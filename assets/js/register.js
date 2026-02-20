@@ -389,6 +389,12 @@
     if (BUILDING_TYPES.has(currentType)) {
       record.buildingId = elBuildingSelect.value || "";
       record.buildingName = elBuildingSelect.selectedOptions[0]?.textContent || "";
+
+      // ✅ 주소 자동 주입: 주소칸을 안 적었으면 건물마스터 주소로 채움
+  if (!record.address && record.buildingId) {
+    const b = DataUtil.findBuildingById(record.buildingId);
+    if (b?.address) record.address = b.address;
+  }
     } else {
       record.buildingId = "";
       record.buildingName = "";
