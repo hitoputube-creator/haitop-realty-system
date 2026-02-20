@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>하이탑부동산 | 매물 목록</title>
+
+  <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <link rel="stylesheet" href="assets/css/list.css"/>
+  <link rel="stylesheet" href="assets/css/print.css"/>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="brand-text">
+          <h1>매물 목록</h1>
+          <p>유형별 · 건물별 · 상태별 필터 + 리스트형 출력</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnBuildings">건물관리</button>
+        <button class="btn primary" id="btnNew">매물등록</button>
+      </div>
+    </header>
+
+    <!-- FILTER -->
+    <section class="filters card">
+      <div class="filter-grid">
+
+        <div class="field">
+          <label>유형</label>
+          <select id="fType">
+            <option value="shop">상가</option>
+            <option value="officetel">오피스텔</option>
+            <option value="apartment">아파트</option>
+            <option value="bizcenter">지식산업센터</option>
+            <option value="land_dev">토지(시행)</option>
+            <option value="land_single">토지(단독)</option>
+            <option value="land_general">토지(일반)</option>
+            <option value="factory">공장/창고</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>건물</label>
+          <select id="fBuilding">
+            <option value="">건물 전체</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>거래유형</label>
+          <select id="fDeal">
+            <option value="">전체</option>
+            <option>매매</option>
+            <option>전세</option>
+            <option>월세</option>
+            <option>임대</option>
+            <option>분양</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>상태</label>
+          <select id="fStatus">
+            <option value="">전체</option>
+            <option>거래가능</option>
+            <option>계약진행</option>
+            <option>보류</option>
+            <option>완료</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>검색</label>
+          <input id="fSearch" placeholder="제목/주소/건물명 검색"/>
+        </div>
+
+      </div>
+
+      <div class="inline" style="margin-top:10px;">
+        <label class="switch">
+          <input type="checkbox" id="fListedOnly" checked/>
+          <span>✅ 매물나옴만 보기</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- TABLE -->
+    <section class="table-wrap card">
+
+      <div class="table-actions">
+        <div class="left small">
+          결과: <b id="resultCount">0건</b>
+        </div>
+        <div class="right">
+          <button class="btn" id="btnPrint">리스트 출력</button>
+        </div>
+      </div>
+
+      <!-- PRINT HEADER (print.css에서만 표시) -->
+      <div id="printHeader">
+        <h2 id="printTitle"></h2>
+        <div id="printSub"></div>
+      </div>
+
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+
+      <!-- PRINT FOOTER -->
+      <div id="printFooter">
+        <div id="printLogo"></div>
+        <div id="printFooterText">
+          하이탑부동산 ☎ 031.949.8969
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/list.js"></script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>하이탑부동산 | 매물 상세</title>
+
+  <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <link rel="stylesheet" href="assets/css/detail.css"/>
+  <link rel="stylesheet" href="assets/css/estimate-print.css"/>
+</head>
+
+<body>
+  <div class="page">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="brand-text">
+          <h1>매물 상세</h1>
+          <p>단건 정보 확인 + 풀 견적서 출력</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="btnBack">뒤로</button>
+        <button class="btn" id="btnEdit">수정</button>
+        <button class="btn primary" id="btnEstimate">견적서 출력(풀)</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <section class="card">
+        <div class="kv">
+          <div class="title" id="dTitle"></div>
+          <div class="sub" id="dSub"></div>
+        </div>
+
+        <div class="meta" id="dMeta"></div>
+
+        <div style="margin-top:14px;">
+          <div class="section-title">
+            <h2>상세 정보</h2>
+            <span class="sub">내부 확인용</span>
+          </div>
+          <div class="info-list" id="dInfo"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <section class="card">
+        <div class="section-title">
+          <h2>도면/자료</h2>
+          <span class="sub">건물 마스터/첨부 링크</span>
+        </div>
+        <div id="dPlanBox"></div>
+
+        <div style="margin-top:14px;">
+          <div class="section-title">
+            <h2>안내</h2>
+            <span class="sub">출력</span>
+          </div>
+          <div class="small">
+            - "견적서 출력(풀)" 버튼을 누르면 A4 고급 보고서 형태로 출력됩니다.<br/>
+            - 상가: 해당층 평면도 자동 연결 / 오피스텔: 배치도 자동 연결
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- 견적서 출력 전용 영역(프린트에서만 보임) -->
+  <div id="estimatePrint"></div>
+
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/estimate.js"></script>
+  <script src="assets/js/detail.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+/* assets/css/estimate-print.css */
+
+@media print {
+  body{
+    background:#fff !important;
+    color:#000 !important;
+    font-family: Pretendard, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+
+  .topbar, .page > .grid, .toast, .btn, .card { display:none !important; }
+
+  #estimatePrint{
+    display:block !important;
+    padding:24px 28px 18px;
+  }
+
+  .est-title{
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-0.2px;
+    margin:0;
+  }
+  .est-sub{
+    margin-top:6px;
+    font-size:11px;
+    color:#555;
+    line-height:1.45;
+  }
+  .est-line{
+    height:1px;
+    background:#e6e6e6;
+    margin:12px 0 14px;
+  }
+
+  .est-figure{ margin:0 0 14px; }
+  .est-figure img{ width:100%; display:block; border-radius:0; }
+  .est-caption{ font-size:10px; color:#666; margin-top:6px; }
+
+  .est-section{ margin-top:14px; }
+  .est-section h3{ margin:0 0 8px; font-size:12px; font-weight:900; color:#111; }
+
+  table.est-table{
+    width:100%;
+    border-collapse:collapse;
+    border:1px solid #ddd;
+  }
+  .est-table th{
+    background:#f6f6f6;
+    font-size:11px;
+    text-align:left;
+    padding:8px 8px;
+    border-bottom:1px solid #ddd;
+    color:#111;
+    width:42%;
+  }
+  .est-table td{
+    font-size:11px;
+    padding:8px 8px;
+    border-bottom:1px solid #eee;
+    color:#111;
+    text-align:right;
+    white-space:nowrap;
+  }
+
+  .yield-box{
+    border:1px solid #ddd;
+    border-top:none;
+    padding:10px 10px 6px;
+  }
+  .yield-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:6px 0;
+    border-bottom:1px solid #eee;
+    font-size:11px;
+  }
+  .yield-row:last-child{ border-bottom:none; }
+  .yield-row .k{ color:#333; }
+  .yield-row .v{ font-weight:800; }
+  .yield-row .v.big{
+    font-size:15px;
+    font-weight:900;
+    letter-spacing:-0.2px;
+  }
+
+  .vat-note{
+    margin-top:10px;
+    font-size:10px;
+    color:#666;
+    line-height:1.5;
+  }
+
+  .est-footer{
+    margin-top:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding-top:10px;
+    border-top:1px solid #e6e6e6;
+  }
+  .est-logo{
+    width:26px;
+    height:26px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    background:#fff;
+  }
+  .est-footer-text{
+    font-size:11px;
+    color:#111;
+    letter-spacing:-0.1px;
+  }
+
+  table, tr, td, th { page-break-inside: avoid; }
+}
+
+#estimatePrint{ display:none; }
