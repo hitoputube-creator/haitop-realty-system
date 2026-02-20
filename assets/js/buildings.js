@@ -169,7 +169,11 @@
   }
 
   function renderList() {
-    const arr = getBuildings();
+    let arr = getBuildings();
+    arr.sort((a, b) =>
+     (a.name || "").localeCompare((b.name || ""), "ko")
+  );
+    
     elList.innerHTML = "";
     elEmpty.style.display = arr.length ? "none" : "block";
     arr.forEach((item) => {
