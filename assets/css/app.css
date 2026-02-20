@@ -83,7 +83,7 @@ html, body {
 .brand-text p{
   margin:2px 0 0;
   font-size:0.84rem;
-  color:rgba(212,175,55,0.85) !important;
+  color:rgba(212,175,55,0.90) !important;
 }
 .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
 
