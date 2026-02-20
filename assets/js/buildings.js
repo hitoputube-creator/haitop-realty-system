@@ -168,54 +168,50 @@
     toast("삭제 완료");
   }
 
-  function renderList() {
-    let arr = getBuildings();
+function renderList() {
+  let arr = getBuildings();
 
-    // ✅ 탭에 맞게 상가/오피스텔만 표시
-  arr = arr.filter(x => x.type === currentType);
-    
-    // ✅ 이름순 정렬
-    arr.sort((a, b) =>
-     (a.name || "").localeCompare((b.name || ""), "ko")
+  // 🔥 실제 눌린 탭을 DOM에서 직접 읽음
+  const activeTab = elTabs.querySelector(".tab.active");
+  const activeType = activeTab ? activeTab.dataset.type : "shop";
+
+  arr = arr.filter(x => x.type === activeType);
+
+  arr.sort((a, b) =>
+    (a.name || "").localeCompare((b.name || ""), "ko")
   );
-    
-    elList.innerHTML = "";
-    elEmpty.style.display = arr.length ? "none" : "block";
-    
-    arr.forEach((item) => {
-      const div = document.createElement("div");
-      div.className = "item";
-      const left = document.createElement("div");
-      left.className = "meta";
-      left.innerHTML = `<div class="name">${item.name}</div><div class="sub">${item.address || "(주소 미입력)"}</div>`;
-      const right = document.createElement("div");
-      right.className = "item-actions";
-      const editBtn = document.createElement("button");
-      editBtn.className = "btn mini"; editBtn.textContent = "수정"; editBtn.onclick = () => loadToForm(item.id);
-      const delBtn = document.createElement("button");
-      delBtn.className = "btn mini danger"; delBtn.textContent = "삭제"; delBtn.onclick = () => deleteBuilding(item.id);
-      right.appendChild(editBtn); right.appendChild(delBtn);
-      div.appendChild(left); div.appendChild(right);
-      elList.appendChild(div);
-    });
-  }
 
-  elTabs.addEventListener("click", (e) => {
-    const btn = e.target.closest(".tab");
-    if (!btn) return;
-    currentType = btn.dataset.type;
-    Array.from(elTabs.querySelectorAll(".tab")).forEach((b) => b.classList.toggle("active", b === btn));
-    renderTypeExtra(currentType, null);
-    
-  // ✅ 탭 누르면 리스트도 해당 타입만 보이게 갱신
-  renderList();    
+  elList.innerHTML = "";
+  elEmpty.style.display = arr.length ? "none" : "block";
+
+  arr.forEach((item) => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    const left = document.createElement("div");
+    left.className = "meta";
+    left.innerHTML =
+      `<div class="name">${item.name}</div>
+       <div class="sub">${item.address || "(주소 미입력)"}</div>`;
+
+    const right = document.createElement("div");
+    right.className = "item-actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn mini";
+    editBtn.textContent = "수정";
+    editBtn.onclick = () => loadToForm(item.id);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn mini danger";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => deleteBuilding(item.id);
+
+    right.appendChild(editBtn);
+    right.appendChild(delBtn);
+
+    div.appendChild(left);
+    div.appendChild(right);
+    elList.appendChild(div);
   });
-
-  $("btnSave").addEventListener("click", saveBuilding);
-  $("btnNew").addEventListener("click", clearForm);
-  $("btnReset").addEventListener("click", () => { if (confirm("전체 삭제할까요?")) { localStorage.removeItem(LS_KEY); renderList(); } });
-  $("btnExport").addEventListener("click", () => { StorageUtil.downloadJson("buildings_backup.json", { buildings: getBuildings() }); });
-
-  renderTypeExtra(currentType, null);
-  renderList();
-})();
+}
