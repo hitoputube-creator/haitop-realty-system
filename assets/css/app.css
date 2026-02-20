@@ -11,7 +11,6 @@
   --gold:#C6A75E;
   --danger:#E11D48;
 
-  /* optional: focus ring */
   --ring:rgba(198,167,94,0.28);
 }
 
@@ -33,7 +32,6 @@ body{
   padding:18px 14px 60px;
 }
 
-/* Buttons */
 .btn{
   border:1px solid var(--border);
   background:rgba(255,255,255,0.72);
@@ -67,7 +65,6 @@ body{
   box-shadow:none;
 }
 
-/* Cards */
 .card{
   border:1px solid var(--border);
   background:rgba(255,255,255,0.92);
@@ -77,7 +74,6 @@ body{
   backdrop-filter:saturate(120%) blur(6px);
 }
 
-/* Form fields */
 .field{
   display:flex;
   flex-direction:column;
@@ -132,7 +128,6 @@ textarea{
   margin:10px 0 0;
 }
 
-/* Toast */
 .toast{
   position:fixed;
   left:50%;
@@ -153,8 +148,6 @@ textarea{
 }
 .toast.show{ opacity:1; }
 
-/* ===== Segmented Toggle (상가/오피스텔) ===== */
-/* buildings.html에서 토글이 button이고 active 클래스 쓰는 구조를 넓게 커버 */
 .segmented button,
 .toggle-group button,
 .type-toggle button,
