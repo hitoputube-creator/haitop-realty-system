@@ -102,6 +102,14 @@
       <section class="card">
         <h2 style="margin:0 0 10px;">등록된 건물</h2>
         <div id="buildingList" class="building-list"></div>
+        
+      <!-- ✅ 페이징 UI 추가 (8개씩) -->
+      <div class="pager" id="pager" style="display:none;">
+      <button class="btn mini" id="btnPrevPage">이전</button>
+      <div class="page-info" id="pageInfo">1 / 1</div>
+      <button class="btn mini" id="btnNextPage">다음</button>
+  </div>
+        
         <div id="empty" class="empty" style="display:none;">
           등록된 건물이 없습니다. 왼쪽에서 먼저 등록해주세요.
         </div>
