@@ -170,12 +170,18 @@
 
   function renderList() {
     let arr = getBuildings();
+
+    // ✅ 탭에 맞게 상가/오피스텔만 표시
+  arr = arr.filter(x => x.type === currentType);
+    
+    // ✅ 이름순 정렬
     arr.sort((a, b) =>
      (a.name || "").localeCompare((b.name || ""), "ko")
   );
     
     elList.innerHTML = "";
     elEmpty.style.display = arr.length ? "none" : "block";
+    
     arr.forEach((item) => {
       const div = document.createElement("div");
       div.className = "item";
