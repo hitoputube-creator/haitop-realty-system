@@ -206,6 +206,9 @@
     currentType = btn.dataset.type;
     Array.from(elTabs.querySelectorAll(".tab")).forEach((b) => b.classList.toggle("active", b === btn));
     renderTypeExtra(currentType, null);
+    
+  // ✅ 탭 누르면 리스트도 해당 타입만 보이게 갱신
+  renderList();    
   });
 
   $("btnSave").addEventListener("click", saveBuilding);
