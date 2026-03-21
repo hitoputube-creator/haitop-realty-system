@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>매물 상세 - 하이탑부동산</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="assets/js/storage.js"></script>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="logo-main">HITOP 부동산</div>
+      <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+    </div>
+  </header>
+  <div class="header-line"></div>
+
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <button class="btn btn-ghost" onclick="location.href='index.html'">← 목록</button>
+  </div>
+
+  <div id="detailArea">
+    <div class="loading"><span class="spinner"></span>불러오는 중...</div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-title">🗑 매물을 삭제할까요?</div>
+    <div style="font-size:0.85rem;color:var(--text-muted);">삭제하면 복구가 어렵습니다.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('deleteModal').style.display='none'">취소</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showToast(msg, duration=2000) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), duration);
+  }
+
+  function getTypeLabel(type) {
+    const map = { shop:"상가/사무실", officetel:"오피스텔", factory:"공장/창고", bizcenter:"지식산업센터" };
+    if (map[type]) return map[type];
+    if (type && type.startsWith("land")) return "토지";
+    return "기타";
+  }
+
+  function row(label, value) {
+    if (!value) return "";
+    return `<div><div class="info-label">${label}</div><div class="info-value">${value}</div></div>`;
+  }
+
+  function renderDetail(item) {
+    let html = "";
+
+    // 상태 배지
+    if (item.status === "거래완료") {
+      html += `<div class="deal-status">거래완료</div>`;
+    }
+
+    // 제목
+    html += `<div class="detail-title">${item.title || getTypeLabel(item.type)}</div>`;
+
+    // 액션 버튼
+    html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">`;
+    if (item.status !== "거래완료") {
+      html += `<button class="btn btn-success" id="doneBtn">✅ 거래완료 처리</button>`;
+    } else {
+      html += `<button class="btn btn-ghost" id="undoneBtn">↩ 광고중으로 변경</button>`;
+    }
+    if (item.owner_contact) {
+      html += `<a class="contact-btn" href="tel:${item.owner_contact}">📞 ${item.owner_contact}</a>`;
+    }
+    html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
+    html += `</div>`;
+
+    // 기본 정보 카드
+    html += `<div class="info-card"><div class="info-grid">`;
+    html += row("매물구분", getTypeLabel(item.type));
+    html += row("주소", item.address);
+    html += row("집주인 연락처", item.owner_contact);
+
+    if (item.type === "shop") {
+      html += row("거래유형", item.shop_dealType);
+      html += row("층수", item.shop_floor);
+      html += row("전용면적", item.shop_area_py ? item.shop_area_py+"평" : "");
+      html += row("보증금", item.shop_deposit ? Number(item.shop_deposit).toLocaleString("ko-KR")+"만원" : "");
+      html += row("월세", item.shop_monthlyRent ? Number(item.shop_monthlyRent).toLocaleString("ko-KR")+"만원" : "");
+      html += row("관리비", item.shop_maintenance ? item.shop_maintenance+"만원" : "");
+      html += row("권리금", item.shop_premium);
+      html += row("임대상태", item.shop_status);
+      html += row("예상 수익률", item.shop_yield ? item.shop_yield+"%" : "");
+      html += row("주차", item.shop_parking);
+      html += row("입주가능일", item.shop_available);
+    }
+    if (item.type === "officetel") {
+      html += row("단지명", item.officetel_complex);
+      html += row("타입", item.officetel_type);
+      html += row("구조", item.officetel_structure);
+      html += row("층수", item.officetel_floor);
+      html += row("거래유형", item.officetel_dealType);
+      html += row("금액", item.officetel_price ? Number(item.officetel_price).toLocaleString("ko-KR")+"만원" : "");
+      html += row("전용면적", item.officetel_area_py ? item.officetel_area_py+"평" : "");
+      html += row("향", item.officetel_direction);
+      html += row("일반사업자", item.officetel_biz);
+      html += row("전입", item.officetel_resident);
+      html += row("주차", item.officetel_parking);
+      html += row("입주가능일", item.officetel_available);
+    }
+    if (item.type && item.type.startsWith("land")) {
+      html += row("토지종류", item.land_kind);
+      html += row("면적", item.land_area_py ? item.land_area_py+"평" : "");
+      html += row("지목", item.land_jimok);
+      html += row("용도지역", item.land_zone);
+      html += row("건폐율", item.land_coverage ? item.land_coverage+"%" : "");
+      html += row("용적률", item.land_far ? item.land_far+"%" : "");
+      html += row("도로", item.land_road);
+      html += row("형상", item.land_shape);
+      html += row("매매가", item.land_price ? Number(item.land_price).toLocaleString("ko-KR")+"만원" : "");
+    }
+    if (item.type === "factory") {
+      html += row("구분", item.factory_kind);
+      html += row("대지면적", item.factory_siteArea_py ? item.factory_siteArea_py+"평" : "");
+      html += row("건물면적", item.factory_buildArea_py ? item.factory_buildArea_py+"평" : "");
+      html += row("층고", item.factory_height ? item.factory_height+"m" : "");
+      html += row("전력", item.factory_power ? item.factory_power+"kW" : "");
+      html += row("대형차", item.factory_truck);
+      html += row("거래유형", item.factory_dealType);
+      html += row("금액", item.factory_price ? Number(item.factory_price).toLocaleString("ko-KR")+"만원" : "");
+      html += row("주차", item.factory_parking);
+      html += row("입주가능일", item.factory_available);
+    }
+    if (item.type === "bizcenter") {
+      html += row("센터명", item.biz_name);
+      html += row("구분", item.biz_kind);
+      html += row("층수", item.biz_floor);
+      html += row("전용면적", item.biz_privArea_py ? item.biz_privArea_py+"평" : "");
+      html += row("거래유형", item.biz_dealType);
+      html += row("금액", item.biz_price ? Number(item.biz_price).toLocaleString("ko-KR")+"만원" : "");
+      html += row("주차", item.biz_parking);
+      html += row("입주가능일", item.biz_available);
+    }
+
+    // 빠른등록 가격
+    if (item.quick_price) html += row("가격(메모)", item.quick_price);
+
+    html += `</div></div>`;
+
+    // 메모/설명
+    if (item.description || item.quick_memo) {
+      html += `<div class="desc-card">
+        <div class="desc-title">📝 메모 / 상세 설명</div>
+        <div style="font-size:0.88rem;line-height:1.6;">${(item.description||item.quick_memo||"").replace(/\n/g,"<br>")}</div>
+      </div>`;
+    }
+
+    // 등록일
+    if (item.created_at) {
+      const d = new Date(item.created_at);
+      html += `<div style="margin-top:12px;font-size:0.75rem;color:var(--text-muted);text-align:right;">등록일: ${d.toLocaleDateString("ko-KR")}</div>`;
+    }
+
+    return html;
+  }
+
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+    if (!id) { document.getElementById("detailArea").innerHTML = "<div class='desc-card'>잘못된 접근입니다.</div>"; return; }
+
+    try {
+      const item = await getListingById(id);
+      if (!item) { document.getElementById("detailArea").innerHTML = "<div class='desc-card'>매물을 찾을 수 없습니다.</div>"; return; }
+
+      document.getElementById("detailArea").innerHTML = renderDetail(item);
+
+      // 거래완료
+      const doneBtn = document.getElementById("doneBtn");
+      const undoneBtn = document.getElementById("undoneBtn");
+      if (doneBtn) {
+        doneBtn.addEventListener("click", async () => {
+          doneBtn.disabled = true;
+          try {
+            await updateListingStatus(id, "거래완료");
+            showToast("✅ 거래완료 처리됐어요!");
+            setTimeout(() => location.href = "index.html", 1200);
+          } catch(e) { showToast("❌ 실패: "+e.message); doneBtn.disabled = false; }
+        });
+      }
+      if (undoneBtn) {
+        undoneBtn.addEventListener("click", async () => {
+          undoneBtn.disabled = true;
+          try {
+            await updateListingStatus(id, "광고중");
+            showToast("↩ 광고중으로 변경됐어요!");
+            setTimeout(() => location.reload(), 1200);
+          } catch(e) { showToast("❌ 실패: "+e.message); undoneBtn.disabled = false; }
+        });
+      }
+
+      // 삭제
+      document.getElementById("deleteBtn").addEventListener("click", () => {
+        document.getElementById("deleteModal").style.display = "flex";
+      });
+      document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+        try {
+          await deleteListing(id);
+          showToast("🗑 삭제됐어요");
+          setTimeout(() => location.href = "index.html", 1000);
+        } catch(e) { showToast("❌ 삭제 실패: "+e.message); }
+      });
+
+    } catch(e) {
+      document.getElementById("detailArea").innerHTML = `<div class='desc-card'>❌ 오류: ${e.message}</div>`;
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

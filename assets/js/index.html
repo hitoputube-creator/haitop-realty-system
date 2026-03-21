@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>하이탑부동산 매물 목록</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="assets/js/storage.js"></script>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="logo-main">HITOP 부동산</div>
+      <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+    </div>
+  </header>
+  <div class="header-line"></div>
+
+  <!-- ⚡ 빠른 등록 -->
+  <div class="quick-card">
+    <div class="quick-title">⚡ 빠른 등록 — 30초 메모</div>
+    <div class="quick-sub">전화/방문 직후 핵심만 입력하고 나중에 보완하세요</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>매물유형</label>
+        <select id="q_type">
+          <option value="shop">상가/사무실</option>
+          <option value="officetel">오피스텔</option>
+          <option value="land_single">토지</option>
+          <option value="factory">공장/창고</option>
+          <option value="bizcenter">지식산업센터</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>위치 (간단히)</label>
+        <input id="q_address" type="text" placeholder="예) 운정역 근처 1층" />
+      </div>
+      <div class="field">
+        <label>가격 (보증금 또는 매매가)</label>
+        <input id="q_price" type="text" placeholder="예) 보증금 5000 / 월세 300" />
+      </div>
+      <div class="field">
+        <label>집주인 연락처</label>
+        <input id="q_contact" type="tel" placeholder="010-0000-0000" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>메모 (특이사항)</label>
+      <input id="q_memo" type="text" placeholder="예) 1층 공실, 즉시입주 가능, 권리금 없음" />
+    </div>
+    <div style="text-align:right;">
+      <button class="btn btn-primary" id="quickSaveBtn">⚡ 빠른 저장</button>
+    </div>
+  </div>
+
+  <!-- 필터 -->
+  <section class="card">
+    <div class="card-title">
+      <span>유형별 필터</span>
+      <span style="font-size:0.75rem;color:var(--text-muted)">거래완료 매물 자동 숨김</span>
+    </div>
+    <div class="filter-row" id="filterRow">
+      <button class="filter-btn active" data-filter="all">전체</button>
+      <button class="filter-btn" data-filter="shop">상가/사무실</button>
+      <button class="filter-btn" data-filter="officetel">오피스텔</button>
+      <button class="filter-btn" data-filter="land">토지</button>
+      <button class="filter-btn" data-filter="factory">공장/창고</button>
+      <button class="filter-btn" data-filter="bizcenter">지식산업센터</button>
+      <button class="filter-btn" data-filter="done">거래완료</button>
+    </div>
+  </section>
+
+  <!-- 목록 -->
+  <section class="card">
+    <div class="card-title">
+      <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+      <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
+    </div>
+    <div id="listingContainer" class="listing-list"></div>
+    <div id="emptyMessage" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+      등록된 매물이 없습니다.
+    </div>
+  </section>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const listingContainer = document.getElementById("listingContainer");
+  const emptyMessage = document.getElementById("emptyMessage");
+  const filterRow = document.getElementById("filterRow");
+  const countBadge = document.getElementById("countBadge");
+
+  let allListings = [];
+  let currentFilter = "all";
+
+  function getTypeLabel(type) {
+    const map = { shop:"상가/사무실", officetel:"오피스텔", factory:"공장/창고", bizcenter:"지식산업센터" };
+    if (map[type]) return map[type];
+    if (type && type.startsWith("land")) return "토지";
+    return "기타";
+  }
+
+  function mapTypeToFilter(type) {
+    if (type === "shop") return "shop";
+    if (type === "officetel") return "officetel";
+    if (type && type.startsWith("land")) return "land";
+    if (type === "factory") return "factory";
+    if (type === "bizcenter") return "bizcenter";
+    return "other";
+  }
+
+  function formatPrice(item) {
+    if (item.type === "shop") {
+      const d = item.shop_deposit ? Number(item.shop_deposit).toLocaleString("ko-KR")+"만원" : "";
+      const r = item.shop_monthlyRent ? Number(item.shop_monthlyRent).toLocaleString("ko-KR")+"만원" : "";
+      if (d && r) return `보증금 ${d} / 월세 ${r}`;
+      if (item.quick_price) return item.quick_price;
+      return "";
+    }
+    if (item.type === "officetel") return `${item.officetel_dealType||""} ${item.officetel_price ? Number(item.officetel_price).toLocaleString("ko-KR")+"만원" : ""}`;
+    if (item.type && item.type.startsWith("land")) return item.land_price ? `매매 ${Number(item.land_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
+    if (item.type === "factory") return item.factory_price ? `${item.factory_dealType||""} ${Number(item.factory_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
+    if (item.type === "bizcenter") return item.biz_price ? `${item.biz_dealType||""} ${Number(item.biz_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
+    return item.quick_price || "";
+  }
+
+  function renderList() {
+    listingContainer.innerHTML = "";
+
+    const filtered = allListings.filter(item => {
+      if (currentFilter === "done") return item.status === "거래완료";
+      if (item.status === "거래완료") return false;
+      if (currentFilter === "all") return true;
+      return mapTypeToFilter(item.type) === currentFilter;
+    });
+
+    countBadge.textContent = filtered.length ? `(${filtered.length}건)` : "";
+
+    if (!filtered.length) {
+      emptyMessage.style.display = "block";
+      return;
+    }
+    emptyMessage.style.display = "none";
+
+    filtered.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "listing-card";
+      card.onclick = () => location.href = `detail.html?id=${item.id}`;
+
+      const isQuick = item.quick_price && !item.shop_deposit && !item.land_price && !item.officetel_price;
+
+      card.innerHTML = `
+        <div class="listing-title">${item.title || "(빠른등록 — 제목 미입력)"}</div>
+        <div class="listing-meta">${getTypeLabel(item.type)} · ${item.address || ""}</div>
+        <div class="listing-price">${formatPrice(item)}</div>
+        <div class="badge-row">
+          <span class="badge">${getTypeLabel(item.type)}</span>
+          ${isQuick ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
+          ${item.status === "거래완료" ? '<span class="badge badge-red">거래완료</span>' : ""}
+          ${item.quick_contact ? `<span class="badge badge-green">📞 ${item.quick_contact}</span>` : ""}
+        </div>
+        ${item.quick_memo ? `<div style="margin-top:6px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
+      `;
+
+      listingContainer.appendChild(card);
+    });
+  }
+
+  function showToast(msg, duration = 2000) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), duration);
+  }
+
+  // 빠른 저장
+  document.getElementById("quickSaveBtn").addEventListener("click", async () => {
+    const type    = document.getElementById("q_type").value;
+    const address = document.getElementById("q_address").value.trim();
+    const price   = document.getElementById("q_price").value.trim();
+    const contact = document.getElementById("q_contact").value.trim();
+    const memo    = document.getElementById("q_memo").value.trim();
+
+    if (!address && !price) {
+      showToast("위치 또는 가격 중 하나는 입력해주세요");
+      return;
+    }
+
+    const btn = document.getElementById("quickSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+
+    try {
+      const item = {
+        id: "HITOP-" + Date.now(),
+        type, address,
+        title: `${getTypeLabel(type)} · ${address || price}`,
+        status: "광고중",
+        description: memo,
+        quick_price: price,
+        quick_contact: contact,
+        quick_memo: memo
+      };
+      await addListing(item);
+
+      // 폼 초기화
+      ["q_address","q_price","q_contact","q_memo"].forEach(id => document.getElementById(id).value = "");
+      showToast("✅ 저장완료!");
+      await loadListings();
+    } catch(e) {
+      showToast("❌ 저장 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "⚡ 빠른 저장";
+    }
+  });
+
+  // 필터
+  filterRow.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterRow.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentFilter = btn.dataset.filter;
+      renderList();
+    });
+  });
+
+  async function loadListings() {
+    listingContainer.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
+    try {
+      allListings = await getListings();
+      renderList();
+    } catch(e) {
+      listingContainer.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
+    }
+  }
+
+  loadListings();
+</script>
+</body>
+</html>
