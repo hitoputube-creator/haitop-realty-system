@@ -321,6 +321,7 @@
   });
 
   // 검색
+  document.getElementById("searchInput").addEventListener("input", (e) => {
     searchKeyword = e.target.value.trim();
     renderList();
   });
