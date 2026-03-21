@@ -144,7 +144,7 @@
       if (item.quick_price) return item.quick_price;
       return "";
     }
-    if (item.type === "officetel") return `${item.officetel_dealType||""} ${item.officetel_price ? Number(item.officetel_price).toLocaleString("ko-KR")+"만원" : ""}`;
+    if (item.type === "officetel") return item.officetel_price ? `${item.officetel_dealType||""} ${Number(item.officetel_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
     if (item.type && item.type.startsWith("land")) return item.land_price ? `매매 ${Number(item.land_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
     if (item.type === "factory") return item.factory_price ? `${item.factory_dealType||""} ${Number(item.factory_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
     if (item.type === "bizcenter") return item.biz_price ? `${item.biz_dealType||""} ${Number(item.biz_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
