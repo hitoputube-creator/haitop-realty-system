@@ -47,3 +47,16 @@ async function deleteListing(id) {
   });
   if (!res.ok) throw new Error("삭제 실패");
 }
+async function updateListing(id, item) {
+  const data = Object.assign({}, item);
+  delete data.id; delete data.created_at;
+  const type = data.type; const title = data.title;
+  const address = data.address; const status = data.status; const description = data.description;
+  delete data.type; delete data.title; delete data.address; delete data.status; delete data.description;
+  const res = await fetch(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify({ type, title, address, status, description, data })
+  });
+  if (!res.ok) throw new Error("수정 실패: " + await res.text());
+}
