@@ -2,150 +2,250 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>하이탑부동산 | 매물 등록</title>
-
-  <!-- Pretendard -->
-  <link rel="stylesheet" as="style" crossorigin
-        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/app.css" />
-  <link rel="stylesheet" href="assets/css/register.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="storage.js"></script>
 </head>
-
 <body>
-  <div class="page">
+<div class="page">
 
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div class="brand-text">
-          <h1>매물 등록</h1>
-          <p>유형별 입력폼 · 건물 자동 불러오기 · ㎡→평 자동 계산</p>
-        </div>
-      </div>
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="logo-main">HITOP 부동산</div>
+      <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+    </div>
+  </header>
+  <div class="header-line"></div>
 
-      <div class="actions">
-        <button class="btn ghost" onclick="location.href='buildings.html'">건물관리</button>
-        <button class="btn ghost" onclick="location.href='index.html'">매물목록</button>
-      </div>
-    </header>
-
-    <main class="grid">
-
-      <!-- LEFT: 기본정보 -->
-      <section class="card">
-        <div class="section-title">
-          <h2>기본 정보</h2>
-          <span class="sub">* 저장 후 목록에서 확인</span>
-        </div>
-
-        <div class="field">
-          <label>매물 유형</label>
-          <select id="typeSelect">
-            <option value="shop">상가</option>
-            <option value="officetel">오피스텔</option>
-            <option value="apartment">아파트</option>
-            <option value="bizcenter">지식산업센터</option>
-            <option value="land_dev">토지(시행부지)</option>
-            <option value="land_single">토지(단독주택)</option>
-            <option value="land_general">토지(일반)</option>
-            <option value="factory">공장/창고</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>건물 선택(건물형만)</label>
-          <select id="buildingSelect">
-            <option value="">건물 선택</option>
-          </select>
-          <div id="buildingInfo" style="margin-top:8px;"></div>
-          <div class="small" style="margin-top:6px;">
-            * 토지/공장창고는 건물 선택이 필요 없습니다.
-          </div>
-        </div>
-
-        <hr class="soft"/>
-
-        <div class="field">
-          <label>제목</label>
-          <input id="title" placeholder="예: 월드스퀘어 2F 공실 / 힐스테이트 오피스텔 전세" />
-        </div>
-
-        <div class="field">
-          <label>주소</label>
-          <input id="address" placeholder="예: 파주시 와동동 ... (토지는 필수 권장)" />
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>거래유형</label>
-            <select id="dealType">
-              <option>매매</option>
-              <option>전세</option>
-              <option>월세</option>
-              <option>임대</option>
-              <option>분양</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>상태</label>
-            <select id="status">
-              <option>거래가능</option>
-              <option>계약진행</option>
-              <option>보류</option>
-              <option>완료</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>매물나옴 체크</label>
-          <div class="switch">
-            <input type="checkbox" id="isListed" checked />
-            <span>현재 내놓은 매물(✅ 표시된 것만 필터/출력 가능)</span>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>내부 메모</label>
-          <textarea id="memo" placeholder="예: 보증금 조정 가능, 빠른 입점 희망 등"></textarea>
-        </div>
-
-        <div class="form-actions">
-          <button class="btn primary" id="btnSave">저장</button>
-        </div>
-
-        <p class="note">
-          - 저장 구조는 localStorage(listings)에 저장됩니다.<br/>
-          - 나중에 "리스트 출력/단건 견적서"는 이 데이터를 그대로 사용합니다.
-        </p>
-      </section>
-
-      <!-- RIGHT: 유형별 상세 입력 -->
-      <section class="card">
-        <div class="section-title">
-          <h2>유형별 상세 입력</h2>
-          <span class="sub">유형 선택에 따라 자동으로 바뀜</span>
-        </div>
-
-        <div id="dynamicFields"></div>
-
-        <p class="note">
-          - 상가: 층(B2/B1/1F/…)은 고정값으로 선택합니다.<br/>
-          - 토지/공장창고: 자료는 "URL 링크"로만 저장합니다.
-        </p>
-      </section>
-
-    </main>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <button class="btn btn-ghost" onclick="history.back()">← 뒤로</button>
+    <h1 class="page-title" style="margin:0;">매물 상세 등록</h1>
   </div>
 
-  <div id="toast" class="toast" aria-live="polite"></div>
+  <!-- 매물유형 -->
+  <section class="card">
+    <div class="card-title">
+      <span>매물유형 선택</span>
+      <span style="font-size:0.78rem;color:var(--text-muted)">선택 후 입력항목 자동 생성</span>
+    </div>
+    <div class="field">
+      <select id="propertyType">
+        <option value="">— 선택하세요 —</option>
+        <option value="shop">상가/사무실</option>
+        <option value="officetel">오피스텔</option>
+        <option value="land_single">토지 (단독부지)</option>
+        <option value="land_dev">토지 (시행부지)</option>
+        <option value="land_other">토지 (그 외)</option>
+        <option value="factory">공장/창고</option>
+        <option value="bizcenter">지식산업센터</option>
+      </select>
+    </div>
+  </section>
 
-  <!-- JS -->
-  <script src="assets/js/storage.js"></script>
-  <script src="assets/js/data.js"></script>
-  <script src="assets/js/register.js"></script>
+  <!-- 기본 정보 -->
+  <section class="card">
+    <div class="card-title">
+      <span>기본 정보</span>
+      <span id="typeNotice" style="font-size:0.78rem;color:var(--text-muted)">유형을 먼저 선택하세요</span>
+    </div>
+    <div class="form-grid-1">
+      <div class="field">
+        <label>매물 제목</label>
+        <input id="title" type="text" placeholder="예) 운정역 1층 상가 임대 (전용 24평)" />
+      </div>
+      <div class="field">
+        <label>주소</label>
+        <input id="address" type="text" placeholder="파주시 ○○동 ○○로 00" />
+      </div>
+      <div class="field">
+        <label>집주인 연락처</label>
+        <input id="owner_contact" type="tel" placeholder="010-0000-0000" />
+      </div>
+      <div class="field">
+        <label>거래상태</label>
+        <select id="status">
+          <option value="광고중">광고중</option>
+          <option value="거래완료">거래완료</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- 동적 필드 -->
+  <section class="card" id="dynamicSection" style="display:none;">
+    <div class="card-title"><span id="dynamicTitle">상세 정보</span></div>
+    <div id="dynamicFields" class="form-grid-2"></div>
+  </section>
+
+  <!-- 상세 설명 -->
+  <section class="card">
+    <div class="card-title"><span>메모 / 상세 설명</span></div>
+    <div class="field">
+      <textarea id="description" placeholder="상권·입지·특징·집주인 성격 등 자유롭게 기록"></textarea>
+    </div>
+    <div style="text-align:right;margin-top:12px;">
+      <button class="btn btn-primary" id="saveBtn">저장하기</button>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const typeSelect = document.getElementById("propertyType");
+  const dynamicFields = document.getElementById("dynamicFields");
+  const dynamicSection = document.getElementById("dynamicSection");
+  const dynamicTitle = document.getElementById("dynamicTitle");
+  const typeNotice = document.getElementById("typeNotice");
+
+  const typeLabels = {
+    shop:"상가/사무실", officetel:"오피스텔",
+    land_single:"토지(단독)", land_dev:"토지(시행)", land_other:"토지",
+    factory:"공장/창고", bizcenter:"지식산업센터"
+  };
+
+  function f(label, id, placeholder="", type="text") {
+    return `<div class="field"><label>${label}</label><input id="${id}" type="${type}" placeholder="${placeholder}" /></div>`;
+  }
+  function fsel(label, id, options) {
+    const opts = options.map(o => `<option value="${o}">${o}</option>`).join("");
+    return `<div class="field"><label>${label}</label><select id="${id}">${opts}</select></div>`;
+  }
+
+  function renderFields(type) {
+    let html = "";
+    dynamicSection.style.display = "block";
+    dynamicTitle.textContent = (typeLabels[type] || "") + " 상세정보";
+    typeNotice.textContent = typeLabels[type] || "";
+
+    if (type === "shop") {
+      html += fsel("거래유형","shop_dealType",["임대","매매","매매+임대"]);
+      html += f("층수","shop_floor","예) 1층");
+      html += f("전용면적(㎡)","shop_area_sqm","예) 79","number");
+      html += f("전용면적(평)","shop_area_py","자동계산");
+      html += f("보증금(만원)","shop_deposit","예) 6000","number");
+      html += f("월세(만원)","shop_monthlyRent","예) 500","number");
+      html += f("관리비(만원)","shop_maintenance","예) 20","number");
+      html += f("권리금","shop_premium","예) 없음");
+      html += fsel("임대상태","shop_status",["임차인 영업중","공실"]);
+      html += f("예상 수익률(%)","shop_yield","","number");
+      html += f("주차","shop_parking","예) 10대");
+      html += f("입주가능일","shop_available","예) 즉시");
+    }
+    if (type === "officetel") {
+      html += fsel("단지명","officetel_complex",["힐스테이트더운정","디에이블","엠버418","클래스원","기타"]);
+      html += f("타입","officetel_type","예) 29");
+      html += fsel("구조","officetel_structure",["원룸","투룸","쓰리룸"]);
+      html += f("층수","officetel_floor","예) 10층");
+      html += fsel("거래유형","officetel_dealType",["전세","월세","매매"]);
+      html += f("금액(만원)","officetel_price","","number");
+      html += f("전용면적(㎡)","officetel_area_sqm","","number");
+      html += f("전용면적(평)","officetel_area_py","자동계산");
+      html += f("향","officetel_direction","예) 남향");
+      html += fsel("일반사업자","officetel_biz",["가능","불가"]);
+      html += fsel("전입","officetel_resident",["가능","불가"]);
+      html += f("주차","officetel_parking","예) 1대");
+      html += f("입주가능일","officetel_available","예) 즉시");
+    }
+    if (type.startsWith("land")) {
+      html += f("토지종류","land_kind", type==="land_single"?"단독부지":type==="land_dev"?"시행부지":"기타");
+      html += f("면적(㎡)","land_area_sqm","","number");
+      html += f("면적(평)","land_area_py","자동계산");
+      html += f("지목","land_jimok","예) 대");
+      html += f("용도지역","land_zone","예) 계획관리");
+      html += f("건폐율(%)","land_coverage","","number");
+      html += f("용적률(%)","land_far","","number");
+      html += f("도로접함","land_road","예) 6m 도로");
+      html += f("형상","land_shape","예) 사각형");
+      html += f("매매가(만원)","land_price","","number");
+    }
+    if (type === "factory") {
+      html += fsel("구분","factory_kind",["공장","창고"]);
+      html += f("대지면적(㎡)","factory_siteArea_sqm","","number");
+      html += f("대지면적(평)","factory_siteArea_py","자동계산");
+      html += f("건물면적(㎡)","factory_buildArea_sqm","","number");
+      html += f("건물면적(평)","factory_buildArea_py","자동계산");
+      html += f("층고(m)","factory_height","","number");
+      html += f("전력(kW)","factory_power","","number");
+      html += fsel("대형차 진입","factory_truck",["가능","불가"]);
+      html += fsel("거래유형","factory_dealType",["임대","매매"]);
+      html += f("금액(만원)","factory_price","","number");
+      html += f("주차","factory_parking","예) 10대");
+      html += f("입주가능일","factory_available","예) 즉시");
+    }
+    if (type === "bizcenter") {
+      html += f("센터명","biz_name","예) ○○지식산업센터");
+      html += fsel("구분","biz_kind",["업무형","제조형","혼합"]);
+      html += f("층수","biz_floor","");
+      html += fsel("거래유형","biz_dealType",["분양","임대","매매"]);
+      html += f("전용면적(㎡)","biz_privArea_sqm","","number");
+      html += f("전용면적(평)","biz_privArea_py","자동계산");
+      html += f("금액(만원)","biz_price","","number");
+      html += f("주차","biz_parking","");
+      html += f("입주가능일","biz_available","");
+    }
+
+    dynamicFields.innerHTML = html;
+    setupAutoCalc();
+  }
+
+  function setupAutoCalc() {
+    dynamicFields.querySelectorAll("input[id*='sqm']").forEach(inp => {
+      inp.addEventListener("input", () => {
+        const sqm = parseFloat(inp.value);
+        const pyEl = document.getElementById(inp.id.replace("_sqm","_py"));
+        if (pyEl) pyEl.value = sqm > 0 ? (sqm / 3.3058).toFixed(1) : "";
+      });
+    });
+  }
+
+  function showToast(msg, duration=2000) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), duration);
+  }
+
+  document.getElementById("saveBtn").addEventListener("click", async () => {
+    const type = typeSelect.value;
+    if (!type) { showToast("매물유형을 선택하세요"); return; }
+
+    const item = {
+      id: "HITOP-" + Date.now(),
+      type,
+      title:       document.getElementById("title").value.trim(),
+      address:     document.getElementById("address").value.trim(),
+      status:      document.getElementById("status").value,
+      description: document.getElementById("description").value.trim(),
+      owner_contact: document.getElementById("owner_contact").value.trim()
+    };
+
+    // 동적 필드 수집
+    dynamicFields.querySelectorAll("input, select").forEach(el => {
+      if (el.value) item[el.id] = el.value;
+    });
+
+    if (!item.title) item.title = `${typeLabels[type]||type} · ${item.address||"주소미입력"}`;
+
+    const btn = document.getElementById("saveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+
+    try {
+      await addListing(item);
+      showToast("✅ 저장완료!");
+      setTimeout(() => location.href = "index.html", 1000);
+    } catch(e) {
+      showToast("❌ 저장 실패: " + e.message);
+      btn.disabled = false; btn.textContent = "저장하기";
+    }
+  });
+
+  typeSelect.addEventListener("change", () => {
+    if (typeSelect.value) renderFields(typeSelect.value);
+    else dynamicSection.style.display = "none";
+  });
+</script>
 </body>
 </html>
