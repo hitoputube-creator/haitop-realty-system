@@ -193,16 +193,15 @@
       const isQuick = item.quick_price && !item.shop_deposit && !item.land_price && !item.officetel_price;
 
       card.innerHTML = `
-        <div class="listing-title">${item.title || "(빠른등록 — 제목 미입력)"}</div>
-        <div class="listing-meta">${getTypeLabel(item.type)} · ${item.address || ""}</div>
-        <div class="listing-price">${formatPrice(item)}</div>
-        <div class="badge-row">
+        <div class="badge-row" style="margin-bottom:6px;">
           <span class="badge">${getTypeLabel(item.type)}</span>
           ${isQuick ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
           ${item.status === "거래완료" ? '<span class="badge badge-red">거래완료</span>' : ""}
-          ${item.quick_contact ? `<span class="badge badge-green">📞 ${item.quick_contact}</span>` : ""}
         </div>
-        ${item.quick_memo ? `<div style="margin-top:6px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
+        <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
+        <div class="listing-price">${formatPrice(item)}</div>
+        ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
+        ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
       `;
 
       listingContainer.appendChild(card);
