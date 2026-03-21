@@ -94,7 +94,10 @@
   <section class="card">
     <div class="card-title">
       <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
-      <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" id="printBtn">🖨 인쇄</button>
+        <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
+      </div>
     </div>
     <div id="listingContainer" class="listing-list"></div>
     <div id="emptyMessage" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
@@ -252,8 +255,72 @@
     }
   });
 
+  // 인쇄
+  document.getElementById("printBtn").addEventListener("click", () => {
+    const list = allListings.filter(item => {
+      if (currentFilter === "done") return item.status === "거래완료";
+      if (item.status === "거래완료") return false;
+      if (currentFilter === "all") return true;
+      return mapTypeToFilter(item.type) === currentFilter;
+    }).filter(item => {
+      if (!searchKeyword) return true;
+      const kw = searchKeyword.toLowerCase();
+      return [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase().includes(kw);
+    });
+
+    const rows = list.map((item, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${getTypeLabel(item.type)}</td>
+        <td>${item.address || ""}</td>
+        <td>${formatPrice(item)}</td>
+        <td>${item.quick_contact || item.owner_contact || ""}</td>
+        <td>${item.quick_memo || item.description || ""}</td>
+      </tr>
+    `).join("");
+
+    const html = `
+      <!DOCTYPE html><html lang="ko"><head>
+      <meta charset="UTF-8">
+      <title>하이탑부동산 매물목록</title>
+      <style>
+        body { font-family: "Noto Sans KR", sans-serif; font-size: 11px; margin: 20px; }
+        h2 { font-size: 15px; margin-bottom: 4px; }
+        p  { font-size: 10px; color: #666; margin-bottom: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1a2a4a; color: #d4af37; padding: 7px 8px; text-align: left; font-size: 11px; }
+        td { padding: 6px 8px; border-bottom: 1px solid #ddd; vertical-align: top; }
+        tr:nth-child(even) td { background: #f9f9f9; }
+        .no { width: 30px; text-align: center; }
+        .type { width: 80px; }
+        .price { width: 140px; }
+        .contact { width: 110px; }
+      </style>
+      </head><body>
+      <h2>🏢 하이탑부동산 매물목록</h2>
+      <p>출력일: ${new Date().toLocaleDateString("ko-KR")} &nbsp;|&nbsp; 총 ${list.length}건</p>
+      <table>
+        <thead><tr>
+          <th class="no">No</th>
+          <th class="type">유형</th>
+          <th>주소</th>
+          <th class="price">가격</th>
+          <th class="contact">집주인 연락처</th>
+          <th>메모/특이사항</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </body></html>
+    `;
+
+    const w = window.open("", "_blank");
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 500);
+  });
+
   // 검색
-  document.getElementById("searchInput").addEventListener("input", (e) => {
     searchKeyword = e.target.value.trim();
     renderList();
   });
