@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title>하이탑부동산 매물 목록</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="assets/css/style.css" />
-<script src="assets/js/storage.js"></script>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="assets/js/storage.js"></script>
 </head>
 <body>
 <div class="page">
@@ -57,6 +57,22 @@
     </div>
   </div>
 
+  <!-- 검색 + 정렬 -->
+  <section class="card">
+    <div class="card-title"><span>🔍 검색 / 정렬</span></div>
+    <div class="form-grid-2" style="margin-bottom:0;">
+      <div class="field">
+        <input id="searchInput" type="text" placeholder="주소, 메모, 가격 등으로 검색..." />
+      </div>
+      <div class="field">
+        <select id="sortSelect">
+          <option value="newest">최신순</option>
+          <option value="oldest">오래된순</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
   <!-- 필터 -->
   <section class="card">
     <div class="card-title">
@@ -98,6 +114,8 @@
 
   let allListings = [];
   let currentFilter = "all";
+  let searchKeyword = "";
+  let currentSort = "newest";
 
   function getTypeLabel(type) {
     const map = { shop:"상가/사무실", officetel:"오피스텔", factory:"공장/창고", bizcenter:"지식산업센터" };
@@ -133,11 +151,27 @@
   function renderList() {
     listingContainer.innerHTML = "";
 
-    const filtered = allListings.filter(item => {
+    let filtered = allListings.filter(item => {
       if (currentFilter === "done") return item.status === "거래완료";
       if (item.status === "거래완료") return false;
       if (currentFilter === "all") return true;
       return mapTypeToFilter(item.type) === currentFilter;
+    });
+
+    // 검색 필터
+    if (searchKeyword) {
+      const kw = searchKeyword.toLowerCase();
+      filtered = filtered.filter(item => {
+        const fields = [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase();
+        return fields.includes(kw);
+      });
+    }
+
+    // 정렬
+    filtered.sort((a, b) => {
+      const da = new Date(a.created_at || 0);
+      const db = new Date(b.created_at || 0);
+      return currentSort === "newest" ? db - da : da - db;
     });
 
     countBadge.textContent = filtered.length ? `(${filtered.length}건)` : "";
@@ -216,6 +250,18 @@
     } finally {
       btn.disabled = false; btn.textContent = "⚡ 빠른 저장";
     }
+  });
+
+  // 검색
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    searchKeyword = e.target.value.trim();
+    renderList();
+  });
+
+  // 정렬
+  document.getElementById("sortSelect").addEventListener("change", (e) => {
+    currentSort = e.target.value;
+    renderList();
   });
 
   // 필터
