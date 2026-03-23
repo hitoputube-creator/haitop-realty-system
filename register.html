@@ -36,6 +36,7 @@
         <option value="shop">상가</option>
         <option value="office">사무실</option>
         <option value="officetel">오피스텔</option>
+        <option value="hilsstate">힐스테이트더운정</option>
         <option value="land_single">토지 (단독부지)</option>
         <option value="land_dev">토지 (시행부지)</option>
         <option value="land_other">토지 (그 외)</option>
@@ -104,7 +105,7 @@
   const typeNotice = document.getElementById("typeNotice");
 
   const typeLabels = {
-    shop:"상가", office:"사무실", officetel:"오피스텔",
+    shop:"상가", office:"사무실", officetel:"오피스텔", hilsstate:"힐스테이트더운정",
     land_single:"토지(단독)", land_dev:"토지(시행)", land_other:"토지",
     factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타"
   };
@@ -139,6 +140,20 @@
     }
     if (type === "officetel") {
       html += fsel("단지명","officetel_complex",["힐스테이트더운정","디에이블","엠버418","클래스원","기타"]);
+      html += f("타입","officetel_type","예) 29");
+      html += fsel("구조","officetel_structure",["원룸","투룸","쓰리룸"]);
+      html += f("층수","officetel_floor","예) 10층");
+      html += fsel("거래유형","officetel_dealType",["전세","월세","매매"]);
+      html += f("금액(만원)","officetel_price","","number");
+      html += f("전용면적(㎡)","officetel_area_sqm","","number");
+      html += f("전용면적(평)","officetel_area_py","자동계산");
+      html += f("향","officetel_direction","예) 남향");
+      html += fsel("일반사업자","officetel_biz",["가능","불가"]);
+      html += fsel("전입","officetel_resident",["가능","불가"]);
+      html += f("주차","officetel_parking","예) 1대");
+      html += f("입주가능일","officetel_available","예) 즉시");
+    }
+    if (type === "hilsstate") {
       html += f("타입","officetel_type","예) 29");
       html += fsel("구조","officetel_structure",["원룸","투룸","쓰리룸"]);
       html += f("층수","officetel_floor","예) 10층");

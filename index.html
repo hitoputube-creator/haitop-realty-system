@@ -41,6 +41,7 @@
             <option value="shop">상가</option>
             <option value="office">사무실</option>
             <option value="officetel">오피스텔</option>
+            <option value="hilsstate">힐스테이트더운정</option>
             <option value="land_single">토지</option>
             <option value="factory">공장/창고</option>
             <option value="bizcenter">지식산업센터</option>
@@ -96,6 +97,7 @@
         <button class="filter-btn" data-filter="shop">상가</button>
         <button class="filter-btn" data-filter="office">사무실</button>
         <button class="filter-btn" data-filter="officetel">오피스텔</button>
+        <button class="filter-btn" data-filter="hilsstate">힐스테이트더운정</button>
         <button class="filter-btn" data-filter="land">토지</button>
         <button class="filter-btn" data-filter="factory">공장/창고</button>
         <button class="filter-btn" data-filter="bizcenter">지식산업센터</button>
@@ -299,7 +301,7 @@
   const ITEMS_PER_PAGE = 10;
 
   function getTypeLabel(type) {
-    const map = { shop:"상가", office:"사무실", officetel:"오피스텔", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
+    const map = { shop:"상가", office:"사무실", officetel:"오피스텔", hilsstate:"힐스테이트더운정", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
     if (map[type]) return map[type];
     if (type && type.startsWith("land")) return "토지";
     return "기타";
@@ -309,6 +311,7 @@
     if (type === "shop") return "shop";
     if (type === "office") return "office";
     if (type === "officetel") return "officetel";
+    if (type === "hilsstate") return "hilsstate";
     if (type && type.startsWith("land")) return "land";
     if (type === "factory") return "factory";
     if (type === "bizcenter") return "bizcenter";
