@@ -40,11 +40,13 @@
       <div class="field">
         <label>매물유형</label>
         <select id="edit_propertyType">
-          <option value="shop">상가/사무실</option>
+          <option value="shop">상가</option>
+          <option value="office">사무실</option>
           <option value="officetel">오피스텔</option>
           <option value="land_single">토지</option>
           <option value="factory">공장/창고</option>
           <option value="bizcenter">지식산업센터</option>
+          <option value="etc">기타</option>
         </select>
       </div>
       <div class="field">
@@ -102,7 +104,7 @@
   }
 
   function getTypeLabel(type) {
-    const map = { shop:"상가/사무실", officetel:"오피스텔", factory:"공장/창고", bizcenter:"지식산업센터" };
+    const map = { shop:"상가", office:"사무실", officetel:"오피스텔", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
     if (map[type]) return map[type];
     if (type && type.startsWith("land")) return "토지";
     return "기타";
@@ -144,7 +146,7 @@
     html += row("주소", item.address);
     html += row("집주인 연락처", item.owner_contact);
 
-    if (item.type === "shop") {
+    if (item.type === "shop" || item.type === "office") {
       html += row("거래유형", item.shop_dealType);
       html += row("층수", item.shop_floor);
       html += row("전용면적", item.shop_area_py ? item.shop_area_py+"평" : "");

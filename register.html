@@ -33,13 +33,15 @@
     <div class="field">
       <select id="propertyType">
         <option value="">— 선택하세요 —</option>
-        <option value="shop">상가/사무실</option>
+        <option value="shop">상가</option>
+        <option value="office">사무실</option>
         <option value="officetel">오피스텔</option>
         <option value="land_single">토지 (단독부지)</option>
         <option value="land_dev">토지 (시행부지)</option>
         <option value="land_other">토지 (그 외)</option>
         <option value="factory">공장/창고</option>
         <option value="bizcenter">지식산업센터</option>
+        <option value="etc">기타</option>
       </select>
     </div>
   </section>
@@ -102,9 +104,9 @@
   const typeNotice = document.getElementById("typeNotice");
 
   const typeLabels = {
-    shop:"상가/사무실", officetel:"오피스텔",
+    shop:"상가", office:"사무실", officetel:"오피스텔",
     land_single:"토지(단독)", land_dev:"토지(시행)", land_other:"토지",
-    factory:"공장/창고", bizcenter:"지식산업센터"
+    factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타"
   };
 
   function f(label, id, placeholder="", type="text") {
@@ -121,7 +123,7 @@
     dynamicTitle.textContent = (typeLabels[type] || "") + " 상세정보";
     typeNotice.textContent = typeLabels[type] || "";
 
-    if (type === "shop") {
+    if (type === "shop" || type === "office") {
       html += fsel("거래유형","shop_dealType",["임대","매매","매매+임대"]);
       html += f("층수","shop_floor","예) 1층");
       html += f("전용면적(㎡)","shop_area_sqm","예) 79","number");
@@ -175,6 +177,10 @@
       html += f("금액(만원)","factory_price","","number");
       html += f("주차","factory_parking","예) 10대");
       html += f("입주가능일","factory_available","예) 즉시");
+    }
+    if (type === "etc") {
+      dynamicSection.style.display = "none";
+      return;
     }
     if (type === "bizcenter") {
       html += f("센터명","biz_name","예) ○○지식산업센터");

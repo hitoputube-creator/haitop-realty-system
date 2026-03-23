@@ -61,6 +61,36 @@ async function updateListing(id, item) {
   if (!res.ok) throw new Error("수정 실패: " + await res.text());
 }
 
+// ===== 의뢰 관리 =====
+async function getRequests() {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/requests?order=created_at.desc", { headers });
+  if (!res.ok) throw new Error("의뢰 목록 조회 실패");
+  return await res.json();
+}
+async function addRequest(request) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/requests", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(request)
+  });
+  if (!res.ok) throw new Error("의뢰 저장 실패: " + await res.text());
+}
+async function deleteRequest(id) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/requests?id=eq." + encodeURIComponent(id), {
+    method: "DELETE",
+    headers: headers
+  });
+  if (!res.ok) throw new Error("의뢰 삭제 실패");
+}
+async function updateRequestStatus(id, status) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/requests?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify({ status })
+  });
+  if (!res.ok) throw new Error("의뢰 상태 변경 실패");
+}
+
 // ===== 고객 관리 =====
 async function getCustomers() {
   const res = await fetch(SUPABASE_URL + "/rest/v1/customers?order=created_at.desc", { headers });
