@@ -17,6 +17,9 @@
       <div class="logo-main">HITOP 부동산</div>
       <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
     </div>
+    <div style="margin-left:auto;">
+      <a class="btn btn-ghost" href="https://calendar.google.com" target="_blank" style="font-size:0.82rem;text-decoration:none;">📅 캘린더</a>
+    </div>
   </header>
   <div class="header-line"></div>
 
@@ -262,6 +265,35 @@
 
 </div>
 
+<!-- 📅 일정 추가 모달 -->
+<div id="calModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-title">📅 구글 캘린더 일정 추가</div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>일정 유형</label>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="cal-type-btn active" data-type="잔금일정">잔금 일정</button>
+        <button class="cal-type-btn" data-type="손님미팅">손님 미팅</button>
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:12px;">
+      <div class="field">
+        <label>날짜</label>
+        <input id="cal_date" type="date" />
+      </div>
+      <div class="field">
+        <label>시간</label>
+        <input id="cal_time" type="time" value="10:00" />
+      </div>
+    </div>
+    <div id="cal_preview" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('calModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="calConfirmBtn">📅 캘린더 열기</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -285,6 +317,79 @@
     t.textContent = msg; t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), duration);
   }
+
+  // ===== 구글 캘린더 =====
+  let _calItem = null;
+  let _calType = "잔금일정";
+
+  function openCalModal(item) {
+    _calItem = item;
+    _calType = "잔금일정";
+    // 오늘 날짜 기본값
+    const today = new Date();
+    document.getElementById("cal_date").value = today.toISOString().slice(0,10);
+    document.getElementById("cal_time").value = "10:00";
+    // 유형 버튼 초기화
+    document.querySelectorAll(".cal-type-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.type === "잔금일정");
+    });
+    updateCalPreview();
+    document.getElementById("calModal").style.display = "flex";
+  }
+
+  function updateCalPreview() {
+    if (!_calItem) return;
+    const loc = _calItem.address || _calItem.title || "매물";
+    const price = formatPrice(_calItem) || "-";
+    const contact = _calItem.quick_contact || _calItem.owner_contact || "-";
+    const type = getTypeLabel(_calItem.type);
+    document.getElementById("cal_preview").innerHTML =
+      `<b>제목:</b> ${loc} ${_calType}<br><b>유형:</b> ${type}<br><b>가격:</b> ${price}<br><b>집주인:</b> ${contact}`;
+  }
+
+  document.querySelectorAll(".cal-type-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".cal-type-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      _calType = btn.dataset.type;
+      updateCalPreview();
+    });
+  });
+
+  ["cal_date","cal_time"].forEach(id => {
+    document.getElementById(id).addEventListener("change", updateCalPreview);
+  });
+
+  document.getElementById("calConfirmBtn").addEventListener("click", () => {
+    if (!_calItem) return;
+    const date = document.getElementById("cal_date").value;
+    const time = document.getElementById("cal_time").value;
+    if (!date || !time) { showToast("날짜와 시간을 입력해주세요"); return; }
+
+    const loc = _calItem.address || _calItem.title || "매물";
+    const price = formatPrice(_calItem) || "";
+    const contact = _calItem.quick_contact || _calItem.owner_contact || "";
+    const typeLabel = getTypeLabel(_calItem.type);
+
+    const title = encodeURIComponent(`${loc} ${_calType}`);
+    const details = encodeURIComponent(`매물유형: ${typeLabel}\n가격: ${price}\n집주인 연락처: ${contact}`);
+
+    // 날짜 형식 변환 YYYYMMDDTHHMMSS
+    const dtStr = date.replace(/-/g,"") + "T" + time.replace(":","") + "00";
+    const endDt = (() => {
+      const d = new Date(`${date}T${time}:00`);
+      d.setHours(d.getHours() + 1);
+      return d.getFullYear().toString() +
+        String(d.getMonth()+1).padStart(2,"0") +
+        String(d.getDate()).padStart(2,"0") + "T" +
+        String(d.getHours()).padStart(2,"0") +
+        String(d.getMinutes()).padStart(2,"0") + "00";
+    })();
+
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dtStr}/${endDt}&details=${details}`;
+    window.open(url, "_blank");
+    document.getElementById("calModal").style.display = "none";
+  });
 
   // ===== 매물관리 =====
   const listingContainer = document.getElementById("listingContainer");
@@ -411,6 +516,9 @@
         <div class="listing-price">${formatPrice(item)}</div>
         ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
         ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
+        <div style="margin-top:10px;text-align:right;">
+          <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
+        </div>
       `;
 
       listingContainer.appendChild(card);

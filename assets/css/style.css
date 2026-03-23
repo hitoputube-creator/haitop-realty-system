@@ -269,6 +269,27 @@ textarea { resize: vertical; min-height: 80px; }
 .page-btn.disabled { opacity: 0.35; cursor: default; }
 .page-info { font-size: 0.82rem; color: var(--text-muted); }
 
+/* 캘린더 버튼 */
+.btn-cal {
+  border-radius: 999px; border: 1px solid rgba(82,130,224,0.4);
+  padding: 4px 12px; font-size: 0.75rem; cursor: pointer;
+  background: transparent; color: #82a8f0;
+  font-family: inherit; transition: 0.15s;
+}
+.btn-cal:hover { background: rgba(82,130,224,0.12); }
+
+/* 캘린더 유형 선택 버튼 */
+.cal-type-btn {
+  flex: 1; border-radius: 999px; border: 1px solid var(--border-soft);
+  padding: 6px 0; font-size: 0.82rem; cursor: pointer;
+  background: rgba(5,10,30,0.8); color: var(--text-muted);
+  font-family: inherit; transition: 0.15s;
+}
+.cal-type-btn.active {
+  border-color: var(--gold); color: var(--gold-soft);
+  background: rgba(212,175,55,0.15);
+}
+
 @media (max-width: 600px) {
   .form-grid-2  { grid-template-columns: 1fr; }
   .info-grid    { grid-template-columns: 1fr; }
