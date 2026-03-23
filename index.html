@@ -20,105 +20,202 @@
   </header>
   <div class="header-line"></div>
 
-  <!-- ⚡ 빠른 등록 -->
-  <div class="quick-card">
-    <div class="quick-title">⚡ 빠른 등록 — 30초 메모</div>
-    <div class="quick-sub">전화/방문 직후 핵심만 입력하고 나중에 보완하세요</div>
-    <div class="form-grid-2" style="margin-bottom:10px;">
-      <div class="field">
-        <label>매물유형</label>
-        <select id="q_type">
-          <option value="shop">상가/사무실</option>
-          <option value="officetel">오피스텔</option>
-          <option value="land_single">토지</option>
-          <option value="factory">공장/창고</option>
-          <option value="bizcenter">지식산업센터</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>위치 (간단히)</label>
-        <input id="q_address" type="text" placeholder="예) 운정역 근처 1층" />
-      </div>
-      <div class="field">
-        <label>가격 (보증금 또는 매매가)</label>
-        <input id="q_price" type="text" placeholder="예) 보증금 5000 / 월세 300" />
-      </div>
-      <div class="field">
-        <label>집주인 연락처</label>
-        <input id="q_contact" type="tel" placeholder="010-0000-0000" />
-      </div>
-    </div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>메모 (특이사항)</label>
-      <input id="q_memo" type="text" placeholder="예) 1층 공실, 즉시입주 가능, 권리금 없음" />
-    </div>
-    <div style="text-align:right;">
-      <button class="btn btn-primary" id="quickSaveBtn">⚡ 빠른 저장</button>
-    </div>
+  <!-- 탭 -->
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="property">📋 매물관리</button>
+    <button class="tab-btn" data-tab="customer">👥 고객관리</button>
   </div>
 
-  <!-- 검색 + 정렬 -->
-  <section class="card">
-    <div class="card-title"><span>🔍 검색 / 정렬</span></div>
-    <div class="form-grid-2" style="margin-bottom:0;">
-      <div class="field">
-        <input id="searchInput" type="text" placeholder="주소, 메모, 가격 등으로 검색..." />
-      </div>
-      <div class="field">
-        <select id="sortSelect">
-          <option value="newest">최신순</option>
-          <option value="oldest">오래된순</option>
-        </select>
-      </div>
-    </div>
-  </section>
+  <!-- ===== 매물관리 탭 ===== -->
+  <div id="tabProperty">
 
-  <!-- 필터 -->
-  <section class="card">
-    <div class="card-title">
-      <span>유형별 필터</span>
-      <span style="font-size:0.75rem;color:var(--text-muted)">거래완료 매물 자동 숨김</span>
-    </div>
-    <div class="filter-row" id="filterRow">
-      <button class="filter-btn active" data-filter="all">전체</button>
-      <button class="filter-btn" data-filter="shop">상가/사무실</button>
-      <button class="filter-btn" data-filter="officetel">오피스텔</button>
-      <button class="filter-btn" data-filter="land">토지</button>
-      <button class="filter-btn" data-filter="factory">공장/창고</button>
-      <button class="filter-btn" data-filter="bizcenter">지식산업센터</button>
-      <button class="filter-btn" data-filter="done">거래완료</button>
-    </div>
-  </section>
-
-  <!-- 목록 -->
-  <section class="card">
-    <div class="card-title">
-      <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost" id="printBtn">🖨 인쇄</button>
-        <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
+    <!-- ⚡ 빠른 등록 -->
+    <div class="quick-card">
+      <div class="quick-title">⚡ 빠른 등록 — 30초 메모</div>
+      <div class="quick-sub">전화/방문 직후 핵심만 입력하고 나중에 보완하세요</div>
+      <div class="form-grid-2" style="margin-bottom:10px;">
+        <div class="field">
+          <label>매물유형</label>
+          <select id="q_type">
+            <option value="shop">상가/사무실</option>
+            <option value="officetel">오피스텔</option>
+            <option value="land_single">토지</option>
+            <option value="factory">공장/창고</option>
+            <option value="bizcenter">지식산업센터</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>위치 (간단히)</label>
+          <input id="q_address" type="text" placeholder="예) 운정역 근처 1층" />
+        </div>
+        <div class="field">
+          <label>가격 (보증금 또는 매매가)</label>
+          <input id="q_price" type="text" placeholder="예) 보증금 5000 / 월세 300" />
+        </div>
+        <div class="field">
+          <label>집주인 연락처</label>
+          <input id="q_contact" type="tel" placeholder="010-0000-0000" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>메모 (특이사항)</label>
+        <input id="q_memo" type="text" placeholder="예) 1층 공실, 즉시입주 가능, 권리금 없음" />
+      </div>
+      <div style="text-align:right;">
+        <button class="btn btn-primary" id="quickSaveBtn">⚡ 빠른 저장</button>
       </div>
     </div>
-    <div id="listingContainer" class="listing-list"></div>
-    <div id="emptyMessage" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
-      등록된 매물이 없습니다.
+
+    <!-- 검색 + 정렬 -->
+    <section class="card">
+      <div class="card-title"><span>🔍 검색 / 정렬</span></div>
+      <div class="form-grid-2" style="margin-bottom:0;">
+        <div class="field">
+          <input id="searchInput" type="text" placeholder="주소, 메모, 가격 등으로 검색..." />
+        </div>
+        <div class="field">
+          <select id="sortSelect">
+            <option value="newest">최신순</option>
+            <option value="oldest">오래된순</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 필터 -->
+    <section class="card">
+      <div class="card-title">
+        <span>유형별 필터</span>
+        <span style="font-size:0.75rem;color:var(--text-muted)">거래완료 매물 자동 숨김</span>
+      </div>
+      <div class="filter-row" id="filterRow">
+        <button class="filter-btn active" data-filter="all">전체</button>
+        <button class="filter-btn" data-filter="shop">상가/사무실</button>
+        <button class="filter-btn" data-filter="officetel">오피스텔</button>
+        <button class="filter-btn" data-filter="land">토지</button>
+        <button class="filter-btn" data-filter="factory">공장/창고</button>
+        <button class="filter-btn" data-filter="bizcenter">지식산업센터</button>
+        <button class="filter-btn" data-filter="done">거래완료</button>
+      </div>
+    </section>
+
+    <!-- 목록 -->
+    <section class="card">
+      <div class="card-title">
+        <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" id="printBtn">🖨 인쇄</button>
+          <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
+        </div>
+      </div>
+      <div id="listingContainer" class="listing-grid"></div>
+      <div id="emptyMessage" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+        등록된 매물이 없습니다.
+      </div>
+      <div id="pagination" class="pagination"></div>
+    </section>
+
+  </div>
+
+  <!-- ===== 고객관리 탭 ===== -->
+  <div id="tabCustomer" style="display:none;">
+
+    <!-- ⚡ 빠른 고객등록 -->
+    <div class="quick-card">
+      <div class="quick-title">👥 빠른 고객등록</div>
+      <div class="quick-sub">상담 직후 고객 정보를 빠르게 기록하세요</div>
+      <div class="form-grid-2" style="margin-bottom:10px;">
+        <div class="field">
+          <label>이름</label>
+          <input id="c_name" type="text" placeholder="고객 이름" />
+        </div>
+        <div class="field">
+          <label>연락처</label>
+          <input id="c_contact" type="tel" placeholder="010-0000-0000" />
+        </div>
+        <div class="field">
+          <label>원하는 매물유형</label>
+          <select id="c_type">
+            <option value="">미정</option>
+            <option value="shop">상가/사무실</option>
+            <option value="officetel">오피스텔</option>
+            <option value="land">토지</option>
+            <option value="factory">공장/창고</option>
+            <option value="bizcenter">지식산업센터</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>예산</label>
+          <input id="c_budget" type="text" placeholder="예) 5억 이하, 월세 200 이하" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>메모 (요구사항)</label>
+        <input id="c_memo" type="text" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" />
+      </div>
+      <div style="text-align:right;">
+        <button class="btn btn-primary" id="customerSaveBtn">💾 고객 저장</button>
+      </div>
     </div>
-  </section>
+
+    <!-- 고객 검색 -->
+    <section class="card">
+      <div class="card-title"><span>🔍 고객 검색</span></div>
+      <div class="field">
+        <input id="customerSearchInput" type="text" placeholder="이름, 연락처, 메모 등으로 검색..." />
+      </div>
+    </section>
+
+    <!-- 고객 목록 -->
+    <section class="card">
+      <div class="card-title">
+        <span>고객 목록 <span id="customerCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+      </div>
+      <div id="customerContainer" class="listing-grid"></div>
+      <div id="customerEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+        등록된 고객이 없습니다.
+      </div>
+    </section>
+
+  </div>
 
 </div>
 
 <div id="toast"></div>
 
 <script>
+  // ===== 탭 전환 =====
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const tab = btn.dataset.tab;
+      document.getElementById("tabProperty").style.display = tab === "property" ? "" : "none";
+      document.getElementById("tabCustomer").style.display = tab === "customer" ? "" : "none";
+      if (tab === "customer") loadCustomers();
+    });
+  });
+
+  // ===== 공통 유틸 =====
+  function showToast(msg, duration = 2000) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), duration);
+  }
+
+  // ===== 매물관리 =====
   const listingContainer = document.getElementById("listingContainer");
   const emptyMessage = document.getElementById("emptyMessage");
   const filterRow = document.getElementById("filterRow");
   const countBadge = document.getElementById("countBadge");
+  const paginationEl = document.getElementById("pagination");
 
   let allListings = [];
   let currentFilter = "all";
   let searchKeyword = "";
   let currentSort = "newest";
+  let currentPage = 1;
+  const ITEMS_PER_PAGE = 10;
 
   function getTypeLabel(type) {
     const map = { shop:"상가/사무실", officetel:"오피스텔", factory:"공장/창고", bizcenter:"지식산업센터" };
@@ -151,17 +248,13 @@
     return item.quick_price || "";
   }
 
-  function renderList() {
-    listingContainer.innerHTML = "";
-
+  function getFilteredListings() {
     let filtered = allListings.filter(item => {
       if (currentFilter === "done") return item.status === "거래완료";
       if (item.status === "거래완료") return false;
       if (currentFilter === "all") return true;
       return mapTypeToFilter(item.type) === currentFilter;
     });
-
-    // 검색 필터
     if (searchKeyword) {
       const kw = searchKeyword.toLowerCase();
       filtered = filtered.filter(item => {
@@ -169,23 +262,53 @@
         return fields.includes(kw);
       });
     }
-
-    // 정렬
     filtered.sort((a, b) => {
       const da = new Date(a.created_at || 0);
       const db = new Date(b.created_at || 0);
       return currentSort === "newest" ? db - da : da - db;
     });
+    return filtered;
+  }
 
+  function renderPagination(total) {
+    const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+    paginationEl.innerHTML = "";
+    if (totalPages <= 1) return;
+
+    const prev = document.createElement("button");
+    prev.className = "page-btn" + (currentPage === 1 ? " disabled" : "");
+    prev.textContent = "‹ 이전";
+    prev.onclick = () => { if (currentPage > 1) { currentPage--; renderList(); } };
+    paginationEl.appendChild(prev);
+
+    const info = document.createElement("span");
+    info.className = "page-info";
+    info.textContent = `${currentPage} / ${totalPages}`;
+    paginationEl.appendChild(info);
+
+    const next = document.createElement("button");
+    next.className = "page-btn" + (currentPage === totalPages ? " disabled" : "");
+    next.textContent = "다음 ›";
+    next.onclick = () => { if (currentPage < totalPages) { currentPage++; renderList(); } };
+    paginationEl.appendChild(next);
+  }
+
+  function renderList() {
+    listingContainer.innerHTML = "";
+    const filtered = getFilteredListings();
     countBadge.textContent = filtered.length ? `(${filtered.length}건)` : "";
 
     if (!filtered.length) {
       emptyMessage.style.display = "block";
+      paginationEl.innerHTML = "";
       return;
     }
     emptyMessage.style.display = "none";
 
-    filtered.forEach(item => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pageItems = filtered.slice(start, start + ITEMS_PER_PAGE);
+
+    pageItems.forEach(item => {
       const card = document.createElement("div");
       card.className = "listing-card";
       card.onclick = () => location.href = `detail.html?id=${item.id}`;
@@ -206,12 +329,8 @@
 
       listingContainer.appendChild(card);
     });
-  }
 
-  function showToast(msg, duration = 2000) {
-    const t = document.getElementById("toast");
-    t.textContent = msg; t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), duration);
+    renderPagination(filtered.length);
   }
 
   // 빠른 저장
@@ -242,8 +361,6 @@
         quick_memo: memo
       };
       await addListing(item);
-
-      // 폼 초기화
       ["q_address","q_price","q_contact","q_memo"].forEach(id => document.getElementById(id).value = "");
       showToast("✅ 저장완료!");
       await loadListings();
@@ -256,17 +373,7 @@
 
   // 인쇄
   document.getElementById("printBtn").addEventListener("click", () => {
-    const list = allListings.filter(item => {
-      if (currentFilter === "done") return item.status === "거래완료";
-      if (item.status === "거래완료") return false;
-      if (currentFilter === "all") return true;
-      return mapTypeToFilter(item.type) === currentFilter;
-    }).filter(item => {
-      if (!searchKeyword) return true;
-      const kw = searchKeyword.toLowerCase();
-      return [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase().includes(kw);
-    });
-
+    const list = getFilteredListings();
     const rows = list.map((item, i) => `
       <tr>
         <td>${i + 1}</td>
@@ -319,24 +426,24 @@
     setTimeout(() => w.print(), 500);
   });
 
-  // 검색
   document.getElementById("searchInput").addEventListener("input", (e) => {
     searchKeyword = e.target.value.trim();
+    currentPage = 1;
     renderList();
   });
 
-  // 정렬
   document.getElementById("sortSelect").addEventListener("change", (e) => {
     currentSort = e.target.value;
+    currentPage = 1;
     renderList();
   });
 
-  // 필터
   filterRow.querySelectorAll(".filter-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       filterRow.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       currentFilter = btn.dataset.filter;
+      currentPage = 1;
       renderList();
     });
   });
@@ -352,6 +459,134 @@
   }
 
   loadListings();
+
+  // ===== 고객관리 =====
+  let allCustomers = [];
+  let customerSearch = "";
+
+  function getCustomerTypeLabel(type) {
+    const map = { shop:"상가/사무실", officetel:"오피스텔", land:"토지", factory:"공장/창고", bizcenter:"지식산업센터" };
+    return map[type] || "미정";
+  }
+
+  function renderCustomers() {
+    const container = document.getElementById("customerContainer");
+    const empty = document.getElementById("customerEmpty");
+    const badge = document.getElementById("customerCountBadge");
+    container.innerHTML = "";
+
+    let filtered = allCustomers;
+    if (customerSearch) {
+      const kw = customerSearch.toLowerCase();
+      filtered = filtered.filter(c =>
+        [c.name, c.contact, c.memo, c.budget].join(" ").toLowerCase().includes(kw)
+      );
+    }
+
+    badge.textContent = filtered.length ? `(${filtered.length}명)` : "";
+
+    if (!filtered.length) {
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+
+    filtered.forEach(c => {
+      const card = document.createElement("div");
+      card.className = "listing-card";
+
+      card.innerHTML = `
+        <div class="badge-row" style="margin-bottom:6px;">
+          ${c.type_want ? `<span class="badge">${getCustomerTypeLabel(c.type_want)}</span>` : ""}
+          ${c.status === "계약완료"
+            ? '<span class="badge badge-red">계약완료</span>'
+            : '<span class="badge badge-green">상담중</span>'}
+        </div>
+        <div class="listing-title">${c.name || "(이름 미입력)"}</div>
+        ${c.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.contact}" onclick="event.stopPropagation()">📞 ${c.contact}</a></div>` : ""}
+        ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
+        ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+          ${c.status !== "계약완료"
+            ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleContractDone('${c.id}')">✅ 계약완료</button>`
+            : ""}
+          <button class="btn btn-danger" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">🗑 삭제</button>
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  async function handleContractDone(id) {
+    if (!confirm("계약완료로 처리하시겠습니까?")) return;
+    try {
+      await updateCustomerStatus(id, "계약완료");
+      showToast("✅ 계약완료 처리됨");
+      await loadCustomers();
+    } catch(e) {
+      showToast("❌ 오류: " + e.message);
+    }
+  }
+
+  async function handleDeleteCustomer(id) {
+    if (!confirm("고객을 삭제하시겠습니까?")) return;
+    try {
+      await deleteCustomer(id);
+      showToast("🗑 삭제됨");
+      await loadCustomers();
+    } catch(e) {
+      showToast("❌ 오류: " + e.message);
+    }
+  }
+
+  document.getElementById("customerSaveBtn").addEventListener("click", async () => {
+    const name     = document.getElementById("c_name").value.trim();
+    const contact  = document.getElementById("c_contact").value.trim();
+    const type_want = document.getElementById("c_type").value;
+    const budget   = document.getElementById("c_budget").value.trim();
+    const memo     = document.getElementById("c_memo").value.trim();
+
+    if (!name && !contact) {
+      showToast("이름 또는 연락처 중 하나는 입력해주세요");
+      return;
+    }
+
+    const btn = document.getElementById("customerSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+
+    try {
+      await addCustomer({
+        id: "CUST-" + Date.now(),
+        name, contact, type_want, budget, memo,
+        status: "상담중"
+      });
+      ["c_name","c_contact","c_budget","c_memo"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("c_type").value = "";
+      showToast("✅ 고객 저장완료!");
+      await loadCustomers();
+    } catch(e) {
+      showToast("❌ 저장 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "💾 고객 저장";
+    }
+  });
+
+  document.getElementById("customerSearchInput").addEventListener("input", (e) => {
+    customerSearch = e.target.value.trim();
+    renderCustomers();
+  });
+
+  async function loadCustomers() {
+    const container = document.getElementById("customerContainer");
+    container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
+    try {
+      allCustomers = await getCustomers();
+      renderCustomers();
+    } catch(e) {
+      container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
+    }
+  }
 </script>
 </body>
 </html>

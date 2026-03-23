@@ -60,3 +60,33 @@ async function updateListing(id, item) {
   });
   if (!res.ok) throw new Error("수정 실패: " + await res.text());
 }
+
+// ===== 고객 관리 =====
+async function getCustomers() {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/customers?order=created_at.desc", { headers });
+  if (!res.ok) throw new Error("고객 목록 조회 실패");
+  return await res.json();
+}
+async function addCustomer(customer) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/customers", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(customer)
+  });
+  if (!res.ok) throw new Error("고객 저장 실패: " + await res.text());
+}
+async function deleteCustomer(id) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/customers?id=eq." + encodeURIComponent(id), {
+    method: "DELETE",
+    headers: headers
+  });
+  if (!res.ok) throw new Error("고객 삭제 실패");
+}
+async function updateCustomerStatus(id, status) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/customers?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify({ status })
+  });
+  if (!res.ok) throw new Error("고객 상태 변경 실패");
+}
