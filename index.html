@@ -692,7 +692,7 @@
 
       card.innerHTML = `
         <div class="badge-row" style="margin-bottom:6px;">
-          ${c.type_want ? `<span class="badge">${getCustomerTypeLabel(c.type_want)}</span>` : ""}
+          ${c.type ? `<span class="badge">${getCustomerTypeLabel(c.type)}</span>` : ""}
           ${c.status === "계약완료"
             ? '<span class="badge badge-red">계약완료</span>'
             : '<span class="badge badge-green">상담중</span>'}
@@ -738,7 +738,7 @@
   document.getElementById("customerSaveBtn").addEventListener("click", async () => {
     const name     = document.getElementById("c_name").value.trim();
     const contact  = document.getElementById("c_contact").value.trim();
-    const type_want = document.getElementById("c_type").value;
+    const type    = document.getElementById("c_type").value;
     const budget   = document.getElementById("c_budget").value.trim();
     const memo     = document.getElementById("c_memo").value.trim();
 
@@ -753,7 +753,7 @@
     try {
       await addCustomer({
         id: "CUST-" + Date.now(),
-        name, contact, type_want, budget, memo,
+        name, contact, type, budget, memo,
         status: "상담중"
       });
       ["c_name","c_contact","c_budget","c_memo"].forEach(id => document.getElementById(id).value = "");
