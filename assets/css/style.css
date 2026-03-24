@@ -128,7 +128,7 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--gold);
   box-shadow: 0 0 0 1px rgba(212,175,55,0.3);
 }
-textarea { resize: vertical; min-height: 80px; }
+textarea { resize: vertical; min-height: 120px; }
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field label { font-size: 0.78rem; color: var(--text-muted); }
 
