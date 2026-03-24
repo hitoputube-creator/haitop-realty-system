@@ -709,6 +709,22 @@
     renderPagination(filtered.length);
   }
 
+  async function handleRevertListing(id) {
+    if (!confirm("거래완료를 취소하고 매물관리로 되돌리시겠습니까?")) return;
+    try {
+      await updateListingStatus(id, "광고중");
+      showToast("↩ 매물관리로 되돌렸습니다");
+      await loadListings();
+      // 매물관리 탭으로 이동
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelector('[data-tab="property"]').classList.add("active");
+      document.getElementById("tabProperty").style.display = "";
+      document.getElementById("tabRequest").style.display  = "none";
+      document.getElementById("tabCustomer").style.display = "none";
+      document.getElementById("tabDone").style.display     = "none";
+    } catch(e) { showToast("❌ 오류: " + e.message); }
+  }
+
   async function handleDealDone(id) {
     if (!confirm("거래완료로 처리하시겠습니까?\n완료일자가 자동 저장됩니다.")) return;
     try {
@@ -892,7 +908,8 @@
         ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
         ${item.quick_memo || item.description ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo || item.description}</div>` : ""}
         ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
-        <div style="margin-top:10px;text-align:right;">
+        <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="event.stopPropagation();handleRevertListing('${item.id}')">↩ 매물로 되돌리기</button>
           <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
         </div>
       `;
