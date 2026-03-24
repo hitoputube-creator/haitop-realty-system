@@ -40,6 +40,20 @@ async function updateListingStatus(id, status) {
   });
   if (!res.ok) throw new Error("상태 변경 실패");
 }
+async function markListingDone(id) {
+  const res1 = await fetch(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), { headers });
+  if (!res1.ok) throw new Error("조회 실패");
+  const rows = await res1.json();
+  if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
+  const r = rows[0];
+  const data = Object.assign({}, r.data, { completed_at: new Date().toISOString() });
+  const res2 = await fetch(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify({ status: "거래완료", data })
+  });
+  if (!res2.ok) throw new Error("거래완료 처리 실패: " + await res2.text());
+}
 async function deleteListing(id) {
   const res = await fetch(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
     method: "DELETE",

@@ -249,6 +249,7 @@
     });
 
     if (!item.title) item.title = `${typeLabels[type]||type} · ${item.address||"주소미입력"}`;
+    if (item.status === "거래완료") item.completed_at = new Date().toISOString();
 
     const btn = document.getElementById("saveBtn");
     btn.disabled = true; btn.textContent = "저장 중...";

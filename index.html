@@ -68,7 +68,11 @@
         <label>메모 (특이사항)</label>
         <input id="q_memo" type="text" placeholder="예) 1층 공실, 즉시입주 가능, 권리금 없음" />
       </div>
-      <div style="text-align:right;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);">
+          <input type="checkbox" id="q_done" style="width:auto;accent-color:var(--gold);" />
+          거래완료로 등록 (과거 이력 입력용)
+        </label>
         <button class="btn btn-primary" id="quickSaveBtn">⚡ 빠른 저장</button>
       </div>
     </div>
@@ -500,6 +504,12 @@
   let currentPage = 1;
   const ITEMS_PER_PAGE = 10;
 
+  function formatDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`;
+  }
+
   function getTypeLabel(type) {
     const map = { shop:"상가", office:"사무실", officetel:"오피스텔", hilsstate:"힐스테이트더운정", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
     if (map[type]) return map[type];
@@ -611,7 +621,9 @@
         <div class="listing-price">${formatPrice(item)}</div>
         ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
         ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
-        <div style="margin-top:10px;text-align:right;">
+        ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+        <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
+          ${item.status !== "거래완료" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
           <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
         </div>
       `;
@@ -620,6 +632,15 @@
     });
 
     renderPagination(filtered.length);
+  }
+
+  async function handleDealDone(id) {
+    if (!confirm("거래완료로 처리하시겠습니까?\n완료일자가 자동 저장됩니다.")) return;
+    try {
+      await markListingDone(id);
+      showToast("✅ 거래완료 처리됨");
+      await loadListings();
+    } catch(e) { showToast("❌ 오류: " + e.message); }
   }
 
   // 빠른 저장
@@ -639,18 +660,21 @@
     btn.disabled = true; btn.textContent = "저장 중...";
 
     try {
+      const isDone = document.getElementById("q_done").checked;
       const item = {
         id: "HITOP-" + Date.now(),
         type, address,
         title: `${getTypeLabel(type)} · ${address || price}`,
-        status: "광고중",
+        status: isDone ? "거래완료" : "광고중",
         description: memo,
         quick_price: price,
         quick_contact: contact,
         quick_memo: memo
       };
+      if (isDone) item.completed_at = new Date().toISOString();
       await addListing(item);
       ["q_address","q_price","q_contact","q_memo"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("q_done").checked = false;
       showToast("✅ 저장완료!");
       await loadListings();
     } catch(e) {
