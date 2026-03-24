@@ -28,6 +28,7 @@
     <button class="tab-btn active" data-tab="property">📋 매물관리</button>
     <button class="tab-btn" data-tab="request">📝 의뢰관리</button>
     <button class="tab-btn" data-tab="customer">👥 고객관리</button>
+    <button class="tab-btn" data-tab="done">✅ 거래완료관리</button>
   </div>
 
   <!-- ===== 매물관리 탭 ===== -->
@@ -267,6 +268,78 @@
 
   </div>
 
+  <!-- ===== 거래완료관리 탭 ===== -->
+  <div id="tabDone" style="display:none;">
+
+    <!-- 빠른 등록 (거래완료 전용) -->
+    <div class="quick-card">
+      <div class="quick-title">✅ 거래완료 이력 등록</div>
+      <div class="quick-sub">과거 거래 이력을 기록하거나 거래완료 매물을 바로 등록하세요</div>
+      <div class="form-grid-2" style="margin-bottom:10px;">
+        <div class="field">
+          <label>매물유형</label>
+          <select id="d_type">
+            <option value="shop">상가</option>
+            <option value="office">사무실</option>
+            <option value="officetel">오피스텔</option>
+            <option value="hilsstate">힐스테이트더운정</option>
+            <option value="land_single">토지</option>
+            <option value="factory">공장/창고</option>
+            <option value="bizcenter">지식산업센터</option>
+            <option value="etc">기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>위치 (간단히)</label>
+          <input id="d_address" type="text" placeholder="예) 운정역 근처 1층" />
+        </div>
+        <div class="field">
+          <label>거래가격</label>
+          <input id="d_price" type="text" placeholder="예) 보증금 5000 / 월세 300" />
+        </div>
+        <div class="field">
+          <label>집주인 연락처</label>
+          <input id="d_contact" type="tel" placeholder="010-0000-0000" />
+        </div>
+        <div class="field">
+          <label>거래완료일</label>
+          <input id="d_date" type="date" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>메모 (특이사항)</label>
+        <input id="d_memo" type="text" placeholder="예) 매매 계약, 보증금 조정 등" />
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:0.8rem;color:var(--gold);">✅ 거래완료 상태로 저장됩니다</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
+          <button class="btn btn-primary" id="doneSaveBtn">✅ 거래완료로 등록</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 검색 -->
+    <section class="card">
+      <div class="card-title"><span>🔍 거래완료 검색</span></div>
+      <div class="field">
+        <input id="doneSearchInput" type="text" placeholder="주소, 가격, 메모 등으로 검색..." />
+      </div>
+    </section>
+
+    <!-- 목록 -->
+    <section class="card">
+      <div class="card-title">
+        <span>거래완료 목록 <span id="doneCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+      </div>
+      <div id="doneContainer" class="listing-grid"></div>
+      <div id="doneEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+        거래완료된 매물이 없습니다.
+      </div>
+    </section>
+
+  </div>
+
 </div>
 
 <!-- ✏️ 의뢰 수정 모달 -->
@@ -405,8 +478,10 @@
       document.getElementById("tabProperty").style.display = tab === "property" ? "" : "none";
       document.getElementById("tabRequest").style.display  = tab === "request"  ? "" : "none";
       document.getElementById("tabCustomer").style.display = tab === "customer" ? "" : "none";
+      document.getElementById("tabDone").style.display     = tab === "done"     ? "" : "none";
       if (tab === "customer") loadCustomers();
       if (tab === "request")  loadRequests();
+      if (tab === "done")     renderDoneList();
     });
   });
 
@@ -640,6 +715,14 @@
       await markListingDone(id);
       showToast("✅ 거래완료 처리됨");
       await loadListings();
+      // 거래완료관리 탭으로 이동
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelector('[data-tab="done"]').classList.add("active");
+      document.getElementById("tabProperty").style.display = "none";
+      document.getElementById("tabRequest").style.display  = "none";
+      document.getElementById("tabCustomer").style.display = "none";
+      document.getElementById("tabDone").style.display     = "";
+      renderDoneList();
     } catch(e) { showToast("❌ 오류: " + e.message); }
   }
 
@@ -772,6 +855,95 @@
   }
 
   loadListings();
+
+  // ===== 거래완료관리 =====
+  let doneSearch = "";
+
+  function renderDoneList() {
+    const container = document.getElementById("doneContainer");
+    const empty     = document.getElementById("doneEmpty");
+    const badge     = document.getElementById("doneCountBadge");
+    container.innerHTML = "";
+
+    let filtered = allListings.filter(item => item.status === "거래완료");
+    if (doneSearch) {
+      const kw = doneSearch.toLowerCase();
+      filtered = filtered.filter(item =>
+        [item.title, item.address, item.quick_price, item.quick_memo, item.description].join(" ").toLowerCase().includes(kw)
+      );
+    }
+    filtered.sort((a, b) => new Date(b.completed_at || b.created_at || 0) - new Date(a.completed_at || a.created_at || 0));
+
+    badge.textContent = filtered.length ? `(${filtered.length}건)` : "";
+    if (!filtered.length) { empty.style.display = "block"; return; }
+    empty.style.display = "none";
+
+    filtered.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "listing-card";
+      card.onclick = () => location.href = `detail.html?id=${item.id}`;
+      card.innerHTML = `
+        <div class="badge-row" style="margin-bottom:6px;">
+          <span class="badge">${getTypeLabel(item.type)}</span>
+          <span class="badge badge-red">거래완료</span>
+        </div>
+        <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
+        <div class="listing-price">${formatPrice(item)}</div>
+        ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
+        ${item.quick_memo || item.description ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo || item.description}</div>` : ""}
+        ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+        <div style="margin-top:10px;text-align:right;">
+          <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  document.getElementById("doneSearchInput").addEventListener("input", (e) => {
+    doneSearch = e.target.value.trim();
+    renderDoneList();
+  });
+
+  // 거래완료 빠른 저장
+  (() => {
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById("d_date").value = today;
+  })();
+
+  document.getElementById("doneSaveBtn").addEventListener("click", async () => {
+    const type    = document.getElementById("d_type").value;
+    const address = document.getElementById("d_address").value.trim();
+    const price   = document.getElementById("d_price").value.trim();
+    const contact = document.getElementById("d_contact").value.trim();
+    const memo    = document.getElementById("d_memo").value.trim();
+    const dateVal = document.getElementById("d_date").value;
+
+    if (!address && !price) { showToast("위치 또는 가격 중 하나는 입력해주세요"); return; }
+
+    const btn = document.getElementById("doneSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      const item = {
+        id: "HITOP-" + Date.now(),
+        type, address,
+        title: `${getTypeLabel(type)} · ${address || price}`,
+        status: "거래완료",
+        description: memo,
+        quick_price: price,
+        quick_contact: contact,
+        quick_memo: memo,
+        completed_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+      };
+      await addListing(item);
+      ["d_address","d_price","d_contact","d_memo"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("d_date").value = new Date().toISOString().slice(0, 10);
+      showToast("✅ 거래완료 등록 완료!");
+      await loadListings();
+      renderDoneList();
+    } catch(e) { showToast("❌ 저장 실패: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "✅ 거래완료로 등록"; }
+  });
 
   // ===== 의뢰관리 =====
   let allRequests = [];
