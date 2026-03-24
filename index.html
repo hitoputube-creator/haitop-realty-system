@@ -267,7 +267,7 @@
 
 <!-- ✏️ 의뢰 수정 모달 -->
 <div id="requestEditModal" class="modal-overlay" style="display:none;">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:560px;">
     <div class="modal-title">✏️ 의뢰 수정</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
       <div class="field">
@@ -311,7 +311,7 @@
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label>메모 / 요구사항</label>
-      <textarea id="re_memo" rows="4" placeholder="예) 1층 선호, 권리금 없는 곳, 주차 3대 이상" style="width:100%;resize:vertical;min-height:100px;box-sizing:border-box;"></textarea>
+      <textarea id="re_memo" rows="6" placeholder="예) 1층 선호, 권리금 없는 곳, 주차 3대 이상" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
     </div>
     <div class="modal-btns">
       <button class="btn" onclick="document.getElementById('requestEditModal').style.display='none'">취소</button>
@@ -322,7 +322,7 @@
 
 <!-- ✏️ 고객 수정 모달 -->
 <div id="customerEditModal" class="modal-overlay" style="display:none;">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:560px;">
     <div class="modal-title">✏️ 고객 수정</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
       <div class="field">
@@ -351,7 +351,7 @@
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label>메모 (요구사항)</label>
-      <textarea id="ce_memo" rows="4" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:100px;box-sizing:border-box;"></textarea>
+      <textarea id="ce_memo" rows="6" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
     </div>
     <div class="modal-btns">
       <button class="btn" onclick="document.getElementById('customerEditModal').style.display='none'">취소</button>
