@@ -90,6 +90,16 @@ async function updateRequestStatus(id, status) {
   });
   if (!res.ok) throw new Error("의뢰 상태 변경 실패");
 }
+async function updateRequest(id, data) {
+  const body = Object.assign({}, data);
+  delete body.id; delete body.created_at;
+  const res = await fetch(SUPABASE_URL + "/rest/v1/requests?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error("의뢰 수정 실패: " + await res.text());
+}
 
 // ===== 고객 관리 =====
 async function getCustomers() {
@@ -119,4 +129,14 @@ async function updateCustomerStatus(id, status) {
     body: JSON.stringify({ status })
   });
   if (!res.ok) throw new Error("고객 상태 변경 실패");
+}
+async function updateCustomer(id, data) {
+  const body = Object.assign({}, data);
+  delete body.id; delete body.created_at;
+  const res = await fetch(SUPABASE_URL + "/rest/v1/customers?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error("고객 수정 실패: " + await res.text());
 }

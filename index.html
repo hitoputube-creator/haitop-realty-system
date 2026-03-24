@@ -265,6 +265,101 @@
 
 </div>
 
+<!-- ✏️ 의뢰 수정 모달 -->
+<div id="requestEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-title">✏️ 의뢰 수정</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>고객 이름</label>
+        <input id="re_name" type="text" placeholder="이름" />
+      </div>
+      <div class="field">
+        <label>연락처</label>
+        <input id="re_contact" type="tel" placeholder="010-0000-0000" />
+      </div>
+      <div class="field">
+        <label>의뢰유형</label>
+        <select id="re_reqtype">
+          <option value="매도의뢰">매도의뢰 (팔고 싶음)</option>
+          <option value="매수의뢰">매수의뢰 (사고 싶음)</option>
+          <option value="임대의뢰">임대의뢰 (임대 놓고 싶음)</option>
+          <option value="임차의뢰">임차의뢰 (임차하고 싶음)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>매물유형</label>
+        <select id="re_proptype">
+          <option value="">미정</option>
+          <option value="shop">상가</option>
+          <option value="office">사무실</option>
+          <option value="officetel">오피스텔</option>
+          <option value="land">토지</option>
+          <option value="factory">공장/창고</option>
+          <option value="bizcenter">지식산업센터</option>
+          <option value="etc">기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>희망지역 / 물건지</label>
+        <input id="re_area" type="text" placeholder="예) 운정역 근처, 파주시 교하동" />
+      </div>
+      <div class="field">
+        <label>희망가격 / 조건</label>
+        <input id="re_price" type="text" placeholder="예) 매매 5억 이하, 월세 300 이하" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>메모 / 요구사항</label>
+      <textarea id="re_memo" rows="4" placeholder="예) 1층 선호, 권리금 없는 곳, 주차 3대 이상" style="width:100%;resize:vertical;min-height:100px;box-sizing:border-box;"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('requestEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="requestEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✏️ 고객 수정 모달 -->
+<div id="customerEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-title">✏️ 고객 수정</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>이름</label>
+        <input id="ce_name" type="text" placeholder="고객 이름" />
+      </div>
+      <div class="field">
+        <label>연락처</label>
+        <input id="ce_contact" type="tel" placeholder="010-0000-0000" />
+      </div>
+      <div class="field">
+        <label>원하는 매물유형</label>
+        <select id="ce_type">
+          <option value="">미정</option>
+          <option value="shop">상가/사무실</option>
+          <option value="officetel">오피스텔</option>
+          <option value="land">토지</option>
+          <option value="factory">공장/창고</option>
+          <option value="bizcenter">지식산업센터</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>예산</label>
+        <input id="ce_budget" type="text" placeholder="예) 5억 이하, 월세 200 이하" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>메모 (요구사항)</label>
+      <textarea id="ce_memo" rows="4" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:100px;box-sizing:border-box;"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('customerEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="customerEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- 📅 일정 추가 모달 -->
 <div id="calModal" class="modal-overlay" style="display:none;">
   <div class="modal-box" style="max-width:360px;">
@@ -698,6 +793,7 @@
         ${r.price ? `<div style="margin-top:4px;font-size:0.82rem;color:var(--text-main);">💰 ${r.price}</div>` : ""}
         ${r.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${r.memo}</div>` : ""}
         <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();openRequestEdit('${r.id}')">✏️ 수정</button>
           ${r.status !== "완료" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleRequestDone('${r.id}')">✅ 완료처리</button>` : ""}
           <button class="btn btn-danger" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDeleteRequest('${r.id}')">🗑 삭제</button>
         </div>
@@ -723,6 +819,41 @@
       await loadRequests();
     } catch(e) { showToast("❌ 오류: " + e.message); }
   }
+
+  let editingRequestId = null;
+  function openRequestEdit(id) {
+    const r = allRequests.find(x => x.id === id);
+    if (!r) return;
+    editingRequestId = id;
+    document.getElementById("re_name").value    = r.name    || "";
+    document.getElementById("re_contact").value = r.contact || "";
+    document.getElementById("re_reqtype").value = r.reqtype || "매도의뢰";
+    document.getElementById("re_proptype").value = r.proptype || "";
+    document.getElementById("re_area").value    = r.area    || "";
+    document.getElementById("re_price").value   = r.price   || "";
+    document.getElementById("re_memo").value    = r.memo    || "";
+    document.getElementById("requestEditModal").style.display = "flex";
+  }
+  document.getElementById("requestEditSaveBtn").addEventListener("click", async () => {
+    if (!editingRequestId) return;
+    const btn = document.getElementById("requestEditSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await updateRequest(editingRequestId, {
+        name:     document.getElementById("re_name").value.trim(),
+        contact:  document.getElementById("re_contact").value.trim(),
+        reqtype:  document.getElementById("re_reqtype").value,
+        proptype: document.getElementById("re_proptype").value,
+        area:     document.getElementById("re_area").value.trim(),
+        price:    document.getElementById("re_price").value.trim(),
+        memo:     document.getElementById("re_memo").value.trim()
+      });
+      document.getElementById("requestEditModal").style.display = "none";
+      showToast("✅ 수정 완료!");
+      await loadRequests();
+    } catch(e) { showToast("❌ 오류: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "저장"; }
+  });
 
   document.getElementById("requestSaveBtn").addEventListener("click", async () => {
     const name    = document.getElementById("r_name").value.trim();
@@ -810,6 +941,7 @@
         ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
         ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
         <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">✏️ 수정</button>
           ${c.status !== "계약완료"
             ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleContractDone('${c.id}')">✅ 계약완료</button>`
             : ""}
@@ -842,6 +974,37 @@
       showToast("❌ 오류: " + e.message);
     }
   }
+
+  let editingCustomerId = null;
+  function openCustomerEdit(id) {
+    const c = allCustomers.find(x => x.id === id);
+    if (!c) return;
+    editingCustomerId = id;
+    document.getElementById("ce_name").value    = c.name    || "";
+    document.getElementById("ce_contact").value = c.contact || "";
+    document.getElementById("ce_type").value    = c.type    || "";
+    document.getElementById("ce_budget").value  = c.budget  || "";
+    document.getElementById("ce_memo").value    = c.memo    || "";
+    document.getElementById("customerEditModal").style.display = "flex";
+  }
+  document.getElementById("customerEditSaveBtn").addEventListener("click", async () => {
+    if (!editingCustomerId) return;
+    const btn = document.getElementById("customerEditSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await updateCustomer(editingCustomerId, {
+        name:    document.getElementById("ce_name").value.trim(),
+        contact: document.getElementById("ce_contact").value.trim(),
+        type:    document.getElementById("ce_type").value,
+        budget:  document.getElementById("ce_budget").value.trim(),
+        memo:    document.getElementById("ce_memo").value.trim()
+      });
+      document.getElementById("customerEditModal").style.display = "none";
+      showToast("✅ 수정 완료!");
+      await loadCustomers();
+    } catch(e) { showToast("❌ 오류: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "저장"; }
+  });
 
   document.getElementById("customerSaveBtn").addEventListener("click", async () => {
     const name     = document.getElementById("c_name").value.trim();
