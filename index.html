@@ -29,6 +29,8 @@
     <button class="tab-btn" data-tab="request">📝 의뢰관리</button>
     <button class="tab-btn" data-tab="customer">👥 고객관리</button>
     <button class="tab-btn" data-tab="done">✅ 거래완료관리</button>
+    <button class="tab-btn" data-tab="reference">📌 참고매물</button>
+    <button class="tab-btn" data-tab="drive">📁 자료보기</button>
   </div>
 
   <!-- ===== 매물관리 탭 ===== -->
@@ -342,6 +344,77 @@
 
 </div>
 
+<!-- ===== 참고매물 탭 ===== -->
+<div id="tabReference" style="display:none;">
+
+  <!-- 빠른 저장 -->
+  <div class="quick-card">
+    <div class="quick-title">📌 참고매물 빠른 저장</div>
+    <div class="quick-sub">타 중개사 또는 현장 조사 중 파악한 매물을 빠르게 메모하세요</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>위치</label>
+        <input id="ref_location" type="text" placeholder="예) 운정역 1번출구 앞" />
+      </div>
+      <div class="field">
+        <label>유형</label>
+        <select id="ref_type">
+          <option value="상가">상가</option>
+          <option value="건물">건물</option>
+          <option value="토지">토지</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>가격</label>
+        <input id="ref_price" type="text" placeholder="예) 매매 3억, 월세 200/20" />
+      </div>
+      <div class="field">
+        <label>연락처</label>
+        <input id="ref_contact" type="tel" placeholder="010-0000-0000" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>메모</label>
+      <input id="ref_memo" type="text" placeholder="특이사항, 층수, 면적 등" />
+    </div>
+    <button class="btn btn-primary" id="refSaveBtn" style="width:100%;">⚡ 빠른 저장</button>
+  </div>
+
+  <!-- 필터 + 검색 -->
+  <div class="quick-card" style="padding:14px 18px;">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;">
+      <span style="font-size:0.8rem;color:var(--text-muted);font-weight:600;">유형</span>
+      <button class="filter-badge active" data-reftype="전체">전체</button>
+      <button class="filter-badge" data-reftype="상가">상가</button>
+      <button class="filter-badge" data-reftype="건물">건물</button>
+      <button class="filter-badge" data-reftype="토지">토지</button>
+      <button class="filter-badge" data-reftype="기타">기타</button>
+      <span style="font-size:0.8rem;color:var(--text-muted);font-weight:600;margin-left:10px;">지역</span>
+      <select id="refRegionFilter" style="background:var(--bg-soft);color:var(--text-main);border:1px solid rgba(212,175,55,0.3);border-radius:6px;padding:4px 8px;font-size:0.82rem;">
+        <option value="전체">전체</option>
+        <option value="운정">운정</option>
+        <option value="교하">교하</option>
+        <option value="문산">문산</option>
+        <option value="금촌">금촌</option>
+        <option value="조리">조리</option>
+        <option value="파주읍">파주읍</option>
+        <option value="기타">기타</option>
+      </select>
+    </div>
+    <input id="refSearchInput" type="text" placeholder="🔍 위치, 가격, 메모 검색..." style="width:100%;box-sizing:border-box;" />
+  </div>
+
+  <!-- 목록 -->
+  <div id="referenceContainer"></div>
+
+</div>
+
+<!-- ===== 자료보기 탭 ===== -->
+<div id="tabDrive" style="display:none;">
+  <div id="driveContent"></div>
+</div>
+
 <!-- ✏️ 의뢰 수정 모달 -->
 <div id="requestEditModal" class="modal-overlay" style="display:none;">
   <div class="modal-box" style="max-width:560px;">
@@ -466,6 +539,44 @@
   </div>
 </div>
 
+<!-- ✏️ 참고매물 수정 모달 -->
+<div id="referenceEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-title">✏️ 참고매물 수정</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>위치</label>
+        <input id="refe_location" type="text" placeholder="예) 운정역 1번출구 앞" />
+      </div>
+      <div class="field">
+        <label>유형</label>
+        <select id="refe_type">
+          <option value="상가">상가</option>
+          <option value="건물">건물</option>
+          <option value="토지">토지</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>가격</label>
+        <input id="refe_price" type="text" placeholder="예) 매매 3억, 월세 200/20" />
+      </div>
+      <div class="field">
+        <label>연락처</label>
+        <input id="refe_contact" type="tel" placeholder="010-0000-0000" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>메모</label>
+      <input id="refe_memo" type="text" placeholder="특이사항, 층수, 면적 등" />
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('referenceEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="referenceEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -475,13 +586,17 @@
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       const tab = btn.dataset.tab;
-      document.getElementById("tabProperty").style.display = tab === "property" ? "" : "none";
-      document.getElementById("tabRequest").style.display  = tab === "request"  ? "" : "none";
-      document.getElementById("tabCustomer").style.display = tab === "customer" ? "" : "none";
-      document.getElementById("tabDone").style.display     = tab === "done"     ? "" : "none";
-      if (tab === "customer") loadCustomers();
-      if (tab === "request")  loadRequests();
-      if (tab === "done")     renderDoneList();
+      document.getElementById("tabProperty").style.display  = tab === "property"  ? "" : "none";
+      document.getElementById("tabRequest").style.display   = tab === "request"   ? "" : "none";
+      document.getElementById("tabCustomer").style.display  = tab === "customer"  ? "" : "none";
+      document.getElementById("tabDone").style.display      = tab === "done"      ? "" : "none";
+      document.getElementById("tabReference").style.display = tab === "reference" ? "" : "none";
+      document.getElementById("tabDrive").style.display     = tab === "drive"     ? "" : "none";
+      if (tab === "customer")  loadCustomers();
+      if (tab === "request")   loadRequests();
+      if (tab === "done")      renderDoneList();
+      if (tab === "reference") loadReferenceProperties();
+      if (tab === "drive")     renderDriveTab();
     });
   });
 
@@ -1265,6 +1380,200 @@
     } catch(e) {
       container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
     }
+  }
+
+  // ===== 참고매물 탭 =====
+  let allReferenceProperties = [];
+  let refTypeFilter = "전체";
+  let refRegionFilter_val = "전체";
+  let refSearch = "";
+
+  document.querySelectorAll(".filter-badge[data-reftype]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filter-badge[data-reftype]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      refTypeFilter = btn.dataset.reftype;
+      renderReferenceProperties();
+    });
+  });
+
+  document.getElementById("refRegionFilter").addEventListener("change", (e) => {
+    refRegionFilter_val = e.target.value;
+    renderReferenceProperties();
+  });
+
+  document.getElementById("refSearchInput").addEventListener("input", (e) => {
+    refSearch = e.target.value.trim();
+    renderReferenceProperties();
+  });
+
+  document.getElementById("refSaveBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("refSaveBtn");
+    const location = document.getElementById("ref_location").value.trim();
+    const property_type = document.getElementById("ref_type").value;
+    const price = document.getElementById("ref_price").value.trim();
+    const contact = document.getElementById("ref_contact").value.trim();
+    const memo = document.getElementById("ref_memo").value.trim();
+    if (!location) { showToast("위치를 입력해주세요"); return; }
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await addReferenceProperty({ location, property_type, price, contact, memo });
+      ["ref_location","ref_price","ref_contact","ref_memo"].forEach(id => document.getElementById(id).value = "");
+      showToast("✅ 참고매물 저장완료!");
+      await loadReferenceProperties();
+    } catch(e) {
+      showToast("❌ 저장 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "⚡ 빠른 저장";
+    }
+  });
+
+  async function loadReferenceProperties() {
+    const container = document.getElementById("referenceContainer");
+    container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
+    try {
+      allReferenceProperties = await getReferenceProperties();
+      renderReferenceProperties();
+    } catch(e) {
+      container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
+    }
+  }
+
+  function renderReferenceProperties() {
+    const container = document.getElementById("referenceContainer");
+    let list = allReferenceProperties;
+    if (refTypeFilter !== "전체") list = list.filter(p => p.property_type === refTypeFilter);
+    if (refRegionFilter_val !== "전체") list = list.filter(p => p.location && p.location.includes(refRegionFilter_val));
+    if (refSearch) {
+      const kw = refSearch.toLowerCase();
+      list = list.filter(p =>
+        (p.location||"").toLowerCase().includes(kw) ||
+        (p.price||"").toLowerCase().includes(kw) ||
+        (p.memo||"").toLowerCase().includes(kw) ||
+        (p.contact||"").toLowerCase().includes(kw)
+      );
+    }
+    if (!list.length) {
+      container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 참고매물이 없습니다</div>`;
+      return;
+    }
+    const typeColors = { "상가": "#d4af37", "건물": "#4caf7d", "토지": "#6fa8dc", "기타": "#a7b0d0" };
+    container.innerHTML = list.map(p => {
+      const color = typeColors[p.property_type] || "#a7b0d0";
+      const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR") : "";
+      return `
+      <div class="prop-card" style="margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}55;">${p.property_type||"기타"}</span>
+          <span style="font-weight:700;font-size:1rem;color:var(--text-main);">${p.location||"-"}</span>
+          <span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">${dateStr}</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
+          ${p.price ? `<span>💰 ${p.price}</span>` : ""}
+          ${p.contact ? `<span>📞 ${p.contact}</span>` : ""}
+          ${p.memo ? `<span>📝 ${p.memo}</span>` : ""}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 12px;" onclick="openRefEdit('${p.id}')">✏️ 수정</button>
+          <button class="btn" style="font-size:0.78rem;padding:4px 12px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRef('${p.id}')">🗑 삭제</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  let editingRefId = null;
+  function openRefEdit(id) {
+    const p = allReferenceProperties.find(x => x.id === id);
+    if (!p) return;
+    editingRefId = id;
+    document.getElementById("refe_location").value = p.location || "";
+    document.getElementById("refe_type").value = p.property_type || "상가";
+    document.getElementById("refe_price").value = p.price || "";
+    document.getElementById("refe_contact").value = p.contact || "";
+    document.getElementById("refe_memo").value = p.memo || "";
+    document.getElementById("referenceEditModal").style.display = "flex";
+  }
+
+  async function deleteRef(id) {
+    if (!confirm("이 참고매물을 삭제하시겠습니까?")) return;
+    try {
+      await deleteReferenceProperty(id);
+      showToast("🗑 삭제되었습니다");
+      await loadReferenceProperties();
+    } catch(e) {
+      showToast("❌ 삭제 실패: " + e.message);
+    }
+  }
+
+  document.getElementById("referenceEditSaveBtn").addEventListener("click", async () => {
+    if (!editingRefId) return;
+    const btn = document.getElementById("referenceEditSaveBtn");
+    const location = document.getElementById("refe_location").value.trim();
+    if (!location) { showToast("위치를 입력해주세요"); return; }
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await updateReferenceProperty(editingRefId, {
+        location,
+        property_type: document.getElementById("refe_type").value,
+        price: document.getElementById("refe_price").value.trim(),
+        contact: document.getElementById("refe_contact").value.trim(),
+        memo: document.getElementById("refe_memo").value.trim()
+      });
+      document.getElementById("referenceEditModal").style.display = "none";
+      showToast("✅ 수정되었습니다");
+      await loadReferenceProperties();
+    } catch(e) {
+      showToast("❌ 수정 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "저장";
+    }
+  });
+
+  // ===== 자료보기 탭 =====
+  const driveData = [
+    {
+      category: "운정역 상가",
+      items: [
+        { name: "명품3차", url: "" },
+        { name: "디에이블", url: "" },
+        { name: "더운정퍼스트", url: "" },
+        { name: "덕진프라자", url: "" },
+        { name: "레이크필드오피스텔", url: "" },
+        { name: "범조타운", url: "" },
+        { name: "브릭", url: "" },
+        { name: "브릿지10", url: "" },
+        { name: "세안파크", url: "" },
+        { name: "센트럴하이뷰오피스텔", url: "" },
+        { name: "송림", url: "" },
+        { name: "남광오피스텔", url: "" },
+      ]
+    },
+    {
+      category: "운정역 오피스텔",
+      items: []
+    }
+  ];
+
+  function renderDriveTab() {
+    const container = document.getElementById("driveContent");
+    container.innerHTML = driveData.map(cat => `
+      <div class="quick-card" style="margin-bottom:16px;">
+        <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.2);padding-bottom:8px;">
+          📂 ${cat.category}
+        </div>
+        ${cat.items.length === 0
+          ? `<div style="font-size:0.85rem;color:var(--text-muted);padding:8px 0;">등록된 건물이 없습니다</div>`
+          : cat.items.map(item => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span style="font-size:0.92rem;color:var(--text-main);">${item.name}</span>
+              ${item.url
+                ? `<button class="btn btn-primary" style="font-size:0.78rem;padding:4px 14px;" onclick="window.open('${item.url}','_blank')">📁 열기</button>`
+                : `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 14px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
+              }
+            </div>`).join("")
+        }
+      </div>
+    `).join("");
   }
 </script>
 </body>

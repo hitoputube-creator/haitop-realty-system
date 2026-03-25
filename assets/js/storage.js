@@ -75,6 +75,38 @@ async function updateListing(id, item) {
   if (!res.ok) throw new Error("수정 실패: " + await res.text());
 }
 
+// ===== 참고매물 관리 =====
+async function getReferenceProperties() {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/reference_properties?order=created_at.desc", { headers });
+  if (!res.ok) throw new Error("참고매물 목록 조회 실패");
+  return await res.json();
+}
+async function addReferenceProperty(item) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/reference_properties", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(item)
+  });
+  if (!res.ok) throw new Error("참고매물 저장 실패: " + await res.text());
+}
+async function updateReferenceProperty(id, item) {
+  const body = Object.assign({}, item);
+  delete body.id; delete body.created_at;
+  const res = await fetch(SUPABASE_URL + "/rest/v1/reference_properties?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error("참고매물 수정 실패: " + await res.text());
+}
+async function deleteReferenceProperty(id) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/reference_properties?id=eq." + encodeURIComponent(id), {
+    method: "DELETE",
+    headers: headers
+  });
+  if (!res.ok) throw new Error("참고매물 삭제 실패");
+}
+
 // ===== 의뢰 관리 =====
 async function getRequests() {
   const res = await fetch(SUPABASE_URL + "/rest/v1/requests?order=created_at.desc", { headers });
