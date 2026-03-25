@@ -75,6 +75,38 @@ async function updateListing(id, item) {
   if (!res.ok) throw new Error("수정 실패: " + await res.text());
 }
 
+// ===== 추천매물장 관리 =====
+async function getRecommendedProperties() {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/recommended_properties?order=received_date.desc,created_at.desc", { headers });
+  if (!res.ok) throw new Error("추천매물장 목록 조회 실패");
+  return await res.json();
+}
+async function addRecommendedProperty(item) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/recommended_properties", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(item)
+  });
+  if (!res.ok) throw new Error("추천매물장 저장 실패: " + await res.text());
+}
+async function updateRecommendedProperty(id, item) {
+  const body = Object.assign({}, item);
+  delete body.id; delete body.created_at;
+  const res = await fetch(SUPABASE_URL + "/rest/v1/recommended_properties?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error("추천매물장 수정 실패: " + await res.text());
+}
+async function deleteRecommendedProperty(id) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/recommended_properties?id=eq." + encodeURIComponent(id), {
+    method: "DELETE",
+    headers: headers
+  });
+  if (!res.ok) throw new Error("추천매물장 삭제 실패");
+}
+
 // ===== 자료보기 관리 =====
 async function getDriveResources() {
   const res = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?order=sort_order.asc,created_at.asc", { headers });
