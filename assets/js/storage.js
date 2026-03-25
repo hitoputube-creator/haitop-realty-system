@@ -75,6 +75,38 @@ async function updateListing(id, item) {
   if (!res.ok) throw new Error("수정 실패: " + await res.text());
 }
 
+// ===== 자료보기 관리 =====
+async function getDriveResources() {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?order=created_at.asc", { headers });
+  if (!res.ok) throw new Error("자료 목록 조회 실패");
+  return await res.json();
+}
+async function addDriveResource(item) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/drive_resources", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(item)
+  });
+  if (!res.ok) throw new Error("자료 저장 실패: " + await res.text());
+}
+async function updateDriveResource(id, item) {
+  const body = Object.assign({}, item);
+  delete body.id; delete body.created_at;
+  const res = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error("자료 수정 실패: " + await res.text());
+}
+async function deleteDriveResource(id) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?id=eq." + encodeURIComponent(id), {
+    method: "DELETE",
+    headers: headers
+  });
+  if (!res.ok) throw new Error("자료 삭제 실패");
+}
+
 // ===== 참고매물 관리 =====
 async function getReferenceProperties() {
   const res = await fetch(SUPABASE_URL + "/rest/v1/reference_properties?order=created_at.desc", { headers });

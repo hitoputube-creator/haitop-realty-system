@@ -412,7 +412,34 @@
 
 <!-- ===== 자료보기 탭 ===== -->
 <div id="tabDrive" style="display:none;">
+
+  <!-- 등록 폼 -->
+  <div class="quick-card">
+    <div class="quick-title">📁 자료 등록</div>
+    <div class="quick-sub">카테고리와 건물명, 구글 드라이브 링크를 입력하세요</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>카테고리</label>
+        <select id="drive_cat_select">
+          <option value="">-- 직접 입력 --</option>
+        </select>
+        <input id="drive_category" type="text" placeholder="카테고리 직접 입력 또는 위에서 선택" style="margin-top:6px;" />
+      </div>
+      <div class="field">
+        <label>건물명</label>
+        <input id="drive_name" type="text" placeholder="예) 명품3차" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>드라이브 링크</label>
+      <input id="drive_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
+    </div>
+    <button class="btn btn-primary" id="driveSaveBtn" style="width:100%;">💾 저장</button>
+  </div>
+
+  <!-- 목록 -->
   <div id="driveContent"></div>
+
 </div>
 
 <!-- ✏️ 의뢰 수정 모달 -->
@@ -539,6 +566,31 @@
   </div>
 </div>
 
+<!-- ✏️ 자료보기 수정 모달 -->
+<div id="driveEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-title">✏️ 자료 수정</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>카테고리</label>
+        <input id="drive_edit_category" type="text" placeholder="예) 운정역 상가" />
+      </div>
+      <div class="field">
+        <label>건물명</label>
+        <input id="drive_edit_name" type="text" placeholder="예) 명품3차" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>드라이브 링크</label>
+      <input id="drive_edit_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('driveEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- ✏️ 참고매물 수정 모달 -->
 <div id="referenceEditModal" class="modal-overlay" style="display:none;">
   <div class="modal-box" style="max-width:520px;">
@@ -596,7 +648,7 @@
       if (tab === "request")   loadRequests();
       if (tab === "done")      renderDoneList();
       if (tab === "reference") loadReferenceProperties();
-      if (tab === "drive")     renderDriveTab();
+      if (tab === "drive")     loadDriveResources();
     });
   });
 
@@ -1530,51 +1582,130 @@
   });
 
   // ===== 자료보기 탭 =====
-  const driveData = [
-    {
-      category: "운정역 상가",
-      items: [
-        { name: "명품3차", url: "" },
-        { name: "디에이블", url: "" },
-        { name: "더운정퍼스트", url: "" },
-        { name: "덕진프라자", url: "" },
-        { name: "레이크필드오피스텔", url: "" },
-        { name: "범조타운", url: "" },
-        { name: "브릭", url: "" },
-        { name: "브릿지10", url: "" },
-        { name: "세안파크", url: "" },
-        { name: "센트럴하이뷰오피스텔", url: "" },
-        { name: "송림", url: "" },
-        { name: "남광오피스텔", url: "" },
-      ]
-    },
-    {
-      category: "운정역 오피스텔",
-      items: []
+  let allDriveResources = [];
+
+  async function loadDriveResources() {
+    const container = document.getElementById("driveContent");
+    container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
+    try {
+      allDriveResources = await getDriveResources();
+      renderDriveTab();
+      updateDriveCategorySelect();
+    } catch(e) {
+      container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
     }
-  ];
+  }
+
+  function updateDriveCategorySelect() {
+    const select = document.getElementById("drive_cat_select");
+    const categories = [...new Set(allDriveResources.map(r => r.category).filter(Boolean))];
+    select.innerHTML = `<option value="">-- 직접 입력 --</option>` +
+      categories.map(c => `<option value="${c}">${c}</option>`).join("");
+  }
+
+  document.getElementById("drive_cat_select").addEventListener("change", (e) => {
+    if (e.target.value) document.getElementById("drive_category").value = e.target.value;
+    else document.getElementById("drive_category").value = "";
+  });
+
+  document.getElementById("driveSaveBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("driveSaveBtn");
+    const category = document.getElementById("drive_category").value.trim();
+    const name = document.getElementById("drive_name").value.trim();
+    const url = document.getElementById("drive_url").value.trim();
+    if (!category) { showToast("카테고리를 입력해주세요"); return; }
+    if (!name) { showToast("건물명을 입력해주세요"); return; }
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await addDriveResource({ category, name, url });
+      document.getElementById("drive_category").value = "";
+      document.getElementById("drive_name").value = "";
+      document.getElementById("drive_url").value = "";
+      document.getElementById("drive_cat_select").value = "";
+      showToast("✅ 저장되었습니다!");
+      await loadDriveResources();
+    } catch(e) {
+      showToast("❌ 저장 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "💾 저장";
+    }
+  });
 
   function renderDriveTab() {
     const container = document.getElementById("driveContent");
-    container.innerHTML = driveData.map(cat => `
+    if (!allDriveResources.length) {
+      container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 자료가 없습니다. 위 폼에서 추가해주세요.</div>`;
+      return;
+    }
+    const grouped = {};
+    allDriveResources.forEach(r => {
+      if (!grouped[r.category]) grouped[r.category] = [];
+      grouped[r.category].push(r);
+    });
+    container.innerHTML = Object.entries(grouped).map(([cat, items]) => `
       <div class="quick-card" style="margin-bottom:16px;">
         <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.2);padding-bottom:8px;">
-          📂 ${cat.category}
+          📂 ${cat}
         </div>
-        ${cat.items.length === 0
-          ? `<div style="font-size:0.85rem;color:var(--text-muted);padding:8px 0;">등록된 건물이 없습니다</div>`
-          : cat.items.map(item => `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-              <span style="font-size:0.92rem;color:var(--text-main);">${item.name}</span>
-              ${item.url
-                ? `<button class="btn btn-primary" style="font-size:0.78rem;padding:4px 14px;" onclick="window.open('${item.url}','_blank')">📁 열기</button>`
-                : `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 14px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
-              }
-            </div>`).join("")
+        ${items.map(item => `
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="flex:1;font-size:0.92rem;color:var(--text-main);">${item.name}</span>
+            ${item.url
+              ? `<button class="btn btn-primary" style="font-size:0.78rem;padding:4px 12px;" onclick="window.open('${item.url}','_blank')">📁 열기</button>`
+              : `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
+            }
+            <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
+            <button class="btn" style="font-size:0.78rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
+          </div>`).join("")
         }
       </div>
     `).join("");
   }
+
+  let editingDriveId = null;
+  function openDriveEdit(id) {
+    const item = allDriveResources.find(r => r.id === id);
+    if (!item) return;
+    editingDriveId = id;
+    document.getElementById("drive_edit_category").value = item.category || "";
+    document.getElementById("drive_edit_name").value = item.name || "";
+    document.getElementById("drive_edit_url").value = item.url || "";
+    document.getElementById("driveEditModal").style.display = "flex";
+  }
+
+  async function deleteDriveItem(id) {
+    if (!confirm("이 항목을 삭제하시겠습니까?")) return;
+    try {
+      await deleteDriveResource(id);
+      showToast("🗑 삭제되었습니다");
+      await loadDriveResources();
+    } catch(e) {
+      showToast("❌ 삭제 실패: " + e.message);
+    }
+  }
+
+  document.getElementById("driveEditSaveBtn").addEventListener("click", async () => {
+    if (!editingDriveId) return;
+    const btn = document.getElementById("driveEditSaveBtn");
+    const category = document.getElementById("drive_edit_category").value.trim();
+    const name = document.getElementById("drive_edit_name").value.trim();
+    if (!category || !name) { showToast("카테고리와 건물명을 입력해주세요"); return; }
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await updateDriveResource(editingDriveId, {
+        category,
+        name,
+        url: document.getElementById("drive_edit_url").value.trim()
+      });
+      document.getElementById("driveEditModal").style.display = "none";
+      showToast("✅ 수정되었습니다");
+      await loadDriveResources();
+    } catch(e) {
+      showToast("❌ 수정 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "저장";
+    }
+  });
 </script>
 </body>
 </html>
