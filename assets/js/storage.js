@@ -109,7 +109,7 @@ async function deleteRecommendedProperty(id) {
 
 // ===== 자료보기 관리 =====
 async function getDriveResources() {
-  const res = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?order=sort_order.asc,created_at.asc", { headers });
+  const res = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?order=sort_order.asc", { headers });
   if (!res.ok) throw new Error("자료 목록 조회 실패");
   return await res.json();
 }
