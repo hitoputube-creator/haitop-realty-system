@@ -208,6 +208,7 @@
       <div id="requestEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
         등록된 의뢰가 없습니다.
       </div>
+      <div id="requestPagination" class="pagination"></div>
     </section>
 
   </div>
@@ -270,6 +271,7 @@
       <div id="customerEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
         등록된 고객이 없습니다.
       </div>
+      <div id="customerPagination" class="pagination"></div>
     </section>
 
   </div>
@@ -342,6 +344,7 @@
       <div id="doneEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
         거래완료된 매물이 없습니다.
       </div>
+      <div id="donePagination" class="pagination"></div>
     </section>
 
   </div>
@@ -409,6 +412,7 @@
 
   <!-- 목록 -->
   <div id="referenceContainer"></div>
+  <div id="referencePagination" class="pagination"></div>
 
   </div>
 
@@ -509,6 +513,7 @@
 
     <!-- 목록 -->
     <div id="recommendContainer"></div>
+    <div id="recommendPagination" class="pagination"></div>
 
   </div>
 
@@ -830,6 +835,29 @@
     document.getElementById("calModal").style.display = "none";
   });
 
+  // ===== 공통 페이지네이션 헬퍼 =====
+  function _makePagination(elId, total, perPage, curPage, cb) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.innerHTML = "";
+    const totalPages = Math.ceil(total / perPage);
+    if (totalPages <= 1) return;
+    const prev = document.createElement("button");
+    prev.className = "page-btn" + (curPage === 1 ? " disabled" : "");
+    prev.textContent = "‹ 이전";
+    prev.onclick = () => { if (curPage > 1) cb(curPage - 1); };
+    el.appendChild(prev);
+    const info = document.createElement("span");
+    info.className = "page-info";
+    info.textContent = `${curPage} / ${totalPages}`;
+    el.appendChild(info);
+    const next = document.createElement("button");
+    next.className = "page-btn" + (curPage === totalPages ? " disabled" : "");
+    next.textContent = "다음 ›";
+    next.onclick = () => { if (curPage < totalPages) cb(curPage + 1); };
+    el.appendChild(next);
+  }
+
   // ===== 매물관리 =====
   const listingContainer = document.getElementById("listingContainer");
   const emptyMessage = document.getElementById("emptyMessage");
@@ -1139,6 +1167,8 @@
 
   // ===== 거래완료관리 =====
   let doneSearch = "";
+  let donePage = 1;
+  const DONE_PER_PAGE = 10;
 
   function renderDoneList() {
     const container = document.getElementById("doneContainer");
@@ -1156,10 +1186,16 @@
     filtered.sort((a, b) => new Date(b.completed_at || b.created_at || 0) - new Date(a.completed_at || a.created_at || 0));
 
     badge.textContent = filtered.length ? `(${filtered.length}건)` : "";
-    if (!filtered.length) { empty.style.display = "block"; return; }
+    if (!filtered.length) {
+      empty.style.display = "block";
+      document.getElementById("donePagination").innerHTML = "";
+      return;
+    }
     empty.style.display = "none";
 
-    filtered.forEach(item => {
+    const doneStart = (donePage - 1) * DONE_PER_PAGE;
+    const donePageItems = filtered.slice(doneStart, doneStart + DONE_PER_PAGE);
+    donePageItems.forEach(item => {
       const card = document.createElement("div");
       card.className = "listing-card";
       card.onclick = () => location.href = `detail.html?id=${item.id}`;
@@ -1180,10 +1216,12 @@
       `;
       container.appendChild(card);
     });
+    _makePagination("donePagination", filtered.length, DONE_PER_PAGE, donePage, (p) => { donePage = p; renderDoneList(); });
   }
 
   document.getElementById("doneSearchInput").addEventListener("input", (e) => {
     doneSearch = e.target.value.trim();
+    donePage = 1;
     renderDoneList();
   });
 
@@ -1229,6 +1267,8 @@
 
   // ===== 의뢰관리 =====
   let allRequests = [];
+  let requestPage = 1;
+  const REQ_PER_PAGE = 10;
   let requestSearch = "";
 
   const reqTypeColors = {
@@ -1252,10 +1292,17 @@
 
     badge.textContent = filtered.length ? `(${filtered.length}건)` : "";
 
-    if (!filtered.length) { empty.style.display = "block"; return; }
+    if (!filtered.length) {
+      empty.style.display = "block";
+      document.getElementById("requestPagination").innerHTML = "";
+      return;
+    }
     empty.style.display = "none";
 
-    filtered.forEach(r => {
+    const start = (requestPage - 1) * REQ_PER_PAGE;
+    const pageItems = filtered.slice(start, start + REQ_PER_PAGE);
+
+    pageItems.forEach(r => {
       const card = document.createElement("div");
       card.className = "listing-card";
       const proptypeLabel = getTypeLabel(r.proptype) !== "기타" || r.proptype ? getTypeLabel(r.proptype) : "";
@@ -1278,6 +1325,8 @@
       `;
       container.appendChild(card);
     });
+
+    _makePagination("requestPagination", filtered.length, REQ_PER_PAGE, requestPage, (p) => { requestPage = p; renderRequests(); });
   }
 
   async function handleRequestDone(id) {
@@ -1358,6 +1407,7 @@
 
   document.getElementById("requestSearchInput").addEventListener("input", (e) => {
     requestSearch = e.target.value.trim();
+    requestPage = 1;
     renderRequests();
   });
 
@@ -1374,6 +1424,8 @@
 
   // ===== 고객관리 =====
   let allCustomers = [];
+  let customerPage = 1;
+  const CUST_PER_PAGE = 10;
   let customerSearch = "";
 
   function getCustomerTypeLabel(type) {
@@ -1399,11 +1451,14 @@
 
     if (!filtered.length) {
       empty.style.display = "block";
+      document.getElementById("customerPagination").innerHTML = "";
       return;
     }
     empty.style.display = "none";
 
-    filtered.forEach(c => {
+    const custStart = (customerPage - 1) * CUST_PER_PAGE;
+    const custPageItems = filtered.slice(custStart, custStart + CUST_PER_PAGE);
+    custPageItems.forEach(c => {
       const card = document.createElement("div");
       card.className = "listing-card";
 
@@ -1429,6 +1484,7 @@
 
       container.appendChild(card);
     });
+    _makePagination("customerPagination", filtered.length, CUST_PER_PAGE, customerPage, (p) => { customerPage = p; renderCustomers(); });
   }
 
   async function handleContractDone(id) {
@@ -1518,6 +1574,7 @@
 
   document.getElementById("customerSearchInput").addEventListener("input", (e) => {
     customerSearch = e.target.value.trim();
+    customerPage = 1;
     renderCustomers();
   });
 
@@ -1537,23 +1594,28 @@
   let refTypeFilter = "전체";
   let refRegionFilter_val = "전체";
   let refSearch = "";
+  let refPage = 1;
+  const REF_PER_PAGE = 10;
 
   document.querySelectorAll(".filter-badge[data-reftype]").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".filter-badge[data-reftype]").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       refTypeFilter = btn.dataset.reftype;
+      refPage = 1;
       renderReferenceProperties();
     });
   });
 
   document.getElementById("refRegionFilter").addEventListener("change", (e) => {
     refRegionFilter_val = e.target.value;
+    refPage = 1;
     renderReferenceProperties();
   });
 
   document.getElementById("refSearchInput").addEventListener("input", (e) => {
     refSearch = e.target.value.trim();
+    refPage = 1;
     renderReferenceProperties();
   });
 
@@ -1605,10 +1667,13 @@
     }
     if (!list.length) {
       container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 참고매물이 없습니다</div>`;
+      document.getElementById("referencePagination").innerHTML = "";
       return;
     }
+    const refStart = (refPage - 1) * REF_PER_PAGE;
+    const refPageItems = list.slice(refStart, refStart + REF_PER_PAGE);
     const typeColors = { "상가": "#d4af37", "건물": "#4caf7d", "토지": "#6fa8dc", "기타": "#a7b0d0" };
-    container.innerHTML = `<div class="listing-grid">` + list.map(p => {
+    container.innerHTML = `<div class="listing-grid">` + refPageItems.map(p => {
       const color = typeColors[p.property_type] || "#a7b0d0";
       const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR") : "";
       return `
@@ -1629,6 +1694,7 @@
         </div>
       </div>`;
     }).join("") + `</div>`;
+    _makePagination("referencePagination", list.length, REF_PER_PAGE, refPage, (p) => { refPage = p; renderReferenceProperties(); });
   }
 
   let editingRefId = null;
@@ -1681,6 +1747,8 @@
 
   // ===== 자료보기 탭 =====
   let allDriveResources = [];
+  let drivePageMap = {};
+  const DRIVE_PER_PAGE = 10;
 
   async function loadDriveResources() {
     const container = document.getElementById("driveContent");
@@ -1772,35 +1840,53 @@
       if (!grouped[r.category]) grouped[r.category] = [];
       grouped[r.category].push(r);
     });
-    container.innerHTML = Object.entries(grouped).map(([cat, rawItems]) => {
+    container.innerHTML = "";
+    Object.entries(grouped).forEach(([cat, rawItems]) => {
       const items = sortedByCatOrder(cat, rawItems);
-      return `
-      <div class="quick-card" style="margin-bottom:16px;">
+      const catPage = drivePageMap[cat] || 1;
+      const start = (catPage - 1) * DRIVE_PER_PAGE;
+      const pageItems = items.slice(start, start + DRIVE_PER_PAGE);
+
+      const section = document.createElement("div");
+      section.className = "quick-card";
+      section.style.marginBottom = "16px";
+      section.innerHTML = `
         <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.2);padding-bottom:8px;">
           📂 ${cat}
         </div>
         <div class="listing-grid">
-          ${items.map((item, idx) => `
-          <div class="listing-card" style="cursor:default;">
-            <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
-              <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-top:2px;">
-                <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${idx === 0 ? 'opacity:0.25;cursor:default;' : ''}" ${idx === 0 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','up','${cat}')"`}>▲</button>
-                <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${idx === items.length-1 ? 'opacity:0.25;cursor:default;' : ''}" ${idx === items.length-1 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','down','${cat}')"`}>▼</button>
+          ${pageItems.map((item, idx) => {
+            const realIdx = start + idx;
+            return `
+            <div class="listing-card" style="cursor:default;">
+              <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
+                <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-top:2px;">
+                  <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx === 0 ? 'opacity:0.25;cursor:default;' : ''}" ${realIdx === 0 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','up','${cat}')"`}>▲</button>
+                  <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx === items.length-1 ? 'opacity:0.25;cursor:default;' : ''}" ${realIdx === items.length-1 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','down','${cat}')"`}>▼</button>
+                </div>
+                <span style="flex:1;font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
               </div>
-              <span style="flex:1;font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
-            </div>
-            <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
-              ${item.url
-                ? `<button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="window.open('${item.url}','_blank')">📁 열기</button>`
-                : `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
-              }
-              <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
-              <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
-            </div>
-          </div>`).join("")}
+              <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+                ${item.url
+                  ? `<button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="window.open('${item.url}','_blank')">📁 열기</button>`
+                  : `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
+                }
+                <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
+                <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
+              </div>
+            </div>`;
+          }).join("")}
         </div>
-      </div>`;
-    }).join("");
+        <div id="drivePag_${cat.replace(/[^a-zA-Z0-9가-힣]/g,'_')}" class="pagination"></div>
+      `;
+      container.appendChild(section);
+
+      _makePagination(
+        `drivePag_${cat.replace(/[^a-zA-Z0-9가-힣]/g,'_')}`,
+        items.length, DRIVE_PER_PAGE, catPage,
+        (p) => { drivePageMap[cat] = p; renderDriveTab(); }
+      );
+    });
   }
 
 
@@ -1852,12 +1938,15 @@
   // ===== 추천매물장 탭 =====
   let allRecommended = [];
   let recSearch = "";
+  let recPage = 1;
+  const REC_PER_PAGE = 10;
 
   // 등록 폼 링크 초기행
   addRecLinkRow("rec_links_container");
 
   document.getElementById("recSearchInput").addEventListener("input", (e) => {
     recSearch = e.target.value.trim();
+    recPage = 1;
     renderRecommendedProperties();
   });
 
@@ -1910,9 +1999,12 @@
     }
     if (!list.length) {
       container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 추천매물장이 없습니다</div>`;
+      document.getElementById("recommendPagination").innerHTML = "";
       return;
     }
-    container.innerHTML = `<div class="listing-grid">` + list.map(p => {
+    const recStart = (recPage - 1) * REC_PER_PAGE;
+    const recPageItems = list.slice(recStart, recStart + REC_PER_PAGE);
+    container.innerHTML = `<div class="listing-grid">` + recPageItems.map(p => {
       const links = parseLinks(p.drive_url);
       const linksHtml = links.length
         ? links.map(l => {
@@ -1935,6 +2027,7 @@
         </div>
       </div>`;
     }).join("") + `</div>`;
+    _makePagination("recommendPagination", list.length, REC_PER_PAGE, recPage, (p) => { recPage = p; renderRecommendedProperties(); });
   }
 
   let editingRecId = null;
