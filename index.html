@@ -457,22 +457,17 @@
     <!-- 등록 폼 -->
     <div class="quick-card">
       <div class="quick-title">📄 추천매물장 등록</div>
-      <div class="quick-sub">받은 매물장 이름과 구글 드라이브 파일 링크를 저장하세요</div>
-      <div class="form-grid-2" style="margin-bottom:10px;">
-        <div class="field">
-          <label>매물장 이름</label>
-          <input id="rec_name" type="text" placeholder="예) 디에이블 2차 분양" />
-        </div>
-        <div class="field">
-          <label>받은 날짜</label>
-          <input id="rec_date" type="date" />
-        </div>
-      </div>
+      <div class="quick-sub">매물장 이름과 드라이브 링크(날짜별 여러 개)를 저장하세요</div>
       <div class="field" style="margin-bottom:10px;">
-        <label>드라이브 파일 링크</label>
-        <input id="rec_url" type="text" placeholder="https://drive.google.com/file/d/..." />
+        <label>매물장 이름</label>
+        <input id="rec_name" type="text" placeholder="예) 디에이블 2차 분양" />
       </div>
-      <div class="field" style="margin-bottom:10px;">
+      <div style="margin-bottom:4px;">
+        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px;">드라이브 링크 (날짜 + URL)</label>
+        <div id="rec_links_container"></div>
+        <button class="btn btn-ghost" style="width:100%;margin-top:6px;font-size:0.82rem;" onclick="addRecLinkRow('rec_links_container')">+ 링크 추가</button>
+      </div>
+      <div class="field" style="margin-bottom:10px;margin-top:10px;">
         <label>메모</label>
         <input id="rec_memo" type="text" placeholder="간단한 메모 (선택)" />
       </div>
@@ -533,21 +528,16 @@
 
 <!-- ✏️ 추천매물장 수정 모달 -->
 <div id="recommendEditModal" class="modal-overlay" style="display:none;">
-  <div class="modal-box" style="max-width:520px;">
+  <div class="modal-box" style="max-width:540px;">
     <div class="modal-title">✏️ 추천매물장 수정</div>
-    <div class="form-grid-2" style="margin-bottom:10px;">
-      <div class="field">
-        <label>매물장 이름</label>
-        <input id="rece_name" type="text" placeholder="예) 디에이블 2차 분양" />
-      </div>
-      <div class="field">
-        <label>받은 날짜</label>
-        <input id="rece_date" type="date" />
-      </div>
-    </div>
     <div class="field" style="margin-bottom:10px;">
-      <label>드라이브 파일 링크</label>
-      <input id="rece_url" type="text" placeholder="https://drive.google.com/file/d/..." />
+      <label>매물장 이름</label>
+      <input id="rece_name" type="text" placeholder="예) 디에이블 2차 분양" />
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px;">드라이브 링크 (날짜 + URL)</label>
+      <div id="rece_links_container"></div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:6px;font-size:0.82rem;" onclick="addRecLinkRow('rece_links_container')">+ 링크 추가</button>
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label>메모</label>
@@ -1875,8 +1865,8 @@
   let allRecommended = [];
   let recSearch = "";
 
-  // 오늘 날짜 기본값
-  document.getElementById("rec_date").value = new Date().toISOString().slice(0, 10);
+  // 등록 폼 링크 초기행
+  addRecLinkRow("rec_links_container");
 
   document.getElementById("recSearchInput").addEventListener("input", (e) => {
     recSearch = e.target.value.trim();
@@ -1886,17 +1876,20 @@
   document.getElementById("recSaveBtn").addEventListener("click", async () => {
     const btn = document.getElementById("recSaveBtn");
     const name = document.getElementById("rec_name").value.trim();
-    const drive_url = document.getElementById("rec_url").value.trim();
-    const received_date = document.getElementById("rec_date").value;
     const memo = document.getElementById("rec_memo").value.trim();
     if (!name) { showToast("매물장 이름을 입력해주세요"); return; }
+    const links = getRecLinks("rec_links_container");
+    const drive_url = links.length ? JSON.stringify(links) : "";
+    const received_date = links.length
+      ? links.reduce((mx, l) => l.date > mx ? l.date : mx, links[0].date) || null
+      : null;
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
-      await addRecommendedProperty({ name, drive_url, received_date: received_date || null, memo });
+      await addRecommendedProperty({ name, drive_url, received_date, memo });
       document.getElementById("rec_name").value = "";
-      document.getElementById("rec_url").value = "";
       document.getElementById("rec_memo").value = "";
-      document.getElementById("rec_date").value = new Date().toISOString().slice(0, 10);
+      document.getElementById("rec_links_container").innerHTML = "";
+      addRecLinkRow("rec_links_container");
       showToast("✅ 매물장이 저장되었습니다!");
       await loadRecommendedProperties();
     } catch(e) {
@@ -1932,23 +1925,23 @@
       return;
     }
     container.innerHTML = `<div class="listing-grid">` + list.map(p => {
-      const dateStr = p.received_date
-        ? new Date(p.received_date).toLocaleDateString("ko-KR")
-        : "-";
+      const links = parseLinks(p.drive_url);
+      const linksHtml = links.length
+        ? links.map(l => {
+            const dateStr = l.date ? new Date(l.date + "T00:00:00").toLocaleDateString("ko-KR") : "-";
+            const safeUrl = l.url.replace(/'/g, "%27");
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+              <span style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;">📅 ${dateStr}</span>
+              <button class="btn btn-primary" style="font-size:0.75rem;padding:3px 12px;" onclick="window.open('${safeUrl}','_blank')">열기</button>
+            </div>`;
+          }).join("")
+        : `<span style="font-size:0.75rem;color:var(--text-muted);">링크 없음</span>`;
       return `
       <div class="listing-card" style="cursor:default;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="font-weight:700;font-size:0.95rem;color:var(--gold-soft);flex:1;">${p.name||"-"}</span>
-          <span style="font-size:0.72rem;color:var(--text-muted);">📅 ${dateStr}</span>
-        </div>
-        <div style="font-size:0.83rem;color:var(--text-muted);margin-bottom:10px;min-height:20px;">
-          ${p.memo ? `📝 ${p.memo}` : ""}
-        </div>
-        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
-          ${p.drive_url
-            ? `<button class="btn btn-primary" style="font-size:0.78rem;padding:4px 12px;" onclick="window.open('${p.drive_url}','_blank')">📄 열기</button>`
-            : `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📄 열기</button>`
-          }
+        <div style="font-weight:700;font-size:0.95rem;color:var(--gold-soft);margin-bottom:8px;">${p.name||"-"}</div>
+        <div style="margin-bottom:8px;">${linksHtml}</div>
+        ${p.memo ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">📝 ${p.memo}</div>` : ""}
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px;">
           <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openRecEdit('${p.id}')">✏️ 수정</button>
           <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRec('${p.id}')">🗑 삭제</button>
         </div>
@@ -1962,9 +1955,15 @@
     if (!p) return;
     editingRecId = id;
     document.getElementById("rece_name").value = p.name || "";
-    document.getElementById("rece_date").value = p.received_date ? p.received_date.slice(0, 10) : "";
-    document.getElementById("rece_url").value = p.drive_url || "";
     document.getElementById("rece_memo").value = p.memo || "";
+    const container = document.getElementById("rece_links_container");
+    container.innerHTML = "";
+    const links = parseLinks(p.drive_url);
+    if (links.length) {
+      links.forEach(l => addRecLinkRow("rece_links_container", l.date, l.url));
+    } else {
+      addRecLinkRow("rece_links_container");
+    }
     document.getElementById("recommendEditModal").style.display = "flex";
   }
 
@@ -1986,10 +1985,15 @@
     if (!name) { showToast("매물장 이름을 입력해주세요"); return; }
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
+      const eLinks = getRecLinks("rece_links_container");
+      const eDriveUrl = eLinks.length ? JSON.stringify(eLinks) : "";
+      const eReceivedDate = eLinks.length
+        ? eLinks.reduce((mx, l) => l.date > mx ? l.date : mx, eLinks[0].date) || null
+        : null;
       await updateRecommendedProperty(editingRecId, {
         name,
-        drive_url: document.getElementById("rece_url").value.trim(),
-        received_date: document.getElementById("rece_date").value || null,
+        drive_url: eDriveUrl,
+        received_date: eReceivedDate,
         memo: document.getElementById("rece_memo").value.trim()
       });
       document.getElementById("recommendEditModal").style.display = "none";
@@ -2001,6 +2005,48 @@
       btn.disabled = false; btn.textContent = "저장";
     }
   });
+
+  // ===== 추천매물장 다중링크 헬퍼 =====
+  function parseLinks(drive_url) {
+    if (!drive_url) return [];
+    try {
+      const arr = JSON.parse(drive_url);
+      if (Array.isArray(arr)) {
+        return arr
+          .filter(l => l && l.url)
+          .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      }
+      return [{ date: "", url: String(drive_url) }];
+    } catch {
+      return drive_url ? [{ date: "", url: drive_url }] : [];
+    }
+  }
+
+  function addRecLinkRow(containerId, date, url) {
+    const container = document.getElementById(containerId);
+    const today = new Date().toISOString().slice(0, 10);
+    const row = document.createElement("div");
+    row.className = "rec-link-row";
+    row.style.cssText = "display:flex;gap:6px;align-items:center;margin-bottom:6px;";
+    row.innerHTML = `
+      <input type="date" value="${date || today}"
+        style="width:145px;flex-shrink:0;background:var(--bg-soft);color:var(--text-main);border:1px solid rgba(212,175,55,0.3);border-radius:6px;padding:5px 8px;font-size:0.82rem;" />
+      <input type="text" value="${url || ""}" placeholder="https://drive.google.com/..."
+        style="flex:1;" />
+      <button onclick="this.closest('.rec-link-row').remove()"
+        style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1.1rem;padding:0 4px;flex-shrink:0;">✕</button>
+    `;
+    container.appendChild(row);
+  }
+
+  function getRecLinks(containerId) {
+    return [...document.getElementById(containerId).querySelectorAll(".rec-link-row")]
+      .map(row => {
+        const inputs = row.querySelectorAll("input");
+        return { date: inputs[0].value, url: inputs[1].value.trim() };
+      })
+      .filter(l => l.url);
+  }
 
   // ===== 엑셀 내보내기 =====
   function _xlsxDate() {
@@ -2065,12 +2111,20 @@
   }
 
   function exportRecommended() {
-    const rows = allRecommended.map(p => ({
-      "매물장이름": p.name || "",
-      "받은날짜": p.received_date ? new Date(p.received_date).toLocaleDateString("ko-KR") : "",
-      "드라이브링크": p.drive_url || "",
-      "메모": p.memo || ""
-    }));
+    const rows = [];
+    allRecommended.forEach(p => {
+      const links = parseLinks(p.drive_url);
+      if (links.length) {
+        links.forEach(l => rows.push({
+          "매물장이름": p.name || "",
+          "날짜": l.date ? new Date(l.date + "T00:00:00").toLocaleDateString("ko-KR") : "",
+          "드라이브링크": l.url || "",
+          "메모": p.memo || ""
+        }));
+      } else {
+        rows.push({ "매물장이름": p.name || "", "날짜": "", "드라이브링크": "", "메모": p.memo || "" });
+      }
+    });
     _saveXlsx(rows, "추천매물장", `하이탑_추천매물장_${_xlsxDate()}.xlsx`);
   }
 
@@ -2177,7 +2231,7 @@
       try {
         await addRecommendedProperty({
           name         : f.name,
-          drive_url    : `https://drive.google.com/file/d/${f.id}/view`,
+          drive_url    : JSON.stringify([{ date, url: `https://drive.google.com/file/d/${f.id}/view` }]),
           received_date: date || null,
           memo
         });
