@@ -5,6 +5,7 @@
   <title>하이탑부동산 매물 목록</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/storage.js"></script>
 </head>
 <body>
@@ -123,6 +124,7 @@
       <div class="card-title">
         <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
         <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="exportListings()">📥 엑셀 백업</button>
           <button class="btn btn-ghost" id="printBtn">🖨 인쇄</button>
           <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
         </div>
@@ -201,6 +203,7 @@
     <section class="card">
       <div class="card-title">
         <span>의뢰 목록 <span id="requestCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+        <button class="btn btn-ghost" onclick="exportRequests()">📥 엑셀 백업</button>
       </div>
       <div id="requestContainer" class="listing-grid"></div>
       <div id="requestEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
@@ -263,6 +266,7 @@
     <section class="card">
       <div class="card-title">
         <span>고객 목록 <span id="customerCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+        <button class="btn btn-ghost" onclick="exportCustomers()">📥 엑셀 백업</button>
       </div>
       <div id="customerContainer" class="listing-grid"></div>
       <div id="customerEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
@@ -437,6 +441,11 @@
     <button class="btn btn-primary" id="driveSaveBtn" style="width:100%;">💾 저장</button>
   </div>
 
+  <!-- 목록 헤더 -->
+  <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+    <button class="btn btn-ghost" onclick="exportDriveResources()">📥 엑셀 백업</button>
+  </div>
+
   <!-- 목록 -->
   <div id="driveContent"></div>
 
@@ -473,6 +482,11 @@
     <!-- 검색 -->
     <div class="quick-card" style="padding:14px 18px;">
       <input id="recSearchInput" type="text" placeholder="🔍 매물장 이름, 메모 검색..." style="width:100%;box-sizing:border-box;" />
+    </div>
+
+    <!-- 목록 헤더 -->
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button class="btn btn-ghost" onclick="exportRecommended()">📥 엑셀 백업</button>
     </div>
 
     <!-- 목록 -->
@@ -1952,6 +1966,78 @@
       btn.disabled = false; btn.textContent = "저장";
     }
   });
+
+  // ===== 엑셀 내보내기 =====
+  function _xlsxDate() {
+    const d = new Date();
+    return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
+  }
+  function _saveXlsx(rows, sheetName, fileName) {
+    if (!rows.length) { showToast("내보낼 데이터가 없습니다"); return; }
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, fileName);
+    showToast("✅ 엑셀 파일이 저장되었습니다");
+  }
+
+  function exportListings() {
+    const rows = allListings.map(item => ({
+      "유형": getTypeLabel(item.type),
+      "주소": item.address || item.title || "",
+      "가격": formatPrice(item),
+      "연락처": item.quick_contact || "",
+      "메모": item.quick_memo || item.description || "",
+      "등록일": item.created_at ? new Date(item.created_at).toLocaleDateString("ko-KR") : "",
+      "상태": item.status || "진행중"
+    }));
+    _saveXlsx(rows, "매물관리", `하이탑_매물관리_${_xlsxDate()}.xlsx`);
+  }
+
+  function exportRequests() {
+    const rows = allRequests.map(r => ({
+      "고객명": r.name || "",
+      "연락처": r.contact || "",
+      "의뢰유형": r.reqtype || "",
+      "매물유형": getTypeLabel(r.proptype),
+      "희망지역": r.area || "",
+      "희망가격": r.price || "",
+      "메모": r.memo || "",
+      "상태": r.status || "진행중"
+    }));
+    _saveXlsx(rows, "의뢰관리", `하이탑_의뢰관리_${_xlsxDate()}.xlsx`);
+  }
+
+  function exportCustomers() {
+    const rows = allCustomers.map(c => ({
+      "이름": c.name || "",
+      "연락처": c.contact || "",
+      "매물유형": getCustomerTypeLabel(c.type),
+      "예산": c.budget || "",
+      "메모": c.memo || "",
+      "상태": c.status || ""
+    }));
+    _saveXlsx(rows, "고객관리", `하이탑_고객관리_${_xlsxDate()}.xlsx`);
+  }
+
+  function exportDriveResources() {
+    const rows = allDriveResources.map(r => ({
+      "카테고리": r.category || "",
+      "건물명": r.name || "",
+      "드라이브링크": r.url || ""
+    }));
+    _saveXlsx(rows, "자료보기", `하이탑_자료보기_${_xlsxDate()}.xlsx`);
+  }
+
+  function exportRecommended() {
+    const rows = allRecommended.map(p => ({
+      "매물장이름": p.name || "",
+      "받은날짜": p.received_date ? new Date(p.received_date).toLocaleDateString("ko-KR") : "",
+      "드라이브링크": p.drive_url || "",
+      "메모": p.memo || ""
+    }));
+    _saveXlsx(rows, "추천매물장", `하이탑_추천매물장_${_xlsxDate()}.xlsx`);
+  }
 </script>
 </body>
 </html>
