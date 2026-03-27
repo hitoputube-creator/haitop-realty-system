@@ -1782,7 +1782,7 @@
   // ===== 자료보기 탭 =====
   let allDriveResources = [];
   let drivePageMap = {};
-  let activeDriveCat = null;
+  let openDriveCats = new Set();   // 열린 카테고리 (다중 허용)
   const DRIVE_PER_PAGE = 10;
 
   async function loadDriveResources() {
@@ -1864,50 +1864,10 @@
     renderDriveTab();
   }
 
-  function renderDriveTab() {
-    const container = document.getElementById("driveContent");
-    if (!allDriveResources.length) {
-      container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 자료가 없습니다. 위 폼에서 추가해주세요.</div>`;
-      return;
-    }
-
-    // 카테고리별 그룹
-    const grouped = {};
-    allDriveResources.forEach(r => {
-      if (!grouped[r.category]) grouped[r.category] = [];
-      grouped[r.category].push(r);
-    });
-    const categories = Object.keys(grouped);
-
-    // 활성 카테고리 초기화
-    if (!activeDriveCat || !grouped[activeDriveCat]) activeDriveCat = categories[0];
-    const cat = activeDriveCat;
-
-    // 카테고리 버튼 그리드 (2열)
-    const catButtons = categories.map(c => {
-      const isActive = c === cat;
-      return `<button
-        onclick="openDriveAccordion(${JSON.stringify(c)})"
-        style="
-          padding:10px 14px;font-size:0.85rem;font-weight:${isActive ? '700' : '500'};
-          text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
-          background:${isActive ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.04)'};
-          color:${isActive ? 'var(--gold)' : 'var(--text-muted)'};
-          border-color:${isActive ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.1)'};
-          transition:all 0.15s;
-        ">
-        📂 ${c} <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>
-      </button>`;
-    }).join("");
-
-    // 선택된 카테고리 아이템
-    const rawItems = grouped[cat] || [];
-    const items = sortedByCatOrder(cat, rawItems);
+  function _buildDriveItemsHtml(items, cat, start) {
     const catPage = drivePageMap[cat] || 1;
-    const start = (catPage - 1) * DRIVE_PER_PAGE;
     const pageItems = items.slice(start, start + DRIVE_PER_PAGE);
-
-    const itemsHtml = pageItems.map((item, idx) => {
+    return pageItems.map((item, idx) => {
       const realIdx = start + idx;
       const safeUrl = (item.url || "").replace(/'/g, "%27");
       return `
@@ -1915,9 +1875,9 @@
         <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
           <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-top:2px;">
             <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx===0?'opacity:0.25;cursor:default;':''}"
-              ${realIdx===0?'disabled':`onclick="moveDriveOrder('${item.id}','up',${JSON.stringify(cat)})"`}>▲</button>
+              ${realIdx===0?'disabled':`onclick="moveDriveOrder('${item.id}','up','${cat.replace(/'/g,"\\'")}')"`}>▲</button>
             <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx===items.length-1?'opacity:0.25;cursor:default;':''}"
-              ${realIdx===items.length-1?'disabled':`onclick="moveDriveOrder('${item.id}','down',${JSON.stringify(cat)})"`}>▼</button>
+              ${realIdx===items.length-1?'disabled':`onclick="moveDriveOrder('${item.id}','down','${cat.replace(/'/g,"\\'")}')"`}>▼</button>
           </div>
           <span style="flex:1;font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
         </div>
@@ -1931,26 +1891,78 @@
         </div>
       </div>`;
     }).join("");
-
-    container.innerHTML = `
-      <div class="quick-card" style="margin-bottom:16px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
-          ${catButtons}
-        </div>
-        <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:14px;">
-          <div class="listing-grid">${itemsHtml}</div>
-          <div id="driveCatPag" class="pagination"></div>
-        </div>
-      </div>`;
-
-    _makePagination("driveCatPag", items.length, DRIVE_PER_PAGE, catPage,
-      (p) => { drivePageMap[cat] = p; renderDriveTab(); });
   }
 
-  function openDriveAccordion(cat) {
-    activeDriveCat = cat;
-    drivePageMap[cat] = 1;
-    renderDriveTab();
+  function renderDriveTab() {
+    const container = document.getElementById("driveContent");
+    if (!allDriveResources.length) {
+      container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 자료가 없습니다. 위 폼에서 추가해주세요.</div>`;
+      return;
+    }
+
+    const grouped = {};
+    allDriveResources.forEach(r => {
+      if (!grouped[r.category]) grouped[r.category] = [];
+      grouped[r.category].push(r);
+    });
+    const categories = Object.keys(grouped);
+
+    // 기본: 첫 카테고리 열기
+    if (openDriveCats.size === 0) openDriveCats.add(categories[0]);
+
+    container.innerHTML = "";
+    const wrap = document.createElement("div");
+    wrap.className = "quick-card";
+    wrap.style.marginBottom = "16px";
+
+    // 2열 버튼 그리드
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;";
+
+    categories.forEach(c => {
+      const isOpen = openDriveCats.has(c);
+      const btn = document.createElement("button");
+      btn.style.cssText = `
+        padding:10px 14px;font-size:0.85rem;font-weight:${isOpen?'700':'500'};
+        text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
+        background:${isOpen?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.04)'};
+        color:${isOpen?'var(--gold)':'var(--text-muted)'};
+        border-color:${isOpen?'rgba(212,175,55,0.5)':'rgba(255,255,255,0.1)'};
+        transition:all 0.15s;
+      `;
+      btn.innerHTML = `${isOpen?'▲':'▼'} 📂 ${c} <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>`;
+      btn.addEventListener("click", () => {
+        if (openDriveCats.has(c)) openDriveCats.delete(c);
+        else { openDriveCats.add(c); drivePageMap[c] = 1; }
+        renderDriveTab();
+      });
+      grid.appendChild(btn);
+    });
+    wrap.appendChild(grid);
+
+    // 열린 카테고리별 목록 (순서대로)
+    categories.filter(c => openDriveCats.has(c)).forEach(c => {
+      const items = sortedByCatOrder(c, grouped[c]);
+      const catPage = drivePageMap[c] || 1;
+      const start = (catPage - 1) * DRIVE_PER_PAGE;
+      const pagId = `drivePag_${c.replace(/\W/g,'_')}`;
+
+      const section = document.createElement("div");
+      section.style.cssText = "border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;";
+      section.innerHTML = `
+        <div style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">📂 ${c}</div>
+        <div class="listing-grid">${_buildDriveItemsHtml(items, c, start)}</div>
+        <div id="${pagId}" class="pagination"></div>`;
+      wrap.appendChild(section);
+
+      // 페이지네이션은 DOM 삽입 후 실행
+      setTimeout(() => {
+        _makePagination(pagId, items.length, DRIVE_PER_PAGE, catPage,
+          (p) => { drivePageMap[c] = p; renderDriveTab(); });
+      }, 0);
+    });
+
+    container.appendChild(wrap);
   }
 
 
