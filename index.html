@@ -71,9 +71,14 @@
           <input id="q_contact" type="tel" placeholder="010-0000-0000" />
         </div>
       </div>
-      <div class="field" style="margin-bottom:12px;">
+      <div class="field" style="margin-bottom:10px;">
         <label>메모 (특이사항)</label>
         <input id="q_memo" type="text" placeholder="예) 1층 공실, 즉시입주 가능, 권리금 없음" />
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px;">📁 드라이브 링크 (선택)</label>
+        <div id="q_links_container"></div>
+        <button class="btn btn-ghost" style="width:100%;font-size:0.82rem;margin-top:4px;" onclick="addQuickLinkRow()">+ 링크 추가</button>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);">
@@ -835,6 +840,29 @@
     document.getElementById("calModal").style.display = "none";
   });
 
+  // ===== 드라이브 링크 헬퍼 (빠른 등록 폼) =====
+  function addQuickLinkRow(name, url) {
+    const c = document.getElementById("q_links_container");
+    const row = document.createElement("div");
+    row.className = "ql-row";
+    row.style.cssText = "display:flex;gap:5px;align-items:center;margin-bottom:5px;";
+    row.innerHTML = `
+      <input type="text" value="${name||""}" placeholder="이름 (예: 토지대장)"
+        style="width:110px;flex-shrink:0;" />
+      <input type="text" value="${url||""}" placeholder="https://drive.google.com/..."
+        style="flex:1;" />
+      <button onclick="this.closest('.ql-row').remove()"
+        style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1.1rem;padding:0 4px;flex-shrink:0;">✕</button>
+    `;
+    c.appendChild(row);
+  }
+  function getQuickLinks() {
+    return [...document.querySelectorAll("#q_links_container .ql-row")].map(row => {
+      const ins = row.querySelectorAll("input");
+      return { name: ins[0].value.trim(), url: ins[1].value.trim() };
+    }).filter(l => l.url);
+  }
+
   // ===== 공통 페이지네이션 헬퍼 =====
   function _makePagination(elId, total, perPage, curPage, cb) {
     const el = document.getElementById(elId);
@@ -990,6 +1018,9 @@
         ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
         ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
         ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+        ${(item.drive_links && item.drive_links.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">
+          ${item.drive_links.map(l=>`<a href="${l.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:0.73rem;color:var(--gold);text-decoration:none;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;padding:2px 7px;">📁 ${l.name||"링크"}</a>`).join("")}
+        </div>` : ""}
         <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
           ${item.status !== "거래완료" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
           <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
@@ -1053,6 +1084,7 @@
 
     try {
       const isDone = document.getElementById("q_done").checked;
+      const driveLinks = getQuickLinks();
       const item = {
         id: "HITOP-" + Date.now(),
         type, address,
@@ -1063,10 +1095,12 @@
         quick_contact: contact,
         quick_memo: memo
       };
+      if (driveLinks.length) item.drive_links = driveLinks;
       if (isDone) item.completed_at = new Date().toISOString();
       await addListing(item);
       ["q_address","q_price","q_contact","q_memo"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("q_done").checked = false;
+      document.getElementById("q_links_container").innerHTML = "";
       showToast("✅ 저장완료!");
       await loadListings();
     } catch(e) {
