@@ -479,6 +479,41 @@
       <button class="btn btn-primary" id="recSaveBtn" style="width:100%;">💾 저장</button>
     </div>
 
+    <!-- 폴더에서 불러오기 -->
+    <div class="quick-card" style="margin-top:10px;">
+      <div class="quick-title">📂 폴더에서 파일 목록 불러오기</div>
+      <div class="quick-sub">구글 드라이브 폴더 링크를 입력하면 파일 목록을 자동으로 가져옵니다<br>
+        <span style="color:var(--gold);font-size:0.75rem;">※ 폴더가 "링크가 있는 모든 사용자" 공유 설정이어야 합니다</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input id="rec_folder_url" type="text" placeholder="https://drive.google.com/drive/folders/..." style="flex:1;" />
+        <button class="btn btn-ghost" id="loadFolderBtn" onclick="loadDriveFolderFiles()">📂 불러오기</button>
+      </div>
+
+      <!-- 파일 선택 패널 -->
+      <div id="folderFilePanel" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span id="folderFileCount" style="font-size:0.82rem;color:var(--text-muted);"></span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost" style="font-size:0.73rem;padding:3px 9px;" onclick="selectAllFolderFiles(true)">전체 선택</button>
+            <button class="btn btn-ghost" style="font-size:0.73rem;padding:3px 9px;" onclick="selectAllFolderFiles(false)">전체 해제</button>
+          </div>
+        </div>
+        <div id="folderFileList" style="max-height:280px;overflow-y:auto;margin-bottom:12px;padding-right:4px;"></div>
+        <div class="form-grid-2" style="margin-bottom:10px;">
+          <div class="field" style="margin-bottom:0;">
+            <label>받은 날짜</label>
+            <input id="rec_folder_date" type="date" />
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>공통 메모 (선택)</label>
+            <input id="rec_folder_memo" type="text" placeholder="선택한 파일에 공통 적용" />
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="saveFolderFiles(event)">✅ 선택한 파일 저장</button>
+      </div>
+    </div>
+
     <!-- 검색 -->
     <div class="quick-card" style="padding:14px 18px;">
       <input id="recSearchInput" type="text" placeholder="🔍 매물장 이름, 메모 검색..." style="width:100%;box-sizing:border-box;" />
@@ -2037,6 +2072,129 @@
       "메모": p.memo || ""
     }));
     _saveXlsx(rows, "추천매물장", `하이탑_추천매물장_${_xlsxDate()}.xlsx`);
+  }
+
+  // ===== 추천매물장 - 폴더에서 파일 목록 불러오기 =====
+  let _folderFiles = [];
+
+  function _extractFolderID(url) {
+    const m = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    return m ? m[1] : null;
+  }
+
+  function _parseDriveFiles(html) {
+    const files = [];
+    const seen = new Set();
+    // Google Drive 폴더 페이지 HTML에 포함된 파일 데이터 파싱
+    // 파일 ID(25자 이상 영숫자) 뒤에 null과 파일명이 오는 패턴
+    const regex = /\["([a-zA-Z0-9_-]{25,})",null,"([^"]{1,300})"/g;
+    let m;
+    while ((m = regex.exec(html)) !== null) {
+      const [, id, name] = m;
+      // 파일명에 확장자 또는 한글/영문이 포함된 것만 추가 (노이즈 필터)
+      if (!seen.has(id) && /[가-힣a-zA-Z0-9]/.test(name) && name.length > 1) {
+        seen.add(id);
+        files.push({ id, name });
+      }
+    }
+    return files;
+  }
+
+  async function loadDriveFolderFiles() {
+    const url = document.getElementById("rec_folder_url").value.trim();
+    const folderId = _extractFolderID(url);
+    if (!folderId) { showToast("올바른 구글 드라이브 폴더 링크를 입력하세요"); return; }
+
+    const btn = document.getElementById("loadFolderBtn");
+    btn.disabled = true;
+    btn.textContent = "불러오는 중...";
+    document.getElementById("folderFilePanel").style.display = "none";
+
+    try {
+      const proxyUrl = `https://corsproxy.io/?https://drive.google.com/drive/folders/${folderId}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error("폴더 접근 실패 (HTTP " + res.status + ")");
+      const html = await res.text();
+      const files = _parseDriveFiles(html);
+
+      if (!files.length) throw new Error("파일을 찾을 수 없습니다. 폴더가 '링크가 있는 모든 사용자' 공유 설정인지 확인하세요");
+
+      _folderFiles = files;
+      _renderFolderFiles(files);
+      showToast("✅ 파일 " + files.length + "개를 불러왔습니다");
+    } catch(e) {
+      showToast("❌ " + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "📂 불러오기";
+    }
+  }
+
+  function _renderFolderFiles(files) {
+    const panel = document.getElementById("folderFilePanel");
+    const list  = document.getElementById("folderFileList");
+    const count = document.getElementById("folderFileCount");
+
+    count.textContent = "총 " + files.length + "개 파일";
+    list.innerHTML = "";
+
+    files.forEach((f, i) => {
+      const fileUrl = `https://drive.google.com/file/d/${f.id}/view`;
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);";
+      row.innerHTML = `
+        <input type="checkbox" id="fc_${i}" data-idx="${i}" checked
+          style="flex-shrink:0;width:16px;height:16px;cursor:pointer;accent-color:var(--gold);" />
+        <label for="fc_${i}" style="flex:1;font-size:0.82rem;cursor:pointer;word-break:break-all;line-height:1.4;">${f.name}</label>
+        <a href="${fileUrl}" target="_blank"
+          style="font-size:0.73rem;color:var(--gold);white-space:nowrap;flex-shrink:0;text-decoration:none;">열기↗</a>
+      `;
+      list.appendChild(row);
+    });
+
+    document.getElementById("rec_folder_date").value = new Date().toISOString().slice(0, 10);
+    panel.style.display = "block";
+  }
+
+  function selectAllFolderFiles(check) {
+    document.querySelectorAll("#folderFileList input[type=checkbox]").forEach(cb => cb.checked = check);
+  }
+
+  async function saveFolderFiles(e) {
+    const checked = [...document.querySelectorAll("#folderFileList input[type=checkbox]")].filter(cb => cb.checked);
+    if (!checked.length) { showToast("저장할 파일을 1개 이상 선택해주세요"); return; }
+
+    const date = document.getElementById("rec_folder_date").value;
+    const memo = document.getElementById("rec_folder_memo").value.trim();
+    const btn  = e.target;
+    btn.disabled = true;
+    btn.textContent = "저장 중...";
+
+    let success = 0;
+    for (const cb of checked) {
+      const idx = parseInt(cb.dataset.idx);
+      const f   = _folderFiles[idx];
+      try {
+        await addRecommendedProperty({
+          name         : f.name,
+          drive_url    : `https://drive.google.com/file/d/${f.id}/view`,
+          received_date: date || null,
+          memo
+        });
+        success++;
+      } catch(err) {
+        console.error("저장 실패:", f.name, err);
+      }
+    }
+
+    showToast("✅ " + success + "개 파일이 추천매물장에 저장되었습니다");
+    document.getElementById("folderFilePanel").style.display = "none";
+    document.getElementById("rec_folder_url").value  = "";
+    document.getElementById("rec_folder_memo").value = "";
+    _folderFiles = [];
+    btn.disabled = false;
+    btn.textContent = "✅ 선택한 파일 저장";
+    await loadRecommendedProperties();
   }
 </script>
 </body>
