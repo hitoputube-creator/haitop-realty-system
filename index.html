@@ -1581,27 +1581,27 @@
       return;
     }
     const typeColors = { "상가": "#d4af37", "건물": "#4caf7d", "토지": "#6fa8dc", "기타": "#a7b0d0" };
-    container.innerHTML = list.map(p => {
+    container.innerHTML = `<div class="listing-grid">` + list.map(p => {
       const color = typeColors[p.property_type] || "#a7b0d0";
       const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR") : "";
       return `
-      <div class="prop-card" style="margin-bottom:10px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <div class="listing-card" style="cursor:default;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}55;">${p.property_type||"기타"}</span>
-          <span style="font-weight:700;font-size:1rem;color:var(--text-main);">${p.location||"-"}</span>
-          <span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">${dateStr}</span>
+          <span style="font-weight:700;font-size:0.95rem;color:var(--gold-soft);flex:1;">${p.location||"-"}</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);">${dateStr}</span>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:0.83rem;color:var(--text-muted);margin-bottom:10px;min-height:36px;">
           ${p.price ? `<span>💰 ${p.price}</span>` : ""}
           ${p.contact ? `<span>📞 ${p.contact}</span>` : ""}
           ${p.memo ? `<span>📝 ${p.memo}</span>` : ""}
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 12px;" onclick="openRefEdit('${p.id}')">✏️ 수정</button>
-          <button class="btn" style="font-size:0.78rem;padding:4px 12px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRef('${p.id}')">🗑 삭제</button>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openRefEdit('${p.id}')">✏️ 수정</button>
+          <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRef('${p.id}')">🗑 삭제</button>
         </div>
       </div>`;
-    }).join("");
+    }).join("") + `</div>`;
   }
 
   let editingRefId = null;
@@ -1752,21 +1752,26 @@
         <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.2);padding-bottom:8px;">
           📂 ${cat}
         </div>
-        ${items.map((item, idx) => `
-          <div style="display:flex;align-items:center;gap:6px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-            <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;">
-              <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${idx === 0 ? 'opacity:0.25;cursor:default;' : ''}" ${idx === 0 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','up','${cat}')"`}>▲</button>
-              <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${idx === items.length-1 ? 'opacity:0.25;cursor:default;' : ''}" ${idx === items.length-1 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','down','${cat}')"`}>▼</button>
+        <div class="listing-grid">
+          ${items.map((item, idx) => `
+          <div class="listing-card" style="cursor:default;">
+            <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
+              <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-top:2px;">
+                <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${idx === 0 ? 'opacity:0.25;cursor:default;' : ''}" ${idx === 0 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','up','${cat}')"`}>▲</button>
+                <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${idx === items.length-1 ? 'opacity:0.25;cursor:default;' : ''}" ${idx === items.length-1 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','down','${cat}')"`}>▼</button>
+              </div>
+              <span style="flex:1;font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
             </div>
-            <span style="flex:1;font-size:0.92rem;color:var(--text-main);">${item.name}</span>
-            ${item.url
-              ? `<button class="btn btn-primary" style="font-size:0.78rem;padding:4px 12px;" onclick="window.open('${item.url}','_blank')">📁 열기</button>`
-              : `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
-            }
-            <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
-            <button class="btn" style="font-size:0.78rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
-          </div>`).join("")
-        }
+            <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+              ${item.url
+                ? `<button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="window.open('${item.url}','_blank')">📁 열기</button>`
+                : `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
+              }
+              <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
+              <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
+            </div>
+          </div>`).join("")}
+        </div>
       </div>`;
     }).join("");
   }
@@ -1877,27 +1882,29 @@
       container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 추천매물장이 없습니다</div>`;
       return;
     }
-    container.innerHTML = list.map(p => {
+    container.innerHTML = `<div class="listing-grid">` + list.map(p => {
       const dateStr = p.received_date
         ? new Date(p.received_date).toLocaleDateString("ko-KR")
         : "-";
       return `
-      <div class="prop-card" style="margin-bottom:10px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="font-weight:700;font-size:1rem;color:var(--text-main);flex:1;">${p.name||"-"}</span>
-          <span style="font-size:0.78rem;color:var(--text-muted);">📅 ${dateStr}</span>
+      <div class="listing-card" style="cursor:default;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-weight:700;font-size:0.95rem;color:var(--gold-soft);flex:1;">${p.name||"-"}</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);">📅 ${dateStr}</span>
         </div>
-        ${p.memo ? `<div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">📝 ${p.memo}</div>` : ""}
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="font-size:0.83rem;color:var(--text-muted);margin-bottom:10px;min-height:20px;">
+          ${p.memo ? `📝 ${p.memo}` : ""}
+        </div>
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
           ${p.drive_url
-            ? `<button class="btn btn-primary" style="font-size:0.82rem;padding:5px 16px;" onclick="window.open('${p.drive_url}','_blank')">📄 열기</button>`
-            : `<button class="btn btn-ghost" style="font-size:0.82rem;padding:5px 16px;opacity:0.4;cursor:not-allowed;" disabled>📄 열기</button>`
+            ? `<button class="btn btn-primary" style="font-size:0.78rem;padding:4px 12px;" onclick="window.open('${p.drive_url}','_blank')">📄 열기</button>`
+            : `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📄 열기</button>`
           }
-          <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 12px;" onclick="openRecEdit('${p.id}')">✏️ 수정</button>
-          <button class="btn" style="font-size:0.78rem;padding:4px 12px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRec('${p.id}')">🗑 삭제</button>
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openRecEdit('${p.id}')">✏️ 수정</button>
+          <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRec('${p.id}')">🗑 삭제</button>
         </div>
       </div>`;
-    }).join("");
+    }).join("") + `</div>`;
   }
 
   let editingRecId = null;
