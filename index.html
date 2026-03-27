@@ -1782,7 +1782,7 @@
   // ===== 자료보기 탭 =====
   let allDriveResources = [];
   let drivePageMap = {};
-  let openDriveCats = new Set();   // 열린 카테고리 (다중 허용)
+  let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
   const DRIVE_PER_PAGE = 10;
 
   async function loadDriveResources() {
@@ -1906,63 +1906,55 @@
       grouped[r.category].push(r);
     });
     const categories = Object.keys(grouped);
-    if (openDriveCats.size === 0) openDriveCats.add(categories[0]);
 
-    // 카테고리 버튼 그리드 (index 기반으로 quoting 문제 완전 회피)
+    // 기본: 첫 번째 카테고리 선택
+    if (!activeDriveCat || !grouped[activeDriveCat]) activeDriveCat = categories[0];
+
+    // 카테고리 버튼 (index로 식별 — 한글 따옴표 문제 완전 회피)
     const catGridHtml = categories.map((c, i) => {
-      const isOpen = openDriveCats.has(c);
+      const isActive = c === activeDriveCat;
       return `<button data-cidx="${i}" style="
-        padding:10px 14px;font-size:0.85rem;font-weight:${isOpen?'700':'500'};
+        padding:10px 14px;font-size:0.85rem;font-weight:${isActive?'700':'500'};
         text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
-        background:${isOpen?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.04)'};
-        color:${isOpen?'var(--gold)':'var(--text-muted)'};
-        border-color:${isOpen?'rgba(212,175,55,0.5)':'rgba(255,255,255,0.1)'};
+        background:${isActive?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.04)'};
+        color:${isActive?'var(--gold)':'var(--text-muted)'};
+        border-color:${isActive?'rgba(212,175,55,0.5)':'rgba(255,255,255,0.1)'};
         transition:all 0.15s;">
-        ${isOpen?'▲':'▼'} 📂 ${c}
+        ${isActive?'▲':'▼'} 📂 ${c}
         <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>
       </button>`;
     }).join("");
 
-    // 열린 카테고리 목록 (index 기반 pagId)
-    const openSectionsHtml = categories
-      .filter(c => openDriveCats.has(c))
-      .map((c, _) => {
-        const idx = categories.indexOf(c);
-        const items = sortedByCatOrder(c, grouped[c]);
-        const catPage = drivePageMap[c] || 1;
-        const start = (catPage - 1) * DRIVE_PER_PAGE;
-        return `<div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
-          <div style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">📂 ${c}</div>
-          <div class="listing-grid">${_buildDriveItemsHtml(items, c, start)}</div>
-          <div id="dcpag_${idx}" class="pagination"></div>
-        </div>`;
-      }).join("");
+    // 선택된 카테고리 목록
+    const cat = activeDriveCat;
+    const items = sortedByCatOrder(cat, grouped[cat]);
+    const catPage = drivePageMap[cat] || 1;
+    const start = (catPage - 1) * DRIVE_PER_PAGE;
+    const sectionHtml = `
+      <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
+        <div class="listing-grid">${_buildDriveItemsHtml(items, cat, start)}</div>
+        <div id="dcpag_active" class="pagination"></div>
+      </div>`;
 
     container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
         ${catGridHtml}
       </div>
-      ${openSectionsHtml}
+      ${sectionHtml}
     </div>`;
 
     // innerHTML 완료 후 버튼 이벤트 바인딩
     container.querySelectorAll("[data-cidx]").forEach(btn => {
       btn.addEventListener("click", () => {
-        const c = categories[+btn.dataset.cidx];
-        if (openDriveCats.has(c)) openDriveCats.delete(c);
-        else { openDriveCats.add(c); drivePageMap[c] = 1; }
+        activeDriveCat = categories[+btn.dataset.cidx];
+        drivePageMap[activeDriveCat] = drivePageMap[activeDriveCat] || 1;
         renderDriveTab();
       });
     });
 
-    // 페이지네이션 (이미 DOM에 있으므로 setTimeout 불필요)
-    categories.filter(c => openDriveCats.has(c)).forEach(c => {
-      const idx = categories.indexOf(c);
-      const items = sortedByCatOrder(c, grouped[c]);
-      const catPage = drivePageMap[c] || 1;
-      _makePagination(`dcpag_${idx}`, items.length, DRIVE_PER_PAGE, catPage,
-        (p) => { drivePageMap[c] = p; renderDriveTab(); });
-    });
+    // 페이지네이션
+    _makePagination("dcpag_active", items.length, DRIVE_PER_PAGE, catPage,
+      (p) => { drivePageMap[cat] = p; renderDriveTab(); });
   }
 
 
