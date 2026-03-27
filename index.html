@@ -1782,6 +1782,7 @@
   // ===== 자료보기 탭 =====
   let allDriveResources = [];
   let drivePageMap = {};
+  let activeDriveCat = null;
   const DRIVE_PER_PAGE = 10;
 
   async function loadDriveResources() {
@@ -1869,58 +1870,87 @@
       container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 자료가 없습니다. 위 폼에서 추가해주세요.</div>`;
       return;
     }
+
+    // 카테고리별 그룹
     const grouped = {};
     allDriveResources.forEach(r => {
       if (!grouped[r.category]) grouped[r.category] = [];
       grouped[r.category].push(r);
     });
-    container.innerHTML = "";
-    Object.entries(grouped).forEach(([cat, rawItems]) => {
-      const items = sortedByCatOrder(cat, rawItems);
-      const catPage = drivePageMap[cat] || 1;
-      const start = (catPage - 1) * DRIVE_PER_PAGE;
-      const pageItems = items.slice(start, start + DRIVE_PER_PAGE);
+    const categories = Object.keys(grouped);
 
-      const section = document.createElement("div");
-      section.className = "quick-card";
-      section.style.marginBottom = "16px";
-      section.innerHTML = `
-        <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:12px;border-bottom:1px solid rgba(212,175,55,0.2);padding-bottom:8px;">
-          📂 ${cat}
-        </div>
-        <div class="listing-grid">
-          ${pageItems.map((item, idx) => {
-            const realIdx = start + idx;
-            return `
-            <div class="listing-card" style="cursor:default;">
-              <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
-                <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-top:2px;">
-                  <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx === 0 ? 'opacity:0.25;cursor:default;' : ''}" ${realIdx === 0 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','up','${cat}')"`}>▲</button>
-                  <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx === items.length-1 ? 'opacity:0.25;cursor:default;' : ''}" ${realIdx === items.length-1 ? 'disabled' : `onclick="moveDriveOrder('${item.id}','down','${cat}')"`}>▼</button>
-                </div>
-                <span style="flex:1;font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
-              </div>
-              <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
-                ${item.url
-                  ? `<button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="window.open('${item.url}','_blank')">📁 열기</button>`
-                  : `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
-                }
-                <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
-                <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
-              </div>
-            </div>`;
-          }).join("")}
-        </div>
-        <div id="drivePag_${cat.replace(/[^a-zA-Z0-9가-힣]/g,'_')}" class="pagination"></div>
-      `;
-      container.appendChild(section);
+    // 활성 카테고리 초기화
+    if (!activeDriveCat || !grouped[activeDriveCat]) activeDriveCat = categories[0];
+    const cat = activeDriveCat;
 
-      _makePagination(
-        `drivePag_${cat.replace(/[^a-zA-Z0-9가-힣]/g,'_')}`,
-        items.length, DRIVE_PER_PAGE, catPage,
-        (p) => { drivePageMap[cat] = p; renderDriveTab(); }
-      );
-    });
+    // 카테고리 버튼 그리드 (2열)
+    const catButtons = categories.map(c => {
+      const isActive = c === cat;
+      return `<button
+        onclick="openDriveAccordion(${JSON.stringify(c)})"
+        style="
+          padding:10px 14px;font-size:0.85rem;font-weight:${isActive ? '700' : '500'};
+          text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
+          background:${isActive ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.04)'};
+          color:${isActive ? 'var(--gold)' : 'var(--text-muted)'};
+          border-color:${isActive ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.1)'};
+          transition:all 0.15s;
+        ">
+        📂 ${c} <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>
+      </button>`;
+    }).join("");
+
+    // 선택된 카테고리 아이템
+    const rawItems = grouped[cat] || [];
+    const items = sortedByCatOrder(cat, rawItems);
+    const catPage = drivePageMap[cat] || 1;
+    const start = (catPage - 1) * DRIVE_PER_PAGE;
+    const pageItems = items.slice(start, start + DRIVE_PER_PAGE);
+
+    const itemsHtml = pageItems.map((item, idx) => {
+      const realIdx = start + idx;
+      const safeUrl = (item.url || "").replace(/'/g, "%27");
+      return `
+      <div class="listing-card" style="cursor:default;">
+        <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
+          <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-top:2px;">
+            <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx===0?'opacity:0.25;cursor:default;':''}"
+              ${realIdx===0?'disabled':`onclick="moveDriveOrder('${item.id}','up',${JSON.stringify(cat)})"`}>▲</button>
+            <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx===items.length-1?'opacity:0.25;cursor:default;':''}"
+              ${realIdx===items.length-1?'disabled':`onclick="moveDriveOrder('${item.id}','down',${JSON.stringify(cat)})"`}>▼</button>
+          </div>
+          <span style="flex:1;font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
+        </div>
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+          ${item.url
+            ? `<button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="window.open('${safeUrl}','_blank')">📁 열기</button>`
+            : `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
+          }
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
+          <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    container.innerHTML = `
+      <div class="quick-card" style="margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+          ${catButtons}
+        </div>
+        <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:14px;">
+          <div class="listing-grid">${itemsHtml}</div>
+          <div id="driveCatPag" class="pagination"></div>
+        </div>
+      </div>`;
+
+    _makePagination("driveCatPag", items.length, DRIVE_PER_PAGE, catPage,
+      (p) => { drivePageMap[cat] = p; renderDriveTab(); });
+  }
+
+  function openDriveAccordion(cat) {
+    activeDriveCat = cat;
+    drivePageMap[cat] = 1;
+    renderDriveTab();
   }
 
 
