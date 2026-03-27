@@ -1906,63 +1906,63 @@
       grouped[r.category].push(r);
     });
     const categories = Object.keys(grouped);
-
-    // 기본: 첫 카테고리 열기
     if (openDriveCats.size === 0) openDriveCats.add(categories[0]);
 
-    container.innerHTML = "";
-    const wrap = document.createElement("div");
-    wrap.className = "quick-card";
-    wrap.style.marginBottom = "16px";
-
-    // 2열 버튼 그리드
-    const grid = document.createElement("div");
-    grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;";
-
-    categories.forEach(c => {
+    // 카테고리 버튼 그리드 (index 기반으로 quoting 문제 완전 회피)
+    const catGridHtml = categories.map((c, i) => {
       const isOpen = openDriveCats.has(c);
-      const btn = document.createElement("button");
-      btn.style.cssText = `
+      return `<button data-cidx="${i}" style="
         padding:10px 14px;font-size:0.85rem;font-weight:${isOpen?'700':'500'};
         text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
         background:${isOpen?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.04)'};
         color:${isOpen?'var(--gold)':'var(--text-muted)'};
         border-color:${isOpen?'rgba(212,175,55,0.5)':'rgba(255,255,255,0.1)'};
-        transition:all 0.15s;
-      `;
-      btn.innerHTML = `${isOpen?'▲':'▼'} 📂 ${c} <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>`;
+        transition:all 0.15s;">
+        ${isOpen?'▲':'▼'} 📂 ${c}
+        <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>
+      </button>`;
+    }).join("");
+
+    // 열린 카테고리 목록 (index 기반 pagId)
+    const openSectionsHtml = categories
+      .filter(c => openDriveCats.has(c))
+      .map((c, _) => {
+        const idx = categories.indexOf(c);
+        const items = sortedByCatOrder(c, grouped[c]);
+        const catPage = drivePageMap[c] || 1;
+        const start = (catPage - 1) * DRIVE_PER_PAGE;
+        return `<div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
+          <div style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">📂 ${c}</div>
+          <div class="listing-grid">${_buildDriveItemsHtml(items, c, start)}</div>
+          <div id="dcpag_${idx}" class="pagination"></div>
+        </div>`;
+      }).join("");
+
+    container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+        ${catGridHtml}
+      </div>
+      ${openSectionsHtml}
+    </div>`;
+
+    // innerHTML 완료 후 버튼 이벤트 바인딩
+    container.querySelectorAll("[data-cidx]").forEach(btn => {
       btn.addEventListener("click", () => {
+        const c = categories[+btn.dataset.cidx];
         if (openDriveCats.has(c)) openDriveCats.delete(c);
         else { openDriveCats.add(c); drivePageMap[c] = 1; }
         renderDriveTab();
       });
-      grid.appendChild(btn);
     });
-    wrap.appendChild(grid);
 
-    // 열린 카테고리별 목록 (순서대로)
+    // 페이지네이션 (이미 DOM에 있으므로 setTimeout 불필요)
     categories.filter(c => openDriveCats.has(c)).forEach(c => {
+      const idx = categories.indexOf(c);
       const items = sortedByCatOrder(c, grouped[c]);
       const catPage = drivePageMap[c] || 1;
-      const start = (catPage - 1) * DRIVE_PER_PAGE;
-      const pagId = `drivePag_${c.replace(/\W/g,'_')}`;
-
-      const section = document.createElement("div");
-      section.style.cssText = "border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;";
-      section.innerHTML = `
-        <div style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px;">📂 ${c}</div>
-        <div class="listing-grid">${_buildDriveItemsHtml(items, c, start)}</div>
-        <div id="${pagId}" class="pagination"></div>`;
-      wrap.appendChild(section);
-
-      // 페이지네이션은 DOM 삽입 후 실행
-      setTimeout(() => {
-        _makePagination(pagId, items.length, DRIVE_PER_PAGE, catPage,
-          (p) => { drivePageMap[c] = p; renderDriveTab(); });
-      }, 0);
+      _makePagination(`dcpag_${idx}`, items.length, DRIVE_PER_PAGE, catPage,
+        (p) => { drivePageMap[c] = p; renderDriveTab(); });
     });
-
-    container.appendChild(wrap);
   }
 
 
