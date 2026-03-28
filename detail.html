@@ -134,8 +134,9 @@
     } else {
       html += `<button class="btn btn-ghost" id="undoneBtn">↩ 광고중으로 변경</button>`;
     }
-    if (item.owner_contact) {
-      html += `<a class="contact-btn" href="tel:${item.owner_contact}">📞 ${item.owner_contact}</a>`;
+    const _contact = item.owner_contact || item.quick_contact;
+    if (_contact) {
+      html += `<a class="contact-btn" href="tel:${_contact}">📞 ${_contact}</a>`;
     }
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
@@ -145,7 +146,7 @@
     html += `<div class="info-card"><div class="info-grid">`;
     html += row("매물구분", getTypeLabel(item.type));
     html += row("주소", item.address);
-    html += row("집주인 연락처", item.owner_contact);
+    html += row("집주인 연락처", item.owner_contact || item.quick_contact);
 
     if (item.type === "shop" || item.type === "office") {
       html += row("거래유형", item.shop_dealType);
