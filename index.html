@@ -18,10 +18,11 @@
       <div class="logo-main">HITOP 부동산</div>
       <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
     </div>
-    <div style="margin-left:auto;display:flex;gap:8px;">
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn btn-ghost" onclick="exportAll()" style="font-size:0.82rem;">📥 전체 백업</button>
       <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/Commercial-Property-Quote/" target="_blank" style="font-size:0.82rem;text-decoration:none;">🧮 견적서</a>
       <a class="btn btn-ghost" href="https://calendar.google.com" target="_blank" style="font-size:0.82rem;text-decoration:none;">📅 캘린더</a>
+      <button class="btn btn-ghost" onclick="openContractModal()" style="font-size:0.82rem;">📨 계약문자</button>
     </div>
   </header>
   <div class="header-line"></div>
@@ -2396,6 +2397,518 @@
     btn.textContent = "✅ 선택한 파일 저장";
     await loadRecommendedProperties();
   }
+</script>
+
+<!-- ===== 계약문자 모달 ===== -->
+<style>
+#contractModal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(2,3,10,0.88);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 20px 12px;
+  overflow-y: auto;
+}
+.cm-wrap {
+  background: radial-gradient(circle at top left, #182853 0, #0b1a33 45%, #050914 100%);
+  border: 1px solid rgba(212,175,55,0.45);
+  border-radius: 18px;
+  width: 100%; max-width: 700px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  margin-bottom: 20px;
+}
+.cm-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(212,175,55,0.25);
+}
+.cm-header h2 { font-size: 1.1rem; color: var(--gold); margin: 0; }
+.cm-close {
+  background: transparent; border: none; color: var(--text-muted);
+  font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0 4px;
+}
+.cm-close:hover { color: var(--text-main); }
+.cm-section { margin-bottom: 14px; }
+.cm-section-title {
+  font-size: 0.75rem; color: var(--gold-soft); font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
+}
+.cm-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cm-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 520px) {
+  .cm-grid2, .cm-grid3 { grid-template-columns: 1fr; }
+}
+.cm-field label {
+  display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px;
+}
+.cm-field input[type=text],
+.cm-field input[type=number],
+.cm-field input[type=date],
+.cm-field input[type=time],
+.cm-field select,
+.cm-field textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color-scheme: dark;
+}
+.cm-field input:focus,
+.cm-field textarea:focus { outline: none; border-color: rgba(212,175,55,0.6); }
+.cm-toggle-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.cm-toggle {
+  padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; cursor: pointer;
+  border: 1px solid rgba(212,175,55,0.35); background: transparent; color: var(--text-muted);
+  transition: 0.15s;
+}
+.cm-toggle.active {
+  background: linear-gradient(135deg, #f3d27b, #d4af37);
+  color: #201608; font-weight: bold; border-color: transparent;
+}
+.cm-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 14px 0; }
+.cm-calc-box {
+  font-size: 0.83rem; color: var(--gold-soft);
+  background: rgba(212,175,55,0.07);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 8px; padding: 8px 12px;
+  margin-top: 4px;
+}
+.cm-output {
+  width: 100%;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(212,175,55,0.3);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 0.84rem;
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  line-height: 1.7;
+  padding: 14px;
+  min-height: 320px;
+  resize: vertical;
+}
+.cm-checkbox-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.cm-checkbox-row input[type=checkbox] {
+  width: auto; accent-color: var(--gold); cursor: pointer; transform: scale(1.15);
+}
+.cm-checkbox-row label {
+  font-size: 0.85rem; color: var(--text-muted); cursor: pointer; margin: 0;
+}
+</style>
+
+<div id="contractModal" style="display:none;">
+  <div class="cm-wrap">
+
+    <div class="cm-header">
+      <h2>📨 계약문자 생성</h2>
+      <button class="cm-close" onclick="closeContractModal()">✕</button>
+    </div>
+
+    <!-- 단지명 + 용도 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>단지명</label>
+          <input id="cm_complex" type="text" placeholder="예) 더퍼스트레지던스">
+        </div>
+        <div class="cm-field">
+          <label>용도</label>
+          <div class="cm-toggle-group" style="margin-top:4px;">
+            <button class="cm-toggle active" data-group="cm_usage" data-val="업무용" onclick="cmToggle(this)">업무용</button>
+            <button class="cm-toggle" data-group="cm_usage" data-val="주거용" onclick="cmToggle(this)">주거용</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 동 / 호수 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>동</label>
+          <input id="cm_dong" type="text" placeholder="예) 101">
+        </div>
+        <div class="cm-field">
+          <label>호수</label>
+          <input id="cm_ho" type="text" placeholder="예) 305">
+        </div>
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 보증금 / 월차임 / 선후불 -->
+    <div class="cm-section">
+      <div class="cm-section-title">계약 조건</div>
+      <div class="cm-grid2" style="margin-bottom:10px;">
+        <div class="cm-field">
+          <label>보증금 (만원)</label>
+          <input id="cm_deposit" type="number" placeholder="1000" oninput="cmCalc()">
+        </div>
+        <div class="cm-field">
+          <label>월차임 (만원)</label>
+          <input id="cm_monthly" type="number" placeholder="100">
+        </div>
+      </div>
+      <div class="cm-field">
+        <label>선불 / 후불</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_pay_timing" data-val="선불" onclick="cmToggle(this)">선불</button>
+          <button class="cm-toggle" data-group="cm_pay_timing" data-val="후불" onclick="cmToggle(this)">후불</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 계약금 -->
+    <div class="cm-section">
+      <div class="cm-section-title">계약금</div>
+      <div class="cm-field" style="margin-bottom:10px;">
+        <label>계약금 전액 (만원)</label>
+        <input id="cm_earnest" type="number" placeholder="100" oninput="cmCalc()">
+      </div>
+      <div class="cm-field" style="margin-bottom:8px;">
+        <label>입금방식</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_pay_method" data-val="전액입금" onclick="cmToggle(this);cmTogglePartial()">전액입금</button>
+          <button class="cm-toggle" data-group="cm_pay_method" data-val="일부입금" onclick="cmToggle(this);cmTogglePartial()">일부입금</button>
+        </div>
+      </div>
+      <div id="cm_partial_section" style="display:none;">
+        <div class="cm-field" style="margin-bottom:6px;">
+          <label>오늘 입금액 (만원)</label>
+          <input id="cm_partial_amount" type="number" placeholder="50" oninput="cmCalc()">
+        </div>
+        <div class="cm-calc-box" id="cm_remaining_display">잔여계약금: — 만원</div>
+      </div>
+    </div>
+
+    <!-- 잔금 + 잔금일 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>잔금 (자동계산)</label>
+          <div class="cm-calc-box" id="cm_balance_display" style="min-height:36px;display:flex;align-items:center;">— 만원</div>
+        </div>
+        <div class="cm-field">
+          <label>잔금일</label>
+          <input id="cm_balance_date" type="date" onchange="cmCalcEndDate()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 계약서 작성일 + 계약기간 -->
+    <div class="cm-section">
+      <div class="cm-grid2" style="margin-bottom:10px;">
+        <div class="cm-field">
+          <label>계약서 작성일</label>
+          <input id="cm_contract_date" type="date">
+        </div>
+        <div class="cm-field">
+          <label>계약서 작성 시간</label>
+          <input id="cm_contract_time" type="time" value="14:00">
+        </div>
+      </div>
+      <div class="cm-field" style="margin-bottom:8px;">
+        <label>계약기간</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_period" data-val="12" onclick="cmToggle(this);cmCalcEndDate()">12개월</button>
+          <button class="cm-toggle" data-group="cm_period" data-val="24" onclick="cmToggle(this);cmCalcEndDate()">24개월</button>
+        </div>
+      </div>
+      <div class="cm-calc-box" id="cm_period_display">계약기간: —</div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 근저당 / 공동중개 -->
+    <div class="cm-section">
+      <div class="cm-checkbox-row">
+        <input type="checkbox" id="cm_mortgage_chk" onchange="cmToggleMortgage()">
+        <label for="cm_mortgage_chk">근저당 있음</label>
+      </div>
+      <div id="cm_mortgage_section" style="display:none;margin-bottom:10px;" class="cm-field">
+        <label>채권최고액 (원)</label>
+        <input id="cm_mortgage_amount" type="text" placeholder="예) 120,000,000">
+      </div>
+
+      <div class="cm-checkbox-row">
+        <input type="checkbox" id="cm_coop_chk" onchange="cmToggleCoop()">
+        <label for="cm_coop_chk">공동중개</label>
+      </div>
+      <div id="cm_coop_section" style="display:none;" class="cm-field">
+        <label>상대 부동산명</label>
+        <input id="cm_coop_name" type="text" placeholder="예) ○○부동산">
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 임대인 계좌 -->
+    <div class="cm-section">
+      <div class="cm-section-title">임대인 계좌</div>
+      <div class="cm-grid3">
+        <div class="cm-field">
+          <label>소유자명</label>
+          <input id="cm_owner" type="text" placeholder="홍길동">
+        </div>
+        <div class="cm-field">
+          <label>은행명</label>
+          <input id="cm_bank" type="text" placeholder="국민은행">
+        </div>
+        <div class="cm-field">
+          <label>계좌번호</label>
+          <input id="cm_account" type="text" placeholder="123-456-789012">
+        </div>
+      </div>
+    </div>
+
+    <!-- 특약사항 -->
+    <div class="cm-section">
+      <div class="cm-field">
+        <label>추가 특약사항 (자유입력)</label>
+        <textarea id="cm_special" rows="3" placeholder="추가 특약이 있으면 입력하세요&#10;여러 줄 입력 가능합니다"></textarea>
+      </div>
+    </div>
+
+    <!-- 문자발송일 -->
+    <div class="cm-section">
+      <div class="cm-field" style="max-width:220px;">
+        <label>문자발송일</label>
+        <input id="cm_send_date" type="date">
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 액션 버튼 -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-primary" style="flex:1;font-size:0.9rem;" onclick="cmGenerate()">📨 문자 생성</button>
+      <button class="btn btn-ghost" style="font-size:0.9rem;" onclick="cmCopy()">📋 복사하기</button>
+    </div>
+
+    <!-- 출력 영역 -->
+    <div class="cm-field">
+      <label>생성된 문자 (직접 수정 가능)</label>
+      <textarea id="cm_output" class="cm-output" placeholder="'문자 생성' 버튼을 클릭하면 완성된 계약 문자가 여기에 표시됩니다."></textarea>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== 계약문자 모달 =====
+function openContractModal() {
+  document.getElementById('contractModal').style.display = 'flex';
+  const today = new Date().toISOString().slice(0, 10);
+  if (!document.getElementById('cm_send_date').value)
+    document.getElementById('cm_send_date').value = today;
+  if (!document.getElementById('cm_contract_date').value)
+    document.getElementById('cm_contract_date').value = today;
+}
+
+function closeContractModal() {
+  document.getElementById('contractModal').style.display = 'none';
+}
+
+document.getElementById('contractModal').addEventListener('click', function(e) {
+  if (e.target === this) closeContractModal();
+});
+
+function cmToggle(btn) {
+  const group = btn.dataset.group;
+  document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function cmTogglePartial() {
+  const isPartial = document.querySelector('[data-group="cm_pay_method"].active')?.dataset.val === '일부입금';
+  document.getElementById('cm_partial_section').style.display = isPartial ? 'block' : 'none';
+  cmCalc();
+}
+
+function cmToggleMortgage() {
+  document.getElementById('cm_mortgage_section').style.display =
+    document.getElementById('cm_mortgage_chk').checked ? 'block' : 'none';
+}
+
+function cmToggleCoop() {
+  document.getElementById('cm_coop_section').style.display =
+    document.getElementById('cm_coop_chk').checked ? 'block' : 'none';
+}
+
+function cmCalc() {
+  const deposit = parseInt(document.getElementById('cm_deposit').value) || 0;
+  const earnest = parseInt(document.getElementById('cm_earnest').value) || 0;
+  const partial = parseInt(document.getElementById('cm_partial_amount').value) || 0;
+
+  const balance = deposit - earnest;
+  document.getElementById('cm_balance_display').textContent =
+    (deposit || earnest) ? `${balance.toLocaleString()}만원` : '— 만원';
+
+  const remaining = earnest - partial;
+  document.getElementById('cm_remaining_display').textContent =
+    earnest ? `잔여계약금: ${remaining.toLocaleString()}만원` : '잔여계약금: — 만원';
+}
+
+function cmCalcEndDate() {
+  const balanceDate = document.getElementById('cm_balance_date').value;
+  const period = parseInt(document.querySelector('[data-group="cm_period"].active')?.dataset.val || '12');
+  if (!balanceDate) {
+    document.getElementById('cm_period_display').textContent = '계약기간: —';
+    return;
+  }
+  const start = new Date(balanceDate);
+  const end = new Date(balanceDate);
+  end.setMonth(end.getMonth() + period);
+  const fmt = d =>
+    `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  document.getElementById('cm_period_display').textContent =
+    `계약기간: ${fmt(start)} ~ ${fmt(end)} (${period}개월)`;
+}
+
+function cmFmtDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function cmGenerate() {
+  const complex     = document.getElementById('cm_complex').value.trim();
+  const dong        = document.getElementById('cm_dong').value.trim();
+  const ho          = document.getElementById('cm_ho').value.trim();
+  const usage       = document.querySelector('[data-group="cm_usage"].active')?.dataset.val || '업무용';
+  const isBiz       = usage === '업무용';
+
+  const depositNum  = parseInt(document.getElementById('cm_deposit').value) || 0;
+  const monthlyNum  = parseInt(document.getElementById('cm_monthly').value) || 0;
+  const payTiming   = document.querySelector('[data-group="cm_pay_timing"].active')?.dataset.val || '선불';
+
+  const earnest     = parseInt(document.getElementById('cm_earnest').value) || 0;
+  const isPartial   = document.querySelector('[data-group="cm_pay_method"].active')?.dataset.val === '일부입금';
+  const partialAmt  = parseInt(document.getElementById('cm_partial_amount').value) || 0;
+  const remaining   = earnest - partialAmt;
+  const balance     = depositNum - earnest;
+
+  const balanceDate    = document.getElementById('cm_balance_date').value;
+  const contractDate   = document.getElementById('cm_contract_date').value;
+  const contractTime   = document.getElementById('cm_contract_time').value;
+  const period         = parseInt(document.querySelector('[data-group="cm_period"].active')?.dataset.val || '12');
+  const sendDate       = document.getElementById('cm_send_date').value;
+
+  const mortgageChk    = document.getElementById('cm_mortgage_chk').checked;
+  const mortgageAmt    = document.getElementById('cm_mortgage_amount').value.trim();
+  const coopChk        = document.getElementById('cm_coop_chk').checked;
+  const coopName       = document.getElementById('cm_coop_name').value.trim();
+
+  const owner   = document.getElementById('cm_owner').value.trim();
+  const bank    = document.getElementById('cm_bank').value.trim();
+  const account = document.getElementById('cm_account').value.trim();
+  const special = document.getElementById('cm_special').value.trim();
+
+  // 계약기간 계산
+  let periodStr = '—';
+  if (balanceDate) {
+    const s = new Date(balanceDate);
+    const e = new Date(balanceDate);
+    e.setMonth(e.getMonth() + period);
+    const fmt = d =>
+      `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    periodStr = `${fmt(s)}~${fmt(e)}(${period}개월)`;
+  }
+
+  // 인사말
+  const greeting = (coopChk && coopName)
+    ? `안녕하세요. 하이탑부동산(031-949-8969)과\n${coopName}입니다.`
+    : `안녕하세요. 하이탑부동산(031-949-8969)입니다.`;
+
+  // 용도
+  const usageText = isBiz ? '업무용(전입신고안됨)' : '주거용(전입신고됨)';
+
+  // 월세 줄
+  const monthlyLine = isBiz
+    ? `월세: ${monthlyNum.toLocaleString()}만원 ${payTiming} (부가세 10% 별도)`
+    : `월세: ${monthlyNum.toLocaleString()}만원 ${payTiming}`;
+
+  // 계약금 줄
+  let earnestBlock = `계약금: ${earnest.toLocaleString()}만원`;
+  if (isPartial) {
+    earnestBlock += `\n- 오늘입금: ${partialAmt.toLocaleString()}만원 (${cmFmtDate(sendDate)})`;
+    earnestBlock += `\n- 잔여계약금: ${remaining.toLocaleString()}만원 (계약서 작성시 입금)`;
+  }
+
+  // 특약사항 목록
+  const specialLines = [];
+  if (mortgageChk && mortgageAmt) {
+    specialLines.push(
+      `현재 등기상 근저당권(채권최고액 ${mortgageAmt}원)이 설정되어 있으며\n  임차인은 이를 확인하고 동의합니다.`
+    );
+  }
+  if (isBiz) {
+    specialLines.push(
+      `임차인은 업무용으로 사용하며 전입신고불가하며,\n  임차인의 전입신고로 인한 임대인의 피해 발생시 임차인이 부담하여야 한다.`
+    );
+  }
+  specialLines.push(`임차인이 사정상 중도해지시 중개수수료는 임차인이 부담한다.`);
+  if (isBiz) {
+    specialLines.push(`월차임에 부가세 10% 별도이며 세금계산서를 발행합니다.`);
+  }
+  if (special) {
+    special.split('\n').filter(l => l.trim()).forEach(l => specialLines.push(l.trim()));
+  }
+  const specialBlock = specialLines.map(l => `- ${l}`).join('\n');
+
+  const text =
+`${greeting}
+
+[${complex || '단지명'} 오피스텔 월세계약 내용]
+
+[계약 물건 정보]
+소재지: 경기도 파주시 와동동 XXXX
+${complex || '단지명'} 오피스텔 ${dong || '동'}동 ${ho || '호수'}호
+용도: ${usageText}
+계약기간: ${periodStr}
+
+[계약 조건]
+보증금: ${depositNum.toLocaleString()}만원
+${monthlyLine}
+${earnestBlock}
+잔금: ${balance.toLocaleString()}만원 (${cmFmtDate(balanceDate)})
+계약서작성일: ${cmFmtDate(contractDate)} ${contractTime}
+
+[특약사항]
+${specialBlock}
+
+본 문자는 계약의 효력이 있습니다.
+정식 계약 이전 해제시 임차인은 입금액의 계약금을 포기하고,
+임대인은 받은 금액의 2배를 반환합니다.
+이에 동의하시면 임대인은 입금계좌번호를 보내주시고,
+임차인은 임대인 계좌로 입금하시면 계약이 성립됩니다.
+
+[임대인 계좌]
+${bank} ${account} (${owner})
+
+${cmFmtDate(sendDate)}`;
+
+  document.getElementById('cm_output').value = text;
+}
+
+function cmCopy() {
+  const ta = document.getElementById('cm_output');
+  if (!ta.value.trim()) { showToast('먼저 문자를 생성해주세요.'); return; }
+  navigator.clipboard.writeText(ta.value).then(() => {
+    showToast('📋 클립보드에 복사되었습니다!');
+  }).catch(() => {
+    ta.select();
+    document.execCommand('copy');
+    showToast('📋 복사되었습니다!');
+  });
+}
 </script>
 </body>
 </html>
