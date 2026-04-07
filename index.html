@@ -1215,7 +1215,7 @@ if (tab === "done")       renderDoneList();
     if (doneSearch) {
       const kw = doneSearch.toLowerCase();
       filtered = filtered.filter(item =>
-        [item.title, item.address, item.quick_price, item.quick_memo, item.description].join(" ").toLowerCase().includes(kw)
+        [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase().includes(kw)
       );
     }
     filtered.sort((a, b) => new Date(b.completed_at || b.created_at || 0) - new Date(a.completed_at || a.created_at || 0));
@@ -1404,7 +1404,7 @@ if (tab === "done")       renderDoneList();
     let filtered = allDoneCustomers.filter(c => {
       if (!doneCustomerSearch) return true;
       const q = doneCustomerSearch;
-      return (c.name || "").includes(q) || (c.budget || "").includes(q) || (c.memo || "").includes(q);
+      return [c.name, c.contact, c.budget, c.memo].join(" ").includes(q);
     });
 
     const badge = document.getElementById("doneCustomerCountBadge");
@@ -2888,7 +2888,7 @@ ${cmFmtDate(sendDate)}`;
     ].join("");
 
     let filtered = allMemos.filter(m => {
-      const matchSearch = !memoSearch || (m.title || "").includes(memoSearch) || (m.content || "").includes(memoSearch);
+      const matchSearch = !memoSearch || [m.title, m.content, m.building_name].join(" ").includes(memoSearch);
       const matchBuilding = !memoBuildingFilter || m.building_name === memoBuildingFilter;
       return matchSearch && matchBuilding;
     });
