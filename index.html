@@ -33,6 +33,7 @@
     <button class="tab-btn" data-tab="request">📝 의뢰관리</button>
     <button class="tab-btn" data-tab="customer">👥 고객관리</button>
     <button class="tab-btn" data-tab="done">✅ 거래완료관리</button>
+    <button class="tab-btn" data-tab="donecustomer">✅ 완료고객</button>
     <button class="tab-btn" data-tab="reference">📌 참고매물</button>
     <button class="tab-btn" data-tab="drive">📁 자료보기</button>
     <button class="tab-btn" data-tab="recommend">📄 추천매물장</button>
@@ -352,6 +353,31 @@
         거래완료된 매물이 없습니다.
       </div>
       <div id="donePagination" class="pagination"></div>
+    </section>
+
+  </div>
+
+  <!-- ===== 완료고객관리 탭 ===== -->
+  <div id="tabDoneCustomer" style="display:none;">
+
+    <!-- 검색 -->
+    <section class="card">
+      <div class="card-title"><span>🔍 완료고객 검색</span></div>
+      <div class="field">
+        <input id="doneCustomerSearchInput" type="text" placeholder="고객명, 관심매물유형, 메모로 검색..." />
+      </div>
+    </section>
+
+    <!-- 목록 -->
+    <section class="card">
+      <div class="card-title">
+        <span>완료고객 목록 <span id="doneCustomerCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+      </div>
+      <div id="doneCustomerContainer" class="listing-grid"></div>
+      <div id="doneCustomerEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+        계약완료된 고객이 없습니다.
+      </div>
+      <div id="doneCustomerPagination" class="pagination"></div>
     </section>
 
   </div>
@@ -815,6 +841,7 @@
       document.getElementById("tabReference").style.display  = tab === "reference"  ? "" : "none";
       document.getElementById("tabDrive").style.display      = tab === "drive"      ? "" : "none";
       document.getElementById("tabRecommend").style.display  = tab === "recommend"  ? "" : "none";
+      document.getElementById("tabDoneCustomer").style.display = tab === "donecustomer" ? "" : "none";
       document.getElementById("tabMemo").style.display       = tab === "memo"       ? "" : "none";
       if (tab === "customer")   loadCustomers();
       if (tab === "request")    loadRequests();
@@ -823,6 +850,7 @@
       if (tab === "drive")      loadDriveResources();
       if (tab === "recommend")  loadRecommendedProperties();
       if (tab === "memo")       loadMemos();
+      if (tab === "donecustomer") loadDoneCustomers();
     });
   });
 
@@ -1588,15 +1616,93 @@
   }
 
   async function handleContractDone(id) {
-    if (!confirm("계약완료로 처리하시겠습니까?")) return;
+    if (!confirm("계약완료로 처리하시겠습니까?\n완료일자가 자동 저장됩니다.")) return;
     try {
-      await updateCustomerStatus(id, "계약완료");
+      await updateCustomer(id, { status: "계약완료", completed_at: new Date().toISOString() });
       showToast("✅ 계약완료 처리됨");
       await loadCustomers();
+      // 완료고객관리 탭으로 이동
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelector('[data-tab="donecustomer"]').classList.add("active");
+      document.getElementById("tabCustomer").style.display     = "none";
+      document.getElementById("tabDoneCustomer").style.display = "";
+      await loadDoneCustomers();
     } catch(e) {
       showToast("❌ 오류: " + e.message);
     }
   }
+
+  // ===== 완료고객관리 탭 =====
+  let allDoneCustomers = [];
+  let doneCustomerPage = 1;
+  let doneCustomerSearch = "";
+  const DONE_CUST_PER_PAGE = 12;
+
+  async function loadDoneCustomers() {
+    const container = document.getElementById("doneCustomerContainer");
+    container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
+    try {
+      const all = await getCustomers();
+      allDoneCustomers = all.filter(c => c.status === "계약완료");
+      renderDoneCustomers();
+    } catch(e) {
+      container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
+    }
+  }
+
+  function renderDoneCustomers() {
+    let filtered = allDoneCustomers.filter(c => {
+      if (!doneCustomerSearch) return true;
+      const q = doneCustomerSearch;
+      return (c.name || "").includes(q) || (c.budget || "").includes(q) || (c.memo || "").includes(q);
+    });
+
+    const badge = document.getElementById("doneCustomerCountBadge");
+    if (badge) badge.textContent = `(${filtered.length}건)`;
+
+    const container = document.getElementById("doneCustomerContainer");
+    const empty = document.getElementById("doneCustomerEmpty");
+
+    if (!filtered.length) {
+      container.innerHTML = "";
+      if (empty) empty.style.display = "block";
+      document.getElementById("doneCustomerPagination").innerHTML = "";
+      return;
+    }
+    if (empty) empty.style.display = "none";
+
+    const start = (doneCustomerPage - 1) * DONE_CUST_PER_PAGE;
+    const pageItems = filtered.slice(start, start + DONE_CUST_PER_PAGE);
+
+    container.innerHTML = "";
+    pageItems.forEach(c => {
+      const card = document.createElement("div");
+      card.className = "listing-card";
+      card.style.cursor = "default";
+      const completedAt = c.completed_at ? formatDate(c.completed_at) : "-";
+      card.innerHTML = `
+        <div class="badge-row" style="margin-bottom:6px;">
+          ${c.type ? `<span class="badge">${getCustomerTypeLabel(c.type)}</span>` : ""}
+          <span class="badge badge-red">계약완료</span>
+        </div>
+        <div class="listing-title">${c.name || "(이름 미입력)"}</div>
+        ${c.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.contact}" onclick="event.stopPropagation()">📞 ${c.contact}</a></div>` : ""}
+        ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
+        ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
+        <div style="margin-top:8px;font-size:0.78rem;color:var(--gold-soft);">✅ 계약완료일: ${completedAt}</div>
+      `;
+      container.appendChild(card);
+    });
+
+    _makePagination("doneCustomerPagination", filtered.length, DONE_CUST_PER_PAGE, doneCustomerPage,
+      (p) => { doneCustomerPage = p; renderDoneCustomers(); });
+  }
+
+  document.getElementById("doneCustomerSearchInput").addEventListener("input", (e) => {
+    doneCustomerSearch = e.target.value.trim();
+    doneCustomerPage = 1;
+    renderDoneCustomers();
+  });
 
   async function handleDeleteCustomer(id) {
     if (!confirm("고객을 삭제하시겠습니까?")) return;
