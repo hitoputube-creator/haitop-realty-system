@@ -211,6 +211,38 @@ async function updateRequest(id, data) {
   if (!res.ok) throw new Error("의뢰 수정 실패: " + await res.text());
 }
 
+// ===== 메모장 관리 =====
+async function getMemos() {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/memos?order=created_at.desc", { headers });
+  if (!res.ok) throw new Error("메모 목록 조회 실패");
+  return await res.json();
+}
+async function addMemo(item) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/memos", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(item)
+  });
+  if (!res.ok) throw new Error("메모 저장 실패: " + await res.text());
+}
+async function updateMemo(id, item) {
+  const body = Object.assign({}, item);
+  delete body.id; delete body.created_at;
+  const res = await fetch(SUPABASE_URL + "/rest/v1/memos?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error("메모 수정 실패: " + await res.text());
+}
+async function deleteMemo(id) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/memos?id=eq." + encodeURIComponent(id), {
+    method: "DELETE",
+    headers: headers
+  });
+  if (!res.ok) throw new Error("메모 삭제 실패");
+}
+
 // ===== 고객 관리 =====
 async function getCustomers() {
   const res = await fetch(SUPABASE_URL + "/rest/v1/customers?order=created_at.desc", { headers });

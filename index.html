@@ -36,6 +36,7 @@
     <button class="tab-btn" data-tab="reference">📌 참고매물</button>
     <button class="tab-btn" data-tab="drive">📁 자료보기</button>
     <button class="tab-btn" data-tab="recommend">📄 추천매물장</button>
+    <button class="tab-btn" data-tab="memo">📝 메모장</button>
   </div>
 
   <!-- ===== 매물관리 탭 ===== -->
@@ -525,6 +526,44 @@
 
 </div>
 
+  <!-- ===== 메모장 탭 ===== -->
+  <div id="tabMemo" style="display:none;">
+
+    <!-- 등록 폼 -->
+    <div class="quick-card">
+      <div class="quick-title">📝 새 메모</div>
+      <div class="quick-sub">빠르게 메모를 남기세요. 건물명으로 분류할 수 있습니다.</div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>제목 <span style="color:var(--red);">*</span></label>
+        <input id="memo_title" type="text" placeholder="메모 제목을 입력하세요" />
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>내용 <span style="color:var(--red);">*</span></label>
+        <textarea id="memo_content" rows="4" placeholder="메모 내용을 입력하세요" style="width:100%;resize:vertical;min-height:100px;box-sizing:border-box;"></textarea>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>건물명 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+        <input id="memo_building" type="text" placeholder="건물명 입력 또는 목록에서 선택" list="memoBuildingList" autocomplete="off" />
+        <datalist id="memoBuildingList"></datalist>
+      </div>
+      <button class="btn btn-primary" id="memoSaveBtn" style="width:100%;">💾 저장</button>
+    </div>
+
+    <!-- 검색 + 건물 필터 -->
+    <section class="card">
+      <div class="card-title"><span>🔍 검색 / 필터</span></div>
+      <div class="field" style="margin-bottom:10px;">
+        <input id="memoSearchInput" type="text" placeholder="제목, 내용으로 검색..." />
+      </div>
+      <div id="memoBuildingFilters" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </section>
+
+    <!-- 목록 -->
+    <div id="memoContainer"></div>
+    <div id="memoPagination" class="pagination"></div>
+
+  </div>
+
 <!-- ✏️ 추천매물장 수정 모달 -->
 <div id="recommendEditModal" class="modal-overlay" style="display:none;">
   <div class="modal-box" style="max-width:540px;">
@@ -736,6 +775,30 @@
   </div>
 </div>
 
+<!-- ✏️ 메모 수정 모달 -->
+<div id="memoEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:540px;">
+    <div class="modal-title">✏️ 메모 수정</div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>제목 <span style="color:var(--red);">*</span></label>
+      <input id="me_title" type="text" placeholder="메모 제목" />
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>내용 <span style="color:var(--red);">*</span></label>
+      <textarea id="me_content" rows="5" placeholder="메모 내용" style="width:100%;resize:vertical;min-height:120px;box-sizing:border-box;"></textarea>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>건물명 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <input id="me_building" type="text" placeholder="건물명" list="memoEditBuildingList" autocomplete="off" />
+      <datalist id="memoEditBuildingList"></datalist>
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('memoEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="memoEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -752,12 +815,14 @@
       document.getElementById("tabReference").style.display  = tab === "reference"  ? "" : "none";
       document.getElementById("tabDrive").style.display      = tab === "drive"      ? "" : "none";
       document.getElementById("tabRecommend").style.display  = tab === "recommend"  ? "" : "none";
+      document.getElementById("tabMemo").style.display       = tab === "memo"       ? "" : "none";
       if (tab === "customer")   loadCustomers();
       if (tab === "request")    loadRequests();
       if (tab === "done")       renderDoneList();
       if (tab === "reference")  loadReferenceProperties();
       if (tab === "drive")      loadDriveResources();
       if (tab === "recommend")  loadRecommendedProperties();
+      if (tab === "memo")       loadMemos();
     });
   });
 
@@ -2897,6 +2962,163 @@ ${cmFmtDate(sendDate)}`;
 
   document.getElementById('cm_output').value = text;
 }
+
+  // ===== 메모장 탭 =====
+  let allMemos = [];
+  let memoPage = 1;
+  let memoSearch = "";
+  let memoBuildingFilter = "";
+  const MEMO_PER_PAGE = 12;
+
+  async function loadMemos() {
+    const container = document.getElementById("memoContainer");
+    container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
+    try {
+      if (!allDriveResources.length) {
+        try { allDriveResources = await getDriveResources(); } catch {}
+      }
+      allMemos = await getMemos();
+      renderMemoTab();
+      updateMemoBuildingDatalist();
+    } catch(e) {
+      container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
+    }
+  }
+
+  function updateMemoBuildingDatalist() {
+    const buildings = [...new Set([
+      ...allDriveResources.map(r => r.name).filter(Boolean),
+      ...allMemos.map(r => r.building_name).filter(Boolean)
+    ])].sort();
+    const html = buildings.map(b => `<option value="${b}">`).join("");
+    document.getElementById("memoBuildingList").innerHTML = html;
+    document.getElementById("memoEditBuildingList").innerHTML = html;
+  }
+
+  function renderMemoTab() {
+    const buildings = [...new Set(allMemos.map(r => r.building_name).filter(Boolean))].sort();
+    const filterContainer = document.getElementById("memoBuildingFilters");
+    filterContainer.innerHTML = [
+      `<button class="filter-btn${memoBuildingFilter === '' ? ' active' : ''}" onclick="setMemoBuildingFilter('')">전체</button>`,
+      ...buildings.map(b => `<button class="filter-btn${memoBuildingFilter === b ? ' active' : ''}" onclick="setMemoBuildingFilter('${b.replace(/'/g, "\\'")}')">📌 ${b}</button>`)
+    ].join("");
+
+    let filtered = allMemos.filter(m => {
+      const matchSearch = !memoSearch || (m.title || "").includes(memoSearch) || (m.content || "").includes(memoSearch);
+      const matchBuilding = !memoBuildingFilter || m.building_name === memoBuildingFilter;
+      return matchSearch && matchBuilding;
+    });
+
+    const container = document.getElementById("memoContainer");
+    if (!filtered.length) {
+      container.innerHTML = `<div class="loading" style="color:var(--text-muted);">메모가 없습니다. 위 폼에서 추가해주세요.</div>`;
+      document.getElementById("memoPagination").innerHTML = "";
+      return;
+    }
+
+    const start = (memoPage - 1) * MEMO_PER_PAGE;
+    const pageItems = filtered.slice(start, start + MEMO_PER_PAGE);
+
+    container.innerHTML = `<div class="listing-grid">${pageItems.map(m => {
+      const createdAt = formatDate(m.created_at);
+      const updatedAt = (m.updated_at && m.updated_at !== m.created_at) ? formatDate(m.updated_at) : null;
+      const safeContent = (m.content || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return `
+      <div class="listing-card" style="cursor:default;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+          <div style="font-size:0.95rem;font-weight:700;color:var(--gold-soft);flex:1;">${m.title}</div>
+          ${m.building_name ? `<span class="badge" style="flex-shrink:0;font-size:0.72rem;">📌 ${m.building_name}</span>` : ""}
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-main);white-space:pre-wrap;line-height:1.6;margin-bottom:10px;">${safeContent}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">
+          등록: ${createdAt}${updatedAt ? ` · 수정: ${updatedAt}` : ""}
+        </div>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openMemoEdit('${m.id}')">✏️ 수정</button>
+          <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteMemoItem('${m.id}')">🗑 삭제</button>
+        </div>
+      </div>`;
+    }).join("")}</div>`;
+
+    _makePagination("memoPagination", filtered.length, MEMO_PER_PAGE, memoPage, (p) => { memoPage = p; renderMemoTab(); });
+  }
+
+  function setMemoBuildingFilter(building) {
+    memoBuildingFilter = building;
+    memoPage = 1;
+    renderMemoTab();
+  }
+
+  document.getElementById("memoSearchInput").addEventListener("input", (e) => {
+    memoSearch = e.target.value.trim();
+    memoPage = 1;
+    renderMemoTab();
+  });
+
+  document.getElementById("memoSaveBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("memoSaveBtn");
+    const title = document.getElementById("memo_title").value.trim();
+    const content = document.getElementById("memo_content").value.trim();
+    const building_name = document.getElementById("memo_building").value.trim() || null;
+    if (!title) { showToast("제목을 입력해주세요"); return; }
+    if (!content) { showToast("내용을 입력해주세요"); return; }
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await addMemo({ title, content, building_name });
+      document.getElementById("memo_title").value = "";
+      document.getElementById("memo_content").value = "";
+      document.getElementById("memo_building").value = "";
+      showToast("✅ 메모가 저장되었습니다!");
+      await loadMemos();
+    } catch(e) {
+      showToast("❌ 저장 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "💾 저장";
+    }
+  });
+
+  let editingMemoId = null;
+  function openMemoEdit(id) {
+    const m = allMemos.find(m => m.id === id);
+    if (!m) return;
+    editingMemoId = id;
+    document.getElementById("me_title").value = m.title || "";
+    document.getElementById("me_content").value = m.content || "";
+    document.getElementById("me_building").value = m.building_name || "";
+    document.getElementById("memoEditModal").style.display = "flex";
+  }
+
+  async function deleteMemoItem(id) {
+    if (!confirm("이 메모를 삭제하시겠습니까?")) return;
+    try {
+      await deleteMemo(id);
+      showToast("🗑 삭제되었습니다");
+      await loadMemos();
+    } catch(e) {
+      showToast("❌ 삭제 실패: " + e.message);
+    }
+  }
+
+  document.getElementById("memoEditSaveBtn").addEventListener("click", async () => {
+    if (!editingMemoId) return;
+    const btn = document.getElementById("memoEditSaveBtn");
+    const title = document.getElementById("me_title").value.trim();
+    const content = document.getElementById("me_content").value.trim();
+    const building_name = document.getElementById("me_building").value.trim() || null;
+    if (!title) { showToast("제목을 입력해주세요"); return; }
+    if (!content) { showToast("내용을 입력해주세요"); return; }
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await updateMemo(editingMemoId, { title, content, building_name });
+      document.getElementById("memoEditModal").style.display = "none";
+      showToast("✅ 수정되었습니다");
+      await loadMemos();
+    } catch(e) {
+      showToast("❌ 수정 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "저장";
+    }
+  });
 
 function cmCopy() {
   const ta = document.getElementById('cm_output');
