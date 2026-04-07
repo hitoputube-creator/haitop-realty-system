@@ -3029,7 +3029,11 @@ ${cmFmtDate(sendDate)}`;
           <div style="font-size:0.95rem;font-weight:700;color:var(--gold-soft);flex:1;">${m.title}</div>
           ${m.building_name ? `<span class="badge" style="flex-shrink:0;font-size:0.72rem;">📌 ${m.building_name}</span>` : ""}
         </div>
-        <div style="font-size:0.82rem;color:var(--text-main);white-space:pre-wrap;line-height:1.6;margin-bottom:10px;">${safeContent}</div>
+        <div class="memo-content-wrap" data-expanded="false" style="position:relative;max-height:100px;overflow:hidden;transition:max-height 0.3s ease;">
+          <div style="font-size:0.82rem;color:var(--text-main);white-space:pre-wrap;line-height:1.6;">${safeContent}</div>
+          <div class="memo-fade" style="position:absolute;bottom:0;left:0;right:0;height:36px;background:linear-gradient(transparent,var(--bg-card));pointer-events:none;"></div>
+        </div>
+        <button class="memo-expand-btn" style="display:none;width:100%;background:none;border:none;border-top:1px solid rgba(212,175,55,0.15);color:var(--gold);font-size:0.78rem;cursor:pointer;padding:6px 0 2px;margin-bottom:6px;font-family:inherit;letter-spacing:0.03em;" onclick="toggleMemoExpand(this)">▼ 더보기</button>
         <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">
           등록: ${createdAt}${updatedAt ? ` · 수정: ${updatedAt}` : ""}
         </div>
@@ -3040,7 +3044,36 @@ ${cmFmtDate(sendDate)}`;
       </div>`;
     }).join("")}</div>`;
 
+    // 렌더링 후 오버플로우 체크 → 짧은 카드는 더보기 버튼 숨김
+    container.querySelectorAll(".memo-content-wrap").forEach(wrap => {
+      const expandBtn = wrap.nextElementSibling;
+      const fade = wrap.querySelector(".memo-fade");
+      if (wrap.scrollHeight <= wrap.clientHeight + 2) {
+        if (expandBtn) expandBtn.style.display = "none";
+        if (fade) fade.style.display = "none";
+      } else {
+        if (expandBtn) expandBtn.style.display = "block";
+      }
+    });
+
     _makePagination("memoPagination", filtered.length, MEMO_PER_PAGE, memoPage, (p) => { memoPage = p; renderMemoTab(); });
+  }
+
+  function toggleMemoExpand(btn) {
+    const wrap = btn.previousElementSibling;
+    const fade = wrap.querySelector(".memo-fade");
+    const isExpanded = wrap.dataset.expanded === "true";
+    if (isExpanded) {
+      wrap.style.maxHeight = "100px";
+      wrap.dataset.expanded = "false";
+      btn.textContent = "▼ 더보기";
+      if (fade) fade.style.display = "block";
+    } else {
+      wrap.style.maxHeight = wrap.scrollHeight + "px";
+      wrap.dataset.expanded = "true";
+      btn.textContent = "▲ 접기";
+      if (fade) fade.style.display = "none";
+    }
   }
 
   function setMemoBuildingFilter(building) {
