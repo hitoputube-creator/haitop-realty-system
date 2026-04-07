@@ -284,6 +284,48 @@
   <!-- ===== 완료고객관리 탭 ===== -->
   <div id="tabDoneCustomer" style="display:none;">
 
+    <!-- 직접 등록 -->
+    <div class="quick-card">
+      <div class="quick-title">✅ 완료고객 직접 등록</div>
+      <div class="quick-sub">과거 계약 고객을 직접 기록하세요</div>
+      <div class="form-grid-2" style="margin-bottom:10px;">
+        <div class="field">
+          <label>이름</label>
+          <input id="dc_name" type="text" placeholder="고객 이름" />
+        </div>
+        <div class="field">
+          <label>연락처</label>
+          <input id="dc_contact" type="tel" placeholder="010-0000-0000" />
+        </div>
+        <div class="field">
+          <label>원하는 매물유형</label>
+          <select id="dc_type">
+            <option value="">미정</option>
+            <option value="shop">상가/사무실</option>
+            <option value="officetel">오피스텔</option>
+            <option value="land">토지</option>
+            <option value="factory">공장/창고</option>
+            <option value="bizcenter">지식산업센터</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>예산</label>
+          <input id="dc_budget" type="text" placeholder="예) 5억 이하, 월세 200 이하" />
+        </div>
+        <div class="field">
+          <label>완료일</label>
+          <input id="dc_completed_at" type="date" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>메모 (요구사항)</label>
+        <input id="dc_memo" type="text" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" />
+      </div>
+      <div style="text-align:right;">
+        <button class="btn btn-primary" id="doneCustomerSaveBtn">💾 완료고객 저장</button>
+      </div>
+    </div>
+
     <!-- 검색 -->
     <section class="card">
       <div class="card-title"><span>🔍 완료고객 검색</span></div>
@@ -1405,6 +1447,34 @@ if (tab === "done")       renderDoneList();
     _makePagination("doneCustomerPagination", filtered.length, DONE_CUST_PER_PAGE, doneCustomerPage,
       (p) => { doneCustomerPage = p; renderDoneCustomers(); });
   }
+
+  document.getElementById("doneCustomerSaveBtn").addEventListener("click", async () => {
+    const name    = document.getElementById("dc_name").value.trim();
+    const contact = document.getElementById("dc_contact").value.trim();
+    const type    = document.getElementById("dc_type").value;
+    const budget  = document.getElementById("dc_budget").value.trim();
+    const memo    = document.getElementById("dc_memo").value.trim();
+    const dateVal = document.getElementById("dc_completed_at").value;
+
+    if (!name && !contact) { showToast("이름 또는 연락처 중 하나는 입력해주세요"); return; }
+
+    const btn = document.getElementById("doneCustomerSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await addCustomer({
+        id: "CUST-" + Date.now(),
+        name, contact, type, budget, memo,
+        status: "계약완료",
+        completed_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+      });
+      ["dc_name","dc_contact","dc_budget","dc_memo"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("dc_type").value = "";
+      document.getElementById("dc_completed_at").value = "";
+      showToast("✅ 완료고객 저장됐습니다!");
+      await loadDoneCustomers();
+    } catch(e) { showToast("❌ 저장 실패: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "💾 완료고객 저장"; }
+  });
 
   document.getElementById("doneCustomerSearchInput").addEventListener("input", (e) => {
     doneCustomerSearch = e.target.value.trim();
