@@ -30,8 +30,7 @@
   <!-- 탭 -->
   <div class="tab-nav">
     <button class="tab-btn active" data-tab="property">매물</button>
-    <button class="tab-btn" data-tab="request">의뢰</button>
-    <button class="tab-btn" data-tab="customer">고객</button>
+<button class="tab-btn" data-tab="customer">고객</button>
     <button class="tab-btn" data-tab="done">거래완료</button>
     <button class="tab-btn" data-tab="donecustomer">완료고객</button>
     <button class="tab-btn" data-tab="reference">참고매물</button>
@@ -142,81 +141,6 @@
         등록된 매물이 없습니다.
       </div>
       <div id="pagination" class="pagination"></div>
-    </section>
-
-  </div>
-
-  <!-- ===== 의뢰관리 탭 ===== -->
-  <div id="tabRequest" style="display:none;">
-
-    <div class="quick-card">
-      <div class="quick-title">📝 의뢰고객 등록</div>
-      <div class="quick-sub">매도·매수·임대·임차 의뢰를 받은 고객을 기록하세요</div>
-      <div class="form-grid-2" style="margin-bottom:10px;">
-        <div class="field">
-          <label>고객 이름</label>
-          <input id="r_name" type="text" placeholder="이름" />
-        </div>
-        <div class="field">
-          <label>연락처</label>
-          <input id="r_contact" type="tel" placeholder="010-0000-0000" />
-        </div>
-        <div class="field">
-          <label>의뢰유형</label>
-          <select id="r_reqtype">
-            <option value="매도의뢰">매도의뢰 (팔고 싶음)</option>
-            <option value="매수의뢰">매수의뢰 (사고 싶음)</option>
-            <option value="임대의뢰">임대의뢰 (임대 놓고 싶음)</option>
-            <option value="임차의뢰">임차의뢰 (임차하고 싶음)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>매물유형</label>
-          <select id="r_proptype">
-            <option value="">미정</option>
-            <option value="shop">상가</option>
-            <option value="office">사무실</option>
-            <option value="officetel">오피스텔</option>
-            <option value="land">토지</option>
-            <option value="factory">공장/창고</option>
-            <option value="bizcenter">지식산업센터</option>
-            <option value="etc">기타</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>희망지역 / 물건지</label>
-          <input id="r_area" type="text" placeholder="예) 운정역 근처, 파주시 교하동" />
-        </div>
-        <div class="field">
-          <label>희망가격 / 조건</label>
-          <input id="r_price" type="text" placeholder="예) 매매 5억 이하, 월세 300 이하" />
-        </div>
-      </div>
-      <div class="field" style="margin-bottom:12px;">
-        <label>메모 / 요구사항</label>
-        <input id="r_memo" type="text" placeholder="예) 1층 선호, 권리금 없는 곳, 주차 3대 이상" />
-      </div>
-      <div style="text-align:right;">
-        <button class="btn btn-primary" id="requestSaveBtn">📝 의뢰 저장</button>
-      </div>
-    </div>
-
-    <section class="card">
-      <div class="card-title"><span>🔍 의뢰 검색</span></div>
-      <div class="field">
-        <input id="requestSearchInput" type="text" placeholder="이름, 연락처, 지역, 조건 등으로 검색..." />
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-title">
-        <span>의뢰 목록 <span id="requestCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
-      </div>
-      <div id="requestContainer" class="listing-grid"></div>
-      <div id="requestEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
-        등록된 의뢰가 없습니다.
-      </div>
-      <div id="requestPagination" class="pagination"></div>
     </section>
 
   </div>
@@ -614,61 +538,6 @@
   </div>
 </div>
 
-<!-- ✏️ 의뢰 수정 모달 -->
-<div id="requestEditModal" class="modal-overlay" style="display:none;">
-  <div class="modal-box" style="max-width:560px;">
-    <div class="modal-title">✏️ 의뢰 수정</div>
-    <div class="form-grid-2" style="margin-bottom:10px;">
-      <div class="field">
-        <label>고객 이름</label>
-        <input id="re_name" type="text" placeholder="이름" />
-      </div>
-      <div class="field">
-        <label>연락처</label>
-        <input id="re_contact" type="tel" placeholder="010-0000-0000" />
-      </div>
-      <div class="field">
-        <label>의뢰유형</label>
-        <select id="re_reqtype">
-          <option value="매도의뢰">매도의뢰 (팔고 싶음)</option>
-          <option value="매수의뢰">매수의뢰 (사고 싶음)</option>
-          <option value="임대의뢰">임대의뢰 (임대 놓고 싶음)</option>
-          <option value="임차의뢰">임차의뢰 (임차하고 싶음)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>매물유형</label>
-        <select id="re_proptype">
-          <option value="">미정</option>
-          <option value="shop">상가</option>
-          <option value="office">사무실</option>
-          <option value="officetel">오피스텔</option>
-          <option value="land">토지</option>
-          <option value="factory">공장/창고</option>
-          <option value="bizcenter">지식산업센터</option>
-          <option value="etc">기타</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>희망지역 / 물건지</label>
-        <input id="re_area" type="text" placeholder="예) 운정역 근처, 파주시 교하동" />
-      </div>
-      <div class="field">
-        <label>희망가격 / 조건</label>
-        <input id="re_price" type="text" placeholder="예) 매매 5억 이하, 월세 300 이하" />
-      </div>
-    </div>
-    <div class="field" style="margin-bottom:14px;">
-      <label>메모 / 요구사항</label>
-      <textarea id="re_memo" rows="6" placeholder="예) 1층 선호, 권리금 없는 곳, 주차 3대 이상" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
-    </div>
-    <div class="modal-btns">
-      <button class="btn" onclick="document.getElementById('requestEditModal').style.display='none'">취소</button>
-      <button class="btn btn-primary" id="requestEditSaveBtn">저장</button>
-    </div>
-  </div>
-</div>
-
 <!-- ✏️ 고객 수정 모달 -->
 <div id="customerEditModal" class="modal-overlay" style="display:none;">
   <div class="modal-box" style="max-width:560px;">
@@ -835,8 +704,7 @@
       btn.classList.add("active");
       const tab = btn.dataset.tab;
       document.getElementById("tabProperty").style.display  = tab === "property"  ? "" : "none";
-      document.getElementById("tabRequest").style.display   = tab === "request"   ? "" : "none";
-      document.getElementById("tabCustomer").style.display  = tab === "customer"  ? "" : "none";
+document.getElementById("tabCustomer").style.display  = tab === "customer"  ? "" : "none";
       document.getElementById("tabDone").style.display      = tab === "done"      ? "" : "none";
       document.getElementById("tabReference").style.display  = tab === "reference"  ? "" : "none";
       document.getElementById("tabDrive").style.display      = tab === "drive"      ? "" : "none";
@@ -844,8 +712,7 @@
       document.getElementById("tabDoneCustomer").style.display = tab === "donecustomer" ? "" : "none";
       document.getElementById("tabMemo").style.display       = tab === "memo"       ? "" : "none";
       if (tab === "customer")   loadCustomers();
-      if (tab === "request")    loadRequests();
-      if (tab === "done")       renderDoneList();
+if (tab === "done")       renderDoneList();
       if (tab === "reference")  loadReferenceProperties();
       if (tab === "drive")      loadDriveResources();
       if (tab === "recommend")  loadRecommendedProperties();
@@ -1137,7 +1004,6 @@
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelector('[data-tab="property"]').classList.add("active");
       document.getElementById("tabProperty").style.display = "";
-      document.getElementById("tabRequest").style.display  = "none";
       document.getElementById("tabCustomer").style.display = "none";
       document.getElementById("tabDone").style.display     = "none";
     } catch(e) { showToast("❌ 오류: " + e.message); }
@@ -1153,7 +1019,6 @@
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelector('[data-tab="done"]').classList.add("active");
       document.getElementById("tabProperty").style.display = "none";
-      document.getElementById("tabRequest").style.display  = "none";
       document.getElementById("tabCustomer").style.display = "none";
       document.getElementById("tabDone").style.display     = "";
       renderDoneList();
@@ -1393,163 +1258,6 @@
     finally { btn.disabled = false; btn.textContent = "✅ 거래완료로 등록"; }
   });
 
-  // ===== 의뢰관리 =====
-  let allRequests = [];
-  let requestPage = 1;
-  const REQ_PER_PAGE = 10;
-  let requestSearch = "";
-
-  const reqTypeColors = {
-    "매도의뢰": "badge-red", "매수의뢰": "badge-green",
-    "임대의뢰": "badge-blue", "임차의뢰": ""
-  };
-
-  function renderRequests() {
-    const container = document.getElementById("requestContainer");
-    const empty = document.getElementById("requestEmpty");
-    const badge = document.getElementById("requestCountBadge");
-    container.innerHTML = "";
-
-    let filtered = allRequests;
-    if (requestSearch) {
-      const kw = requestSearch.toLowerCase();
-      filtered = filtered.filter(r =>
-        [r.name, r.contact, r.area, r.price, r.memo, r.reqtype, r.proptype].join(" ").toLowerCase().includes(kw)
-      );
-    }
-
-    badge.textContent = filtered.length ? `(${filtered.length}건)` : "";
-
-    if (!filtered.length) {
-      empty.style.display = "block";
-      document.getElementById("requestPagination").innerHTML = "";
-      return;
-    }
-    empty.style.display = "none";
-
-    const start = (requestPage - 1) * REQ_PER_PAGE;
-    const pageItems = filtered.slice(start, start + REQ_PER_PAGE);
-
-    pageItems.forEach(r => {
-      const card = document.createElement("div");
-      card.className = "listing-card";
-      const proptypeLabel = getTypeLabel(r.proptype) !== "기타" || r.proptype ? getTypeLabel(r.proptype) : "";
-      card.innerHTML = `
-        <div class="badge-row" style="margin-bottom:6px;">
-          <span class="badge ${reqTypeColors[r.reqtype]||""}">${r.reqtype||""}</span>
-          ${r.proptype ? `<span class="badge">${getTypeLabel(r.proptype)}</span>` : ""}
-          ${r.status === "완료" ? '<span class="badge badge-red">완료</span>' : '<span class="badge badge-green">진행중</span>'}
-        </div>
-        <div class="listing-title">${r.name || "(이름 미입력)"}</div>
-        ${r.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${r.contact}" onclick="event.stopPropagation()">📞 ${r.contact}</a></div>` : ""}
-        ${r.area ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">📍 ${r.area}</div>` : ""}
-        ${r.price ? `<div style="margin-top:4px;font-size:0.82rem;color:var(--text-main);">💰 ${r.price}</div>` : ""}
-        ${r.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${r.memo}</div>` : ""}
-        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
-          <button class="btn" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();openRequestEdit('${r.id}')">✏️ 수정</button>
-          ${r.status !== "완료" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleRequestDone('${r.id}')">✅ 완료처리</button>` : ""}
-          <button class="btn btn-danger" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDeleteRequest('${r.id}')">🗑 삭제</button>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-
-    _makePagination("requestPagination", filtered.length, REQ_PER_PAGE, requestPage, (p) => { requestPage = p; renderRequests(); });
-  }
-
-  async function handleRequestDone(id) {
-    if (!confirm("의뢰를 완료처리하시겠습니까?")) return;
-    try {
-      await updateRequestStatus(id, "완료");
-      showToast("✅ 완료처리됨");
-      await loadRequests();
-    } catch(e) { showToast("❌ 오류: " + e.message); }
-  }
-
-  async function handleDeleteRequest(id) {
-    if (!confirm("의뢰를 삭제하시겠습니까?")) return;
-    try {
-      await deleteRequest(id);
-      showToast("🗑 삭제됨");
-      await loadRequests();
-    } catch(e) { showToast("❌ 오류: " + e.message); }
-  }
-
-  let editingRequestId = null;
-  function openRequestEdit(id) {
-    const r = allRequests.find(x => x.id === id);
-    if (!r) return;
-    editingRequestId = id;
-    document.getElementById("re_name").value    = r.name    || "";
-    document.getElementById("re_contact").value = r.contact || "";
-    document.getElementById("re_reqtype").value = r.reqtype || "매도의뢰";
-    document.getElementById("re_proptype").value = r.proptype || "";
-    document.getElementById("re_area").value    = r.area    || "";
-    document.getElementById("re_price").value   = r.price   || "";
-    document.getElementById("re_memo").value    = r.memo    || "";
-    document.getElementById("requestEditModal").style.display = "flex";
-  }
-  document.getElementById("requestEditSaveBtn").addEventListener("click", async () => {
-    if (!editingRequestId) return;
-    const btn = document.getElementById("requestEditSaveBtn");
-    btn.disabled = true; btn.textContent = "저장 중...";
-    try {
-      await updateRequest(editingRequestId, {
-        name:     document.getElementById("re_name").value.trim(),
-        contact:  document.getElementById("re_contact").value.trim(),
-        reqtype:  document.getElementById("re_reqtype").value,
-        proptype: document.getElementById("re_proptype").value,
-        area:     document.getElementById("re_area").value.trim(),
-        price:    document.getElementById("re_price").value.trim(),
-        memo:     document.getElementById("re_memo").value.trim()
-      });
-      document.getElementById("requestEditModal").style.display = "none";
-      showToast("✅ 수정 완료!");
-      await loadRequests();
-    } catch(e) { showToast("❌ 오류: " + e.message); }
-    finally { btn.disabled = false; btn.textContent = "저장"; }
-  });
-
-  document.getElementById("requestSaveBtn").addEventListener("click", async () => {
-    const name    = document.getElementById("r_name").value.trim();
-    const contact = document.getElementById("r_contact").value.trim();
-    const reqtype = document.getElementById("r_reqtype").value;
-    const proptype = document.getElementById("r_proptype").value;
-    const area    = document.getElementById("r_area").value.trim();
-    const price   = document.getElementById("r_price").value.trim();
-    const memo    = document.getElementById("r_memo").value.trim();
-
-    if (!name && !contact) { showToast("이름 또는 연락처 중 하나는 입력해주세요"); return; }
-
-    const btn = document.getElementById("requestSaveBtn");
-    btn.disabled = true; btn.textContent = "저장 중...";
-    try {
-      await addRequest({ id: "REQ-" + Date.now(), name, contact, reqtype, proptype, area, price, memo, status: "진행중" });
-      ["r_name","r_contact","r_area","r_price","r_memo"].forEach(id => document.getElementById(id).value = "");
-      document.getElementById("r_proptype").value = "";
-      showToast("✅ 의뢰 저장완료!");
-      await loadRequests();
-    } catch(e) { showToast("❌ 저장 실패: " + e.message); }
-    finally { btn.disabled = false; btn.textContent = "📝 의뢰 저장"; }
-  });
-
-  document.getElementById("requestSearchInput").addEventListener("input", (e) => {
-    requestSearch = e.target.value.trim();
-    requestPage = 1;
-    renderRequests();
-  });
-
-  async function loadRequests() {
-    const container = document.getElementById("requestContainer");
-    container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
-    try {
-      allRequests = await getRequests();
-      renderRequests();
-    } catch(e) {
-      container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
-    }
-  }
-
   // ===== 고객관리 =====
   let allCustomers = [];
   let customerPage = 1;
@@ -1567,7 +1275,7 @@
     const badge = document.getElementById("customerCountBadge");
     container.innerHTML = "";
 
-    let filtered = allCustomers;
+    let filtered = allCustomers.filter(c => c.status !== "계약완료");
     if (customerSearch) {
       const kw = customerSearch.toLowerCase();
       filtered = filtered.filter(c =>

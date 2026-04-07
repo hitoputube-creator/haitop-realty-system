@@ -237,8 +237,8 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .tab-btn {
   border: none; background: transparent;
-  color: var(--text-muted); font-size: 0.8rem; font-weight: 600;
-  padding: 8px 13px; cursor: pointer;
+  color: var(--text-muted); font-size: 0.9rem; font-weight: 600;
+  padding: 8px 16px; cursor: pointer;
   border-bottom: 2px solid transparent;
   transition: 0.15s; border-radius: 8px 8px 0 0;
   font-family: inherit; white-space: nowrap;
