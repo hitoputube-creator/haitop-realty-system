@@ -1312,7 +1312,7 @@ if (tab === "done")       renderDoneList();
         <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
           <button class="btn" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">✏️ 수정</button>
           ${c.status !== "계약완료"
-            ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleContractDone('${c.id}')">✅ 계약완료</button>`
+            ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleContractDone('${c.id}')">✅ 완료고객으로</button>`
             : ""}
           <button class="btn btn-danger" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">🗑 삭제</button>
         </div>
