@@ -94,11 +94,15 @@
     <!-- 검색 + 정렬 -->
     <section class="card">
       <div class="card-title"><span>🔍 검색 / 정렬</span></div>
-      <div class="form-grid-2" style="margin-bottom:0;">
-        <div class="field">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:0;">
+        <div class="field" style="flex:1;margin-bottom:0;">
           <input id="searchInput" type="text" placeholder="주소, 메모, 가격 등으로 검색..." />
         </div>
-        <div class="field">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">
+          <input type="checkbox" id="includeCompletedChk" style="width:auto;accent-color:var(--gold);" />
+          거래완료 포함
+        </label>
+        <div class="field" style="flex:0 0 auto;min-width:110px;margin-bottom:0;">
           <select id="sortSelect">
             <option value="newest">최신순</option>
             <option value="oldest">오래된순</option>
@@ -136,11 +140,18 @@
           <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
         </div>
       </div>
+      <!-- 통합검색: 현재매물 섹션 헤더 -->
+      <div id="unifiedPropertyLabel" style="display:none;font-weight:600;font-size:0.88rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(212,175,55,0.2);">현재매물 <span id="unifiedPropertyCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
       <div id="listingContainer" class="listing-grid"></div>
       <div id="emptyMessage" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
         등록된 매물이 없습니다.
       </div>
       <div id="pagination" class="pagination"></div>
+      <!-- 통합검색: 거래완료 섹션 -->
+      <div id="unifiedDoneSection" style="display:none;">
+        <div style="font-weight:600;font-size:0.88rem;color:#e88;margin-top:16px;margin-bottom:8px;padding-top:14px;padding-bottom:6px;border-top:1px solid rgba(238,136,136,0.2);border-bottom:1px solid rgba(238,136,136,0.2);">거래완료 <span id="unifiedDoneCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+        <div id="unifiedDoneContainer" class="listing-grid"></div>
+      </div>
     </section>
 
   </div>
@@ -272,6 +283,14 @@
       <div class="card-title">
         <span>거래완료 목록 <span id="doneCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
       </div>
+      <!-- 통합검색: 현재매물 섹션 -->
+      <div id="unifiedActiveSection" style="display:none;">
+        <div style="font-weight:600;font-size:0.88rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(212,175,55,0.2);">현재매물 <span id="unifiedActiveCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+        <div id="unifiedActiveContainer" class="listing-grid"></div>
+        <div style="height:16px;"></div>
+      </div>
+      <!-- 통합검색: 거래완료 섹션 헤더 -->
+      <div id="unifiedDoneLabelInDoneTab" style="display:none;font-weight:600;font-size:0.88rem;color:#e88;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(238,136,136,0.2);">거래완료 <span id="unifiedDoneLabelCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
       <div id="doneContainer" class="listing-grid"></div>
       <div id="doneEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
         거래완료된 매물이 없습니다.
@@ -901,6 +920,7 @@ if (tab === "done")       renderDoneList();
   let searchKeyword = "";
   let currentSort = "newest";
   let currentPage = 1;
+  let includeCompleted = false;
   const ITEMS_PER_PAGE = 10;
 
   function formatDate(iso) {
@@ -990,6 +1010,52 @@ if (tab === "done")       renderDoneList();
 
   function renderList() {
     listingContainer.innerHTML = "";
+    const unifiedPropertyLabel = document.getElementById("unifiedPropertyLabel");
+    const unifiedPropertyCount = document.getElementById("unifiedPropertyCount");
+    const unifiedDoneSection   = document.getElementById("unifiedDoneSection");
+    const unifiedDoneCount     = document.getElementById("unifiedDoneCount");
+    const unifiedDoneContainer = document.getElementById("unifiedDoneContainer");
+
+    // 통합검색 모드
+    if (searchKeyword) {
+      const kw = searchKeyword.toLowerCase();
+      const activeItems = allListings.filter(item => item.status !== "거래완료" && matchesKeyword(item, kw));
+      const doneItems   = allListings.filter(item => item.status === "거래완료"  && matchesKeyword(item, kw));
+      activeItems.sort((a, b) => new Date(b.created_at||0) - new Date(a.created_at||0));
+      doneItems.sort((a, b) => new Date(b.completed_at||b.created_at||0) - new Date(a.completed_at||a.created_at||0));
+
+      countBadge.textContent = "";
+      paginationEl.innerHTML = "";
+
+      if (activeItems.length) {
+        unifiedPropertyLabel.style.display = "";
+        unifiedPropertyCount.textContent = `(${activeItems.length}건)`;
+        emptyMessage.style.display = "none";
+        activeItems.forEach(item => listingContainer.appendChild(makeCard(item)));
+      } else {
+        unifiedPropertyLabel.style.display = "none";
+        emptyMessage.style.display = "none";
+      }
+
+      if (includeCompleted && doneItems.length) {
+        unifiedDoneSection.style.display = "";
+        unifiedDoneCount.textContent = `(${doneItems.length}건)`;
+        unifiedDoneContainer.innerHTML = "";
+        doneItems.forEach(item => unifiedDoneContainer.appendChild(makeCard(item, { revert: true })));
+      } else {
+        unifiedDoneSection.style.display = "none";
+      }
+
+      if (!activeItems.length && !(includeCompleted && doneItems.length)) {
+        emptyMessage.style.display = "block";
+      }
+      return;
+    }
+
+    // 일반 모드
+    unifiedPropertyLabel.style.display = "none";
+    unifiedDoneSection.style.display   = "none";
+
     const filtered = getFilteredListings();
     countBadge.textContent = filtered.length ? `(${filtered.length}건)` : "";
 
@@ -1166,8 +1232,44 @@ if (tab === "done")       renderDoneList();
     setTimeout(() => w.print(), 500);
   });
 
+  function matchesKeyword(item, kw) {
+    return [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase().includes(kw);
+  }
+
+  function makeCard(item, { revert = false } = {}) {
+    const card = document.createElement("div");
+    card.className = "listing-card";
+    card.onclick = () => location.href = `detail.html?id=${item.id}`;
+    const isQuick = item.quick_price && !item.shop_deposit && !item.land_price && !item.officetel_price;
+    const isDone = item.status === "거래완료";
+    card.innerHTML = `
+      <div class="badge-row" style="margin-bottom:6px;">
+        <span class="badge">${getTypeLabel(item.type)}</span>
+        ${isQuick && !isDone ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
+        ${isDone ? '<span class="badge badge-red">거래완료</span>' : ""}
+      </div>
+      <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
+      <div class="listing-price">${formatPrice(item)}</div>
+      ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
+      ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
+      ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+      <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
+        ${revert ? `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="event.stopPropagation();handleRevertListing('${item.id}')">↩ 매물로 되돌리기</button>` : ""}
+        ${!isDone && !revert ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
+        <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
+      </div>
+    `;
+    return card;
+  }
+
   document.getElementById("searchInput").addEventListener("input", (e) => {
     searchKeyword = e.target.value.trim();
+    currentPage = 1;
+    renderList();
+  });
+
+  document.getElementById("includeCompletedChk").addEventListener("change", (e) => {
+    includeCompleted = e.target.checked;
     currentPage = 1;
     renderList();
   });
@@ -1206,18 +1308,57 @@ if (tab === "done")       renderDoneList();
   const DONE_PER_PAGE = 10;
 
   function renderDoneList() {
-    const container = document.getElementById("doneContainer");
-    const empty     = document.getElementById("doneEmpty");
-    const badge     = document.getElementById("doneCountBadge");
+    const container          = document.getElementById("doneContainer");
+    const empty              = document.getElementById("doneEmpty");
+    const badge              = document.getElementById("doneCountBadge");
+    const unifiedActiveSection = document.getElementById("unifiedActiveSection");
+    const unifiedActiveCount   = document.getElementById("unifiedActiveCount");
+    const unifiedActiveContainer = document.getElementById("unifiedActiveContainer");
+    const unifiedDoneLabelInDoneTab = document.getElementById("unifiedDoneLabelInDoneTab");
+    const unifiedDoneLabelCount     = document.getElementById("unifiedDoneLabelCount");
     container.innerHTML = "";
 
-    let filtered = allListings.filter(item => item.status === "거래완료");
+    // 통합검색 모드
     if (doneSearch) {
       const kw = doneSearch.toLowerCase();
-      filtered = filtered.filter(item =>
-        [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase().includes(kw)
-      );
+      const activeItems = allListings.filter(item => item.status !== "거래완료" && matchesKeyword(item, kw));
+      const doneItems   = allListings.filter(item => item.status === "거래완료"  && matchesKeyword(item, kw));
+      activeItems.sort((a, b) => new Date(b.created_at||0) - new Date(a.created_at||0));
+      doneItems.sort((a, b) => new Date(b.completed_at||b.created_at||0) - new Date(a.completed_at||a.created_at||0));
+
+      badge.textContent = "";
+      document.getElementById("donePagination").innerHTML = "";
+
+      if (activeItems.length) {
+        unifiedActiveSection.style.display = "";
+        unifiedActiveCount.textContent = `(${activeItems.length}건)`;
+        unifiedActiveContainer.innerHTML = "";
+        activeItems.forEach(item => unifiedActiveContainer.appendChild(makeCard(item)));
+      } else {
+        unifiedActiveSection.style.display = "none";
+      }
+
+      if (doneItems.length) {
+        unifiedDoneLabelInDoneTab.style.display = "";
+        unifiedDoneLabelCount.textContent = `(${doneItems.length}건)`;
+        empty.style.display = "none";
+        doneItems.forEach(item => container.appendChild(makeCard(item, { revert: true })));
+      } else {
+        unifiedDoneLabelInDoneTab.style.display = "none";
+        empty.style.display = "none";
+      }
+
+      if (!activeItems.length && !doneItems.length) {
+        empty.style.display = "block";
+      }
+      return;
     }
+
+    // 일반 모드
+    unifiedActiveSection.style.display = "none";
+    unifiedDoneLabelInDoneTab.style.display = "none";
+
+    let filtered = allListings.filter(item => item.status === "거래완료");
     filtered.sort((a, b) => new Date(b.completed_at || b.created_at || 0) - new Date(a.completed_at || a.created_at || 0));
 
     badge.textContent = filtered.length ? `(${filtered.length}건)` : "";
