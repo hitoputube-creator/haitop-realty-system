@@ -273,8 +273,14 @@
     <!-- 검색 -->
     <section class="card">
       <div class="card-title"><span>🔍 거래완료 검색</span></div>
-      <div class="field">
-        <input id="doneSearchInput" type="text" placeholder="주소, 가격, 메모 등으로 검색..." />
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:0;">
+        <div class="field" style="flex:1;margin-bottom:0;">
+          <input id="doneSearchInput" type="text" placeholder="주소, 가격, 메모 등으로 검색..." />
+        </div>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">
+          <input type="checkbox" id="includeActiveChk" style="width:auto;accent-color:var(--gold);" />
+          현재매물 포함
+        </label>
       </div>
     </section>
 
@@ -1236,7 +1242,7 @@ if (tab === "done")       renderDoneList();
     return [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase().includes(kw);
   }
 
-  function makeCard(item, { revert = false } = {}) {
+  function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     const card = document.createElement("div");
     card.className = "listing-card";
     card.onclick = () => location.href = `detail.html?id=${item.id}`;
@@ -1247,6 +1253,7 @@ if (tab === "done")       renderDoneList();
         <span class="badge">${getTypeLabel(item.type)}</span>
         ${isQuick && !isDone ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
         ${isDone ? '<span class="badge badge-red">거래완료</span>' : ""}
+        ${!isDone && showActiveBadge ? '<span class="badge" style="background:rgba(80,180,100,0.18);color:#5cb85c;border:1px solid rgba(80,180,100,0.35);">매물중</span>' : ""}
       </div>
       <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
       <div class="listing-price">${formatPrice(item)}</div>
@@ -1305,6 +1312,7 @@ if (tab === "done")       renderDoneList();
   // ===== 거래완료관리 =====
   let doneSearch = "";
   let donePage = 1;
+  let includeActive = false;
   const DONE_PER_PAGE = 10;
 
   function renderDoneList() {
@@ -1321,25 +1329,27 @@ if (tab === "done")       renderDoneList();
     // 통합검색 모드
     if (doneSearch) {
       const kw = doneSearch.toLowerCase();
-      const activeItems = allListings.filter(item => item.status !== "거래완료" && matchesKeyword(item, kw));
-      const doneItems   = allListings.filter(item => item.status === "거래완료"  && matchesKeyword(item, kw));
+      const activeItems = includeActive
+        ? allListings.filter(item => item.status !== "거래완료" && matchesKeyword(item, kw))
+        : [];
+      const doneItems   = allListings.filter(item => item.status === "거래완료" && matchesKeyword(item, kw));
       activeItems.sort((a, b) => new Date(b.created_at||0) - new Date(a.created_at||0));
       doneItems.sort((a, b) => new Date(b.completed_at||b.created_at||0) - new Date(a.completed_at||a.created_at||0));
 
       badge.textContent = "";
       document.getElementById("donePagination").innerHTML = "";
 
-      if (activeItems.length) {
+      if (includeActive && activeItems.length) {
         unifiedActiveSection.style.display = "";
         unifiedActiveCount.textContent = `(${activeItems.length}건)`;
         unifiedActiveContainer.innerHTML = "";
-        activeItems.forEach(item => unifiedActiveContainer.appendChild(makeCard(item)));
+        activeItems.forEach(item => unifiedActiveContainer.appendChild(makeCard(item, { showActiveBadge: true })));
       } else {
         unifiedActiveSection.style.display = "none";
       }
 
       if (doneItems.length) {
-        unifiedDoneLabelInDoneTab.style.display = "";
+        unifiedDoneLabelInDoneTab.style.display = includeActive ? "" : "none";
         unifiedDoneLabelCount.textContent = `(${doneItems.length}건)`;
         empty.style.display = "none";
         doneItems.forEach(item => container.appendChild(makeCard(item, { revert: true })));
@@ -1397,6 +1407,12 @@ if (tab === "done")       renderDoneList();
 
   document.getElementById("doneSearchInput").addEventListener("input", (e) => {
     doneSearch = e.target.value.trim();
+    donePage = 1;
+    renderDoneList();
+  });
+
+  document.getElementById("includeActiveChk").addEventListener("change", (e) => {
+    includeActive = e.target.checked;
     donePage = 1;
     renderDoneList();
   });
