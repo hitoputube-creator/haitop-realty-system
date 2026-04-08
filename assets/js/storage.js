@@ -9,7 +9,7 @@ async function getListings() {
   const res = await fetch(SUPABASE_URL + "/rest/v1/listings?order=created_at.desc", { headers });
   if (!res.ok) throw new Error("목록 조회 실패");
   const rows = await res.json();
-  return rows.map(r => Object.assign({ id:r.id, type:r.type, title:r.title, address:r.address, status:r.status, description:r.description, created_at:r.created_at }, r.data));
+  return rows.map(r => Object.assign({ id:r.id, type:r.type, title:r.title, address:r.address, status:r.status, description:r.description, resource_id:r.resource_id||null, created_at:r.created_at }, r.data));
 }
 async function getListingById(id) {
   const res = await fetch(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), { headers });
@@ -17,18 +17,19 @@ async function getListingById(id) {
   const rows = await res.json();
   if (!rows.length) return null;
   const r = rows[0];
-  return Object.assign({ id:r.id, type:r.type, title:r.title, address:r.address, status:r.status, description:r.description, created_at:r.created_at }, r.data);
+  return Object.assign({ id:r.id, type:r.type, title:r.title, address:r.address, status:r.status, description:r.description, resource_id:r.resource_id||null, created_at:r.created_at }, r.data);
 }
 async function addListing(item) {
   const data = Object.assign({}, item);
   const id = data.id; const type = data.type; const title = data.title;
   const address = data.address; const status = data.status; const description = data.description;
+  const resource_id = data.resource_id || null;
   delete data.id; delete data.type; delete data.title;
-  delete data.address; delete data.status; delete data.description;
+  delete data.address; delete data.status; delete data.description; delete data.resource_id;
   const res = await fetch(SUPABASE_URL + "/rest/v1/listings", {
     method: "POST",
     headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
-    body: JSON.stringify({ id:id, type:type, title:title, address:address, status:status, description:description, data:data })
+    body: JSON.stringify({ id:id, type:type, title:title, address:address, status:status, description:description, resource_id:resource_id, data:data })
   });
   if (!res.ok) throw new Error("저장 실패: " + await res.text());
 }
@@ -66,13 +67,24 @@ async function updateListing(id, item) {
   delete data.id; delete data.created_at;
   const type = data.type; const title = data.title;
   const address = data.address; const status = data.status; const description = data.description;
-  delete data.type; delete data.title; delete data.address; delete data.status; delete data.description;
+  const resource_id = data.resource_id !== undefined ? (data.resource_id || null) : undefined;
+  delete data.type; delete data.title; delete data.address; delete data.status; delete data.description; delete data.resource_id;
+  const patch = { type, title, address, status, description, data };
+  if (resource_id !== undefined) patch.resource_id = resource_id;
   const res = await fetch(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
     method: "PATCH",
     headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
-    body: JSON.stringify({ type, title, address, status, description, data })
+    body: JSON.stringify(patch)
   });
   if (!res.ok) throw new Error("수정 실패: " + await res.text());
+}
+async function updateListingResourceId(id, resource_id) {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify({ resource_id: resource_id || null })
+  });
+  if (!res.ok) throw new Error("자료연결 수정 실패: " + await res.text());
 }
 
 // ===== 추천매물장 관리 =====

@@ -699,6 +699,37 @@
   </div>
 </div>
 
+<!-- 📝 건물 개요 메모 모달 -->
+<div id="driveMemoModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-title">📝 건물 개요 메모</div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>메모 내용 (자유 입력)</label>
+      <textarea id="drive_memo_text" rows="8" placeholder="예) 1동: 1~5층 상가, 6~15층 오피스텔&#10;2동: 주차장 별도&#10;관리비 협의 가능..." style="width:100%;resize:vertical;min-height:160px;box-sizing:border-box;"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('driveMemoModal').style.display='none'">취소</button>
+      <button class="btn" style="background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" id="driveMemoDeleteBtn">삭제</button>
+      <button class="btn btn-primary" id="driveMemoSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🔗 매물연결 모달 -->
+<div id="driveLinkModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
+  <div class="modal-box" style="max-width:560px;width:95%;padding:20px;">
+    <div class="modal-title">🔗 매물 연결</div>
+    <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">이 건물 자료와 연결할 매물을 선택하세요 (복수 선택 가능)</div>
+    <div id="driveLinkListArea" style="max-height:400px;overflow-y:auto;margin-bottom:14px;">
+      <div class="loading"><span class="spinner"></span>불러오는 중...</div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('driveLinkModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveLinkSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- ✏️ 참고매물 수정 모달 -->
 <div id="referenceEditModal" class="modal-overlay" style="display:none;">
   <div class="modal-box" style="max-width:520px;">
@@ -922,6 +953,7 @@ if (tab === "done")       renderDoneList();
   const paginationEl = document.getElementById("pagination");
 
   let allListings = [];
+  let allDriveResources = [];
   let currentFilter = "all";
   let searchKeyword = "";
   let currentSort = "newest";
@@ -1097,6 +1129,7 @@ if (tab === "done")       renderDoneList();
           ${item.drive_links.map(l=>`<a href="${l.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:0.73rem;color:var(--gold);text-decoration:none;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;padding:2px 7px;">📁 ${l.name||"링크"}</a>`).join("")}
         </div>` : ""}
         <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
+          ${item.resource_id ? (() => { const res = allDriveResources.find(r => r.id === item.resource_id); return res && res.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();window.open('${res.url.replace(/'/g,"%27")}','_blank')">📁 자료보기</button>` : ''; })() : ""}
           ${item.status !== "거래완료" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
           <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
         </div>
@@ -1300,7 +1333,7 @@ if (tab === "done")       renderDoneList();
   async function loadListings() {
     listingContainer.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
     try {
-      allListings = await getListings();
+      [allListings, allDriveResources] = await Promise.all([getListings(), getDriveResources()]);
       renderList();
     } catch(e) {
       listingContainer.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
@@ -1887,7 +1920,6 @@ if (tab === "done")       renderDoneList();
   });
 
   // ===== 자료보기 탭 =====
-  let allDriveResources = [];
   let drivePageMap = {};
   let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
   const DRIVE_PER_PAGE = 10;
@@ -1977,6 +2009,8 @@ if (tab === "done")       renderDoneList();
     return pageItems.map((item, idx) => {
       const realIdx = start + idx;
       const safeUrl = (item.url || "").replace(/'/g, "%27");
+      const memoPreview = item.memo ? item.memo.split('\n')[0].substring(0, 60) + (item.memo.split('\n')[0].length > 60 ? '…' : '') : '';
+      const linkedCount = allListings.filter(l => l.resource_id === item.id).length;
       return `
       <div class="listing-card" style="cursor:default;">
         <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
@@ -1986,13 +2020,19 @@ if (tab === "done")       renderDoneList();
             <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx===items.length-1?'opacity:0.25;cursor:default;':''}"
               ${realIdx===items.length-1?'disabled':`onclick="moveDriveOrder('${item.id}','down','${cat.replace(/'/g,"\\'")}')"`}>▼</button>
           </div>
-          <span style="flex:1;font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
+          <div style="flex:1;">
+            <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
+            ${memoPreview ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;line-height:1.4;">📝 ${memoPreview}</div>` : ''}
+            ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}
+          </div>
         </div>
         <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
           ${item.url
             ? `<button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="window.open('${safeUrl}','_blank')">📁 열기</button>`
             : `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
           }
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveMemoModal('${item.id}')">📝 개요</button>
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveLinkModal('${item.id}')">🔗 매물연결</button>
           <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
           <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
         </div>
@@ -2064,6 +2104,85 @@ if (tab === "done")       renderDoneList();
       (p) => { drivePageMap[cat] = p; renderDriveTab(); });
   }
 
+
+  // ── 개요 메모 모달 ──
+  let memoEditingDriveId = null;
+  function openDriveMemoModal(id) {
+    const item = allDriveResources.find(r => r.id === id);
+    if (!item) return;
+    memoEditingDriveId = id;
+    document.getElementById("drive_memo_text").value = item.memo || "";
+    document.getElementById("driveMemoModal").style.display = "flex";
+  }
+  document.getElementById("driveMemoSaveBtn").addEventListener("click", async () => {
+    if (!memoEditingDriveId) return;
+    const btn = document.getElementById("driveMemoSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await updateDriveResource(memoEditingDriveId, { memo: document.getElementById("drive_memo_text").value.trim() });
+      document.getElementById("driveMemoModal").style.display = "none";
+      showToast("✅ 개요 메모 저장됨");
+      await loadDriveResources();
+    } catch(e) { showToast("❌ 실패: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "저장"; }
+  });
+  document.getElementById("driveMemoDeleteBtn").addEventListener("click", async () => {
+    if (!memoEditingDriveId) return;
+    if (!confirm("메모를 삭제하시겠습니까?")) return;
+    try {
+      await updateDriveResource(memoEditingDriveId, { memo: null });
+      document.getElementById("driveMemoModal").style.display = "none";
+      showToast("🗑 메모 삭제됨");
+      await loadDriveResources();
+    } catch(e) { showToast("❌ 실패: " + e.message); }
+  });
+
+  // ── 매물연결 모달 ──
+  let linkEditingDriveId = null;
+  function openDriveLinkModal(id) {
+    linkEditingDriveId = id;
+    document.getElementById("driveLinkModal").style.display = "flex";
+    renderDriveLinkList();
+  }
+  function renderDriveLinkList() {
+    const area = document.getElementById("driveLinkListArea");
+    const activeListings = allListings.filter(l => l.status !== "거래완료");
+    if (!activeListings.length) {
+      area.innerHTML = `<div style="font-size:0.82rem;color:var(--text-muted);">등록된 매물이 없습니다</div>`;
+      return;
+    }
+    area.innerHTML = activeListings.map(l => {
+      const checked = l.resource_id === linkEditingDriveId;
+      return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;background:${checked?'rgba(212,175,55,0.1)':'rgba(255,255,255,0.03)'};border:1px solid ${checked?'rgba(212,175,55,0.35)':'rgba(255,255,255,0.07)'};margin-bottom:6px;">
+        <input type="checkbox" data-lid="${l.id}" ${checked?'checked':''} style="width:auto;accent-color:var(--gold);" />
+        <div style="flex:1;">
+          <div style="font-size:0.85rem;font-weight:600;color:var(--text-main);">${l.address || l.title || "(주소 미입력)"}</div>
+          <div style="font-size:0.74rem;color:var(--text-muted);">${getTypeLabel(l.type)} · ${formatPrice(l)}</div>
+        </div>
+      </label>`;
+    }).join("");
+  }
+  document.getElementById("driveLinkSaveBtn").addEventListener("click", async () => {
+    if (!linkEditingDriveId) return;
+    const btn = document.getElementById("driveLinkSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+    const checked = [...document.querySelectorAll("#driveLinkListArea input[type=checkbox]:checked")].map(c => c.dataset.lid);
+    const unchecked = [...document.querySelectorAll("#driveLinkListArea input[type=checkbox]:not(:checked)")].map(c => c.dataset.lid);
+    try {
+      await Promise.all([
+        ...checked.map(lid => updateListingResourceId(lid, linkEditingDriveId)),
+        ...unchecked.filter(lid => {
+          const l = allListings.find(x => x.id === lid);
+          return l && l.resource_id === linkEditingDriveId;
+        }).map(lid => updateListingResourceId(lid, null))
+      ]);
+      document.getElementById("driveLinkModal").style.display = "none";
+      showToast(`✅ 매물 연결 저장됨`);
+      await loadListings();
+      renderDriveTab();
+    } catch(e) { showToast("❌ 실패: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "저장"; }
+  });
 
   let editingDriveId = null;
   function openDriveEdit(id) {
