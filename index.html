@@ -1163,11 +1163,25 @@ if (tab === "done")       renderDoneList();
         <th>주소</th><th style="width:130px;">가격</th>
         <th style="width:110px;">연락처</th><th style="width:64px;">상태</th><th>메모</th>
       </tr></thead><tbody>${rows}</tbody></table>
-      <script>window.onload=()=>{window.print();}<\/script>
+      <script>
+        window.onload = () => { window.print(); };
+        window.onafterprint = () => { window.close(); };
+      <\/script>
       </body></html>`;
     const w = window.open("", "_blank");
+    if (!w) { showToast("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요."); return; }
     w.document.write(html);
     w.document.close();
+
+    // 팝업 닫힘 감지 → 선택 초기화 + UI 복구
+    const _checkClosed = setInterval(() => {
+      if (w.closed) {
+        clearInterval(_checkClosed);
+        selectedIds.clear();
+        updatePrintBtn();
+        renderList();
+      }
+    }, 400);
   }
 
   function setViewMode(mode) {
