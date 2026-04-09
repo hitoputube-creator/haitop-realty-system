@@ -308,3 +308,8 @@ async function updateCustomer(id, data) {
   });
   if (!res.ok) throw new Error("고객 수정 실패: " + await res.text());
 }
+async function getDoneCustomers() {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers?status=eq.계약완료&order=completed_at.desc", { headers });
+  if (!res.ok) throw new Error("완료고객 목록 조회 실패");
+  return await res.json();
+}

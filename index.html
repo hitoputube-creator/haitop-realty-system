@@ -2849,10 +2849,11 @@ if (tab === "done")       renderDoneList();
   async function exportAll() {
     showToast("⏳ 전체 데이터를 불러오는 중...");
     try {
-      const [listings, requests, customers, driveResources, recommended, referenceProps, memos] = await Promise.all([
+      const [listings, requests, customers, doneCustomers, driveResources, recommended, referenceProps, memos] = await Promise.all([
         getListings(),
         getRequests(),
         getCustomers(),
+        getDoneCustomers(),
         getDriveResources(),
         getRecommendedProperties(),
         getReferenceProperties(),
@@ -2884,8 +2885,9 @@ if (tab === "done")       renderDoneList();
         "상태": r.status || "진행중"
       }))), "의뢰관리");
 
-      // 고객관리
-      XLSX.utils.book_append_sheet(wb, _makeSheet(customers.map(c => ({
+      // 고객관리 (상담중)
+      const activeCustomers = customers.filter(c => c.status !== "계약완료");
+      XLSX.utils.book_append_sheet(wb, _makeSheet(activeCustomers.map(c => ({
         "이름": c.name || "",
         "연락처": c.contact || "",
         "매물유형": getCustomerTypeLabel(c.type),
@@ -2893,6 +2895,16 @@ if (tab === "done")       renderDoneList();
         "메모": c.memo || "",
         "상태": c.status || ""
       }))), "고객관리");
+
+      // 완료고객
+      XLSX.utils.book_append_sheet(wb, _makeSheet(doneCustomers.map(c => ({
+        "이름": c.name || "",
+        "연락처": c.contact || "",
+        "매물유형": getCustomerTypeLabel(c.type),
+        "예산": c.budget || "",
+        "메모": c.memo || "",
+        "계약완료일": c.completed_at ? new Date(c.completed_at).toLocaleDateString("ko-KR") : ""
+      }))), "완료고객");
 
       // 자료보기
       XLSX.utils.book_append_sheet(wb, _makeSheet(driveResources.map(r => ({
