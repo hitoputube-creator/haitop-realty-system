@@ -50,6 +50,10 @@
       #printHeader { display: none; }
       #selectedPrintHeader { display: none; }
     }
+    /* 카드 더보기/접기 공통 */
+    .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
+    .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:linear-gradient(transparent,var(--bg-card)); pointer-events:none; }
+    .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(212,175,55,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
   </style>
 </head>
 <body>
@@ -1434,6 +1438,7 @@ if (tab === "done")       renderDoneList();
         unifiedPropertyCount.textContent = `(${activeItems.length}건)`;
         emptyMessage.style.display = "none";
         activeItems.forEach(item => listingContainer.appendChild(makeCard(item)));
+        _initExpandCards(listingContainer);
       } else {
         unifiedPropertyLabel.style.display = "none";
         emptyMessage.style.display = "none";
@@ -1444,6 +1449,7 @@ if (tab === "done")       renderDoneList();
         unifiedDoneCount.textContent = `(${doneItems.length}건)`;
         unifiedDoneContainer.innerHTML = "";
         doneItems.forEach(item => unifiedDoneContainer.appendChild(makeCard(item, { revert: true })));
+        _initExpandCards(unifiedDoneContainer);
       } else {
         unifiedDoneSection.style.display = "none";
       }
@@ -1499,12 +1505,14 @@ if (tab === "done")       renderDoneList();
         </div>
         <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
         <div class="listing-price">${formatPrice(item)}</div>
-        ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
-        ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
-        ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
-        ${(item.drive_links && item.drive_links.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">
-          ${item.drive_links.map(l=>`<a href="${l.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:0.73rem;color:var(--gold);text-decoration:none;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;padding:2px 7px;">📁 ${l.name||"링크"}</a>`).join("")}
-        </div>` : ""}
+        <div class="card-expand-wrap" data-expanded="false">
+          ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
+          ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
+          ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+          ${(item.drive_links && item.drive_links.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">${item.drive_links.map(l=>`<a href="${l.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:0.73rem;color:var(--gold);text-decoration:none;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;padding:2px 7px;">📁 ${l.name||"링크"}</a>`).join("")}</div>` : ""}
+          <div class="card-expand-fade"></div>
+        </div>
+        <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
         <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
           ${item.resource_id ? (() => { const res = allDriveResources.find(r => r.id === item.resource_id); return res && res.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();window.open('${res.url.replace(/'/g,"%27")}','_blank')">📁 자료보기</button>` : ''; })() : ""}
           ${item.status !== "거래완료" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
@@ -1514,6 +1522,7 @@ if (tab === "done")       renderDoneList();
 
       listingContainer.appendChild(card);
     });
+    _initExpandCards(listingContainer);
     _currentCardItems = pageItems;
 
     renderPagination(filtered.length);
@@ -1616,9 +1625,13 @@ if (tab === "done")       renderDoneList();
       </div>
       <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
       <div class="listing-price">${formatPrice(item)}</div>
-      ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
-      ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
-      ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+      <div class="card-expand-wrap" data-expanded="false">
+        ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
+        ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
+        ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+        <div class="card-expand-fade"></div>
+      </div>
+      <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
       <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
         ${revert ? `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="event.stopPropagation();handleRevertListing('${item.id}')">↩ 매물로 되돌리기</button>` : ""}
         ${!isDone && !revert ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
@@ -1708,6 +1721,7 @@ if (tab === "done")       renderDoneList();
         unifiedActiveCount.textContent = `(${activeItems.length}건)`;
         unifiedActiveContainer.innerHTML = "";
         activeItems.forEach(item => unifiedActiveContainer.appendChild(makeCard(item, { showActiveBadge: true })));
+        _initExpandCards(unifiedActiveContainer);
       } else {
         unifiedActiveSection.style.display = "none";
       }
@@ -1717,6 +1731,7 @@ if (tab === "done")       renderDoneList();
         unifiedDoneLabelCount.textContent = `(${doneItems.length}건)`;
         empty.style.display = "none";
         doneItems.forEach(item => container.appendChild(makeCard(item, { revert: true })));
+        _initExpandCards(container);
       } else {
         unifiedDoneLabelInDoneTab.style.display = "none";
         empty.style.display = "none";
@@ -1756,9 +1771,13 @@ if (tab === "done")       renderDoneList();
         </div>
         <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
         <div class="listing-price">${formatPrice(item)}</div>
-        ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
-        ${item.quick_memo || item.description ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo || item.description}</div>` : ""}
-        ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+        <div class="card-expand-wrap" data-expanded="false">
+          ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
+          ${item.quick_memo || item.description ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo || item.description}</div>` : ""}
+          ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+          <div class="card-expand-fade"></div>
+        </div>
+        <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
         <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="event.stopPropagation();handleRevertListing('${item.id}')">↩ 매물로 되돌리기</button>
           <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
@@ -1766,6 +1785,7 @@ if (tab === "done")       renderDoneList();
       `;
       container.appendChild(card);
     });
+    _initExpandCards(container);
     _makePagination("donePagination", filtered.length, DONE_PER_PAGE, donePage, (p) => { donePage = p; renderDoneList(); });
   }
 
@@ -1869,9 +1889,13 @@ if (tab === "done")       renderDoneList();
             : '<span class="badge badge-green">상담중</span>'}
         </div>
         <div class="listing-title">${c.name || "(이름 미입력)"}</div>
-        ${c.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.contact}" onclick="event.stopPropagation()">📞 ${c.contact}</a></div>` : ""}
-        ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
-        ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
+        <div class="card-expand-wrap" data-expanded="false">
+          ${c.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.contact}" onclick="event.stopPropagation()">📞 ${c.contact}</a></div>` : ""}
+          ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
+          ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
+          <div class="card-expand-fade"></div>
+        </div>
+        <button class="card-expand-btn" onclick="toggleCardExpand(this)">▼ 더보기</button>
         <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
           <button class="btn" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">✏️ 수정</button>
           ${c.status !== "계약완료"
@@ -1883,6 +1907,7 @@ if (tab === "done")       renderDoneList();
 
       container.appendChild(card);
     });
+    _initExpandCards(container);
     _makePagination("customerPagination", filtered.length, CUST_PER_PAGE, customerPage, (p) => { customerPage = p; renderCustomers(); });
   }
 
@@ -1957,13 +1982,18 @@ if (tab === "done")       renderDoneList();
           <span class="badge badge-red">계약완료</span>
         </div>
         <div class="listing-title">${c.name || "(이름 미입력)"}</div>
-        ${c.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.contact}" onclick="event.stopPropagation()">📞 ${c.contact}</a></div>` : ""}
-        ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
-        ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
-        <div style="margin-top:8px;font-size:0.78rem;color:var(--gold-soft);">✅ 계약완료일: ${completedAt}</div>
+        <div class="card-expand-wrap" data-expanded="false">
+          ${c.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.contact}" onclick="event.stopPropagation()">📞 ${c.contact}</a></div>` : ""}
+          ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
+          ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
+          <div style="margin-top:8px;font-size:0.78rem;color:var(--gold-soft);">✅ 계약완료일: ${completedAt}</div>
+          <div class="card-expand-fade"></div>
+        </div>
+        <button class="card-expand-btn" onclick="toggleCardExpand(this)">▼ 더보기</button>
       `;
       container.appendChild(card);
     });
+    _initExpandCards(container);
 
     _makePagination("doneCustomerPagination", filtered.length, DONE_CUST_PER_PAGE, doneCustomerPage,
       (p) => { doneCustomerPage = p; renderDoneCustomers(); });
@@ -2188,17 +2218,22 @@ if (tab === "done")       renderDoneList();
           <span style="font-weight:700;font-size:0.95rem;color:var(--gold-soft);flex:1;">${p.location||"-"}</span>
           <span style="font-size:0.72rem;color:var(--text-muted);">${dateStr}</span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;font-size:0.83rem;color:var(--text-muted);margin-bottom:10px;min-height:36px;">
-          ${p.price ? `<span>💰 ${p.price}</span>` : ""}
-          ${p.contact ? `<span>📞 ${p.contact}</span>` : ""}
-          ${p.memo ? `<span>📝 ${p.memo}</span>` : ""}
+        <div class="card-expand-wrap" data-expanded="false">
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:0.83rem;color:var(--text-muted);">
+            ${p.price ? `<span>💰 ${p.price}</span>` : ""}
+            ${p.contact ? `<span>📞 ${p.contact}</span>` : ""}
+            ${p.memo ? `<span>📝 ${p.memo}</span>` : ""}
+          </div>
+          <div class="card-expand-fade"></div>
         </div>
-        <div style="display:flex;gap:6px;justify-content:flex-end;">
+        <button class="card-expand-btn" onclick="toggleCardExpand(this)">▼ 더보기</button>
+        <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px;">
           <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openRefEdit('${p.id}')">✏️ 수정</button>
           <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRef('${p.id}')">🗑 삭제</button>
         </div>
       </div>`;
     }).join("") + `</div>`;
+    _initExpandCards(container);
     _makePagination("referencePagination", list.length, REF_PER_PAGE, refPage, (p) => { refPage = p; renderReferenceProperties(); });
   }
 
@@ -2677,14 +2712,19 @@ if (tab === "done")       renderDoneList();
       return `
       <div class="listing-card" style="cursor:default;">
         <div style="font-weight:700;font-size:0.95rem;color:var(--gold-soft);margin-bottom:8px;">${p.name||"-"}</div>
-        <div style="margin-bottom:8px;">${linksHtml}</div>
-        ${p.memo ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">📝 ${p.memo}</div>` : ""}
-        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px;">
+        <div class="card-expand-wrap" data-expanded="false">
+          <div style="margin-bottom:4px;">${linksHtml}</div>
+          ${p.memo ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">📝 ${p.memo}</div>` : ""}
+          <div class="card-expand-fade"></div>
+        </div>
+        <button class="card-expand-btn" onclick="toggleCardExpand(this)">▼ 더보기</button>
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;">
           <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openRecEdit('${p.id}')">✏️ 수정</button>
           <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRec('${p.id}')">🗑 삭제</button>
         </div>
       </div>`;
     }).join("") + `</div>`;
+    _initExpandCards(container);
     _makePagination("recommendPagination", list.length, REC_PER_PAGE, recPage, (p) => { recPage = p; renderRecommendedProperties(); });
   }
 
@@ -3620,6 +3660,39 @@ ${cmFmtDate(sendDate)}`;
     });
 
     _makePagination("memoPagination", filtered.length, MEMO_PER_PAGE, memoPage, (p) => { memoPage = p; renderMemoTab(); });
+  }
+
+  // ===== 카드 더보기/접기 공통 =====
+  function _initExpandCards(container) {
+    container.querySelectorAll(".card-expand-wrap").forEach(wrap => {
+      const btn = wrap.nextElementSibling;
+      const fade = wrap.querySelector(".card-expand-fade");
+      if (!btn || !btn.classList.contains("card-expand-btn")) return;
+      if (wrap.scrollHeight <= wrap.clientHeight + 2) {
+        btn.style.display = "none";
+        if (fade) fade.style.display = "none";
+      } else {
+        btn.style.display = "block";
+      }
+    });
+  }
+
+  function toggleCardExpand(btn) {
+    const wrap = btn.previousElementSibling;
+    if (!wrap) return;
+    const fade = wrap.querySelector(".card-expand-fade");
+    const isExpanded = wrap.dataset.expanded === "true";
+    if (isExpanded) {
+      wrap.style.maxHeight = "100px";
+      wrap.dataset.expanded = "false";
+      btn.textContent = "▼ 더보기";
+      if (fade) fade.style.display = "block";
+    } else {
+      wrap.style.maxHeight = wrap.scrollHeight + "px";
+      wrap.dataset.expanded = "true";
+      btn.textContent = "▲ 접기";
+      if (fade) fade.style.display = "none";
+    }
   }
 
   function toggleMemoExpand(btn) {
