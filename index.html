@@ -912,6 +912,24 @@
 
 <div id="toast"></div>
 
+<!-- 🖨️ 선택인쇄 미리보기 모달 -->
+<div id="printPreviewModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
+  <div class="modal-box" style="max-width:760px;width:96%;padding:0;overflow:hidden;">
+    <!-- 모달 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(212,175,55,0.2);">
+      <div class="modal-title" id="printPreviewTitle" style="margin:0;">🖨️ 선택된 매물</div>
+      <button onclick="closePrintPreview()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;padding:4px;">✕</button>
+    </div>
+    <!-- 미리보기 테이블 영역 -->
+    <div id="printPreviewBody" style="padding:16px 20px;overflow-x:auto;max-height:60vh;overflow-y:auto;"></div>
+    <!-- 모달 하단 버튼 -->
+    <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid rgba(255,255,255,0.07);">
+      <button class="btn btn-ghost" onclick="closePrintPreview()">취소</button>
+      <button class="btn btn-primary" onclick="doPrint()">🖨️ 인쇄</button>
+    </div>
+  </div>
+</div>
+
 <!-- 전역 에러 오버레이 -->
 <div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
   <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
@@ -1127,24 +1145,75 @@ if (tab === "done")       renderDoneList();
     renderList(); // 체크박스 상태 갱신
   }
 
+  let _printList = []; // 미리보기 중인 매물 목록
+
   function printSelected() {
     if (!selectedIds.size) return;
-    const list = allListings.filter(l => selectedIds.has(l.id));
-    const rows = list.map((item, i) => {
+    _printList = allListings.filter(l => selectedIds.has(l.id));
+    const kw = searchKeyword.trim();
+
+    document.getElementById("printPreviewTitle").textContent =
+      `🖨️ 선택된 매물 (${_printList.length}건)`;
+
+    const rows = _printList.map((item, i) => {
       const isDone = item.status === "거래완료";
       const memo = (item.quick_memo || item.description || "");
+      const memoShort = memo.length > 25 ? memo.substring(0, 25) + "…" : memo;
+      const owner = item.owner_name || item.quick_owner || "";
+      const contact = item.owner_contact || item.quick_contact || "";
+      return `<tr style="${isDone ? 'opacity:0.6;' : ''}">
+        <td style="text-align:center;color:var(--text-muted);font-size:0.78rem;">${i + 1}</td>
+        <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getTypeLabel(item.type)}</span></td>
+        <td style="font-weight:500;">${item.address || item.title || ""}</td>
+        <td style="font-size:0.82rem;">${formatPrice(item)}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">${contact}</td>
+        <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:${isDone?'rgba(238,136,136,0.15)':'rgba(82,197,100,0.12)'};color:${isDone?'#e88':'#52c564'};">${isDone?"완료":(item.status||"광고중")}</span></td>
+        <td style="font-size:0.78rem;color:var(--text-muted);">${memoShort}</td>
+      </tr>`;
+    }).join("");
+
+    document.getElementById("printPreviewBody").innerHTML = `
+      ${kw ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px;">🔍 검색어: <strong>${kw}</strong></div>` : ""}
+      <table style="width:100%;border-collapse:collapse;font-size:0.83rem;">
+        <thead><tr style="border-bottom:2px solid rgba(212,175,55,0.3);">
+          <th style="padding:8px 6px;text-align:center;width:32px;color:var(--text-muted);font-weight:600;">No</th>
+          <th style="padding:8px 6px;text-align:left;width:68px;color:var(--text-muted);font-weight:600;">유형</th>
+          <th style="padding:8px 6px;text-align:left;color:var(--text-muted);font-weight:600;">주소</th>
+          <th style="padding:8px 6px;text-align:left;width:130px;color:var(--text-muted);font-weight:600;">가격</th>
+          <th style="padding:8px 6px;text-align:left;width:72px;color:var(--text-muted);font-weight:600;">소유주</th>
+          <th style="padding:8px 6px;text-align:left;width:110px;color:var(--text-muted);font-weight:600;">연락처</th>
+          <th style="padding:8px 6px;text-align:left;width:60px;color:var(--text-muted);font-weight:600;">상태</th>
+          <th style="padding:8px 6px;text-align:left;width:130px;color:var(--text-muted);font-weight:600;">메모</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    document.getElementById("printPreviewModal").style.display = "flex";
+  }
+
+  function closePrintPreview() {
+    document.getElementById("printPreviewModal").style.display = "none";
+  }
+
+  function doPrint() {
+    const kw = searchKeyword.trim();
+    const kwLine = kw ? `<p style="font-size:10px;color:#555;margin:2px 0 8px;">검색어: ${kw}</p>` : "";
+    const rows = _printList.map((item, i) => {
+      const isDone = item.status === "거래완료";
+      const memo = (item.quick_memo || item.description || "");
+      const owner = item.owner_name || item.quick_owner || "";
+      const contact = item.owner_contact || item.quick_contact || "";
       return `<tr style="${isDone ? 'color:#888;background:#f5f5f5;' : ''}">
         <td style="text-align:center;">${i + 1}</td>
         <td>${getTypeLabel(item.type)}</td>
         <td>${item.address || item.title || ""}</td>
         <td>${formatPrice(item)}</td>
-        <td>${item.owner_contact || item.quick_contact || ""}</td>
-        <td>${isDone ? "거래완료" : (item.status || "광고중")}</td>
+        <td>${owner}</td>
+        <td>${contact}</td>
+        <td>${isDone ? "완료" : (item.status || "광고중")}</td>
         <td>${memo}</td>
       </tr>`;
     }).join("");
-    const kw = searchKeyword.trim();
-    const kwLine = kw ? `<p style="font-size:10px;color:#555;margin:2px 0 8px;">검색어: ${kw}</p>` : "";
     const html = `<!DOCTYPE html><html lang="ko"><head>
       <meta charset="UTF-8"><title>하이탑부동산 매물목록</title>
       <style>
@@ -1154,14 +1223,16 @@ if (tab === "done")       renderDoneList();
         th{background:#1a2a4a;color:#d4af37;padding:6px 8px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
         td{padding:5px 8px;border-bottom:1px solid #ddd;vertical-align:top;}
         thead{display:table-header-group;}
+        tr.done td{color:#888;background:#f5f5f5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
       </style></head><body>
       <h2>🏢 하이탑부동산 매물목록</h2>
       ${kwLine}
-      <p style="font-size:10px;color:#666;margin-bottom:10px;">출력일: ${new Date().toLocaleDateString("ko-KR")} &nbsp;|&nbsp; 총 ${list.length}건</p>
+      <p style="font-size:10px;color:#666;margin-bottom:10px;">출력일: ${new Date().toLocaleDateString("ko-KR")} &nbsp;|&nbsp; 총 ${_printList.length}건</p>
       <table><thead><tr>
         <th style="width:28px;">No</th><th style="width:68px;">유형</th>
-        <th>주소</th><th style="width:130px;">가격</th>
-        <th style="width:110px;">연락처</th><th style="width:64px;">상태</th><th>메모</th>
+        <th>주소</th><th style="width:120px;">가격</th>
+        <th style="width:70px;">소유주</th><th style="width:100px;">연락처</th>
+        <th style="width:48px;">상태</th><th>메모</th>
       </tr></thead><tbody>${rows}</tbody></table>
       <script>
         window.onload = () => { window.print(); };
@@ -1173,10 +1244,11 @@ if (tab === "done")       renderDoneList();
     w.document.write(html);
     w.document.close();
 
-    // 팝업 닫힘 감지 → 선택 초기화 + UI 복구
+    // 팝업 닫힘 → 모달 닫기 + 선택 초기화
     const _checkClosed = setInterval(() => {
       if (w.closed) {
         clearInterval(_checkClosed);
+        closePrintPreview();
         selectedIds.clear();
         updatePrintBtn();
         renderList();
