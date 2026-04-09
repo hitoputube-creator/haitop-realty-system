@@ -2806,62 +2806,101 @@ if (tab === "done")       renderDoneList();
       "상태": item.status || "진행중"
     }));
   }
-  function _requestsRows() {
-    return allRequests.map(r => ({
-      "고객명": r.name || "",
-      "연락처": r.contact || "",
-      "의뢰유형": r.reqtype || "",
-      "매물유형": getTypeLabel(r.proptype),
-      "희망지역": r.area || "",
-      "희망가격": r.price || "",
-      "메모": r.memo || "",
-      "상태": r.status || "진행중"
-    }));
-  }
-  function _customersRows() {
-    return allCustomers.map(c => ({
-      "이름": c.name || "",
-      "연락처": c.contact || "",
-      "매물유형": getCustomerTypeLabel(c.type),
-      "예산": c.budget || "",
-      "메모": c.memo || "",
-      "상태": c.status || ""
-    }));
-  }
-  function _driveRows() {
-    return allDriveResources.map(r => ({
-      "카테고리": r.category || "",
-      "건물명": r.name || "",
-      "드라이브링크": r.url || ""
-    }));
-  }
-  function _recommendRows() {
-    const rows = [];
-    allRecommended.forEach(p => {
-      const links = parseLinks(p.drive_url);
-      if (links.length) {
-        links.forEach(l => rows.push({
-          "매물장이름": p.name || "",
-          "날짜": l.date ? new Date(l.date + "T00:00:00").toLocaleDateString("ko-KR") : "",
-          "드라이브링크": l.url || "",
-          "메모": p.memo || ""
-        }));
-      } else {
-        rows.push({ "매물장이름": p.name || "", "날짜": "", "드라이브링크": "", "메모": p.memo || "" });
-      }
-    });
-    return rows;
-  }
+  async function exportAll() {
+    showToast("⏳ 전체 데이터를 불러오는 중...");
+    try {
+      const [listings, requests, customers, driveResources, recommended, referenceProps, memos] = await Promise.all([
+        getListings(),
+        getRequests(),
+        getCustomers(),
+        getDriveResources(),
+        getRecommendedProperties(),
+        getReferenceProperties(),
+        getMemos()
+      ]);
 
-  function exportAll() {
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, _makeSheet(_listingsRows()),   "매물관리");
-    XLSX.utils.book_append_sheet(wb, _makeSheet(_requestsRows()),   "의뢰관리");
-    XLSX.utils.book_append_sheet(wb, _makeSheet(_customersRows()),  "고객관리");
-    XLSX.utils.book_append_sheet(wb, _makeSheet(_driveRows()),      "자료보기");
-    XLSX.utils.book_append_sheet(wb, _makeSheet(_recommendRows()),  "추천매물장");
-    XLSX.writeFile(wb, `하이탑부동산_전체백업_${_xlsxDate()}.xlsx`);
-    showToast("✅ 전체 백업 파일이 저장되었습니다");
+      const wb = XLSX.utils.book_new();
+
+      // 매물관리
+      XLSX.utils.book_append_sheet(wb, _makeSheet(listings.map(item => ({
+        "유형": getTypeLabel(item.type),
+        "주소": item.address || item.title || "",
+        "가격": formatPrice(item),
+        "연락처": item.quick_contact || "",
+        "메모": item.quick_memo || item.description || "",
+        "등록일": item.created_at ? new Date(item.created_at).toLocaleDateString("ko-KR") : "",
+        "상태": item.status || "진행중"
+      }))), "매물관리");
+
+      // 의뢰관리
+      XLSX.utils.book_append_sheet(wb, _makeSheet(requests.map(r => ({
+        "고객명": r.name || "",
+        "연락처": r.contact || "",
+        "의뢰유형": r.reqtype || "",
+        "매물유형": getTypeLabel(r.proptype),
+        "희망지역": r.area || "",
+        "희망가격": r.price || "",
+        "메모": r.memo || "",
+        "상태": r.status || "진행중"
+      }))), "의뢰관리");
+
+      // 고객관리
+      XLSX.utils.book_append_sheet(wb, _makeSheet(customers.map(c => ({
+        "이름": c.name || "",
+        "연락처": c.contact || "",
+        "매물유형": getCustomerTypeLabel(c.type),
+        "예산": c.budget || "",
+        "메모": c.memo || "",
+        "상태": c.status || ""
+      }))), "고객관리");
+
+      // 자료보기
+      XLSX.utils.book_append_sheet(wb, _makeSheet(driveResources.map(r => ({
+        "카테고리": r.category || "",
+        "건물명": r.name || "",
+        "드라이브링크": r.url || "",
+        "메모": r.memo || ""
+      }))), "자료보기");
+
+      // 추천매물장
+      const recRows = [];
+      recommended.forEach(p => {
+        const links = parseLinks(p.drive_url);
+        if (links.length) {
+          links.forEach(l => recRows.push({
+            "매물장이름": p.name || "",
+            "날짜": l.date ? new Date(l.date + "T00:00:00").toLocaleDateString("ko-KR") : "",
+            "드라이브링크": l.url || "",
+            "메모": p.memo || ""
+          }));
+        } else {
+          recRows.push({ "매물장이름": p.name || "", "날짜": "", "드라이브링크": "", "메모": p.memo || "" });
+        }
+      });
+      XLSX.utils.book_append_sheet(wb, _makeSheet(recRows), "추천매물장");
+
+      // 참고매물
+      XLSX.utils.book_append_sheet(wb, _makeSheet(referenceProps.map(p => ({
+        "유형": getTypeLabel(p.type),
+        "주소": p.address || "",
+        "가격": p.price || "",
+        "면적": p.area || "",
+        "메모": p.memo || "",
+        "등록일": p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR") : ""
+      }))), "참고매물");
+
+      // 메모장
+      XLSX.utils.book_append_sheet(wb, _makeSheet(memos.map(m => ({
+        "건물명": m.building_name || "",
+        "메모": m.memo || "",
+        "등록일": m.created_at ? new Date(m.created_at).toLocaleDateString("ko-KR") : ""
+      }))), "메모장");
+
+      XLSX.writeFile(wb, `하이탑부동산_전체백업_${_xlsxDate()}.xlsx`);
+      showToast("✅ 전체 백업 파일이 저장되었습니다");
+    } catch (e) {
+      showToast("❌ 백업 실패: " + e.message);
+    }
   }
 
   // ===== 추천매물장 - 폴더에서 파일 목록 불러오기 =====
