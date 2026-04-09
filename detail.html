@@ -8,6 +8,15 @@
 <script src="assets/js/storage.js"></script>
 </head>
 <body>
+
+<script>
+  (function() {
+    if (sessionStorage.getItem("hitop_auth") !== "1") {
+      location.replace("index.html");
+    }
+  })();
+</script>
+
 <div class="page">
 
   <header class="header">

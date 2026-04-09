@@ -9,6 +9,53 @@
   <script src="assets/js/storage.js"></script>
 </head>
 <body>
+
+<!-- 비밀번호 잠금 화면 -->
+<div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:99998;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+  <div style="text-align:center;margin-bottom:36px;">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#d4af37,#f0c040);border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">🏢</div>
+    <div style="font-size:1.4rem;font-weight:800;color:#d4af37;letter-spacing:0.5px;">HITOP 부동산</div>
+    <div style="font-size:0.8rem;color:#666;margin-top:4px;">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+  </div>
+  <div style="width:100%;max-width:320px;">
+    <input id="authInput" type="password" placeholder="비밀번호를 입력하세요"
+      style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:#1a1a1a;border:1px solid #333;border-radius:10px;color:#e0e0e0;outline:none;margin-bottom:10px;text-align:center;letter-spacing:2px;" />
+    <div id="authError" style="font-size:0.82rem;color:#e05252;text-align:center;min-height:20px;margin-bottom:10px;"></div>
+    <button id="authBtn" style="width:100%;padding:14px;background:#d4af37;color:#000;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">확인</button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const PW = "hitop8969";
+    const KEY = "hitop_auth";
+    function unlock() {
+      document.getElementById("authOverlay").style.display = "none";
+    }
+    function tryAuth() {
+      const val = document.getElementById("authInput").value;
+      if (val === PW) {
+        sessionStorage.setItem(KEY, "1");
+        unlock();
+      } else {
+        document.getElementById("authError").textContent = "비밀번호가 틀렸습니다.";
+        document.getElementById("authInput").value = "";
+        document.getElementById("authInput").focus();
+      }
+    }
+    if (sessionStorage.getItem(KEY) === "1") {
+      // 이미 인증됨 — 오버레이 숨김
+    } else {
+      document.getElementById("authOverlay").style.display = "flex";
+      document.getElementById("authBtn").addEventListener("click", tryAuth);
+      document.getElementById("authInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") tryAuth();
+        document.getElementById("authError").textContent = "";
+      });
+    }
+  })();
+</script>
+
 <div class="page">
 
   <!-- HEADER -->
