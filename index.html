@@ -511,9 +511,13 @@
       <label>드라이브 링크</label>
       <input id="drive_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
     </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>건물 개요 메모 — 기본 정보 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <textarea id="drive_memo_basic_reg" rows="8" style="width:100%;resize:vertical;min-height:200px;box-sizing:border-box;font-family:inherit;"></textarea>
+    </div>
     <div class="field" style="margin-bottom:12px;">
-      <label>건물 개요 메모 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
-      <textarea id="drive_memo" rows="5" placeholder="예) 준공년도, 층수, 주차대수, 관리비 등" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
+      <label>추가 메모 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <textarea id="drive_memo_extra_reg" rows="3" placeholder="기타 특이사항 입력" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
     </div>
     <button class="btn btn-primary" id="driveSaveBtn" style="width:100%;">💾 저장</button>
   </div>
@@ -751,12 +755,16 @@
 </div>
 
 <!-- 📝 건물 개요 메모 모달 -->
-<div id="driveMemoModal" class="modal-overlay" style="display:none;">
-  <div class="modal-box" style="max-width:520px;">
+<div id="driveMemoModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
+  <div class="modal-box" style="max-width:540px;width:95%;padding:20px;">
     <div class="modal-title" id="driveMemoTitle">📝 건물 개요 메모</div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>기본 정보</label>
+      <textarea id="drive_memo_basic" rows="8" style="width:100%;resize:vertical;min-height:200px;box-sizing:border-box;font-family:inherit;"></textarea>
+    </div>
     <div class="field" style="margin-bottom:14px;">
-      <label>메모 내용 (자유 입력)</label>
-      <textarea id="drive_memo_text" rows="14" placeholder="예) 1동: 1~5층 상가, 6~15층 오피스텔&#10;2동: 주차장 별도&#10;관리비 협의 가능..." style="width:100%;resize:vertical;min-height:320px;box-sizing:border-box;"></textarea>
+      <label>추가 메모</label>
+      <textarea id="drive_memo_extra" rows="5" placeholder="기타 특이사항 입력" style="width:100%;resize:vertical;min-height:120px;box-sizing:border-box;"></textarea>
     </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="document.getElementById('driveMemoModal').style.display='none'">취소</button>
@@ -2031,16 +2039,20 @@ if (tab === "done")       renderDoneList();
     const category = document.getElementById("drive_category").value.trim();
     const name = document.getElementById("drive_name").value.trim();
     const url = document.getElementById("drive_url").value.trim();
-    const memo = document.getElementById("drive_memo").value.trim();
     if (!category) { showToast("카테고리를 입력해주세요"); return; }
     if (!name) { showToast("건물명을 입력해주세요"); return; }
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
-      await addDriveResource({ category, name, url, memo: memo || null });
+      const memo = joinMemo(
+        document.getElementById("drive_memo_basic_reg").value,
+        document.getElementById("drive_memo_extra_reg").value
+      );
+      await addDriveResource({ category, name, url, memo });
       document.getElementById("drive_category").value = "";
       document.getElementById("drive_name").value = "";
       document.getElementById("drive_url").value = "";
-      document.getElementById("drive_memo").value = "";
+      document.getElementById("drive_memo_basic_reg").value = MEMO_TEMPLATE;
+      document.getElementById("drive_memo_extra_reg").value = "";
       document.getElementById("drive_cat_select").value = "";
       showToast("✅ 저장되었습니다!");
       await loadDriveResources();
@@ -2186,13 +2198,35 @@ if (tab === "done")       renderDoneList();
 
 
   // ── 개요 메모 모달 ──
+  const MEMO_SEP = "---추가메모---";
+  const MEMO_TEMPLATE = "주소: \n주차대수: \n사용승인일: \n구조: 지하  층 ~ 지상  층\n토지면적:  평\n연면적:  평\n관리사무소: ";
+
+  function splitMemo(raw) {
+    if (!raw) return { basic: "", extra: "" };
+    const idx = raw.indexOf(MEMO_SEP);
+    if (idx === -1) return { basic: raw, extra: "" };
+    return { basic: raw.slice(0, idx).trimEnd(), extra: raw.slice(idx + MEMO_SEP.length).trimStart() };
+  }
+  function joinMemo(basic, extra) {
+    const b = (basic || "").trim();
+    const e = (extra || "").trim();
+    if (!b && !e) return null;
+    if (!e) return b;
+    return b + "\n" + MEMO_SEP + "\n" + e;
+  }
+
+  // 등록 폼 기본정보 칸 초기 템플릿
+  document.getElementById("drive_memo_basic_reg").value = MEMO_TEMPLATE;
+
   let memoEditingDriveId = null;
   function openDriveMemoModal(id) {
     const item = allDriveResources.find(r => r.id === id);
     if (!item) return;
     memoEditingDriveId = id;
     document.getElementById("driveMemoTitle").textContent = `📝 ${item.name} 건물개요 메모`;
-    document.getElementById("drive_memo_text").value = item.memo || "";
+    const { basic, extra } = splitMemo(item.memo);
+    document.getElementById("drive_memo_basic").value = basic || MEMO_TEMPLATE;
+    document.getElementById("drive_memo_extra").value = extra;
     document.getElementById("driveMemoModal").style.display = "flex";
   }
   document.getElementById("driveMemoSaveBtn").addEventListener("click", async () => {
@@ -2200,7 +2234,11 @@ if (tab === "done")       renderDoneList();
     const btn = document.getElementById("driveMemoSaveBtn");
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
-      await updateDriveResource(memoEditingDriveId, { memo: document.getElementById("drive_memo_text").value.trim() });
+      const memo = joinMemo(
+        document.getElementById("drive_memo_basic").value,
+        document.getElementById("drive_memo_extra").value
+      );
+      await updateDriveResource(memoEditingDriveId, { memo });
       document.getElementById("driveMemoModal").style.display = "none";
       showToast("✅ 개요 메모 저장됨");
       await loadDriveResources();
