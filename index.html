@@ -183,6 +183,7 @@
         <div class="field" style="flex:1;margin-bottom:0;">
           <input id="searchInput" type="text" placeholder="주소, 메모, 가격 등으로 검색..." />
         </div>
+        <button class="btn btn-primary" id="searchBtn" style="flex-shrink:0;padding:8px 14px;font-size:0.85rem;">🔍 검색</button>
         <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">
           <input type="checkbox" id="includeCompletedChk" style="width:auto;accent-color:var(--gold);" />
           거래완료 포함
@@ -1469,11 +1470,15 @@ if (tab === "done")       renderDoneList();
     return card;
   }
 
-  document.getElementById("searchInput").addEventListener("input", (e) => {
-    searchKeyword = e.target.value.trim();
+  function doSearch() {
+    searchKeyword = document.getElementById("searchInput").value.trim();
     currentPage = 1;
     renderList();
+  }
+  document.getElementById("searchInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doSearch();
   });
+  document.getElementById("searchBtn").addEventListener("click", doSearch);
 
   document.getElementById("includeCompletedChk").addEventListener("change", (e) => {
     includeCompleted = e.target.checked;
