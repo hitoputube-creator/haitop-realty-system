@@ -10,7 +10,7 @@ async function fetchWithTimeout(url, options = {}, timeout = 10000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
-    const res = await fetchWithTimeout(url, { ...options, signal: controller.signal });
+    const res = await fetch(url, { ...options, signal: controller.signal });
     return res;
   } catch(e) {
     if (e.name === "AbortError") throw new Error("서버 응답 시간 초과 (10초). 인터넷 연결을 확인해주세요.");
