@@ -15,27 +15,32 @@
     #listViewTable tbody tr:hover td { background:rgba(212,175,55,0.07); }
     #listViewTable tbody tr.done-row td { color:#777; }
     #listViewTable tbody tr.done-row:hover td { background:rgba(255,255,255,0.03); }
+    /* 선택매물보기 테이블 */
+    #selectedViewTable { width:100%; border-collapse:collapse; font-size:0.83rem; }
+    #selectedViewTable thead th { padding:9px 10px; text-align:left; font-weight:600; color:var(--text-muted); border-bottom:2px solid rgba(212,175,55,0.25); }
+    #selectedViewTable tbody td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; }
+    #selectedViewTable tbody tr:hover td { background:rgba(212,175,55,0.05); }
+    #selectedViewTable tbody tr.done-row td { color:#666; }
     /* 인쇄 */
     @media print {
       body * { visibility: hidden; }
-      #printArea, #printArea * { visibility: visible; }
-      #printArea {
+      #selectedPrintArea, #selectedPrintArea * { visibility: visible; }
+      #selectedPrintArea {
         position: absolute; top: 0; left: 0;
-        width: 100%; padding: 20px; box-sizing: border-box;
-        background: #fff;
+        width: 100%; padding: 20px; box-sizing: border-box; background: #fff;
       }
-      #printHeader { display: flex !important; }
-      #listViewTable { font-size: 10px; width: 100%; border-collapse: collapse; }
-      #listViewTable thead th {
+      #selectedPrintHeader { display: flex !important; }
+      #selectedViewTable { font-size: 10px; width: 100%; border-collapse: collapse; }
+      #selectedViewTable thead th {
         background: #1a2a4a !important; color: #d4af37 !important;
-        padding: 6px 8px; text-align: left; font-weight: 600;
+        padding: 6px 8px; border-bottom: none;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
       }
-      #listViewTable tbody td {
+      #selectedViewTable tbody td {
         padding: 5px 8px; border-bottom: 1px solid #ddd !important;
         color: #111 !important; vertical-align: top;
       }
-      #listViewTable tbody tr.done-row td {
+      #selectedViewTable tbody tr.done-row td {
         color: #888 !important; background: #f5f5f5 !important;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
       }
@@ -43,6 +48,7 @@
     }
     @media screen {
       #printHeader { display: none; }
+      #selectedPrintHeader { display: none; }
     }
   </style>
 </head>
@@ -232,7 +238,7 @@
             <button id="viewToggleCard" onclick="setViewMode('card')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:rgba(212,175,55,0.2);color:var(--gold);border:none;cursor:pointer;">☰ 카드</button>
             <button id="viewToggleList" onclick="setViewMode('list')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:transparent;color:var(--text-muted);border:none;cursor:pointer;border-left:1px solid rgba(212,175,55,0.25);">☷ 목록</button>
           </div>
-          <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">🖨️ 선택인쇄</button>
+          <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">📋 선택매물보기</button>
           <button class="btn btn-ghost" onclick="location.href='register.html'" style="font-size:0.82rem;">+ 상세 등록</button>
         </div>
       </div>
@@ -257,6 +263,28 @@
           <div style="font-weight:600;font-size:0.88rem;color:#e88;margin-top:16px;margin-bottom:8px;padding-top:14px;padding-bottom:6px;border-top:1px solid rgba(238,136,136,0.2);border-bottom:1px solid rgba(238,136,136,0.2);">거래완료 <span id="unifiedDoneCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
           <div id="unifiedDoneContainer" class="listing-grid"></div>
         </div>
+      </div>
+    </section>
+
+    <!-- ===== 선택매물보기 (2단계) ===== -->
+    <section id="selectedPreviewSection" class="card" style="display:none;">
+      <div class="card-title no-print">
+        <span>선택된 매물 <span id="previewCount" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="goBackToList()">← 목록으로</button>
+          <button class="btn btn-primary" onclick="doPrint()">🖨️ 인쇄</button>
+        </div>
+      </div>
+      <!-- 인쇄 영역 -->
+      <div id="selectedPrintArea">
+        <div id="selectedPrintHeader" style="justify-content:space-between;align-items:flex-end;margin-bottom:8px;">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#000;">🏢 하이탑부동산 매물목록</div>
+            <div id="selectedPrintKeyword" style="font-size:10px;color:#555;margin-top:2px;"></div>
+          </div>
+          <div id="selectedPrintDate" style="font-size:10px;color:#666;text-align:right;"></div>
+        </div>
+        <div id="selectedViewTableWrap"></div>
       </div>
     </section>
 
@@ -912,23 +940,6 @@
 
 <div id="toast"></div>
 
-<!-- 🖨️ 선택인쇄 미리보기 모달 -->
-<div id="printPreviewModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
-  <div class="modal-box" style="max-width:760px;width:96%;padding:0;overflow:hidden;">
-    <!-- 모달 헤더 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(212,175,55,0.2);">
-      <div class="modal-title" id="printPreviewTitle" style="margin:0;">🖨️ 선택된 매물</div>
-      <button onclick="closePrintPreview()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;padding:4px;">✕</button>
-    </div>
-    <!-- 미리보기 테이블 영역 -->
-    <div id="printPreviewBody" style="padding:16px 20px;overflow-x:auto;max-height:60vh;overflow-y:auto;"></div>
-    <!-- 모달 하단 버튼 -->
-    <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid rgba(255,255,255,0.07);">
-      <button class="btn btn-ghost" onclick="closePrintPreview()">취소</button>
-      <button class="btn btn-primary" onclick="doPrint()">🖨️ 인쇄</button>
-    </div>
-  </div>
-</div>
 
 <!-- 전역 에러 오버레이 -->
 <div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
@@ -1145,25 +1156,37 @@ if (tab === "done")       renderDoneList();
     renderList(); // 체크박스 상태 갱신
   }
 
-  let _printList = []; // 미리보기 중인 매물 목록
+  // ── 선택매물보기 섹션 표시 요소 ──
+  const _listingSections = () => [
+    document.querySelector("#tabProperty .quick-card"),
+    ...document.querySelectorAll("#tabProperty > section.card:not(#selectedPreviewSection)")
+  ];
 
   function printSelected() {
     if (!selectedIds.size) return;
-    _printList = allListings.filter(l => selectedIds.has(l.id));
-    const kw = searchKeyword.trim();
+    // 목록 섹션 숨기기
+    _listingSections().forEach(el => { if (el) el.style.display = "none"; });
+    // 선택매물보기 섹션 표시
+    document.getElementById("selectedPreviewSection").style.display = "";
+    renderPreview();
+  }
 
-    document.getElementById("printPreviewTitle").textContent =
-      `🖨️ 선택된 매물 (${_printList.length}건)`;
-
-    const rows = _printList.map((item, i) => {
+  function renderPreview() {
+    const list = allListings.filter(l => selectedIds.has(l.id));
+    document.getElementById("previewCount").textContent = `(${list.length}건)`;
+    const rows = list.map((item, i) => {
       const isDone = item.status === "거래완료";
       const memo = (item.quick_memo || item.description || "");
-      const memoShort = memo.length > 25 ? memo.substring(0, 25) + "…" : memo;
+      const memoShort = memo.length > 30 ? memo.substring(0, 30) + "…" : memo;
       const owner = item.owner_name || item.quick_owner || "";
       const contact = item.owner_contact || item.quick_contact || "";
-      return `<tr style="${isDone ? 'opacity:0.6;' : ''}">
-        <td style="text-align:center;color:var(--text-muted);font-size:0.78rem;">${i + 1}</td>
-        <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getTypeLabel(item.type)}</span></td>
+      const chk = selectedIds.has(item.id) ? "checked" : "";
+      return `<tr class="${isDone ? "done-row" : ""}">
+        <td style="text-align:center;width:36px;" onclick="event.stopPropagation()">
+          <input type="checkbox" ${chk} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="togglePreviewCheck('${item.id}',this.checked)" />
+        </td>
+        <td style="text-align:center;color:var(--text-muted);font-size:0.76rem;width:28px;">${i + 1}</td>
+        <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getTypeLabel(item.type)}</span></td>
         <td style="font-weight:500;">${item.address || item.title || ""}</td>
         <td style="font-size:0.82rem;">${formatPrice(item)}</td>
         <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
@@ -1172,89 +1195,50 @@ if (tab === "done")       renderDoneList();
         <td style="font-size:0.78rem;color:var(--text-muted);">${memoShort}</td>
       </tr>`;
     }).join("");
-
-    document.getElementById("printPreviewBody").innerHTML = `
-      ${kw ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px;">🔍 검색어: <strong>${kw}</strong></div>` : ""}
-      <table style="width:100%;border-collapse:collapse;font-size:0.83rem;">
-        <thead><tr style="border-bottom:2px solid rgba(212,175,55,0.3);">
-          <th style="padding:8px 6px;text-align:center;width:32px;color:var(--text-muted);font-weight:600;">No</th>
-          <th style="padding:8px 6px;text-align:left;width:68px;color:var(--text-muted);font-weight:600;">유형</th>
-          <th style="padding:8px 6px;text-align:left;color:var(--text-muted);font-weight:600;">주소</th>
-          <th style="padding:8px 6px;text-align:left;width:130px;color:var(--text-muted);font-weight:600;">가격</th>
-          <th style="padding:8px 6px;text-align:left;width:72px;color:var(--text-muted);font-weight:600;">소유주</th>
-          <th style="padding:8px 6px;text-align:left;width:110px;color:var(--text-muted);font-weight:600;">연락처</th>
-          <th style="padding:8px 6px;text-align:left;width:60px;color:var(--text-muted);font-weight:600;">상태</th>
-          <th style="padding:8px 6px;text-align:left;width:130px;color:var(--text-muted);font-weight:600;">메모</th>
+    document.getElementById("selectedViewTableWrap").innerHTML = `
+      <table id="selectedViewTable">
+        <thead><tr>
+          <th style="width:36px;"></th>
+          <th style="width:28px;text-align:center;">No</th>
+          <th style="width:72px;">유형</th>
+          <th>주소</th>
+          <th style="width:140px;">가격</th>
+          <th style="width:76px;">소유주</th>
+          <th style="width:110px;">연락처</th>
+          <th style="width:60px;">상태</th>
+          <th style="width:160px;">메모</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
-    document.getElementById("printPreviewModal").style.display = "flex";
   }
 
-  function closePrintPreview() {
-    document.getElementById("printPreviewModal").style.display = "none";
+  function togglePreviewCheck(id, checked) {
+    toggleSelect(id, checked);
+    if (!selectedIds.size) { goBackToList(); return; }
+    renderPreview();
+  }
+
+  function goBackToList() {
+    document.getElementById("selectedPreviewSection").style.display = "none";
+    _listingSections().forEach(el => { if (el) el.style.display = ""; });
+    renderList(); // 체크박스 상태 반영
   }
 
   function doPrint() {
     const kw = searchKeyword.trim();
-    const kwLine = kw ? `<p style="font-size:10px;color:#555;margin:2px 0 8px;">검색어: ${kw}</p>` : "";
-    const rows = _printList.map((item, i) => {
-      const isDone = item.status === "거래완료";
-      const memo = (item.quick_memo || item.description || "");
-      const owner = item.owner_name || item.quick_owner || "";
-      const contact = item.owner_contact || item.quick_contact || "";
-      return `<tr style="${isDone ? 'color:#888;background:#f5f5f5;' : ''}">
-        <td style="text-align:center;">${i + 1}</td>
-        <td>${getTypeLabel(item.type)}</td>
-        <td>${item.address || item.title || ""}</td>
-        <td>${formatPrice(item)}</td>
-        <td>${owner}</td>
-        <td>${contact}</td>
-        <td>${isDone ? "완료" : (item.status || "광고중")}</td>
-        <td>${memo}</td>
-      </tr>`;
-    }).join("");
-    const html = `<!DOCTYPE html><html lang="ko"><head>
-      <meta charset="UTF-8"><title>하이탑부동산 매물목록</title>
-      <style>
-        body{font-family:"Noto Sans KR",sans-serif;font-size:11px;margin:20px;}
-        h2{font-size:15px;margin-bottom:2px;}
-        table{width:100%;border-collapse:collapse;}
-        th{background:#1a2a4a;color:#d4af37;padding:6px 8px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-        td{padding:5px 8px;border-bottom:1px solid #ddd;vertical-align:top;}
-        thead{display:table-header-group;}
-        tr.done td{color:#888;background:#f5f5f5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-      </style></head><body>
-      <h2>🏢 하이탑부동산 매물목록</h2>
-      ${kwLine}
-      <p style="font-size:10px;color:#666;margin-bottom:10px;">출력일: ${new Date().toLocaleDateString("ko-KR")} &nbsp;|&nbsp; 총 ${_printList.length}건</p>
-      <table><thead><tr>
-        <th style="width:28px;">No</th><th style="width:68px;">유형</th>
-        <th>주소</th><th style="width:120px;">가격</th>
-        <th style="width:70px;">소유주</th><th style="width:100px;">연락처</th>
-        <th style="width:48px;">상태</th><th>메모</th>
-      </tr></thead><tbody>${rows}</tbody></table>
-      <script>
-        window.onload = () => { window.print(); };
-        window.onafterprint = () => { window.close(); };
-      <\/script>
-      </body></html>`;
-    const w = window.open("", "_blank");
-    if (!w) { showToast("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요."); return; }
-    w.document.write(html);
-    w.document.close();
-
-    // 팝업 닫힘 → 모달 닫기 + 선택 초기화
-    const _checkClosed = setInterval(() => {
-      if (w.closed) {
-        clearInterval(_checkClosed);
-        closePrintPreview();
-        selectedIds.clear();
-        updatePrintBtn();
-        renderList();
-      }
-    }, 400);
+    const list = allListings.filter(l => selectedIds.has(l.id));
+    document.getElementById("selectedPrintKeyword").textContent = kw ? `검색어: ${kw}` : "";
+    document.getElementById("selectedPrintDate").textContent =
+      `출력일: ${new Date().toLocaleDateString("ko-KR")}  총 ${list.length}건`;
+    window.print();
   }
+
+  window.addEventListener("afterprint", () => {
+    // 인쇄 완료/취소 후 선택 초기화 + 목록으로 복귀
+    selectedIds.clear();
+    updatePrintBtn();
+    goBackToList();
+  });
 
   function setViewMode(mode) {
     viewMode = mode;
