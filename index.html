@@ -7,6 +7,30 @@
   <link rel="stylesheet" href="assets/css/style.css" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/storage.js"></script>
+  <style>
+    /* 목록보기 테이블 */
+    #listViewTable { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    #listViewTable thead th { background:#1a2a4a; color:#d4af37; padding:8px 10px; text-align:left; font-weight:600; position:sticky;top:0; }
+    #listViewTable tbody td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; cursor:pointer; }
+    #listViewTable tbody tr:hover td { background:rgba(212,175,55,0.07); }
+    #listViewTable tbody tr.done-row td { color:#777; }
+    #listViewTable tbody tr.done-row:hover td { background:rgba(255,255,255,0.03); }
+    /* 인쇄 */
+    @media print {
+      .no-print { display:none !important; }
+      body { background:#fff !important; color:#000 !important; }
+      .page { max-width:none !important; padding:0 !important; }
+      #printHeader { display:block !important; }
+      #listViewTable { font-size:10px; }
+      #listViewTable thead th { background:#1a2a4a !important; color:#d4af37 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      #listViewTable tbody td { border-bottom:1px solid #ddd !important; color:#000 !important; }
+      #listViewTable tbody tr.done-row td { color:#888 !important; background:#f5f5f5 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      thead { display:table-header-group; }
+    }
+    @media screen {
+      #printHeader { display:none; }
+    }
+  </style>
 </head>
 <body>
 
@@ -180,11 +204,22 @@
 
     <!-- 목록 -->
     <section class="card">
-      <div class="card-title">
+      <div class="card-title no-print">
         <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-ghost" id="printBtn">🖨 인쇄</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;border:1px solid rgba(212,175,55,0.35);border-radius:7px;overflow:hidden;">
+            <button id="viewToggleCard" onclick="setViewMode('card')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:rgba(212,175,55,0.2);color:var(--gold);border:none;cursor:pointer;">☰ 카드</button>
+            <button id="viewToggleList" onclick="setViewMode('list')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:transparent;color:var(--text-muted);border:none;cursor:pointer;border-left:1px solid rgba(212,175,55,0.25);">☷ 목록</button>
+          </div>
+          <button class="btn btn-ghost" id="printBtn" style="display:none;">🖨️ 인쇄</button>
           <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
+        </div>
+      </div>
+      <!-- 인쇄 헤더 (화면에선 숨김) -->
+      <div id="printHeader">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;">
+          <div style="font-size:16px;font-weight:800;">🏢 하이탑부동산 매물목록</div>
+          <div style="font-size:10px;color:#666;" id="printDate"></div>
         </div>
       </div>
       <!-- 통합검색: 현재매물 섹션 헤더 -->
@@ -1044,7 +1079,65 @@ if (tab === "done")       renderDoneList();
   let currentSort = "newest";
   let currentPage = 1;
   let includeCompleted = false;
+  let viewMode = "card"; // "card" | "list"
   const ITEMS_PER_PAGE = 10;
+
+  function setViewMode(mode) {
+    viewMode = mode;
+    const cardBtn = document.getElementById("viewToggleCard");
+    const listBtn = document.getElementById("viewToggleList");
+    const printBtn = document.getElementById("printBtn");
+    const gold = "rgba(212,175,55,0.2)", goldTxt = "var(--gold)";
+    const none = "transparent", noneTxt = "var(--text-muted)";
+    if (mode === "card") {
+      cardBtn.style.background = gold; cardBtn.style.color = goldTxt;
+      listBtn.style.background = none; listBtn.style.color = noneTxt;
+      printBtn.style.display = "none";
+      listingContainer.className = "listing-grid";
+    } else {
+      listBtn.style.background = gold; listBtn.style.color = goldTxt;
+      cardBtn.style.background = none; cardBtn.style.color = noneTxt;
+      printBtn.style.display = "";
+      listingContainer.className = "";
+    }
+    currentPage = 1;
+    renderList();
+  }
+
+  function renderListView(items) {
+    if (!items.length) {
+      listingContainer.innerHTML = `<div style="font-size:0.82rem;color:var(--text-muted);padding:20px 0;text-align:center;">등록된 매물이 없습니다.</div>`;
+      return;
+    }
+    const rows = items.map(item => {
+      const memo = (item.quick_memo || item.description || "");
+      const memoShort = memo.length > 20 ? memo.substring(0, 20) + "…" : memo;
+      const isDone = item.status === "거래완료";
+      const owner = item.owner_name || item.quick_owner || "";
+      const contact = item.owner_contact || item.quick_contact || "";
+      return `<tr class="${isDone ? "done-row" : ""}" onclick="location.href='detail.html?id=${item.id}'" style="cursor:pointer;">
+        <td>${getTypeLabel(item.type)}</td>
+        <td>${item.address || item.title || ""}</td>
+        <td>${formatPrice(item)}</td>
+        <td>${owner}</td>
+        <td>${contact}</td>
+        <td><span style="font-size:0.8rem;padding:2px 7px;border-radius:4px;background:${isDone ? 'rgba(238,136,136,0.15)' : 'rgba(82,197,100,0.12)'};color:${isDone ? '#e88' : '#52c564'};">${item.status || "광고중"}</span></td>
+        <td style="color:var(--text-muted);font-size:0.78rem;">${memoShort}</td>
+      </tr>`;
+    }).join("");
+    listingContainer.innerHTML = `<table id="listViewTable">
+      <thead><tr>
+        <th style="width:80px;">유형</th>
+        <th>주소</th>
+        <th style="width:150px;">가격</th>
+        <th style="width:80px;">소유주</th>
+        <th style="width:110px;">연락처</th>
+        <th style="width:72px;">상태</th>
+        <th style="width:140px;">메모</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  }
 
   function formatDate(iso) {
     if (!iso) return "";
@@ -1138,6 +1231,22 @@ if (tab === "done")       renderDoneList();
     const unifiedDoneSection   = document.getElementById("unifiedDoneSection");
     const unifiedDoneCount     = document.getElementById("unifiedDoneCount");
     const unifiedDoneContainer = document.getElementById("unifiedDoneContainer");
+
+    // ── 목록보기 모드 ──
+    if (viewMode === "list") {
+      unifiedPropertyLabel.style.display = "none";
+      unifiedDoneSection.style.display = "none";
+      paginationEl.innerHTML = "";
+      emptyMessage.style.display = "none";
+      const kw = searchKeyword.toLowerCase();
+      let items = kw
+        ? allListings.filter(item => matchesKeyword(item, kw))
+        : getFilteredListings();
+      if (kw) items.sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
+      countBadge.textContent = items.length ? `(${items.length}건)` : "";
+      renderListView(items);
+      return;
+    }
 
     // 통합검색 모드
     if (searchKeyword) {
@@ -1303,57 +1412,9 @@ if (tab === "done")       renderDoneList();
 
   // 인쇄
   document.getElementById("printBtn").addEventListener("click", () => {
-    const list = getFilteredListings();
-    const rows = list.map((item, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${getTypeLabel(item.type)}</td>
-        <td>${item.address || ""}</td>
-        <td>${formatPrice(item)}</td>
-        <td>${item.quick_contact || item.owner_contact || ""}</td>
-        <td>${item.quick_memo || item.description || ""}</td>
-      </tr>
-    `).join("");
-
-    const html = `
-      <!DOCTYPE html><html lang="ko"><head>
-      <meta charset="UTF-8">
-      <title>하이탑부동산 매물목록</title>
-      <style>
-        body { font-family: "Noto Sans KR", sans-serif; font-size: 11px; margin: 20px; }
-        h2 { font-size: 15px; margin-bottom: 4px; }
-        p  { font-size: 10px; color: #666; margin-bottom: 12px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #1a2a4a; color: #d4af37; padding: 7px 8px; text-align: left; font-size: 11px; }
-        td { padding: 6px 8px; border-bottom: 1px solid #ddd; vertical-align: top; }
-        tr:nth-child(even) td { background: #f9f9f9; }
-        .no { width: 30px; text-align: center; }
-        .type { width: 80px; }
-        .price { width: 140px; }
-        .contact { width: 110px; }
-      </style>
-      </head><body>
-      <h2>🏢 하이탑부동산 매물목록</h2>
-      <p>출력일: ${new Date().toLocaleDateString("ko-KR")} &nbsp;|&nbsp; 총 ${list.length}건</p>
-      <table>
-        <thead><tr>
-          <th class="no">No</th>
-          <th class="type">유형</th>
-          <th>주소</th>
-          <th class="price">가격</th>
-          <th class="contact">집주인 연락처</th>
-          <th>메모/특이사항</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      </body></html>
-    `;
-
-    const w = window.open("", "_blank");
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 500);
+    document.getElementById("printDate").textContent =
+      `출력일: ${new Date().toLocaleDateString("ko-KR")}  총 ${document.querySelectorAll("#listViewTable tbody tr").length}건`;
+    window.print();
   });
 
   function matchesKeyword(item, kw) {
