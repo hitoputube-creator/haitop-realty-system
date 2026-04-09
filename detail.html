@@ -31,6 +31,32 @@
 
 <div id="toast"></div>
 
+<!-- 전역 에러 오버레이 -->
+<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+  <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
+  <div style="font-size:1.1rem;font-weight:700;color:#e0e0e0;margin-bottom:8px;">연결 오류가 발생했습니다</div>
+  <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
+  <button onclick="location.reload()" style="background:#d4af37;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
+  <button onclick="location.href='index.html'" style="margin-top:10px;background:none;border:1px solid #555;border-radius:8px;padding:10px 24px;font-size:0.88rem;color:#aaa;cursor:pointer;">← 목록으로</button>
+</div>
+
+<script>
+  function showAppError(msg) {
+    const el = document.getElementById("appErrorOverlay");
+    if (!el) return;
+    document.getElementById("appErrorMsg").textContent = msg || "새로고침 해주세요.";
+    el.style.display = "flex";
+  }
+  window.onerror = function(msg, src, line, col, err) {
+    showAppError((err && err.message) || msg || "알 수 없는 오류가 발생했습니다.");
+  };
+  window.onunhandledrejection = function(e) {
+    const msg = (e.reason && e.reason.message) || String(e.reason) || "비동기 오류가 발생했습니다.";
+    if (msg.includes("저장 실패") || msg.includes("수정 실패") || msg.includes("삭제 실패")) return;
+    showAppError(msg);
+  };
+</script>
+
 <!-- 수정 모달 -->
 <div id="editModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
   <div class="modal-box" style="max-width:560px;width:95%;padding:20px;">
@@ -395,7 +421,8 @@
       });
 
     } catch(e) {
-      document.getElementById("detailArea").innerHTML = `<div class='desc-card'>❌ 오류: ${e.message}</div>`;
+      document.getElementById("detailArea").innerHTML = "";
+      showAppError(e.message || "데이터를 불러오지 못했습니다. 새로고침 해주세요.");
     }
   }
 
