@@ -511,6 +511,10 @@
       <label>드라이브 링크</label>
       <input id="drive_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
     </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>건물 개요 메모 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <textarea id="drive_memo" rows="5" placeholder="예) 준공년도, 층수, 주차대수, 관리비 등" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
+    </div>
     <button class="btn btn-primary" id="driveSaveBtn" style="width:100%;">💾 저장</button>
   </div>
 
@@ -2027,14 +2031,16 @@ if (tab === "done")       renderDoneList();
     const category = document.getElementById("drive_category").value.trim();
     const name = document.getElementById("drive_name").value.trim();
     const url = document.getElementById("drive_url").value.trim();
+    const memo = document.getElementById("drive_memo").value.trim();
     if (!category) { showToast("카테고리를 입력해주세요"); return; }
     if (!name) { showToast("건물명을 입력해주세요"); return; }
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
-      await addDriveResource({ category, name, url });
+      await addDriveResource({ category, name, url, memo: memo || null });
       document.getElementById("drive_category").value = "";
       document.getElementById("drive_name").value = "";
       document.getElementById("drive_url").value = "";
+      document.getElementById("drive_memo").value = "";
       document.getElementById("drive_cat_select").value = "";
       showToast("✅ 저장되었습니다!");
       await loadDriveResources();
