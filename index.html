@@ -219,15 +219,21 @@
 
     <!-- 목록 -->
     <section class="card">
-      <div class="card-title no-print">
-        <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
-        <div style="display:flex;gap:8px;align-items:center;">
+      <div class="card-title no-print" style="flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+          <label id="cardSelectBar" style="display:none;align-items:center;gap:5px;cursor:pointer;font-size:0.78rem;color:var(--text-muted);user-select:none;">
+            <input type="checkbox" id="cardSelectAll" style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelectAll(_currentCardItems,this.checked)" />
+            전체선택
+          </label>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
           <div style="display:flex;border:1px solid rgba(212,175,55,0.35);border-radius:7px;overflow:hidden;">
             <button id="viewToggleCard" onclick="setViewMode('card')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:rgba(212,175,55,0.2);color:var(--gold);border:none;cursor:pointer;">☰ 카드</button>
             <button id="viewToggleList" onclick="setViewMode('list')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:transparent;color:var(--text-muted);border:none;cursor:pointer;border-left:1px solid rgba(212,175,55,0.25);">☷ 목록</button>
           </div>
-          <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;">🖨️ 선택인쇄</button>
-          <button class="btn btn-ghost" onclick="location.href='register.html'">+ 상세 등록</button>
+          <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">🖨️ 선택인쇄</button>
+          <button class="btn btn-ghost" onclick="location.href='register.html'" style="font-size:0.82rem;">+ 상세 등록</button>
         </div>
       </div>
       <div id="printArea">
@@ -1170,14 +1176,17 @@ if (tab === "done")       renderDoneList();
     const listBtn = document.getElementById("viewToggleList");
     const gold = "rgba(212,175,55,0.2)", goldTxt = "var(--gold)";
     const none = "transparent", noneTxt = "var(--text-muted)";
+    const cardSelectBar = document.getElementById("cardSelectBar");
     if (mode === "card") {
       cardBtn.style.background = gold; cardBtn.style.color = goldTxt;
       listBtn.style.background = none; listBtn.style.color = noneTxt;
       listingContainer.className = "listing-grid";
+      // 전체선택 바는 renderList() 후 표시됨
     } else {
       listBtn.style.background = gold; listBtn.style.color = goldTxt;
       cardBtn.style.background = none; cardBtn.style.color = noneTxt;
       listingContainer.className = "";
+      cardSelectBar.style.display = "none";
     }
     currentPage = 1;
     renderList();
@@ -1392,14 +1401,12 @@ if (tab === "done")       renderDoneList();
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     const pageItems = filtered.slice(start, start + ITEMS_PER_PAGE);
 
-    // 전체선택 바
+    // 전체선택 바 (정적 요소 업데이트)
     const allChk = pageItems.length > 0 && pageItems.every(i => selectedIds.has(i.id));
-    const selBar = document.createElement("div");
-    selBar.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 10px;background:rgba(212,175,55,0.07);border-radius:8px;border:1px solid rgba(212,175,55,0.18);";
-    selBar.innerHTML = `<input type="checkbox" id="cardSelectAll" ${allChk?"checked":""} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelectAll(_currentCardItems,this.checked)" />
-      <label for="cardSelectAll" style="font-size:0.82rem;color:var(--text-muted);cursor:pointer;">현재 페이지 전체선택</label>
-      <span style="font-size:0.78rem;color:var(--gold);margin-left:4px;">${selectedIds.size > 0 ? `(총 ${selectedIds.size}건 선택됨)` : ""}</span>`;
-    listingContainer.appendChild(selBar);
+    const cardSelectBar = document.getElementById("cardSelectBar");
+    const cardSelectAll = document.getElementById("cardSelectAll");
+    cardSelectBar.style.display = "flex";
+    cardSelectAll.checked = allChk;
     _currentCardItems = pageItems;
 
     pageItems.forEach(item => {
@@ -1412,8 +1419,8 @@ if (tab === "done")       renderDoneList();
       const chk = selectedIds.has(item.id) ? "checked" : "";
 
       card.innerHTML = `
-        <div onclick="event.stopPropagation()" style="position:absolute;top:10px;right:10px;z-index:2;">
-          <input type="checkbox" data-sel="${item.id}" ${chk} style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelect('${item.id}',this.checked)" />
+        <div onclick="event.stopPropagation()" style="position:absolute;top:12px;right:12px;z-index:2;">
+          <input type="checkbox" data-sel="${item.id}" ${chk} style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;margin:0;" onchange="toggleSelect('${item.id}',this.checked)" />
         </div>
         <div class="badge-row" style="margin-bottom:6px;padding-right:28px;">
           <span class="badge">${getTypeLabel(item.type)}</span>
