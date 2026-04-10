@@ -636,7 +636,7 @@
       </div>
       <div class="field" style="margin-bottom:10px;margin-top:10px;">
         <label>메모</label>
-        <input id="rec_memo" type="text" placeholder="간단한 메모 (선택)" />
+        <textarea id="rec_memo" rows="6" placeholder="간단한 메모 (선택)" style="width:100%;resize:vertical;min-height:120px;box-sizing:border-box;"></textarea>
       </div>
       <button class="btn btn-primary" id="recSaveBtn" style="width:100%;">💾 저장</button>
     </div>
@@ -728,7 +728,7 @@
 </div>
 
 <!-- ✏️ 추천매물장 수정 모달 -->
-<div id="recommendEditModal" class="modal-overlay" style="display:none;">
+<div id="recommendEditModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
   <div class="modal-box" style="max-width:540px;">
     <div class="modal-title">✏️ 추천매물장 수정</div>
     <div class="field" style="margin-bottom:10px;">
@@ -742,7 +742,7 @@
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label>메모</label>
-      <input id="rece_memo" type="text" placeholder="간단한 메모" />
+      <textarea id="rece_memo" rows="6" placeholder="간단한 메모" style="width:100%;resize:vertical;min-height:120px;box-sizing:border-box;"></textarea>
     </div>
     <div class="modal-btns">
       <button class="btn" onclick="document.getElementById('recommendEditModal').style.display='none'">취소</button>
