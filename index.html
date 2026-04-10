@@ -2931,20 +2931,21 @@ if (tab === "done")       renderDoneList();
       });
       XLSX.utils.book_append_sheet(wb, _makeSheet(recRows), "추천매물장");
 
-      // 참고매물
+      // 참고매물 (DB 컬럼: location, property_type, price, contact, memo)
       XLSX.utils.book_append_sheet(wb, _makeSheet(referenceProps.map(p => ({
-        "유형": getTypeLabel(p.type),
-        "주소": p.address || "",
+        "유형": p.property_type || "",
+        "위치": p.location || "",
         "가격": p.price || "",
-        "면적": p.area || "",
+        "연락처": p.contact || "",
         "메모": p.memo || "",
         "등록일": p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR") : ""
       }))), "참고매물");
 
-      // 메모장
+      // 메모장 (DB 컬럼: title, content, building_name)
       XLSX.utils.book_append_sheet(wb, _makeSheet(memos.map(m => ({
+        "제목": m.title || "",
+        "내용": m.content || "",
         "건물명": m.building_name || "",
-        "메모": m.memo || "",
         "등록일": m.created_at ? new Date(m.created_at).toLocaleDateString("ko-KR") : ""
       }))), "메모장");
 
