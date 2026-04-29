@@ -105,6 +105,18 @@
   padding-right:4px;
 }
 
+/* register.html과 동일한 "추가형 리스트" 스타일(층별 평면도) */
+.attach-list{ display:flex; flex-direction:column; gap:8px; }
+.attach-item{
+  display:grid;
+  grid-template-columns: 140px 1fr auto;
+  gap:8px;
+  align-items:center;
+}
+@media (max-width: 520px){
+  .attach-item{ grid-template-columns: 1fr; }
+}
+
 .list-header{
   display:flex;
   align-items:flex-end;

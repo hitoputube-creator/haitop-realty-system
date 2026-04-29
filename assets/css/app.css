@@ -166,3 +166,82 @@ input[readonly]{ background:rgba(255,255,255,0.04); color:var(--muted); cursor:d
 ::-webkit-scrollbar-track{ background:rgba(255,255,255,0.03); }
 ::-webkit-scrollbar-thumb{ background:rgba(212,175,55,0.25); border-radius:99px; }
 ::-webkit-scrollbar-thumb:hover{ background:rgba(212,175,55,0.45); }
+
+/* ── 공통 레이아웃 안정화 패치 ── */
+.field label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.20);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.18s;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 42px;
+  box-sizing: border-box;
+}
+input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  padding: 0;
+}
+textarea { height: auto; min-height: 80px; resize: vertical; line-height: 1.6; }
+input[readonly] { opacity: 0.65; cursor: default; }
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(212,175,55,0.55);
+  background: rgba(0,0,0,0.28);
+}
+select option { background: #0D1728; color: var(--text); }
+
+/* 버튼 통일 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(212,175,55,0.08);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  height: 40px;
+}
+.btn:hover { background: rgba(212,175,55,0.16); border-color: rgba(212,175,55,0.40); }
+.btn.primary {
+  background: linear-gradient(135deg, #c8a227 0%, #e4c84a 100%);
+  border-color: transparent;
+  color: #111;
+  font-weight: 800;
+}
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; border-color: rgba(255,255,255,0.12); }
+.btn.ghost:hover { background: rgba(255,255,255,0.06); }
+.btn.danger { background: rgba(255,79,106,0.12); border-color: rgba(255,79,106,0.30); color: var(--danger); }
+.btn.danger:hover { background: rgba(255,79,106,0.22); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* note */
+p.note {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 10px 0 0;
+}

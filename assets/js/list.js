@@ -10,14 +10,19 @@
   const elStatus = $("fStatus");
   const elListedOnly = $("fListedOnly");
   const elSearch = $("fSearch");
+  const elFloorGroup = $("fFloorGroup");
 
   const elTableHead = $("tableHead");
   const elTableBody = $("tableBody");
   const elCount = $("resultCount");
 
   const elBtnPrint = $("btnPrint");
+  const elBtnPrintSelected = $("btnPrintSelected");
+  const elBtnPrintOne = $("btnPrintOne");
   const elBtnNew = $("btnNew");
   const elBtnBuildings = $("btnBuildings");
+  const elBtnHome = $("btnHome");
+  const elBtnCustomers = $("btnCustomers");
 
   const elPrintTitle = $("printTitle");
   const elPrintSub = $("printSub");
@@ -27,8 +32,10 @@
     buildingId: "",
     dealType: "",
     status: "",
+    floorGroup: "",
     listedOnly: true,
-    q: ""
+    q: "",
+    selected: new Set()
   };
 
   init();
@@ -59,6 +66,13 @@
       render();
     });
 
+    if (elFloorGroup) {
+      elFloorGroup.addEventListener("change", () => {
+        state.floorGroup = elFloorGroup.value;
+        render();
+      });
+    }
+
     elListedOnly.addEventListener("change", () => {
       state.listedOnly = elListedOnly.checked;
       render();
@@ -70,12 +84,32 @@
     });
 
     elBtnPrint.addEventListener("click", () => {
-      updatePrintHeader();
-      window.print();
+      printWithRows(getFilteredRows());
     });
+
+    if (elBtnPrintSelected) {
+      elBtnPrintSelected.addEventListener("click", () => {
+        const sel = Array.from(state.selected);
+        if (!sel.length) return alert("선택된 매물이 없습니다.");
+        const all = getFilteredRows();
+        const rows = all.filter(x => state.selected.has(x.id));
+        if (!rows.length) return alert("현재 조건에서 선택된 매물이 없습니다.");
+        printWithRows(rows);
+      });
+    }
+
+    if (elBtnPrintOne) {
+      elBtnPrintOne.addEventListener("click", () => {
+        const sel = Array.from(state.selected);
+        if (sel.length !== 1) return alert("단건 출력은 1개만 선택해주세요.");
+        location.href = `detail.html?id=${sel[0]}&print=info`;
+      });
+    }
 
     elBtnNew.addEventListener("click", () => location.href = "register.html");
     elBtnBuildings.addEventListener("click", () => location.href = "buildings.html");
+    if (elBtnHome) elBtnHome.addEventListener("click", () => location.href = "home.html");
+    if (elBtnCustomers) elBtnCustomers.addEventListener("click", () => location.href = "customers.html");
 
     renderBuildingOptions();
     render();
@@ -96,14 +130,21 @@
   }
 
   function render() {
-    const listings = DataUtil.getListings();
-    const filtered = listings.filter(matches);
+    const filtered = getFilteredRows();
 
     renderColumns(state.type);
     renderRows(state.type, filtered);
 
     elCount.textContent = `${filtered.length}건`;
     updatePrintHeader();
+
+    // 버튼 상태
+    if (elBtnPrintOne) elBtnPrintOne.disabled = state.selected.size !== 1;
+  }
+
+  function getFilteredRows() {
+    const listings = DataUtil.getListings();
+    return listings.filter(matches);
   }
 
   function matches(x) {
@@ -112,11 +153,16 @@
     if (state.status && x.status !== state.status) return false;
     if (state.dealType && x.dealType !== state.dealType) return false;
     if (state.buildingId && x.buildingId !== state.buildingId) return false;
+    if (state.floorGroup) {
+      const fg = x.floorGroup || guessFloorGroup(x.floor);
+      if (fg !== state.floorGroup) return false;
+    }
 
     if (state.q) {
       const hay = [
         x.title, x.address, x.buildingName, x.unit, x.ho, x.dong, x.memo,
         x.currentBiz, x.landUseZone, x.landJimo
+        ,x.ownerName, x.ownerPhone, x.tenantName, x.tenantPhone
       ].join(" ").toLowerCase();
       if (!hay.includes(state.q)) return false;
     }
@@ -188,11 +234,22 @@
       return "-";
     };
 
+    const colSelect = {
+      label:"선택",
+      className:"center",
+      render: (x) => {
+        const checked = state.selected.has(x.id) ? "checked" : "";
+        return `<input type="checkbox" class="row-check" data-id="${escAttr(x.id)}" ${checked}/>`;
+      }
+    };
+
     if (type === "officetel") return [
+      colSelect,
       { label:"번호", className:"center", render:(_, i) => String(i+1) },
       { label:"건물명", render: x => esc(x.buildingName || "-") },
       { label:"동/호수", render: x => esc(`${x.dong ? x.dong+" " : ""}${x.ho || "-"}`) },
-      { label:"층", className:"center", render: x => esc(x.floor || "-") },
+      { label:"층수", className:"center", render: x => esc(x.floorGroup || guessFloorGroup(x.floor) || "-") },
+      { label:"타입/방", className:"center", render: x => esc(`${x.otType || "-"}${x.rooms ? " / "+x.rooms+"R" : ""}`) },
       { label:"전용(㎡/평)", render: x => esc(m2py(x.areaExclusiveM2, x.areaExclusivePy)) },
       { label:"분양(㎡/평)", render: x => esc(m2py(x.areaSupplyM2, x.areaSupplyPy)) },
       { label:"향", className:"center", render: x => esc(x.direction || "-") },
@@ -202,10 +259,11 @@
     ];
 
     if (type === "apartment") return [
+      colSelect,
       { label:"번호", className:"center", render:(_, i) => String(i+1) },
       { label:"건물명", render: x => esc(x.buildingName || "-") },
       { label:"동/호수", render: x => esc(`${x.dong ? x.dong+" " : ""}${x.ho || "-"}`) },
-      { label:"층", className:"center", render: x => esc(x.floor || "-") },
+      { label:"층수", className:"center", render: x => esc(x.floorGroup || guessFloorGroup(x.floor) || "-") },
       { label:"전용(㎡/평)", render: x => esc(m2py(x.areaExclusiveM2, x.areaExclusivePy)) },
       { label:"분양(㎡/평)", render: x => esc(m2py(x.areaSupplyM2, x.areaSupplyPy)) },
       { label:"타입", className:"center", render: x => esc(x.aptType || "-") },
@@ -215,11 +273,24 @@
       { label:"상태", className:"center", render: x => esc(x.status || "-") },
     ];
 
-    if (type === "shop") return [
+    if (type === "bizcenter") return [
+      colSelect,
       { label:"번호", className:"center", render:(_, i) => String(i+1) },
       { label:"건물명", render: x => esc(x.buildingName || "-") },
       { label:"호실", className:"center", render: x => esc(x.unit || "-") },
-      { label:"층", className:"center", render: x => esc(x.floor || "-") },
+      { label:"층수", className:"center", render: x => esc(x.floorGroup || guessFloorGroup(x.floor) || "-") },
+      { label:"전용(㎡/평)", render: x => esc(m2py(x.areaExclusiveM2, x.areaExclusivePy)) },
+      { label:"거래", className:"center", render: x => esc(x.dealType || "-") },
+      { label:"가격", className:"right", render: x => esc(priceShop(x)) },
+      { label:"상태", className:"center", render: x => esc(x.status || "-") },
+    ];
+
+    if (type === "shop") return [
+      colSelect,
+      { label:"번호", className:"center", render:(_, i) => String(i+1) },
+      { label:"건물명", render: x => esc(x.buildingName || "-") },
+      { label:"호실", className:"center", render: x => esc(x.unit || "-") },
+      { label:"층수", className:"center", render: x => esc(x.floorGroup || guessFloorGroup(x.floor) || "-") },
       { label:"전용(㎡/평)", render: x => esc(m2py(x.areaExclusiveM2, x.areaExclusivePy)) },
       { label:"분양(㎡/평)", render: x => esc(m2py(x.areaSupplyM2, x.areaSupplyPy)) },
       { label:"현업종", render: x => esc(x.currentBiz || "-") },
@@ -229,6 +300,7 @@
     ];
 
     if (type === "land_dev" || type === "land_single" || type === "land_general") return [
+      colSelect,
       { label:"번호", className:"center", render:(_, i) => String(i+1) },
       { label:"소재지", render: x => esc(x.address || "-") },
       { label:"면적(㎡/평)", render: x => esc(m2py(x.landAreaM2, x.landAreaPy)) },
@@ -240,6 +312,7 @@
     ];
 
     if (type === "factory") return [
+      colSelect,
       { label:"번호", className:"center", render:(_, i) => String(i+1) },
       { label:"소재지", render: x => esc(x.address || "-") },
       { label:"대지(㎡/평)", render: x => esc(m2py(x.landAreaM2, x.landAreaPy)) },
@@ -251,12 +324,54 @@
     ];
 
     return [
+      colSelect,
       { label:"번호", className:"center", render:(_, i) => String(i+1) },
       { label:"제목", render: x => esc(x.title || "-") },
       { label:"주소/건물", render: x => esc(x.address || x.buildingName || "-") },
       { label:"거래", className:"center", render: x => esc(x.dealType || "-") },
       { label:"상태", className:"center", render: x => esc(x.status || "-") },
     ];
+  }
+
+  // 체크박스 클릭 시 행 이동 막기 + 선택 상태 관리
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    if (!(t instanceof HTMLElement)) return;
+    if (t.classList.contains("row-check")) {
+      e.stopPropagation();
+      const id = t.getAttribute("data-id");
+      if (!id) return;
+      if (t.checked) state.selected.add(id);
+      else state.selected.delete(id);
+      if (elBtnPrintOne) elBtnPrintOne.disabled = state.selected.size !== 1;
+    }
+  }, true);
+
+  function printWithRows(rows) {
+    const original = getFilteredRows();
+    renderColumns(state.type);
+    renderRows(state.type, rows);
+    updatePrintHeader();
+    window.print();
+    // 복원
+    renderColumns(state.type);
+    renderRows(state.type, original);
+    updatePrintHeader();
+  }
+
+  function guessFloorGroup(floor) {
+    const f = String(floor || "").toUpperCase();
+    if (f === "1F" || f.includes("1F")) return "1층";
+    if (f === "2F" || f.includes("2F")) return "2층";
+    return "상층부";
+  }
+
+  function escAttr(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
   }
 
   function updatePrintHeader() {

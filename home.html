@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>하이탑부동산 | 홈</title>
+
+  <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <link rel="stylesheet" href="assets/css/home.css"/>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="brand-text">
+          <h1>하이탑부동산 홈</h1>
+          <p>자주 쓰는 기능 바로가기 + 일정표(간단 메모)</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="goList">매물목록</button>
+        <button class="btn" id="goRegister">매물등록</button>
+        <button class="btn" id="goBuildings">건물관리</button>
+        <button class="btn" id="goCustomers">고객관리</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="section-title">
+          <h2>일정 추가</h2>
+          <span class="sub">내부용 메모 (로컬 저장)</span>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>날짜</label>
+            <input type="date" id="evDate" />
+          </div>
+          <div class="field">
+            <label>제목</label>
+            <input id="evTitle" placeholder="예: 사전점검 동행 / 계약서 작성" />
+          </div>
+        </div>
+        <div class="field">
+          <label>메모</label>
+          <textarea id="evMemo" placeholder="예: 고객명 / 시간 / 준비 서류"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn primary" id="btnAdd">저장</button>
+          <button class="btn" id="btnClear">전체삭제</button>
+        </div>
+
+        <p class="note">* 이 일정표는 이 브라우저(localStorage)에 저장됩니다. 다른 기기와 자동 동기화는 아직 적용되지 않았어요.</p>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>다가오는 일정</h2>
+          <span class="sub">최근순/날짜순</span>
+        </div>
+        <div id="evList" class="ev-list"></div>
+        <div id="evEmpty" class="empty" style="display:none;">등록된 일정이 없습니다.</div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/home.js"></script>
+</body>
+</html>

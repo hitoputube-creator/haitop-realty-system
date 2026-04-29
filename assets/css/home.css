@@ -1,0 +1,9 @@
+/* assets/css/home.css */
+
+.ev-list{ display:flex; flex-direction:column; gap:10px; }
+.ev-item{ border:1px solid var(--border); background:var(--surface); border-radius:14px; padding:12px; }
+.ev-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.ev-date{ font-weight:900; }
+.ev-title{ font-weight:800; margin-top:2px; }
+.ev-memo{ margin-top:8px; font-size:13px; color:var(--muted); white-space:pre-wrap; line-height:1.5; }
+.ev-actions{ display:flex; gap:6px; }

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>하이탑부동산 | 고객관리</title>
+
+  <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <link rel="stylesheet" href="assets/css/customers.css"/>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="brand-text">
+          <h1>고객관리</h1>
+          <p>임대인/임차인/의뢰인 상담 메모를 날짜별로 기록</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="goHome">홈</button>
+        <button class="btn" id="goList">매물목록</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="section-title">
+          <h2>고객 등록</h2>
+          <span class="sub">* 로컬 저장</span>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>이름</label>
+            <input id="cName" placeholder="예: 김○○" />
+          </div>
+          <div class="field">
+            <label>연락처</label>
+            <input id="cPhone" placeholder="010-0000-0000" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>구분</label>
+            <select id="cRole">
+              <option>임대인</option>
+              <option>임차인</option>
+              <option>매도인</option>
+              <option>매수인</option>
+              <option>의뢰인</option>
+              <option>기타</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>키워드(선택)</label>
+            <input id="cTag" placeholder="예: 운정역 상가 / 토지 / 공장" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>기본 메모</label>
+          <textarea id="cMemo" placeholder="예: 예산, 원하는 면적/층, 일정 등"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn primary" id="btnAddCustomer">저장</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-title">
+          <h2>검색</h2>
+          <span class="sub">이름/연락처/메모</span>
+        </div>
+        <div class="field">
+          <input id="q" placeholder="검색어" />
+        </div>
+
+        <div id="list" class="c-list"></div>
+        <div id="empty" class="empty" style="display:none;">등록된 고객이 없습니다.</div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>상담 기록</h2>
+          <span class="sub">선택한 고객의 메모</span>
+        </div>
+
+        <div id="detailEmpty" class="empty">왼쪽에서 고객을 선택하세요.</div>
+
+        <div id="detail" style="display:none;">
+          <div class="readonly-box" id="dHead"></div>
+
+          <div class="row" style="margin-top:12px;">
+            <div class="field">
+              <label>날짜</label>
+              <input type="date" id="nDate" />
+            </div>
+            <div class="field">
+              <label>상담 메모</label>
+              <input id="nText" placeholder="예: 1층 선호 / 예산 3억" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" id="btnAddNote">+ 추가</button>
+            <button class="btn danger" id="btnDeleteCustomer">고객 삭제</button>
+          </div>
+
+          <div class="divider"></div>
+          <div id="notes" class="note-list"></div>
+          <div id="notesEmpty" class="empty" style="display:none;">상담 기록이 없습니다.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/customers.js"></script>
+</body>
+</html>

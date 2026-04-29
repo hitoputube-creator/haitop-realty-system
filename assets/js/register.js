@@ -7,17 +7,28 @@
   const elTypeSelect = $("typeSelect");
   const elBuildingSelect = $("buildingSelect");
   const elBuildingInfo = $("buildingInfo");
+  const elBuildingWrap = $("buildingFieldWrap");
   const elDynamic = $("dynamicFields");
   const elDealType = $("dealType");
   const elStatus = $("status");
   const elIsListed = $("isListed");
   const elSave = $("btnSave");
 
+  const elLinkedCustomer = $("linkedCustomer");
+  const elMemoList = $("memoList");
+  const elAddMemo = $("btnAddMemo");
+
   let currentType = elTypeSelect.value || "shop";
 
   const BUILDING_TYPES = new Set(["shop", "officetel", "apartment", "bizcenter"]);
   const SHOP_FLOORS = DataUtil.SHOP_FLOORS;
   const DIRECTIONS = DataUtil.DIRECTIONS;
+
+  const FLOOR_GROUPS = ["1층", "2층", "상층부"]; // 요청사항 기준
+
+  const qs = new URLSearchParams(location.search);
+  const editId = qs.get("id");
+  let editingListing = null;
 
   init();
 
@@ -36,17 +47,45 @@
 
     elSave.addEventListener("click", saveListing);
 
+    // 메모(추가형)
+    if (elAddMemo) {
+      elAddMemo.addEventListener("click", () => addMemoRow("", ""));
+      // 기본 1줄
+      addMemoRow(todayStr(), "");
+    }
+
+    loadCustomerOptions();
     syncBuildingUI();
     renderDynamicFields(currentType);
+
+    // 수정 모드
+    if (editId) {
+      editingListing = DataUtil.getListings().find(x => x.id === editId) || null;
+      if (editingListing) loadListingToForm(editingListing);
+      else alert("수정할 매물을 찾을 수 없습니다.");
+    }
+  }
+
+  function loadCustomerOptions() {
+    if (!elLinkedCustomer) return;
+    const customers = StorageUtil.getArray("customers");
+    elLinkedCustomer.innerHTML = `<option value="">-- 고객 연결 안 함 --</option>`;
+    customers.forEach(c => {
+      const o = document.createElement("option");
+      o.value = c.id;
+      o.textContent = `${c.name}${c.phone ? " (" + c.phone + ")" : ""}${c.role ? " [" + c.role + "]" : ""}`;
+      elLinkedCustomer.appendChild(o);
+    });
   }
 
   function syncBuildingUI() {
     const needsBuilding = BUILDING_TYPES.has(currentType);
+    if (elBuildingWrap) elBuildingWrap.style.display = needsBuilding ? "block" : "none";
     elBuildingSelect.disabled = !needsBuilding;
 
     if (!needsBuilding) {
       elBuildingSelect.innerHTML = `<option value="">(건물 선택 없음)</option>`;
-      elBuildingInfo.innerHTML = `<div class="small">* 토지/공장창고는 건물 선택이 필요 없습니다.</div>`;
+      elBuildingInfo.innerHTML = "";
       return;
     }
 
@@ -68,13 +107,15 @@
     const b = DataUtil.findBuildingById(id);
     if (!b) return;
 
+    const scaleTxt = b.scale || makeScaleText(b.scaleB, b.scaleG);
+
     elBuildingInfo.innerHTML = `
       <div class="readonly-box">
         <b>${esc(b.name)}</b><br/>
         ${esc(b.address || "")}<br/>
         사용승인: ${esc(b.approved || "-")}<br/>
-        규모: ${esc(b.scale || "-")}<br/>
-        주차: ${esc(b.parking || "-")} · 엘리베이터: ${esc(b.elevator || "-")}
+        규모: ${esc(scaleTxt || "-")}<br/>
+        주차: ${esc(b.parking || "-")}
       </div>`;
   }
 
@@ -93,7 +134,7 @@
     elDynamic.innerHTML = `
       <div class="row">
         <div class="field"><label>호실</label><input id="unit" placeholder="예: 201호"/></div>
-        <div class="field"><label>층</label><select id="floor"></select></div>
+        <div class="field"><label>층수(필터용)</label><select id="floorGroup"></select></div>
       </div>
       <div class="row">
         <div class="field"><label>전용면적 (㎡)</label><input id="exM2" type="number" step="0.01"/></div>
@@ -131,8 +172,8 @@
         <div class="field"><label>VAT 세율(%)</label><input id="vatRate" type="number" value="10"/></div>
       </div>`;
 
-    const floorSel = $("floor");
-    SHOP_FLOORS.forEach(f => { const o = document.createElement("option"); o.value = f; o.textContent = f; floorSel.appendChild(o); });
+    const fg = $("floorGroup");
+    FLOOR_GROUPS.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; fg.appendChild(o); });
     const dirSel = $("direction");
     DIRECTIONS.forEach(d => { const o = document.createElement("option"); o.value = d; o.textContent = d; dirSel.appendChild(o); });
     bindM2ToPy("exM2", "exPy");
@@ -146,8 +187,12 @@
         <div class="field"><label>호수</label><input id="ho" placeholder="예: 1502호"/></div>
       </div>
       <div class="row">
-        <div class="field"><label>층</label><input id="floorTxt" placeholder="예: 15"/></div>
-        <div class="field"><label>전체층</label><input id="totalFloors" placeholder="예: 29"/></div>
+        <div class="field"><label>타입</label><input id="otType" placeholder="예: A타입 / 84A"/></div>
+        <div class="field"><label>방수</label><input id="rooms" type="number" min="0" step="1" placeholder="예: 1"/></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>층수(필터용)</label><select id="floorGroup"></select></div>
+        <div class="field"><label>관리비 (만원)</label><input id="maintenance" type="number"/></div>
       </div>
       <div class="row">
         <div class="field"><label>전용면적 (㎡)</label><input id="exM2" type="number" step="0.01"/></div>
@@ -159,7 +204,7 @@
       </div>
       <div class="row">
         <div class="field"><label>향</label><select id="direction"></select></div>
-        <div class="field"><label>관리비 (만원)</label><input id="maintenance" type="number"/></div>
+        <div class="field"></div>
       </div>
       <div class="row">
         <div class="field"><label>매매가 (만원)</label><input id="salePrice" type="number"/></div>
@@ -186,6 +231,8 @@
 
     const dirSel = $("direction");
     DIRECTIONS.forEach(d => { const o = document.createElement("option"); o.value = d; o.textContent = d; dirSel.appendChild(o); });
+    const fg = $("floorGroup");
+    FLOOR_GROUPS.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; fg.appendChild(o); });
     bindM2ToPy("exM2", "exPy");
     bindM2ToPy("suM2", "suPy");
   }
@@ -197,8 +244,8 @@
         <div class="field"><label>호수</label><input id="ho" placeholder="예: 902호"/></div>
       </div>
       <div class="row">
-        <div class="field"><label>층</label><input id="floorTxt" placeholder="예: 9"/></div>
-        <div class="field"><label>전체층</label><input id="totalFloors" placeholder="예: 29"/></div>
+        <div class="field"><label>층수(필터용)</label><select id="floorGroup"></select></div>
+        <div class="field"></div>
       </div>
       <div class="row">
         <div class="field"><label>전용면적 (㎡)</label><input id="exM2" type="number" step="0.01"/></div>
@@ -231,6 +278,8 @@
 
     const dirSel = $("direction");
     DIRECTIONS.forEach(d => { const o = document.createElement("option"); o.value = d; o.textContent = d; dirSel.appendChild(o); });
+    const fg = $("floorGroup");
+    FLOOR_GROUPS.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; fg.appendChild(o); });
     bindM2ToPy("exM2", "exPy");
     bindM2ToPy("suM2", "suPy");
   }
@@ -239,7 +288,7 @@
     elDynamic.innerHTML = `
       <div class="row">
         <div class="field"><label>호실</label><input id="unit" placeholder="예: A-1203"/></div>
-        <div class="field"><label>층</label><input id="floorTxt" placeholder="예: 12F"/></div>
+        <div class="field"><label>층수(필터용)</label><select id="floorGroup"></select></div>
       </div>
       <div class="row">
         <div class="field"><label>전용면적 (㎡)</label><input id="exM2" type="number" step="0.01"/></div>
@@ -262,12 +311,15 @@
         <div class="field"><label>소유주 연락처</label><input id="ownerPhone" placeholder="010-0000-0000"/></div>
       </div>`;
 
+    const fg = $("floorGroup");
+    FLOOR_GROUPS.forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = v; fg.appendChild(o); });
     bindM2ToPy("exM2", "exPy");
     bindM2ToPy("suM2", "suPy");
   }
 
   function renderLand(type) {
     elDynamic.innerHTML = `
+      <div class="field"><label>소재지(주소)</label><input id="locAddress" placeholder="예: 파주시 ○○읍 ○○리"/></div>
       ${type === "land_single" ? `
         <div class="row">
           <div class="field"><label>블럭주소</label><input id="blockAddress" placeholder="예: A-12블럭"/></div>
@@ -308,6 +360,7 @@
 
   function renderFactory() {
     elDynamic.innerHTML = `
+      <div class="field"><label>소재지(주소)</label><input id="locAddress" placeholder="예: 파주시 ○○읍 ○○리"/></div>
       <div class="row">
         <div class="field"><label>단지명</label><input id="complexName" placeholder="예: 파주 ○○산단"/></div>
         <div class="field"><label>진입로</label><input id="accessRoad" placeholder="예: 대형차 진입"/></div>
@@ -371,16 +424,16 @@
   }
 
   function saveListing() {
+    const isEdit = !!editingListing;
     const record = {
-      id: DataUtil.newListingId(),
+      id: isEdit ? editingListing.id : DataUtil.newListingId(),
       type: currentType,
-      title: DataUtil.cleanText($("title").value),
-      address: DataUtil.cleanText($("address").value),
       dealType: elDealType.value,
       status: elStatus.value,
       isListed: elIsListed.checked,
-      memo: DataUtil.cleanText($("memo").value),
-      createdAt: DataUtil.nowISO(),
+      memoEntries: collectMemos(),
+      memo: memoSummary(collectMemos()),
+      createdAt: isEdit ? (editingListing.createdAt || DataUtil.nowISO()) : DataUtil.nowISO(),
       updatedAt: DataUtil.nowISO(),
     };
 
@@ -390,14 +443,13 @@
       record.buildingId = elBuildingSelect.value || "";
       record.buildingName = elBuildingSelect.selectedOptions[0]?.textContent || "";
 
-      // ✅ 주소 자동 주입: 주소칸을 안 적었으면 건물마스터 주소로 채움
-  if (!record.address && record.buildingId) {
-    const b = DataUtil.findBuildingById(record.buildingId);
-    if (b?.address) record.address = b.address;
-  }
+      // ✅ 주소는 건물마스터 주소로 자동 세팅
+      const b = record.buildingId ? DataUtil.findBuildingById(record.buildingId) : null;
+      record.address = b?.address || "";
     } else {
       record.buildingId = "";
       record.buildingName = "";
+      record.address = DataUtil.cleanText($("locAddress")?.value);
     }
 
     if (currentType === "shop") fillShop(record);
@@ -407,6 +459,31 @@
     else if (currentType === "factory") fillFactory(record);
     else if (currentType.startsWith("land")) fillLand(record);
 
+    // 제목 입력칸은 없지만, 내부 표시/검색 호환을 위해 자동 생성
+    record.title = makeAutoTitle(record);
+    record.descChecks = collectDescChecks();
+    record.customerId = elLinkedCustomer ? (elLinkedCustomer.value || "") : "";
+
+    // 거래완료 시 연결된 고객에 자동 메모 추가
+    if (record.status === "완료" && record.customerId) {
+      const customers = StorageUtil.getArray("customers");
+      const idx = customers.findIndex(c => c.id === record.customerId);
+      if (idx >= 0) {
+        const prevStatus = editingListing ? editingListing.status : "";
+        // 이미 완료였던 매물을 재저장하는 경우엔 중복 메모 방지
+        if (prevStatus !== "완료") {
+          customers[idx].notes = Array.isArray(customers[idx].notes) ? customers[idx].notes : [];
+          customers[idx].notes.unshift({
+            id: StorageUtil.uid("n"),
+            date: todayStr(),
+            text: `거래완료 - ${record.title || record.buildingName || "매물"} (${record.dealType || ""})`,
+          });
+          customers[idx].updatedAt = new Date().toISOString();
+          StorageUtil.setArray("customers", customers);
+        }
+      }
+    }
+
     DataUtil.upsertListing(record);
     alert("저장 완료");
     location.href = "index.html";
@@ -414,7 +491,9 @@
 
   function fillShop(r) {
     r.unit = DataUtil.cleanText($("unit").value);
-    r.floor = $("floor").value;
+    r.floorGroup = $("floorGroup").value;
+    // 건물 평면도 자동 연결을 위해 최소한의 층 키를 저장(1F/2F/3F)
+    r.floor = floorKeyFromGroup(r.floorGroup);
     r.direction = $("direction").value;
     r.currentBiz = DataUtil.cleanText($("currentBiz").value);
     r.areaExclusiveM2 = num($("exM2").value);
@@ -437,8 +516,10 @@
   function fillOfficetel(r) {
     r.dong = DataUtil.cleanText($("dong").value);
     r.ho = DataUtil.cleanText($("ho").value);
-    r.floor = DataUtil.cleanText($("floorTxt").value);
-    r.totalFloors = DataUtil.cleanText($("totalFloors").value);
+    r.otType = DataUtil.cleanText($("otType").value);
+    r.rooms = num($("rooms").value);
+    r.floorGroup = $("floorGroup").value;
+    r.floor = r.floorGroup; // 호환용
     r.direction = $("direction").value;
     r.areaExclusiveM2 = num($("exM2").value);
     r.areaExclusivePy = num($("exPy").value);
@@ -460,8 +541,8 @@
   function fillApartment(r) {
     r.dong = DataUtil.cleanText($("dong").value);
     r.ho = DataUtil.cleanText($("ho").value);
-    r.floor = DataUtil.cleanText($("floorTxt").value);
-    r.totalFloors = DataUtil.cleanText($("totalFloors").value);
+    r.floorGroup = $("floorGroup").value;
+    r.floor = r.floorGroup; // 호환용
     r.aptType = DataUtil.cleanText($("aptType").value);
     r.direction = $("direction").value;
     r.areaExclusiveM2 = num($("exM2").value);
@@ -480,7 +561,8 @@
 
   function fillBizcenter(r) {
     r.unit = DataUtil.cleanText($("unit").value);
-    r.floor = DataUtil.cleanText($("floorTxt").value);
+    r.floorGroup = $("floorGroup").value;
+    r.floor = r.floorGroup; // 호환용
     r.areaExclusiveM2 = num($("exM2").value);
     r.areaExclusivePy = num($("exPy").value);
     r.areaSupplyM2 = num($("suM2").value);
@@ -494,6 +576,7 @@
   }
 
   function fillLand(r) {
+    r.address = DataUtil.cleanText($("locAddress")?.value);
     r.landAreaM2 = num($("landM2").value);
     r.landAreaPy = num($("landPy").value);
     r.landJimo = DataUtil.cleanText($("landJimo").value);
@@ -516,6 +599,7 @@
   }
 
   function fillFactory(r) {
+    r.address = DataUtil.cleanText($("locAddress")?.value);
     r.complexName = DataUtil.cleanText($("complexName").value);
     r.accessRoad = DataUtil.cleanText($("accessRoad").value);
     r.landAreaM2 = num($("landM2").value);
@@ -549,6 +633,296 @@
 
   function esc(s) {
     return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  function collectDescChecks() {
+    const dc = {};
+    ["location","demand","strength","notes"].forEach(function(k){
+      const cb = $("desc_"+k);
+      const ta = $("desc_"+k+"_text");
+      dc[k] = cb ? cb.checked : false;
+      dc[k+"Text"] = ta ? (ta.value || "").trim() : "";
+    });
+    return dc;
+  }
+
+  function toggleDescArea(k) {
+    const cb = $("desc_"+k);
+    const ta = $("desc_"+k+"_text");
+    if (ta) ta.style.display = (cb && cb.checked) ? "block" : "none";
+  }
+
+  function addMemoRow(date, text) {
+    if (!elMemoList) return;
+    const row = document.createElement("div");
+    row.className = "attach-item";
+    row.innerHTML = `
+      <input class="memo-date" type="date" value="${escAttr(date)}"/>
+      <input class="memo-text" placeholder="메모" value="${escAttr(text)}"/>
+      <button class="btn danger" type="button">삭제</button>
+    `;
+    row.querySelector("button").onclick = () => row.remove();
+    elMemoList.appendChild(row);
+  }
+
+  function collectMemos() {
+    const arr = [];
+    if (!elMemoList) return arr;
+    elMemoList.querySelectorAll(".attach-item").forEach((row) => {
+      const d = row.querySelector(".memo-date")?.value || "";
+      const t = (row.querySelector(".memo-text")?.value || "").trim();
+      if (t) arr.push({ date: d || todayStr(), text: t });
+    });
+    // 최신순
+    arr.sort((a,b) => String(b.date).localeCompare(String(a.date)));
+    return arr;
+  }
+
+  function memoSummary(entries) {
+    const e = Array.isArray(entries) ? entries[0] : null;
+    return e?.text ? e.text : "";
+  }
+
+  function todayStr() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const da = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+
+  function makeScaleText(b, g) {
+    const bb = Number(b) ? `지하${b}층` : "지하0층";
+    const gg = Number(g) ? `지상${g}층` : "지상0층";
+    return `${bb} / ${gg}`;
+  }
+
+  function makeAutoTitle(r) {
+    // 입력칸은 없지만 내부 호환을 위한 자동 제목
+    const parts = [];
+    if (r.buildingName) parts.push(r.buildingName);
+    if (r.unit) parts.push(r.unit);
+    if (r.ho) parts.push(r.ho);
+    if (r.currentBiz) parts.push(r.currentBiz);
+    if (!parts.length && r.address) parts.push(r.address);
+    return parts.join(" ").trim();
+  }
+
+  function loadListingToForm(x) {
+    // 유형
+    elTypeSelect.value = x.type;
+    currentType = x.type;
+    syncBuildingUI();
+    renderDynamicFields(currentType);
+
+    // 공통
+    elDealType.value = x.dealType || "매매";
+    elStatus.value = x.status || "거래가능";
+    elIsListed.checked = !!x.isListed;
+
+    // 건물
+    if (BUILDING_TYPES.has(currentType)) {
+      elBuildingSelect.value = x.buildingId || "";
+      renderBuildingInfo();
+    }
+
+    // 메모
+    if (elMemoList) {
+      elMemoList.innerHTML = "";
+      const entries = Array.isArray(x.memoEntries) && x.memoEntries.length
+        ? x.memoEntries
+        : (x.memo ? [{ date: todayStr(), text: x.memo }] : []);
+      if (entries.length) entries.slice().reverse().forEach(e => addMemoRow(e.date || todayStr(), e.text || ""));
+      else addMemoRow(todayStr(), "");
+    }
+
+    // 유형별
+    if (currentType === "shop") {
+      if ($("unit")) $("unit").value = x.unit || "";
+      if ($("floorGroup")) $("floorGroup").value = x.floorGroup || guessFloorGroup(x.floor);
+      if ($("direction")) $("direction").value = x.direction || "확인중";
+      if ($("currentBiz")) $("currentBiz").value = x.currentBiz || "";
+      setNum("exM2", x.areaExclusiveM2);
+      setNum("suM2", x.areaSupplyM2);
+      setNum("deposit", x.depositManwon);
+      setNum("rent", x.rentManwon);
+      setNum("salePrice", x.salePriceManwon);
+      setNum("maintenance", x.maintenanceFeeManwon);
+      setVal("ownerName", x.ownerName);
+      setVal("ownerPhone", x.ownerPhone);
+      setVal("tenantName", x.tenantName);
+      setVal("tenantPhone", x.tenantPhone);
+      setVal("leaseEnd", x.leaseEnd);
+      setVal("vatMode", x.vatMode);
+      setNum("vatRate", x.vatRate);
+    }
+
+    if (currentType === "officetel") {
+      setVal("dong", x.dong);
+      setVal("ho", x.ho);
+      setVal("otType", x.otType);
+      setNum("rooms", x.rooms);
+      if ($("floorGroup")) $("floorGroup").value = x.floorGroup || guessFloorGroup(x.floor);
+      if ($("direction")) $("direction").value = x.direction || "확인중";
+      setNum("exM2", x.areaExclusiveM2);
+      setNum("suM2", x.areaSupplyM2);
+      setNum("maintenance", x.maintenanceFeeManwon);
+      setNum("salePrice", x.salePriceManwon);
+      setNum("jeonsePrice", x.jeonsePriceManwon);
+      setNum("deposit", x.depositManwon);
+      setNum("rent", x.rentManwon);
+      setVal("ownerName", x.ownerName);
+      setVal("ownerPhone", x.ownerPhone);
+      setVal("tenantName", x.tenantName);
+      setVal("tenantPhone", x.tenantPhone);
+      setVal("vatMode", x.vatMode);
+      setNum("vatRate", x.vatRate);
+    }
+
+    if (currentType === "apartment") {
+      setVal("dong", x.dong);
+      setVal("ho", x.ho);
+      if ($("floorGroup")) $("floorGroup").value = x.floorGroup || guessFloorGroup(x.floor);
+      setVal("aptType", x.aptType);
+      if ($("direction")) $("direction").value = x.direction || "확인중";
+      setNum("exM2", x.areaExclusiveM2);
+      setNum("suM2", x.areaSupplyM2);
+      setNum("salePrice", x.salePriceManwon);
+      setNum("jeonsePrice", x.jeonsePriceManwon);
+      setNum("deposit", x.depositManwon);
+      setNum("rent", x.rentManwon);
+      setVal("ownerName", x.ownerName);
+      setVal("ownerPhone", x.ownerPhone);
+      setVal("tenantName", x.tenantName);
+      setVal("tenantPhone", x.tenantPhone);
+    }
+
+    if (currentType === "bizcenter") {
+      setVal("unit", x.unit);
+      if ($("floorGroup")) $("floorGroup").value = x.floorGroup || guessFloorGroup(x.floor);
+      setNum("exM2", x.areaExclusiveM2);
+      setNum("suM2", x.areaSupplyM2);
+      setNum("deposit", x.depositManwon);
+      setNum("rent", x.rentManwon);
+      setNum("salePrice", x.salePriceManwon);
+      setNum("maintenance", x.maintenanceFeeManwon);
+      setVal("ownerName", x.ownerName);
+      setVal("ownerPhone", x.ownerPhone);
+    }
+
+    if (currentType.startsWith("land")) {
+      setVal("locAddress", x.address);
+      setVal("blockAddress", x.blockAddress);
+      setVal("houseType", x.houseType);
+      setVal("devUsage", x.devUsage);
+      setNum("landM2", x.landAreaM2);
+      setVal("landJimo", x.landJimo);
+      setVal("landUseZone", x.landUseZone);
+      setNum("coverage", x.coverageRatio);
+      setNum("far", x.farRatio);
+      setVal("roadAccess", x.roadAccess);
+      setVal("shape", x.shape);
+      setNum("salePrice", x.salePriceManwon);
+      setVal("ownerName", x.ownerName);
+      setVal("ownerPhone", x.ownerPhone);
+      // attachments
+      if (Array.isArray(x.attachments) && x.attachments.length) {
+        const wrap = $("attachments");
+        if (wrap) {
+          wrap.innerHTML = "";
+          x.attachments.forEach(a => {
+            const row = document.createElement("div");
+            row.className = "attach-item";
+            row.innerHTML = `
+              <input placeholder="라벨(예: 지적도)" value="${escAttr(a.label||"")}"/>
+              <input placeholder="URL" value="${escAttr(a.url||"")}"/>
+              <button class="btn danger" type="button">삭제</button>`;
+            row.querySelector("button").onclick = () => row.remove();
+            wrap.appendChild(row);
+          });
+        }
+      }
+    }
+
+    if (currentType === "factory") {
+      setVal("locAddress", x.address);
+      setVal("complexName", x.complexName);
+      setVal("accessRoad", x.accessRoad);
+      setNum("landM2", x.landAreaM2);
+      setNum("bldM2", x.buildingAreaM2);
+      setNum("clearHeight", x.clearHeightM);
+      setNum("powerKw", x.powerKw);
+      setNum("deposit", x.depositManwon);
+      setNum("rent", x.rentManwon);
+      setNum("salePrice", x.salePriceManwon);
+      setVal("ownerName", x.ownerName);
+      setVal("ownerPhone", x.ownerPhone);
+      if (Array.isArray(x.attachments) && x.attachments.length) {
+        const wrap = $("attachments");
+        if (wrap) {
+          wrap.innerHTML = "";
+          x.attachments.forEach(a => {
+            const row = document.createElement("div");
+            row.className = "attach-item";
+            row.innerHTML = `
+              <input placeholder="라벨(예: 지적도)" value="${escAttr(a.label||"")}"/>
+              <input placeholder="URL" value="${escAttr(a.url||"")}"/>
+              <button class="btn danger" type="button">삭제</button>`;
+            row.querySelector("button").onclick = () => row.remove();
+            wrap.appendChild(row);
+          });
+        }
+      }
+    }
+
+    // 매물 설명 체크 복원
+    if (x.descChecks) {
+      const dc = x.descChecks;
+      ["location","demand","strength","notes"].forEach(function(k){
+        const cb = $("desc_"+k);
+        const ta = $("desc_"+k+"_text");
+        if (cb) cb.checked = !!dc[k];
+        if (ta) ta.value = dc[k+"Text"] || "";
+        if (ta) ta.style.display = dc[k] ? "block" : "none";
+      });
+    }
+
+    // 연결 고객 복원
+    if (elLinkedCustomer && x.customerId) {
+      elLinkedCustomer.value = x.customerId;
+    }
+
+    // 화면상 평수 자동 갱신
+    ["exM2","suM2","landM2","bldM2"].forEach(id => $(id)?.dispatchEvent(new Event("input")));
+  }
+
+  function setVal(id, v) {
+    const el = $(id);
+    if (el) el.value = v ?? "";
+  }
+
+  function setNum(id, v) {
+    const el = $(id);
+    if (!el) return;
+    const n = Number(v);
+    el.value = Number.isFinite(n) && n !== 0 ? String(n) : "";
+  }
+
+  function guessFloorGroup(floor) {
+    const f = String(floor || "").toUpperCase();
+    if (f === "1F" || f.includes("1")) return "1층";
+    if (f === "2F" || f.includes("2")) return "2층";
+    return "상층부";
+  }
+
+  function floorKeyFromGroup(g) {
+    if (g === "1층") return "1F";
+    if (g === "2층") return "2F";
+    return "3F";
+  }
+
+  function escAttr(s) {
+    return String(s ?? "").replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
   }
 
 })();

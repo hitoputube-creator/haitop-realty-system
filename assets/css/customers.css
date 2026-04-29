@@ -1,0 +1,13 @@
+/* assets/css/customers.css */
+
+.c-list{ display:flex; flex-direction:column; gap:10px; }
+.c-item{ border:1px solid var(--border); background:var(--surface); border-radius:14px; padding:12px; cursor:pointer; }
+.c-item.active{ outline:2px solid rgba(198,167,94,0.35); }
+.c-name{ font-weight:900; }
+.c-sub{ margin-top:4px; font-size:13px; color:var(--muted); }
+
+.note-list{ display:flex; flex-direction:column; gap:10px; }
+.n-item{ border:1px solid var(--border); border-radius:14px; padding:12px; background:var(--surface); }
+.n-top{ display:flex; justify-content:space-between; gap:10px; }
+.n-date{ font-weight:900; }
+.n-text{ margin-top:6px; font-size:13px; color:var(--text); white-space:pre-wrap; line-height:1.5; }
