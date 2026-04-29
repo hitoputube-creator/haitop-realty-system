@@ -19,9 +19,7 @@
 
   // ---------- Listings ----------
   Data.getListings = function () {
-    const arr = StorageUtil.getArray(Data.KEY_LISTINGS);
-    // null/undefined 아이템 필터링
-    return arr.filter(function(x){ return x && typeof x === "object"; });
+    return StorageUtil.getArray(Data.KEY_LISTINGS);
   };
 
   Data.setListings = function (arr) {

@@ -3,8 +3,7 @@
   "use strict";
 
   const LS_KEY = "buildings";
-  // 기존 고정층 입력 방식 → 필요한 층만 추가하는 방식으로 변경
-  const FLOOR_PRESETS = ["B3","B2","B1","1F","2F","3F","4F","5F","6F","7F","8F","9F","10F","11F","12F","13F","14F","15F"];
+  const SHOP_FLOORS = ["B2", "B1", "1F", "2F", "3F", "4F", "5F"];
 
   let currentType = "shop";
   let currentFilter = "all";
@@ -19,9 +18,9 @@
   const elName = $("b_name");
   const elAddr = $("b_address");
   const elApproved = $("b_approved");
-  const elScaleB = $("b_scale_b");
-  const elScaleG = $("b_scale_g");
+  const elScale = $("b_scale");
   const elParking = $("b_parking");
+  const elElevator = $("b_elevator");
 
   const elList = $("buildingList");
   const elEmpty = $("empty");
@@ -62,28 +61,26 @@
           <div class="field"><label>관리사무소 연락처</label><input id="shop_office" /></div>
         </div>
         <div class="field"><label>건물 특징(메모)</label><textarea id="shop_note"></textarea></div>
-        <div class="field">
-          <label>층별 평면도 URL</label>
-          <div class="small" style="margin:-4px 0 10px;">필요한 층만 추가해서 URL을 저장하세요.</div>
-          <div id="fpList" class="attach-list"></div>
-          <button class="btn" type="button" id="btnAddFloorplan">+ 층 추가</button>
-        </div>
+        <div class="field"><label>층별 평면도 URL</label><div class="floorgrid" id="floorGrid"></div></div>
       `;
       elTypeExtra.appendChild(wrap);
-
-      const fpList = document.getElementById("fpList");
-      const btnAdd = document.getElementById("btnAddFloorplan");
-
-      const existing = normalizeFloorplans(data);
-      if (existing.length) existing.forEach(e => addFloorplanRow(fpList, e.floor, e.url));
-      else addFloorplanRow(fpList, "1F", "");
-
-      btnAdd.onclick = () => addFloorplanRow(fpList, "", "");
-
+      const grid = document.getElementById("floorGrid");
+      SHOP_FLOORS.forEach((f) => {
+        const key = document.createElement("div");
+        key.className = "fkey";
+        key.textContent = f;
+        const input = document.createElement("input");
+        input.id = "fp_" + f;
+        input.placeholder = `${f} 평면도 URL`;
+        grid.appendChild(key);
+        grid.appendChild(input);
+      });
       if (data) {
         $("shop_summary").value = data.shop_summary || "";
         $("shop_office").value = data.shop_office || "";
         $("shop_note").value = data.shop_note || "";
+        const fp = data.floorplans || {};
+        SHOP_FLOORS.forEach((f) => { if ($("fp_" + f)) $("fp_" + f).value = fp[f] || ""; });
       }
     }
 
@@ -112,34 +109,22 @@
     const name = normalizeName(elName.value);
     if (!name) { toast("건물명은 필수입니다."); return; }
 
-    const scaleB = toInt(elScaleB?.value);
-    const scaleG = toInt(elScaleG?.value);
-    const scaleText = makeScaleText(scaleB, scaleG);
-
     const base = {
       id: editId || StorageUtil.uid("b"),
       type: currentType, name,
       address: elAddr.value.trim(),
       approved: elApproved.value,
-      scaleB, scaleG,
-      scale: scaleText, // 호환용 표시 텍스트
+      scale: elScale.value.trim(),
       parking: elParking.value.trim(),
+      elevator: elElevator.value.trim(),
       updatedAt: new Date().toISOString(),
     };
 
     let extra = {};
     if (currentType === "shop") {
-      const fpList = document.getElementById("fpList");
-      const floorplansArr = collectFloorplans(fpList);
       const floorplans = {};
-      floorplansArr.forEach(e => { if (e.floor && e.url) floorplans[e.floor] = e.url; });
-      extra = {
-        shop_summary: $("shop_summary").value.trim(),
-        shop_office: $("shop_office").value.trim(),
-        shop_note: $("shop_note").value.trim(),
-        floorplans,
-        floorplansArr
-      };
+      SHOP_FLOORS.forEach((f) => { const v = ($("fp_" + f)?.value || "").trim(); if (v) floorplans[f] = v; });
+      extra = { shop_summary: $("shop_summary").value.trim(), shop_office: $("shop_office").value.trim(), shop_note: $("shop_note").value.trim(), floorplans };
     }
     if (currentType === "officetel") {
       extra = { layouts: [$("lay1").value.trim(), $("lay2").value.trim(), $("lay3").value.trim()].filter(Boolean) };
@@ -159,9 +144,7 @@
   function clearForm() {
     editId = null;
     elName.value = ""; elAddr.value = ""; elApproved.value = "";
-    if (elScaleB) elScaleB.value = "";
-    if (elScaleG) elScaleG.value = "";
-    elParking.value = "";
+    elScale.value = ""; elParking.value = ""; elElevator.value = "";
     renderTypeExtra(currentType, null);
   }
 
@@ -173,87 +156,9 @@
     currentType = item.type;
     Array.from(elTabs.querySelectorAll(".tab")).forEach((b) => b.classList.toggle("active", b.dataset.type === currentType));
     elName.value = item.name || ""; elAddr.value = item.address || "";
-    elApproved.value = item.approved || "";
-    const parsed = parseScale(item);
-    if (elScaleB) elScaleB.value = parsed.scaleB ?? "";
-    if (elScaleG) elScaleG.value = parsed.scaleG ?? "";
-    elParking.value = item.parking || "";
+    elApproved.value = item.approved || ""; elScale.value = item.scale || "";
+    elParking.value = item.parking || ""; elElevator.value = item.elevator || "";
     renderTypeExtra(currentType, item);
-  }
-
-  function addFloorplanRow(wrap, floor, url) {
-    const row = document.createElement("div");
-    row.className = "attach-item";
-    const presetOptions = FLOOR_PRESETS.map(f => `<option value="${f}">${f}</option>`).join("");
-    row.innerHTML = `
-      <input class="fp-floor" list="floorPresets" placeholder="층(예: 1F, B1)" value="${escAttr(floor)}"/>
-      <input class="fp-url" placeholder="URL" value="${escAttr(url)}"/>
-      <button class="btn danger" type="button">삭제</button>
-    `;
-    row.querySelector("button").onclick = () => row.remove();
-    wrap.appendChild(row);
-
-    // datalist는 최초 1회만 주입
-    if (!document.getElementById("floorPresets")) {
-      const dl = document.createElement("datalist");
-      dl.id = "floorPresets";
-      dl.innerHTML = presetOptions;
-      document.body.appendChild(dl);
-    }
-  }
-
-  function collectFloorplans(wrap) {
-    const arr = [];
-    if (!wrap) return arr;
-    wrap.querySelectorAll(".attach-item").forEach((row) => {
-      const floor = (row.querySelector(".fp-floor")?.value || "").trim();
-      const url = (row.querySelector(".fp-url")?.value || "").trim();
-      if (floor || url) arr.push({ floor, url });
-    });
-    return arr.filter(e => e.floor && e.url);
-  }
-
-  function normalizeFloorplans(data) {
-    if (!data) return [];
-    if (Array.isArray(data.floorplansArr) && data.floorplansArr.length) {
-      return data.floorplansArr
-        .map(e => ({ floor: (e.floor||"").trim(), url: (e.url||"").trim() }))
-        .filter(e => e.floor && e.url);
-    }
-    const obj = data.floorplans || {};
-    return Object.keys(obj)
-      .map(k => ({ floor: k, url: String(obj[k]||"").trim() }))
-      .filter(e => e.floor && e.url);
-  }
-
-  function toInt(v) {
-    const n = Number(String(v ?? "").trim());
-    return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
-  }
-
-  function makeScaleText(b, g) {
-    const bb = Number(b) ? `지하${b}층` : "지하0층";
-    const gg = Number(g) ? `지상${g}층` : "지상0층";
-    return `${bb} / ${gg}`;
-  }
-
-  function parseScale(item) {
-    // 신규 데이터 우선
-    if (typeof item.scaleB === "number" || typeof item.scaleG === "number") {
-      return { scaleB: item.scaleB ?? 0, scaleG: item.scaleG ?? 0 };
-    }
-    // 구버전 scale 텍스트 파싱
-    const s = String(item.scale || "");
-    const mB = s.match(/지하\s*(\d+)\s*층/);
-    const mG = s.match(/지상\s*(\d+)\s*층/);
-    return {
-      scaleB: mB ? Number(mB[1]) : 0,
-      scaleG: mG ? Number(mG[1]) : 0,
-    };
-  }
-
-  function escAttr(s) {
-    return String(s ?? "").replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
   }
 
   function deleteBuilding(id) {

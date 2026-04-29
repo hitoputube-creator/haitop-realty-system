@@ -156,30 +156,3 @@ hr.soft{
   font-size:0.78rem;
   color:rgba(255,255,255,0.88);
 }
-
-/* ── 매물설명 체크 섹션 ── */
-.desc-check-row {
-  margin-bottom: 10px;
-}
-.desc-textarea {
-  width: 100%;
-  min-height: 80px;
-  margin-top: 6px;
-  padding: 10px 12px;
-  background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(212,175,55,0.20);
-  border-radius: 12px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.desc-textarea:focus {
-  border-color: rgba(212,175,55,0.55);
-}
-.desc-textarea::placeholder {
-  color: var(--muted);
-}
