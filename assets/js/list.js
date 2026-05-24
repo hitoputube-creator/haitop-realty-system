@@ -139,6 +139,12 @@
 
   function renderRows(type, rows) {
     const cols = getColumns(type);
+    // add action column for prefill button
+    cols.push({
+      label: '',
+      className: 'center',
+      render: (x) => `<button class="btn btn-primary" data-action="prefill" data-id="${x.id}">홈페이지로 보내기</button>`
+    });
     elTableBody.innerHTML = "";
 
     rows.forEach((x, idx) => {
@@ -152,6 +158,16 @@
         tr.appendChild(td);
       });
       elTableBody.appendChild(tr);
+    });
+
+    // delegate click for prefill buttons
+    elTableBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action="prefill"]');
+      if (btn) {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        window.location.href = `https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?prefill=${id}`;
+      }
     });
 
     if (rows.length === 0) {
