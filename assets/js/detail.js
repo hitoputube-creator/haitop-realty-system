@@ -9,6 +9,7 @@
   const elMeta = $("dMeta");
   const elInfo = $("dInfo");
   const elPlanBox = $("dPlanBox");
+  const elButtonArea = $("dButtons");
 
   const btnBack = $("btnBack");
   const btnEstimate = $("btnEstimate");
@@ -30,15 +31,24 @@
     return;
   }
 
-  btnBack.addEventListener("click", () => history.back());
-  btnEstimate.addEventListener("click", () => {
-    window.EstimateUtil.renderAndPrint(listing);
-  });
-  btnEdit.addEventListener("click", () => {
-    alert("수정 기능은 다음 단계에서 연결합니다.");
-  });
+  function rebindButtons(x) {
+    btnBack.addEventListener("click", () => history.back());
+    btnEstimate.addEventListener("click", () => {
+      window.EstimateUtil.renderAndPrint(x);
+    });
+    btnEdit.addEventListener("click", () => {
+      location.href = `edit.html?id=${x.id}`;
+    });
+    const sendBtn = document.getElementById("sendHomeBtn");
+    if (sendBtn) {
+      sendBtn.addEventListener("click", () => {
+        location.href = `https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?prefill=${x.id}`;
+      });
+    }
+  }
 
   renderDetail(listing);
+  rebindButtons(listing);
 
   function renderDetail(x) {
     elTitle.textContent = x.title || "(제목 없음)";
@@ -70,6 +80,15 @@
     if (x.tenantName) addInfo("임차인", `${x.tenantName}${x.tenantPhone ? " ("+x.tenantPhone+")" : ""}`);
     if (x.leaseEnd) addInfo("계약만료", x.leaseEnd);
     if (x.memo) addInfo("메모", x.memo);
+
+    if (elButtonArea) {
+      elButtonArea.innerHTML = `
+        <button id="btnBack" class="btn">목록으로</button>
+        <button id="btnEstimate" class="btn primary">견적서 출력</button>
+        <button id="btnEdit" class="btn">수정하기</button>
+        <button class="btn primary" id="sendHomeBtn">🏠 홈페이지로 보내기</button>
+      `;
+    }
 
     renderPlan(x);
   }
