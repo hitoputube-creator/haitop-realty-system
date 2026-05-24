@@ -143,7 +143,7 @@
     cols.push({
       label: '',
       className: 'center',
-      render: (x) => `<button class="btn btn-primary" data-action="prefill" data-id="${x.id}">홈페이지로 보내기</button>`
+      render: (x) => `<button class="btn primary" data-action="prefill" data-id="${x.id}">홈페이지로 보내기</button>`
     });
     elTableBody.innerHTML = "";
 
