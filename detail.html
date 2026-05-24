@@ -199,7 +199,7 @@
     }
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
-    html += `<button class="btn btn-primary" onclick="window.location.href='https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?prefill=${item.id}'">🏠 홈페이지로 보내기</button>`;
+    html += `<button class="btn btn-primary" id="sendHomeBtn">🏠 홈페이지로 보내기</button>`;
     html += `</div>`;
 
     // 기본 정보 카드
@@ -370,6 +370,58 @@
     } catch(e) { showToast("❌ 실패: " + e.message); }
   }
 
+  function mapPropertyType(type) {
+    const m = { shop:"상가", officetel:"오피스텔", apartment:"아파트", bizcenter:"지식산업센터",
+      factory:"공장/창고", land_dev:"토지(시행)", land_single:"토지(단독)", land_general:"토지(일반)" };
+    return m[type] || "상가";
+  }
+
+  function formatLegacyDesc(item) {
+    const lines = [];
+    if (item.address) lines.push("주소: " + item.address);
+    if (item.title) lines.push("제목: " + item.title);
+    if (item.type === "shop" || item.type === "office") {
+      if (item.shop_dealType) lines.push("거래유형: " + item.shop_dealType);
+      if (item.shop_floor) lines.push("층수: " + item.shop_floor);
+      if (item.shop_area_py) lines.push("전용면적: " + item.shop_area_py + "평");
+      if (item.shop_deposit) lines.push("보증금: " + Number(item.shop_deposit).toLocaleString("ko-KR") + "만원");
+      if (item.shop_monthlyRent) lines.push("월세: " + Number(item.shop_monthlyRent).toLocaleString("ko-KR") + "만원");
+      if (item.shop_maintenance) lines.push("관리비: " + item.shop_maintenance + "만원");
+      if (item.shop_premium) lines.push("권리금: " + item.shop_premium);
+      if (item.shop_status) lines.push("임대상태: " + item.shop_status);
+      if (item.shop_available) lines.push("입주가능일: " + item.shop_available);
+    }
+    if (item.type === "officetel" || item.type === "hilsstate") {
+      if (item.officetel_dealType) lines.push("거래유형: " + item.officetel_dealType);
+      if (item.officetel_floor) lines.push("층수: " + item.officetel_floor);
+      if (item.officetel_area_py) lines.push("전용면적: " + item.officetel_area_py + "평");
+      if (item.officetel_price) lines.push("금액: " + Number(item.officetel_price).toLocaleString("ko-KR") + "만원");
+      if (item.officetel_direction) lines.push("향: " + item.officetel_direction);
+      if (item.officetel_available) lines.push("입주가능일: " + item.officetel_available);
+    }
+    if (item.type && item.type.startsWith("land")) {
+      if (item.land_area_py) lines.push("면적: " + item.land_area_py + "평");
+      if (item.land_jimok) lines.push("지목: " + item.land_jimok);
+      if (item.land_zone) lines.push("용도지역: " + item.land_zone);
+      if (item.land_price) lines.push("매매가: " + Number(item.land_price).toLocaleString("ko-KR") + "만원");
+    }
+    if (item.type === "factory") {
+      if (item.factory_area_py) lines.push("건축면적: " + item.factory_area_py + "평");
+      if (item.factory_land_py) lines.push("대지면적: " + item.factory_land_py + "평");
+      if (item.factory_price) lines.push("가격: " + Number(item.factory_price).toLocaleString("ko-KR") + "만원");
+    }
+    if (item.description) lines.push("메모: " + item.description);
+    return lines.join("\n");
+  }
+
+  function buildHomepagePrefill(item) {
+    return {
+      propertyType: mapPropertyType(item.type),
+      title: item.title || "",
+      description: formatLegacyDesc(item)
+    };
+  }
+
   function rebindButtons() {
     const item = _currentItem;
     const id   = item.id;
@@ -387,6 +439,13 @@
     });
     document.getElementById("editBtn").addEventListener("click", () => openEditModal(item));
     document.getElementById("deleteBtn").addEventListener("click", () => { document.getElementById("deleteModal").style.display = "flex"; });
+    const sendHomeBtn = document.getElementById("sendHomeBtn");
+    if (sendHomeBtn) {
+      sendHomeBtn.addEventListener("click", () => {
+        localStorage.setItem('hitopHomepagePrefill', JSON.stringify(buildHomepagePrefill(_currentItem)));
+        window.location.href = 'https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?source=haitop';
+      });
+    }
   }
 
   async function init() {

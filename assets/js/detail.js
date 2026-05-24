@@ -42,7 +42,8 @@
     const sendBtn = document.getElementById("sendHomeBtn");
     if (sendBtn) {
       sendBtn.addEventListener("click", () => {
-        location.href = `https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?prefill=${x.id}`;
+        localStorage.setItem('hitopHomepagePrefill', JSON.stringify(buildHomepagePrefill(x)));
+        window.location.href = 'https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?source=haitop';
       });
     }
   }
@@ -182,6 +183,43 @@
 
   function escapeAttr(s) {
     return String(s ?? "").replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  function mapPropertyType(type) {
+    const m = { shop:"상가", officetel:"오피스텔", apartment:"아파트", bizcenter:"지식산업센터",
+      factory:"공장/창고", land_dev:"토지(시행)", land_single:"토지(단독)", land_general:"토지(일반)" };
+    return m[type] || "상가";
+  }
+
+  function formatLegacyDesc(x) {
+    const lines = [];
+    if (x.address) lines.push("주소: " + x.address);
+    if (x.buildingName) lines.push("건물명: " + x.buildingName);
+    if (x.unit) lines.push("호실: " + x.unit);
+    if (x.ho) lines.push("호수: " + x.ho);
+    if (x.floor) lines.push("층: " + x.floor);
+    if (x.dealType) lines.push("거래유형: " + x.dealType);
+    if (x.status) lines.push("상태: " + x.status);
+    if (x.areaExclusivePy) lines.push("전용면적: " + x.areaExclusivePy + "평");
+    if (x.areaSupplyPy) lines.push("분양면적: " + x.areaSupplyPy + "평");
+    if (x.landAreaPy) lines.push("토지면적: " + x.landAreaPy + "평");
+    if (x.buildingAreaPy) lines.push("건축면적: " + x.buildingAreaPy + "평");
+    if (x.salePriceManwon) lines.push("매매가: " + Number(x.salePriceManwon).toLocaleString("ko-KR") + "만원");
+    if (x.jeonsePriceManwon) lines.push("전세가: " + Number(x.jeonsePriceManwon).toLocaleString("ko-KR") + "만원");
+    if (x.depositManwon) lines.push("보증금: " + Number(x.depositManwon).toLocaleString("ko-KR") + "만원");
+    if (x.rentManwon) lines.push("월세: " + Number(x.rentManwon).toLocaleString("ko-KR") + "만원");
+    if (x.currentBiz) lines.push("현업종: " + x.currentBiz);
+    if (x.direction) lines.push("향: " + x.direction);
+    if (x.memo) lines.push("메모: " + x.memo);
+    return lines.join("\n");
+  }
+
+  function buildHomepagePrefill(x) {
+    return {
+      propertyType: mapPropertyType(x.type),
+      title: x.title || "",
+      description: formatLegacyDesc(x)
+    };
   }
 
 })();
