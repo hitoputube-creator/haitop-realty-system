@@ -3814,5 +3814,48 @@ function cmCopy() {
   });
 }
 </script>
+
+<!-- ===== 업무일지 매물보내기 연동 ===== -->
+<script>
+(function () {
+  function applyMemoParam() {
+    var params = new URLSearchParams(window.location.search);
+    var memo = params.get('memo');
+    if (!memo) return;
+
+    // property 탭 활성화
+    document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+    var propBtn = document.querySelector('[data-tab="property"]');
+    if (propBtn) propBtn.classList.add('active');
+    var tabProp = document.getElementById('tabProperty');
+    var tabCust = document.getElementById('tabCustomer');
+    var tabDone = document.getElementById('tabDone');
+    if (tabProp) tabProp.style.display = '';
+    if (tabCust) tabCust.style.display = 'none';
+    if (tabDone) tabDone.style.display = 'none';
+
+    // 빠른 등록 메모(특이사항) textarea 자동 입력
+    var ta = document.getElementById('q_memo');
+    if (ta) {
+      ta.value = memo;
+      ta.focus();
+      setTimeout(function () {
+        ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+
+    // URL에서 memo 파라미터 제거 (새로고침 시 재입력 방지)
+    var cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete('memo');
+    history.replaceState({}, '', cleanUrl.toString());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyMemoParam);
+  } else {
+    applyMemoParam();
+  }
+})();
+</script>
 </body>
 </html>
