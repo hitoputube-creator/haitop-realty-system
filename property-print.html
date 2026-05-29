@@ -6,6 +6,9 @@
 <title>매물 브리핑 — 하이탑부동산</title>
 <script src="assets/js/storage.js"></script>
 <style>
+/* ══════════════════════════════
+   변수
+══════════════════════════════ */
 :root {
   --navy:   #0d1b2e;
   --navy2:  #132540;
@@ -20,400 +23,358 @@
   --white:  #ffffff;
   --accent: #1a3a6b;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 15px; }
-body {
-  font-family: "Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
+*   { box-sizing: border-box; margin: 0; padding: 0; }
+html{ font-size: 15px; }
+body{
+  font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.6;
 }
-a { text-decoration: none; color: inherit; }
+a{ text-decoration:none; color:inherit; }
 
-/* 로딩 / 에러 */
-.state-overlay {
-  min-height: 100vh;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 14px; padding: 24px;
-  background: var(--navy);
-  color: #c8d8ec;
+/* ── 로딩/에러 오버레이 ── */
+.state-overlay{
+  min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:14px; padding:24px; background:var(--navy); color:#c8d8ec;
 }
-.spinner {
-  width: 36px; height: 36px;
-  border: 3px solid rgba(212,175,55,.2);
-  border-top-color: var(--gold2);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
+.spinner{
+  width:36px; height:36px;
+  border:3px solid rgba(212,175,55,.2); border-top-color:var(--gold2);
+  border-radius:50%; animation:spin .8s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin{ to{ transform:rotate(360deg); } }
 
-/* 컨트롤 바 */
-.screen-controls {
-  position: sticky; top: 0; z-index: 100;
-  background: var(--navy);
-  border-bottom: 2px solid var(--gold);
-  padding: 10px 24px;
-  display: flex; align-items: center;
-  justify-content: space-between; gap: 12px; flex-wrap: wrap;
+/* ── 컨트롤 바 ── */
+.screen-controls{
+  position:sticky; top:0; z-index:100;
+  background:var(--navy); border-bottom:2px solid var(--gold);
+  padding:10px 24px; display:flex; align-items:center;
+  justify-content:space-between; gap:12px; flex-wrap:wrap;
 }
-.ctrl-brand { display: flex; align-items: center; gap: 10px; }
-.ctrl-logo {
-  width: 34px; height: 34px;
-  background: rgba(212,175,55,.15);
-  border: 1px solid rgba(212,175,55,.4);
-  border-radius: 8px; display: grid; place-items: center;
-  color: var(--gold2); font-weight: 900; font-size: 12px;
+.ctrl-brand{ display:flex; align-items:center; gap:10px; }
+.ctrl-logo{
+  width:34px; height:34px;
+  background:rgba(212,175,55,.15); border:1px solid rgba(212,175,55,.4);
+  border-radius:8px; display:grid; place-items:center;
+  color:var(--gold2); font-weight:900; font-size:12px;
 }
-.ctrl-title { color: #e8d9a8; font-size: 13px; font-weight: 700; }
-.ctrl-sub   { color: #8097b5; font-size: 11px; margin-top: 1px; }
-.ctrl-btns  { display: flex; gap: 8px; flex-wrap: wrap; }
-.ctrl-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; border-radius: 999px;
-  font-size: 12.5px; font-weight: 700;
-  cursor: pointer; border: none; transition: .15s;
-  font-family: inherit;
+.ctrl-title{ color:#e8d9a8; font-size:13px; font-weight:700; }
+.ctrl-sub  { color:#8097b5; font-size:11px; margin-top:1px; }
+.ctrl-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.ctrl-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 16px; border-radius:999px;
+  font-size:12.5px; font-weight:700;
+  cursor:pointer; border:none; transition:.15s; font-family:inherit;
 }
-.ctrl-btn.print {
-  background: linear-gradient(135deg, var(--gold), var(--gold2));
-  color: #111827;
+.ctrl-btn.back{
+  background:transparent; border:1px solid rgba(212,175,55,.4); color:#c8d8ec;
 }
-.ctrl-btn.print:hover { filter: brightness(1.08); }
-.ctrl-btn.back {
-  background: transparent;
-  border: 1px solid rgba(212,175,55,.4);
-  color: #c8d8ec;
+.ctrl-btn.back:hover{ border-color:var(--gold2); color:var(--gold2); }
+.ctrl-btn.edit-idle{
+  background:rgba(212,175,55,.15); border:1px solid rgba(212,175,55,.45); color:var(--gold2);
 }
-.ctrl-btn.back:hover { border-color: var(--gold2); color: var(--gold2); }
+.ctrl-btn.edit-idle:hover{ background:rgba(212,175,55,.28); }
+.ctrl-btn.edit-done{
+  background:linear-gradient(135deg,#1a7a3a,#22a04d); color:#fff; border:none;
+}
+.ctrl-btn.edit-done:hover{ filter:brightness(1.08); }
+.ctrl-btn.print{
+  background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#111827; border:none;
+}
+.ctrl-btn.print:hover{ filter:brightness(1.08); }
 
-/* A4 래퍼 */
-.page-wrap {
-  max-width: 794px;
-  margin: 24px auto 40px;
-  padding: 0 16px;
-}
-#property-page {
-  background: var(--white);
-  border-radius: 12px;
-  box-shadow: 0 4px 32px rgba(0,0,0,.10);
-  overflow: hidden;
+/* ── A4 래퍼 ── */
+.page-wrap{ max-width:794px; margin:24px auto 40px; padding:0 16px; }
+#property-page{
+  background:var(--white); border-radius:12px;
+  box-shadow:0 4px 32px rgba(0,0,0,.10); overflow:hidden;
 }
 
-/* 헤더 */
-#page-header {
-  background: linear-gradient(135deg, var(--navy), var(--navy2));
-  padding: 22px 28px 18px;
-  display: flex; align-items: flex-start;
-  justify-content: space-between; gap: 16px; flex-wrap: wrap;
+/* ── 페이지 헤더 (네이비) ── */
+#page-header{
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  padding:20px 28px 16px; display:flex; align-items:flex-start;
+  justify-content:space-between; gap:16px; flex-wrap:wrap;
 }
-.ph-brand { display: flex; align-items: center; gap: 12px; }
-.ph-logo {
-  width: 44px; height: 44px;
-  background: rgba(212,175,55,.15);
-  border: 1.5px solid rgba(212,175,55,.45);
-  border-radius: 10px; display: grid; place-items: center;
-  color: var(--gold2); font-weight: 900; font-size: 14px;
+.ph-brand{ display:flex; align-items:center; gap:12px; }
+.ph-logo{
+  width:44px; height:44px;
+  background:rgba(212,175,55,.15); border:1.5px solid rgba(212,175,55,.45);
+  border-radius:10px; display:grid; place-items:center;
+  color:var(--gold2); font-weight:900; font-size:14px;
 }
-.ph-name   { color: #f0e4b8; font-size: 17px; font-weight: 900; letter-spacing: -.5px; }
-.ph-doc    { color: #a0b8d0; font-size: 11.5px; margin-top: 2px; }
-.ph-date   { text-align: right; color: #7a9bbf; font-size: 11.5px; line-height: 1.7; }
-.ph-date strong { color: var(--gold); font-size: 12px; }
-.ph-badge {
-  display: inline-block;
-  background: rgba(212,175,55,.18);
-  border: 1px solid rgba(212,175,55,.35);
-  border-radius: 6px; padding: 2px 9px;
-  color: var(--gold2); font-size: 11px; font-weight: 700; margin-top: 4px;
+.ph-name{ color:#f0e4b8; font-size:17px; font-weight:900; letter-spacing:-.5px; }
+.ph-doc { color:#a0b8d0; font-size:11.5px; margin-top:2px; }
+.ph-date{ text-align:right; color:#7a9bbf; font-size:11.5px; line-height:1.7; }
+.ph-date strong{ color:var(--gold); font-size:12px; }
+.ph-badge{
+  display:inline-block;
+  background:rgba(212,175,55,.18); border:1px solid rgba(212,175,55,.35);
+  border-radius:6px; padding:2px 9px; color:var(--gold2); font-size:11px; font-weight:700; margin-top:4px;
 }
-.gold-line {
-  height: 3px;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 40%, transparent 100%);
+.gold-line{
+  height:3px;
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold2) 40%,transparent 100%);
 }
-.page-body { padding: 24px 28px 28px; }
+.page-body{ padding:22px 28px 28px; }
 
-/* 매물 제목 */
-#property-title-area {
-  margin-bottom: 20px; padding-bottom: 18px;
-  border-bottom: 1px solid var(--border);
+/* ── 매물 제목 영역 ── */
+#property-title-area{
+  margin-bottom:18px; padding-bottom:16px;
+  border-bottom:1px solid var(--border);
 }
-.prop-main-title {
-  font-size: 22px; font-weight: 900;
-  color: var(--accent); letter-spacing: -.5px;
-  line-height: 1.3; margin-bottom: 6px;
+.prop-main-title{
+  font-size:22px; font-weight:900; color:var(--accent);
+  letter-spacing:-.5px; line-height:1.3; margin-bottom:5px;
 }
-.prop-sub-title {
-  font-size: 13px; color: var(--text-m); font-weight: 500;
-  display: flex; align-items: center; gap: 6px;
+.prop-sub-title{
+  font-size:13px; color:var(--text-m); font-weight:500;
+  display:flex; align-items:center; gap:6px;
 }
-.prop-sub-title::before {
-  content: ''; display: inline-block;
-  width: 3px; height: 14px;
-  background: var(--gold); border-radius: 2px; flex-shrink: 0;
+.prop-sub-title::before{
+  content:''; display:inline-block;
+  width:3px; height:14px; background:var(--gold); border-radius:2px; flex-shrink:0;
 }
-.prop-tags { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
-.prop-tag {
-  display: inline-block; padding: 3px 10px;
-  border-radius: 999px; font-size: 11.5px; font-weight: 700;
-  background: #eef3fb; color: var(--accent); border: 1px solid #c8d8ef;
+.prop-tags{ margin-top:9px; display:flex; gap:6px; flex-wrap:wrap; }
+.prop-tag{
+  display:inline-block; padding:3px 10px; border-radius:999px;
+  font-size:11.5px; font-weight:700;
+  background:#eef3fb; color:var(--accent); border:1px solid #c8d8ef;
 }
-.prop-tag.gold-tag {
-  background: var(--gold-lt); color: #7a5a00; border-color: #e0c96a;
+.prop-tag.gold-tag{
+  background:var(--gold-lt); color:#7a5a00; border-color:#e0c96a;
 }
 
-/* 가격 */
-#price-area { margin-bottom: 20px; }
-.price-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+/* ── 핵심 요약 박스 3개 ── */
+#summary-area{ margin-bottom:18px; }
+.summary-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
 }
-.price-card {
-  background: linear-gradient(135deg, var(--navy), #1a3356);
-  border-radius: 10px; padding: 14px 12px 12px;
-  text-align: center; border: 1px solid rgba(212,175,55,.25);
+.sum-card{
+  background:linear-gradient(135deg,#0f2240,#1a3a6b);
+  border-radius:10px; padding:14px 14px 12px; text-align:center;
+  border:1px solid rgba(212,175,55,.45);
+  box-shadow:0 2px 12px rgba(0,0,0,.12);
 }
-.price-card.main-price {
-  background: linear-gradient(135deg, #0f2240, #1a3a6b);
-  border-color: rgba(212,175,55,.5);
-  box-shadow: 0 2px 12px rgba(0,0,0,.12);
-}
-.price-card.hidden { display: none; }
-.pc-label { font-size: 10.5px; font-weight: 700; color: #7a9bbf; letter-spacing: .05em; margin-bottom: 5px; }
-.pc-value { font-size: 17px; font-weight: 900; color: var(--gold2); letter-spacing: -.3px; line-height: 1.2; }
-.price-card.main-price .pc-value { font-size: 19px; }
-.pc-note { font-size: 10px; color: #5a7a9f; margin-top: 4px; }
+.sum-label{ font-size:10.5px; font-weight:700; color:#7a9bbf; letter-spacing:.05em; margin-bottom:5px; }
+.sum-value{ font-size:18px; font-weight:900; color:var(--gold2); letter-spacing:-.3px; line-height:1.2; }
+.sum-note { font-size:10px; color:#5a7a9f; margin-top:4px; }
 
-/* 섹션 제목 */
-.section-title {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 800; color: var(--accent);
-  letter-spacing: .02em; margin-bottom: 12px;
-  padding-bottom: 8px; border-bottom: 2px solid var(--gold);
+/* ── 섹션 제목 공통 ── */
+.section-title{
+  display:flex; align-items:center; gap:8px;
+  font-size:13px; font-weight:800; color:var(--accent);
+  letter-spacing:.02em; margin-bottom:12px;
+  padding-bottom:8px; border-bottom:2px solid var(--gold);
 }
-.section-title .st-icon { font-size: 15px; }
+.section-title .st-icon{ font-size:15px; }
 
-/* 기본정보 표 */
-#info-table-area { margin-bottom: 20px; }
-.info-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.info-table th, .info-table td {
-  padding: 7px 12px; border: 1px solid var(--border); vertical-align: top;
+/* ── 기본정보 표 ── */
+#info-table-area{ margin-bottom:18px; }
+.info-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.info-table th,.info-table td{
+  padding:7px 11px; border:1px solid var(--border); vertical-align:middle;
 }
-.info-table th {
-  background: #f0f5fc; color: var(--accent); font-weight: 700;
-  width: 22%; white-space: nowrap; font-size: 12px;
+.info-table th{
+  background:#f0f5fc; color:var(--accent);
+  font-weight:700; width:20%; white-space:nowrap; font-size:12px;
 }
-.info-table tr:nth-child(even) td { background: #fafbfd; }
-.info-table td { color: var(--text-s); }
-.info-table td strong { color: var(--text); font-weight: 700; }
+.info-table tr:nth-child(even) td{ background:#fafbfd; }
+.info-table td{ color:var(--text-s); }
+.info-table td strong{ color:var(--text); font-weight:700; }
 
-/* 추천 포인트 */
-#points-area { margin-bottom: 20px; }
-.points-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+/* ── 추천 포인트 ── */
+#points-area{ margin-bottom:18px; }
+.points-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.point-card{
+  background:#f7f9fc; border:1px solid #dce8f7;
+  border-radius:10px; padding:13px 10px 11px; text-align:center;
+  transition:.15s;
 }
-.point-card {
-  background: #f7f9fc; border: 1px solid #dce8f7;
-  border-radius: 10px; padding: 14px 10px 12px;
-  text-align: center;
-}
-.point-icon { font-size: 22px; margin-bottom: 7px; }
-.point-label { font-size: 12px; font-weight: 700; color: var(--accent); line-height: 1.4; }
+.point-icon { font-size:22px; margin-bottom:6px; }
+.point-label{ font-size:12px; font-weight:700; color:var(--accent); line-height:1.4; }
 
-/* 상세 설명 */
-#desc-area { margin-bottom: 20px; }
-.desc-box {
-  background: #f4f8ff;
-  border-left: 4px solid var(--gold);
-  border-radius: 0 8px 8px 0;
-  padding: 14px 16px; font-size: 13px;
-  color: var(--text-s); line-height: 1.85;
-  white-space: pre-wrap;
+/* ── 상세 설명 ── */
+#desc-area{ margin-bottom:18px; }
+.desc-box{
+  background:#f4f8ff; border-left:4px solid var(--gold);
+  border-radius:0 8px 8px 0; padding:14px 16px;
+  font-size:13px; color:var(--text-s); line-height:1.85; white-space:pre-wrap;
 }
 
-/* ── 편집 모드 스타일 ── */
-.ctrl-btn.edit-mode {
-  background: rgba(212,175,55,.18);
-  border: 1px solid rgba(212,175,55,.55);
-  color: var(--gold2);
+/* ── 사진/도면 ── */
+#photo-area{ margin-bottom:22px; }
+.photo-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.photo-placeholder{
+  aspect-ratio:4/3; background:#f0f4fa;
+  border:1.5px dashed #c0d0e8; border-radius:8px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:6px; color:#a0b4cc; font-size:11px; font-weight:600;
 }
-.ctrl-btn.edit-mode:hover { background: rgba(212,175,55,.32); }
-.ctrl-btn.edit-done {
-  background: linear-gradient(135deg,#1a7a3a,#22a04d);
-  color: #fff; border: none;
-}
-.ctrl-btn.edit-done:hover { filter: brightness(1.08); }
+.photo-placeholder .ph-ph-icon{ font-size:22px; }
 
-/* 편집 가능 입력 공통 */
-.edit-input {
-  width: 100%; font-family: inherit;
-  border: 1.5px solid rgba(201,168,76,.55);
-  border-radius: 7px; outline: none;
-  background: rgba(255,255,240,.92);
-  color: var(--text); transition: border-color .15s, box-shadow .15s;
+/* ── 문의 ── */
+#contact-area{
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  border-radius:10px; padding:18px 20px;
+  display:flex; align-items:flex-start;
+  justify-content:space-between; gap:16px; flex-wrap:wrap;
 }
-.edit-input:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(201,168,76,.18);
-}
+.contact-main{ flex:1; }
+.contact-company{ color:var(--gold2); font-size:15px; font-weight:900; letter-spacing:-.3px; margin-bottom:3px; }
+.contact-agent  { color:#e0d4a8; font-size:13px; font-weight:700; margin-bottom:6px; }
+.contact-spec   { color:#7a9bbf; font-size:11.5px; line-height:1.7; }
+.contact-phone  { text-align:right; flex-shrink:0; }
+.phone-num      { font-size:20px; font-weight:900; color:var(--gold2); letter-spacing:.03em; }
+.phone-label    { font-size:10.5px; color:#5a7a9f; margin-bottom:4px; }
+.contact-web    { color:#5a7a9f; font-size:11px; margin-top:6px; text-align:right; }
 
-/* 제목 편집 */
-#edit-title {
-  font-size: 20px; font-weight: 900;
-  letter-spacing: -.5px; line-height: 1.3;
-  padding: 6px 10px; margin-bottom: 6px;
-}
-/* 부제 편집 */
-#edit-subtitle {
-  font-size: 13px; padding: 5px 10px;
-  width: 100%;
-}
-/* 가격 메모 편집 */
-.pc-note-input {
-  font-size: 10px; padding: 3px 6px;
-  background: rgba(255,255,240,.15);
-  border: 1px solid rgba(212,175,55,.35);
-  border-radius: 5px; color: #a0bcd0;
-  width: 100%; text-align: center;
-}
-.pc-note-input:focus {
-  border-color: var(--gold2);
-  outline: none;
-  background: rgba(255,255,240,.25);
-}
-/* 추천 포인트 편집 */
-.point-edit-wrap { display: flex; flex-direction: column; gap: 4px; align-items: center; }
-.point-icon-input {
-  font-size: 18px; width: 44px; text-align: center;
-  padding: 3px 4px; background: rgba(255,255,240,.92);
-  border: 1.5px solid rgba(201,168,76,.5); border-radius: 6px;
-  color: var(--text); outline: none;
-}
-.point-icon-input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,168,76,.18); }
-.point-label-input {
-  font-size: 11.5px; font-weight: 700;
-  text-align: center; padding: 4px 6px;
-  width: 100%; background: rgba(255,255,240,.92);
-  border: 1.5px solid rgba(201,168,76,.5); border-radius: 6px;
-  color: var(--text); outline: none;
-}
-.point-label-input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,168,76,.18); }
-/* 상세 설명 편집 */
-#edit-description {
-  width: 100%; min-height: 120px; resize: vertical;
-  padding: 12px 14px; font-size: 13px; line-height: 1.85;
-  background: rgba(255,255,240,.92);
+/* ── 페이지 하단 ── */
+.page-footer{
+  margin-top:10px; padding:9px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:10px; color:#b0bcd0; border-top:1px solid var(--border);
 }
 
-/* 편집 모드일 때 원본 숨김 */
-body.editing #prop-title      { display: none; }
-body.editing #prop-subtitle   { display: none; }
-body.editing #prop-description{ display: none; }
-body.editing .edit-only       { display: block !important; }
-body.editing .edit-only-flex  { display: flex !important; }
-body:not(.editing) .edit-only,
-body:not(.editing) .edit-only-flex { display: none !important; }
+/* ══════════════════════════════
+   편집 모드
+══════════════════════════════ */
 
-/* 편집 모드 포인트 카드 */
-body.editing .point-card { background: #fff8e8; border-color: rgba(201,168,76,.4); }
-body.editing .point-icon { display: none; }
-body.editing .point-label { display: none; }
-body.editing .point-edit-wrap { display: flex !important; }
-body:not(.editing) .point-edit-wrap { display: none !important; }
+/* 편집 모드 진입 시 body에 .editing 클래스 추가 */
 
-/* 인쇄 시 편집 UI 완전 숨김 (이미 컨트롤 바에 포함되지만 안전 장치) */
-@media print {
-  .edit-input, .pc-note-input, .point-edit-wrap,
-  .point-icon-input, .point-label-input,
-  #edit-title, #edit-subtitle, #edit-description { display: none !important; }
-  #prop-title, #prop-subtitle, #prop-description { display: block !important; }
-  .point-icon, .point-label { display: block !important; }
+/* 기본: edit-only 숨김 */
+.edit-only{ display:none !important; }
+body.editing .edit-only{ display:block !important; }
+body.editing .edit-only-flex{ display:flex !important; }
+.edit-only-flex{ display:none !important; }
+
+/* 편집 가능 구역 표시 */
+body.editing .editable-zone{
+  outline:2px dashed rgba(201,168,76,.65);
+  border-radius:8px; background:rgba(255,250,220,.55);
+  padding:6px; position:relative;
+}
+body.editing .editable-zone::before{
+  content:'✏️ 수정 가능';
+  position:absolute; top:-10px; right:6px;
+  font-size:9.5px; font-weight:700; color:#7a5a00;
+  background:var(--gold-lt); border:1px solid #e0c96a;
+  padding:1px 7px; border-radius:999px; white-space:nowrap;
+}
+/* 편집 모드에서 원본 숨김 */
+body.editing #prop-title    { display:none; }
+body.editing #prop-subtitle { display:none; }
+body.editing .desc-box      { display:none; }
+body.editing .point-icon    { display:none; }
+body.editing .point-label   { display:none; }
+
+/* 공통 입력 */
+.edit-input{
+  width:100%; font-family:inherit;
+  border:1.5px solid rgba(201,168,76,.6);
+  border-radius:7px; outline:none;
+  background:rgba(255,252,230,.96);
+  color:var(--text); transition:border-color .15s, box-shadow .15s;
+}
+.edit-input:focus{
+  border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,168,76,.2);
+}
+#edit-title{
+  font-size:20px; font-weight:900; letter-spacing:-.5px;
+  line-height:1.3; padding:6px 10px; margin-bottom:4px;
+}
+#edit-subtitle{ font-size:13px; padding:5px 10px; }
+#edit-description{
+  min-height:110px; resize:vertical; padding:12px 14px;
+  font-size:13px; line-height:1.85;
+}
+/* 포인트 편집 */
+.point-edit-wrap{ display:none; flex-direction:column; gap:4px; align-items:center; }
+body.editing .point-edit-wrap{ display:flex !important; }
+.point-icon-input{
+  font-size:18px; width:44px; text-align:center;
+  padding:3px 4px; background:rgba(255,252,230,.96);
+  border:1.5px solid rgba(201,168,76,.55); border-radius:6px;
+  outline:none;
+}
+.point-icon-input:focus{ border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,168,76,.2); }
+.point-label-input{
+  font-size:11.5px; font-weight:700; text-align:center;
+  padding:4px 5px; width:100%;
+  background:rgba(255,252,230,.96);
+  border:1.5px solid rgba(201,168,76,.55); border-radius:6px;
+  outline:none;
+}
+.point-label-input:focus{ border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,168,76,.2); }
+
+/* ── 반응형 ── */
+@media(max-width:680px){
+  .page-wrap{ padding:0 8px; margin:12px auto 24px; }
+  .page-body{ padding:16px 14px 20px; }
+  #page-header{ padding:16px 14px 14px; }
+  .prop-main-title{ font-size:18px; }
+  .summary-grid{ grid-template-columns:repeat(3,1fr); }
+  .points-grid { grid-template-columns:repeat(2,1fr); }
+  .photo-grid  { grid-template-columns:repeat(2,1fr); }
+  .info-table th{ width:28%; font-size:11px; }
+  #contact-area{ flex-direction:column; }
+  .contact-phone,.contact-web{ text-align:left; }
+}
+@media(max-width:480px){
+  .summary-grid{ grid-template-columns:1fr 1fr; }
+  .sum-value{ font-size:15px; }
+  .ctrl-btn{ padding:6px 10px; font-size:11.5px; }
 }
 
-/* 사진/도면 */
-#photo-area { margin-bottom: 24px; }
-.photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.photo-placeholder {
-  aspect-ratio: 4/3; background: #f0f4fa;
-  border: 1.5px dashed #c0d0e8; border-radius: 8px;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 6px; color: #a0b4cc; font-size: 11px; font-weight: 600;
-}
-.photo-placeholder .ph-ph-icon { font-size: 22px; }
-
-/* 문의 */
-#contact-area {
-  background: linear-gradient(135deg, var(--navy), var(--navy2));
-  border-radius: 10px; padding: 18px 20px;
-  display: flex; align-items: flex-start;
-  justify-content: space-between; gap: 16px; flex-wrap: wrap;
-}
-.contact-main { flex: 1; }
-.contact-company { color: var(--gold2); font-size: 15px; font-weight: 900; letter-spacing: -.3px; margin-bottom: 3px; }
-.contact-agent   { color: #e0d4a8; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
-.contact-spec    { color: #7a9bbf; font-size: 11.5px; line-height: 1.7; }
-.contact-phone   { text-align: right; flex-shrink: 0; }
-.phone-num       { font-size: 20px; font-weight: 900; color: var(--gold2); letter-spacing: .03em; }
-.phone-label     { font-size: 10.5px; color: #5a7a9f; margin-bottom: 4px; }
-.contact-web     { color: #5a7a9f; font-size: 11px; margin-top: 6px; text-align: right; }
-.page-footer {
-  margin-top: 10px; padding: 10px 28px;
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 10px; color: #b0bcd0;
-  border-top: 1px solid var(--border);
-}
-
-/* 반응형 */
-@media (max-width: 680px) {
-  .page-wrap { padding: 0 8px; margin: 12px auto 24px; }
-  .page-body { padding: 16px 14px 20px; }
-  #page-header { padding: 16px 14px 14px; }
-  .prop-main-title { font-size: 18px; }
-  .price-grid { grid-template-columns: repeat(2, 1fr); }
-  .points-grid { grid-template-columns: repeat(2, 1fr); }
-  .photo-grid  { grid-template-columns: repeat(2, 1fr); }
-  .info-table th { width: 30%; font-size: 11px; }
-  #contact-area { flex-direction: column; }
-  .contact-phone, .contact-web { text-align: left; }
-}
-
-/* @media print */
-@media print {
-  @page { size: A4 portrait; margin: 12mm 14mm; }
-  html, body { background: white !important; }
-  .screen-controls { display: none !important; }
-  .page-wrap { max-width: 100%; margin: 0; padding: 0; }
-  #property-page { box-shadow: none !important; border-radius: 0 !important; }
-  #page-header, #contact-area, .price-card {
-    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+/* ── @media print ── */
+@media print{
+  @page{ size:A4 portrait; margin:12mm 14mm; }
+  html,body{ background:white !important; }
+  .screen-controls{ display:none !important; }
+  .page-wrap{ max-width:100%; margin:0; padding:0; }
+  #property-page{ box-shadow:none !important; border-radius:0 !important; }
+  #page-header,#contact-area,.sum-card{
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
-  .page-footer { display: none; }
-  #photo-area, #contact-area, #info-table-area { page-break-inside: avoid; }
+  .page-footer{ display:none; }
+  #photo-area,#contact-area,#info-table-area{ page-break-inside:avoid; }
+  /* 편집 UI 완전 숨김 */
+  .edit-only,.edit-input,.point-edit-wrap,
+  .point-icon-input,.point-label-input{ display:none !important; }
+  #prop-title,#prop-subtitle,.desc-box,
+  .point-icon,.point-label{ display:block !important; }
+  body.editing .editable-zone{
+    outline:none !important; background:transparent !important; padding:0 !important;
+  }
+  body.editing .editable-zone::before{ display:none !important; }
 }
 </style>
 </head>
 <body>
 
-<!-- 로딩 상태 (초기) -->
+<!-- 로딩 -->
 <div class="state-overlay" id="loadingState">
   <div class="spinner"></div>
   <div>매물 정보를 불러오는 중…</div>
 </div>
 
-<!-- 에러 상태 (숨김) -->
+<!-- 에러 -->
 <div class="state-overlay" id="errorState" style="display:none;">
   <div style="font-size:2.5rem;">⚠️</div>
-  <div id="errorMsg" style="font-size:0.9rem;color:#c8d8ec;">매물 정보를 불러오지 못했습니다.</div>
+  <div id="errorMsg" style="font-size:.9rem;color:#c8d8ec;">매물 정보를 불러오지 못했습니다.</div>
   <button onclick="history.back()"
-    style="background:var(--gold);color:#111;border:none;border-radius:8px;padding:10px 24px;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:8px;">
+    style="background:var(--gold);color:#111;border:none;border-radius:8px;padding:10px 24px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:8px;">
     ← 목록으로 돌아가기
   </button>
 </div>
 
-<!-- 본문 (데이터 로드 후 표시) -->
+<!-- 본문 -->
 <div id="mainContent" style="display:none;">
 
   <!-- 컨트롤 바 -->
-  <div class="screen-controls" id="screen-controls">
+  <div class="screen-controls">
     <div class="ctrl-brand">
       <div class="ctrl-logo">HT</div>
       <div>
@@ -423,8 +384,8 @@ body:not(.editing) .point-edit-wrap { display: none !important; }
     </div>
     <div class="ctrl-btns">
       <button class="ctrl-btn back" onclick="history.back()">← 목록으로 돌아가기</button>
-      <button class="ctrl-btn edit-mode" id="btn-edit-toggle">✏️ 설명 수정</button>
-      <button class="ctrl-btn print" id="btn-print" onclick="window.print()">🖨 인쇄하기</button>
+      <button class="ctrl-btn edit-idle" id="btn-edit-toggle">✏️ 설명 수정</button>
+      <button class="ctrl-btn print"     id="btn-print" onclick="window.print()">🖨 인쇄하기</button>
     </div>
   </div>
 
@@ -451,76 +412,67 @@ body:not(.editing) .point-edit-wrap { display: none !important; }
 
     <div class="page-body">
 
-      <!-- 제목 -->
-      <div id="property-title-area">
+      <!-- ① 매물 제목 (수정 가능) -->
+      <div id="property-title-area" class="editable-zone" style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
         <h1 class="prop-main-title" id="prop-title"></h1>
-        <input id="edit-title" class="edit-input edit-only" type="text" placeholder="매물 제목을 입력하세요" style="display:none;" />
-        <p class="prop-sub-title" id="prop-subtitle"></p>
-        <input id="edit-subtitle" class="edit-input edit-only" type="text" placeholder="부제를 입력하세요" style="display:none;" />
-        <div class="prop-tags" id="prop-tags"></div>
+        <input id="edit-title" class="edit-input edit-only" type="text" placeholder="매물 제목" />
+        <p class="prop-sub-title" id="prop-subtitle" style="margin-top:5px;"></p>
+        <input id="edit-subtitle" class="edit-input edit-only" type="text" placeholder="부제 (예: 파주 운정신도시 중심상권)" style="margin-top:4px;" />
+        <div class="prop-tags" id="prop-tags" style="margin-top:9px;"></div>
       </div>
 
-      <!-- 가격 -->
-      <div id="price-area">
-        <div class="price-grid" id="price-grid">
-          <div class="price-card main-price" id="pc-main1">
-            <div class="pc-label" id="pc-main1-label">보증금</div>
-            <div class="pc-value" id="pc-main1-value">—</div>
-            <div class="pc-note" id="pc-main1-note">협의 가능</div>
-            <input class="pc-note-input edit-only" id="edit-note-main1" type="text" placeholder="메모" style="display:none;margin-top:4px;" />
+      <!-- ② 핵심 요약 3박스 -->
+      <div id="summary-area">
+        <div class="summary-grid">
+          <div class="sum-card">
+            <div class="sum-label">거래방식</div>
+            <div class="sum-value" id="sum-deal">—</div>
+            <div class="sum-note" id="sum-deal-note"></div>
           </div>
-          <div class="price-card main-price" id="pc-main2">
-            <div class="pc-label" id="pc-main2-label">월세</div>
-            <div class="pc-value" id="pc-main2-value">—</div>
-            <div class="pc-note" id="pc-main2-note">부가세 별도</div>
-            <input class="pc-note-input edit-only" id="edit-note-main2" type="text" placeholder="메모" style="display:none;margin-top:4px;" />
+          <div class="sum-card">
+            <div class="sum-label">가격</div>
+            <div class="sum-value" id="sum-price">—</div>
+            <div class="sum-note" id="sum-price-note">협의 가능</div>
           </div>
-          <div class="price-card" id="pc-sub1">
-            <div class="pc-label" id="pc-sub1-label">권리금</div>
-            <div class="pc-value" id="pc-sub1-value">협의</div>
-            <div class="pc-note" id="pc-sub1-note">별도 상담</div>
-            <input class="pc-note-input edit-only" id="edit-note-sub1" type="text" placeholder="메모" style="display:none;margin-top:4px;" />
-          </div>
-          <div class="price-card" id="pc-sub2">
-            <div class="pc-label" id="pc-sub2-label">관리비</div>
-            <div class="pc-value" id="pc-sub2-value">별도 협의</div>
-            <div class="pc-note" id="pc-sub2-note">실비 정산</div>
-            <input class="pc-note-input edit-only" id="edit-note-sub2" type="text" placeholder="메모" style="display:none;margin-top:4px;" />
+          <div class="sum-card">
+            <div class="sum-label">전용면적</div>
+            <div class="sum-value" id="sum-area">—</div>
+            <div class="sum-note" id="sum-area-note"></div>
           </div>
         </div>
       </div>
 
-      <!-- 기본정보 -->
-      <div id="info-table-area">
+      <!-- ③ 기본정보 표 -->
+      <div id="info-table-area" style="margin-top:18px;">
         <div class="section-title"><span class="st-icon">📋</span> 기본 정보</div>
         <table class="info-table"><tbody id="info-tbody"></tbody></table>
       </div>
 
-      <!-- 추천 포인트 -->
-      <div id="points-area">
+      <!-- ④ 추천 포인트 (수정 가능) -->
+      <div id="points-area" class="editable-zone">
         <div class="section-title"><span class="st-icon">⭐</span> 추천 포인트</div>
         <div class="points-grid" id="points-grid"></div>
       </div>
 
-      <!-- 상세 설명 -->
-      <div id="desc-area">
+      <!-- ⑤ 상세 설명 (수정 가능) -->
+      <div id="desc-area" class="editable-zone">
         <div class="section-title"><span class="st-icon">📝</span> 상세 설명</div>
         <div class="desc-box" id="prop-description"></div>
-        <textarea id="edit-description" class="edit-input edit-only" placeholder="손님에게 보여줄 설명 문구를 입력하세요." style="display:none;"></textarea>
+        <textarea id="edit-description" class="edit-input edit-only" placeholder="손님에게 보여줄 설명 문구를 입력하세요."></textarea>
       </div>
 
-      <!-- 사진/도면 -->
+      <!-- ⑥ 사진/도면 -->
       <div id="photo-area">
         <div class="section-title"><span class="st-icon">📷</span> 사진 · 도면</div>
         <div class="photo-grid" id="photo-grid">
-          <div class="photo-placeholder"><span class="ph-ph-icon">🏢</span><span>외관 사진</span></div>
-          <div class="photo-placeholder"><span class="ph-ph-icon">🛋</span><span>내부 사진</span></div>
-          <div class="photo-placeholder"><span class="ph-ph-icon">📍</span><span>위치도</span></div>
-          <div class="photo-placeholder"><span class="ph-ph-icon">📐</span><span>평면도</span></div>
+          <div class="photo-placeholder" id="photo-1"><span class="ph-ph-icon">🏢</span><span>외관 사진</span></div>
+          <div class="photo-placeholder" id="photo-2"><span class="ph-ph-icon">🛋</span><span>내부 사진</span></div>
+          <div class="photo-placeholder" id="photo-3"><span class="ph-ph-icon">📍</span><span>위치도</span></div>
+          <div class="photo-placeholder" id="photo-4"><span class="ph-ph-icon">📐</span><span>평면도</span></div>
         </div>
       </div>
 
-      <!-- 문의 -->
+      <!-- ⑦ 문의 -->
       <div id="contact-area">
         <div class="contact-main">
           <div class="contact-company">하이탑부동산</div>
@@ -541,7 +493,6 @@ body:not(.editing) .point-edit-wrap { display: none !important; }
       </div>
 
     </div><!-- /page-body -->
-
     <div class="page-footer">
       <span>하이탑부동산 · 공인중개사 주현희 · 031-948-8969</span>
       <span id="footer-date"></span>
@@ -555,331 +506,371 @@ body:not(.editing) .point-edit-wrap { display: none !important; }
 (async function () {
   'use strict';
 
-  /* ── 유틸 ── */
+  /* ══════════════════════════
+     유틸
+  ══════════════════════════ */
+  const M2_PER_PY = 3.30579;
+
   function fmtMan(v) {
     const n = Number(v);
-    if (!isFinite(n) || n === 0) return '—';
-    if (n >= 10000) return (n / 10000).toFixed(n % 10000 === 0 ? 0 : 1) + '억';
-    return n.toLocaleString('ko-KR') + '만원';
+    if (!isFinite(n) || n === 0) return null;
+    if (n >= 10000) {
+      const uk = n / 10000;
+      return uk % 1 === 0 ? uk + '억' : uk.toFixed(1) + '억';
+    }
+    return n.toLocaleString('ko-KR') + '만';
+  }
+  function fmtArea(py, m2) {
+    const hasPy = py !== null && py !== undefined && py !== '';
+    const hasM2 = m2 !== null && m2 !== undefined && m2 !== '';
+    if (!hasPy && !hasM2) return null;
+    let pyVal = hasPy ? Number(py) : Number(m2) / M2_PER_PY;
+    let m2Val = hasM2 ? Number(m2) : Number(py) * M2_PER_PY;
+    const pyStr = isFinite(pyVal) ? pyVal.toFixed(1).replace(/\.0$/, '') + '평' : '';
+    const m2Str = isFinite(m2Val) ? m2Val.toFixed(2) + '㎡' : '';
+    if (pyStr && m2Str) return pyStr + ' / ' + m2Str;
+    return pyStr || m2Str;
   }
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c =>
       ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
-  function val(v, fallback) { return (v !== undefined && v !== null && v !== '') ? v : (fallback ?? ''); }
-  function setEl(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
-  function setHtml(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function setEl(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(text ?? '');
+  }
   function addTag(container, text, isGold) {
+    if (!text) return;
     const span = document.createElement('span');
     span.className = 'prop-tag' + (isGold ? ' gold-tag' : '');
     span.textContent = text;
     container.appendChild(span);
   }
-  function addInfoRow(tbody, label, value1, value2) {
-    if (!value1 && !value2) return;
-    const tr = document.createElement('tr');
-    if (value2 !== undefined) {
-      tr.innerHTML = `<th>${esc(label)}</th><td>${esc(value1||'—')}</td>`;
-    } else {
-      tr.innerHTML = `<th>${esc(label)}</th><td colspan="3">${esc(value1||'—')}</td>`;
-    }
-    tbody.appendChild(tr);
-  }
   function addInfoRow2(tbody, label1, val1, label2, val2) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<th>${esc(label1)}</th><td>${esc(val1||'—')}</td><th>${esc(label2)}</th><td>${esc(val2||'—')}</td>`;
+    tr.innerHTML =
+      `<th>${esc(label1)}</th><td>${esc(val1 ?? '—')}</td>` +
+      `<th>${esc(label2)}</th><td>${esc(val2 ?? '—')}</td>`;
+    tbody.appendChild(tr);
+  }
+  function addInfoRowFull(tbody, label, val) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th>${esc(label)}</th><td colspan="3">${esc(val ?? '—')}</td>`;
     tbody.appendChild(tr);
   }
   function addPoint(container, icon, label) {
     const div = document.createElement('div');
     div.className = 'point-card';
-    div.innerHTML = `
-      <div class="point-icon">${icon}</div>
-      <div class="point-label">${esc(label)}</div>
-      <div class="point-edit-wrap" style="display:none;">
-        <input class="point-icon-input" type="text" value="${esc(icon)}" maxlength="4" placeholder="🏠" />
-        <input class="point-label-input" type="text" value="${esc(label)}" placeholder="포인트 문구" />
-      </div>`;
+    div.innerHTML =
+      `<div class="point-icon">${icon}</div>` +
+      `<div class="point-label">${esc(label)}</div>` +
+      `<div class="point-edit-wrap">` +
+        `<input class="point-icon-input" type="text" value="${esc(icon)}" maxlength="4" placeholder="🏠" />` +
+        `<input class="point-label-input" type="text" value="${esc(label)}" placeholder="포인트 문구" />` +
+      `</div>`;
     container.appendChild(div);
   }
 
-  /* ── 날짜 ── */
-  const d    = new Date();
-  const yyyy = d.getFullYear();
-  const mm   = String(d.getMonth() + 1).padStart(2, '0');
-  const dd   = String(d.getDate()).padStart(2, '0');
-  const today = `${yyyy}-${mm}-${dd}`;
+  /* ══════════════════════════
+     날짜
+  ══════════════════════════ */
+  const now  = new Date();
+  const today = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0');
   setEl('print-date', today);
   setEl('footer-date', '출력일 ' + today);
 
-  /* ── URL 파라미터 ── */
+  /* ══════════════════════════
+     URL 파라미터
+  ══════════════════════════ */
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
   if (!id) {
     setEl('errorMsg', '매물 ID가 없습니다. 목록에서 다시 접근해주세요.');
     document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('errorState').style.display  = 'flex';
+    document.getElementById('errorState').style.display   = 'flex';
     return;
   }
 
-  /* ── Supabase에서 매물 로드 ── */
+  /* ══════════════════════════
+     Supabase 로드
+  ══════════════════════════ */
   let item;
   try {
     item = await getListingById(id);
   } catch(e) {
     setEl('errorMsg', '데이터를 불러오지 못했습니다: ' + (e.message || ''));
     document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('errorState').style.display  = 'flex';
+    document.getElementById('errorState').style.display   = 'flex';
     return;
   }
   if (!item) {
     setEl('errorMsg', '해당 매물을 찾을 수 없습니다. (id: ' + esc(id) + ')');
     document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('errorState').style.display  = 'flex';
+    document.getElementById('errorState').style.display   = 'flex';
     return;
   }
 
-  /* ── 타입 라벨 ── */
-  function getTypeLabel(type) {
+  /* ══════════════════════════
+     타입 라벨
+  ══════════════════════════ */
+  function getTypeLabel(t) {
     const m = {
       shop:'상가', office:'사무실', officetel:'오피스텔',
       hilsstate:'힐스테이트더운정', factory:'공장/창고',
       bizcenter:'지식산업센터', etc:'기타'
     };
-    if (m[type]) return m[type];
-    if (type && type.startsWith('land')) return '토지';
-    return type || '기타';
+    if (m[t]) return m[t];
+    if (t && t.startsWith('land')) return '토지';
+    return t || '기타';
   }
 
-  /* ── ① 헤더 ── */
-  const typeLabel = getTypeLabel(item.type);
-  setEl('type-badge', typeLabel);
-  setEl('ctrl-sub-title', `${item.address || item.title || typeLabel} · 손님용 브리핑`);
+  const type      = item.type || '';
+  const typeLabel = getTypeLabel(type);
 
-  /* ── ② 제목 영역 ── */
+  /* 거래방식 추출 */
+  const dealType =
+    item.shop_dealType        ||
+    item.officetel_dealType   ||
+    item.factory_dealType     ||
+    (type.startsWith('land') ? '매매' : '') ||
+    '';
+
+  /* ══════════════════════════
+     ① 헤더
+  ══════════════════════════ */
+  setEl('type-badge', typeLabel);
+  setEl('ctrl-sub-title', (item.address || item.title || typeLabel) + ' · 손님용 브리핑');
+
+  /* ══════════════════════════
+     ② 제목 영역
+  ══════════════════════════ */
   const mainTitle = item.title || item.address || typeLabel + ' 매물';
   setEl('prop-title', mainTitle);
   const subParts = [item.address, typeLabel].filter(Boolean);
   setEl('prop-subtitle', subParts.join(' · '));
 
   const tagsEl = document.getElementById('prop-tags');
-  if (item.type) addTag(tagsEl, typeLabel, true);
-  const dealType = item.shop_dealType || item.officetel_dealType || item.factory_dealType || '';
-  if (dealType) addTag(tagsEl, dealType, true);
-  if (item.shop_floor)       addTag(tagsEl, item.shop_floor + '층');
-  if (item.shop_area_py)     addTag(tagsEl, item.shop_area_py + '평');
-  if (item.officetel_floor)  addTag(tagsEl, item.officetel_floor);
-  if (item.officetel_area_py)addTag(tagsEl, item.officetel_area_py + '평');
-  if (item.land_area_py)     addTag(tagsEl, item.land_area_py + '평');
-  if (item.status)           addTag(tagsEl, item.status);
+  addTag(tagsEl, typeLabel, true);
+  if (dealType)               addTag(tagsEl, dealType, true);
+  const floorVal = item.shop_floor || item.officetel_floor || '';
+  if (floorVal)               addTag(tagsEl, floorVal);
+  if (item.status)            addTag(tagsEl, item.status);
 
-  /* ── ③ 가격 영역 ── */
-  const type = item.type || '';
-  if (type === 'shop' || type === 'office') {
-    if (item.shop_deposit || item.shop_monthlyRent) {
-      setEl('pc-main1-label',  '보증금');
-      setEl('pc-main1-value',  fmtMan(item.shop_deposit));
-      setEl('pc-main1-note',   '협의 가능');
-      setEl('pc-main2-label',  '월세');
-      setEl('pc-main2-value',  fmtMan(item.shop_monthlyRent));
-      setEl('pc-main2-note',   '부가세 별도');
-    } else if (item.quick_price) {
-      setEl('pc-main1-label',  '가격');
-      setEl('pc-main1-value',  item.quick_price);
-      setEl('pc-main1-note',   '협의 가능');
-      document.getElementById('pc-main2').classList.add('hidden');
+  /* ══════════════════════════
+     ③ 핵심 요약 3박스
+  ══════════════════════════ */
+
+  /* 거래방식 */
+  setEl('sum-deal', dealType || '협의');
+  setEl('sum-deal-note', typeLabel);
+
+  /* 가격 */
+  function buildPriceStr() {
+    if (type === 'shop' || type === 'office') {
+      const dep = Number(item.shop_deposit);
+      const rent = Number(item.shop_monthlyRent);
+      if (isFinite(dep) && dep > 0 && isFinite(rent) && rent > 0)
+        return dep.toLocaleString('ko-KR') + '/' + rent.toLocaleString('ko-KR');
+      if (isFinite(dep) && dep > 0)  return fmtMan(dep) || '협의';
+      if (item.quick_price)          return item.quick_price;
     }
-    setEl('pc-sub1-label', '권리금');
-    setEl('pc-sub1-value', item.shop_premium || '협의');
-    setEl('pc-sub1-note',  '별도 상담');
-    setEl('pc-sub2-label', '관리비');
-    setEl('pc-sub2-value', item.shop_maintenance ? item.shop_maintenance + '만원' : '별도 협의');
-    setEl('pc-sub2-note',  '실비 정산');
-  } else if (type === 'officetel' || type === 'hilsstate') {
-    setEl('pc-main1-label', item.officetel_dealType || '가격');
-    setEl('pc-main1-value', fmtMan(item.officetel_price));
-    setEl('pc-main1-note',  '협의 가능');
-    document.getElementById('pc-main2').classList.add('hidden');
-    document.getElementById('pc-sub1').classList.add('hidden');
-    document.getElementById('pc-sub2').classList.add('hidden');
-  } else if (type && type.startsWith('land')) {
-    setEl('pc-main1-label', '매매가');
-    setEl('pc-main1-value', fmtMan(item.land_price));
-    setEl('pc-main1-note',  '협의 가능');
-    document.getElementById('pc-main2').classList.add('hidden');
-    document.getElementById('pc-sub1').classList.add('hidden');
-    document.getElementById('pc-sub2').classList.add('hidden');
-  } else if (type === 'factory') {
-    if (item.factory_dealType === '임대' || item.factory_dealType === '월세') {
-      setEl('pc-main1-label', '보증금'); setEl('pc-main1-value', fmtMan(item.factory_deposit));
-      setEl('pc-main2-label', '월세');   setEl('pc-main2-value', fmtMan(item.factory_monthlyRent));
-      document.getElementById('pc-sub1').classList.add('hidden');
-      document.getElementById('pc-sub2').classList.add('hidden');
-    } else {
-      setEl('pc-main1-label', '매매가'); setEl('pc-main1-value', fmtMan(item.factory_price || item.quick_price));
-      document.getElementById('pc-main2').classList.add('hidden');
-      document.getElementById('pc-sub1').classList.add('hidden');
-      document.getElementById('pc-sub2').classList.add('hidden');
+    if (type === 'officetel' || type === 'hilsstate') {
+      const p = fmtMan(item.officetel_price);
+      if (p) return (item.officetel_dealType || '') + ' ' + p;
     }
-  } else if (item.quick_price) {
-    setEl('pc-main1-label', '가격');
-    setEl('pc-main1-value', item.quick_price);
-    setEl('pc-main1-note',  '협의 가능');
-    document.getElementById('pc-main2').classList.add('hidden');
-    document.getElementById('pc-sub1').classList.add('hidden');
-    document.getElementById('pc-sub2').classList.add('hidden');
+    if (type && type.startsWith('land')) {
+      const p = fmtMan(item.land_price);
+      if (p) return '매매 ' + p;
+    }
+    if (type === 'factory') {
+      const dt = item.factory_dealType || '';
+      if (dt === '임대' || dt === '월세') {
+        const d = fmtMan(item.factory_deposit);
+        const r = fmtMan(item.factory_monthlyRent);
+        if (d && r) return d + '/' + r;
+      }
+      const p = fmtMan(item.factory_price);
+      if (p) return '매매 ' + p;
+    }
+    return item.quick_price || null;
   }
+  const priceStr = buildPriceStr();
+  setEl('sum-price', priceStr || '협의');
+  if (!priceStr) setEl('sum-price-note', '상담 후 안내');
 
-  /* ── ④ 기본정보 표 ── */
+  /* 전용면적 */
+  function buildAreaStr() {
+    if (type === 'shop' || type === 'office')
+      return fmtArea(item.shop_area_py, item.shop_area_m2);
+    if (type === 'officetel' || type === 'hilsstate')
+      return fmtArea(item.officetel_area_py, item.officetel_area_m2);
+    if (type && type.startsWith('land'))
+      return fmtArea(item.land_area_py, item.land_area_m2);
+    if (type === 'factory')
+      return fmtArea(item.factory_buildArea_py, item.factory_buildArea_m2);
+    return null;
+  }
+  const areaStr = buildAreaStr();
+  setEl('sum-area', areaStr || '—');
+  if (!areaStr) setEl('sum-area-note', '별도 확인');
+
+  /* ══════════════════════════
+     ④ 기본정보 표
+  ══════════════════════════ */
   const tbody = document.getElementById('info-tbody');
+
+  /* 공통 상단 2행 */
   addInfoRow2(tbody, '소재지', item.address, '매물유형', typeLabel);
   addInfoRow2(tbody, '거래방식', dealType || '협의', '상태', item.status || '—');
+  addInfoRow2(tbody, '가격', priceStr || '협의', '전용면적', areaStr || '—');
 
+  /* 유형별 상세 */
   if (type === 'shop' || type === 'office') {
-    addInfoRow2(tbody, '전용면적', item.shop_area_py ? item.shop_area_py+'평' : '—', '해당층', item.shop_floor || '—');
+    const contractArea = fmtArea(item.shop_supply_py || item.shop_area_py, item.shop_supply_m2 || item.shop_area_m2);
+    addInfoRow2(tbody, '계약면적', contractArea || '—', '해당층', item.shop_floor || '—');
+    addInfoRow2(tbody,
+      '권리금', item.shop_premium || '협의',
+      '관리비', item.shop_maintenance ? item.shop_maintenance + '만원' : '별도 협의'
+    );
     addInfoRow2(tbody, '입주가능일', item.shop_available || '협의', '주차', item.shop_parking || '—');
-    if (item.shop_yield) addInfoRow2(tbody, '예상수익률', item.shop_yield + '%', '임대상태', item.shop_status || '—');
+    if (item.shop_yield)
+      addInfoRow2(tbody, '예상수익률', item.shop_yield + '%', '임대상태', item.shop_status || '—');
   } else if (type === 'officetel' || type === 'hilsstate') {
     const complexName = type === 'hilsstate' ? '힐스테이트더운정' : (item.officetel_complex || '—');
     addInfoRow2(tbody, '단지명', complexName, '층수', item.officetel_floor || '—');
-    addInfoRow2(tbody, '전용면적', item.officetel_area_py ? item.officetel_area_py+'평' : '—', '향', item.officetel_direction || '—');
+    const supplyArea = fmtArea(item.officetel_supply_py, item.officetel_supply_m2);
+    addInfoRow2(tbody, '계약면적', supplyArea || '—', '향', item.officetel_direction || '—');
     addInfoRow2(tbody, '구조', item.officetel_structure || '—', '타입', item.officetel_type || '—');
     addInfoRow2(tbody, '주차', item.officetel_parking || '—', '입주가능일', item.officetel_available || '협의');
   } else if (type && type.startsWith('land')) {
-    addInfoRow2(tbody, '면적', item.land_area_py ? item.land_area_py+'평' : '—', '지목', item.land_jimok || '—');
+    const landArea = fmtArea(item.land_area_py, item.land_area_m2);
+    addInfoRow2(tbody, '토지면적', landArea || '—', '지목', item.land_jimok || '—');
     addInfoRow2(tbody, '용도지역', item.land_zone || '—', '도로', item.land_road || '—');
     if (item.land_coverage || item.land_far)
-      addInfoRow2(tbody, '건폐율', item.land_coverage ? item.land_coverage+'%' : '—', '용적률', item.land_far ? item.land_far+'%' : '—');
-    if (item.land_shape) addInfoRow2(tbody, '형상', item.land_shape, '토지종류', item.land_kind || '—');
+      addInfoRow2(tbody,
+        '건폐율', item.land_coverage ? item.land_coverage + '%' : '—',
+        '용적률', item.land_far      ? item.land_far + '%'      : '—'
+      );
+    if (item.land_shape || item.land_kind)
+      addInfoRow2(tbody, '형상', item.land_shape || '—', '토지종류', item.land_kind || '—');
   } else if (type === 'factory') {
-    addInfoRow2(tbody, '대지면적', item.factory_siteArea_py ? item.factory_siteArea_py+'평' : '—', '건물면적', item.factory_buildArea_py ? item.factory_buildArea_py+'평' : '—');
-    addInfoRow2(tbody, '층고', item.factory_height ? item.factory_height+'m' : '—', '전력', item.factory_power ? item.factory_power+'kW' : '—');
+    const siteArea  = fmtArea(item.factory_siteArea_py,  item.factory_siteArea_m2);
+    const buildArea = fmtArea(item.factory_buildArea_py, item.factory_buildArea_m2);
+    addInfoRow2(tbody, '대지면적', siteArea || '—', '건물면적', buildArea || '—');
+    addInfoRow2(tbody,
+      '층고', item.factory_height ? item.factory_height + 'm' : '—',
+      '전력', item.factory_power  ? item.factory_power + 'kW' : '—'
+    );
     addInfoRow2(tbody, '대형차', item.factory_truck || '—', '구분', item.factory_kind || '—');
+    addInfoRow2(tbody, '주차/진입', '—', '입주가능일', '협의');
   }
 
-  /* ── ⑤ 추천 포인트 (자동 생성) ── */
+  /* ══════════════════════════
+     ⑤ 추천 포인트 (유형별 기본값)
+  ══════════════════════════ */
+  const POINTS_BY_TYPE = {
+    shop:      [['🏪','주변 배후수요 확인 가능'],['🍽','생활밀착형 업종 검토 가능'],['💬','상권 입지 상담 가능'],['🌱','창업용 검토 가능']],
+    office:    [['💼','업무공간 활용 가능'],['🏢','소규모 사무실 추천'],['🤝','임대조건 협의 가능'],['✅','실사용자 검토 추천']],
+    officetel: [['🏠','실거주 및 임대 검토 가능'],['🚉','교통·생활편의 확인 추천'],['💰','임대수요 상담 가능'],['🤝','조건 협의 가능']],
+    hilsstate: [['🏠','실거주 및 임대 검토 가능'],['🚉','교통·생활편의 확인 추천'],['💰','임대수요 상담 가능'],['🤝','조건 협의 가능']],
+    factory:   [['🏭','작업장 및 창고 활용 가능'],['🚛','차량 진입 확인 추천'],['📦','물류 동선 검토 가능'],['✅','실사용자 상담 가능']],
+  };
+  function getLandPoints() {
+    return [['🌱','토지 활용도 검토 가능'],['🏗','건축 가능성 확인 필요'],['🛣','진입도로 확인 추천'],['💬','개발 여건 상담 가능']];
+  }
+  const defaultPoints = POINTS_BY_TYPE[type]
+    || (type.startsWith('land') ? getLandPoints() : [['📌','조건 협의 가능'],['✅','실사용 검토 가능'],['💬','상담 후 조정 가능'],['🔍','현장 확인 추천']]);
+
   const pointsEl = document.getElementById('points-grid');
-  const points = [];
-  if (item.address && item.address.includes('운정')) points.push(['🚉', '운정역 생활권']);
-  if (item.shop_floor === '1F' || item.shop_floor === '1층' || item.officetel_floor === '1') points.push(['🚪', '1층 접근성 우수']);
-  if (type === 'shop' || type === 'office') points.push(['🏘', '배후수요 보유 입지']);
-  if (!item.shop_premium || item.shop_premium === '' || item.shop_premium === '없음') {
-    if (type === 'shop') points.push(['✅', '권리금 협의 가능']);
-  }
-  if (type === 'officetel' || type === 'hilsstate') points.push(['🏠', '주거/업무 겸용 가능']);
-  if (type && type.startsWith('land')) { points.push(['🌱', '토지 투자 적합']); points.push(['📐', '개발 가능 용지']); }
-  if (type === 'factory') { points.push(['🏭', '공장·창고 운영 최적']); points.push(['🚛', '물류 접근성 우수']); }
-  if (item.shop_parking === '가능' || item.officetel_parking === '가능') points.push(['🅿', '주차 가능']);
-  if (dealType === '임대' || dealType === '월세') points.push(['💼', '임대 사업 검토 가능']);
-  // 4개만 표시
-  points.slice(0, 4).forEach(([icon, label]) => addPoint(pointsEl, icon, label));
-  if (pointsEl.children.length === 0) {
-    addPoint(pointsEl, '📌', '위치 우수');
-    addPoint(pointsEl, '💰', '합리적 가격');
-    addPoint(pointsEl, '🤝', '협의 가능');
-    addPoint(pointsEl, '📋', '상세 안내 가능');
-  }
+  defaultPoints.forEach(([icon, label]) => addPoint(pointsEl, icon, label));
 
-  /* ── ⑥ 상세 설명 ── */
+  /* ══════════════════════════
+     ⑥ 상세 설명
+  ══════════════════════════ */
   const desc = item.description || item.quick_memo || '';
   document.getElementById('prop-description').textContent =
     desc || '매물에 대한 상세 설명은 담당 공인중개사에게 문의해주세요.';
 
-  /* ── 화면 전환 ── */
+  /* ══════════════════════════
+     화면 전환
+  ══════════════════════════ */
   document.getElementById('loadingState').style.display = 'none';
   document.getElementById('mainContent').style.display  = '';
 
-  /* ══════════════════════════════════════════
+  /* ══════════════════════════
      편집 모드 토글
-  ══════════════════════════════════════════ */
+  ══════════════════════════ */
   let isEditing = false;
   const btnToggle = document.getElementById('btn-edit-toggle');
   const btnPrint  = document.getElementById('btn-print');
 
   btnToggle.addEventListener('click', function () {
     isEditing = !isEditing;
-    if (isEditing) enterEditMode();
-    else           exitEditMode();
+    if (isEditing) enterEdit();
+    else           exitEdit();
   });
 
-  function enterEditMode() {
-    /* 버튼 변경 */
-    btnToggle.textContent = '✅ 수정 완료';
-    btnToggle.classList.remove('edit-mode');
-    btnToggle.classList.add('edit-done');
-    btnPrint.style.opacity = '0.4';
-    btnPrint.style.pointerEvents = 'none';
+  function enterEdit() {
+    /* 입력값 초기화 */
+    const titleEl = document.getElementById('prop-title');
+    const subEl   = document.getElementById('prop-subtitle');
+    const descEl  = document.getElementById('prop-description');
+    document.getElementById('edit-title').value       = titleEl.textContent;
+    document.getElementById('edit-subtitle').value    = subEl.textContent;
+    document.getElementById('edit-description').value = descEl.textContent;
 
-    /* 제목 */
-    const titleEl    = document.getElementById('prop-title');
-    const subtitleEl = document.getElementById('prop-subtitle');
-    const editTitle  = document.getElementById('edit-title');
-    const editSub    = document.getElementById('edit-subtitle');
-    editTitle.value = titleEl.textContent;
-    editSub.value   = subtitleEl.textContent;
+    /* 설명 높이 자동 맞춤 */
+    const editDesc = document.getElementById('edit-description');
+    editDesc.style.height = 'auto';
+    editDesc.style.height = Math.max(110, editDesc.scrollHeight) + 'px';
 
-    /* 가격 메모 4개 */
-    ['main1','main2','sub1','sub2'].forEach(function(k) {
-      const noteEl  = document.getElementById('pc-' + k + '-note');
-      const inputEl = document.getElementById('edit-note-' + k);
-      if (noteEl && inputEl) inputEl.value = noteEl.textContent;
+    /* 포인트 입력값 초기화 */
+    document.querySelectorAll('#points-grid .point-card').forEach(function (card) {
+      const iconEl  = card.querySelector('.point-icon');
+      const labelEl = card.querySelector('.point-label');
+      const iconInp  = card.querySelector('.point-icon-input');
+      const labelInp = card.querySelector('.point-label-input');
+      if (iconEl  && iconInp)  iconInp.value  = iconEl.textContent;
+      if (labelEl && labelInp) labelInp.value = labelEl.textContent;
     });
 
-    /* 상세 설명 */
-    const descEl  = document.getElementById('prop-description');
-    const editDesc = document.getElementById('edit-description');
-    editDesc.value = descEl.textContent;
-    /* 높이 자동 맞춤 */
-    editDesc.style.height = 'auto';
-    editDesc.style.height = Math.max(120, editDesc.scrollHeight) + 'px';
-
-    /* body 클래스 → CSS로 표시/숨김 처리 */
     document.body.classList.add('editing');
+    btnToggle.textContent = '✅ 수정 완료';
+    btnToggle.classList.replace('edit-idle', 'edit-done');
+    btnPrint.style.opacity       = '0.4';
+    btnPrint.style.pointerEvents = 'none';
+    btnPrint.title = '수정 완료 후 인쇄하세요';
   }
 
-  function exitEditMode() {
-    /* 제목 반영 */
-    const titleEl    = document.getElementById('prop-title');
-    const subtitleEl = document.getElementById('prop-subtitle');
+  function exitEdit() {
+    /* 제목/부제 반영 */
     const v = document.getElementById('edit-title').value.trim();
     const s = document.getElementById('edit-subtitle').value.trim();
-    if (v) titleEl.textContent    = v;
-    if (s) subtitleEl.textContent = s;
+    if (v) setEl('prop-title',    v);
+    if (s) setEl('prop-subtitle', s);
 
-    /* 가격 메모 반영 */
-    ['main1','main2','sub1','sub2'].forEach(function(k) {
-      const noteEl  = document.getElementById('pc-' + k + '-note');
-      const inputEl = document.getElementById('edit-note-' + k);
-      if (noteEl && inputEl && inputEl.value.trim())
-        noteEl.textContent = inputEl.value.trim();
+    /* 설명 반영 */
+    const dv = document.getElementById('edit-description').value.trim();
+    if (dv) document.getElementById('prop-description').textContent = dv;
+
+    /* 포인트 반영 */
+    document.querySelectorAll('#points-grid .point-card').forEach(function (card) {
+      const iconInp  = card.querySelector('.point-icon-input');
+      const labelInp = card.querySelector('.point-label-input');
+      const iconEl   = card.querySelector('.point-icon');
+      const labelEl  = card.querySelector('.point-label');
+      if (iconInp  && iconEl  && iconInp.value.trim())  iconEl.textContent  = iconInp.value.trim();
+      if (labelInp && labelEl && labelInp.value.trim()) labelEl.textContent = labelInp.value.trim();
     });
 
-    /* 상세 설명 반영 */
-    const descEl   = document.getElementById('prop-description');
-    const editDesc = document.getElementById('edit-description');
-    if (editDesc.value.trim()) descEl.textContent = editDesc.value.trim();
-
-    /* 추천 포인트 반영 */
-    document.querySelectorAll('#points-grid .point-card').forEach(function(card) {
-      const iconInput  = card.querySelector('.point-icon-input');
-      const labelInput = card.querySelector('.point-label-input');
-      const iconEl     = card.querySelector('.point-icon');
-      const labelEl    = card.querySelector('.point-label');
-      if (iconInput && iconEl && iconInput.value.trim())
-        iconEl.textContent  = iconInput.value.trim();
-      if (labelInput && labelEl && labelInput.value.trim())
-        labelEl.textContent = labelInput.value.trim();
-    });
-
-    /* body 클래스 해제 */
     document.body.classList.remove('editing');
-
-    /* 버튼 복원 */
     btnToggle.textContent = '✏️ 설명 수정';
-    btnToggle.classList.remove('edit-done');
-    btnToggle.classList.add('edit-mode');
-    btnPrint.style.opacity = '1';
+    btnToggle.classList.replace('edit-done', 'edit-idle');
+    btnPrint.style.opacity       = '1';
     btnPrint.style.pointerEvents = '';
+    btnPrint.title = '';
   }
 
 })();
