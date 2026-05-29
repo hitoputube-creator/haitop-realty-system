@@ -509,10 +509,13 @@ input[type=file].hidden-file { display:none; }
       <div id="photo-area">
         <div class="section-title"><span>📷</span> 사진 · 도면</div>
         <div class="photo-upload-strip">
-          <button class="photo-add-btn" id="photo-add-btn" onclick="triggerPhotoUpload()">
+          <button class="photo-add-btn" id="photo-add-btn" type="button" onclick="triggerPhotoUpload()">
             📎 사진/도면 추가 (최대 2장)
           </button>
           <input type="file" accept="image/*" class="hidden-file" id="photo-file-input" onchange="handlePhotoUpload(this)"/>
+        </div>
+        <div id="photo-storage-warn" style="display:none;font-size:11.5px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:6px 12px;margin-bottom:8px;">
+          ⚠️ 저장 공간 부족 — 사진 저장에 실패했습니다. 다른 매물 사진을 삭제하거나 더 작은 이미지를 사용해주세요.
         </div>
         <div id="photo-grid-wrap"></div>
       </div>
@@ -885,8 +888,19 @@ input[type=file].hidden-file { display:none; }
     if (!Array.isArray(photos) || photos.length < 2) photos = [null, null];
   }
 
+  /**
+   * 사진 저장. 성공하면 true, QuotaExceededError 등 실패 시 false 반환.
+   * localStorage 도메인 한도(약 5MB)는 GitHub Pages에서 모든 레포가 공유함.
+   * JPEG 0.80/1200px 기준 사진 1장 ≈ 200~600KB(base64). 매물이 많으면 한도 초과 가능.
+   */
   function savePhotos() {
-    localStorage.setItem(LS_PHOTOS(id), JSON.stringify(photos));
+    try {
+      localStorage.setItem(LS_PHOTOS(id), JSON.stringify(photos));
+      return true;
+    } catch(e) {
+      /* QuotaExceededError: 저장 공간 부족 */
+      return false;
+    }
   }
 
   function renderPhotos() {
@@ -931,7 +945,16 @@ input[type=file].hidden-file { display:none; }
     try {
       const data = await resizeImage(file);
       photos[slot] = { data, name: file.name };
-      savePhotos();
+      const saved = savePhotos();
+      if (!saved) {
+        /* 저장 실패 → 롤백하고 인라인 경고 표시 */
+        photos[slot] = null;
+        const warnEl = document.getElementById('photo-storage-warn');
+        if (warnEl) warnEl.style.display = 'block';
+      } else {
+        const warnEl = document.getElementById('photo-storage-warn');
+        if (warnEl) warnEl.style.display = 'none';
+      }
       renderPhotos();
     } catch(e) {
       alert('이미지 처리 중 오류가 발생했습니다: ' + e.message);
@@ -941,6 +964,8 @@ input[type=file].hidden-file { display:none; }
   function deletePhoto(i) {
     photos[i] = null;
     savePhotos();
+    const warnEl = document.getElementById('photo-storage-warn');
+    if (warnEl) warnEl.style.display = 'none';
     renderPhotos();
   }
 
@@ -996,8 +1021,7 @@ input[type=file].hidden-file { display:none; }
   ══════════════════════════ */
   function openPanel() {
     /* 현재 값 채우기 */
-    const t   = getType();
-    const tl  = getTypeLabel(t);
+    const t    = getType();
     const deal = getDealType();
     const price = getPriceDisplay();
 
