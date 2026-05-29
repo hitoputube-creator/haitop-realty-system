@@ -197,6 +197,7 @@
         html += `<a class="btn btn-ghost" href="${res.url}" target="_blank" style="text-decoration:none;">📁 자료보기</a>`;
       }
     }
+    html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button>`;
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
     html += `<button class="btn btn-primary" id="sendHomeBtn">🏠 홈페이지로 보내기</button>`;
@@ -437,6 +438,12 @@
       try { await updateListingStatus(id, "광고중"); showToast("↩ 광고중으로 변경됐어요!"); setTimeout(() => location.reload(), 1200); }
       catch(e) { showToast("❌ 실패: "+e.message); undoneBtn.disabled = false; }
     });
+    const printBriefBtn = document.getElementById("printBriefBtn");
+    if (printBriefBtn) {
+      printBriefBtn.addEventListener("click", () => {
+        location.href = `property-print.html?id=${item.id}`;
+      });
+    }
     document.getElementById("editBtn").addEventListener("click", () => openEditModal(item));
     document.getElementById("deleteBtn").addEventListener("click", () => { document.getElementById("deleteModal").style.display = "flex"; });
     const sendHomeBtn = document.getElementById("sendHomeBtn");

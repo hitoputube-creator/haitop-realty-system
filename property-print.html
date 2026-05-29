@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>매물 브리핑 — 하이탑부동산</title>
+<script src="assets/js/storage.js"></script>
+<style>
+:root {
+  --navy:   #0d1b2e;
+  --navy2:  #132540;
+  --gold:   #C9A84C;
+  --gold2:  #e8c96a;
+  --gold-lt:#f5e6b8;
+  --text:   #1a2535;
+  --text-s: #4a5568;
+  --text-m: #718096;
+  --border: #e2e8f0;
+  --bg:     #f7f9fc;
+  --white:  #ffffff;
+  --accent: #1a3a6b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: "Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+a { text-decoration: none; color: inherit; }
+
+/* 로딩 / 에러 */
+.state-overlay {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; padding: 24px;
+  background: var(--navy);
+  color: #c8d8ec;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(212,175,55,.2);
+  border-top-color: var(--gold2);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 컨트롤 바 */
+.screen-controls {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--navy);
+  border-bottom: 2px solid var(--gold);
+  padding: 10px 24px;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.ctrl-brand { display: flex; align-items: center; gap: 10px; }
+.ctrl-logo {
+  width: 34px; height: 34px;
+  background: rgba(212,175,55,.15);
+  border: 1px solid rgba(212,175,55,.4);
+  border-radius: 8px; display: grid; place-items: center;
+  color: var(--gold2); font-weight: 900; font-size: 12px;
+}
+.ctrl-title { color: #e8d9a8; font-size: 13px; font-weight: 700; }
+.ctrl-sub   { color: #8097b5; font-size: 11px; margin-top: 1px; }
+.ctrl-btns  { display: flex; gap: 8px; flex-wrap: wrap; }
+.ctrl-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 700;
+  cursor: pointer; border: none; transition: .15s;
+  font-family: inherit;
+}
+.ctrl-btn.print {
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #111827;
+}
+.ctrl-btn.print:hover { filter: brightness(1.08); }
+.ctrl-btn.back {
+  background: transparent;
+  border: 1px solid rgba(212,175,55,.4);
+  color: #c8d8ec;
+}
+.ctrl-btn.back:hover { border-color: var(--gold2); color: var(--gold2); }
+
+/* A4 래퍼 */
+.page-wrap {
+  max-width: 794px;
+  margin: 24px auto 40px;
+  padding: 0 16px;
+}
+#property-page {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 4px 32px rgba(0,0,0,.10);
+  overflow: hidden;
+}
+
+/* 헤더 */
+#page-header {
+  background: linear-gradient(135deg, var(--navy), var(--navy2));
+  padding: 22px 28px 18px;
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.ph-brand { display: flex; align-items: center; gap: 12px; }
+.ph-logo {
+  width: 44px; height: 44px;
+  background: rgba(212,175,55,.15);
+  border: 1.5px solid rgba(212,175,55,.45);
+  border-radius: 10px; display: grid; place-items: center;
+  color: var(--gold2); font-weight: 900; font-size: 14px;
+}
+.ph-name   { color: #f0e4b8; font-size: 17px; font-weight: 900; letter-spacing: -.5px; }
+.ph-doc    { color: #a0b8d0; font-size: 11.5px; margin-top: 2px; }
+.ph-date   { text-align: right; color: #7a9bbf; font-size: 11.5px; line-height: 1.7; }
+.ph-date strong { color: var(--gold); font-size: 12px; }
+.ph-badge {
+  display: inline-block;
+  background: rgba(212,175,55,.18);
+  border: 1px solid rgba(212,175,55,.35);
+  border-radius: 6px; padding: 2px 9px;
+  color: var(--gold2); font-size: 11px; font-weight: 700; margin-top: 4px;
+}
+.gold-line {
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 40%, transparent 100%);
+}
+.page-body { padding: 24px 28px 28px; }
+
+/* 매물 제목 */
+#property-title-area {
+  margin-bottom: 20px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.prop-main-title {
+  font-size: 22px; font-weight: 900;
+  color: var(--accent); letter-spacing: -.5px;
+  line-height: 1.3; margin-bottom: 6px;
+}
+.prop-sub-title {
+  font-size: 13px; color: var(--text-m); font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+}
+.prop-sub-title::before {
+  content: ''; display: inline-block;
+  width: 3px; height: 14px;
+  background: var(--gold); border-radius: 2px; flex-shrink: 0;
+}
+.prop-tags { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.prop-tag {
+  display: inline-block; padding: 3px 10px;
+  border-radius: 999px; font-size: 11.5px; font-weight: 700;
+  background: #eef3fb; color: var(--accent); border: 1px solid #c8d8ef;
+}
+.prop-tag.gold-tag {
+  background: var(--gold-lt); color: #7a5a00; border-color: #e0c96a;
+}
+
+/* 가격 */
+#price-area { margin-bottom: 20px; }
+.price-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.price-card {
+  background: linear-gradient(135deg, var(--navy), #1a3356);
+  border-radius: 10px; padding: 14px 12px 12px;
+  text-align: center; border: 1px solid rgba(212,175,55,.25);
+}
+.price-card.main-price {
+  background: linear-gradient(135deg, #0f2240, #1a3a6b);
+  border-color: rgba(212,175,55,.5);
+  box-shadow: 0 2px 12px rgba(0,0,0,.12);
+}
+.price-card.hidden { display: none; }
+.pc-label { font-size: 10.5px; font-weight: 700; color: #7a9bbf; letter-spacing: .05em; margin-bottom: 5px; }
+.pc-value { font-size: 17px; font-weight: 900; color: var(--gold2); letter-spacing: -.3px; line-height: 1.2; }
+.price-card.main-price .pc-value { font-size: 19px; }
+.pc-note { font-size: 10px; color: #5a7a9f; margin-top: 4px; }
+
+/* 섹션 제목 */
+.section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 800; color: var(--accent);
+  letter-spacing: .02em; margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 2px solid var(--gold);
+}
+.section-title .st-icon { font-size: 15px; }
+
+/* 기본정보 표 */
+#info-table-area { margin-bottom: 20px; }
+.info-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.info-table th, .info-table td {
+  padding: 7px 12px; border: 1px solid var(--border); vertical-align: top;
+}
+.info-table th {
+  background: #f0f5fc; color: var(--accent); font-weight: 700;
+  width: 22%; white-space: nowrap; font-size: 12px;
+}
+.info-table tr:nth-child(even) td { background: #fafbfd; }
+.info-table td { color: var(--text-s); }
+.info-table td strong { color: var(--text); font-weight: 700; }
+
+/* 추천 포인트 */
+#points-area { margin-bottom: 20px; }
+.points-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.point-card {
+  background: #f7f9fc; border: 1px solid #dce8f7;
+  border-radius: 10px; padding: 14px 10px 12px;
+  text-align: center;
+}
+.point-icon { font-size: 22px; margin-bottom: 7px; }
+.point-label { font-size: 12px; font-weight: 700; color: var(--accent); line-height: 1.4; }
+
+/* 상세 설명 */
+#desc-area { margin-bottom: 20px; }
+.desc-box {
+  background: #f4f8ff;
+  border-left: 4px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 16px; font-size: 13px;
+  color: var(--text-s); line-height: 1.85;
+  white-space: pre-wrap;
+}
+
+/* 사진/도면 */
+#photo-area { margin-bottom: 24px; }
+.photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.photo-placeholder {
+  aspect-ratio: 4/3; background: #f0f4fa;
+  border: 1.5px dashed #c0d0e8; border-radius: 8px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; color: #a0b4cc; font-size: 11px; font-weight: 600;
+}
+.photo-placeholder .ph-ph-icon { font-size: 22px; }
+
+/* 문의 */
+#contact-area {
+  background: linear-gradient(135deg, var(--navy), var(--navy2));
+  border-radius: 10px; padding: 18px 20px;
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.contact-main { flex: 1; }
+.contact-company { color: var(--gold2); font-size: 15px; font-weight: 900; letter-spacing: -.3px; margin-bottom: 3px; }
+.contact-agent   { color: #e0d4a8; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.contact-spec    { color: #7a9bbf; font-size: 11.5px; line-height: 1.7; }
+.contact-phone   { text-align: right; flex-shrink: 0; }
+.phone-num       { font-size: 20px; font-weight: 900; color: var(--gold2); letter-spacing: .03em; }
+.phone-label     { font-size: 10.5px; color: #5a7a9f; margin-bottom: 4px; }
+.contact-web     { color: #5a7a9f; font-size: 11px; margin-top: 6px; text-align: right; }
+.page-footer {
+  margin-top: 10px; padding: 10px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; color: #b0bcd0;
+  border-top: 1px solid var(--border);
+}
+
+/* 반응형 */
+@media (max-width: 680px) {
+  .page-wrap { padding: 0 8px; margin: 12px auto 24px; }
+  .page-body { padding: 16px 14px 20px; }
+  #page-header { padding: 16px 14px 14px; }
+  .prop-main-title { font-size: 18px; }
+  .price-grid { grid-template-columns: repeat(2, 1fr); }
+  .points-grid { grid-template-columns: repeat(2, 1fr); }
+  .photo-grid  { grid-template-columns: repeat(2, 1fr); }
+  .info-table th { width: 30%; font-size: 11px; }
+  #contact-area { flex-direction: column; }
+  .contact-phone, .contact-web { text-align: left; }
+}
+
+/* @media print */
+@media print {
+  @page { size: A4 portrait; margin: 12mm 14mm; }
+  html, body { background: white !important; }
+  .screen-controls { display: none !important; }
+  .page-wrap { max-width: 100%; margin: 0; padding: 0; }
+  #property-page { box-shadow: none !important; border-radius: 0 !important; }
+  #page-header, #contact-area, .price-card {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page-footer { display: none; }
+  #photo-area, #contact-area, #info-table-area { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- 로딩 상태 (초기) -->
+<div class="state-overlay" id="loadingState">
+  <div class="spinner"></div>
+  <div>매물 정보를 불러오는 중…</div>
+</div>
+
+<!-- 에러 상태 (숨김) -->
+<div class="state-overlay" id="errorState" style="display:none;">
+  <div style="font-size:2.5rem;">⚠️</div>
+  <div id="errorMsg" style="font-size:0.9rem;color:#c8d8ec;">매물 정보를 불러오지 못했습니다.</div>
+  <button onclick="history.back()"
+    style="background:var(--gold);color:#111;border:none;border-radius:8px;padding:10px 24px;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:8px;">
+    ← 목록으로 돌아가기
+  </button>
+</div>
+
+<!-- 본문 (데이터 로드 후 표시) -->
+<div id="mainContent" style="display:none;">
+
+  <!-- 컨트롤 바 -->
+  <div class="screen-controls" id="screen-controls">
+    <div class="ctrl-brand">
+      <div class="ctrl-logo">HT</div>
+      <div>
+        <div class="ctrl-title">하이탑부동산 · 매물 브리핑</div>
+        <div class="ctrl-sub" id="ctrl-sub-title">손님 설명용 출력 자료 미리보기</div>
+      </div>
+    </div>
+    <div class="ctrl-btns">
+      <button class="ctrl-btn back" onclick="history.back()">← 목록으로 돌아가기</button>
+      <button class="ctrl-btn print" onclick="window.print()">🖨 인쇄하기</button>
+    </div>
+  </div>
+
+  <!-- A4 페이지 -->
+  <div class="page-wrap">
+  <div id="property-page">
+
+    <!-- 헤더 -->
+    <div id="page-header">
+      <div class="ph-brand">
+        <div class="ph-logo">HT</div>
+        <div>
+          <div class="ph-name">하이탑부동산</div>
+          <div class="ph-doc">손님 설명용 매물 브리핑 자료</div>
+        </div>
+      </div>
+      <div class="ph-date">
+        <div>출력일자</div>
+        <strong id="print-date">--</strong>
+        <div><span class="ph-badge" id="type-badge">상가</span></div>
+      </div>
+    </div>
+    <div class="gold-line"></div>
+
+    <div class="page-body">
+
+      <!-- 제목 -->
+      <div id="property-title-area">
+        <h1 class="prop-main-title" id="prop-title"></h1>
+        <p class="prop-sub-title" id="prop-subtitle"></p>
+        <div class="prop-tags" id="prop-tags"></div>
+      </div>
+
+      <!-- 가격 -->
+      <div id="price-area">
+        <div class="price-grid" id="price-grid">
+          <div class="price-card main-price" id="pc-main1">
+            <div class="pc-label" id="pc-main1-label">보증금</div>
+            <div class="pc-value" id="pc-main1-value">—</div>
+            <div class="pc-note" id="pc-main1-note">협의 가능</div>
+          </div>
+          <div class="price-card main-price" id="pc-main2">
+            <div class="pc-label" id="pc-main2-label">월세</div>
+            <div class="pc-value" id="pc-main2-value">—</div>
+            <div class="pc-note" id="pc-main2-note">부가세 별도</div>
+          </div>
+          <div class="price-card" id="pc-sub1">
+            <div class="pc-label" id="pc-sub1-label">권리금</div>
+            <div class="pc-value" id="pc-sub1-value">협의</div>
+            <div class="pc-note" id="pc-sub1-note">별도 상담</div>
+          </div>
+          <div class="price-card" id="pc-sub2">
+            <div class="pc-label" id="pc-sub2-label">관리비</div>
+            <div class="pc-value" id="pc-sub2-value">별도 협의</div>
+            <div class="pc-note" id="pc-sub2-note">실비 정산</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 기본정보 -->
+      <div id="info-table-area">
+        <div class="section-title"><span class="st-icon">📋</span> 기본 정보</div>
+        <table class="info-table"><tbody id="info-tbody"></tbody></table>
+      </div>
+
+      <!-- 추천 포인트 -->
+      <div id="points-area">
+        <div class="section-title"><span class="st-icon">⭐</span> 추천 포인트</div>
+        <div class="points-grid" id="points-grid"></div>
+      </div>
+
+      <!-- 상세 설명 -->
+      <div id="desc-area">
+        <div class="section-title"><span class="st-icon">📝</span> 상세 설명</div>
+        <div class="desc-box" id="prop-description"></div>
+      </div>
+
+      <!-- 사진/도면 -->
+      <div id="photo-area">
+        <div class="section-title"><span class="st-icon">📷</span> 사진 · 도면</div>
+        <div class="photo-grid" id="photo-grid">
+          <div class="photo-placeholder"><span class="ph-ph-icon">🏢</span><span>외관 사진</span></div>
+          <div class="photo-placeholder"><span class="ph-ph-icon">🛋</span><span>내부 사진</span></div>
+          <div class="photo-placeholder"><span class="ph-ph-icon">📍</span><span>위치도</span></div>
+          <div class="photo-placeholder"><span class="ph-ph-icon">📐</span><span>평면도</span></div>
+        </div>
+      </div>
+
+      <!-- 문의 -->
+      <div id="contact-area">
+        <div class="contact-main">
+          <div class="contact-company">하이탑부동산</div>
+          <div class="contact-agent">공인중개사 주현희</div>
+          <div class="contact-spec">
+            파주 / 운정 상가 · 오피스텔 · 공장 · 창고 · 토지 전문<br>
+            경기도 파주시 운정신도시 중개 23년 경력
+          </div>
+        </div>
+        <div class="contact-phone">
+          <div class="phone-label">문의 전화</div>
+          <div class="phone-num">031-948-8969</div>
+          <div class="contact-web">
+            블로그 · 홈페이지에서 더 많은 매물 확인 가능<br>
+            하이탑부동산 검색 또는 하이탑TV 유튜브 참고
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+      <span>하이탑부동산 · 공인중개사 주현희 · 031-948-8969</span>
+      <span id="footer-date"></span>
+    </div>
+  </div><!-- /#property-page -->
+  </div><!-- /.page-wrap -->
+
+</div><!-- /#mainContent -->
+
+<script>
+(async function () {
+  'use strict';
+
+  /* ── 유틸 ── */
+  function fmtMan(v) {
+    const n = Number(v);
+    if (!isFinite(n) || n === 0) return '—';
+    if (n >= 10000) return (n / 10000).toFixed(n % 10000 === 0 ? 0 : 1) + '억';
+    return n.toLocaleString('ko-KR') + '만원';
+  }
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function val(v, fallback) { return (v !== undefined && v !== null && v !== '') ? v : (fallback ?? ''); }
+  function setEl(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+  function setHtml(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function addTag(container, text, isGold) {
+    const span = document.createElement('span');
+    span.className = 'prop-tag' + (isGold ? ' gold-tag' : '');
+    span.textContent = text;
+    container.appendChild(span);
+  }
+  function addInfoRow(tbody, label, value1, value2) {
+    if (!value1 && !value2) return;
+    const tr = document.createElement('tr');
+    if (value2 !== undefined) {
+      tr.innerHTML = `<th>${esc(label)}</th><td>${esc(value1||'—')}</td>`;
+    } else {
+      tr.innerHTML = `<th>${esc(label)}</th><td colspan="3">${esc(value1||'—')}</td>`;
+    }
+    tbody.appendChild(tr);
+  }
+  function addInfoRow2(tbody, label1, val1, label2, val2) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th>${esc(label1)}</th><td>${esc(val1||'—')}</td><th>${esc(label2)}</th><td>${esc(val2||'—')}</td>`;
+    tbody.appendChild(tr);
+  }
+  function addPoint(container, icon, label) {
+    const div = document.createElement('div');
+    div.className = 'point-card';
+    div.innerHTML = `<div class="point-icon">${icon}</div><div class="point-label">${esc(label)}</div>`;
+    container.appendChild(div);
+  }
+
+  /* ── 날짜 ── */
+  const d    = new Date();
+  const yyyy = d.getFullYear();
+  const mm   = String(d.getMonth() + 1).padStart(2, '0');
+  const dd   = String(d.getDate()).padStart(2, '0');
+  const today = `${yyyy}-${mm}-${dd}`;
+  setEl('print-date', today);
+  setEl('footer-date', '출력일 ' + today);
+
+  /* ── URL 파라미터 ── */
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (!id) {
+    setEl('errorMsg', '매물 ID가 없습니다. 목록에서 다시 접근해주세요.');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display  = 'flex';
+    return;
+  }
+
+  /* ── Supabase에서 매물 로드 ── */
+  let item;
+  try {
+    item = await getListingById(id);
+  } catch(e) {
+    setEl('errorMsg', '데이터를 불러오지 못했습니다: ' + (e.message || ''));
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display  = 'flex';
+    return;
+  }
+  if (!item) {
+    setEl('errorMsg', '해당 매물을 찾을 수 없습니다. (id: ' + esc(id) + ')');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display  = 'flex';
+    return;
+  }
+
+  /* ── 타입 라벨 ── */
+  function getTypeLabel(type) {
+    const m = {
+      shop:'상가', office:'사무실', officetel:'오피스텔',
+      hilsstate:'힐스테이트더운정', factory:'공장/창고',
+      bizcenter:'지식산업센터', etc:'기타'
+    };
+    if (m[type]) return m[type];
+    if (type && type.startsWith('land')) return '토지';
+    return type || '기타';
+  }
+
+  /* ── ① 헤더 ── */
+  const typeLabel = getTypeLabel(item.type);
+  setEl('type-badge', typeLabel);
+  setEl('ctrl-sub-title', `${item.address || item.title || typeLabel} · 손님용 브리핑`);
+
+  /* ── ② 제목 영역 ── */
+  const mainTitle = item.title || item.address || typeLabel + ' 매물';
+  setEl('prop-title', mainTitle);
+  const subParts = [item.address, typeLabel].filter(Boolean);
+  setEl('prop-subtitle', subParts.join(' · '));
+
+  const tagsEl = document.getElementById('prop-tags');
+  if (item.type) addTag(tagsEl, typeLabel, true);
+  const dealType = item.shop_dealType || item.officetel_dealType || item.factory_dealType || '';
+  if (dealType) addTag(tagsEl, dealType, true);
+  if (item.shop_floor)       addTag(tagsEl, item.shop_floor + '층');
+  if (item.shop_area_py)     addTag(tagsEl, item.shop_area_py + '평');
+  if (item.officetel_floor)  addTag(tagsEl, item.officetel_floor);
+  if (item.officetel_area_py)addTag(tagsEl, item.officetel_area_py + '평');
+  if (item.land_area_py)     addTag(tagsEl, item.land_area_py + '평');
+  if (item.status)           addTag(tagsEl, item.status);
+
+  /* ── ③ 가격 영역 ── */
+  const type = item.type || '';
+  if (type === 'shop' || type === 'office') {
+    if (item.shop_deposit || item.shop_monthlyRent) {
+      setEl('pc-main1-label',  '보증금');
+      setEl('pc-main1-value',  fmtMan(item.shop_deposit));
+      setEl('pc-main1-note',   '협의 가능');
+      setEl('pc-main2-label',  '월세');
+      setEl('pc-main2-value',  fmtMan(item.shop_monthlyRent));
+      setEl('pc-main2-note',   '부가세 별도');
+    } else if (item.quick_price) {
+      setEl('pc-main1-label',  '가격');
+      setEl('pc-main1-value',  item.quick_price);
+      setEl('pc-main1-note',   '협의 가능');
+      document.getElementById('pc-main2').classList.add('hidden');
+    }
+    setEl('pc-sub1-label', '권리금');
+    setEl('pc-sub1-value', item.shop_premium || '협의');
+    setEl('pc-sub1-note',  '별도 상담');
+    setEl('pc-sub2-label', '관리비');
+    setEl('pc-sub2-value', item.shop_maintenance ? item.shop_maintenance + '만원' : '별도 협의');
+    setEl('pc-sub2-note',  '실비 정산');
+  } else if (type === 'officetel' || type === 'hilsstate') {
+    setEl('pc-main1-label', item.officetel_dealType || '가격');
+    setEl('pc-main1-value', fmtMan(item.officetel_price));
+    setEl('pc-main1-note',  '협의 가능');
+    document.getElementById('pc-main2').classList.add('hidden');
+    document.getElementById('pc-sub1').classList.add('hidden');
+    document.getElementById('pc-sub2').classList.add('hidden');
+  } else if (type && type.startsWith('land')) {
+    setEl('pc-main1-label', '매매가');
+    setEl('pc-main1-value', fmtMan(item.land_price));
+    setEl('pc-main1-note',  '협의 가능');
+    document.getElementById('pc-main2').classList.add('hidden');
+    document.getElementById('pc-sub1').classList.add('hidden');
+    document.getElementById('pc-sub2').classList.add('hidden');
+  } else if (type === 'factory') {
+    if (item.factory_dealType === '임대' || item.factory_dealType === '월세') {
+      setEl('pc-main1-label', '보증금'); setEl('pc-main1-value', fmtMan(item.factory_deposit));
+      setEl('pc-main2-label', '월세');   setEl('pc-main2-value', fmtMan(item.factory_monthlyRent));
+      document.getElementById('pc-sub1').classList.add('hidden');
+      document.getElementById('pc-sub2').classList.add('hidden');
+    } else {
+      setEl('pc-main1-label', '매매가'); setEl('pc-main1-value', fmtMan(item.factory_price || item.quick_price));
+      document.getElementById('pc-main2').classList.add('hidden');
+      document.getElementById('pc-sub1').classList.add('hidden');
+      document.getElementById('pc-sub2').classList.add('hidden');
+    }
+  } else if (item.quick_price) {
+    setEl('pc-main1-label', '가격');
+    setEl('pc-main1-value', item.quick_price);
+    setEl('pc-main1-note',  '협의 가능');
+    document.getElementById('pc-main2').classList.add('hidden');
+    document.getElementById('pc-sub1').classList.add('hidden');
+    document.getElementById('pc-sub2').classList.add('hidden');
+  }
+
+  /* ── ④ 기본정보 표 ── */
+  const tbody = document.getElementById('info-tbody');
+  addInfoRow2(tbody, '소재지', item.address, '매물유형', typeLabel);
+  addInfoRow2(tbody, '거래방식', dealType || '협의', '상태', item.status || '—');
+
+  if (type === 'shop' || type === 'office') {
+    addInfoRow2(tbody, '전용면적', item.shop_area_py ? item.shop_area_py+'평' : '—', '해당층', item.shop_floor || '—');
+    addInfoRow2(tbody, '입주가능일', item.shop_available || '협의', '주차', item.shop_parking || '—');
+    if (item.shop_yield) addInfoRow2(tbody, '예상수익률', item.shop_yield + '%', '임대상태', item.shop_status || '—');
+  } else if (type === 'officetel' || type === 'hilsstate') {
+    const complexName = type === 'hilsstate' ? '힐스테이트더운정' : (item.officetel_complex || '—');
+    addInfoRow2(tbody, '단지명', complexName, '층수', item.officetel_floor || '—');
+    addInfoRow2(tbody, '전용면적', item.officetel_area_py ? item.officetel_area_py+'평' : '—', '향', item.officetel_direction || '—');
+    addInfoRow2(tbody, '구조', item.officetel_structure || '—', '타입', item.officetel_type || '—');
+    addInfoRow2(tbody, '주차', item.officetel_parking || '—', '입주가능일', item.officetel_available || '협의');
+  } else if (type && type.startsWith('land')) {
+    addInfoRow2(tbody, '면적', item.land_area_py ? item.land_area_py+'평' : '—', '지목', item.land_jimok || '—');
+    addInfoRow2(tbody, '용도지역', item.land_zone || '—', '도로', item.land_road || '—');
+    if (item.land_coverage || item.land_far)
+      addInfoRow2(tbody, '건폐율', item.land_coverage ? item.land_coverage+'%' : '—', '용적률', item.land_far ? item.land_far+'%' : '—');
+    if (item.land_shape) addInfoRow2(tbody, '형상', item.land_shape, '토지종류', item.land_kind || '—');
+  } else if (type === 'factory') {
+    addInfoRow2(tbody, '대지면적', item.factory_siteArea_py ? item.factory_siteArea_py+'평' : '—', '건물면적', item.factory_buildArea_py ? item.factory_buildArea_py+'평' : '—');
+    addInfoRow2(tbody, '층고', item.factory_height ? item.factory_height+'m' : '—', '전력', item.factory_power ? item.factory_power+'kW' : '—');
+    addInfoRow2(tbody, '대형차', item.factory_truck || '—', '구분', item.factory_kind || '—');
+  }
+
+  /* ── ⑤ 추천 포인트 (자동 생성) ── */
+  const pointsEl = document.getElementById('points-grid');
+  const points = [];
+  if (item.address && item.address.includes('운정')) points.push(['🚉', '운정역 생활권']);
+  if (item.shop_floor === '1F' || item.shop_floor === '1층' || item.officetel_floor === '1') points.push(['🚪', '1층 접근성 우수']);
+  if (type === 'shop' || type === 'office') points.push(['🏘', '배후수요 보유 입지']);
+  if (!item.shop_premium || item.shop_premium === '' || item.shop_premium === '없음') {
+    if (type === 'shop') points.push(['✅', '권리금 협의 가능']);
+  }
+  if (type === 'officetel' || type === 'hilsstate') points.push(['🏠', '주거/업무 겸용 가능']);
+  if (type && type.startsWith('land')) { points.push(['🌱', '토지 투자 적합']); points.push(['📐', '개발 가능 용지']); }
+  if (type === 'factory') { points.push(['🏭', '공장·창고 운영 최적']); points.push(['🚛', '물류 접근성 우수']); }
+  if (item.shop_parking === '가능' || item.officetel_parking === '가능') points.push(['🅿', '주차 가능']);
+  if (dealType === '임대' || dealType === '월세') points.push(['💼', '임대 사업 검토 가능']);
+  // 4개만 표시
+  points.slice(0, 4).forEach(([icon, label]) => addPoint(pointsEl, icon, label));
+  if (pointsEl.children.length === 0) {
+    addPoint(pointsEl, '📌', '위치 우수');
+    addPoint(pointsEl, '💰', '합리적 가격');
+    addPoint(pointsEl, '🤝', '협의 가능');
+    addPoint(pointsEl, '📋', '상세 안내 가능');
+  }
+
+  /* ── ⑥ 상세 설명 ── */
+  const desc = item.description || item.quick_memo || '';
+  document.getElementById('prop-description').textContent =
+    desc || '매물에 대한 상세 설명은 담당 공인중개사에게 문의해주세요.';
+
+  /* ── 화면 전환 ── */
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('mainContent').style.display  = '';
+
+})();
+</script>
+</body>
+</html>
