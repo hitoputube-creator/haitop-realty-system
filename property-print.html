@@ -229,6 +229,105 @@ a { text-decoration: none; color: inherit; }
   white-space: pre-wrap;
 }
 
+/* ── 편집 모드 스타일 ── */
+.ctrl-btn.edit-mode {
+  background: rgba(212,175,55,.18);
+  border: 1px solid rgba(212,175,55,.55);
+  color: var(--gold2);
+}
+.ctrl-btn.edit-mode:hover { background: rgba(212,175,55,.32); }
+.ctrl-btn.edit-done {
+  background: linear-gradient(135deg,#1a7a3a,#22a04d);
+  color: #fff; border: none;
+}
+.ctrl-btn.edit-done:hover { filter: brightness(1.08); }
+
+/* 편집 가능 입력 공통 */
+.edit-input {
+  width: 100%; font-family: inherit;
+  border: 1.5px solid rgba(201,168,76,.55);
+  border-radius: 7px; outline: none;
+  background: rgba(255,255,240,.92);
+  color: var(--text); transition: border-color .15s, box-shadow .15s;
+}
+.edit-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,.18);
+}
+
+/* 제목 편집 */
+#edit-title {
+  font-size: 20px; font-weight: 900;
+  letter-spacing: -.5px; line-height: 1.3;
+  padding: 6px 10px; margin-bottom: 6px;
+}
+/* 부제 편집 */
+#edit-subtitle {
+  font-size: 13px; padding: 5px 10px;
+  width: 100%;
+}
+/* 가격 메모 편집 */
+.pc-note-input {
+  font-size: 10px; padding: 3px 6px;
+  background: rgba(255,255,240,.15);
+  border: 1px solid rgba(212,175,55,.35);
+  border-radius: 5px; color: #a0bcd0;
+  width: 100%; text-align: center;
+}
+.pc-note-input:focus {
+  border-color: var(--gold2);
+  outline: none;
+  background: rgba(255,255,240,.25);
+}
+/* 추천 포인트 편집 */
+.point-edit-wrap { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.point-icon-input {
+  font-size: 18px; width: 44px; text-align: center;
+  padding: 3px 4px; background: rgba(255,255,240,.92);
+  border: 1.5px solid rgba(201,168,76,.5); border-radius: 6px;
+  color: var(--text); outline: none;
+}
+.point-icon-input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,168,76,.18); }
+.point-label-input {
+  font-size: 11.5px; font-weight: 700;
+  text-align: center; padding: 4px 6px;
+  width: 100%; background: rgba(255,255,240,.92);
+  border: 1.5px solid rgba(201,168,76,.5); border-radius: 6px;
+  color: var(--text); outline: none;
+}
+.point-label-input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,168,76,.18); }
+/* 상세 설명 편집 */
+#edit-description {
+  width: 100%; min-height: 120px; resize: vertical;
+  padding: 12px 14px; font-size: 13px; line-height: 1.85;
+  background: rgba(255,255,240,.92);
+}
+
+/* 편집 모드일 때 원본 숨김 */
+body.editing #prop-title      { display: none; }
+body.editing #prop-subtitle   { display: none; }
+body.editing #prop-description{ display: none; }
+body.editing .edit-only       { display: block !important; }
+body.editing .edit-only-flex  { display: flex !important; }
+body:not(.editing) .edit-only,
+body:not(.editing) .edit-only-flex { display: none !important; }
+
+/* 편집 모드 포인트 카드 */
+body.editing .point-card { background: #fff8e8; border-color: rgba(201,168,76,.4); }
+body.editing .point-icon { display: none; }
+body.editing .point-label { display: none; }
+body.editing .point-edit-wrap { display: flex !important; }
+body:not(.editing) .point-edit-wrap { display: none !important; }
+
+/* 인쇄 시 편집 UI 완전 숨김 (이미 컨트롤 바에 포함되지만 안전 장치) */
+@media print {
+  .edit-input, .pc-note-input, .point-edit-wrap,
+  .point-icon-input, .point-label-input,
+  #edit-title, #edit-subtitle, #edit-description { display: none !important; }
+  #prop-title, #prop-subtitle, #prop-description { display: block !important; }
+  .point-icon, .point-label { display: block !important; }
+}
+
 /* 사진/도면 */
 #photo-area { margin-bottom: 24px; }
 .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -324,7 +423,8 @@ a { text-decoration: none; color: inherit; }
     </div>
     <div class="ctrl-btns">
       <button class="ctrl-btn back" onclick="history.back()">← 목록으로 돌아가기</button>
-      <button class="ctrl-btn print" onclick="window.print()">🖨 인쇄하기</button>
+      <button class="ctrl-btn edit-mode" id="btn-edit-toggle">✏️ 설명 수정</button>
+      <button class="ctrl-btn print" id="btn-print" onclick="window.print()">🖨 인쇄하기</button>
     </div>
   </div>
 
@@ -354,7 +454,9 @@ a { text-decoration: none; color: inherit; }
       <!-- 제목 -->
       <div id="property-title-area">
         <h1 class="prop-main-title" id="prop-title"></h1>
+        <input id="edit-title" class="edit-input edit-only" type="text" placeholder="매물 제목을 입력하세요" style="display:none;" />
         <p class="prop-sub-title" id="prop-subtitle"></p>
+        <input id="edit-subtitle" class="edit-input edit-only" type="text" placeholder="부제를 입력하세요" style="display:none;" />
         <div class="prop-tags" id="prop-tags"></div>
       </div>
 
@@ -365,21 +467,25 @@ a { text-decoration: none; color: inherit; }
             <div class="pc-label" id="pc-main1-label">보증금</div>
             <div class="pc-value" id="pc-main1-value">—</div>
             <div class="pc-note" id="pc-main1-note">협의 가능</div>
+            <input class="pc-note-input edit-only" id="edit-note-main1" type="text" placeholder="메모" style="display:none;margin-top:4px;" />
           </div>
           <div class="price-card main-price" id="pc-main2">
             <div class="pc-label" id="pc-main2-label">월세</div>
             <div class="pc-value" id="pc-main2-value">—</div>
             <div class="pc-note" id="pc-main2-note">부가세 별도</div>
+            <input class="pc-note-input edit-only" id="edit-note-main2" type="text" placeholder="메모" style="display:none;margin-top:4px;" />
           </div>
           <div class="price-card" id="pc-sub1">
             <div class="pc-label" id="pc-sub1-label">권리금</div>
             <div class="pc-value" id="pc-sub1-value">협의</div>
             <div class="pc-note" id="pc-sub1-note">별도 상담</div>
+            <input class="pc-note-input edit-only" id="edit-note-sub1" type="text" placeholder="메모" style="display:none;margin-top:4px;" />
           </div>
           <div class="price-card" id="pc-sub2">
             <div class="pc-label" id="pc-sub2-label">관리비</div>
             <div class="pc-value" id="pc-sub2-value">별도 협의</div>
             <div class="pc-note" id="pc-sub2-note">실비 정산</div>
+            <input class="pc-note-input edit-only" id="edit-note-sub2" type="text" placeholder="메모" style="display:none;margin-top:4px;" />
           </div>
         </div>
       </div>
@@ -400,6 +506,7 @@ a { text-decoration: none; color: inherit; }
       <div id="desc-area">
         <div class="section-title"><span class="st-icon">📝</span> 상세 설명</div>
         <div class="desc-box" id="prop-description"></div>
+        <textarea id="edit-description" class="edit-input edit-only" placeholder="손님에게 보여줄 설명 문구를 입력하세요." style="display:none;"></textarea>
       </div>
 
       <!-- 사진/도면 -->
@@ -486,7 +593,13 @@ a { text-decoration: none; color: inherit; }
   function addPoint(container, icon, label) {
     const div = document.createElement('div');
     div.className = 'point-card';
-    div.innerHTML = `<div class="point-icon">${icon}</div><div class="point-label">${esc(label)}</div>`;
+    div.innerHTML = `
+      <div class="point-icon">${icon}</div>
+      <div class="point-label">${esc(label)}</div>
+      <div class="point-edit-wrap" style="display:none;">
+        <input class="point-icon-input" type="text" value="${esc(icon)}" maxlength="4" placeholder="🏠" />
+        <input class="point-label-input" type="text" value="${esc(label)}" placeholder="포인트 문구" />
+      </div>`;
     container.appendChild(div);
   }
 
@@ -675,6 +788,99 @@ a { text-decoration: none; color: inherit; }
   /* ── 화면 전환 ── */
   document.getElementById('loadingState').style.display = 'none';
   document.getElementById('mainContent').style.display  = '';
+
+  /* ══════════════════════════════════════════
+     편집 모드 토글
+  ══════════════════════════════════════════ */
+  let isEditing = false;
+  const btnToggle = document.getElementById('btn-edit-toggle');
+  const btnPrint  = document.getElementById('btn-print');
+
+  btnToggle.addEventListener('click', function () {
+    isEditing = !isEditing;
+    if (isEditing) enterEditMode();
+    else           exitEditMode();
+  });
+
+  function enterEditMode() {
+    /* 버튼 변경 */
+    btnToggle.textContent = '✅ 수정 완료';
+    btnToggle.classList.remove('edit-mode');
+    btnToggle.classList.add('edit-done');
+    btnPrint.style.opacity = '0.4';
+    btnPrint.style.pointerEvents = 'none';
+
+    /* 제목 */
+    const titleEl    = document.getElementById('prop-title');
+    const subtitleEl = document.getElementById('prop-subtitle');
+    const editTitle  = document.getElementById('edit-title');
+    const editSub    = document.getElementById('edit-subtitle');
+    editTitle.value = titleEl.textContent;
+    editSub.value   = subtitleEl.textContent;
+
+    /* 가격 메모 4개 */
+    ['main1','main2','sub1','sub2'].forEach(function(k) {
+      const noteEl  = document.getElementById('pc-' + k + '-note');
+      const inputEl = document.getElementById('edit-note-' + k);
+      if (noteEl && inputEl) inputEl.value = noteEl.textContent;
+    });
+
+    /* 상세 설명 */
+    const descEl  = document.getElementById('prop-description');
+    const editDesc = document.getElementById('edit-description');
+    editDesc.value = descEl.textContent;
+    /* 높이 자동 맞춤 */
+    editDesc.style.height = 'auto';
+    editDesc.style.height = Math.max(120, editDesc.scrollHeight) + 'px';
+
+    /* body 클래스 → CSS로 표시/숨김 처리 */
+    document.body.classList.add('editing');
+  }
+
+  function exitEditMode() {
+    /* 제목 반영 */
+    const titleEl    = document.getElementById('prop-title');
+    const subtitleEl = document.getElementById('prop-subtitle');
+    const v = document.getElementById('edit-title').value.trim();
+    const s = document.getElementById('edit-subtitle').value.trim();
+    if (v) titleEl.textContent    = v;
+    if (s) subtitleEl.textContent = s;
+
+    /* 가격 메모 반영 */
+    ['main1','main2','sub1','sub2'].forEach(function(k) {
+      const noteEl  = document.getElementById('pc-' + k + '-note');
+      const inputEl = document.getElementById('edit-note-' + k);
+      if (noteEl && inputEl && inputEl.value.trim())
+        noteEl.textContent = inputEl.value.trim();
+    });
+
+    /* 상세 설명 반영 */
+    const descEl   = document.getElementById('prop-description');
+    const editDesc = document.getElementById('edit-description');
+    if (editDesc.value.trim()) descEl.textContent = editDesc.value.trim();
+
+    /* 추천 포인트 반영 */
+    document.querySelectorAll('#points-grid .point-card').forEach(function(card) {
+      const iconInput  = card.querySelector('.point-icon-input');
+      const labelInput = card.querySelector('.point-label-input');
+      const iconEl     = card.querySelector('.point-icon');
+      const labelEl    = card.querySelector('.point-label');
+      if (iconInput && iconEl && iconInput.value.trim())
+        iconEl.textContent  = iconInput.value.trim();
+      if (labelInput && labelEl && labelInput.value.trim())
+        labelEl.textContent = labelInput.value.trim();
+    });
+
+    /* body 클래스 해제 */
+    document.body.classList.remove('editing');
+
+    /* 버튼 복원 */
+    btnToggle.textContent = '✏️ 설명 수정';
+    btnToggle.classList.remove('edit-done');
+    btnToggle.classList.add('edit-mode');
+    btnPrint.style.opacity = '1';
+    btnPrint.style.pointerEvents = '';
+  }
 
 })();
 </script>
