@@ -514,9 +514,7 @@ input[type=file].hidden-file { display:none; }
           </button>
           <input type="file" accept="image/*" class="hidden-file" id="photo-file-input" onchange="handlePhotoUpload(this)"/>
         </div>
-        <div id="photo-storage-warn" style="display:none;font-size:11.5px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:6px 12px;margin-bottom:8px;">
-          ⚠️ 저장 공간 부족 — 사진 저장에 실패했습니다. 다른 매물 사진을 삭제하거나 더 작은 이미지를 사용해주세요.
-        </div>
+        <div id="photo-storage-warn" style="display:none;font-size:11.5px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:6px 12px;margin-bottom:8px;"></div>
         <div id="photo-grid-wrap"></div>
       </div>
 
@@ -552,6 +550,8 @@ input[type=file].hidden-file { display:none; }
   const M2_PER_PY = 3.30579;
   const LS_EXTRA  = (id) => 'print_extra_'  + id;
   const LS_PHOTOS = (id) => 'print_photos_' + id;
+  /* Supabase Storage — storage.js 의 SUPABASE_URL / SUPABASE_KEY 재사용 */
+  const BUCKET    = 'property-proposal-images';
 
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c =>
@@ -876,10 +876,14 @@ input[type=file].hidden-file { display:none; }
   }
 
   /* ══════════════════════════
-     사진 관리
+     사진 관리 — Supabase Storage 방식
+     photos 배열: [{url, path, name, uploadedAt} | null, ...]
+     localStorage 에는 url/path 메타데이터만 저장 (base64 없음)
+     구형 base64 데이터(p.data)는 하위 호환으로 표시만 허용
   ══════════════════════════ */
-  let photos = [null, null]; /* [slot0, slot1] 각 {data:base64,name:'...'} or null */
+  let photos = [null, null];
 
+  /* ── localStorage: 메타데이터만 저장 (수 KB) ── */
   function loadPhotos() {
     try {
       const raw = localStorage.getItem(LS_PHOTOS(id));
@@ -888,93 +892,22 @@ input[type=file].hidden-file { display:none; }
     if (!Array.isArray(photos) || photos.length < 2) photos = [null, null];
   }
 
-  /**
-   * 사진 저장. 성공하면 true, QuotaExceededError 등 실패 시 false 반환.
-   * localStorage 도메인 한도(약 5MB)는 GitHub Pages에서 모든 레포가 공유함.
-   * JPEG 0.80/1200px 기준 사진 1장 ≈ 200~600KB(base64). 매물이 많으면 한도 초과 가능.
-   */
   function savePhotos() {
+    /* URL/path 메타데이터만 저장하므로 용량 문제 없음 */
     try {
       localStorage.setItem(LS_PHOTOS(id), JSON.stringify(photos));
-      return true;
     } catch(e) {
-      /* QuotaExceededError: 저장 공간 부족 */
-      return false;
+      console.warn('사진 메타데이터 저장 실패:', e.message);
     }
   }
 
-  function renderPhotos() {
-    const wrap = document.getElementById('photo-grid-wrap');
-    const hasAny = photos[0] || photos[1];
-
-    if (!hasAny) {
-      wrap.innerHTML = '<div style="color:#a0b4cc;font-size:13px;padding:18px 0;text-align:center;">📸 사진 또는 도면을 추가해주세요</div>';
-      document.getElementById('photo-add-btn').disabled = false;
-      return;
-    }
-
-    const count = photos.filter(Boolean).length;
-    const gridCls = count >= 2 ? 'photo-grid-2' : 'photo-grid-1';
-    let html = `<div class="${gridCls}">`;
-    photos.forEach((p, i) => {
-      if (!p) return;
-      html += `
-        <div class="photo-slot has-img" id="photo-slot-${i}">
-          <img src="${p.data}" alt="${esc(p.name || '사진')}" />
-          <button class="photo-del-btn" onclick="deletePhoto(${i})" title="삭제">✕</button>
-        </div>`;
-    });
-    html += '</div>';
-    wrap.innerHTML = html;
-
-    /* 2장이면 추가 버튼 비활성 */
-    document.getElementById('photo-add-btn').disabled = photos[0] && photos[1];
-  }
-
-  function triggerPhotoUpload() {
-    document.getElementById('photo-file-input').value = '';
-    document.getElementById('photo-file-input').click();
-  }
-
-  async function handlePhotoUpload(input) {
-    const file = input.files && input.files[0];
-    if (!file) return;
-    const slot = photos[0] ? 1 : 0; /* 빈 슬롯 찾기 */
-    if (photos[0] && photos[1]) return; /* 꽉 참 */
-
-    try {
-      const data = await resizeImage(file);
-      photos[slot] = { data, name: file.name };
-      const saved = savePhotos();
-      if (!saved) {
-        /* 저장 실패 → 롤백하고 인라인 경고 표시 */
-        photos[slot] = null;
-        const warnEl = document.getElementById('photo-storage-warn');
-        if (warnEl) warnEl.style.display = 'block';
-      } else {
-        const warnEl = document.getElementById('photo-storage-warn');
-        if (warnEl) warnEl.style.display = 'none';
-      }
-      renderPhotos();
-    } catch(e) {
-      alert('이미지 처리 중 오류가 발생했습니다: ' + e.message);
-    }
-  }
-
-  function deletePhoto(i) {
-    photos[i] = null;
-    savePhotos();
-    const warnEl = document.getElementById('photo-storage-warn');
-    if (warnEl) warnEl.style.display = 'none';
-    renderPhotos();
-  }
-
-  function resizeImage(file) {
+  /* ── 이미지 → Blob 변환 (리사이즈 후 Supabase에 업로드) ── */
+  function resizeToBlob(file) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      const url = URL.createObjectURL(file);
+      const objUrl = URL.createObjectURL(file);
       img.onload = () => {
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(objUrl);
         const MAX = 1200;
         let w = img.width, h = img.height;
         if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
@@ -982,11 +915,147 @@ input[type=file].hidden-file { display:none; }
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.80));
+        canvas.toBlob(blob => {
+          blob ? resolve(blob) : reject(new Error('이미지 변환 실패'));
+        }, 'image/jpeg', 0.80);
       };
       img.onerror = () => reject(new Error('이미지를 읽을 수 없습니다'));
-      img.src = url;
+      img.src = objUrl;
     });
+  }
+
+  /* ── Supabase Storage 업로드 ── */
+  async function uploadToStorage(file, propertyId) {
+    const ts       = Date.now();
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60);
+    const path     = `property-proposals/${propertyId}/${ts}-${safeName}`;
+
+    const blob = await resizeToBlob(file);
+
+    const res = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodeURI(path)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type' : 'image/jpeg',
+          'x-upsert'     : 'false'
+        },
+        body: blob
+      }
+    );
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`업로드 실패 (${res.status}): ${errText}`);
+    }
+
+    return {
+      url        : `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${encodeURI(path)}`,
+      path       : path,
+      name       : file.name,
+      uploadedAt : new Date().toISOString()
+    };
+  }
+
+  /* ── Supabase Storage 삭제 (실패해도 UI는 제거) ── */
+  async function deleteFromStorage(path) {
+    if (!path) return;
+    try {
+      await fetch(
+        `${SUPABASE_URL}/storage/v1/object/${BUCKET}`,
+        {
+          method : 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type' : 'application/json'
+          },
+          body: JSON.stringify({ prefixes: [path] })
+        }
+      );
+    } catch(e) {
+      console.warn('Storage 파일 삭제 실패 (무시됨):', e.message);
+    }
+  }
+
+  /* ── 렌더링 ── */
+  function renderPhotos() {
+    const wrap    = document.getElementById('photo-grid-wrap');
+    const addBtn  = document.getElementById('photo-add-btn');
+    const warnEl  = document.getElementById('photo-storage-warn');
+    const hasAny  = photos[0] || photos[1];
+
+    if (!hasAny) {
+      wrap.innerHTML = '<div style="color:#a0b4cc;font-size:13px;padding:18px 0;text-align:center;">📸 사진 또는 도면을 추가해주세요</div>';
+      addBtn.disabled = false;
+      return;
+    }
+
+    const count   = photos.filter(Boolean).length;
+    const gridCls = count >= 2 ? 'photo-grid-2' : 'photo-grid-1';
+    let html = `<div class="${gridCls}">`;
+    photos.forEach((p, i) => {
+      if (!p) return;
+      /* 하위 호환: 구형 base64(p.data) 또는 신형 URL(p.url) */
+      const src = esc(p.url || p.data || '');
+      html += `
+        <div class="photo-slot has-img" id="photo-slot-${i}">
+          <img src="${src}" alt="${esc(p.name || '사진')}" loading="lazy"/>
+          <button class="photo-del-btn" onclick="deletePhoto(${i})" title="삭제">✕</button>
+        </div>`;
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+
+    addBtn.disabled = !!(photos[0] && photos[1]);
+    if (warnEl) warnEl.style.display = 'none';
+  }
+
+  /* ── 업로드 트리거 ── */
+  function triggerPhotoUpload() {
+    document.getElementById('photo-file-input').value = '';
+    document.getElementById('photo-file-input').click();
+  }
+
+  /* ── 업로드 핸들러 ── */
+  async function handlePhotoUpload(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (photos[0] && photos[1]) return; /* 2장 꽉 참 */
+    const slot = photos[0] ? 1 : 0;
+
+    /* 버튼 로딩 상태 */
+    const addBtn   = document.getElementById('photo-add-btn');
+    const warnEl   = document.getElementById('photo-storage-warn');
+    const origText = addBtn.textContent;
+    addBtn.disabled = true;
+    addBtn.textContent = '⏳ 업로드 중…';
+    if (warnEl) warnEl.style.display = 'none';
+
+    try {
+      const meta = await uploadToStorage(file, id);
+      photos[slot] = meta;
+      savePhotos();        /* URL/path 메타만 저장 — 수 KB */
+      renderPhotos();
+    } catch(e) {
+      if (warnEl) {
+        warnEl.textContent = '⚠️ 업로드 실패: ' + e.message;
+        warnEl.style.display = 'block';
+      }
+    } finally {
+      addBtn.textContent = origText;
+      addBtn.disabled    = !!(photos[0] && photos[1]);
+    }
+  }
+
+  /* ── 삭제 핸들러 ── */
+  function deletePhoto(i) {
+    const photo = photos[i];
+    photos[i] = null;
+    savePhotos();
+    renderPhotos();
+    /* Storage에서도 삭제 (비동기, UI 블록 없음) */
+    if (photo && photo.path) deleteFromStorage(photo.path);
   }
 
   /* 전역 노출 (onclick 속성에서 사용) */
