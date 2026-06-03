@@ -119,8 +119,14 @@
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label>&#47588;&#47932; &#51060;&#48120;&#51648; (&#52572;&#45824; 5&#51109;)</label>
-      <input id="edit_images" type="file" accept="image/*" multiple />
       <div id="edit_image_preview" class="image-preview-row"></div>
+      <div id="edit_image_slots" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+        <input class="edit-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />
+      </div>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
+        <button type="button" id="editAddImageSlotBtn" class="btn btn-ghost" style="font-size:0.82rem;padding:4px 10px;">+ &#52628;&#44032;</button>
+        <span id="editImageCount" style="font-size:0.78rem;color:var(--text-muted);">0 / 5</span>
+      </div>
     </div>
 
     <div class="modal-btns">
@@ -211,6 +217,45 @@ function closeHomepageTab(tab) {
       </span>
     `).join("");
     wrap.innerHTML = existingHtml + newHtml;
+    updateEditImageSlots();
+  }
+
+  function updateEditImageSlots() {
+    const total = _editImageUrls.length + _editNewImageFiles.length;
+    const countEl = document.getElementById("editImageCount");
+    if (countEl) countEl.textContent = `${total} / ${MAX_LISTING_IMAGES}`;
+    const addBtn = document.getElementById("editAddImageSlotBtn");
+    if (addBtn) addBtn.disabled = total >= MAX_LISTING_IMAGES;
+  }
+
+  function addEditImageSlot() {
+    const total = _editImageUrls.length + _editNewImageFiles.length;
+    if (total >= MAX_LISTING_IMAGES) {
+      showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
+      return;
+    }
+    const slots = document.getElementById("edit_image_slots");
+    if (!slots) return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = true;
+    input.className = "edit-img-slot";
+    input.style.fontSize = "0.82rem";
+    slots.appendChild(input);
+    input.click();
+  }
+
+  function handleEditImageSlotChange(input) {
+    const files = Array.from(input.files || []).filter(f => f.type.startsWith("image/"));
+    const remaining = MAX_LISTING_IMAGES - _editImageUrls.length - _editNewImageFiles.length;
+    const toAdd = files.slice(0, remaining);
+    if (files.length > remaining) {
+      showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
+    }
+    _editNewImageFiles = _editNewImageFiles.concat(toAdd);
+    input.value = "";
+    renderEditImagePreview();
   }
 
   function removeEditImage(idx) {
@@ -223,19 +268,6 @@ function closeHomepageTab(tab) {
     renderEditImagePreview();
   }
 
-  function handleEditImageSelection() {
-    const input = document.getElementById("edit_images");
-    const files = Array.from(input?.files || []).filter(file => file.type.startsWith("image/"));
-    const totalCount = _editImageUrls.length + _editNewImageFiles.length + files.length;
-    if (totalCount > MAX_LISTING_IMAGES) {
-      showToast(`Images can be uploaded up to ${MAX_LISTING_IMAGES} files.`);
-      if (input) input.value = "";
-      return;
-    }
-    _editNewImageFiles = _editNewImageFiles.concat(files);
-    if (input) input.value = "";
-    renderEditImagePreview();
-  }
 
   async function loadDriveResourcesForSelect() {
     try {
@@ -257,7 +289,8 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_memo").value = item.quick_memo || item.description || "";
     document.getElementById("edit_resource_id").value = item.resource_id || "";
     document.getElementById("edit_is_public").checked = item.is_public === true;
-    document.getElementById("edit_images").value = "";
+    const slots = document.getElementById("edit_image_slots");
+    if (slots) slots.innerHTML = '<input class="edit-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />';
     _editImageUrls = getListingImageUrls(item);
     _editNewImageFiles = [];
     renderEditImagePreview();
@@ -270,8 +303,10 @@ function closeHomepageTab(tab) {
     setTimeout(() => t.classList.remove("show"), duration);
   }
 
-  const editImagesInput = document.getElementById("edit_images");
-  if (editImagesInput) editImagesInput.addEventListener("change", handleEditImageSelection);
+  document.getElementById("edit_image_slots")?.addEventListener("change", function(e) {
+    if (e.target.classList.contains("edit-img-slot")) handleEditImageSlotChange(e.target);
+  });
+  document.getElementById("editAddImageSlotBtn")?.addEventListener("click", addEditImageSlot);
   document.getElementById("edit_category1")?.addEventListener("change", () => renderEditCategory2Options());
   document.getElementById("edit_category2")?.addEventListener("change", updateEditCategoryType);
 
