@@ -295,6 +295,27 @@ textarea { resize: vertical; min-height: 120px; }
   background: rgba(212,175,55,0.15);
 }
 
+/* 면적 입력 행 */
+.area-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.area-label { font-size: 0.78rem; color: var(--text-muted); width: 56px; flex-shrink: 0; }
+.area-row input { width: 90px !important; flex-shrink: 0; }
+.area-unit { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+
+/* 홍보스티커 */
+.sticker-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.sticker-chip {
+  display: flex; align-items: center; gap: 5px;
+  border: 1px solid rgba(212,175,55,0.3); border-radius: 999px;
+  padding: 4px 10px; font-size: 0.78rem; color: var(--text-muted);
+  cursor: pointer; transition: 0.15s; background: rgba(5,10,30,0.7);
+  user-select: none;
+}
+.sticker-chip:has(input:checked) { border-color: var(--gold); color: var(--gold-soft); background: rgba(212,175,55,0.15); }
+.sticker-chip input { width: auto !important; padding: 0; }
+
+/* 모달 내 섹션 제목 */
+.modal-section-title { font-size: 0.78rem; color: var(--gold-soft); font-weight: 600; margin: 14px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(212,175,55,0.2); }
+
 @media (max-width: 600px) {
   .form-grid-2  { grid-template-columns: 1fr; }
   .info-grid    { grid-template-columns: 1fr; }
