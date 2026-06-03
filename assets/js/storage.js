@@ -2,6 +2,22 @@ const SUPABASE_URL = "https://xaxbkdnrzsghsabkdvzj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
 const LISTING_IMAGES_BUCKET = "listing-images";
 const MAX_LISTING_IMAGES = 5;
+
+const CATEGORY_OPTIONS = {"\uacf5\uc7a5\ucc3d\uace0": ["\uacf5\uc7a5", "\ucc3d\uace0", "\uacf5\uc7a5\ucc3d\uace0"], "\uc0c1\uac00\uc0ac\ubb34\uc2e4": ["\uc0c1\uac00", "\uc0ac\ubb34\uc2e4", "\uc9c0\uc2dd\uc0b0\uc5c5\uc13c\ud130"], "\ud1a0\uc9c0": ["\ud1a0\uc9c0", "\uc784\uc57c", "\ub18d\uc9c0", "\ud0dd\uc9c0"], "\uc8fc\uac70\uc6a9": ["\uc544\ud30c\ud2b8", "\uc624\ud53c\uc2a4\ud154", "\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815"], "\ub2e8\ub3c5\uc804\uc6d0\uc8fc\ud0dd": ["\ub2e8\ub3c5\uc8fc\ud0dd", "\uc804\uc6d0\uc8fc\ud0dd"], "\uac74\ubb3c\ube4c\ub529": ["\uac74\ubb3c", "\ube4c\ub529", "\uc0c1\uac00\uc8fc\ud0dd", "\ub2e4\uac00\uad6c\uc8fc\ud0dd"], "\uae30\ud0c0": ["\uae30\ud0c0"]};
+const LEGACY_TYPE_CATEGORY = {"shop": ["\uc0c1\uac00\uc0ac\ubb34\uc2e4", "\uc0c1\uac00"], "office": ["\uc0c1\uac00\uc0ac\ubb34\uc2e4", "\uc0ac\ubb34\uc2e4"], "officetel": ["\uc8fc\uac70\uc6a9", "\uc624\ud53c\uc2a4\ud154"], "hilsstate": ["\uc8fc\uac70\uc6a9", "\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815"], "factory": ["\uacf5\uc7a5\ucc3d\uace0", "\uacf5\uc7a5\ucc3d\uace0"], "bizcenter": ["\uc0c1\uac00\uc0ac\ubb34\uc2e4", "\uc9c0\uc2dd\uc0b0\uc5c5\uc13c\ud130"], "land_single": ["\ud1a0\uc9c0", "\ud1a0\uc9c0"], "land_dev": ["\ud1a0\uc9c0", "\ud1a0\uc9c0"], "land_other": ["\ud1a0\uc9c0", "\ud1a0\uc9c0"], "etc": ["\uae30\ud0c0", "\uae30\ud0c0"]};
+const CATEGORY_TO_TYPE = {"\uacf5\uc7a5\ucc3d\uace0|\uacf5\uc7a5": "factory", "\uacf5\uc7a5\ucc3d\uace0|\ucc3d\uace0": "factory", "\uacf5\uc7a5\ucc3d\uace0|\uacf5\uc7a5\ucc3d\uace0": "factory", "\uc0c1\uac00\uc0ac\ubb34\uc2e4|\uc0c1\uac00": "shop", "\uc0c1\uac00\uc0ac\ubb34\uc2e4|\uc0ac\ubb34\uc2e4": "office", "\uc0c1\uac00\uc0ac\ubb34\uc2e4|\uc9c0\uc2dd\uc0b0\uc5c5\uc13c\ud130": "bizcenter", "\ud1a0\uc9c0|\ud1a0\uc9c0": "land_single", "\ud1a0\uc9c0|\uc784\uc57c": "land_other", "\ud1a0\uc9c0|\ub18d\uc9c0": "land_other", "\ud1a0\uc9c0|\ud0dd\uc9c0": "land_dev", "\uc8fc\uac70\uc6a9|\uc544\ud30c\ud2b8": "hilsstate", "\uc8fc\uac70\uc6a9|\uc624\ud53c\uc2a4\ud154": "officetel", "\uc8fc\uac70\uc6a9|\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815": "hilsstate", "\ub2e8\ub3c5\uc804\uc6d0\uc8fc\ud0dd|\ub2e8\ub3c5\uc8fc\ud0dd": "etc", "\ub2e8\ub3c5\uc804\uc6d0\uc8fc\ud0dd|\uc804\uc6d0\uc8fc\ud0dd": "etc", "\uac74\ubb3c\ube4c\ub529|\uac74\ubb3c": "etc", "\uac74\ubb3c\ube4c\ub529|\ube4c\ub529": "etc", "\uac74\ubb3c\ube4c\ub529|\uc0c1\uac00\uc8fc\ud0dd": "etc", "\uac74\ubb3c\ube4c\ub529|\ub2e4\uac00\uad6c\uc8fc\ud0dd": "etc", "\uae30\ud0c0|\uae30\ud0c0": "etc"};
+
+function getCategoryFromListing(item = {}) {
+  const legacy = LEGACY_TYPE_CATEGORY[item.type] || ['\uae30\ud0c0', '\uae30\ud0c0'];
+  const category1 = item.category1 || item.category_1 || legacy[0];
+  const category2 = item.category2 || item.category_2 || legacy[1];
+  return { category1, category2 };
+}
+
+function getTypeFromCategory(category1, category2, fallback = 'etc') {
+  return CATEGORY_TO_TYPE[`${category1}|${category2}`] || fallback || 'etc';
+}
+
 const headers = {
   "Content-Type": "application/json",
   "apikey": SUPABASE_KEY,
@@ -41,7 +57,9 @@ function normalizeListingRow(r) {
     status: r.status,
     description: r.description,
     resource_id: r.resource_id || null,
-    created_at: r.created_at
+    created_at: r.created_at,
+    category1: r.category1 || r.category_1 || data.category1 || '',
+    category2: r.category2 || r.category_2 || data.category2 || ''
   }, data, {
     is_public: isPublic,
     image_urls: imageUrls,
@@ -52,7 +70,10 @@ function normalizeListingRow(r) {
 function buildListingPayload(item) {
   const data = Object.assign({}, item);
   const id = data.id;
-  const type = data.type;
+  const category = getCategoryFromListing(data);
+  const category1 = category.category1;
+  const category2 = category.category2;
+  const type = data.type || getTypeFromCategory(category1, category2, 'etc');
   const title = data.title;
   const address = data.address;
   const status = data.status;
@@ -69,15 +90,21 @@ function buildListingPayload(item) {
   delete data.status;
   delete data.description;
   delete data.resource_id;
+  delete data.category1;
+  delete data.category2;
+  delete data.category_1;
+  delete data.category_2;
   delete data.is_public;
   delete data.image_urls;
   delete data.imageUrls;
 
+  data.category1 = category1;
+  data.category2 = category2;
   data.is_public = is_public;
   data.image_urls = image_urls;
   data.imageUrls = image_urls;
 
-  const payload = { type, title, address, status, description, is_public, image_urls, data };
+  const payload = { type, title, address, status, description, is_public, image_urls, category1, category2, data };
   if (id !== undefined) payload.id = id;
   if (resource_id !== undefined) payload.resource_id = resource_id;
   return payload;
