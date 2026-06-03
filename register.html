@@ -242,16 +242,35 @@
 
   const imageUpload = document.getElementById("imageUpload");
   const imageUploadPreview = document.getElementById("imageUploadPreview");
+  let selectedImageFiles = [];
+
+  function renderImageUploadPreview() {
+    if (!imageUploadPreview) return;
+    imageUploadPreview.innerHTML = selectedImageFiles.map((file, idx) => `
+      <span class="image-preview-thumb">
+        <img src="${URL.createObjectURL(file)}" alt="selected image ${idx + 1}" />
+        <button type="button" onclick="removeSelectedImage(${idx})">&times;</button>
+      </span>
+    `).join("");
+  }
+
+  function removeSelectedImage(idx) {
+    selectedImageFiles.splice(idx, 1);
+    renderImageUploadPreview();
+  }
+
   if (imageUpload) {
     imageUpload.addEventListener("change", () => {
-      const files = Array.from(imageUpload.files || []);
-      if (files.length > MAX_LISTING_IMAGES) {
+      const files = Array.from(imageUpload.files || []).filter(file => file.type.startsWith("image/"));
+      const merged = selectedImageFiles.concat(files);
+      if (merged.length > MAX_LISTING_IMAGES) {
         showToast(`Images can be uploaded up to ${MAX_LISTING_IMAGES} files.`);
         imageUpload.value = "";
-        imageUploadPreview.innerHTML = "";
         return;
       }
-      imageUploadPreview.innerHTML = files.map(file => `<span class="image-preview-chip">${file.name}</span>`).join("");
+      selectedImageFiles = merged;
+      imageUpload.value = "";
+      renderImageUploadPreview();
     });
   }
 
@@ -283,7 +302,7 @@
     btn.disabled = true; btn.textContent = "저장 중...";
 
     try {
-      const imageFiles = Array.from(imageUpload?.files || []);
+      const imageFiles = selectedImageFiles;
       if (imageFiles.length) {
         const uploadedUrls = await uploadListingImages(imageFiles, item.id);
         item.image_urls = uploadedUrls;

@@ -142,20 +142,47 @@
 <script>
   let _allDriveResources = [];
   let _editImageUrls = [];
+  let _editNewImageFiles = [];
 
   function renderEditImagePreview() {
     const wrap = document.getElementById("edit_image_preview");
     if (!wrap) return;
-    wrap.innerHTML = _editImageUrls.map((url, idx) => `
+    const existingHtml = _editImageUrls.map((url, idx) => `
       <span class="image-preview-thumb">
         <img src="${url}" alt="listing image ${idx + 1}" />
         <button type="button" onclick="removeEditImage(${idx})">&times;</button>
       </span>
     `).join("");
+    const newHtml = _editNewImageFiles.map((file, idx) => `
+      <span class="image-preview-thumb">
+        <img src="${URL.createObjectURL(file)}" alt="new listing image ${idx + 1}" />
+        <button type="button" onclick="removeEditNewImage(${idx})">&times;</button>
+      </span>
+    `).join("");
+    wrap.innerHTML = existingHtml + newHtml;
   }
 
   function removeEditImage(idx) {
     _editImageUrls.splice(idx, 1);
+    renderEditImagePreview();
+  }
+
+  function removeEditNewImage(idx) {
+    _editNewImageFiles.splice(idx, 1);
+    renderEditImagePreview();
+  }
+
+  function handleEditImageSelection() {
+    const input = document.getElementById("edit_images");
+    const files = Array.from(input?.files || []).filter(file => file.type.startsWith("image/"));
+    const totalCount = _editImageUrls.length + _editNewImageFiles.length + files.length;
+    if (totalCount > MAX_LISTING_IMAGES) {
+      showToast(`Images can be uploaded up to ${MAX_LISTING_IMAGES} files.`);
+      if (input) input.value = "";
+      return;
+    }
+    _editNewImageFiles = _editNewImageFiles.concat(files);
+    if (input) input.value = "";
     renderEditImagePreview();
   }
 
@@ -179,6 +206,7 @@
     document.getElementById("edit_is_public").checked = item.is_public === true;
     document.getElementById("edit_images").value = "";
     _editImageUrls = getListingImageUrls(item);
+    _editNewImageFiles = [];
     renderEditImagePreview();
     document.getElementById("editModal").style.display = "flex";
   }
@@ -188,6 +216,9 @@
     t.textContent = msg; t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), duration);
   }
+
+  const editImagesInput = document.getElementById("edit_images");
+  if (editImagesInput) editImagesInput.addEventListener("change", handleEditImageSelection);
 
   function getTypeLabel(type) {
     const map = { shop:"상가", office:"사무실", officetel:"오피스텔", hilsstate:"힐스테이트더운정", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
@@ -529,7 +560,7 @@
 
         const resource_id = document.getElementById("edit_resource_id").value || null;
         const isPublic = document.getElementById("edit_is_public").checked;
-        const newImageFiles = Array.from(document.getElementById("edit_images").files || []);
+        const newImageFiles = _editNewImageFiles;
         const updated = Object.assign({}, item, {
           type,
           address,
