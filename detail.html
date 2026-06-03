@@ -548,9 +548,6 @@ function closeHomepageTab(tab) {
     html += `</div>`;
 
     html += `<div style="margin-bottom:8px;"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span></div>`;
-    if (imageUrls.length) {
-      html += `<div class="desc-card"><div class="desc-title">&#47588;&#47932; &#51060;&#48120;&#51648;</div><img class="photo-main" src="${imageUrls[0]}" alt="listing main image" />${imageUrls.length > 1 ? `<div class="thumb-row">${imageUrls.slice(1).map((url, idx) => `<img class="thumb" src="${url}" alt="listing image ${idx + 2}" onclick="document.querySelector('.photo-main').src='${url}'" />`).join("")}</div>` : ""}</div>`;
-    }
 
     // 기본 정보 카드
     html += `<div class="info-card"><div class="info-grid">`;
@@ -676,6 +673,16 @@ function closeHomepageTab(tab) {
         </div>
       </div>
     </div>`;
+
+    // 이미지 (맨 하단, 썸네일)
+    if (imageUrls.length) {
+      html += `<div class="desc-card">
+        <div class="desc-title" style="margin-bottom:8px;">📷 매물 이미지</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${imageUrls.map((url, idx) => `<img src="${url}" alt="listing image ${idx + 1}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid rgba(212,175,55,0.28);" />`).join("")}
+        </div>
+      </div>`;
+    }
 
     // 등록일
     if (item.created_at) {
