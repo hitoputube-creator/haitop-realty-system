@@ -41,9 +41,19 @@
     });
     const sendBtn = document.getElementById("sendHomeBtn");
     if (sendBtn) {
-      sendBtn.addEventListener("click", () => {
-        localStorage.setItem('hitopHomepagePrefill', JSON.stringify(buildHomepagePrefill(x)));
-        window.location.href = 'https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?source=haitop';
+      sendBtn.addEventListener("click", async () => {
+        if (typeof updateListingPublic !== "function") return;
+        const nextPublic = x.is_public !== true;
+        sendBtn.disabled = true;
+        try {
+          await updateListingPublic(x.id, nextPublic);
+          x.is_public = nextPublic;
+          sendBtn.innerHTML = nextPublic ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;";
+          sendBtn.disabled = false;
+        } catch(e) {
+          alert("Public status update failed: " + e.message);
+          sendBtn.disabled = false;
+        }
       });
     }
   }
@@ -87,7 +97,7 @@
         <button id="btnBack" class="btn">목록으로</button>
         <button id="btnEstimate" class="btn primary">견적서 출력</button>
         <button id="btnEdit" class="btn">수정하기</button>
-        <button class="btn primary" id="sendHomeBtn">🏠 홈페이지로 보내기</button>
+        <button class="btn primary" id="sendHomeBtn">${x.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>
       `;
     }
 

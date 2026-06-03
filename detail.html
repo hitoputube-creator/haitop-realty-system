@@ -108,6 +108,17 @@
         <option value="">-- 연결 안함 --</option>
       </select>
     </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;</label>
+      <label style="display:flex;align-items:center;gap:8px;color:var(--text-main);font-size:0.86rem;">
+        <input id="edit_is_public" type="checkbox" style="width:auto;accent-color:var(--gold);" /> &#44277;&#44060;
+      </label>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>&#47588;&#47932; &#51060;&#48120;&#51648; (&#52572;&#45824; 5&#51109;)</label>
+      <input id="edit_images" type="file" accept="image/*" multiple />
+      <div id="edit_image_preview" class="image-preview-row"></div>
+    </div>
 
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="document.getElementById('editModal').style.display='none'">취소</button>
@@ -130,6 +141,23 @@
 
 <script>
   let _allDriveResources = [];
+  let _editImageUrls = [];
+
+  function renderEditImagePreview() {
+    const wrap = document.getElementById("edit_image_preview");
+    if (!wrap) return;
+    wrap.innerHTML = _editImageUrls.map((url, idx) => `
+      <span class="image-preview-thumb">
+        <img src="${url}" alt="listing image ${idx + 1}" />
+        <button type="button" onclick="removeEditImage(${idx})">&times;</button>
+      </span>
+    `).join("");
+  }
+
+  function removeEditImage(idx) {
+    _editImageUrls.splice(idx, 1);
+    renderEditImagePreview();
+  }
 
   async function loadDriveResourcesForSelect() {
     try {
@@ -148,6 +176,10 @@
     document.getElementById("edit_owner_contact").value = item.owner_contact || item.quick_contact || "";
     document.getElementById("edit_memo").value = item.quick_memo || item.description || "";
     document.getElementById("edit_resource_id").value = item.resource_id || "";
+    document.getElementById("edit_is_public").checked = item.is_public === true;
+    document.getElementById("edit_images").value = "";
+    _editImageUrls = getListingImageUrls(item);
+    renderEditImagePreview();
     document.getElementById("editModal").style.display = "flex";
   }
 
@@ -171,6 +203,7 @@
 
   function renderDetail(item) {
     let html = "";
+    const imageUrls = getListingImageUrls(item);
 
     // 상태 배지
     if (item.status === "거래완료") {
@@ -200,8 +233,13 @@
     html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button>`;
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
-    html += `<button class="btn btn-primary" id="sendHomeBtn">🏠 홈페이지로 보내기</button>`;
+    html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`;
     html += `</div>`;
+
+    html += `<div style="margin-bottom:8px;"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span></div>`;
+    if (imageUrls.length) {
+      html += `<div class="desc-card"><div class="desc-title">&#47588;&#47932; &#51060;&#48120;&#51648;</div><img class="photo-main" src="${imageUrls[0]}" alt="listing main image" />${imageUrls.length > 1 ? `<div class="thumb-row">${imageUrls.slice(1).map((url, idx) => `<img class="thumb" src="${url}" alt="listing image ${idx + 2}" onclick="document.querySelector('.photo-main').src='${url}'" />`).join("")}</div>` : ""}</div>`;
+    }
 
     // 기본 정보 카드
     html += `<div class="info-card"><div class="info-grid">`;
@@ -448,9 +486,19 @@
     document.getElementById("deleteBtn").addEventListener("click", () => { document.getElementById("deleteModal").style.display = "flex"; });
     const sendHomeBtn = document.getElementById("sendHomeBtn");
     if (sendHomeBtn) {
-      sendHomeBtn.addEventListener("click", () => {
-        localStorage.setItem('hitopHomepagePrefill', JSON.stringify(buildHomepagePrefill(_currentItem)));
-        window.location.href = 'https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?source=haitop';
+      sendHomeBtn.addEventListener("click", async () => {
+        const nextPublic = _currentItem.is_public !== true;
+        sendHomeBtn.disabled = true;
+        try {
+          await updateListingPublic(id, nextPublic);
+          _currentItem.is_public = nextPublic;
+          showToast(nextPublic ? "Homepage listing is now public." : "Homepage listing is now private.");
+          document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+          rebindButtons();
+        } catch(e) {
+          showToast("Public status update failed: " + e.message);
+          sendHomeBtn.disabled = false;
+        }
       });
     }
   }
@@ -480,6 +528,8 @@
         const memo    = document.getElementById("edit_memo").value.trim();
 
         const resource_id = document.getElementById("edit_resource_id").value || null;
+        const isPublic = document.getElementById("edit_is_public").checked;
+        const newImageFiles = Array.from(document.getElementById("edit_images").files || []);
         const updated = Object.assign({}, item, {
           type,
           address,
@@ -489,11 +539,19 @@
           quick_memo:    memo,
           description:   memo,
           resource_id,
+          is_public: isPublic,
+          image_urls: _editImageUrls,
+          imageUrls: _editImageUrls,
           title: item.title || `${getTypeLabel(type)} · ${address || price || "주소미입력"}`,
           drive_links:   item.drive_links || []
         });
 
         try {
+          if (newImageFiles.length) {
+            const uploadedUrls = await uploadListingImages(newImageFiles, id, _editImageUrls.length);
+            updated.image_urls = _editImageUrls.concat(uploadedUrls).slice(0, MAX_LISTING_IMAGES);
+            updated.imageUrls = updated.image_urls;
+          }
           await updateListing(id, updated);
           _currentItem = updated;
           showToast("✅ 수정완료!");
