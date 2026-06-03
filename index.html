@@ -1316,6 +1316,20 @@ if (tab === "done")       renderDoneList();
   let _currentListItems = [];
   let _currentCardItems = [];
 
+  const HOMEPAGE_LISTINGS_URL = "https://hitoputube-creator.github.io/hitop-property-platform/listings.html";
+function createHomepageTab() {
+  const tab = window.open("about:blank", "_blank");
+  if (tab) tab.opener = null;
+  return tab;
+}
+function openHomepageListings(tab) {
+  if (tab) tab.location.href = HOMEPAGE_LISTINGS_URL;
+  else window.open(HOMEPAGE_LISTINGS_URL, "_blank", "noopener,noreferrer");
+}
+function closeHomepageTab(tab) {
+  try { if (tab) tab.close(); } catch (_) {}
+}
+
   function renderPublicBadge(item) {
     const isPublic = item && item.is_public === true;
     return `<span class="badge" style="background:${isPublic ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${isPublic ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${isPublic ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${isPublic ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;' : '&#48708;&#44277;&#44060;'}</span>`;
@@ -1332,6 +1346,7 @@ if (tab === "done")       renderDoneList();
       renderList();
       renderDoneList();
     } catch(e) {
+      closeHomepageTab(homepageTab);
       showToast("Public status update failed: " + e.message);
     }
   }

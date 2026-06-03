@@ -2,6 +2,20 @@
 (function () {
   "use strict";
 
+  const HOMEPAGE_LISTINGS_URL = "https://hitoputube-creator.github.io/hitop-property-platform/listings.html";
+function createHomepageTab() {
+  const tab = window.open("about:blank", "_blank");
+  if (tab) tab.opener = null;
+  return tab;
+}
+function openHomepageListings(tab) {
+  if (tab) tab.location.href = HOMEPAGE_LISTINGS_URL;
+  else window.open(HOMEPAGE_LISTINGS_URL, "_blank", "noopener,noreferrer");
+}
+function closeHomepageTab(tab) {
+  try { if (tab) tab.close(); } catch (_) {}
+}
+
   const $ = (id) => document.getElementById(id);
 
   const elTitle = $("dTitle");
@@ -51,6 +65,7 @@
           sendBtn.innerHTML = nextPublic ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;";
           sendBtn.disabled = false;
         } catch(e) {
+          closeHomepageTab(homepageTab);
           alert("Public status update failed: " + e.message);
           sendBtn.disabled = false;
         }
