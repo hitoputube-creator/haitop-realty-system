@@ -68,21 +68,36 @@
 
 <!-- 수정 모달 -->
 <div id="editModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
-  <div class="modal-box" style="max-width:560px;width:95%;padding:20px;">
+  <div class="modal-box" style="max-width:620px;width:95%;padding:20px;">
     <div class="modal-title">✏️ 매물 수정</div>
 
+    <!-- 기본정보 -->
+    <div class="modal-section-title">📋 기본정보</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
       <div class="field">
-        <label>매물유형</label>
-        <select id="edit_propertyType">
-          <option value="shop">상가</option>
-          <option value="office">사무실</option>
-          <option value="officetel">오피스텔</option>
-          <option value="hilsstate">힐스테이트더운정</option>
-          <option value="land_single">토지</option>
-          <option value="factory">공장/창고</option>
-          <option value="bizcenter">지식산업센터</option>
-          <option value="etc">기타</option>
+        <label>1차구분</label>
+        <select id="edit_category1">
+          <option value="공장창고">공장·창고</option>
+          <option value="상가사무실">상가·사무실</option>
+          <option value="토지">토지</option>
+          <option value="주거용">주거용</option>
+          <option value="단독전원주택">단독·전원주택</option>
+          <option value="건물빌딩">건물·빌딩</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>2차구분</label>
+        <select id="edit_category2"></select>
+        <input id="edit_propertyType" type="hidden" value="" />
+      </div>
+      <div class="field">
+        <label>거래유형</label>
+        <select id="edit_dealType">
+          <option value="">선택하세요</option>
+          <option value="매매">매매</option>
+          <option value="전세">전세</option>
+          <option value="월세">월세</option>
+          <option value="임대">임대</option>
         </select>
       </div>
       <div class="field">
@@ -98,23 +113,146 @@
         <input id="edit_privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호" />
       </div>
       <div class="field">
-        <label>가격 (보증금 또는 매매가)</label>
-        <input id="edit_quick_price" type="text" placeholder="예) 보증금 5000 / 월세 300" />
+        <label>제목</label>
+        <input id="edit_title" type="text" placeholder="매물 제목" maxlength="20" />
       </div>
+    </div>
+
+    <!-- 가격정보 -->
+    <div class="modal-section-title">💰 가격정보</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field"><label>매매가</label><input id="edit_salePrice" type="text" placeholder="예: 12억 5,000만" />
+        <div class="price-preview" id="edit_salePrice_preview"></div></div>
+      <div class="field"><label>분양가</label><input id="edit_presalePrice" type="text" placeholder="예: 8억 9,000만" />
+        <div class="price-preview" id="edit_presalePrice_preview"></div></div>
+      <div class="field"><label>보증금</label><input id="edit_deposit" type="text" placeholder="예: 5,000만" />
+        <div class="price-preview" id="edit_deposit_preview"></div></div>
+      <div class="field"><label>월세</label><input id="edit_monthlyRent" type="text" placeholder="예: 300만" />
+        <div class="price-preview" id="edit_monthlyRent_preview"></div></div>
+      <div class="field"><label>관리비</label><input id="edit_managementFee" type="text" placeholder="예: 15만" />
+        <div class="price-preview" id="edit_managementFee_preview"></div></div>
+      <div class="field"><label>권리금</label><input id="edit_premium" type="text" placeholder="예: 없음 또는 2,000만" />
+        <div class="price-preview" id="edit_premium_preview"></div></div>
+    </div>
+
+    <!-- 면적정보 (조건부) -->
+    <div id="edit_area_land" style="display:none;">
+      <div class="modal-section-title">📐 면적정보</div>
+      <div class="area-row" style="margin-bottom:10px;">
+        <span class="area-label">토지면적</span>
+        <input id="edit_areaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_areaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+    </div>
+
+    <div id="edit_area_exclusive" style="display:none;">
+      <div class="modal-section-title">📐 면적정보</div>
+      <div class="area-row"><span class="area-label">전용면적</span>
+        <input id="edit_exclusiveAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_exclusiveAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      <div class="area-row" style="margin-top:6px;margin-bottom:10px;"><span class="area-label">공급면적</span>
+        <input id="edit_supplyAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_supplyAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+    </div>
+
+    <div id="edit_area_building" style="display:none;">
+      <div class="modal-section-title">📐 면적정보</div>
+      <div class="area-row"><span class="area-label">대지면적</span>
+        <input id="edit_landAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_landAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      <div class="area-row" style="margin-top:6px;"><span class="area-label">건축면적</span>
+        <input id="edit_buildingAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_buildingAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      <div class="area-row" style="margin-top:6px;margin-bottom:10px;"><span class="area-label">연면적</span>
+        <input id="edit_totalFloorAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_totalFloorAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+    </div>
+
+    <!-- 추가정보 (공장·상가·건물) -->
+    <div id="edit_commercial_section" style="display:none;">
+      <div class="modal-section-title">🏢 추가정보 <span style="color:var(--text-muted);font-size:0.75rem;">(공장·상가·건물)</span></div>
+      <div class="form-grid-2" style="margin-bottom:10px;">
+        <div class="field"><label>층정보</label><input id="edit_floorInfo" type="text" placeholder="예: 지상 1층" /></div>
+        <div class="field"><label>용도지역</label><input id="edit_zoning" type="text" placeholder="예: 준공업지역" /></div>
+        <div class="field"><label>주차대수</label><input id="edit_parkingCount" type="text" placeholder="예: 10대" /></div>
+        <div class="field"><label>사용승인일</label><input id="edit_approvalDate" type="text" placeholder="예: 2010-03-15" /></div>
+      </div>
+    </div>
+
+    <!-- 홍보스티커 -->
+    <div class="modal-section-title">🏷️ 홍보스티커</div>
+    <div class="sticker-grid" style="margin-bottom:10px;">
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="추천매물" /> 추천매물</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="급매물" /> 급매물</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="수익형" /> 수익형</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="역세권" /> 역세권</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="즉시입주" /> 즉시입주</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="단독공장" /> 단독공장</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="민원적음" /> 민원적음</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="추천업종" /> 추천업종</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="권리금없음" /> 권리금없음</label>
+    </div>
+
+    <!-- 매물설명 -->
+    <div class="modal-section-title">📝 매물설명</div>
+    <div class="field" style="margin-bottom:8px;">
+      <label>공개 매물설명 <span style="color:var(--text-muted);font-size:0.75rem;">(상세보기 표시)</span></label>
+      <textarea id="edit_detailDescription" rows="3" placeholder="입지, 도로접근성, 추천업종, 임대조건 등" style="width:100%;box-sizing:border-box;"></textarea>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>내부 메모 <span style="color:var(--text-muted);font-size:0.75rem;">(비공개)</span></label>
+      <textarea id="edit_description" rows="3" placeholder="관리용 메모 / 특이사항" style="width:100%;box-sizing:border-box;"></textarea>
+    </div>
+
+    <!-- 내부전용 -->
+    <div class="modal-section-title">🔒 내부전용</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
       <div class="field">
         <label>집주인 연락처</label>
         <input id="edit_owner_contact" type="tel" placeholder="010-0000-0000" />
       </div>
+      <div class="field">
+        <label>드라이브 자료 연결</label>
+        <select id="edit_resource_id"><option value="">-- 연결 안함 --</option></select>
+      </div>
     </div>
+
+    <!-- 홈페이지 공개 -->
     <div class="field" style="margin-bottom:12px;">
-      <label>메모 (특이사항)</label>
-      <textarea id="edit_memo" rows="14" placeholder="예) 1층 공실, 즉시입주 가능, 권리금 없음" style="width:100%;resize:vertical;min-height:320px;height:320px;box-sizing:border-box;"></textarea>
+      <label>홈페이지 공개</label>
+      <label style="display:flex;align-items:center;gap:8px;color:var(--text-main);font-size:0.86rem;">
+        <input id="edit_is_public" type="checkbox" style="width:auto;accent-color:var(--gold);" /> 공개
+      </label>
     </div>
+
+    <!-- 이미지 -->
+    <div class="modal-section-title">📷 이미지 (최대 5장)</div>
     <div class="field" style="margin-bottom:14px;">
-      <label>📁 자료 연결 (건물 자료 폴더)</label>
-      <select id="edit_resource_id">
-        <option value="">-- 연결 안함 --</option>
-      </select>
+      <div id="edit_image_preview" class="image-preview-row"></div>
+      <div id="edit_image_slots" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+        <input class="edit-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />
+      </div>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
+        <button type="button" id="editAddImageSlotBtn" class="btn btn-ghost" style="font-size:0.82rem;padding:4px 10px;">+ 추가</button>
+        <span id="editImageCount" style="font-size:0.78rem;color:var(--text-muted);">0 / 5</span>
+      </div>
     </div>
 
     <div class="modal-btns">
@@ -138,6 +276,222 @@
 
 <script>
   let _allDriveResources = [];
+  let _editImageUrls = [];
+  let _editNewImageFiles = [];
+  const HOMEPAGE_LISTINGS_URL = "https://hitoputube-creator.github.io/hitop-property-platform/listings.html";
+function createHomepageTab() {
+  const tab = window.open("about:blank", "_blank");
+  if (tab) tab.opener = null;
+  return tab;
+}
+function getHomepageListingUrl(id) {
+  return HOMEPAGE_LISTINGS_URL + "?id=" + encodeURIComponent(id);
+}
+function openHomepageListings(tab, id) {
+  const url = id ? getHomepageListingUrl(id) : HOMEPAGE_LISTINGS_URL;
+  if (tab) tab.location.href = url;
+  else window.open(url, "_blank", "noopener,noreferrer");
+}
+function closeHomepageTab(tab) {
+  try { if (tab) tab.close(); } catch (_) {}
+}
+
+  const DETAIL_CATEGORY_OPTIONS = {"\uacf5\uc7a5\ucc3d\uace0": ["\uacf5\uc7a5", "\ucc3d\uace0", "\uacf5\uc7a5\ucc3d\uace0"], "\uc0c1\uac00\uc0ac\ubb34\uc2e4": ["\uc0c1\uac00", "\uc0ac\ubb34\uc2e4", "\uc9c0\uc2dd\uc0b0\uc5c5\uc13c\ud130"], "\ud1a0\uc9c0": ["\ud1a0\uc9c0", "\uc784\uc57c", "\ub18d\uc9c0", "\ud0dd\uc9c0"], "\uc8fc\uac70\uc6a9": ["\uc544\ud30c\ud2b8", "\uc624\ud53c\uc2a4\ud154", "\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815"], "\ub2e8\ub3c5\uc804\uc6d0\uc8fc\ud0dd": ["\ub2e8\ub3c5\uc8fc\ud0dd", "\uc804\uc6d0\uc8fc\ud0dd"], "\uac74\ubb3c\ube4c\ub529": ["\uac74\ubb3c", "\ube4c\ub529", "\uc0c1\uac00\uc8fc\ud0dd", "\ub2e4\uac00\uad6c\uc8fc\ud0dd"]};
+  const DETAIL_LEGACY_TYPE_CATEGORY = {"shop": ["\uc0c1\uac00\uc0ac\ubb34\uc2e4", "\uc0c1\uac00"], "office": ["\uc0c1\uac00\uc0ac\ubb34\uc2e4", "\uc0ac\ubb34\uc2e4"], "officetel": ["\uc8fc\uac70\uc6a9", "\uc624\ud53c\uc2a4\ud154"], "hilsstate": ["\uc8fc\uac70\uc6a9", "\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815"], "factory": ["\uacf5\uc7a5\ucc3d\uace0", "\uacf5\uc7a5\ucc3d\uace0"], "bizcenter": ["\uc0c1\uac00\uc0ac\ubb34\uc2e4", "\uc9c0\uc2dd\uc0b0\uc5c5\uc13c\ud130"], "land_single": ["\ud1a0\uc9c0", "\ud1a0\uc9c0"], "land_dev": ["\ud1a0\uc9c0", "\ud1a0\uc9c0"], "land_other": ["\ud1a0\uc9c0", "\ud1a0\uc9c0"], "etc": ["\uac74\ubb3c\ube4c\ub529", "\uac74\ubb3c"]};
+  const DETAIL_CATEGORY_TO_TYPE = {"\uacf5\uc7a5\ucc3d\uace0|\uacf5\uc7a5": "factory", "\uacf5\uc7a5\ucc3d\uace0|\ucc3d\uace0": "factory", "\uacf5\uc7a5\ucc3d\uace0|\uacf5\uc7a5\ucc3d\uace0": "factory", "\uc0c1\uac00\uc0ac\ubb34\uc2e4|\uc0c1\uac00": "shop", "\uc0c1\uac00\uc0ac\ubb34\uc2e4|\uc0ac\ubb34\uc2e4": "office", "\uc0c1\uac00\uc0ac\ubb34\uc2e4|\uc9c0\uc2dd\uc0b0\uc5c5\uc13c\ud130": "bizcenter", "\ud1a0\uc9c0|\ud1a0\uc9c0": "land_single", "\ud1a0\uc9c0|\uc784\uc57c": "land_other", "\ud1a0\uc9c0|\ub18d\uc9c0": "land_other", "\ud1a0\uc9c0|\ud0dd\uc9c0": "land_dev", "\uc8fc\uac70\uc6a9|\uc544\ud30c\ud2b8": "hilsstate", "\uc8fc\uac70\uc6a9|\uc624\ud53c\uc2a4\ud154": "officetel", "\uc8fc\uac70\uc6a9|\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815": "hilsstate", "\ub2e8\ub3c5\uc804\uc6d0\uc8fc\ud0dd|\ub2e8\ub3c5\uc8fc\ud0dd": "etc", "\ub2e8\ub3c5\uc804\uc6d0\uc8fc\ud0dd|\uc804\uc6d0\uc8fc\ud0dd": "etc", "\uac74\ubb3c\ube4c\ub529|\uac74\ubb3c": "etc", "\uac74\ubb3c\ube4c\ub529|\ube4c\ub529": "etc", "\uac74\ubb3c\ube4c\ub529|\uc0c1\uac00\uc8fc\ud0dd": "etc", "\uac74\ubb3c\ube4c\ub529|\ub2e4\uac00\uad6c\uc8fc\ud0dd": "etc"};
+
+  function getCategoryFromItem(item = {}) {
+    const legacy = DETAIL_LEGACY_TYPE_CATEGORY[item.type] || ["\uac74\ubb3c\ube4c\ub529", "\uac74\ubb3c"];
+    let category1 = item.category1 || legacy[0];
+    let category2 = item.category2 || legacy[1];
+    if (category1 === "\uae30\ud0c0") {
+      category1 = "\uac74\ubb3c\ube4c\ub529";
+      category2 = "\uac74\ubb3c";
+    }
+    return { category1, category2 };
+  }
+
+  function getTypeFromCategory(category1, category2, fallback = "etc") {
+    return DETAIL_CATEGORY_TO_TYPE[`${category1}|${category2}`] || fallback || "etc";
+  }
+
+  const EDIT_AREA_MAP = {
+    '공장창고':    'building',
+    '상가사무실':  'exclusive',
+    '토지':        'land',
+    '주거용':      'exclusive',
+    '단독전원주택':'building',
+    '건물빌딩':    'building',
+  };
+  const EDIT_COMMERCIAL_CATS = ['공장창고', '상가사무실', '건물빌딩'];
+
+  function renderEditCategory2Options(selectedValue = "") {
+    const cat1El = document.getElementById("edit_category1");
+    const cat2El = document.getElementById("edit_category2");
+    const opts = DETAIL_CATEGORY_OPTIONS[cat1El.value] || [];
+    cat2El.innerHTML = opts.map(v => `<option value="${v}">${v}</option>`).join("");
+    cat2El.value = opts.includes(selectedValue) ? selectedValue : (opts[0] || "");
+    updateEditDynamicSections();
+  }
+
+  function updateEditDynamicSections() {
+    const cat1 = document.getElementById("edit_category1")?.value || "";
+    const cat2 = document.getElementById("edit_category2")?.value || "";
+    const hidden = document.getElementById("edit_propertyType");
+    if (hidden) hidden.value = getTypeFromCategory(cat1, cat2);
+
+    ["edit_area_land","edit_area_exclusive","edit_area_building"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+    const variant = EDIT_AREA_MAP[cat1];
+    if (variant) {
+      const el = document.getElementById("edit_area_" + variant);
+      if (el) el.style.display = "";
+    }
+    const commercialEl = document.getElementById("edit_commercial_section");
+    if (commercialEl) commercialEl.style.display = EDIT_COMMERCIAL_CATS.includes(cat1) ? "" : "none";
+  }
+
+
+  // 가격 입력 미리보기
+  const EDIT_PRICE_IDS = ["edit_salePrice","edit_presalePrice","edit_deposit","edit_monthlyRent","edit_managementFee","edit_premium"];
+  function editPriceDigits(value) { return String(value || "").replace(/[^\d]/g, ""); }
+  function editFormatPriceInput(value) {
+    const digits = editPriceDigits(value);
+    return digits ? Number(digits).toLocaleString("ko-KR") : "";
+  }
+  function editFormatWonPreview(value) {
+    const digits = editPriceDigits(value);
+    if (!digits) return "";
+    const won = Number(digits);
+    if (!won) return "";
+    const eok = Math.floor(won / 100000000);
+    const man = Math.floor((won % 100000000) / 10000);
+    const rest = won % 10000;
+    const parts = [];
+    if (eok) parts.push(eok.toLocaleString("ko-KR") + "억");
+    if (man) parts.push(man.toLocaleString("ko-KR") + "만원");
+    if (!parts.length && rest) parts.push(rest.toLocaleString("ko-KR") + "원");
+    return parts.length ? "약 " + parts.join(" ") : "";
+  }
+  function syncEditPricePreview(id) {
+    const input = document.getElementById(id);
+    const preview = document.getElementById(id + "_preview");
+    if (!input || !preview) return;
+    const formatted = editFormatPriceInput(input.value);
+    if (input.value && input.value !== formatted) input.value = formatted;
+    const text = editFormatWonPreview(input.value);
+    preview.textContent = text;
+    preview.classList.toggle("has-value", !!text);
+  }
+  function setupEditPricePreviews() {
+    EDIT_PRICE_IDS.forEach(id => {
+      const input = document.getElementById(id);
+      if (!input || input.dataset.pricePreviewBound === "1") return;
+      input.dataset.pricePreviewBound = "1";
+      input.addEventListener("input", () => syncEditPricePreview(id));
+      input.addEventListener("blur", () => syncEditPricePreview(id));
+      syncEditPricePreview(id);
+    });
+  }
+  function refreshEditPricePreviews() { EDIT_PRICE_IDS.forEach(syncEditPricePreview); }
+  function cleanEditPriceInputs() {
+    EDIT_PRICE_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = editPriceDigits(el.value);
+    });
+  }
+  document.addEventListener("DOMContentLoaded", setupEditPricePreviews);
+
+
+  // 면적 자동계산 (edit 모달용)
+  const EDIT_SQM_PY = [
+    ['edit_areaM2','edit_areaPy'],
+    ['edit_exclusiveAreaM2','edit_exclusiveAreaPy'],
+    ['edit_supplyAreaM2','edit_supplyAreaPy'],
+    ['edit_landAreaM2','edit_landAreaPy'],
+    ['edit_buildingAreaM2','edit_buildingAreaPy'],
+    ['edit_totalFloorAreaM2','edit_totalFloorAreaPy'],
+  ];
+  EDIT_SQM_PY.forEach(([sqmId, pyId]) => {
+    const sqmEl = document.getElementById(sqmId);
+    const pyEl  = document.getElementById(pyId);
+    if (sqmEl && pyEl) {
+      sqmEl.addEventListener("input", () => {
+        const v = parseFloat(sqmEl.value);
+        pyEl.value = v > 0 ? (v / 3.3058).toFixed(1) : "";
+      });
+    }
+  });
+
+  function renderEditImagePreview() {
+    const wrap = document.getElementById("edit_image_preview");
+    if (!wrap) return;
+    const existingHtml = _editImageUrls.map((url, idx) => `
+      <span class="image-preview-thumb">
+        <img src="${url}" alt="listing image ${idx + 1}" />
+        <button type="button" onclick="removeEditImage(${idx})">&times;</button>
+      </span>
+    `).join("");
+    const newHtml = _editNewImageFiles.map((file, idx) => `
+      <span class="image-preview-thumb">
+        <img src="${URL.createObjectURL(file)}" alt="new listing image ${idx + 1}" />
+        <button type="button" onclick="removeEditNewImage(${idx})">&times;</button>
+      </span>
+    `).join("");
+    wrap.innerHTML = existingHtml + newHtml;
+    updateEditImageSlots();
+  }
+
+  function updateEditImageSlots() {
+    const total = _editImageUrls.length + _editNewImageFiles.length;
+    const countEl = document.getElementById("editImageCount");
+    if (countEl) countEl.textContent = `${total} / ${MAX_LISTING_IMAGES}`;
+    const addBtn = document.getElementById("editAddImageSlotBtn");
+    if (addBtn) addBtn.disabled = total >= MAX_LISTING_IMAGES;
+  }
+
+  function addEditImageSlot() {
+    const total = _editImageUrls.length + _editNewImageFiles.length;
+    if (total >= MAX_LISTING_IMAGES) {
+      showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
+      return;
+    }
+    const slots = document.getElementById("edit_image_slots");
+    if (!slots) return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = true;
+    input.className = "edit-img-slot";
+    input.style.fontSize = "0.82rem";
+    slots.appendChild(input);
+    input.click();
+  }
+
+  function handleEditImageSlotChange(input) {
+    const files = Array.from(input.files || []).filter(f => f.type.startsWith("image/"));
+    const remaining = MAX_LISTING_IMAGES - _editImageUrls.length - _editNewImageFiles.length;
+    const toAdd = files.slice(0, remaining);
+    if (files.length > remaining) {
+      showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
+    }
+    _editNewImageFiles = _editNewImageFiles.concat(toAdd);
+    input.value = "";
+    renderEditImagePreview();
+  }
+
+  function removeEditImage(idx) {
+    _editImageUrls.splice(idx, 1);
+    renderEditImagePreview();
+  }
+
+  function removeEditNewImage(idx) {
+    _editNewImageFiles.splice(idx, 1);
+    renderEditImagePreview();
+  }
+
 
   async function loadDriveResourcesForSelect() {
     try {
@@ -150,14 +504,54 @@
 
   // ── 수정 모달 ──
   function openEditModal(item) {
-    document.getElementById("edit_propertyType").value = item.type || "shop";
-    document.getElementById("edit_publicAddress").value = item.publicAddress || item.address || "";
-    document.getElementById("edit_mapAddress").value = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
+    const category = getCategoryFromItem(item);
+    document.getElementById("edit_category1").value = category.category1;
+    renderEditCategory2Options(category.category2);
+
+    // 기본정보
+    document.getElementById("edit_dealType").value           = item.dealType || "";
+    document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
+    document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
-    document.getElementById("edit_quick_price").value = item.quick_price || "";
+    document.getElementById("edit_title").value              = item.title || "";
+    // 가격정보
+    document.getElementById("edit_salePrice").value     = item.salePrice || "";
+    document.getElementById("edit_presalePrice").value  = item.presalePrice || "";
+    document.getElementById("edit_deposit").value       = item.deposit || "";
+    document.getElementById("edit_monthlyRent").value   = item.monthlyRent || "";
+    document.getElementById("edit_managementFee").value = item.managementFee || "";
+    document.getElementById("edit_premium").value       = item.premium || "";
+    refreshEditPricePreviews();
+    // 면적
+    const sv = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
+    sv("edit_areaM2", item.areaM2); sv("edit_areaPy", item.areaPy);
+    sv("edit_exclusiveAreaM2", item.exclusiveAreaM2); sv("edit_exclusiveAreaPy", item.exclusiveAreaPy);
+    sv("edit_supplyAreaM2", item.supplyAreaM2);       sv("edit_supplyAreaPy", item.supplyAreaPy);
+    sv("edit_landAreaM2", item.landAreaM2);           sv("edit_landAreaPy", item.landAreaPy);
+    sv("edit_buildingAreaM2", item.buildingAreaM2);   sv("edit_buildingAreaPy", item.buildingAreaPy);
+    sv("edit_totalFloorAreaM2", item.totalFloorAreaM2); sv("edit_totalFloorAreaPy", item.totalFloorAreaPy);
+    // 추가정보
+    sv("edit_floorInfo", item.floorInfo); sv("edit_zoning", item.zoning);
+    sv("edit_parkingCount", item.parkingCount); sv("edit_approvalDate", item.approvalDate);
+    // 홍보스티커
+    const stickers = Array.isArray(item.stickers) ? item.stickers : [];
+    document.querySelectorAll("input[name='edit_stickers']").forEach(cb => {
+      cb.checked = stickers.includes(cb.value);
+    });
+    // 매물설명
+    document.getElementById("edit_detailDescription").value = item.detailDescription || "";
+    document.getElementById("edit_description").value       = item.description || item.quick_memo || "";
+    // 내부전용
     document.getElementById("edit_owner_contact").value = item.owner_contact || item.quick_contact || "";
-    document.getElementById("edit_memo").value = item.quick_memo || item.description || "";
-    document.getElementById("edit_resource_id").value = item.resource_id || "";
+    document.getElementById("edit_resource_id").value   = item.resource_id || "";
+    // 공개
+    document.getElementById("edit_is_public").checked = item.is_public === true;
+    // 이미지
+    const slots = document.getElementById("edit_image_slots");
+    if (slots) slots.innerHTML = '<input class="edit-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />';
+    _editImageUrls = getListingImageUrls(item);
+    _editNewImageFiles = [];
+    renderEditImagePreview();
     document.getElementById("editModal").style.display = "flex";
   }
 
@@ -166,6 +560,13 @@
     t.textContent = msg; t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), duration);
   }
+
+  document.getElementById("edit_image_slots")?.addEventListener("change", function(e) {
+    if (e.target.classList.contains("edit-img-slot")) handleEditImageSlotChange(e.target);
+  });
+  document.getElementById("editAddImageSlotBtn")?.addEventListener("click", addEditImageSlot);
+  document.getElementById("edit_category1")?.addEventListener("change", () => renderEditCategory2Options());
+  document.getElementById("edit_category2")?.addEventListener("change", updateEditDynamicSections);
 
   function getTypeLabel(type) {
     const map = { shop:"상가", office:"사무실", officetel:"오피스텔", hilsstate:"힐스테이트더운정", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
@@ -181,6 +582,7 @@
 
   function renderDetail(item) {
     let html = "";
+    const imageUrls = getListingImageUrls(item);
 
     // 상태 배지
     if (item.status === "거래완료") {
@@ -207,10 +609,14 @@
         html += `<a class="btn btn-ghost" href="${res.url}" target="_blank" style="text-decoration:none;">📁 자료보기</a>`;
       }
     }
+    html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button>`;
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
-    html += `<button class="btn btn-primary" id="sendHomeBtn">🏠 홈페이지로 보내기</button>`;
+    html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`;
+    html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
     html += `</div>`;
+
+    html += `<div style="margin-bottom:8px;"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span></div>`;
 
     // 기본 정보 카드
     html += `<div class="info-card"><div class="info-grid">`;
@@ -349,6 +755,16 @@
       </div>
     </div>`;
 
+    // 이미지 (맨 하단, 썸네일)
+    if (imageUrls.length) {
+      html += `<div class="desc-card">
+        <div class="desc-title" style="margin-bottom:8px;">📷 매물 이미지</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${imageUrls.map((url, idx) => `<img src="${url}" alt="listing image ${idx + 1}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid rgba(212,175,55,0.28);" />`).join("")}
+        </div>
+      </div>`;
+    }
+
     // 등록일
     if (item.created_at) {
       const d = new Date(item.created_at);
@@ -459,13 +875,40 @@
       try { await updateListingStatus(id, "광고중"); showToast("↩ 광고중으로 변경됐어요!"); setTimeout(() => location.reload(), 1200); }
       catch(e) { showToast("❌ 실패: "+e.message); undoneBtn.disabled = false; }
     });
+    const printBriefBtn = document.getElementById("printBriefBtn");
+    if (printBriefBtn) {
+      printBriefBtn.addEventListener("click", () => {
+        location.href = `property-print.html?id=${item.id}`;
+      });
+    }
     document.getElementById("editBtn").addEventListener("click", () => openEditModal(item));
     document.getElementById("deleteBtn").addEventListener("click", () => { document.getElementById("deleteModal").style.display = "flex"; });
+    const viewHomeBtn = document.getElementById("viewHomeBtn");
+    if (viewHomeBtn) {
+      viewHomeBtn.addEventListener("click", () => {
+        if (_currentItem.is_public !== true) {
+          showToast("먼저 홈페이지 공개를 해주세요.");
+          return;
+        }
+        openHomepageListings(null, _currentItem.id);
+      });
+    }
     const sendHomeBtn = document.getElementById("sendHomeBtn");
     if (sendHomeBtn) {
-      sendHomeBtn.addEventListener("click", () => {
-        localStorage.setItem('hitopHomepagePrefill', JSON.stringify(buildHomepagePrefill(_currentItem)));
-        window.location.href = 'https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?source=haitop';
+      sendHomeBtn.addEventListener("click", async () => {
+        const nextPublic = _currentItem.is_public !== true;
+        sendHomeBtn.disabled = true;
+        try {
+          await updateListingPublic(id, nextPublic);
+          _currentItem.is_public = nextPublic;
+          showToast(nextPublic ? "Homepage listing is now public." : "Homepage listing is now private.");
+          document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+          rebindButtons();
+        } catch(e) {
+          closeHomepageTab(homepageTab);
+          showToast("Public status update failed: " + e.message);
+          sendHomeBtn.disabled = false;
+        }
       });
     }
   }
@@ -488,32 +931,69 @@
       document.getElementById("editSaveBtn").addEventListener("click", async () => {
         const btn = document.getElementById("editSaveBtn");
         btn.disabled = true; btn.textContent = "저장 중...";
-        const type                 = document.getElementById("edit_propertyType").value;
-        const publicAddress        = document.getElementById("edit_publicAddress").value.trim();
-        const mapAddress           = document.getElementById("edit_mapAddress").value.trim();
-        const privateDetailAddress = document.getElementById("edit_privateDetailAddress").value.trim();
-        const price                = document.getElementById("edit_quick_price").value.trim();
-        const contact              = document.getElementById("edit_owner_contact").value.trim();
-        const memo                 = document.getElementById("edit_memo").value.trim();
+        updateEditDynamicSections();
 
-        const resource_id = document.getElementById("edit_resource_id").value || null;
+        cleanEditPriceInputs();
+        const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+        const gn = id => { const el = document.getElementById(id); return (el && el.value) ? el.value : null; };
+
+        const category1          = gv("edit_category1");
+        const category2          = gv("edit_category2");
+        const type               = gv("edit_propertyType");
+        const publicAddress      = gv("edit_publicAddress");
+        const mapAddress         = gv("edit_mapAddress");
+        const privateDetailAddress = gv("edit_privateDetailAddress");
+        const editTitle          = gv("edit_title");
+        const stickers           = Array.from(document.querySelectorAll("input[name='edit_stickers']:checked")).map(c => c.value);
+        const newImageFiles      = _editNewImageFiles;
+
         const updated = Object.assign({}, item, {
-          type,
-          address:            publicAddress,
+          type, category1, category2,
+          title:              editTitle || item.title || `${getTypeLabel(type)} · ${publicAddress || "주소미입력"}`,
+          address:            mapAddress || publicAddress,
           publicAddress,
           mapAddress,
           privateDetailAddress,
-          quick_price:        price,
-          owner_contact:      contact,
-          quick_contact:      contact,
-          quick_memo:         memo,
-          description:        memo,
-          resource_id,
-          title: item.title || `${getTypeLabel(type)} · ${publicAddress || price || "주소미입력"}`,
-          drive_links:        item.drive_links || []
+          description:        gv("edit_description"),
+          resource_id:        gv("edit_resource_id") || null,
+          is_public:          document.getElementById("edit_is_public").checked,
+          image_urls:         _editImageUrls,
+          imageUrls:          _editImageUrls,
+          drive_links:        item.drive_links || [],
+          // 기본정보 추가
+          dealType:           gv("edit_dealType"),
+          // 가격정보
+          salePrice:          gv("edit_salePrice"),
+          presalePrice:       gv("edit_presalePrice"),
+          deposit:            gv("edit_deposit"),
+          monthlyRent:        gv("edit_monthlyRent"),
+          managementFee:      gv("edit_managementFee"),
+          premium:            gv("edit_premium"),
+          // 면적
+          areaM2:             gn("edit_areaM2"),           areaPy:             gn("edit_areaPy"),
+          exclusiveAreaM2:    gn("edit_exclusiveAreaM2"),  exclusiveAreaPy:    gn("edit_exclusiveAreaPy"),
+          supplyAreaM2:       gn("edit_supplyAreaM2"),     supplyAreaPy:       gn("edit_supplyAreaPy"),
+          landAreaM2:         gn("edit_landAreaM2"),       landAreaPy:         gn("edit_landAreaPy"),
+          buildingAreaM2:     gn("edit_buildingAreaM2"),   buildingAreaPy:     gn("edit_buildingAreaPy"),
+          totalFloorAreaM2:   gn("edit_totalFloorAreaM2"), totalFloorAreaPy:   gn("edit_totalFloorAreaPy"),
+          // 추가정보
+          floorInfo:          gv("edit_floorInfo"),
+          zoning:             gv("edit_zoning"),
+          parkingCount:       gv("edit_parkingCount"),
+          approvalDate:       gv("edit_approvalDate"),
+          // 기타
+          detailDescription:  gv("edit_detailDescription"),
+          owner_contact:      gv("edit_owner_contact"),
+          quick_contact:      gv("edit_owner_contact"),
+          stickers,
         });
 
         try {
+          if (newImageFiles.length) {
+            const uploadedUrls = await uploadListingImages(newImageFiles, id, _editImageUrls.length);
+            updated.image_urls = _editImageUrls.concat(uploadedUrls).slice(0, MAX_LISTING_IMAGES);
+            updated.imageUrls  = updated.image_urls;
+          }
           await updateListing(id, updated);
           _currentItem = updated;
           showToast("✅ 수정완료!");

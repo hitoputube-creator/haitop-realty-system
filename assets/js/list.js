@@ -2,6 +2,20 @@
 (function () {
   "use strict";
 
+  const HOMEPAGE_LISTINGS_URL = "https://hitoputube-creator.github.io/hitop-property-platform/listings.html";
+function createHomepageTab() {
+  const tab = window.open("about:blank", "_blank");
+  if (tab) tab.opener = null;
+  return tab;
+}
+function openHomepageListings(tab) {
+  if (tab) tab.location.href = HOMEPAGE_LISTINGS_URL;
+  else window.open(HOMEPAGE_LISTINGS_URL, "_blank", "noopener,noreferrer");
+}
+function closeHomepageTab(tab) {
+  try { if (tab) tab.close(); } catch (_) {}
+}
+
   const $ = (id) => document.getElementById(id);
 
   const elType = $("fType");
@@ -143,11 +157,11 @@
     _rowsCache = {};
     rows.forEach(x => { _rowsCache[x.id] = x; });
     const cols = getColumns(type);
-    // add action column for prefill button
+    // add action column for homepage public toggle
     cols.push({
       label: '',
       className: 'center',
-      render: (x) => `<button class="btn primary" data-action="prefill" data-id="${x.id}">홈페이지로 보내기</button>`
+      render: (x) => `<button class="btn primary" data-action="public-toggle" data-id="${x.id}">${x.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`
     });
     elTableBody.innerHTML = "";
 
@@ -164,17 +178,24 @@
       elTableBody.appendChild(tr);
     });
 
-    // delegate click for prefill buttons
-    elTableBody.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action="prefill"]');
-      if (btn) {
-        e.stopPropagation();
-        const id = btn.dataset.id;
-        const item = _rowsCache[id];
-        if (item) {
-          localStorage.setItem('hitopHomepagePrefill', JSON.stringify(buildHomepagePrefill(item)));
-        }
-        window.location.href = 'https://hitoputube-creator.github.io/hitop-property-platform/admin-register.html?source=haitop';
+    // delegate click for homepage public toggle buttons
+    elTableBody.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action="public-toggle"]');
+      if (!btn) return;
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const item = _rowsCache[id];
+      if (!item || typeof updateListingPublic !== "function") return;
+      const nextPublic = item.is_public !== true;
+      btn.disabled = true;
+      try {
+        await updateListingPublic(id, nextPublic);
+        item.is_public = nextPublic;
+        render();
+      } catch(err) {
+        closeHomepageTab(homepageTab);
+        alert("Public status update failed: " + err.message);
+        btn.disabled = false;
       }
     });
 

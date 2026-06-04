@@ -131,6 +131,11 @@ input:focus, select:focus, textarea:focus {
 textarea { resize: vertical; min-height: 120px; }
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field label { font-size: 0.78rem; color: var(--text-muted); }
+.image-preview-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.image-preview-chip { border: 1px solid rgba(212,175,55,0.28); border-radius: 999px; padding: 4px 9px; color: var(--gold-soft); font-size: 0.75rem; background: rgba(212,175,55,0.08); }
+.image-preview-thumb { position: relative; display: inline-flex; width: 72px; height: 56px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(212,175,55,0.28); }
+.image-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.image-preview-thumb button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border: none; border-radius: 999px; background: rgba(0,0,0,0.68); color: #fff; cursor: pointer; line-height: 20px; padding: 0; }
 
 /* 그리드 */
 .form-grid-1 { display: grid; gap: 12px; }
@@ -290,10 +295,45 @@ textarea { resize: vertical; min-height: 120px; }
   background: rgba(212,175,55,0.15);
 }
 
+/* 면적 입력 행 */
+.area-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.area-label { font-size: 0.78rem; color: var(--text-muted); width: 56px; flex-shrink: 0; }
+.area-row input { width: 90px !important; flex-shrink: 0; }
+.area-unit { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+
+/* 홍보스티커 */
+.sticker-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.sticker-chip {
+  display: flex; align-items: center; gap: 5px;
+  border: 1px solid rgba(212,175,55,0.3); border-radius: 999px;
+  padding: 4px 10px; font-size: 0.78rem; color: var(--text-muted);
+  cursor: pointer; transition: 0.15s; background: rgba(5,10,30,0.7);
+  user-select: none;
+}
+.sticker-chip:has(input:checked) { border-color: var(--gold); color: var(--gold-soft); background: rgba(212,175,55,0.15); }
+.sticker-chip input { width: auto !important; padding: 0; }
+
+/* 모달 내 섹션 제목 */
+.modal-section-title { font-size: 0.78rem; color: var(--gold-soft); font-weight: 600; margin: 14px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(212,175,55,0.2); }
+
 @media (max-width: 600px) {
   .form-grid-2  { grid-template-columns: 1fr; }
   .info-grid    { grid-template-columns: 1fr; }
   .page         { padding: 16px 12px 60px; }
   .listing-grid { grid-template-columns: 1fr; }
   .tab-btn      { font-size: 0.82rem; padding: 7px 14px; }
+}
+
+
+/* Price input preview */
+.price-preview {
+  display: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f4c542;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.price-preview.has-value {
+  display: block;
 }

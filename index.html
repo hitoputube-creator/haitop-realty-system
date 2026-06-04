@@ -114,6 +114,7 @@
       <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
     </div>
     <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem;text-decoration:none;">🏠 매물홈페이지</a>
       <button class="btn btn-ghost" onclick="exportAll()" style="font-size:0.82rem;">📥 전체 백업</button>
       <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/Commercial-Property-Quote/" target="_blank" style="font-size:0.82rem;text-decoration:none;">🧮 견적서</a>
       <a class="btn btn-ghost" href="https://calendar.google.com" target="_blank" style="font-size:0.82rem;text-decoration:none;">📅 캘린더</a>
@@ -1290,6 +1291,7 @@ if (tab === "done")       renderDoneList();
         <td onclick="location.href='detail.html?id=${item.id}'">${owner}</td>
         <td onclick="location.href='detail.html?id=${item.id}'">${contact}</td>
         <td onclick="location.href='detail.html?id=${item.id}'"><span style="font-size:0.8rem;padding:2px 7px;border-radius:4px;background:${isDone ? 'rgba(238,136,136,0.15)' : 'rgba(82,197,100,0.12)'};color:${isDone ? '#e88' : '#52c564'};">${item.status || "광고중"}</span></td>
+        <td onclick=\"event.stopPropagation();handlePublicToggle('${item.id}')\" style=\"cursor:pointer;\">${renderPublicBadge(item)}</td>
         <td onclick="location.href='detail.html?id=${item.id}'" style="color:var(--text-muted);font-size:0.78rem;">${memoShort}</td>
       </tr>`;
     }).join("");
@@ -1304,6 +1306,7 @@ if (tab === "done")       renderDoneList();
         <th style="width:80px;">소유주</th>
         <th style="width:110px;">연락처</th>
         <th style="width:72px;">상태</th>
+        <th style="width:90px;">&#44277;&#44060;</th>
         <th style="width:140px;">메모</th>
       </tr></thead>
       <tbody>${rows}</tbody>
@@ -1312,6 +1315,41 @@ if (tab === "done")       renderDoneList();
   }
   let _currentListItems = [];
   let _currentCardItems = [];
+
+  const HOMEPAGE_LISTINGS_URL = "https://hitoputube-creator.github.io/hitop-property-platform/listings.html";
+function createHomepageTab() {
+  const tab = window.open("about:blank", "_blank");
+  if (tab) tab.opener = null;
+  return tab;
+}
+function openHomepageListings(tab) {
+  if (tab) tab.location.href = HOMEPAGE_LISTINGS_URL;
+  else window.open(HOMEPAGE_LISTINGS_URL, "_blank", "noopener,noreferrer");
+}
+function closeHomepageTab(tab) {
+  try { if (tab) tab.close(); } catch (_) {}
+}
+
+  function renderPublicBadge(item) {
+    const isPublic = item && item.is_public === true;
+    return `<span class="badge" style="background:${isPublic ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${isPublic ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${isPublic ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${isPublic ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;' : '&#48708;&#44277;&#44060;'}</span>`;
+  }
+
+  async function handlePublicToggle(id) {
+    const item = allListings.find(x => x.id === id);
+    if (!item) return;
+    const nextPublic = item.is_public !== true;
+    try {
+      await updateListingPublic(id, nextPublic);
+      item.is_public = nextPublic;
+      showToast(nextPublic ? "Homepage listing is now public." : "Homepage listing is now private.");
+      renderList();
+      renderDoneList();
+    } catch(e) {
+      closeHomepageTab(homepageTab);
+      showToast("Public status update failed: " + e.message);
+    }
+  }
 
   function formatDate(iso) {
     if (!iso) return "";
@@ -1502,6 +1540,7 @@ if (tab === "done")       renderDoneList();
           <span class="badge">${getTypeLabel(item.type)}</span>
           ${isQuick ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
           ${item.status === "거래완료" ? '<span class="badge badge-red">거래완료</span>' : ""}
+          ${renderPublicBadge(item)}
         </div>
         <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
         <div class="listing-price">${formatPrice(item)}</div>
@@ -1515,7 +1554,9 @@ if (tab === "done")       renderDoneList();
         <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
         <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
           ${item.resource_id ? (() => { const res = allDriveResources.find(r => r.id === item.resource_id); return res && res.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();window.open('${res.url.replace(/'/g,"%27")}','_blank')">📁 자료보기</button>` : ''; })() : ""}
-          ${item.status !== "거래완료" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
+          <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handlePublicToggle('${item.id}')">${item.is_public === true ? '&#44277;&#44060; &#52712;&#49548;' : '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;'}</button>
+          ${item.status !== "\uac70\ub798\uc644\ub8cc" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">&#9989; &#44144;&#47000;&#50756;&#47308;</button>` : ""}
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();location.href='property-print.html?id=${item.id}'">🖨 설명서 출력</button>
           <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
         </div>
       `;
@@ -1586,7 +1627,9 @@ if (tab === "done")       renderDoneList();
         description: memo,
         quick_price: price,
         quick_contact: contact,
-        quick_memo: memo
+        quick_memo: memo,
+        is_public: false,
+        image_urls: []
       };
       if (driveLinks.length) item.drive_links = driveLinks;
       if (isDone) item.completed_at = new Date().toISOString();
@@ -1621,6 +1664,7 @@ if (tab === "done")       renderDoneList();
         <span class="badge">${getTypeLabel(item.type)}</span>
         ${isQuick && !isDone ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
         ${isDone ? '<span class="badge badge-red">거래완료</span>' : ""}
+        ${renderPublicBadge(item)}
         ${!isDone && showActiveBadge ? '<span class="badge" style="background:rgba(80,180,100,0.18);color:#5cb85c;border:1px solid rgba(80,180,100,0.35);">매물중</span>' : ""}
       </div>
       <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
@@ -1634,7 +1678,9 @@ if (tab === "done")       renderDoneList();
       <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
       <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
         ${revert ? `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="event.stopPropagation();handleRevertListing('${item.id}')">↩ 매물로 되돌리기</button>` : ""}
-        ${!isDone && !revert ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
+        <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handlePublicToggle('${item.id}')">${item.is_public === true ? '&#44277;&#44060; &#52712;&#49548;' : '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;'}</button>
+        ${!isDone && !revert ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">&#9989; &#44144;&#47000;&#50756;&#47308;</button>` : ""}
+        <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();location.href='property-print.html?id=${item.id}'">🖨 설명서 출력</button>
         <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
       </div>
     `;
@@ -1829,7 +1875,9 @@ if (tab === "done")       renderDoneList();
         quick_price: price,
         quick_contact: contact,
         quick_memo: memo,
-        completed_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+        completed_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString(),
+        is_public: false,
+        image_urls: []
       };
       await addListing(item);
       ["d_address","d_price","d_contact","d_memo"].forEach(id => document.getElementById(id).value = "");
@@ -3813,6 +3861,49 @@ function cmCopy() {
     showToast('📋 복사되었습니다!');
   });
 }
+</script>
+
+<!-- ===== 업무일지 매물보내기 연동 ===== -->
+<script>
+(function () {
+  function applyMemoParam() {
+    var params = new URLSearchParams(window.location.search);
+    var memo = params.get('memo');
+    if (!memo) return;
+
+    // property 탭 활성화
+    document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+    var propBtn = document.querySelector('[data-tab="property"]');
+    if (propBtn) propBtn.classList.add('active');
+    var tabProp = document.getElementById('tabProperty');
+    var tabCust = document.getElementById('tabCustomer');
+    var tabDone = document.getElementById('tabDone');
+    if (tabProp) tabProp.style.display = '';
+    if (tabCust) tabCust.style.display = 'none';
+    if (tabDone) tabDone.style.display = 'none';
+
+    // 빠른 등록 메모(특이사항) textarea 자동 입력
+    var ta = document.getElementById('q_memo');
+    if (ta) {
+      ta.value = memo;
+      ta.focus();
+      setTimeout(function () {
+        ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+
+    // URL에서 memo 파라미터 제거 (새로고침 시 재입력 방지)
+    var cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete('memo');
+    history.replaceState({}, '', cleanUrl.toString());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyMemoParam);
+  } else {
+    applyMemoParam();
+  }
+})();
 </script>
 </body>
 </html>

@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>부동산 매물 제안서 — 하이탑부동산</title>
+<script src="assets/js/storage.js"></script>
+<style>
+/* ══════════════════════════════ 변수 */
+:root {
+  --navy:   #0d1b2e;  --navy2:  #132540;
+  --gold:   #C9A84C;  --gold2:  #e8c96a;  --gold-lt: #f5e6b8;
+  --text:   #1a2535;  --text-s: #4a5568;  --text-m:  #718096;
+  --border: #e2e8f0;  --bg:     #f7f9fc;  --white:   #ffffff;
+  --accent: #1a3a6b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.6; }
+
+/* ── 로딩/에러 ── */
+.state-overlay { min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:14px; padding:24px;
+  background:var(--navy); color:#c8d8ec; }
+.spinner { width:36px; height:36px;
+  border:3px solid rgba(212,175,55,.2); border-top-color:var(--gold2);
+  border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── 컨트롤 바 ── */
+.screen-controls { position:sticky; top:0; z-index:100;
+  background:var(--navy); border-bottom:2px solid var(--gold);
+  padding:10px 24px; display:flex; align-items:center;
+  justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.ctrl-brand { display:flex; align-items:center; gap:10px; }
+.ctrl-logo { width:34px; height:34px;
+  background:rgba(212,175,55,.15); border:1px solid rgba(212,175,55,.4);
+  border-radius:8px; display:grid; place-items:center;
+  color:var(--gold2); font-weight:900; font-size:12px; }
+.ctrl-title { color:#e8d9a8; font-size:13px; font-weight:700; }
+.ctrl-sub   { color:#8097b5; font-size:11px; margin-top:1px; }
+.ctrl-btns  { display:flex; gap:8px; flex-wrap:wrap; }
+.ctrl-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 16px; border-radius:999px;
+  font-size:12.5px; font-weight:700; cursor:pointer;
+  border:none; transition:.15s; font-family:inherit; }
+.ctrl-btn.back { background:transparent; border:1px solid rgba(212,175,55,.4); color:#c8d8ec; }
+.ctrl-btn.back:hover { border-color:var(--gold2); color:var(--gold2); }
+.ctrl-btn.edit { background:rgba(212,175,55,.15); border:1px solid rgba(212,175,55,.45); color:var(--gold2); }
+.ctrl-btn.edit:hover { background:rgba(212,175,55,.28); }
+.ctrl-btn.print { background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#111827; border:none; }
+.ctrl-btn.print:hover { filter:brightness(1.08); }
+
+/* ── A4 래퍼 ── */
+.page-wrap { max-width:794px; margin:24px auto 40px; padding:0 16px; }
+#property-page { background:var(--white); border-radius:12px;
+  box-shadow:0 4px 32px rgba(0,0,0,.10); overflow:hidden; }
+
+/* ── 페이지 헤더 ── */
+#page-header { background:linear-gradient(135deg,var(--navy),var(--navy2));
+  padding:20px 28px 16px; display:flex; align-items:flex-start;
+  justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.ph-brand { display:flex; align-items:center; gap:12px; }
+.ph-logo  { width:44px; height:44px;
+  background:rgba(212,175,55,.15); border:1.5px solid rgba(212,175,55,.45);
+  border-radius:10px; display:grid; place-items:center;
+  color:var(--gold2); font-weight:900; font-size:14px; }
+.ph-name { color:#f0e4b8; font-size:17px; font-weight:900; letter-spacing:-.5px; }
+.ph-doc  { color:var(--gold2); font-size:12px; font-weight:700; margin-top:3px; letter-spacing:.04em; }
+.ph-date { text-align:right; color:#7a9bbf; font-size:11.5px; line-height:1.7; }
+.ph-date strong { color:var(--gold); font-size:12px; }
+.gold-line { height:3px; background:linear-gradient(90deg,var(--gold) 0%,var(--gold2) 40%,transparent 100%); }
+.page-body { padding:22px 28px 28px; }
+
+/* ── 제목 영역 ── */
+#title-area { margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+.prop-main-title { font-size:22px; font-weight:900; color:var(--accent); letter-spacing:-.5px; line-height:1.3; }
+.prop-sub-title { font-size:13px; color:var(--text-m); font-weight:500; margin-top:5px;
+  display:flex; align-items:center; gap:6px; }
+.prop-sub-title::before { content:''; display:inline-block; width:3px; height:14px;
+  background:var(--gold); border-radius:2px; flex-shrink:0; }
+
+/* ── 핵심 요약 3박스 ── */
+#summary-area { margin-bottom:20px; }
+.summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.sum-card { background:linear-gradient(135deg,#0f2240,#1a3a6b);
+  border-radius:10px; padding:16px 14px 14px; text-align:center;
+  border:1px solid rgba(212,175,55,.45); box-shadow:0 2px 12px rgba(0,0,0,.12); }
+.sum-label { font-size:10.5px; font-weight:700; color:#7a9bbf; letter-spacing:.05em; margin-bottom:6px; }
+.sum-value { font-size:19px; font-weight:900; color:var(--gold2); letter-spacing:-.3px; line-height:1.2; }
+.sum-value.sm { font-size:15px; }
+
+/* ── 섹션 제목 ── */
+.section-title { display:flex; align-items:center; gap:8px;
+  font-size:13px; font-weight:800; color:var(--accent);
+  letter-spacing:.02em; margin-bottom:12px;
+  padding-bottom:8px; border-bottom:2px solid var(--gold); }
+
+/* ── 기본정보 표 ── */
+#info-table-area { margin-bottom:20px; }
+.info-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+.info-table th, .info-table td { padding:7px 11px; border:1px solid var(--border); vertical-align:middle; }
+.info-table th { background:#f0f5fc; color:var(--accent); font-weight:700; width:20%; white-space:nowrap; font-size:12px; }
+.info-table tr:nth-child(even) td { background:#fafbfd; }
+.info-table td { color:var(--text-s); }
+
+/* ── 상세 설명 ── */
+#desc-area { margin-bottom:22px; }
+.desc-box { background:#f4f8ff; border-left:4px solid var(--gold);
+  border-radius:0 8px 8px 0; padding:14px 16px;
+  font-size:13px; color:var(--text-s); line-height:1.85;
+  white-space:pre-wrap; min-height:52px; }
+
+/* ── 사진/도면 ── */
+#photo-area { margin-bottom:24px; }
+.photo-upload-strip { display:flex; gap:8px; margin-bottom:10px; }
+.photo-add-btn { display:inline-flex; align-items:center; gap:5px;
+  padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700;
+  background:rgba(26,58,107,.08); border:1.5px dashed #a0b8d0;
+  color:var(--accent); cursor:pointer; font-family:inherit; transition:.15s; }
+.photo-add-btn:hover { background:rgba(26,58,107,.14); border-color:#6888b0; }
+.photo-add-btn:disabled { opacity:.35; cursor:not-allowed; }
+.photo-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.photo-grid-1 { display:grid; grid-template-columns:1fr; }
+.photo-slot { position:relative; background:#f0f4fa;
+  border:1.5px dashed #c0d0e8; border-radius:10px; overflow:hidden;
+  aspect-ratio:4/3; }
+.photo-slot.has-img { border-style:solid; border-color:#c0d0e8; }
+.photo-slot img { width:100%; height:100%; object-fit:cover; display:block; }
+.photo-empty { display:flex; flex-direction:column;
+  align-items:center; justify-content:center; height:100%;
+  gap:7px; color:#a0b4cc; font-size:12px; font-weight:600; }
+.photo-empty .pe-icon { font-size:30px; }
+.photo-del-btn { position:absolute; top:7px; right:7px; width:28px; height:28px;
+  border-radius:50%; background:rgba(0,0,0,.55); border:none;
+  color:#fff; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; z-index:10; }
+.photo-del-btn:hover { background:rgba(200,30,30,.82); }
+input[type=file].hidden-file { display:none; }
+
+/* ── 하단 회사정보 ── */
+#contact-area { background:linear-gradient(135deg,var(--navy),var(--navy2));
+  border-radius:10px; padding:16px 22px; }
+.contact-company { color:var(--gold2); font-size:15px; font-weight:900;
+  letter-spacing:-.3px; margin-bottom:6px; }
+.contact-line { color:#a0b8d0; font-size:11.5px; line-height:1.85; }
+
+/* ── 페이지 하단 ── */
+.page-footer { margin-top:10px; padding:8px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:10px; color:#b0bcd0; border-top:1px solid var(--border); }
+
+/* ══════════════════════════════
+   수정 패널 (Drawer)
+══════════════════════════════ */
+#ep-overlay { display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.45); z-index:200; }
+#ep-overlay.open { display:block; }
+#ep-panel { position:fixed; top:0; right:0; height:100vh; width:440px;
+  max-width:100vw; background:var(--white);
+  box-shadow:-4px 0 24px rgba(0,0,0,.18); z-index:201;
+  display:flex; flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .25s cubic-bezier(.4,0,.2,1); overflow:hidden; }
+#ep-panel.open { transform:translateX(0); }
+.ep-head { background:var(--navy); padding:15px 20px;
+  display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.ep-head-title { color:var(--gold2); font-size:15px; font-weight:800; }
+.ep-close { background:none; border:none; color:#c8d8ec; font-size:22px;
+  cursor:pointer; line-height:1; padding:2px 6px; }
+.ep-close:hover { color:var(--gold2); }
+.ep-body { flex:1; overflow-y:auto; padding:18px 18px 6px; }
+.ep-group { margin-bottom:18px; }
+.ep-group-title { font-size:11.5px; font-weight:800; color:var(--accent);
+  letter-spacing:.06em; text-transform:uppercase;
+  margin-bottom:10px; padding-bottom:6px;
+  border-bottom:1.5px solid var(--gold-lt); }
+.ep-field { margin-bottom:11px; }
+.ep-field label { display:block; font-size:12px; font-weight:700;
+  color:var(--text-s); margin-bottom:4px; }
+.ep-field input, .ep-field select, .ep-field textarea {
+  width:100%; padding:8px 11px; border:1.5px solid var(--border);
+  border-radius:7px; font-size:13px; font-family:inherit;
+  color:var(--text); background:#fafcff; outline:none; transition:border-color .15s; }
+.ep-field input:focus, .ep-field select:focus, .ep-field textarea:focus {
+  border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,168,76,.15); }
+.ep-field textarea { min-height:100px; resize:vertical; line-height:1.75; }
+.ep-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ep-hint { font-size:11px; color:var(--text-m); margin-top:3px; }
+.ep-foot { background:#f7f9fc; border-top:1px solid var(--border);
+  padding:14px 18px; flex-shrink:0; }
+.ep-foot-btns { display:flex; gap:10px; }
+.ep-save-btn { flex:1; padding:10px; border:none; border-radius:8px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  font-size:13.5px; font-weight:800; color:#111;
+  cursor:pointer; font-family:inherit; transition:filter .15s; }
+.ep-save-btn:hover { filter:brightness(1.07); }
+.ep-cancel-btn { padding:10px 18px; background:transparent;
+  border:1.5px solid var(--border); border-radius:8px;
+  font-size:13px; font-weight:700; color:var(--text-s);
+  cursor:pointer; font-family:inherit; }
+.ep-cancel-btn:hover { border-color:#a0b4cc; }
+#ep-status { display:none; margin-top:8px; font-size:12px; font-weight:700; text-align:center; }
+#ep-status.ok  { color:#1a7a3a; display:block; }
+#ep-status.err { color:#c0392b; display:block; }
+
+/* ── 반응형 ── */
+@media(max-width:680px) {
+  .page-wrap { padding:0 8px; margin:12px auto 24px; }
+  .page-body { padding:16px 14px 20px; }
+  #page-header { padding:16px 14px 14px; }
+  .prop-main-title { font-size:18px; }
+  .photo-grid-2 { grid-template-columns:1fr; }
+  .info-table th { width:28%; font-size:11px; }
+  #ep-panel { width:100vw; }
+}
+@media(max-width:480px) {
+  .summary-grid { grid-template-columns:1fr 1fr; }
+  .sum-value { font-size:15px; }
+  .ctrl-btn { padding:6px 10px; font-size:11.5px; }
+}
+
+/* ── @media print ── */
+@media print {
+  @page { size:A4 portrait; margin:12mm 14mm; }
+  html, body { background:white !important; }
+  .screen-controls { display:none !important; }
+  #ep-overlay, #ep-panel { display:none !important; }
+  .photo-upload-strip { display:none !important; }
+  .photo-del-btn { display:none !important; }
+  .page-wrap { max-width:100%; margin:0; padding:0; }
+  #property-page { box-shadow:none !important; border-radius:0 !important; }
+  #page-header, #contact-area, .sum-card {
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page-footer { display:none; }
+  #photo-area, #contact-area, #info-table-area { page-break-inside:avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- 로딩 -->
+<div class="state-overlay" id="loadingState">
+  <div class="spinner"></div>
+  <div>매물 정보를 불러오는 중…</div>
+</div>
+
+<!-- 에러 -->
+<div class="state-overlay" id="errorState" style="display:none;">
+  <div style="font-size:2.5rem;">⚠️</div>
+  <div id="errorMsg" style="font-size:.9rem;color:#c8d8ec;">매물 정보를 불러오지 못했습니다.</div>
+  <button onclick="history.back()"
+    style="background:var(--gold);color:#111;border:none;border-radius:8px;padding:10px 24px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:8px;">
+    ← 목록으로 돌아가기
+  </button>
+</div>
+
+<!-- 본문 -->
+<div id="mainContent" style="display:none;">
+
+  <!-- 컨트롤 바 -->
+  <div class="screen-controls">
+    <div class="ctrl-brand">
+      <div class="ctrl-logo">HT</div>
+      <div>
+        <div class="ctrl-title">하이탑부동산 · 매물 제안서</div>
+        <div class="ctrl-sub" id="ctrl-sub-title">부동산 매물 제안서 미리보기</div>
+      </div>
+    </div>
+    <div class="ctrl-btns">
+      <button class="ctrl-btn back"  onclick="history.back()">← 목록</button>
+      <button class="ctrl-btn edit"  id="btn-edit">✏️ 제안서 정보 수정</button>
+      <button class="ctrl-btn print" onclick="window.print()">🖨 제안서 출력</button>
+    </div>
+  </div>
+
+  <!-- ══ 수정 패널 (Drawer) ══ -->
+  <div id="ep-overlay" onclick="closePanel()"></div>
+  <div id="ep-panel">
+    <div class="ep-head">
+      <span class="ep-head-title">✏️ 제안서 정보 수정</span>
+      <button class="ep-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="ep-body">
+
+      <!-- 기본정보 -->
+      <div class="ep-group">
+        <div class="ep-group-title">기본 정보</div>
+        <div class="ep-field">
+          <label>매물명 (제목)</label>
+          <input id="ep-title" type="text" placeholder="예: 운정신도시 1층 상가 임대"/>
+        </div>
+        <div class="ep-field">
+          <label>주소</label>
+          <input id="ep-address" type="text" placeholder="예: 경기도 파주시 와동동 123"/>
+        </div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>매물구분</label>
+            <select id="ep-type">
+              <option value="">선택</option>
+              <option value="shop">상가</option>
+              <option value="office">사무실</option>
+              <option value="officetel">오피스텔</option>
+              <option value="hilsstate">힐스테이트더운정</option>
+              <option value="factory">공장/창고</option>
+              <option value="land">토지</option>
+              <option value="etc">기타</option>
+            </select>
+          </div>
+          <div class="ep-field">
+            <label>거래방식</label>
+            <select id="ep-deal">
+              <option value="">선택</option>
+              <option value="월세">월세</option>
+              <option value="전세">전세</option>
+              <option value="매매">매매</option>
+              <option value="임대">임대</option>
+              <option value="단기임대">단기임대</option>
+            </select>
+          </div>
+        </div>
+        <div class="ep-field">
+          <label>가격</label>
+          <input id="ep-price" type="text" placeholder="예: 1000/70  또는  2억  또는  전세 1억5천"/>
+          <div class="ep-hint">월세: 보증금/월세 형태 (예: 1000/70), 매매: 금액만 입력</div>
+        </div>
+      </div>
+
+      <!-- 면적 정보 -->
+      <div class="ep-group">
+        <div class="ep-group-title">면적 정보</div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>전용면적 (평)</label>
+            <input id="ep-area-py" type="number" step="0.1" placeholder="예: 10.5" oninput="calcArea('py')"/>
+          </div>
+          <div class="ep-field">
+            <label>전용면적 (㎡)</label>
+            <input id="ep-area-m2" type="number" step="0.01" placeholder="자동계산" oninput="calcArea('m2')"/>
+          </div>
+        </div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>공급면적 (평)</label>
+            <input id="ep-supply-py" type="number" step="0.1" placeholder="예: 13.2" oninput="calcSupply('py')"/>
+          </div>
+          <div class="ep-field">
+            <label>공급면적 (㎡)</label>
+            <input id="ep-supply-m2" type="number" step="0.01" placeholder="자동계산" oninput="calcSupply('m2')"/>
+          </div>
+        </div>
+        <div class="ep-hint" style="margin-top:-6px;margin-bottom:10px;">1평 = 3.30579㎡ · 한 쪽만 입력하면 자동 계산됩니다</div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>해당층</label>
+            <input id="ep-floor" type="text" placeholder="예: 1층, B1층"/>
+          </div>
+          <div class="ep-field">
+            <label>총층</label>
+            <input id="ep-total-floor" type="text" placeholder="예: 5층"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- 조건 정보 -->
+      <div class="ep-group">
+        <div class="ep-group-title">조건 정보</div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>관리비 (만원)</label>
+            <input id="ep-maintenance" type="text" placeholder="예: 15"/>
+          </div>
+          <div class="ep-field">
+            <label>권리금 (만원)</label>
+            <input id="ep-premium" type="text" placeholder="예: 500, 없음"/>
+          </div>
+        </div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>입주가능일</label>
+            <input id="ep-available" type="text" placeholder="예: 즉시입주, 협의"/>
+          </div>
+          <div class="ep-field">
+            <label>주차</label>
+            <input id="ep-parking" type="text" placeholder="예: 가능(2대)"/>
+          </div>
+        </div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>방향</label>
+            <input id="ep-direction" type="text" placeholder="예: 남향, 동남향"/>
+          </div>
+          <div class="ep-field">
+            <label>용도</label>
+            <input id="ep-usage" type="text" placeholder="예: 근린생활시설"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- 상가/사무실 추가 정보 -->
+      <div class="ep-group" id="ep-shop-group">
+        <div class="ep-group-title">상가 · 사무실 추가 정보</div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>추천업종</label>
+            <input id="ep-reco-biz" type="text" placeholder="예: 카페, 음식점"/>
+          </div>
+          <div class="ep-field">
+            <label>현재용도</label>
+            <input id="ep-curr-usage" type="text" placeholder="예: 공실, 음식점"/>
+          </div>
+        </div>
+        <div class="ep-row2">
+          <div class="ep-field">
+            <label>화장실</label>
+            <input id="ep-toilet" type="text" placeholder="예: 1개(공용)"/>
+          </div>
+          <div class="ep-field">
+            <label>엘리베이터</label>
+            <input id="ep-elevator" type="text" placeholder="예: 있음, 없음"/>
+          </div>
+        </div>
+        <div class="ep-field">
+          <label>냉난방</label>
+          <input id="ep-hvac" type="text" placeholder="예: 개별(에어컨), 중앙"/>
+        </div>
+      </div>
+
+      <!-- 상세 설명 -->
+      <div class="ep-group">
+        <div class="ep-group-title">상세 설명</div>
+        <div class="ep-field">
+          <textarea id="ep-desc" placeholder="고객에게 보여줄 설명 문구를 입력하세요.&#10;매물의 특징, 입지, 장점 등을 자유롭게 작성하세요."></textarea>
+        </div>
+      </div>
+
+    </div><!-- /ep-body -->
+    <div class="ep-foot">
+      <div class="ep-foot-btns">
+        <button class="ep-cancel-btn" onclick="closePanel()">취소</button>
+        <button class="ep-save-btn"   onclick="savePanel()">💾 저장하고 화면 적용</button>
+      </div>
+      <div id="ep-status"></div>
+    </div>
+  </div><!-- /#ep-panel -->
+
+  <!-- A4 페이지 -->
+  <div class="page-wrap">
+  <div id="property-page">
+
+    <!-- 헤더 -->
+    <div id="page-header">
+      <div class="ph-brand">
+        <div class="ph-logo">HT</div>
+        <div>
+          <div class="ph-name">하이탑부동산공인중개사사무소</div>
+          <div class="ph-doc">부동산 매물 제안서</div>
+        </div>
+      </div>
+      <div class="ph-date">
+        <div>제안서 작성일</div>
+        <strong id="print-date">--</strong>
+      </div>
+    </div>
+    <div class="gold-line"></div>
+
+    <div class="page-body">
+
+      <!-- ① 제목 -->
+      <div id="title-area">
+        <h1 class="prop-main-title" id="prop-title"></h1>
+        <p  class="prop-sub-title"  id="prop-subtitle"></p>
+      </div>
+
+      <!-- ② 요약 3박스 -->
+      <div id="summary-area">
+        <div class="summary-grid">
+          <div class="sum-card">
+            <div class="sum-label">거래방식</div>
+            <div class="sum-value" id="sum-deal">—</div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-label">가격</div>
+            <div class="sum-value" id="sum-price">—</div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-label">전용면적</div>
+            <div class="sum-value" id="sum-area">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ 기본정보 -->
+      <div id="info-table-area" style="margin-top:18px;">
+        <div class="section-title"><span>📋</span> 기본 정보</div>
+        <table class="info-table"><tbody id="info-tbody"></tbody></table>
+      </div>
+
+      <!-- ④ 상세 설명 -->
+      <div id="desc-area">
+        <div class="section-title"><span>📝</span> 상세 설명</div>
+        <div class="desc-box" id="prop-description"></div>
+      </div>
+
+      <!-- ⑤ 사진/도면 -->
+      <div id="photo-area">
+        <div class="section-title"><span>📷</span> 사진 · 도면</div>
+        <div class="photo-upload-strip">
+          <button class="photo-add-btn" id="photo-add-btn" type="button" onclick="triggerPhotoUpload()">
+            📎 사진/도면 추가 (최대 2장)
+          </button>
+          <input type="file" accept="image/*" class="hidden-file" id="photo-file-input" onchange="handlePhotoUpload(this)"/>
+        </div>
+        <div id="photo-storage-warn" style="display:none;font-size:11.5px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:6px 12px;margin-bottom:8px;"></div>
+        <div id="photo-grid-wrap"></div>
+      </div>
+
+    </div><!-- /page-body -->
+
+    <!-- ⑥ 하단 회사정보 -->
+    <div id="contact-area" style="margin:0 28px 22px; border-radius:10px;">
+      <div class="contact-company">하이탑부동산공인중개사사무소</div>
+      <div class="contact-line">
+        대표: 주현희&nbsp;&nbsp;|&nbsp;&nbsp;주소: 경기도 파주시 책향기로 830, 1층&nbsp;&nbsp;|&nbsp;&nbsp;전화: 031-949-8969&nbsp;&nbsp;|&nbsp;&nbsp;팩스: 031-944-1108
+      </div>
+      <div class="contact-line">
+        사업자등록번호: 305-48-62183&nbsp;&nbsp;|&nbsp;&nbsp;중개사무소 등록번호: 41480-2016-00026&nbsp;&nbsp;|&nbsp;&nbsp;이메일: newpajucity@naver.com
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>하이탑부동산공인중개사사무소 · 031-949-8969</span>
+      <span id="footer-date"></span>
+    </div>
+  </div><!-- /#property-page -->
+  </div><!-- /.page-wrap -->
+
+</div><!-- /#mainContent -->
+
+<script>
+(async function () {
+  'use strict';
+
+  /* ══════════════════════════
+     상수 / 유틸
+  ══════════════════════════ */
+  const M2_PER_PY = 3.30579;
+  const LS_EXTRA  = (id) => 'print_extra_'  + id;
+  const LS_PHOTOS = (id) => 'print_photos_' + id;
+  /* Supabase Storage — storage.js 의 SUPABASE_URL / SUPABASE_KEY 재사용 */
+  const BUCKET    = 'property-proposal-images';
+
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function setEl(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(text ?? '');
+  }
+  function v(...args) {
+    /* 첫 번째 truthy 값 반환 (null/undefined/빈문자열 건너뜀) */
+    for (const a of args) {
+      if (a !== null && a !== undefined && a !== '' && String(a).trim() !== '') return String(a).trim();
+    }
+    return '';
+  }
+  function fmtMan(n) {
+    const num = Number(n);
+    if (!isFinite(num) || num === 0) return '';
+    if (num >= 10000) {
+      const uk = num / 10000;
+      return (uk % 1 === 0 ? uk : uk.toFixed(1)) + '억';
+    }
+    return num.toLocaleString('ko-KR') + '만';
+  }
+  function fmtArea(py, m2) {
+    const hasPy = py !== null && py !== undefined && String(py).trim() !== '';
+    const hasM2 = m2 !== null && m2 !== undefined && String(m2).trim() !== '';
+    if (!hasPy && !hasM2) return '';
+    const pyVal = hasPy ? Number(py) : Number(m2) / M2_PER_PY;
+    const m2Val = hasM2 ? Number(m2) : Number(py) * M2_PER_PY;
+    const pyStr = isFinite(pyVal) && pyVal > 0 ? pyVal.toFixed(1).replace(/\.0$/, '') + '평' : '';
+    const m2Str = isFinite(m2Val) && m2Val > 0 ? m2Val.toFixed(2) + '㎡' : '';
+    if (pyStr && m2Str) return pyStr + ' / ' + m2Str;
+    return pyStr || m2Str;
+  }
+  function addRow2(tbody, l1, v1, l2, v2) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th>${esc(l1)}</th><td>${esc(v1||'—')}</td>`
+                 + `<th>${esc(l2)}</th><td>${esc(v2||'—')}</td>`;
+    tbody.appendChild(tr);
+  }
+  function addRowFull(tbody, label, val) {
+    if (!val) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th>${esc(label)}</th><td colspan="3">${esc(val)}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  /* ══════════════════════════
+     날짜
+  ══════════════════════════ */
+  const now   = new Date();
+  const today = now.getFullYear() + '-'
+    + String(now.getMonth()+1).padStart(2,'0') + '-'
+    + String(now.getDate()).padStart(2,'0');
+  setEl('print-date',  today);
+  setEl('footer-date', '출력일 ' + today);
+
+  /* ══════════════════════════
+     URL 파라미터
+  ══════════════════════════ */
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (!id) {
+    setEl('errorMsg', '매물 ID가 없습니다. 목록에서 다시 접근해주세요.');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display   = 'flex';
+    return;
+  }
+
+  /* ══════════════════════════
+     Supabase 로드
+  ══════════════════════════ */
+  let item;
+  try {
+    item = await getListingById(id);
+  } catch(e) {
+    setEl('errorMsg', '데이터를 불러오지 못했습니다: ' + (e.message || ''));
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display   = 'flex';
+    return;
+  }
+  if (!item) {
+    setEl('errorMsg', '해당 매물을 찾을 수 없습니다. (id: ' + esc(id) + ')');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display   = 'flex';
+    return;
+  }
+
+  /* ── localStorage 오버레이 로드 ── */
+  let extra = {};
+  try {
+    const raw = localStorage.getItem(LS_EXTRA(id));
+    if (raw) extra = JSON.parse(raw);
+  } catch(e) { extra = {}; }
+
+  /* ══════════════════════════
+     빠른메모 자동 분리
+  ══════════════════════════ */
+  function parseQuickPrice(raw) {
+    /* "월세_1000/70", "매매_2억", "전세 1억5000", "1000/70" 등 파싱 */
+    if (!raw) return { dealType: '', priceDisplay: '' };
+    const s = String(raw).trim();
+    const m = s.match(/^(월세|전세|매매|임대|단기임대)[_\s]+(.+)/i);
+    if (m) return { dealType: m[1], priceDisplay: m[2].trim() };
+    /* 숫자/슬래시만 있으면 그냥 가격으로 */
+    return { dealType: '', priceDisplay: s };
+  }
+
+  /* ══════════════════════════
+     타입 라벨
+  ══════════════════════════ */
+  function getTypeLabel(t) {
+    const m = { shop:'상가', office:'사무실', officetel:'오피스텔',
+      hilsstate:'힐스테이트더운정', factory:'공장/창고',
+      bizcenter:'지식산업센터', land:'토지', etc:'기타' };
+    if (m[t]) return m[t];
+    if (t && t.startsWith('land')) return '토지';
+    return t || '기타';
+  }
+
+  /* ══════════════════════════
+     머지 값 추출 헬퍼
+  ══════════════════════════ */
+  function getType()     { return v(extra._type,    item.type) || 'etc'; }
+  function getTitle()    { return v(extra._title,   item.title, item.address); }
+  function getAddress()  { return v(extra._address, item.address); }
+
+  function getDealType() {
+    /* extra 오버라이드 우선 */
+    if (v(extra._dealType)) return extra._dealType;
+    /* Supabase 타입별 필드 */
+    const t = getType();
+    const sb = v(item.shop_dealType, item.officetel_dealType, item.factory_dealType);
+    if (sb) return sb;
+    if (t.startsWith('land')) return '매매';
+    /* 빠른메모 파싱 */
+    if (item.quick_price) return parseQuickPrice(item.quick_price).dealType;
+    return '';
+  }
+
+  function getPriceDisplay() {
+    if (v(extra._priceDisplay)) return extra._priceDisplay;
+    const t = getType();
+
+    /* shop / office */
+    if (t === 'shop' || t === 'office') {
+      const dep  = Number(item.shop_deposit);
+      const rent = Number(item.shop_monthlyRent);
+      if (isFinite(dep) && dep > 0 && isFinite(rent) && rent > 0)
+        return dep.toLocaleString('ko-KR') + ' / ' + rent.toLocaleString('ko-KR');
+      if (isFinite(dep) && dep > 0) return fmtMan(dep);
+    }
+    /* officetel / hilsstate */
+    if (t === 'officetel' || t === 'hilsstate') {
+      const p = fmtMan(item.officetel_price);
+      if (p) return p;
+    }
+    /* land */
+    if (t.startsWith('land')) {
+      const p = fmtMan(item.land_price);
+      if (p) return p;
+    }
+    /* factory */
+    if (t === 'factory') {
+      const dt = v(item.factory_dealType);
+      if (dt === '임대' || dt === '월세') {
+        const d = fmtMan(item.factory_deposit);
+        const r = fmtMan(item.factory_monthlyRent);
+        if (d && r) return d + ' / ' + r;
+      }
+      const p = fmtMan(item.factory_price);
+      if (p) return p;
+    }
+    /* 빠른메모 파싱 */
+    if (item.quick_price) return parseQuickPrice(item.quick_price).priceDisplay;
+    return '';
+  }
+
+  function getAreaPy() { return v(extra._areaPy, item.shop_area_py, item.officetel_area_py, item.factory_buildArea_py, item.land_area_py); }
+  function getAreaM2() { return v(extra._areaM2, item.shop_area_m2, item.officetel_area_m2, item.factory_buildArea_m2, item.land_area_m2); }
+  function getSupplyPy() { return v(extra._supplyPy, item.shop_supply_py, item.officetel_supply_py); }
+  function getSupplyM2() { return v(extra._supplyM2, item.shop_supply_m2, item.officetel_supply_m2); }
+  function getFloor()  { return v(extra._floor,      item.shop_floor, item.officetel_floor); }
+  function getAvailable() { return v(extra._available, item.shop_available, item.officetel_available); }
+  function getParking()   { return v(extra._parking,   item.shop_parking,   item.officetel_parking); }
+  function getDirection() { return v(extra._direction, item.officetel_direction); }
+  function getMaintenance() { return v(extra._maintenance, item.shop_maintenance); }
+  function getPremium()     { return v(extra._premium, item.shop_premium); }
+  function getDescription() {
+    return v(extra._desc, item.description, item.quick_memo);
+  }
+
+  /* ══════════════════════════
+     렌더링 함수들
+  ══════════════════════════ */
+  function renderTitle() {
+    const t   = getType();
+    const tl  = getTypeLabel(t);
+    const ttl = getTitle() || tl + ' 매물';
+    setEl('prop-title',    ttl);
+    setEl('prop-subtitle', v(getAddress(), tl));
+    setEl('ctrl-sub-title', (getAddress() || ttl) + ' · 제안서');
+  }
+
+  function renderSummary() {
+    /* 거래방식 */
+    const deal = getDealType();
+    const dealEl = document.getElementById('sum-deal');
+    dealEl.textContent = deal || '미입력';
+    dealEl.classList.toggle('sm', deal.length > 5);
+
+    /* 가격 */
+    const price = getPriceDisplay();
+    const priceEl = document.getElementById('sum-price');
+    priceEl.textContent = price || '미입력';
+    priceEl.classList.toggle('sm', price.length > 8);
+
+    /* 전용면적 */
+    const areaStr = fmtArea(getAreaPy(), getAreaM2());
+    const areaEl  = document.getElementById('sum-area');
+    areaEl.textContent = areaStr || '미입력';
+    areaEl.classList.toggle('sm', areaStr.length > 10);
+  }
+
+  function renderInfoTable() {
+    const tbody = document.getElementById('info-tbody');
+    tbody.innerHTML = '';
+    const t   = getType();
+    const tl  = getTypeLabel(t);
+    const deal     = getDealType();
+    const price    = getPriceDisplay();
+    const areaStr  = fmtArea(getAreaPy(), getAreaM2());
+    const supStr   = fmtArea(getSupplyPy(), getSupplyM2());
+    const floor    = getFloor();
+    const maint    = getMaintenance();
+    const premium  = getPremium();
+    const avail    = getAvailable();
+    const parking  = getParking();
+    const dir      = getDirection();
+    const usage    = v(extra._usage, item.shop_usage, item.officetel_usage);
+    const totalF   = v(extra._totalFloor, item.shop_totalFloor, item.officetel_totalFloor);
+
+    /* 공통 기본 */
+    addRow2(tbody, '소재지',  v(getAddress(),'—'), '매물구분', tl);
+    addRow2(tbody, '거래방식', deal || '—',         '가격',    price || '—');
+    if (areaStr || supStr)
+      addRow2(tbody, '전용면적', areaStr || '—', '계약(공급)면적', supStr || '—');
+
+    /* 층 정보 */
+    if (floor || totalF)
+      addRow2(tbody, '해당층', floor || '—', '총층', totalF || '—');
+
+    /* 비용 */
+    if (maint || premium)
+      addRow2(tbody, '권리금', premium ? premium + '만원' : '—',
+                     '관리비', maint   ? maint + '만원'   : '별도 협의');
+
+    /* 입주/주차 */
+    if (avail || parking)
+      addRow2(tbody, '입주가능일', avail || '협의', '주차', parking || '—');
+
+    /* 방향/용도 */
+    if (dir || usage)
+      addRow2(tbody, '방향', dir || '—', '용도', usage || '—');
+
+    /* 타입별 추가 */
+    if (t === 'shop' || t === 'office') {
+      const reco = v(extra._recoBiz,   item.shop_recommendBiz);
+      const curr = v(extra._currUsage, item.shop_currentUsage);
+      const toil = v(extra._toilet,    item.shop_toilet);
+      const elev = v(extra._elevator,  item.shop_elevator);
+      const hvac = v(extra._hvac,      item.shop_hvac);
+      const yld  = item.shop_yield;
+      if (reco || curr) addRow2(tbody, '추천업종', reco || '—', '현재용도', curr || '—');
+      if (toil || elev) addRow2(tbody, '화장실',   toil || '—', '엘리베이터', elev || '—');
+      if (hvac)         addRow2(tbody, '냉난방',   hvac, '예상수익률', yld ? yld + '%' : '—');
+    } else if (t === 'officetel' || t === 'hilsstate') {
+      const complex = t === 'hilsstate' ? '힐스테이트더운정' : v(item.officetel_complex);
+      const struct  = v(item.officetel_structure);
+      const otype   = v(item.officetel_type);
+      if (complex) addRow2(tbody, '단지명', complex, '구조/타입', [struct, otype].filter(Boolean).join(' / ') || '—');
+    } else if (t.startsWith('land')) {
+      const la    = fmtArea(item.land_area_py, item.land_area_m2);
+      const jimok = v(item.land_jimok);
+      const zone  = v(item.land_zone);
+      const road  = v(item.land_road);
+      if (la || jimok) addRow2(tbody, '토지면적', la || '—', '지목', jimok || '—');
+      if (zone || road) addRow2(tbody, '용도지역', zone || '—', '도로', road || '—');
+    } else if (t === 'factory') {
+      const siteA  = fmtArea(item.factory_siteArea_py,  item.factory_siteArea_m2);
+      const height = item.factory_height;
+      const power  = item.factory_power;
+      const truck  = item.factory_truck;
+      if (siteA)          addRow2(tbody, '대지면적', siteA, '건물면적', areaStr || '—');
+      if (height || power) addRow2(tbody, '층고', height ? height + 'm' : '—', '전력', power ? power + 'kW' : '—');
+      if (truck)           addRow2(tbody, '대형차 진입', truck, '구분', v(item.factory_kind,'—'));
+    }
+
+    /* 내부 메모가 있고 설명이 없으면 참고로 표시 */
+    if (!v(extra._desc, item.description) && item.quick_memo) {
+      addRowFull(tbody, '참고 메모', item.quick_memo);
+    }
+  }
+
+  function renderDescription() {
+    const d = getDescription();
+    setEl('prop-description',
+      d || '매물에 대한 상세 설명은 담당 공인중개사에게 문의해주세요. (031-949-8969)');
+  }
+
+  /* ══════════════════════════
+     전체 렌더 (초기 + 저장 후)
+  ══════════════════════════ */
+  function renderAll() {
+    renderTitle();
+    renderSummary();
+    renderInfoTable();
+    renderDescription();
+    renderPhotos();
+  }
+
+  /* ══════════════════════════
+     사진 관리 — Supabase Storage 방식
+     photos 배열: [{url, path, name, uploadedAt} | null, ...]
+     localStorage 에는 url/path 메타데이터만 저장 (base64 없음)
+     구형 base64 데이터(p.data)는 하위 호환으로 표시만 허용
+  ══════════════════════════ */
+  let photos = [null, null];
+
+  /* ── localStorage: 메타데이터만 저장 (수 KB) ── */
+  function loadPhotos() {
+    try {
+      const raw = localStorage.getItem(LS_PHOTOS(id));
+      if (raw) photos = JSON.parse(raw);
+    } catch(e) { photos = [null, null]; }
+    if (!Array.isArray(photos) || photos.length < 2) photos = [null, null];
+  }
+
+  function savePhotos() {
+    /* URL/path 메타데이터만 저장하므로 용량 문제 없음 */
+    try {
+      localStorage.setItem(LS_PHOTOS(id), JSON.stringify(photos));
+    } catch(e) {
+      console.warn('사진 메타데이터 저장 실패:', e.message);
+    }
+  }
+
+  /* ── 이미지 → Blob 변환 (리사이즈 후 Supabase에 업로드) ── */
+  function resizeToBlob(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objUrl);
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          blob ? resolve(blob) : reject(new Error('이미지 변환 실패'));
+        }, 'image/jpeg', 0.80);
+      };
+      img.onerror = () => reject(new Error('이미지를 읽을 수 없습니다'));
+      img.src = objUrl;
+    });
+  }
+
+  /* ── Supabase Storage 업로드 ── */
+  async function uploadToStorage(file, propertyId) {
+    const ts       = Date.now();
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60);
+    const path     = `property-proposals/${propertyId}/${ts}-${safeName}`;
+
+    const blob = await resizeToBlob(file);
+
+    const res = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodeURI(path)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type' : 'image/jpeg',
+          'x-upsert'     : 'false'
+        },
+        body: blob
+      }
+    );
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`업로드 실패 (${res.status}): ${errText}`);
+    }
+
+    return {
+      url        : `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${encodeURI(path)}`,
+      path       : path,
+      name       : file.name,
+      uploadedAt : new Date().toISOString()
+    };
+  }
+
+  /* ── Supabase Storage 삭제 (실패해도 UI는 제거) ── */
+  async function deleteFromStorage(path) {
+    if (!path) return;
+    try {
+      await fetch(
+        `${SUPABASE_URL}/storage/v1/object/${BUCKET}`,
+        {
+          method : 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type' : 'application/json'
+          },
+          body: JSON.stringify({ prefixes: [path] })
+        }
+      );
+    } catch(e) {
+      console.warn('Storage 파일 삭제 실패 (무시됨):', e.message);
+    }
+  }
+
+  /* ── 렌더링 ── */
+  function renderPhotos() {
+    const wrap    = document.getElementById('photo-grid-wrap');
+    const addBtn  = document.getElementById('photo-add-btn');
+    const warnEl  = document.getElementById('photo-storage-warn');
+    const hasAny  = photos[0] || photos[1];
+
+    if (!hasAny) {
+      wrap.innerHTML = '<div style="color:#a0b4cc;font-size:13px;padding:18px 0;text-align:center;">📸 사진 또는 도면을 추가해주세요</div>';
+      addBtn.disabled = false;
+      return;
+    }
+
+    const count   = photos.filter(Boolean).length;
+    const gridCls = count >= 2 ? 'photo-grid-2' : 'photo-grid-1';
+    let html = `<div class="${gridCls}">`;
+    photos.forEach((p, i) => {
+      if (!p) return;
+      /* 하위 호환: 구형 base64(p.data) 또는 신형 URL(p.url) */
+      const src = esc(p.url || p.data || '');
+      html += `
+        <div class="photo-slot has-img" id="photo-slot-${i}">
+          <img src="${src}" alt="${esc(p.name || '사진')}" loading="lazy"/>
+          <button class="photo-del-btn" onclick="deletePhoto(${i})" title="삭제">✕</button>
+        </div>`;
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+
+    addBtn.disabled = !!(photos[0] && photos[1]);
+    if (warnEl) warnEl.style.display = 'none';
+  }
+
+  /* ── 업로드 트리거 ── */
+  function triggerPhotoUpload() {
+    document.getElementById('photo-file-input').value = '';
+    document.getElementById('photo-file-input').click();
+  }
+
+  /* ── 업로드 핸들러 ── */
+  async function handlePhotoUpload(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (photos[0] && photos[1]) return; /* 2장 꽉 참 */
+    const slot = photos[0] ? 1 : 0;
+
+    /* 버튼 로딩 상태 */
+    const addBtn   = document.getElementById('photo-add-btn');
+    const warnEl   = document.getElementById('photo-storage-warn');
+    const origText = addBtn.textContent;
+    addBtn.disabled = true;
+    addBtn.textContent = '⏳ 업로드 중…';
+    if (warnEl) warnEl.style.display = 'none';
+
+    try {
+      const meta = await uploadToStorage(file, id);
+      photos[slot] = meta;
+      savePhotos();        /* URL/path 메타만 저장 — 수 KB */
+      renderPhotos();
+    } catch(e) {
+      if (warnEl) {
+        warnEl.textContent = '⚠️ 업로드 실패: ' + e.message;
+        warnEl.style.display = 'block';
+      }
+    } finally {
+      addBtn.textContent = origText;
+      addBtn.disabled    = !!(photos[0] && photos[1]);
+    }
+  }
+
+  /* ── 삭제 핸들러 ── */
+  function deletePhoto(i) {
+    const photo = photos[i];
+    photos[i] = null;
+    savePhotos();
+    renderPhotos();
+    /* Storage에서도 삭제 (비동기, UI 블록 없음) */
+    if (photo && photo.path) deleteFromStorage(photo.path);
+  }
+
+  /* 전역 노출 (onclick 속성에서 사용) */
+  window.deletePhoto        = deletePhoto;
+  window.triggerPhotoUpload = triggerPhotoUpload;
+  window.handlePhotoUpload  = handlePhotoUpload;
+
+  /* ══════════════════════════
+     전용면적 자동계산 (패널)
+  ══════════════════════════ */
+  window.calcArea = function(changed) {
+    const pyInp = document.getElementById('ep-area-py');
+    const m2Inp = document.getElementById('ep-area-m2');
+    if (changed === 'py' && pyInp.value) {
+      m2Inp.value = (Number(pyInp.value) * M2_PER_PY).toFixed(2);
+    } else if (changed === 'm2' && m2Inp.value) {
+      pyInp.value = (Number(m2Inp.value) / M2_PER_PY).toFixed(2);
+    }
+  };
+  window.calcSupply = function(changed) {
+    const pyInp = document.getElementById('ep-supply-py');
+    const m2Inp = document.getElementById('ep-supply-m2');
+    if (changed === 'py' && pyInp.value) {
+      m2Inp.value = (Number(pyInp.value) * M2_PER_PY).toFixed(2);
+    } else if (changed === 'm2' && m2Inp.value) {
+      pyInp.value = (Number(m2Inp.value) / M2_PER_PY).toFixed(2);
+    }
+  };
+
+  /* ══════════════════════════
+     수정 패널 열기/닫기
+  ══════════════════════════ */
+  function openPanel() {
+    /* 현재 값 채우기 */
+    const t    = getType();
+    const deal = getDealType();
+    const price = getPriceDisplay();
+
+    document.getElementById('ep-title').value   = v(extra._title,   item.title, '');
+    document.getElementById('ep-address').value = v(extra._address, item.address, '');
+    document.getElementById('ep-deal').value    = deal;
+
+    /* 가격 — 빠른메모 파싱 결과를 폼에 채움 */
+    const rawPrice = v(extra._priceDisplay, item.quick_price, '');
+    const parsed   = parseQuickPrice(rawPrice);
+    /* extra가 있으면 그대로, 없으면 파싱된 값 */
+    document.getElementById('ep-price').value = v(extra._priceDisplay, parsed.priceDisplay, '');
+
+    /* 타입 셀렉트 */
+    const typeSelect = document.getElementById('ep-type');
+    typeSelect.value = v(extra._type, item.type, '');
+
+    /* 면적 */
+    document.getElementById('ep-area-py').value   = v(extra._areaPy,   getAreaPy(), '');
+    document.getElementById('ep-area-m2').value   = v(extra._areaM2,   getAreaM2(), '');
+    document.getElementById('ep-supply-py').value = v(extra._supplyPy, getSupplyPy(), '');
+    document.getElementById('ep-supply-m2').value = v(extra._supplyM2, getSupplyM2(), '');
+
+    /* 조건 */
+    document.getElementById('ep-floor').value      = v(extra._floor,      getFloor(), '');
+    document.getElementById('ep-total-floor').value= v(extra._totalFloor, item.shop_totalFloor, item.officetel_totalFloor, '');
+    document.getElementById('ep-maintenance').value= v(extra._maintenance, getMaintenance(), '');
+    document.getElementById('ep-premium').value    = v(extra._premium,    getPremium(), '');
+    document.getElementById('ep-available').value  = v(extra._available,  getAvailable(), '');
+    document.getElementById('ep-parking').value    = v(extra._parking,    getParking(), '');
+    document.getElementById('ep-direction').value  = v(extra._direction,  getDirection(), '');
+    document.getElementById('ep-usage').value      = v(extra._usage, item.shop_usage, item.officetel_usage, '');
+
+    /* 상가/사무실 추가 */
+    document.getElementById('ep-reco-biz').value   = v(extra._recoBiz,   item.shop_recommendBiz, '');
+    document.getElementById('ep-curr-usage').value = v(extra._currUsage, item.shop_currentUsage, '');
+    document.getElementById('ep-toilet').value     = v(extra._toilet,    item.shop_toilet, '');
+    document.getElementById('ep-elevator').value   = v(extra._elevator,  item.shop_elevator, '');
+    document.getElementById('ep-hvac').value       = v(extra._hvac,      item.shop_hvac, '');
+
+    /* 설명 */
+    document.getElementById('ep-desc').value = v(extra._desc, item.description, item.quick_memo, '');
+
+    /* 상태 초기화 */
+    const st = document.getElementById('ep-status');
+    st.className = ''; st.textContent = '';
+
+    document.getElementById('ep-overlay').classList.add('open');
+    document.getElementById('ep-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  window.closePanel = function() {
+    document.getElementById('ep-overlay').classList.remove('open');
+    document.getElementById('ep-panel').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  window.savePanel = function() {
+    const st = document.getElementById('ep-status');
+    st.className = ''; st.textContent = '';
+
+    /* 입력값 수집 */
+    const newExtra = {
+      _title:      document.getElementById('ep-title').value.trim()      || undefined,
+      _address:    document.getElementById('ep-address').value.trim()    || undefined,
+      _type:       document.getElementById('ep-type').value              || undefined,
+      _dealType:   document.getElementById('ep-deal').value              || undefined,
+      _priceDisplay: document.getElementById('ep-price').value.trim()    || undefined,
+      _areaPy:     document.getElementById('ep-area-py').value.trim()    || undefined,
+      _areaM2:     document.getElementById('ep-area-m2').value.trim()    || undefined,
+      _supplyPy:   document.getElementById('ep-supply-py').value.trim()  || undefined,
+      _supplyM2:   document.getElementById('ep-supply-m2').value.trim()  || undefined,
+      _floor:      document.getElementById('ep-floor').value.trim()      || undefined,
+      _totalFloor: document.getElementById('ep-total-floor').value.trim()|| undefined,
+      _maintenance:document.getElementById('ep-maintenance').value.trim()|| undefined,
+      _premium:    document.getElementById('ep-premium').value.trim()    || undefined,
+      _available:  document.getElementById('ep-available').value.trim()  || undefined,
+      _parking:    document.getElementById('ep-parking').value.trim()    || undefined,
+      _direction:  document.getElementById('ep-direction').value.trim()  || undefined,
+      _usage:      document.getElementById('ep-usage').value.trim()      || undefined,
+      _recoBiz:    document.getElementById('ep-reco-biz').value.trim()   || undefined,
+      _currUsage:  document.getElementById('ep-curr-usage').value.trim() || undefined,
+      _toilet:     document.getElementById('ep-toilet').value.trim()     || undefined,
+      _elevator:   document.getElementById('ep-elevator').value.trim()   || undefined,
+      _hvac:       document.getElementById('ep-hvac').value.trim()       || undefined,
+      _desc:       document.getElementById('ep-desc').value.trim()       || undefined,
+    };
+    /* undefined 키 제거 */
+    Object.keys(newExtra).forEach(k => newExtra[k] === undefined && delete newExtra[k]);
+
+    try {
+      localStorage.setItem(LS_EXTRA(id), JSON.stringify(newExtra));
+      extra = newExtra;
+      renderAll();
+      st.className = 'ok';
+      st.textContent = '✅ 저장 완료! 제안서에 반영되었습니다.';
+      setTimeout(closePanel, 1200);
+    } catch(e) {
+      st.className = 'err';
+      st.textContent = '저장 실패: ' + (e.message || '알 수 없는 오류');
+    }
+  };
+
+  document.getElementById('btn-edit').addEventListener('click', openPanel);
+
+  /* ══════════════════════════
+     초기 렌더
+  ══════════════════════════ */
+  loadPhotos();
+  renderAll();
+
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('mainContent').style.display  = '';
+
+})();
+</script>
+</body>
+</html>
