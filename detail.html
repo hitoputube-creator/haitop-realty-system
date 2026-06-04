@@ -280,9 +280,13 @@ function createHomepageTab() {
   if (tab) tab.opener = null;
   return tab;
 }
-function openHomepageListings(tab) {
-  if (tab) tab.location.href = HOMEPAGE_LISTINGS_URL;
-  else window.open(HOMEPAGE_LISTINGS_URL, "_blank", "noopener,noreferrer");
+function getHomepageListingUrl(id) {
+  return HOMEPAGE_LISTINGS_URL + "?id=" + encodeURIComponent(id);
+}
+function openHomepageListings(tab, id) {
+  const url = id ? getHomepageListingUrl(id) : HOMEPAGE_LISTINGS_URL;
+  if (tab) tab.location.href = url;
+  else window.open(url, "_blank", "noopener,noreferrer");
 }
 function closeHomepageTab(tab) {
   try { if (tab) tab.close(); } catch (_) {}
@@ -604,6 +608,7 @@ function closeHomepageTab(tab) {
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
     html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`;
+    html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
     html += `</div>`;
 
     html += `<div style="margin-bottom:8px;"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span></div>`;
@@ -861,6 +866,16 @@ function closeHomepageTab(tab) {
     }
     document.getElementById("editBtn").addEventListener("click", () => openEditModal(item));
     document.getElementById("deleteBtn").addEventListener("click", () => { document.getElementById("deleteModal").style.display = "flex"; });
+    const viewHomeBtn = document.getElementById("viewHomeBtn");
+    if (viewHomeBtn) {
+      viewHomeBtn.addEventListener("click", () => {
+        if (_currentItem.is_public !== true) {
+          showToast("먼저 홈페이지 공개를 해주세요.");
+          return;
+        }
+        openHomepageListings(null, _currentItem.id);
+      });
+    }
     const sendHomeBtn = document.getElementById("sendHomeBtn");
     if (sendHomeBtn) {
       sendHomeBtn.addEventListener("click", async () => {
