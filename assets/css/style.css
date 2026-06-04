@@ -323,3 +323,17 @@ textarea { resize: vertical; min-height: 120px; }
   .listing-grid { grid-template-columns: 1fr; }
   .tab-btn      { font-size: 0.82rem; padding: 7px 14px; }
 }
+
+
+/* Price input preview */
+.price-preview {
+  display: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f4c542;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.price-preview.has-value {
+  display: block;
+}

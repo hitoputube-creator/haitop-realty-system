@@ -117,12 +117,18 @@
     <!-- 가격정보 -->
     <div class="modal-section-title">💰 가격정보</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
-      <div class="field"><label>매매가</label><input id="edit_salePrice" type="text" placeholder="예: 12억 5,000만" /></div>
-      <div class="field"><label>분양가</label><input id="edit_presalePrice" type="text" placeholder="예: 8억 9,000만" /></div>
-      <div class="field"><label>보증금</label><input id="edit_deposit" type="text" placeholder="예: 5,000만" /></div>
-      <div class="field"><label>월세</label><input id="edit_monthlyRent" type="text" placeholder="예: 300만" /></div>
-      <div class="field"><label>관리비</label><input id="edit_managementFee" type="text" placeholder="예: 15만" /></div>
-      <div class="field"><label>권리금</label><input id="edit_premium" type="text" placeholder="예: 없음 또는 2,000만" /></div>
+      <div class="field"><label>매매가</label><input id="edit_salePrice" type="text" placeholder="예: 12억 5,000만" />
+        <div class="price-preview" id="edit_salePrice_preview"></div></div>
+      <div class="field"><label>분양가</label><input id="edit_presalePrice" type="text" placeholder="예: 8억 9,000만" />
+        <div class="price-preview" id="edit_presalePrice_preview"></div></div>
+      <div class="field"><label>보증금</label><input id="edit_deposit" type="text" placeholder="예: 5,000만" />
+        <div class="price-preview" id="edit_deposit_preview"></div></div>
+      <div class="field"><label>월세</label><input id="edit_monthlyRent" type="text" placeholder="예: 300만" />
+        <div class="price-preview" id="edit_monthlyRent_preview"></div></div>
+      <div class="field"><label>관리비</label><input id="edit_managementFee" type="text" placeholder="예: 15만" />
+        <div class="price-preview" id="edit_managementFee_preview"></div></div>
+      <div class="field"><label>권리금</label><input id="edit_premium" type="text" placeholder="예: 없음 또는 2,000만" />
+        <div class="price-preview" id="edit_premium_preview"></div></div>
     </div>
 
     <!-- 면적정보 (조건부) -->
@@ -339,6 +345,58 @@ function closeHomepageTab(tab) {
     if (commercialEl) commercialEl.style.display = EDIT_COMMERCIAL_CATS.includes(cat1) ? "" : "none";
   }
 
+
+  // 가격 입력 미리보기
+  const EDIT_PRICE_IDS = ["edit_salePrice","edit_presalePrice","edit_deposit","edit_monthlyRent","edit_managementFee","edit_premium"];
+  function editPriceDigits(value) { return String(value || "").replace(/[^\d]/g, ""); }
+  function editFormatPriceInput(value) {
+    const digits = editPriceDigits(value);
+    return digits ? Number(digits).toLocaleString("ko-KR") : "";
+  }
+  function editFormatWonPreview(value) {
+    const digits = editPriceDigits(value);
+    if (!digits) return "";
+    const won = Number(digits);
+    if (!won) return "";
+    const eok = Math.floor(won / 100000000);
+    const man = Math.floor((won % 100000000) / 10000);
+    const rest = won % 10000;
+    const parts = [];
+    if (eok) parts.push(eok.toLocaleString("ko-KR") + "억");
+    if (man) parts.push(man.toLocaleString("ko-KR") + "만원");
+    if (!parts.length && rest) parts.push(rest.toLocaleString("ko-KR") + "원");
+    return parts.length ? "약 " + parts.join(" ") : "";
+  }
+  function syncEditPricePreview(id) {
+    const input = document.getElementById(id);
+    const preview = document.getElementById(id + "_preview");
+    if (!input || !preview) return;
+    const formatted = editFormatPriceInput(input.value);
+    if (input.value && input.value !== formatted) input.value = formatted;
+    const text = editFormatWonPreview(input.value);
+    preview.textContent = text;
+    preview.classList.toggle("has-value", !!text);
+  }
+  function setupEditPricePreviews() {
+    EDIT_PRICE_IDS.forEach(id => {
+      const input = document.getElementById(id);
+      if (!input || input.dataset.pricePreviewBound === "1") return;
+      input.dataset.pricePreviewBound = "1";
+      input.addEventListener("input", () => syncEditPricePreview(id));
+      input.addEventListener("blur", () => syncEditPricePreview(id));
+      syncEditPricePreview(id);
+    });
+  }
+  function refreshEditPricePreviews() { EDIT_PRICE_IDS.forEach(syncEditPricePreview); }
+  function cleanEditPriceInputs() {
+    EDIT_PRICE_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = editPriceDigits(el.value);
+    });
+  }
+  document.addEventListener("DOMContentLoaded", setupEditPricePreviews);
+
+
   // 면적 자동계산 (edit 모달용)
   const EDIT_SQM_PY = [
     ['edit_areaM2','edit_areaPy'],
@@ -454,6 +512,7 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_monthlyRent").value   = item.monthlyRent || "";
     document.getElementById("edit_managementFee").value = item.managementFee || "";
     document.getElementById("edit_premium").value       = item.premium || "";
+    refreshEditPricePreviews();
     // 면적
     const sv = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
     sv("edit_areaM2", item.areaM2); sv("edit_areaPy", item.areaPy);
@@ -842,6 +901,7 @@ function closeHomepageTab(tab) {
         btn.disabled = true; btn.textContent = "저장 중...";
         updateEditDynamicSections();
 
+        cleanEditPriceInputs();
         const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
         const gn = id => { const el = document.getElementById(id); return (el && el.value) ? el.value : null; };
 
