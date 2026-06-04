@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="assets/css/style.css" />
-<script src="assets/js/storage.js"></script>
+<link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
+<script src="assets/js/storage.js?v=20260604-address-split"></script>
 </head>
 <body>
 
@@ -86,8 +86,16 @@
         </select>
       </div>
       <div class="field">
-        <label>위치 (간단히)</label>
-        <input id="edit_address" type="text" placeholder="예) 운정역 근처 1층" />
+        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
+        <input id="edit_publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
+      </div>
+      <div class="field">
+        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
+        <input id="edit_mapAddress" type="text" placeholder="예) 파주시 동패동 2075" />
+      </div>
+      <div class="field">
+        <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
+        <input id="edit_privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호" />
       </div>
       <div class="field">
         <label>가격 (보증금 또는 매매가)</label>
@@ -143,7 +151,9 @@
   // ── 수정 모달 ──
   function openEditModal(item) {
     document.getElementById("edit_propertyType").value = item.type || "shop";
-    document.getElementById("edit_address").value = item.address || "";
+    document.getElementById("edit_publicAddress").value = item.publicAddress || item.address || "";
+    document.getElementById("edit_mapAddress").value = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
+    document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
     document.getElementById("edit_quick_price").value = item.quick_price || "";
     document.getElementById("edit_owner_contact").value = item.owner_contact || item.quick_contact || "";
     document.getElementById("edit_memo").value = item.quick_memo || item.description || "";
@@ -205,7 +215,7 @@
     // 기본 정보 카드
     html += `<div class="info-card"><div class="info-grid">`;
     html += row("매물구분", getTypeLabel(item.type));
-    html += row("주소", item.address);
+    html += row("공개주소", item.publicAddress || item.address);
     html += row("집주인 연락처", item.owner_contact || item.quick_contact);
 
     if (item.type === "shop" || item.type === "office") {
@@ -274,6 +284,18 @@
     if (item.quick_price) html += row("가격(메모)", item.quick_price);
 
     html += `</div></div>`;
+
+    // 관리자 전용: 비공개 주소 정보
+    const _mapAddr    = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
+    const _detailAddr = item.privateDetailAddress || item.detailAddress || "";
+    if (_mapAddr || _detailAddr) {
+      html += `<div class="desc-card" style="border:1px solid rgba(255,100,100,0.2);background:rgba(255,60,60,0.04);">
+        <div class="desc-title" style="color:#e08888;margin-bottom:8px;">🔒 비공개 주소 (관리자용)</div>
+        <div style="font-size:0.85rem;line-height:1.8;">`;
+      if (_mapAddr)    html += `<div><span style="color:#888;font-size:0.78rem;">지도검색주소</span><br/><span style="color:#e0e0e0;">${_mapAddr.replace(/</g,"&lt;")}</span></div>`;
+      if (_detailAddr) html += `<div style="margin-top:6px;"><span style="color:#888;font-size:0.78rem;">상세주소·동호수</span><br/><span style="color:#e0e0e0;">${_detailAddr.replace(/</g,"&lt;")}</span></div>`;
+      html += `</div></div>`;
+    }
 
     // 메모/설명
     if (item.description || item.quick_memo) {
@@ -466,24 +488,29 @@
       document.getElementById("editSaveBtn").addEventListener("click", async () => {
         const btn = document.getElementById("editSaveBtn");
         btn.disabled = true; btn.textContent = "저장 중...";
-        const type    = document.getElementById("edit_propertyType").value;
-        const address = document.getElementById("edit_address").value.trim();
-        const price   = document.getElementById("edit_quick_price").value.trim();
-        const contact = document.getElementById("edit_owner_contact").value.trim();
-        const memo    = document.getElementById("edit_memo").value.trim();
+        const type                 = document.getElementById("edit_propertyType").value;
+        const publicAddress        = document.getElementById("edit_publicAddress").value.trim();
+        const mapAddress           = document.getElementById("edit_mapAddress").value.trim();
+        const privateDetailAddress = document.getElementById("edit_privateDetailAddress").value.trim();
+        const price                = document.getElementById("edit_quick_price").value.trim();
+        const contact              = document.getElementById("edit_owner_contact").value.trim();
+        const memo                 = document.getElementById("edit_memo").value.trim();
 
         const resource_id = document.getElementById("edit_resource_id").value || null;
         const updated = Object.assign({}, item, {
           type,
-          address,
-          quick_price:   price,
-          owner_contact: contact,
-          quick_contact: contact,
-          quick_memo:    memo,
-          description:   memo,
+          address:            publicAddress,
+          publicAddress,
+          mapAddress,
+          privateDetailAddress,
+          quick_price:        price,
+          owner_contact:      contact,
+          quick_contact:      contact,
+          quick_memo:         memo,
+          description:        memo,
           resource_id,
-          title: item.title || `${getTypeLabel(type)} · ${address || price || "주소미입력"}`,
-          drive_links:   item.drive_links || []
+          title: item.title || `${getTypeLabel(type)} · ${publicAddress || price || "주소미입력"}`,
+          drive_links:        item.drive_links || []
         });
 
         try {

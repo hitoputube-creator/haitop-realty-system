@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="assets/css/style.css" />
-<script src="assets/js/storage.js"></script>
+<link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
+<script src="assets/js/storage.js?v=20260604-address-split"></script>
 </head>
 <body>
 <div class="page">
@@ -59,8 +59,16 @@
         <input id="title" type="text" placeholder="예) 운정역 1층 상가 임대 (전용 24평)" />
       </div>
       <div class="field">
-        <label>주소</label>
-        <input id="address" type="text" placeholder="파주시 ○○동 ○○로 00" />
+        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft);">고객에게 보이는 주소</span></label>
+        <input id="publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
+      </div>
+      <div class="field">
+        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
+        <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075, 경기 파주시 숲속노을로 150" />
+      </div>
+      <div class="field">
+        <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
+        <input id="privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호, B동 203호" />
       </div>
       <div class="field">
         <label>집주인 연락처</label>
@@ -233,14 +241,21 @@
     const type = typeSelect.value;
     if (!type) { showToast("매물유형을 선택하세요"); return; }
 
+    const publicAddress        = document.getElementById("publicAddress").value.trim();
+    const mapAddress           = document.getElementById("mapAddress").value.trim();
+    const privateDetailAddress = document.getElementById("privateDetailAddress").value.trim();
+
     const item = {
       id: "HITOP-" + Date.now(),
       type,
-      title:       document.getElementById("title").value.trim(),
-      address:     document.getElementById("address").value.trim(),
-      status:      document.getElementById("status").value,
-      description: document.getElementById("description").value.trim(),
-      owner_contact: document.getElementById("owner_contact").value.trim()
+      title:              document.getElementById("title").value.trim(),
+      address:            publicAddress,
+      publicAddress,
+      mapAddress,
+      privateDetailAddress,
+      status:             document.getElementById("status").value,
+      description:        document.getElementById("description").value.trim(),
+      owner_contact:      document.getElementById("owner_contact").value.trim()
     };
 
     // 동적 필드 수집

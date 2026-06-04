@@ -64,7 +64,7 @@
     elMeta.appendChild(metaBox("향", x.direction || "—"));
 
     elInfo.innerHTML = "";
-    addInfo("주소", x.address || "—");
+    addInfo("공개주소", x.publicAddress || x.address || "—");
     if (x.buildingName) addInfo("건물명", x.buildingName);
     if (x.unit) addInfo("호실", x.unit);
     if (x.ho) addInfo("호수", x.ho);
