@@ -1275,7 +1275,7 @@ if (tab === "done")       renderDoneList();
     }
     const allChecked = items.length > 0 && items.every(i => selectedIds.has(i.id));
     const rows = items.map(item => {
-      const memo = (item.quick_memo || item.description || "");
+      const memo = (item.quick_memo || item.description || item.detailDescription || "");
       const memoShort = memo.length > 20 ? memo.substring(0, 20) + "…" : memo;
       const isDone = item.status === "거래완료";
       const owner = item.owner_name || item.quick_owner || "";
@@ -1376,19 +1376,32 @@ function closeHomepageTab(tab) {
     return "other";
   }
 
+  // 상세등록(register.html) 필드에서 가격 문자열 생성
+  function _detailPrice(item) {
+    const deal = item.dealType || "";
+    const sale  = item.salePrice  ? (deal || "매매") + " " + item.salePrice  : "";
+    const dep   = item.deposit    ? "보증금 " + item.deposit                 : "";
+    const rent  = item.monthlyRent? "월세 "  + item.monthlyRent             : "";
+    if (dep && rent) return `${dep} / ${rent}`;
+    if (sale) return sale;
+    if (dep)  return dep;
+    if (rent) return rent;
+    return "";
+  }
+
   function formatPrice(item) {
     if (item.type === "shop") {
       const d = item.shop_deposit ? Number(item.shop_deposit).toLocaleString("ko-KR")+"만원" : "";
       const r = item.shop_monthlyRent ? Number(item.shop_monthlyRent).toLocaleString("ko-KR")+"만원" : "";
       if (d && r) return `보증금 ${d} / 월세 ${r}`;
       if (item.quick_price) return item.quick_price;
-      return "";
+      return _detailPrice(item);
     }
-    if (item.type === "officetel") return item.officetel_price ? `${item.officetel_dealType||""} ${Number(item.officetel_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
-    if (item.type && item.type.startsWith("land")) return item.land_price ? `매매 ${Number(item.land_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
-    if (item.type === "factory") return item.factory_price ? `${item.factory_dealType||""} ${Number(item.factory_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
-    if (item.type === "bizcenter") return item.biz_price ? `${item.biz_dealType||""} ${Number(item.biz_price).toLocaleString("ko-KR")}만원` : (item.quick_price||"");
-    return item.quick_price || "";
+    if (item.type === "officetel") return item.officetel_price ? `${item.officetel_dealType||""} ${Number(item.officetel_price).toLocaleString("ko-KR")}만원` : (item.quick_price || _detailPrice(item));
+    if (item.type && item.type.startsWith("land")) return item.land_price ? `매매 ${Number(item.land_price).toLocaleString("ko-KR")}만원` : (item.quick_price || _detailPrice(item));
+    if (item.type === "factory") return item.factory_price ? `${item.factory_dealType||""} ${Number(item.factory_price).toLocaleString("ko-KR")}만원` : (item.quick_price || _detailPrice(item));
+    if (item.type === "bizcenter") return item.biz_price ? `${item.biz_dealType||""} ${Number(item.biz_price).toLocaleString("ko-KR")}만원` : (item.quick_price || _detailPrice(item));
+    return item.quick_price || _detailPrice(item);
   }
 
   function getFilteredListings() {
@@ -1545,8 +1558,8 @@ function closeHomepageTab(tab) {
         <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
         <div class="listing-price">${formatPrice(item)}</div>
         <div class="card-expand-wrap" data-expanded="false">
-          ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
-          ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
+          ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
+          ${(item.quick_memo||item.description||item.detailDescription) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description||item.detailDescription}</div>` : ""}
           ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
           ${(item.drive_links && item.drive_links.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">${item.drive_links.map(l=>`<a href="${l.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:0.73rem;color:var(--gold);text-decoration:none;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;padding:2px 7px;">📁 ${l.name||"링크"}</a>`).join("")}</div>` : ""}
           <div class="card-expand-fade"></div>
@@ -1650,7 +1663,13 @@ function closeHomepageTab(tab) {
   document.getElementById("printBtn").addEventListener("click", printSelected);
 
   function matchesKeyword(item, kw) {
-    return [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase().includes(kw);
+    return [
+      item.title, item.address,
+      item.quick_price, item.salePrice, item.deposit, item.monthlyRent,
+      item.quick_memo, item.description, item.detailDescription,
+      item.quick_contact, item.owner_contact,
+      item.owner_name, item.zoning, item.floorInfo
+    ].join(" ").toLowerCase().includes(kw);
   }
 
   function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
@@ -1670,8 +1689,8 @@ function closeHomepageTab(tab) {
       <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
       <div class="listing-price">${formatPrice(item)}</div>
       <div class="card-expand-wrap" data-expanded="false">
-        ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
-        ${item.quick_memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo}</div>` : ""}
+        ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
+        ${(item.quick_memo||item.description||item.detailDescription) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description||item.detailDescription}</div>` : ""}
         ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
         <div class="card-expand-fade"></div>
       </div>
@@ -1818,8 +1837,8 @@ function closeHomepageTab(tab) {
         <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
         <div class="listing-price">${formatPrice(item)}</div>
         <div class="card-expand-wrap" data-expanded="false">
-          ${item.quick_contact ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact}</div>` : ""}
-          ${item.quick_memo || item.description ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo || item.description}</div>` : ""}
+          ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
+          ${(item.quick_memo||item.description||item.detailDescription) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description||item.detailDescription}</div>` : ""}
           ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
           <div class="card-expand-fade"></div>
         </div>
