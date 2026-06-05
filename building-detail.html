@@ -8,56 +8,187 @@
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <link rel="stylesheet" href="assets/css/app.css" />
   <style>
-    .section-title {
+    /* ── 섹션 타이틀 ── */
+    .sec-title {
       font-size: 1rem; font-weight: 800; color: var(--gold);
-      letter-spacing: 0.3px; margin: 0 0 16px;
-      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
     }
-    .section-title::after {
+    .sec-title::after {
       content: ''; flex: 1; height: 1px;
       background: linear-gradient(90deg, rgba(212,175,55,0.3), transparent);
     }
-    .upload-row {
-      display: grid; grid-template-columns: 120px 1fr auto; gap: 8px;
-      align-items: center; margin-bottom: 10px;
+
+    /* ── 건물 기본정보 요약 그리드 ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px; margin-bottom: 16px;
     }
-    .upload-row.wide { grid-template-columns: 1fr 1fr auto; }
+    .info-cell {
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 10px; padding: 10px 14px;
+    }
+    .info-cell-label {
+      font-size: 0.7rem; font-weight: 700;
+      color: rgba(180,200,230,0.55); letter-spacing: 0.5px;
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .info-cell-value {
+      font-size: 0.9rem; color: var(--text); font-weight: 600;
+      line-height: 1.4;
+    }
+    .info-cell-value.empty { color: rgba(255,255,255,0.22); font-weight: 400; }
+
+    /* ── 업로드 폼 ── */
+    .upload-row {
+      display: grid; gap: 8px; align-items: center; margin-bottom: 10px;
+    }
+    .upload-row.floor-row  { grid-template-columns: 110px 1fr auto; }
+    .upload-row.file-row   { grid-template-columns: 1fr 1fr auto; }
+    .upload-row.link-row   { grid-template-columns: 1fr 1fr auto; }
+
+    /* ── 평면도 카드 그리드 ── */
+    .floor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px; margin-top: 14px;
+    }
+    .floor-card {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: border-color 0.18s;
+    }
+    .floor-card:hover { border-color: rgba(212,175,55,0.35); }
+
+    .floor-thumb {
+      width: 100%; aspect-ratio: 4/3;
+      object-fit: cover; cursor: pointer;
+      background: rgba(0,0,0,0.4);
+      display: block;
+      transition: opacity 0.15s;
+    }
+    .floor-thumb:hover { opacity: 0.85; }
+
+    .floor-pdf {
+      width: 100%; aspect-ratio: 4/3;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; background: rgba(212,175,55,0.06);
+      cursor: pointer;
+    }
+    .floor-pdf-icon { font-size: 2.2rem; }
+    .floor-pdf-label {
+      font-size: 0.72rem; color: var(--muted);
+      text-align: center; padding: 0 8px;
+      word-break: break-all; line-height: 1.4;
+    }
+
+    .floor-card-foot {
+      padding: 8px 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .floor-badge {
+      font-size: 0.78rem; font-weight: 700; color: var(--gold);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .btn-icon {
+      border: none; background: transparent;
+      color: rgba(255,100,100,0.7); cursor: pointer;
+      font-size: 0.95rem; padding: 2px 4px;
+      border-radius: 6px; transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: rgba(255,79,106,0.18); color: var(--danger); }
+
+    /* ── 기타 자료 목록 ── */
     .file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
     .file-item {
       display: flex; align-items: center; gap: 10px;
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px; padding: 10px 14px;
+      transition: border-color 0.18s;
+    }
+    .file-item:hover { border-color: rgba(212,175,55,0.25); }
+    .file-item-thumb {
+      width: 48px; height: 48px; border-radius: 8px;
+      object-fit: cover; cursor: pointer; flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .file-item-icon {
+      width: 48px; height: 48px; border-radius: 8px;
+      background: rgba(212,175,55,0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; flex-shrink: 0;
     }
     .file-item-info { flex: 1; min-width: 0; }
-    .file-item-label {
-      font-size: 0.72rem; color: var(--gold); font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.4px;
-    }
     .file-item-name {
       font-size: 0.9rem; color: var(--text); font-weight: 600;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .file-item-sub { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+    .file-item-sub { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
     .file-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    /* ── 업로드 진행 ── */
     .upload-progress {
-      font-size: 0.8rem; color: var(--gold); padding: 6px 0;
       display: none; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--gold); padding: 4px 0;
     }
     .upload-progress.active { display: flex; }
     .spinner-sm {
-      width: 14px; height: 14px; border: 2px solid rgba(212,175,55,0.3);
-      border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(212,175,55,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 빈 상태 ── */
     .empty-state {
-      text-align: center; padding: 28px 20px; color: var(--muted);
-      font-size: 0.85rem; border: 1px dashed rgba(255,255,255,0.1);
+      text-align: center; padding: 28px 20px;
+      color: var(--muted); font-size: 0.85rem;
+      border: 1px dashed rgba(255,255,255,0.1);
       border-radius: 12px;
     }
-    .divider { margin: 28px 0; border: none; border-top: 1px solid rgba(212,175,55,0.15); }
-    .link-or { display: flex; align-items: center; gap: 10px; margin: 8px 0;
-      color: var(--muted); font-size: 0.78rem; }
-    .link-or::before, .link-or::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.08); }
+
+    /* ── 구분선 ── */
+    .link-or {
+      display: flex; align-items: center; gap: 10px;
+      color: var(--muted); font-size: 0.78rem; margin: 10px 0;
+    }
+    .link-or::before, .link-or::after {
+      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08);
+    }
+
+    /* ── 라이트박스 ── */
+    #lightbox {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.92);
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      max-width: 94vw; max-height: 90vh;
+      object-fit: contain; border-radius: 8px;
+      box-shadow: 0 0 60px rgba(0,0,0,0.8);
+    }
+    #lightbox-close {
+      position: fixed; top: 18px; right: 22px;
+      font-size: 1.8rem; color: rgba(255,255,255,0.75);
+      cursor: pointer; line-height: 1;
+      transition: color 0.15s;
+    }
+    #lightbox-close:hover { color: var(--gold); }
+    #lightbox-caption {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      font-size: 0.85rem; color: rgba(255,255,255,0.55);
+      background: rgba(0,0,0,0.6); border-radius: 8px; padding: 6px 16px;
+    }
   </style>
 </head>
 <body>
@@ -73,48 +204,58 @@
       </div>
     </div>
     <div class="actions">
-      <button class="btn" onclick="goOverview()">📝 개요</button>
-      <button class="btn" onclick="goBack()">← 뒤로</button>
+      <button class="btn" onclick="goBack()">← 뒤로가기</button>
     </div>
   </header>
 
-  <!-- ===== 층별 평면도 섹션 ===== -->
+  <!-- ===== 건물 기본정보 요약 ===== -->
   <div class="card" style="margin-bottom:20px;">
-    <div class="section-title">📐 층별 평면도</div>
+    <div class="sec-title">🏢 건물 기본정보</div>
+    <div class="info-grid" id="infoGrid">
+      <div class="info-cell"><div class="info-cell-label">불러오는 중…</div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn" style="font-size:0.82rem;" onclick="goOverview()">📝 개요 상세보기</button>
+    </div>
+  </div>
 
-    <div class="upload-row">
-      <input id="floorNum" type="text" placeholder="층 (예: 1층, B1)" />
+  <!-- ===== 층별 평면도 ===== -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="sec-title">📐 층별 평면도</div>
+
+    <div class="upload-row floor-row">
+      <input id="floorNum" type="text" placeholder="층 (예: 1층)" />
       <input id="floorFile" type="file" accept="image/*,.pdf" style="font-size:0.85rem;" />
       <button class="btn primary" onclick="uploadFloor()">+ 추가</button>
     </div>
     <div class="upload-progress" id="floorProgress">
-      <div class="spinner-sm"></div> 업로드 중...
+      <div class="spinner-sm"></div> 업로드 중…
     </div>
 
-    <div class="file-list" id="floorList">
-      <div class="empty-state">등록된 평면도가 없습니다.</div>
+    <div class="floor-grid" id="floorGrid">
+      <div class="empty-state" style="grid-column:1/-1;">등록된 평면도가 없습니다.</div>
     </div>
   </div>
 
-  <!-- ===== 기타 자료 섹션 ===== -->
+  <!-- ===== 기타 자료 ===== -->
   <div class="card">
-    <div class="section-title">📄 기타 자료</div>
+    <div class="sec-title">📄 기타 자료</div>
 
     <!-- 파일 업로드 -->
-    <div class="upload-row wide">
+    <div class="upload-row file-row">
       <input id="fileName" type="text" placeholder="자료명 (예: 분양안내서)" />
       <input id="fileUpload" type="file" accept="image/*,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" style="font-size:0.85rem;" />
       <button class="btn primary" onclick="uploadFile()">+ 추가</button>
     </div>
     <div class="upload-progress" id="fileProgress">
-      <div class="spinner-sm"></div> 업로드 중...
+      <div class="spinner-sm"></div> 업로드 중…
     </div>
 
-    <!-- 또는 드라이브 링크 -->
+    <!-- 드라이브 링크 직접 입력 -->
     <div class="link-or">또는 구글 드라이브 링크 직접 입력</div>
-    <div class="upload-row wide">
+    <div class="upload-row link-row">
       <input id="linkName" type="text" placeholder="자료명 (예: 분양도면)" />
-      <input id="linkUrl" type="text" placeholder="https://drive.google.com/..." />
+      <input id="linkUrl"  type="text" placeholder="https://drive.google.com/…" />
       <button class="btn" onclick="addDriveLink()">+ 추가</button>
     </div>
 
@@ -123,36 +264,73 @@
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
+</div><!-- /page -->
+
+<!-- ===== 라이트박스 ===== -->
+<div id="lightbox" onclick="closeLightbox()">
+  <span id="lightbox-close" onclick="closeLightbox()">✕</span>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
+  <div id="lightbox-caption"></div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script src="assets/js/storage.js"></script>
 <script>
+/* ═══════════════════════════════════════════
+   Cloudinary 설정
+═══════════════════════════════════════════ */
 const CLOUDINARY_CLOUD  = 'dljw2pjvn';
 const CLOUDINARY_KEY    = '324442129185332';
 const CLOUDINARY_SECRET = '8uawLQywBtkUYqfVXYwV7DCWwFI';
 
-const params = new URLSearchParams(location.search);
+const MEMO_SEP = '---추가메모---';
+const OV_FIELDS = [
+  { label: '주소',      key: '주소' },
+  { label: '주차대수',  key: '주차대수' },
+  { label: '사용승인일',key: '사용승인일' },
+  { label: '구조',      key: '구조' },
+  { label: '토지면적',  key: '토지면적' },
+  { label: '연면적',    key: '연면적' },
+  { label: '관리사무소',key: '관리사무소' },
+];
+
+const params     = new URLSearchParams(location.search);
 const buildingId = params.get('id');
 
-let buildingName = '';
-
-// ── 유틸 ──
+/* ── 유틸 ── */
 function showToast(msg, dur = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), dur);
 }
 
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function isImage(url, fileName) {
+  const u = (url || fileName || '').toLowerCase();
+  return /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/.test(u);
+}
+
+function isPdf(url, fileName) {
+  const u = (url || fileName || '').toLowerCase();
+  return /\.pdf(\?|$)/.test(u);
+}
+
+/* ── Cloudinary 서명 업로드 ── */
 async function sha1Hex(str) {
   const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
 async function cloudinaryUpload(file, folder = 'haitop') {
-  const ts = Math.round(Date.now() / 1000);
+  const ts      = Math.round(Date.now() / 1000);
   const paramStr = `folder=${folder}&timestamp=${ts}${CLOUDINARY_SECRET}`;
-  const sig = await sha1Hex(paramStr);
+  const sig     = await sha1Hex(paramStr);
 
   const fd = new FormData();
   fd.append('file', file);
@@ -170,57 +348,110 @@ async function cloudinaryUpload(file, folder = 'haitop') {
   return data.secure_url;
 }
 
-// ── 이동 ──
-function goBack() { window.location.href = 'index.html'; }
-function goOverview() {
-  window.location.href = `building-overview.html?id=${buildingId}`;
-}
+/* ── 이동 ── */
+function goBack()    { window.location.href = 'index.html'; }
+function goOverview(){ window.location.href = `building-overview.html?id=${buildingId}`; }
 
-// ── 초기 로드 ──
+/* ── 라이트박스 ── */
+function openLightbox(url, caption) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox-caption').textContent = caption || '';
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+/* ══════════════════════════════════════════
+   초기 로드
+══════════════════════════════════════════ */
 async function init() {
   if (!buildingId) { alert('건물 ID가 없습니다.'); goBack(); return; }
   try {
     const resources = await getDriveResources();
     const building  = resources.find(r => r.id === buildingId);
-    buildingName = building ? building.name : '건물 상세';
-    document.getElementById('buildingName').textContent = buildingName;
-    document.title = `하이탑부동산 | ${buildingName}`;
+    if (building) {
+      document.getElementById('buildingName').textContent = building.name;
+      document.title = `하이탑부동산 | ${building.name}`;
+      renderInfoGrid(building.memo || '');
+    }
   } catch(e) { /* 이름 로드 실패 무시 */ }
 
   await loadFloors();
   await loadFiles();
 }
 
-// ── 층별 평면도 ──
+/* ── 건물 기본정보 요약 ── */
+function parseMemoFields(raw) {
+  const basic = raw.indexOf(MEMO_SEP) === -1 ? raw : raw.slice(0, raw.indexOf(MEMO_SEP));
+  const fields = {};
+  basic.split('\n').forEach(line => {
+    const c = line.indexOf(':');
+    if (c === -1) return;
+    fields[line.slice(0,c).trim()] = line.slice(c+1).trim();
+  });
+  return fields;
+}
+
+function renderInfoGrid(memo) {
+  const fields = parseMemoFields(memo);
+  const html = OV_FIELDS.map(f => {
+    const val = fields[f.key] || '';
+    return `<div class="info-cell">
+      <div class="info-cell-label">${esc(f.label)}</div>
+      <div class="info-cell-value${val ? '' : ' empty'}">${val ? esc(val) : '—'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('infoGrid').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════
+   층별 평면도
+══════════════════════════════════════════ */
 async function loadFloors() {
   try {
     const floors = await getBuildingFloors(buildingId);
     renderFloors(floors);
   } catch(e) {
-    document.getElementById('floorList').innerHTML =
-      `<div class="empty-state" style="color:var(--danger);">불러오기 실패: ${e.message}</div>`;
+    document.getElementById('floorGrid').innerHTML =
+      `<div class="empty-state" style="grid-column:1/-1;color:var(--danger);">불러오기 실패: ${esc(e.message)}</div>`;
   }
 }
 
 function renderFloors(floors) {
-  const el = document.getElementById('floorList');
+  const el = document.getElementById('floorGrid');
   if (!floors.length) {
-    el.innerHTML = '<div class="empty-state">등록된 평면도가 없습니다.</div>';
+    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">등록된 평면도가 없습니다.</div>';
     return;
   }
-  el.innerHTML = floors.map(f => `
-    <div class="file-item">
-      <div class="file-item-info">
-        <div class="file-item-label">${esc(f.floor_number)}</div>
-        <div class="file-item-name">${esc(f.file_name)}</div>
+
+  el.innerHTML = floors.map(f => {
+    const url  = f.cloudinary_url;
+    const name = esc(f.file_name);
+    const badge = esc(f.floor_number);
+
+    const previewHtml = isImage(url, f.file_name)
+      ? `<img class="floor-thumb" src="${esc(url)}" alt="${badge}"
+           loading="lazy"
+           onclick="openLightbox('${esc(url)}','${badge} — ${name}')">`
+      : `<div class="floor-pdf" onclick="window.open('${esc(url)}','_blank')">
+           <div class="floor-pdf-icon">📄</div>
+           <div class="floor-pdf-label">${name}</div>
+         </div>`;
+
+    return `
+    <div class="floor-card">
+      ${previewHtml}
+      <div class="floor-card-foot">
+        <span class="floor-badge">${badge}</span>
+        <button class="btn-icon" title="삭제" onclick="deleteFloor('${f.id}')">🗑</button>
       </div>
-      <div class="file-item-actions">
-        <button class="btn" style="font-size:0.8rem;padding:6px 12px;"
-          onclick="window.open('${esc(f.cloudinary_url)}','_blank')">🔍 열기</button>
-        <button class="btn danger" style="font-size:0.8rem;padding:6px 12px;"
-          onclick="deleteFloor('${f.id}')">🗑 삭제</button>
-      </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function uploadFloor() {
@@ -235,12 +466,7 @@ async function uploadFloor() {
   prog.classList.add('active');
   try {
     const url = await cloudinaryUpload(file, 'haitop/floors');
-    await addBuildingFloor({
-      building_id:    buildingId,
-      floor_number:   floorNum,
-      file_name:      file.name,
-      cloudinary_url: url
-    });
+    await addBuildingFloor({ building_id: buildingId, floor_number: floorNum, file_name: file.name, cloudinary_url: url });
     document.getElementById('floorNum').value = '';
     fileInput.value = '';
     showToast('✅ 평면도가 추가되었습니다.');
@@ -261,14 +487,16 @@ async function deleteFloor(id) {
   } catch(e) { showToast('❌ 삭제 실패: ' + e.message); }
 }
 
-// ── 기타 자료 ──
+/* ══════════════════════════════════════════
+   기타 자료
+══════════════════════════════════════════ */
 async function loadFiles() {
   try {
     const files = await getBuildingFiles(buildingId);
     renderFiles(files);
   } catch(e) {
     document.getElementById('fileList').innerHTML =
-      `<div class="empty-state" style="color:var(--danger);">불러오기 실패: ${e.message}</div>`;
+      `<div class="empty-state" style="color:var(--danger);">불러오기 실패: ${esc(e.message)}</div>`;
   }
 }
 
@@ -278,18 +506,41 @@ function renderFiles(files) {
     el.innerHTML = '<div class="empty-state">등록된 자료가 없습니다.</div>';
     return;
   }
+
   el.innerHTML = files.map(f => {
-    const openUrl = f.cloudinary_url || f.drive_link || '';
-    const sub     = f.drive_link && !f.cloudinary_url ? '🔗 구글 드라이브' : '☁️ Cloudinary';
+    const url  = f.cloudinary_url || f.drive_link || '';
+    const name = esc(f.file_name);
+    const safe = esc(url);
+
+    let iconHtml, actionHtml, subLabel;
+
+    if (f.cloudinary_url && isImage(f.cloudinary_url, f.file_name)) {
+      iconHtml   = `<img class="file-item-thumb" src="${safe}" alt="${name}"
+                     loading="lazy" onclick="openLightbox('${safe}','${name}')">`;
+      actionHtml = `<button class="btn ghost" style="font-size:0.8rem;padding:6px 12px;"
+                     onclick="openLightbox('${safe}','${name}')">🔍 보기</button>`;
+      subLabel   = '☁️ 이미지';
+    } else if (f.cloudinary_url) {
+      iconHtml   = `<div class="file-item-icon">📄</div>`;
+      actionHtml = `<button class="btn" style="font-size:0.8rem;padding:6px 12px;"
+                     onclick="window.open('${safe}','_blank')">🔍 열기</button>`;
+      subLabel   = '☁️ Cloudinary';
+    } else {
+      iconHtml   = `<div class="file-item-icon">🔗</div>`;
+      actionHtml = `<button class="btn" style="font-size:0.8rem;padding:6px 12px;"
+                     onclick="window.open('${safe}','_blank')">🔍 열기</button>`;
+      subLabel   = '🔗 구글 드라이브';
+    }
+
     return `
     <div class="file-item">
+      ${iconHtml}
       <div class="file-item-info">
-        <div class="file-item-name">${esc(f.file_name)}</div>
-        <div class="file-item-sub">${sub}</div>
+        <div class="file-item-name">${name}</div>
+        <div class="file-item-sub">${subLabel}</div>
       </div>
       <div class="file-item-actions">
-        ${openUrl ? `<button class="btn" style="font-size:0.8rem;padding:6px 12px;"
-          onclick="window.open('${esc(openUrl)}','_blank')">🔍 열기</button>` : ''}
+        ${actionHtml}
         <button class="btn danger" style="font-size:0.8rem;padding:6px 12px;"
           onclick="deleteBFile('${f.id}')">🗑 삭제</button>
       </div>
@@ -309,12 +560,7 @@ async function uploadFile() {
   prog.classList.add('active');
   try {
     const url = await cloudinaryUpload(file, 'haitop/files');
-    await addBuildingFile({
-      building_id:    buildingId,
-      file_name:      name,
-      cloudinary_url: url,
-      drive_link:     null
-    });
+    await addBuildingFile({ building_id: buildingId, file_name: name, cloudinary_url: url, drive_link: null });
     document.getElementById('fileName').value = '';
     fileInput.value = '';
     showToast('✅ 자료가 추가되었습니다.');
@@ -332,12 +578,7 @@ async function addDriveLink() {
   if (!name) { showToast('자료명을 입력하세요.'); return; }
   if (!url)  { showToast('드라이브 링크를 입력하세요.'); return; }
   try {
-    await addBuildingFile({
-      building_id:    buildingId,
-      file_name:      name,
-      cloudinary_url: null,
-      drive_link:     url
-    });
+    await addBuildingFile({ building_id: buildingId, file_name: name, cloudinary_url: null, drive_link: url });
     document.getElementById('linkName').value = '';
     document.getElementById('linkUrl').value  = '';
     showToast('✅ 드라이브 링크가 추가되었습니다.');
@@ -352,11 +593,6 @@ async function deleteBFile(id) {
     showToast('삭제되었습니다.');
     await loadFiles();
   } catch(e) { showToast('❌ 삭제 실패: ' + e.message); }
-}
-
-function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 init();
