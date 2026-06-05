@@ -296,6 +296,48 @@ async function deleteDriveResource(id) {
   if (!res.ok) throw new Error("자료 삭제 실패");
 }
 
+// ===== 건물 층별 평면도 =====
+async function getBuildingFloors(buildingId) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?building_id=eq." + encodeURIComponent(buildingId) + "&order=created_at.asc", { headers });
+  if (!res.ok) throw new Error("평면도 목록 조회 실패");
+  return await res.json();
+}
+async function addBuildingFloor(item) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(item)
+  });
+  if (!res.ok) throw new Error("평면도 저장 실패: " + await res.text());
+}
+async function deleteBuildingFloor(id) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?id=eq." + encodeURIComponent(id), {
+    method: "DELETE", headers
+  });
+  if (!res.ok) throw new Error("평면도 삭제 실패");
+}
+
+// ===== 건물 기타 자료 =====
+async function getBuildingFiles(buildingId) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_files?building_id=eq." + encodeURIComponent(buildingId) + "&order=created_at.asc", { headers });
+  if (!res.ok) throw new Error("기타 자료 목록 조회 실패");
+  return await res.json();
+}
+async function addBuildingFile(item) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_files", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(item)
+  });
+  if (!res.ok) throw new Error("기타 자료 저장 실패: " + await res.text());
+}
+async function deleteBuildingFile(id) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_files?id=eq." + encodeURIComponent(id), {
+    method: "DELETE", headers
+  });
+  if (!res.ok) throw new Error("기타 자료 삭제 실패");
+}
+
 // ===== 참고매물 관리 =====
 async function getReferenceProperties() {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/reference_properties?order=created_at.desc", { headers });

@@ -2479,11 +2479,8 @@ function closeHomepageTab(tab) {
           </div>
         </div>
         <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
-          ${item.url
-            ? `<button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="window.open('${safeUrl}','_blank')">📁 열기</button>`
-            : `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 12px;opacity:0.4;cursor:not-allowed;" disabled>📁 열기</button>`
-          }
-          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveMemoModal('${item.id}')">📝 개요</button>
+          <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="location.href='building-detail.html?id=${item.id}'">📁 열기</button>
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="location.href='building-overview.html?id=${item.id}'">📝 개요</button>
           <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveLinkModal('${item.id}')">🔗 매물연결</button>
           <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
           <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>

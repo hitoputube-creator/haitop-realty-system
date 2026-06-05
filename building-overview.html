@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>하이탑부동산 | 건물 개요</title>
+  <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="assets/css/app.css" />
+  <style>
+    .section-title {
+      font-size: 1rem; font-weight: 800; color: var(--gold);
+      letter-spacing: 0.3px; margin: 0 0 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(212,175,55,0.3), transparent);
+    }
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+    .extra-memo { margin-top: 24px; }
+    .extra-memo label {
+      font-size: 0.78rem; font-weight: 700;
+      color: rgba(180,200,230,0.65);
+      letter-spacing: 0.4px; text-transform: uppercase;
+      display: block; margin-bottom: 6px;
+    }
+    .btn-row { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+    .preview-box {
+      background: rgba(0,0,0,0.25); border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 12px; padding: 16px 20px; margin-top: 20px;
+      font-size: 0.88rem; line-height: 1.9; color: var(--text);
+      white-space: pre-wrap; display: none;
+    }
+    .preview-box.show { display: block; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOPBAR -->
+  <header class="topbar" style="margin-bottom:20px;">
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="brand-text">
+        <h1 id="buildingName">건물 개요</h1>
+        <p>건물 기본 정보를 수정하고 저장하세요</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="goDetail()">📐 자료</button>
+      <button class="btn" onclick="goBack()">← 뒤로</button>
+    </div>
+  </header>
+
+  <!-- 개요 폼 -->
+  <div class="card">
+    <div class="section-title">📝 건물 기본 정보</div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label>주소</label>
+        <input id="ov_address" type="text" placeholder="예: 경기도 파주시 ○○로 ○○" />
+      </div>
+      <div class="field">
+        <label>주차대수</label>
+        <input id="ov_parking" type="text" placeholder="예: 지상 20대, 지하 50대" />
+      </div>
+      <div class="field">
+        <label>사용승인일</label>
+        <input id="ov_approval" type="text" placeholder="예: 2018년 12월" />
+      </div>
+      <div class="field">
+        <label>구조</label>
+        <input id="ov_structure" type="text" placeholder="예: 지하 1층 ~ 지상 10층" />
+      </div>
+      <div class="field">
+        <label>토지면적</label>
+        <input id="ov_land" type="text" placeholder="예: 1,200평" />
+      </div>
+      <div class="field">
+        <label>연면적</label>
+        <input id="ov_total" type="text" placeholder="예: 8,500평" />
+      </div>
+      <div class="field full">
+        <label>관리사무소</label>
+        <input id="ov_mgmt" type="text" placeholder="예: 031-000-0000" />
+      </div>
+    </div>
+
+    <div class="extra-memo">
+      <label>추가 메모</label>
+      <textarea id="ov_extra" rows="5" placeholder="기타 특이사항, 임대 현황, 주요 입점 업종 등"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn ghost" onclick="togglePreview()">👁 미리보기</button>
+      <button class="btn primary" onclick="saveOverview()">💾 저장</button>
+    </div>
+
+    <div class="preview-box" id="previewBox"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="assets/js/storage.js"></script>
+<script>
+const MEMO_SEP      = '---추가메모---';
+const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토지면적','연면적','관리사무소'];
+const FIELD_IDS     = ['ov_address','ov_parking','ov_approval','ov_structure','ov_land','ov_total','ov_mgmt'];
+
+const params     = new URLSearchParams(location.search);
+const buildingId = params.get('id');
+let buildingData = null;
+
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function goBack()   { window.location.href = 'index.html'; }
+function goDetail() { window.location.href = `building-detail.html?id=${buildingId}`; }
+
+// ── 메모 파싱 ──
+function parseMemo(raw) {
+  if (!raw) return { fields: {}, extra: '' };
+  const idx = raw.indexOf(MEMO_SEP);
+  const basicPart = idx === -1 ? raw : raw.slice(0, idx).trimEnd();
+  const extra     = idx === -1 ? '' : raw.slice(idx + MEMO_SEP.length).trimStart();
+
+  const fields = {};
+  basicPart.split('\n').forEach(line => {
+    const colon = line.indexOf(':');
+    if (colon === -1) return;
+    const key = line.slice(0, colon).trim();
+    const val = line.slice(colon + 1).trim();
+    fields[key] = val;
+  });
+  return { fields, extra };
+}
+
+function buildMemo() {
+  const lines = FIELD_LABELS.map((lbl, i) => {
+    const val = document.getElementById(FIELD_IDS[i]).value.trim();
+    return `${lbl}: ${val}`;
+  });
+  const basic = lines.join('\n');
+  const extra = document.getElementById('ov_extra').value.trim();
+  if (!extra) return basic;
+  return basic + '\n' + MEMO_SEP + '\n' + extra;
+}
+
+function populateForm(memo) {
+  const { fields, extra } = parseMemo(memo);
+  FIELD_LABELS.forEach((lbl, i) => {
+    document.getElementById(FIELD_IDS[i]).value = fields[lbl] || '';
+  });
+  document.getElementById('ov_extra').value = extra;
+}
+
+// ── 초기 로드 ──
+async function init() {
+  if (!buildingId) { alert('건물 ID가 없습니다.'); goBack(); return; }
+  try {
+    const resources = await getDriveResources();
+    buildingData = resources.find(r => r.id === buildingId);
+    if (!buildingData) { alert('건물을 찾을 수 없습니다.'); goBack(); return; }
+
+    document.getElementById('buildingName').textContent = buildingData.name;
+    document.title = `하이탑부동산 | ${buildingData.name} 개요`;
+
+    populateForm(buildingData.memo || '');
+  } catch(e) {
+    showToast('❌ 불러오기 실패: ' + e.message);
+  }
+}
+
+// ── 저장 ──
+async function saveOverview() {
+  const memo = buildMemo();
+  try {
+    await updateDriveResource(buildingId, { memo });
+    showToast('✅ 저장되었습니다.');
+  } catch(e) {
+    showToast('❌ 저장 실패: ' + e.message);
+  }
+}
+
+// ── 미리보기 ──
+function togglePreview() {
+  const box = document.getElementById('previewBox');
+  if (box.classList.contains('show')) {
+    box.classList.remove('show'); return;
+  }
+  box.textContent = buildMemo();
+  box.classList.add('show');
+}
+
+init();
+</script>
+</body>
+</html>

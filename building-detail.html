@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>하이탑부동산 | 건물 상세</title>
+  <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="assets/css/app.css" />
+  <style>
+    .section-title {
+      font-size: 1rem; font-weight: 800; color: var(--gold);
+      letter-spacing: 0.3px; margin: 0 0 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(212,175,55,0.3), transparent);
+    }
+    .upload-row {
+      display: grid; grid-template-columns: 120px 1fr auto; gap: 8px;
+      align-items: center; margin-bottom: 10px;
+    }
+    .upload-row.wide { grid-template-columns: 1fr 1fr auto; }
+    .file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .file-item {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; padding: 10px 14px;
+    }
+    .file-item-info { flex: 1; min-width: 0; }
+    .file-item-label {
+      font-size: 0.72rem; color: var(--gold); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .file-item-name {
+      font-size: 0.9rem; color: var(--text); font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-item-sub { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+    .file-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .upload-progress {
+      font-size: 0.8rem; color: var(--gold); padding: 6px 0;
+      display: none; align-items: center; gap: 8px;
+    }
+    .upload-progress.active { display: flex; }
+    .spinner-sm {
+      width: 14px; height: 14px; border: 2px solid rgba(212,175,55,0.3);
+      border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-state {
+      text-align: center; padding: 28px 20px; color: var(--muted);
+      font-size: 0.85rem; border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 12px;
+    }
+    .divider { margin: 28px 0; border: none; border-top: 1px solid rgba(212,175,55,0.15); }
+    .link-or { display: flex; align-items: center; gap: 10px; margin: 8px 0;
+      color: var(--muted); font-size: 0.78rem; }
+    .link-or::before, .link-or::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.08); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOPBAR -->
+  <header class="topbar" style="margin-bottom:20px;">
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="brand-text">
+        <h1 id="buildingName">건물 상세</h1>
+        <p>층별 평면도 · 기타 자료 관리</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="goOverview()">📝 개요</button>
+      <button class="btn" onclick="goBack()">← 뒤로</button>
+    </div>
+  </header>
+
+  <!-- ===== 층별 평면도 섹션 ===== -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-title">📐 층별 평면도</div>
+
+    <div class="upload-row">
+      <input id="floorNum" type="text" placeholder="층 (예: 1층, B1)" />
+      <input id="floorFile" type="file" accept="image/*,.pdf" style="font-size:0.85rem;" />
+      <button class="btn primary" onclick="uploadFloor()">+ 추가</button>
+    </div>
+    <div class="upload-progress" id="floorProgress">
+      <div class="spinner-sm"></div> 업로드 중...
+    </div>
+
+    <div class="file-list" id="floorList">
+      <div class="empty-state">등록된 평면도가 없습니다.</div>
+    </div>
+  </div>
+
+  <!-- ===== 기타 자료 섹션 ===== -->
+  <div class="card">
+    <div class="section-title">📄 기타 자료</div>
+
+    <!-- 파일 업로드 -->
+    <div class="upload-row wide">
+      <input id="fileName" type="text" placeholder="자료명 (예: 분양안내서)" />
+      <input id="fileUpload" type="file" accept="image/*,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" style="font-size:0.85rem;" />
+      <button class="btn primary" onclick="uploadFile()">+ 추가</button>
+    </div>
+    <div class="upload-progress" id="fileProgress">
+      <div class="spinner-sm"></div> 업로드 중...
+    </div>
+
+    <!-- 또는 드라이브 링크 -->
+    <div class="link-or">또는 구글 드라이브 링크 직접 입력</div>
+    <div class="upload-row wide">
+      <input id="linkName" type="text" placeholder="자료명 (예: 분양도면)" />
+      <input id="linkUrl" type="text" placeholder="https://drive.google.com/..." />
+      <button class="btn" onclick="addDriveLink()">+ 추가</button>
+    </div>
+
+    <div class="file-list" id="fileList">
+      <div class="empty-state">등록된 자료가 없습니다.</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="assets/js/storage.js"></script>
+<script>
+const CLOUDINARY_CLOUD  = 'dljw2pjvn';
+const CLOUDINARY_KEY    = '324442129185332';
+const CLOUDINARY_SECRET = '8uawLQywBtkUYqfVXYwV7DCWwFI';
+
+const params = new URLSearchParams(location.search);
+const buildingId = params.get('id');
+
+let buildingName = '';
+
+// ── 유틸 ──
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+async function sha1Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function cloudinaryUpload(file, folder = 'haitop') {
+  const ts = Math.round(Date.now() / 1000);
+  const paramStr = `folder=${folder}&timestamp=${ts}${CLOUDINARY_SECRET}`;
+  const sig = await sha1Hex(paramStr);
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('api_key', CLOUDINARY_KEY);
+  fd.append('timestamp', ts);
+  fd.append('folder', folder);
+  fd.append('signature', sig);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`,
+    { method: 'POST', body: fd }
+  );
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.secure_url;
+}
+
+// ── 이동 ──
+function goBack() { window.location.href = 'index.html'; }
+function goOverview() {
+  window.location.href = `building-overview.html?id=${buildingId}`;
+}
+
+// ── 초기 로드 ──
+async function init() {
+  if (!buildingId) { alert('건물 ID가 없습니다.'); goBack(); return; }
+  try {
+    const resources = await getDriveResources();
+    const building  = resources.find(r => r.id === buildingId);
+    buildingName = building ? building.name : '건물 상세';
+    document.getElementById('buildingName').textContent = buildingName;
+    document.title = `하이탑부동산 | ${buildingName}`;
+  } catch(e) { /* 이름 로드 실패 무시 */ }
+
+  await loadFloors();
+  await loadFiles();
+}
+
+// ── 층별 평면도 ──
+async function loadFloors() {
+  try {
+    const floors = await getBuildingFloors(buildingId);
+    renderFloors(floors);
+  } catch(e) {
+    document.getElementById('floorList').innerHTML =
+      `<div class="empty-state" style="color:var(--danger);">불러오기 실패: ${e.message}</div>`;
+  }
+}
+
+function renderFloors(floors) {
+  const el = document.getElementById('floorList');
+  if (!floors.length) {
+    el.innerHTML = '<div class="empty-state">등록된 평면도가 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = floors.map(f => `
+    <div class="file-item">
+      <div class="file-item-info">
+        <div class="file-item-label">${esc(f.floor_number)}</div>
+        <div class="file-item-name">${esc(f.file_name)}</div>
+      </div>
+      <div class="file-item-actions">
+        <button class="btn" style="font-size:0.8rem;padding:6px 12px;"
+          onclick="window.open('${esc(f.cloudinary_url)}','_blank')">🔍 열기</button>
+        <button class="btn danger" style="font-size:0.8rem;padding:6px 12px;"
+          onclick="deleteFloor('${f.id}')">🗑 삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+async function uploadFloor() {
+  const floorNum  = document.getElementById('floorNum').value.trim();
+  const fileInput = document.getElementById('floorFile');
+  const file      = fileInput.files[0];
+
+  if (!floorNum) { showToast('층 번호를 입력하세요.'); return; }
+  if (!file)     { showToast('파일을 선택하세요.'); return; }
+
+  const prog = document.getElementById('floorProgress');
+  prog.classList.add('active');
+  try {
+    const url = await cloudinaryUpload(file, 'haitop/floors');
+    await addBuildingFloor({
+      building_id:    buildingId,
+      floor_number:   floorNum,
+      file_name:      file.name,
+      cloudinary_url: url
+    });
+    document.getElementById('floorNum').value = '';
+    fileInput.value = '';
+    showToast('✅ 평면도가 추가되었습니다.');
+    await loadFloors();
+  } catch(e) {
+    showToast('❌ 업로드 실패: ' + e.message);
+  } finally {
+    prog.classList.remove('active');
+  }
+}
+
+async function deleteFloor(id) {
+  if (!confirm('이 평면도를 삭제하시겠습니까?')) return;
+  try {
+    await deleteBuildingFloor(id);
+    showToast('삭제되었습니다.');
+    await loadFloors();
+  } catch(e) { showToast('❌ 삭제 실패: ' + e.message); }
+}
+
+// ── 기타 자료 ──
+async function loadFiles() {
+  try {
+    const files = await getBuildingFiles(buildingId);
+    renderFiles(files);
+  } catch(e) {
+    document.getElementById('fileList').innerHTML =
+      `<div class="empty-state" style="color:var(--danger);">불러오기 실패: ${e.message}</div>`;
+  }
+}
+
+function renderFiles(files) {
+  const el = document.getElementById('fileList');
+  if (!files.length) {
+    el.innerHTML = '<div class="empty-state">등록된 자료가 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = files.map(f => {
+    const openUrl = f.cloudinary_url || f.drive_link || '';
+    const sub     = f.drive_link && !f.cloudinary_url ? '🔗 구글 드라이브' : '☁️ Cloudinary';
+    return `
+    <div class="file-item">
+      <div class="file-item-info">
+        <div class="file-item-name">${esc(f.file_name)}</div>
+        <div class="file-item-sub">${sub}</div>
+      </div>
+      <div class="file-item-actions">
+        ${openUrl ? `<button class="btn" style="font-size:0.8rem;padding:6px 12px;"
+          onclick="window.open('${esc(openUrl)}','_blank')">🔍 열기</button>` : ''}
+        <button class="btn danger" style="font-size:0.8rem;padding:6px 12px;"
+          onclick="deleteBFile('${f.id}')">🗑 삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function uploadFile() {
+  const name      = document.getElementById('fileName').value.trim();
+  const fileInput = document.getElementById('fileUpload');
+  const file      = fileInput.files[0];
+
+  if (!name) { showToast('자료명을 입력하세요.'); return; }
+  if (!file) { showToast('파일을 선택하세요.'); return; }
+
+  const prog = document.getElementById('fileProgress');
+  prog.classList.add('active');
+  try {
+    const url = await cloudinaryUpload(file, 'haitop/files');
+    await addBuildingFile({
+      building_id:    buildingId,
+      file_name:      name,
+      cloudinary_url: url,
+      drive_link:     null
+    });
+    document.getElementById('fileName').value = '';
+    fileInput.value = '';
+    showToast('✅ 자료가 추가되었습니다.');
+    await loadFiles();
+  } catch(e) {
+    showToast('❌ 업로드 실패: ' + e.message);
+  } finally {
+    prog.classList.remove('active');
+  }
+}
+
+async function addDriveLink() {
+  const name = document.getElementById('linkName').value.trim();
+  const url  = document.getElementById('linkUrl').value.trim();
+  if (!name) { showToast('자료명을 입력하세요.'); return; }
+  if (!url)  { showToast('드라이브 링크를 입력하세요.'); return; }
+  try {
+    await addBuildingFile({
+      building_id:    buildingId,
+      file_name:      name,
+      cloudinary_url: null,
+      drive_link:     url
+    });
+    document.getElementById('linkName').value = '';
+    document.getElementById('linkUrl').value  = '';
+    showToast('✅ 드라이브 링크가 추가되었습니다.');
+    await loadFiles();
+  } catch(e) { showToast('❌ 저장 실패: ' + e.message); }
+}
+
+async function deleteBFile(id) {
+  if (!confirm('이 자료를 삭제하시겠습니까?')) return;
+  try {
+    await deleteBuildingFile(id);
+    showToast('삭제되었습니다.');
+    await loadFiles();
+  } catch(e) { showToast('❌ 삭제 실패: ' + e.message); }
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>
