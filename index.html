@@ -1275,7 +1275,7 @@ if (tab === "done")       renderDoneList();
     }
     const allChecked = items.length > 0 && items.every(i => selectedIds.has(i.id));
     const rows = items.map(item => {
-      const memo = (item.quick_memo || item.description || item.detailDescription || "");
+      const memo = (item.quick_memo || item.description || "");
       const memoShort = memo.length > 20 ? memo.substring(0, 20) + "…" : memo;
       const isDone = item.status === "거래완료";
       const owner = item.owner_name || item.quick_owner || "";
@@ -1572,7 +1572,7 @@ function closeHomepageTab(tab) {
         <div class="listing-price">${formatPrice(item)}</div>
         <div class="card-expand-wrap" data-expanded="false">
           ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
-          ${(item.quick_memo||item.description||item.detailDescription) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description||item.detailDescription}</div>` : ""}
+          ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
           ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
           ${(item.drive_links && item.drive_links.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">${item.drive_links.map(l=>`<a href="${l.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:0.73rem;color:var(--gold);text-decoration:none;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;padding:2px 7px;">📁 ${l.name||"링크"}</a>`).join("")}</div>` : ""}
           <div class="card-expand-fade"></div>
@@ -1703,7 +1703,7 @@ function closeHomepageTab(tab) {
       <div class="listing-price">${formatPrice(item)}</div>
       <div class="card-expand-wrap" data-expanded="false">
         ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
-        ${(item.quick_memo||item.description||item.detailDescription) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description||item.detailDescription}</div>` : ""}
+        ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
         ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
         <div class="card-expand-fade"></div>
       </div>
@@ -1851,7 +1851,7 @@ function closeHomepageTab(tab) {
         <div class="listing-price">${formatPrice(item)}</div>
         <div class="card-expand-wrap" data-expanded="false">
           ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
-          ${(item.quick_memo||item.description||item.detailDescription) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description||item.detailDescription}</div>` : ""}
+          ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
           ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
           <div class="card-expand-fade"></div>
         </div>
