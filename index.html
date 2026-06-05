@@ -729,8 +729,9 @@
 
 <!-- ✏️ 추천매물장 수정 모달 -->
 <div id="recommendEditModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
-  <div class="modal-box" style="max-width:480px;">
+  <div class="modal-box" style="max-width:520px;">
     <div class="modal-title">✏️ 추천매물장 수정</div>
+
     <div class="field" style="margin-bottom:10px;">
       <label>매물장 이름</label>
       <input id="rece_name" type="text" placeholder="예) 디에이블 2차 분양" />
@@ -739,12 +740,23 @@
       <label>날짜</label>
       <input id="rece_date" type="date" />
     </div>
+
+    <!-- 파일 목록 -->
+    <div style="margin-bottom:10px;">
+      <label style="font-size:0.78rem;font-weight:700;color:rgba(180,200,230,0.65);letter-spacing:0.4px;text-transform:uppercase;display:block;margin-bottom:6px;">연결된 파일</label>
+      <div id="rece_file_list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;min-height:20px;"></div>
+      <!-- 파일 추가 행 -->
+      <div id="rece_new_files"></div>
+      <button class="btn btn-ghost" style="width:100%;font-size:0.82rem;margin-top:4px;" onclick="addReceFileRow()">+ 파일 추가</button>
+      <div class="rec-spinner" id="rece_upload_spin" style="margin-top:6px;"><div class="rec-spinner-dot"></div> 업로드 중…</div>
+    </div>
+
     <div class="field" style="margin-bottom:14px;">
       <label>메모</label>
-      <textarea id="rece_memo" rows="4" placeholder="간단한 메모" style="width:100%;resize:vertical;min-height:90px;box-sizing:border-box;"></textarea>
+      <textarea id="rece_memo" rows="3" placeholder="간단한 메모" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
     </div>
     <div class="modal-btns">
-      <button class="btn" onclick="document.getElementById('recommendEditModal').style.display='none'">취소</button>
+      <button class="btn" onclick="closeRecEditModal()">취소</button>
       <button class="btn btn-primary" id="recommendEditSaveBtn">저장</button>
     </div>
   </div>
@@ -2947,6 +2959,12 @@ function closeHomepageTab(tab) {
 
   // ===== 추천매물 — 수정/삭제 =====
   let editingRecId = null;
+
+  function closeRecEditModal() {
+    document.getElementById("recommendEditModal").style.display = "none";
+    document.getElementById("rece_new_files").innerHTML = "";
+  }
+
   function openRecEdit(id) {
     const p = allRecommended.find(x => x.id === id);
     if (!p) return;
@@ -2954,7 +2972,56 @@ function closeHomepageTab(tab) {
     document.getElementById("rece_name").value = p.name || "";
     document.getElementById("rece_date").value = p.received_date || "";
     document.getElementById("rece_memo").value = p.memo || "";
+    document.getElementById("rece_new_files").innerHTML = "";
+
+    // 기존 연결 파일 목록 렌더
+    const files = allRecFiles.filter(f => f.recommended_id === id);
+    const listEl = document.getElementById("rece_file_list");
+    if (files.length) {
+      listEl.innerHTML = files.map(f => {
+        const safe  = (f.cloudinary_url || "").replace(/'/g, "%27");
+        const nameE = (f.file_name || "").replace(/"/g, "&quot;");
+        const icon  = _recIsImage(f.cloudinary_url, f.file_name) ? "🖼" : "📄";
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;
+                  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+                  border-radius:8px;font-size:0.82rem;">
+          <span>${icon}</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+                color:rgba(255,255,255,0.8);" title="${nameE}">${nameE}</span>
+          <button class="btn btn-ghost" style="font-size:0.72rem;padding:2px 8px;"
+            onclick="window.open('${safe}','_blank')">열기</button>
+          <button style="background:none;border:none;color:rgba(255,100,100,0.7);
+            cursor:pointer;font-size:1rem;padding:0 2px;flex-shrink:0;"
+            onclick="recModalDeleteFile('${f.id}','${id}')">✕</button>
+        </div>`;
+      }).join("");
+    } else {
+      listEl.innerHTML = `<div style="font-size:0.78rem;color:var(--text-muted);">연결된 파일 없음</div>`;
+    }
+
     document.getElementById("recommendEditModal").style.display = "flex";
+  }
+
+  async function recModalDeleteFile(fileId, recId) {
+    if (!confirm("이 파일을 삭제하시겠습니까?")) return;
+    try {
+      await deleteRecommendedFile(fileId);
+      allRecFiles = allRecFiles.filter(f => f.id !== fileId);
+      openRecEdit(recId); // 모달 갱신
+      showToast("삭제되었습니다");
+    } catch(e) { showToast("❌ 삭제 실패: " + e.message); }
+  }
+
+  function addReceFileRow() {
+    const c = document.getElementById("rece_new_files");
+    const row = document.createElement("div");
+    row.className = "rec-file-input-row";
+    row.style.cssText = "display:flex;gap:6px;align-items:center;margin-bottom:6px;";
+    row.innerHTML = `
+      <input type="file" accept="image/*,.pdf" style="flex:1;font-size:0.82rem;" />
+      <button onclick="this.closest('.rec-file-input-row').remove()"
+        style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>`;
+    c.appendChild(row);
   }
 
   async function deleteRec(id) {
@@ -2972,18 +3039,28 @@ function closeHomepageTab(tab) {
     const btn  = document.getElementById("recommendEditSaveBtn");
     const name = document.getElementById("rece_name").value.trim();
     if (!name) { showToast("매물장 이름을 입력해주세요"); return; }
+
+    const newFileRows = [...document.querySelectorAll("#rece_new_files .rec-file-input-row")];
+    const newFiles = newFileRows.map(r => r.querySelector("input[type=file]").files[0]).filter(Boolean);
+
     btn.disabled = true; btn.textContent = "저장 중...";
+    const spin = document.getElementById("rece_upload_spin");
+    if (newFiles.length) spin.classList.add("active");
     try {
       await updateRecommendedProperty(editingRecId, {
         name,
         received_date: document.getElementById("rece_date").value || null,
         memo: document.getElementById("rece_memo").value.trim()
       });
-      document.getElementById("recommendEditModal").style.display = "none";
+      for (const file of newFiles) {
+        const url = await recCloudinaryUpload(file);
+        await addRecommendedFile({ recommended_id: editingRecId, file_name: file.name, cloudinary_url: url });
+      }
+      closeRecEditModal();
       showToast("✅ 수정되었습니다");
       await loadRecommendedProperties();
     } catch(e) { showToast("❌ 수정 실패: " + e.message); }
-    finally { btn.disabled = false; btn.textContent = "저장"; }
+    finally { btn.disabled = false; btn.textContent = "저장"; spin.classList.remove("active"); }
   });
 
   // ===== 추천매물 — 라이트박스 =====
