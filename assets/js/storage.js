@@ -296,6 +296,38 @@ async function deleteDriveResource(id) {
   if (!res.ok) throw new Error("자료 삭제 실패");
 }
 
+// ===== 추천매물 파일 관리 =====
+async function getAllRecommendedFiles() {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/recommended_files?order=created_at.asc", { headers });
+  if (!res.ok) throw new Error("추천매물 파일 목록 조회 실패");
+  return await res.json();
+}
+async function getRecommendedFiles(recommendedId) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/recommended_files?recommended_id=eq." + encodeURIComponent(recommendedId) + "&order=created_at.asc", { headers });
+  if (!res.ok) throw new Error("추천매물 파일 조회 실패");
+  return await res.json();
+}
+async function addRecommendedFile(item) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/recommended_files", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify(item)
+  });
+  if (!res.ok) throw new Error("추천매물 파일 저장 실패: " + await res.text());
+}
+async function deleteRecommendedFile(id) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/recommended_files?id=eq." + encodeURIComponent(id), {
+    method: "DELETE", headers
+  });
+  if (!res.ok) throw new Error("추천매물 파일 삭제 실패");
+}
+async function deleteRecommendedFilesByRecId(recommendedId) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/recommended_files?recommended_id=eq." + encodeURIComponent(recommendedId), {
+    method: "DELETE", headers
+  });
+  if (!res.ok) throw new Error("추천매물 파일 일괄 삭제 실패");
+}
+
 // ===== 건물 층별 평면도 =====
 async function getBuildingFloors(buildingId) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?building_id=eq." + encodeURIComponent(buildingId) + "&order=created_at.asc", { headers });

@@ -54,6 +54,33 @@
     .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
     .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:linear-gradient(transparent,var(--bg-card)); pointer-events:none; }
     .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(212,175,55,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
+    /* ── 추천매물 파일 그리드 ── */
+    .rec-file-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; margin-top:10px; }
+    .rec-file-card { background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; cursor:pointer; transition:border-color .15s; }
+    .rec-file-card:hover { border-color:rgba(212,175,55,0.35); }
+    .rec-file-thumb { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; }
+    .rec-file-pdf { width:100%; aspect-ratio:4/3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:rgba(212,175,55,0.06); }
+    .rec-file-pdf-icon { font-size:1.8rem; }
+    .rec-file-label { font-size:0.65rem; color:var(--text-muted); text-align:center; padding:0 4px; word-break:break-all; line-height:1.3; }
+    .rec-file-foot { display:flex; align-items:center; justify-content:space-between; padding:5px 7px; border-top:1px solid rgba(255,255,255,0.06); }
+    .rec-file-name { font-size:0.68rem; color:rgba(255,255,255,0.7); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rec-file-del { background:none; border:none; color:rgba(255,100,100,0.6); cursor:pointer; font-size:0.85rem; padding:0 2px; border-radius:4px; flex-shrink:0; }
+    .rec-file-del:hover { color:var(--red); background:rgba(255,79,106,0.15); }
+    /* ── 라이트박스 ── */
+    #recLightbox { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.93); align-items:center; justify-content:center; padding:20px; }
+    #recLightbox.open { display:flex; }
+    #recLightbox img { max-width:94vw; max-height:88vh; object-fit:contain; border-radius:8px; box-shadow:0 0 60px rgba(0,0,0,0.8); }
+    #recLbClose { position:fixed; top:16px; right:20px; font-size:1.8rem; color:rgba(255,255,255,0.75); cursor:pointer; line-height:1; transition:color .15s; }
+    #recLbClose:hover { color:var(--gold); }
+    #recLbCaption { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); font-size:0.82rem; color:rgba(255,255,255,0.5); background:rgba(0,0,0,0.6); border-radius:8px; padding:5px 14px; }
+    /* ── 인라인 파일 추가 폼 ── */
+    .rec-add-form { background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.2); border-radius:10px; padding:12px; margin-top:10px; display:none; }
+    .rec-add-form.open { display:block; }
+    .rec-upload-row { display:flex; gap:8px; align-items:center; }
+    .rec-spinner { display:none; align-items:center; gap:6px; font-size:0.78rem; color:var(--gold); margin-top:6px; }
+    .rec-spinner.active { display:flex; }
+    .rec-spinner-dot { width:12px; height:12px; border:2px solid rgba(212,175,55,0.3); border-top-color:var(--gold); border-radius:50%; animation:recSpin .7s linear infinite; }
+    @keyframes recSpin { to { transform:rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -625,56 +652,28 @@
     <!-- 등록 폼 -->
     <div class="quick-card">
       <div class="quick-title">📄 추천매물장 등록</div>
-      <div class="quick-sub">매물장 이름과 드라이브 링크(날짜별 여러 개)를 저장하세요</div>
+      <div class="quick-sub">매물장 이름, 날짜, 파일을 업로드하세요</div>
+      <div class="form-grid-2" style="margin-bottom:10px;">
+        <div class="field" style="margin-bottom:0;">
+          <label>매물장 이름 <span style="color:var(--red);">*</span></label>
+          <input id="rec_name" type="text" placeholder="예) 디에이블 2차 분양" />
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>날짜</label>
+          <input id="rec_date" type="date" />
+        </div>
+      </div>
       <div class="field" style="margin-bottom:10px;">
-        <label>매물장 이름</label>
-        <input id="rec_name" type="text" placeholder="예) 디에이블 2차 분양" />
+        <label>파일 업로드 <span style="font-size:0.75rem;color:var(--text-muted);">(이미지·PDF 여러 개 가능)</span></label>
+        <div id="rec_file_list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px;"></div>
+        <button class="btn btn-ghost" style="width:100%;font-size:0.82rem;" onclick="addRecFileRow()">+ 파일 추가</button>
       </div>
-      <div style="margin-bottom:4px;">
-        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px;">드라이브 링크 (날짜 + URL)</label>
-        <div id="rec_links_container"></div>
-        <button class="btn btn-ghost" style="width:100%;margin-top:6px;font-size:0.82rem;" onclick="addRecLinkRow('rec_links_container')">+ 링크 추가</button>
-      </div>
-      <div class="field" style="margin-bottom:10px;margin-top:10px;">
+      <div class="field" style="margin-bottom:10px;">
         <label>메모</label>
-        <textarea id="rec_memo" rows="6" placeholder="간단한 메모 (선택)" style="width:100%;resize:vertical;min-height:120px;box-sizing:border-box;"></textarea>
+        <textarea id="rec_memo" rows="3" placeholder="간단한 메모 (선택)" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
       </div>
       <button class="btn btn-primary" id="recSaveBtn" style="width:100%;">💾 저장</button>
-    </div>
-
-    <!-- 폴더에서 불러오기 -->
-    <div class="quick-card" style="margin-top:10px;">
-      <div class="quick-title">📂 폴더에서 파일 목록 불러오기</div>
-      <div class="quick-sub">구글 드라이브 폴더 링크를 입력하면 파일 목록을 자동으로 가져옵니다<br>
-        <span style="color:var(--gold);font-size:0.75rem;">※ 폴더가 "링크가 있는 모든 사용자" 공유 설정이어야 합니다</span>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <input id="rec_folder_url" type="text" placeholder="https://drive.google.com/drive/folders/..." style="flex:1;" />
-        <button class="btn btn-ghost" id="loadFolderBtn" onclick="loadDriveFolderFiles()">📂 불러오기</button>
-      </div>
-
-      <!-- 파일 선택 패널 -->
-      <div id="folderFilePanel" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span id="folderFileCount" style="font-size:0.82rem;color:var(--text-muted);"></span>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-ghost" style="font-size:0.73rem;padding:3px 9px;" onclick="selectAllFolderFiles(true)">전체 선택</button>
-            <button class="btn btn-ghost" style="font-size:0.73rem;padding:3px 9px;" onclick="selectAllFolderFiles(false)">전체 해제</button>
-          </div>
-        </div>
-        <div id="folderFileList" style="max-height:280px;overflow-y:auto;margin-bottom:12px;padding-right:4px;"></div>
-        <div class="form-grid-2" style="margin-bottom:10px;">
-          <div class="field" style="margin-bottom:0;">
-            <label>받은 날짜</label>
-            <input id="rec_folder_date" type="date" />
-          </div>
-          <div class="field" style="margin-bottom:0;">
-            <label>공통 메모 (선택)</label>
-            <input id="rec_folder_memo" type="text" placeholder="선택한 파일에 공통 적용" />
-          </div>
-        </div>
-        <button class="btn btn-primary" style="width:100%;" onclick="saveFolderFiles(event)">✅ 선택한 파일 저장</button>
-      </div>
+      <div class="rec-spinner" id="recSaveSpinner"><div class="rec-spinner-dot"></div> 업로드 중…</div>
     </div>
 
     <!-- 검색 -->
@@ -730,26 +729,32 @@
 
 <!-- ✏️ 추천매물장 수정 모달 -->
 <div id="recommendEditModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
-  <div class="modal-box" style="max-width:540px;">
+  <div class="modal-box" style="max-width:480px;">
     <div class="modal-title">✏️ 추천매물장 수정</div>
     <div class="field" style="margin-bottom:10px;">
       <label>매물장 이름</label>
       <input id="rece_name" type="text" placeholder="예) 디에이블 2차 분양" />
     </div>
-    <div style="margin-bottom:10px;">
-      <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px;">드라이브 링크 (날짜 + URL)</label>
-      <div id="rece_links_container"></div>
-      <button class="btn btn-ghost" style="width:100%;margin-top:6px;font-size:0.82rem;" onclick="addRecLinkRow('rece_links_container')">+ 링크 추가</button>
+    <div class="field" style="margin-bottom:10px;">
+      <label>날짜</label>
+      <input id="rece_date" type="date" />
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label>메모</label>
-      <textarea id="rece_memo" rows="6" placeholder="간단한 메모" style="width:100%;resize:vertical;min-height:120px;box-sizing:border-box;"></textarea>
+      <textarea id="rece_memo" rows="4" placeholder="간단한 메모" style="width:100%;resize:vertical;min-height:90px;box-sizing:border-box;"></textarea>
     </div>
     <div class="modal-btns">
       <button class="btn" onclick="document.getElementById('recommendEditModal').style.display='none'">취소</button>
       <button class="btn btn-primary" id="recommendEditSaveBtn">저장</button>
     </div>
   </div>
+</div>
+
+<!-- 라이트박스 -->
+<div id="recLightbox" onclick="closeRecLightbox()">
+  <span id="recLbClose" onclick="closeRecLightbox()">✕</span>
+  <img id="recLbImg" src="" alt="" onclick="event.stopPropagation()" />
+  <div id="recLbCaption"></div>
 </div>
 
 <!-- ✏️ 고객 수정 모달 -->
@@ -2711,8 +2716,8 @@ function closeHomepageTab(tab) {
   let recPage = 1;
   const REC_PER_PAGE = 10;
 
-  // 등록 폼 링크 초기행
-  addRecLinkRow("rec_links_container");
+  // 등록 폼 파일 행 초기화
+  addRecFileRow();
 
   document.getElementById("recSearchInput").addEventListener("input", (e) => {
     recSearch = e.target.value.trim();
@@ -2725,36 +2730,90 @@ function closeHomepageTab(tab) {
     const name = document.getElementById("rec_name").value.trim();
     const memo = document.getElementById("rec_memo").value.trim();
     if (!name) { showToast("매물장 이름을 입력해주세요"); return; }
-    const links = getRecLinks("rec_links_container");
-    const drive_url = links.length ? JSON.stringify(links) : "";
-    const received_date = links.length
-      ? links.reduce((mx, l) => l.date > mx ? l.date : mx, links[0].date) || null
-      : null;
-    btn.disabled = true; btn.textContent = "저장 중...";
+    const received_date = document.getElementById("rec_date").value || null;
+    const fileRows = [...document.querySelectorAll("#rec_file_list .rec-file-input-row")];
+    const files = fileRows.map(r => r.querySelector("input[type=file]").files[0]).filter(Boolean);
+    btn.disabled = true;
+    const spinner = document.getElementById("recSaveSpinner");
+    spinner.classList.add("active");
     try {
-      await addRecommendedProperty({ name, drive_url, received_date, memo });
+      await addRecommendedProperty({ name, drive_url: "", received_date, memo });
+      const all = await getRecommendedProperties();
+      const saved = all[0];
+      if (saved && files.length) {
+        for (const file of files) {
+          const url = await recCloudinaryUpload(file);
+          await addRecommendedFile({ recommended_id: saved.id, file_name: file.name, cloudinary_url: url });
+        }
+      }
       document.getElementById("rec_name").value = "";
+      document.getElementById("rec_date").value = "";
       document.getElementById("rec_memo").value = "";
-      document.getElementById("rec_links_container").innerHTML = "";
-      addRecLinkRow("rec_links_container");
+      document.getElementById("rec_file_list").innerHTML = "";
+      addRecFileRow();
       showToast("✅ 매물장이 저장되었습니다!");
       await loadRecommendedProperties();
     } catch(e) {
       showToast("❌ 저장 실패: " + e.message);
     } finally {
-      btn.disabled = false; btn.textContent = "💾 저장";
+      btn.disabled = false;
+      spinner.classList.remove("active");
     }
   });
+
+  // ===== 추천매물 — Cloudinary =====
+  const REC_CL_CLOUD  = "dljw2pjvn";
+  const REC_CL_KEY    = "324442129185332";
+  const REC_CL_SECRET = "8uawLQywBtkUYqfVXYwV7DCWwFI";
+
+  async function _recSha1(str) {
+    const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+  }
+  async function recCloudinaryUpload(file, folder = "haitop/recommend") {
+    const ts  = Math.round(Date.now() / 1000);
+    const sig = await _recSha1(`folder=${folder}&timestamp=${ts}${REC_CL_SECRET}`);
+    const fd  = new FormData();
+    fd.append("file", file); fd.append("api_key", REC_CL_KEY);
+    fd.append("timestamp", ts); fd.append("folder", folder); fd.append("signature", sig);
+    const res  = await fetch(`https://api.cloudinary.com/v1_1/${REC_CL_CLOUD}/auto/upload`, { method:"POST", body:fd });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.secure_url;
+  }
+
+  // ===== 추천매물 — 등록 폼 파일 행 =====
+  function addRecFileRow() {
+    const list = document.getElementById("rec_file_list");
+    const row  = document.createElement("div");
+    row.className = "rec-file-input-row";
+    row.style.cssText = "display:flex;gap:6px;align-items:center;";
+    row.innerHTML = `
+      <input type="file" accept="image/*,.pdf" style="flex:1;font-size:0.82rem;" />
+      <button onclick="this.closest('.rec-file-input-row').remove()"
+        style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>`;
+    list.appendChild(row);
+  }
+
+  // ===== 추천매물 — 로드 & 렌더 =====
+  let allRecFiles = [];
 
   async function loadRecommendedProperties() {
     const container = document.getElementById("recommendContainer");
     container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
     try {
-      allRecommended = await getRecommendedProperties();
+      [allRecommended, allRecFiles] = await Promise.all([
+        getRecommendedProperties(),
+        getAllRecommendedFiles()
+      ]);
       renderRecommendedProperties();
     } catch(e) {
       container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
     }
+  }
+
+  function _recIsImage(url, name) {
+    return /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(url || name || "");
   }
 
   function renderRecommendedProperties() {
@@ -2772,137 +2831,161 @@ function closeHomepageTab(tab) {
       document.getElementById("recommendPagination").innerHTML = "";
       return;
     }
-    const recStart = (recPage - 1) * REC_PER_PAGE;
+    const recStart    = (recPage - 1) * REC_PER_PAGE;
     const recPageItems = list.slice(recStart, recStart + REC_PER_PAGE);
+
     container.innerHTML = `<div class="listing-grid">` + recPageItems.map(p => {
-      const links = parseLinks(p.drive_url);
-      const linksHtml = links.length
-        ? links.map(l => {
-            const dateStr = l.date ? new Date(l.date + "T00:00:00").toLocaleDateString("ko-KR") : "-";
-            const safeUrl = l.url.replace(/'/g, "%27");
-            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-              <span style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;">📅 ${dateStr}</span>
-              <button class="btn btn-primary" style="font-size:0.75rem;padding:3px 12px;" onclick="window.open('${safeUrl}','_blank')">열기</button>
-            </div>`;
-          }).join("")
-        : `<span style="font-size:0.75rem;color:var(--text-muted);">링크 없음</span>`;
+      const files   = allRecFiles.filter(f => f.recommended_id === p.id);
+      const dateStr = p.received_date ? new Date(p.received_date + "T00:00:00").toLocaleDateString("ko-KR") : "";
+
+      const filesHtml = files.length
+        ? `<div class="rec-file-grid">` + files.map(f => {
+            const safe = (f.cloudinary_url||"").replace(/'/g,"%27");
+            const nameE = (f.file_name||"").replace(/"/g,"&quot;");
+            if (_recIsImage(f.cloudinary_url, f.file_name)) {
+              return `<div class="rec-file-card">
+                <img class="rec-file-thumb" src="${safe}" loading="lazy"
+                  onclick="openRecLightbox('${safe}','${nameE}')" />
+                <div class="rec-file-foot">
+                  <span class="rec-file-name" title="${nameE}">${nameE}</span>
+                  <button class="rec-file-del" onclick="deleteRecFile('${f.id}','${p.id}')">✕</button>
+                </div>
+              </div>`;
+            } else {
+              return `<div class="rec-file-card" onclick="window.open('${safe}','_blank')">
+                <div class="rec-file-pdf">
+                  <div class="rec-file-pdf-icon">📄</div>
+                  <div class="rec-file-label">${nameE}</div>
+                </div>
+                <div class="rec-file-foot">
+                  <span class="rec-file-name" title="${nameE}">${nameE}</span>
+                  <button class="rec-file-del" onclick="event.stopPropagation();deleteRecFile('${f.id}','${p.id}')">✕</button>
+                </div>
+              </div>`;
+            }
+          }).join("") + `</div>`
+        : `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;">파일 없음</div>`;
+
       return `
-      <div class="listing-card" style="cursor:default;">
-        <div style="font-weight:700;font-size:0.95rem;color:var(--gold-soft);margin-bottom:8px;">${p.name||"-"}</div>
-        <div class="card-expand-wrap" data-expanded="false">
-          <div style="margin-bottom:4px;">${linksHtml}</div>
-          ${p.memo ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">📝 ${p.memo}</div>` : ""}
-          <div class="card-expand-fade"></div>
+      <div class="listing-card" style="cursor:default;" id="rec-card-${p.id}">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="font-weight:700;font-size:0.95rem;color:var(--gold-soft);">${p.name||"-"}</span>
+          ${dateStr ? `<span style="font-size:0.75rem;color:var(--text-muted);">📅 ${dateStr}</span>` : ""}
         </div>
-        <button class="card-expand-btn" onclick="toggleCardExpand(this)">▼ 더보기</button>
-        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;">
-          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openRecEdit('${p.id}')">✏️ 수정</button>
-          <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteRec('${p.id}')">🗑 삭제</button>
+        ${filesHtml}
+        <!-- 파일 추가 인라인 폼 -->
+        <div class="rec-add-form" id="rec-add-${p.id}">
+          <div class="rec-upload-row">
+            <input type="file" accept="image/*,.pdf" style="flex:1;font-size:0.82rem;" id="rec-add-file-${p.id}" />
+            <button class="btn btn-primary" style="font-size:0.78rem;padding:5px 10px;"
+              onclick="uploadRecFile('${p.id}')">업로드</button>
+            <button class="btn btn-ghost" style="font-size:0.78rem;padding:5px 8px;"
+              onclick="toggleRecAddForm('${p.id}')">취소</button>
+          </div>
+          <div class="rec-spinner" id="rec-add-spin-${p.id}"><div class="rec-spinner-dot"></div> 업로드 중…</div>
+        </div>
+        ${p.memo ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;">📝 ${p.memo}</div>` : ""}
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px;">
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;"
+            onclick="toggleRecAddForm('${p.id}')">📎 파일 추가</button>
+          <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;"
+            onclick="openRecEdit('${p.id}')">✏️ 수정</button>
+          <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);"
+            onclick="deleteRec('${p.id}')">🗑 삭제</button>
         </div>
       </div>`;
     }).join("") + `</div>`;
-    _initExpandCards(container);
-    _makePagination("recommendPagination", list.length, REC_PER_PAGE, recPage, (p) => { recPage = p; renderRecommendedProperties(); });
+
+    _makePagination("recommendPagination", list.length, REC_PER_PAGE, recPage,
+      (pg) => { recPage = pg; renderRecommendedProperties(); });
   }
 
+  // ===== 추천매물 — 파일 추가 인라인 =====
+  function toggleRecAddForm(id) {
+    const form = document.getElementById(`rec-add-${id}`);
+    if (form) form.classList.toggle("open");
+  }
+
+  async function uploadRecFile(id) {
+    const input = document.getElementById(`rec-add-file-${id}`);
+    const file  = input && input.files[0];
+    if (!file) { showToast("파일을 선택하세요"); return; }
+    const spin = document.getElementById(`rec-add-spin-${id}`);
+    if (spin) spin.classList.add("active");
+    try {
+      const url = await recCloudinaryUpload(file);
+      await addRecommendedFile({ recommended_id: id, file_name: file.name, cloudinary_url: url });
+      showToast("✅ 파일이 추가되었습니다");
+      await loadRecommendedProperties();
+    } catch(e) {
+      showToast("❌ 업로드 실패: " + e.message);
+      if (spin) spin.classList.remove("active");
+    }
+  }
+
+  async function deleteRecFile(fileId, recId) {
+    if (!confirm("이 파일을 삭제하시겠습니까?")) return;
+    try {
+      await deleteRecommendedFile(fileId);
+      showToast("삭제되었습니다");
+      await loadRecommendedProperties();
+    } catch(e) { showToast("❌ 삭제 실패: " + e.message); }
+  }
+
+  // ===== 추천매물 — 수정/삭제 =====
   let editingRecId = null;
   function openRecEdit(id) {
     const p = allRecommended.find(x => x.id === id);
     if (!p) return;
     editingRecId = id;
     document.getElementById("rece_name").value = p.name || "";
+    document.getElementById("rece_date").value = p.received_date || "";
     document.getElementById("rece_memo").value = p.memo || "";
-    const container = document.getElementById("rece_links_container");
-    container.innerHTML = "";
-    const links = parseLinks(p.drive_url);
-    if (links.length) {
-      links.forEach(l => addRecLinkRow("rece_links_container", l.date, l.url));
-    } else {
-      addRecLinkRow("rece_links_container");
-    }
     document.getElementById("recommendEditModal").style.display = "flex";
   }
 
   async function deleteRec(id) {
     if (!confirm("이 매물장을 삭제하시겠습니까?")) return;
     try {
+      await deleteRecommendedFilesByRecId(id);
       await deleteRecommendedProperty(id);
       showToast("🗑 삭제되었습니다");
       await loadRecommendedProperties();
-    } catch(e) {
-      showToast("❌ 삭제 실패: " + e.message);
-    }
+    } catch(e) { showToast("❌ 삭제 실패: " + e.message); }
   }
 
   document.getElementById("recommendEditSaveBtn").addEventListener("click", async () => {
     if (!editingRecId) return;
-    const btn = document.getElementById("recommendEditSaveBtn");
+    const btn  = document.getElementById("recommendEditSaveBtn");
     const name = document.getElementById("rece_name").value.trim();
     if (!name) { showToast("매물장 이름을 입력해주세요"); return; }
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
-      const eLinks = getRecLinks("rece_links_container");
-      const eDriveUrl = eLinks.length ? JSON.stringify(eLinks) : "";
-      const eReceivedDate = eLinks.length
-        ? eLinks.reduce((mx, l) => l.date > mx ? l.date : mx, eLinks[0].date) || null
-        : null;
       await updateRecommendedProperty(editingRecId, {
         name,
-        drive_url: eDriveUrl,
-        received_date: eReceivedDate,
+        received_date: document.getElementById("rece_date").value || null,
         memo: document.getElementById("rece_memo").value.trim()
       });
       document.getElementById("recommendEditModal").style.display = "none";
       showToast("✅ 수정되었습니다");
       await loadRecommendedProperties();
-    } catch(e) {
-      showToast("❌ 수정 실패: " + e.message);
-    } finally {
-      btn.disabled = false; btn.textContent = "저장";
-    }
+    } catch(e) { showToast("❌ 수정 실패: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "저장"; }
   });
 
-  // ===== 추천매물장 다중링크 헬퍼 =====
-  function parseLinks(drive_url) {
-    if (!drive_url) return [];
-    try {
-      const arr = JSON.parse(drive_url);
-      if (Array.isArray(arr)) {
-        return arr
-          .filter(l => l && l.url)
-          .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-      }
-      return [{ date: "", url: String(drive_url) }];
-    } catch {
-      return drive_url ? [{ date: "", url: drive_url }] : [];
-    }
+  // ===== 추천매물 — 라이트박스 =====
+  function openRecLightbox(url, caption) {
+    document.getElementById("recLbImg").src = url;
+    document.getElementById("recLbCaption").textContent = caption || "";
+    document.getElementById("recLightbox").classList.add("open");
+    document.body.style.overflow = "hidden";
   }
-
-  function addRecLinkRow(containerId, date, url) {
-    const container = document.getElementById(containerId);
-    const today = new Date().toISOString().slice(0, 10);
-    const row = document.createElement("div");
-    row.className = "rec-link-row";
-    row.style.cssText = "display:flex;gap:6px;align-items:center;margin-bottom:6px;";
-    row.innerHTML = `
-      <input type="date" value="${date || today}"
-        style="width:145px;flex-shrink:0;background:var(--bg-soft);color:var(--text-main);border:1px solid rgba(212,175,55,0.3);border-radius:6px;padding:5px 8px;font-size:0.82rem;" />
-      <input type="text" value="${url || ""}" placeholder="https://drive.google.com/..."
-        style="flex:1;" />
-      <button onclick="this.closest('.rec-link-row').remove()"
-        style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1.1rem;padding:0 4px;flex-shrink:0;">✕</button>
-    `;
-    container.appendChild(row);
+  function closeRecLightbox() {
+    document.getElementById("recLightbox").classList.remove("open");
+    document.getElementById("recLbImg").src = "";
+    document.body.style.overflow = "";
   }
-
-  function getRecLinks(containerId) {
-    return [...document.getElementById(containerId).querySelectorAll(".rec-link-row")]
-      .map(row => {
-        const inputs = row.querySelectorAll("input");
-        return { date: inputs[0].value, url: inputs[1].value.trim() };
-      })
-      .filter(l => l.url);
-  }
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeRecLightbox(); });
 
   // ===== 엑셀 내보내기 =====
   function _xlsxDate() {
@@ -2992,20 +3075,11 @@ function closeHomepageTab(tab) {
       }))), "자료보기");
 
       // 추천매물장
-      const recRows = [];
-      recommended.forEach(p => {
-        const links = parseLinks(p.drive_url);
-        if (links.length) {
-          links.forEach(l => recRows.push({
-            "매물장이름": p.name || "",
-            "날짜": l.date ? new Date(l.date + "T00:00:00").toLocaleDateString("ko-KR") : "",
-            "드라이브링크": l.url || "",
-            "메모": p.memo || ""
-          }));
-        } else {
-          recRows.push({ "매물장이름": p.name || "", "날짜": "", "드라이브링크": "", "메모": p.memo || "" });
-        }
-      });
+      const recRows = recommended.map(p => ({
+        "매물장이름": p.name || "",
+        "날짜": p.received_date ? new Date(p.received_date + "T00:00:00").toLocaleDateString("ko-KR") : "",
+        "메모": p.memo || ""
+      }));
       XLSX.utils.book_append_sheet(wb, _makeSheet(recRows), "추천매물장");
 
       // 참고매물 (DB 컬럼: location, property_type, price, contact, memo)
@@ -3033,128 +3107,7 @@ function closeHomepageTab(tab) {
     }
   }
 
-  // ===== 추천매물장 - 폴더에서 파일 목록 불러오기 =====
-  let _folderFiles = [];
 
-  function _extractFolderID(url) {
-    const m = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-    return m ? m[1] : null;
-  }
-
-  function _parseDriveFiles(html) {
-    const files = [];
-    const seen = new Set();
-    // Google Drive 폴더 페이지 HTML에 포함된 파일 데이터 파싱
-    // 파일 ID(25자 이상 영숫자) 뒤에 null과 파일명이 오는 패턴
-    const regex = /\["([a-zA-Z0-9_-]{25,})",null,"([^"]{1,300})"/g;
-    let m;
-    while ((m = regex.exec(html)) !== null) {
-      const [, id, name] = m;
-      // 파일명에 확장자 또는 한글/영문이 포함된 것만 추가 (노이즈 필터)
-      if (!seen.has(id) && /[가-힣a-zA-Z0-9]/.test(name) && name.length > 1) {
-        seen.add(id);
-        files.push({ id, name });
-      }
-    }
-    return files;
-  }
-
-  async function loadDriveFolderFiles() {
-    const url = document.getElementById("rec_folder_url").value.trim();
-    const folderId = _extractFolderID(url);
-    if (!folderId) { showToast("올바른 구글 드라이브 폴더 링크를 입력하세요"); return; }
-
-    const btn = document.getElementById("loadFolderBtn");
-    btn.disabled = true;
-    btn.textContent = "불러오는 중...";
-    document.getElementById("folderFilePanel").style.display = "none";
-
-    try {
-      const proxyUrl = `https://corsproxy.io/?https://drive.google.com/drive/folders/${folderId}`;
-      const res = await fetch(proxyUrl);
-      if (!res.ok) throw new Error("폴더 접근 실패 (HTTP " + res.status + ")");
-      const html = await res.text();
-      const files = _parseDriveFiles(html);
-
-      if (!files.length) throw new Error("파일을 찾을 수 없습니다. 폴더가 '링크가 있는 모든 사용자' 공유 설정인지 확인하세요");
-
-      _folderFiles = files;
-      _renderFolderFiles(files);
-      showToast("✅ 파일 " + files.length + "개를 불러왔습니다");
-    } catch(e) {
-      showToast("❌ " + e.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "📂 불러오기";
-    }
-  }
-
-  function _renderFolderFiles(files) {
-    const panel = document.getElementById("folderFilePanel");
-    const list  = document.getElementById("folderFileList");
-    const count = document.getElementById("folderFileCount");
-
-    count.textContent = "총 " + files.length + "개 파일";
-    list.innerHTML = "";
-
-    files.forEach((f, i) => {
-      const fileUrl = `https://drive.google.com/file/d/${f.id}/view`;
-      const row = document.createElement("div");
-      row.style.cssText = "display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);";
-      row.innerHTML = `
-        <input type="checkbox" id="fc_${i}" data-idx="${i}" checked
-          style="flex-shrink:0;width:16px;height:16px;cursor:pointer;accent-color:var(--gold);" />
-        <label for="fc_${i}" style="flex:1;font-size:0.82rem;cursor:pointer;word-break:break-all;line-height:1.4;">${f.name}</label>
-        <a href="${fileUrl}" target="_blank"
-          style="font-size:0.73rem;color:var(--gold);white-space:nowrap;flex-shrink:0;text-decoration:none;">열기↗</a>
-      `;
-      list.appendChild(row);
-    });
-
-    document.getElementById("rec_folder_date").value = new Date().toISOString().slice(0, 10);
-    panel.style.display = "block";
-  }
-
-  function selectAllFolderFiles(check) {
-    document.querySelectorAll("#folderFileList input[type=checkbox]").forEach(cb => cb.checked = check);
-  }
-
-  async function saveFolderFiles(e) {
-    const checked = [...document.querySelectorAll("#folderFileList input[type=checkbox]")].filter(cb => cb.checked);
-    if (!checked.length) { showToast("저장할 파일을 1개 이상 선택해주세요"); return; }
-
-    const date = document.getElementById("rec_folder_date").value;
-    const memo = document.getElementById("rec_folder_memo").value.trim();
-    const btn  = e.target;
-    btn.disabled = true;
-    btn.textContent = "저장 중...";
-
-    let success = 0;
-    for (const cb of checked) {
-      const idx = parseInt(cb.dataset.idx);
-      const f   = _folderFiles[idx];
-      try {
-        await addRecommendedProperty({
-          name         : f.name,
-          drive_url    : JSON.stringify([{ date, url: `https://drive.google.com/file/d/${f.id}/view` }]),
-          received_date: date || null,
-          memo
-        });
-        success++;
-      } catch(err) {
-        console.error("저장 실패:", f.name, err);
-      }
-    }
-
-    showToast("✅ " + success + "개 파일이 추천매물장에 저장되었습니다");
-    document.getElementById("folderFilePanel").style.display = "none";
-    document.getElementById("rec_folder_url").value  = "";
-    document.getElementById("rec_folder_memo").value = "";
-    _folderFiles = [];
-    btn.disabled = false;
-    btn.textContent = "✅ 선택한 파일 저장";
-    await loadRecommendedProperties();
-  }
 </script>
 
 <!-- ===== 계약문자 모달 ===== -->
