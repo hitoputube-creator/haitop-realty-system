@@ -1376,12 +1376,25 @@ function closeHomepageTab(tab) {
     return "other";
   }
 
+  // 원(₩) 단위 숫자를 억/만원 한국어 표기로 변환
+  function _fmtWon(v) {
+    const n = Number(String(v).replace(/,/g, ""));
+    if (!n || !isFinite(n)) return "";
+    const uk  = Math.floor(n / 100000000);
+    const man = Math.floor((n % 100000000) / 10000);
+    let s = "";
+    if (uk  > 0) s += uk.toLocaleString("ko-KR") + "억";
+    if (man > 0) s += (s ? " " : "") + man.toLocaleString("ko-KR") + "만";
+    return s ? s + "원" : "";
+  }
+
   // 상세등록(register.html) 필드에서 가격 문자열 생성
+  // salePrice/deposit/monthlyRent 는 원(₩) 단위 문자열로 저장됨
   function _detailPrice(item) {
     const deal = item.dealType || "";
-    const sale  = item.salePrice  ? (deal || "매매") + " " + item.salePrice  : "";
-    const dep   = item.deposit    ? "보증금 " + item.deposit                 : "";
-    const rent  = item.monthlyRent? "월세 "  + item.monthlyRent             : "";
+    const sale  = item.salePrice   && Number(item.salePrice)   ? (deal || "매매") + " " + _fmtWon(item.salePrice)   : "";
+    const dep   = item.deposit     && Number(item.deposit)     ? "보증금 " + _fmtWon(item.deposit)                  : "";
+    const rent  = item.monthlyRent && Number(item.monthlyRent) ? "월세 "   + _fmtWon(item.monthlyRent)              : "";
     if (dep && rent) return `${dep} / ${rent}`;
     if (sale) return sale;
     if (dep)  return dep;
