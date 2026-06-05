@@ -15,14 +15,14 @@
   }
 
   .est-title{
-    font-size:18px;
+    font-size:19px;
     font-weight:900;
     letter-spacing:-0.2px;
     margin:0;
   }
   .est-sub{
     margin-top:6px;
-    font-size:11px;
+    font-size:11.5px;
     color:#555;
     line-height:1.45;
   }
@@ -34,10 +34,10 @@
 
   .est-figure{ margin:0 0 14px; }
   .est-figure img{ width:100%; display:block; border-radius:0; }
-  .est-caption{ font-size:10px; color:#666; margin-top:6px; }
+  .est-caption{ font-size:10.5px; color:#666; margin-top:6px; }
 
   .est-section{ margin-top:14px; }
-  .est-section h3{ margin:0 0 8px; font-size:12px; font-weight:900; color:#111; }
+  .est-section h3{ margin:0 0 8px; font-size:12.5px; font-weight:900; color:#111; }
 
   table.est-table{
     width:100%;
@@ -46,7 +46,7 @@
   }
   .est-table th{
     background:#f6f6f6;
-    font-size:11px;
+    font-size:11.7px;
     text-align:left;
     padding:8px 8px;
     border-bottom:1px solid #ddd;
@@ -54,7 +54,7 @@
     width:42%;
   }
   .est-table td{
-    font-size:11px;
+    font-size:11.7px;
     padding:8px 8px;
     border-bottom:1px solid #eee;
     color:#111;
@@ -73,46 +73,78 @@
     gap:10px;
     padding:6px 0;
     border-bottom:1px solid #eee;
-    font-size:11px;
+    font-size:11.7px;
   }
   .yield-row:last-child{ border-bottom:none; }
   .yield-row .k{ color:#333; }
   .yield-row .v{ font-weight:800; }
   .yield-row .v.big{
-    font-size:15px;
+    font-size:16px;
     font-weight:900;
     letter-spacing:-0.2px;
   }
 
   .vat-note{
     margin-top:10px;
-    font-size:10px;
+    font-size:10.5px;
     color:#666;
     line-height:1.5;
   }
 
   .est-footer{
-    margin-top:18px;
+    margin-top:22px;
+    padding:12px 14px 10px;
+    border-top:2px solid #12335a;
+    background:#f8fafc;
+  }
+  .est-footer-head{
     display:flex;
     align-items:center;
     justify-content:center;
     gap:10px;
-    padding-top:10px;
-    border-top:1px solid #e6e6e6;
+    margin-bottom:8px;
   }
   .est-logo{
-    width:26px;
-    height:26px;
+    width:28px;
+    height:28px;
     border-radius:8px;
-    border:1px solid #ddd;
+    border:1px solid #d8dee8;
     background:#fff;
   }
   .est-footer-text{
-    font-size:11px;
+    font-size:12.5px;
+    font-weight:900;
     color:#111;
     letter-spacing:-0.1px;
   }
+  .est-office-name{
+    margin-top:2px;
+    font-size:11.5px;
+    font-weight:800;
+    color:#12335a;
+    text-align:center;
+  }
+  .est-office-info{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:3px 14px;
+    font-size:9.6px;
+    line-height:1.35;
+    color:#475569;
+    text-align:left;
+  }
+  .est-office-info div:nth-child(2),
+  .est-office-info div:nth-child(7){
+    grid-column:1 / -1;
+  }
 
+  .est-table tbody tr:nth-child(2) td,
+  .est-table tbody tr:nth-child(5) td,
+  .est-table tbody tr:nth-child(6) td,
+  .est-table tbody tr:nth-child(7) td,
+  .est-table tbody tr:nth-child(8) td{
+    font-weight:900;
+  }
   table, tr, td, th { page-break-inside: avoid; }
 }
 

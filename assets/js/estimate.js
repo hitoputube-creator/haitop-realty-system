@@ -84,8 +84,22 @@
       </div>
 
       <div class="est-footer">
-        <div class="est-logo"></div>
-        <div class="est-footer-text">하이탑부동산 ☎ 031.949.8969</div>
+        <div class="est-footer-head">
+          <div class="est-logo"></div>
+          <div>
+            <div class="est-footer-text">하이탑부동산 / T.031.949.8969</div>
+            <div class="est-office-name">하이탑부동산공인중개사사무소</div>
+          </div>
+        </div>
+        <div class="est-office-info">
+          <div>대표: 주현희</div>
+          <div>주소: 경기도 파주시 책향기로 830, 1층</div>
+          <div>전화: 031-949-8969</div>
+          <div>팩스: 031-944-1108</div>
+          <div>사업자등록번호: 305-48-62183</div>
+          <div>중개사무소 등록번호: 41480-2016-00026</div>
+          <div>이메일: newpajucity@naver.com</div>
+        </div>
       </div>
     `;
   }
@@ -150,7 +164,7 @@
 
   function makeVatNote(x, calc) {
     if (x.type.startsWith("land")) return "※ 토지는 일반적으로 부가세 적용 대상이 아닙니다. (거래 구조에 따라 예외가 있을 수 있습니다)";
-    if (calc.vatMode === "별도") return `※ 상기 금액은 부가세(${calc.vatRate}%) 별도 기준입니다.`;
+    if (calc.vatMode === "별도") return "※ 취득세는 매매가 기준 4.6%를 적용한 대략 금액이며, 실제 취득세 및 부대비용은 계약 조건과 과세 기준에 따라 달라질 수 있습니다.";
     if (calc.vatMode === "포함") return "※ 상기 금액은 부가세 포함 금액입니다.";
     return "※ 부가세 적용 여부는 거래 구조에 따라 달라질 수 있습니다.";
   }
