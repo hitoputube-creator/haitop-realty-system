@@ -104,34 +104,12 @@
     }
     .btn-icon:hover { background: rgba(255,79,106,0.18); color: var(--danger); }
 
-    /* ── 기타 자료 목록 ── */
-    .file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
-    .file-item {
-      display: flex; align-items: center; gap: 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px; padding: 10px 14px;
-      transition: border-color 0.18s;
+    /* ── 기타 자료 그리드 (평면도와 동일 레이아웃) ── */
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px; margin-top: 14px;
     }
-    .file-item:hover { border-color: rgba(212,175,55,0.25); }
-    .file-item-thumb {
-      width: 48px; height: 48px; border-radius: 8px;
-      object-fit: cover; cursor: pointer; flex-shrink: 0;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .file-item-icon {
-      width: 48px; height: 48px; border-radius: 8px;
-      background: rgba(212,175,55,0.08);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; flex-shrink: 0;
-    }
-    .file-item-info { flex: 1; min-width: 0; }
-    .file-item-name {
-      font-size: 0.9rem; color: var(--text); font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .file-item-sub { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
-    .file-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
     /* ── 업로드 진행 ── */
     .upload-progress {
@@ -153,15 +131,6 @@
       color: var(--muted); font-size: 0.85rem;
       border: 1px dashed rgba(255,255,255,0.1);
       border-radius: 12px;
-    }
-
-    /* ── 구분선 ── */
-    .link-or {
-      display: flex; align-items: center; gap: 10px;
-      color: var(--muted); font-size: 0.78rem; margin: 10px 0;
-    }
-    .link-or::before, .link-or::after {
-      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08);
     }
 
     /* ── 라이트박스 ── */
@@ -251,16 +220,8 @@
       <div class="spinner-sm"></div> 업로드 중…
     </div>
 
-    <!-- 드라이브 링크 직접 입력 -->
-    <div class="link-or">또는 구글 드라이브 링크 직접 입력</div>
-    <div class="upload-row link-row">
-      <input id="linkName" type="text" placeholder="자료명 (예: 분양도면)" />
-      <input id="linkUrl"  type="text" placeholder="https://drive.google.com/…" />
-      <button class="btn" onclick="addDriveLink()">+ 추가</button>
-    </div>
-
-    <div class="file-list" id="fileList">
-      <div class="empty-state">등록된 자료가 없습니다.</div>
+    <div class="file-grid" id="fileList">
+      <div class="empty-state" style="grid-column:1/-1;">등록된 자료가 없습니다.</div>
     </div>
   </div>
 
@@ -503,46 +464,31 @@ async function loadFiles() {
 function renderFiles(files) {
   const el = document.getElementById('fileList');
   if (!files.length) {
-    el.innerHTML = '<div class="empty-state">등록된 자료가 없습니다.</div>';
+    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">등록된 자료가 없습니다.</div>';
     return;
   }
 
   el.innerHTML = files.map(f => {
-    const url  = f.cloudinary_url || f.drive_link || '';
+    const url  = f.cloudinary_url || '';
     const name = esc(f.file_name);
     const safe = esc(url);
 
-    let iconHtml, actionHtml, subLabel;
-
-    if (f.cloudinary_url && isImage(f.cloudinary_url, f.file_name)) {
-      iconHtml   = `<img class="file-item-thumb" src="${safe}" alt="${name}"
-                     loading="lazy" onclick="openLightbox('${safe}','${name}')">`;
-      actionHtml = `<button class="btn ghost" style="font-size:0.8rem;padding:6px 12px;"
-                     onclick="openLightbox('${safe}','${name}')">🔍 보기</button>`;
-      subLabel   = '☁️ 이미지';
-    } else if (f.cloudinary_url) {
-      iconHtml   = `<div class="file-item-icon">📄</div>`;
-      actionHtml = `<button class="btn" style="font-size:0.8rem;padding:6px 12px;"
-                     onclick="window.open('${safe}','_blank')">🔍 열기</button>`;
-      subLabel   = '☁️ Cloudinary';
-    } else {
-      iconHtml   = `<div class="file-item-icon">🔗</div>`;
-      actionHtml = `<button class="btn" style="font-size:0.8rem;padding:6px 12px;"
-                     onclick="window.open('${safe}','_blank')">🔍 열기</button>`;
-      subLabel   = '🔗 구글 드라이브';
-    }
+    const previewHtml = isImage(url, f.file_name)
+      ? `<img class="floor-thumb" src="${safe}" alt="${name}"
+           loading="lazy"
+           onclick="openLightbox('${safe}','${name}')">`
+      : `<div class="floor-pdf" onclick="window.open('${safe}','_blank')">
+           <div class="floor-pdf-icon">📄</div>
+           <div class="floor-pdf-label">${name}</div>
+         </div>`;
 
     return `
-    <div class="file-item">
-      ${iconHtml}
-      <div class="file-item-info">
-        <div class="file-item-name">${name}</div>
-        <div class="file-item-sub">${subLabel}</div>
-      </div>
-      <div class="file-item-actions">
-        ${actionHtml}
-        <button class="btn danger" style="font-size:0.8rem;padding:6px 12px;"
-          onclick="deleteBFile('${f.id}')">🗑 삭제</button>
+    <div class="floor-card">
+      ${previewHtml}
+      <div class="floor-card-foot">
+        <span class="floor-badge" style="color:var(--text);font-weight:500;font-size:0.78rem;"
+          title="${name}">${name}</span>
+        <button class="btn-icon" title="삭제" onclick="deleteBFile('${f.id}')">🗑</button>
       </div>
     </div>`;
   }).join('');
@@ -570,20 +516,6 @@ async function uploadFile() {
   } finally {
     prog.classList.remove('active');
   }
-}
-
-async function addDriveLink() {
-  const name = document.getElementById('linkName').value.trim();
-  const url  = document.getElementById('linkUrl').value.trim();
-  if (!name) { showToast('자료명을 입력하세요.'); return; }
-  if (!url)  { showToast('드라이브 링크를 입력하세요.'); return; }
-  try {
-    await addBuildingFile({ building_id: buildingId, file_name: name, cloudinary_url: null, drive_link: url });
-    document.getElementById('linkName').value = '';
-    document.getElementById('linkUrl').value  = '';
-    showToast('✅ 드라이브 링크가 추가되었습니다.');
-    await loadFiles();
-  } catch(e) { showToast('❌ 저장 실패: ' + e.message); }
 }
 
 async function deleteBFile(id) {
