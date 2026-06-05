@@ -979,6 +979,17 @@
 
 <script>
   // ===== 탭 전환 =====
+  function switchTab(tab) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if (btn) btn.click();
+  }
+
+  // URL 파라미터로 탭 자동 전환 (?tab=drive 등)
+  (function () {
+    const t = new URLSearchParams(location.search).get("tab");
+    if (t) window.addEventListener("DOMContentLoaded", () => switchTab(t), { once: true });
+  })();
+
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
