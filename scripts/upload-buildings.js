@@ -10,19 +10,18 @@
  * ▶ 패키지 설치 (최초 1회)
  *   npm install
  *
- * ▶ 저장 필드 구조 (한글 키)
- *   { 호수, 공실여부, 현업종, 소유주, 연락처,
- *     보증금, 월차임, 현_매매가격, 현_보증금, 현_월세,
- *     수익률, 비고, 전용_평, 분양_평, 평당가, 분양금액 }
+ * ▶ 특징
+ *   - 시트마다 다른 헤더 컬럼명을 자동 정규화하여 동일하게 파싱
+ *   - 시트명 → 앱 건물명 매핑 적용
  */
 
 "use strict";
 
+// ── Supabase ─────────────────────────────────────
 const SUPABASE_URL = "https://xaxbkdnrzsghsabkdvzj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
 
 // ── 시트명 → 앱 건물명 매핑 ──────────────────────
-// 여기에 없는 시트명은 시트명 그대로 사용
 const NAME_MAP = {
   "아름터":  "아름터워",
   "현해":    "현해프라자",
@@ -31,28 +30,108 @@ const NAME_MAP = {
   "홍원":    "홍원빌딩",
 };
 
-// ── 엑셀 컬럼 인덱스 (0-based)
-const COL = {
-  건물명:      0,   // A
-  호수:        1,   // B
-  전용평:      2,   // C
-  분양평:      3,   // D
-  평당가:      4,   // E
-  분양금액:    5,   // F
-  보증금:      6,   // G
-  월차임:      7,   // H
-  현업종:      8,   // I
-  공실여부:    9,   // J
-  현매매가격: 10,   // K
-  현보증금:   11,   // L
-  현월세:     12,   // M
-  소유주:     13,   // N
-  연락처:     14,   // O
-  비고:       15,   // P
-  추천매물:   16,   // Q
-  수익률:     17,   // R
+// ── 컬럼명 정규화 규칙 ────────────────────────────
+// 정규화 키: 원본 셀 값에서 공백·괄호·특수문자 제거 후 소문자
+// 값: 저장할 표준 필드명
+const COL_NORM = {
+  // 호수
+  "호수":           "호수",
+  "호실":           "호수",
+
+  // 전용(평)
+  "전용평":         "전용_평",
+  "전용":           "전용_평",
+
+  // 분양(평) — 오타/이형 포함
+  "분양평":         "분양_평",
+  "분영평":         "분양_평",   // 오타
+  "뷴양평":         "분양_평",   // 오타
+  "공유평":         "분양_평",   // 남광 시트
+
+  // 평당가
+  "평당가":         "평당가",
+  "평단가":         "평당가",
+
+  // 분양금액
+  "분양금액":       "분양금액",
+  "분양가격":       "분양금액",
+  "분양가":         "분양금액",
+  "공급가액":       "분양금액",
+
+  // 보증금 / 월차임
+  "보증금":         "보증금",
+  "월차임":         "월차임",
+
+  // 업종 / 공실
+  "현업종":         "현업종",
+  "업종":           "현업종",
+  "공실여부":       "공실여부",
+
+  // 현재 시세
+  "현매매가격":     "현_매매가격",
+  "현보증금":       "현_보증금",
+  "현월세":         "현_월세",
+
+  // 소유주 / 연락처 (소유주1, 연락처1 등 변형 포함)
+  "소유주":         "소유주",
+  "소유주1":        "소유주",
+  "연락처":         "연락처",
+  "연락처1":        "연락처",
+
+  // 기타
+  "비고":           "비고",
+  "추천매물":       "추천매물",
+  "수익률":         "수익률",
 };
 
+// ── 정규화 키 생성 ────────────────────────────────
+// 공백, 괄호, 특수문자 제거 → 소문자
+function normKey(raw) {
+  return String(raw ?? "")
+    .replace(/[\s\(\)\[\]（）\.,·]/g, "")
+    .toLowerCase();
+}
+
+// ── 헤더 행 탐지 ─────────────────────────────────
+// "호수" / "호실" 키워드가 포함된 행을 헤더로 판별
+function findHeaderRow(rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    for (const cell of r) {
+      const k = normKey(cell);
+      if (k === "호수" || k === "호실") return i;
+    }
+  }
+  return -1;
+}
+
+// ── 헤더 → 표준 필드 인덱스 맵 생성 ─────────────
+function buildColMap(headerRow) {
+  const map = {};   // 표준 필드명 → 열 인덱스
+  headerRow.forEach((cell, idx) => {
+    const std = COL_NORM[normKey(cell)];
+    if (std && !(std in map)) map[std] = idx;  // 첫 번째 매칭만 사용
+  });
+  return map;
+}
+
+// ── 유틸 ─────────────────────────────────────────
+function toNum(val) {
+  if (val === "" || val == null) return 0;
+  const n = Number(String(val).replace(/,/g, "").trim());
+  return isFinite(n) ? n : 0;
+}
+function isPositiveNum(val) {
+  if (val === "" || val == null) return false;
+  const n = Number(String(val).trim());
+  return isFinite(n) && n > 0;
+}
+function col(row, map, field) {
+  const idx = map[field];
+  return idx !== undefined ? row[idx] : undefined;
+}
+
+// ── 메인 ─────────────────────────────────────────
 async function main() {
   const filePath = process.argv[2];
   if (!filePath) {
@@ -68,13 +147,9 @@ async function main() {
     process.exit(1);
   }
 
-  let fetchFn = globalThis.fetch;
+  const fetchFn = globalThis.fetch;
   if (!fetchFn) {
-    try { fetchFn = (...a) => import("node-fetch").then(m => m.default(...a)); }
-    catch { fetchFn = null; }
-  }
-  if (!fetchFn) {
-    console.error("\n❌ Node.js 18 이상 또는 npm install node-fetch 가 필요합니다.\n");
+    console.error("\n❌ Node.js 18 이상이 필요합니다.\n");
     process.exit(1);
   }
 
@@ -87,7 +162,7 @@ async function main() {
   const sheetNames = workbook.SheetNames;
   console.log(`✅ 시트 ${sheetNames.length}개 발견`);
   console.log(`   ${sheetNames.join(" | ")}\n`);
-  console.log("─".repeat(55));
+  console.log("─".repeat(60));
 
   const reqHeaders = {
     "Content-Type":  "application/json",
@@ -101,45 +176,60 @@ async function main() {
   const errors       = [];
 
   for (const sheetName of sheetNames) {
-    const sheet = workbook.Sheets[sheetName];
-    const rows  = XLSX.utils.sheet_to_json(sheet, {
+    const appName = NAME_MAP[sheetName.trim()] || sheetName.trim();
+    const sheet   = workbook.Sheets[sheetName];
+    const rows    = XLSX.utils.sheet_to_json(sheet, {
       header: 1, defval: "", blankrows: false,
     });
 
-    const units = [];
+    // ── 헤더 행 탐지 ──
+    const hdrIdx = findHeaderRow(rows);
+    if (hdrIdx < 0) {
+      console.log(`⚠️  [${sheetName}] 헤더 행 없음 → 건너뜀`);
+      continue;
+    }
 
-    for (const row of rows) {
-      const roomCell = row[COL.호수];
-      // 호수가 숫자형이 아니면 헤더/합계행 → 건너뜀
-      if (typeof roomCell !== "number" && !isPositiveNum(roomCell)) continue;
+    // ── 컬럼 매핑 구성 ──
+    const colMap = buildColMap(rows[hdrIdx]);
+
+    if (!("호수" in colMap)) {
+      console.log(`⚠️  [${sheetName}] '호수' 컬럼 없음 → 건너뜀`);
+      continue;
+    }
+
+    // ── 데이터 행 파싱 (헤더 다음 행부터) ──
+    const units = [];
+    for (let i = hdrIdx + 1; i < rows.length; i++) {
+      const row  = rows[i];
+      const room = row[colMap["호수"]];
+
+      // 호수가 숫자형이 아니면 합계행·구분행·빈 행 → 건너뜀
+      if (typeof room !== "number" && !isPositiveNum(room)) continue;
 
       // 공실여부 결정
-      const vacantRaw = String(row[COL.공실여부] || "").trim();
-      const hasBiz    = String(row[COL.현업종]   || "").trim() !== "";
-      let 공실여부;
-      if (vacantRaw)   공실여부 = "공실";
-      else if (hasBiz) 공실여부 = "임차중";
-      else             공실여부 = "공실";
+      const vacantRaw = String(col(row, colMap, "공실여부") ?? "").trim();
+      const hasBiz    = String(col(row, colMap, "현업종")   ?? "").trim() !== "";
+      const 공실여부  = vacantRaw ? "공실" : (hasBiz ? "임차중" : "공실");
 
-      const 수익률raw = String(row[COL.수익률] || "").trim().replace(/%$/, "");
+      const 수익률raw = String(col(row, colMap, "수익률") ?? "").trim().replace(/%$/, "");
 
       units.push({
-        호수:        String(roomCell).trim(),
+        호수:        String(room).trim(),
         공실여부,
-        현업종:      String(row[COL.현업종]  || "").trim()  || null,
-        소유주:      String(row[COL.소유주]  || "").trim()  || null,
-        연락처:      String(row[COL.연락처]  || "").trim()  || null,
-        보증금:      toNum(row[COL.보증금])   || null,
-        월차임:      toNum(row[COL.월차임])   || null,
-        현_매매가격: toNum(row[COL.현매매가격]) || null,
-        현_보증금:   toNum(row[COL.현보증금])  || null,
-        현_월세:     toNum(row[COL.현월세])    || null,
+        현업종:      String(col(row, colMap, "현업종")      ?? "").trim() || null,
+        소유주:      String(col(row, colMap, "소유주")      ?? "").trim() || null,
+        연락처:      String(col(row, colMap, "연락처")      ?? "").trim() || null,
+        보증금:      toNum(col(row, colMap, "보증금"))      || null,
+        월차임:      toNum(col(row, colMap, "월차임"))      || null,
+        현_매매가격: toNum(col(row, colMap, "현_매매가격")) || null,
+        현_보증금:   toNum(col(row, colMap, "현_보증금"))   || null,
+        현_월세:     toNum(col(row, colMap, "현_월세"))     || null,
         수익률:      수익률raw || null,
-        비고:        String(row[COL.비고]     || "").trim() || null,
-        전용_평:     toNum(row[COL.전용평])   || null,
-        분양_평:     toNum(row[COL.분양평])   || null,
-        평당가:      toNum(row[COL.평당가])   || null,
-        분양금액:    toNum(row[COL.분양금액]) || null,
+        비고:        String(col(row, colMap, "비고")        ?? "").trim() || null,
+        전용_평:     toNum(col(row, colMap, "전용_평"))     || null,
+        분양_평:     toNum(col(row, colMap, "분양_평"))     || null,
+        평당가:      toNum(col(row, colMap, "평당가"))      || null,
+        분양금액:    toNum(col(row, colMap, "분양금액"))    || null,
         updated_at:  new Date().toISOString(),
       });
     }
@@ -149,10 +239,8 @@ async function main() {
       continue;
     }
 
+    // ── Supabase upsert ──
     try {
-      // 시트명을 앱 건물명으로 변환 (매핑 없으면 시트명 그대로)
-      const appName = NAME_MAP[sheetName.trim()] || sheetName.trim();
-
       const res = await fetchFn(`${SUPABASE_URL}/rest/v1/buildings?on_conflict=local_id`, {
         method:  "POST",
         headers: reqHeaders,
@@ -161,7 +249,9 @@ async function main() {
       if (!res.ok) throw new Error(`HTTP ${res.status} → ${await res.text()}`);
 
       const mapped = appName !== sheetName.trim() ? ` → [${appName}]` : "";
-      console.log(`✅ [${sheetName}]${mapped} 저장 완료  (${units.length}개 호실)`);
+      // 컬럼 매핑 요약 (개발용)
+      const mappedCols = Object.keys(colMap).join(", ");
+      console.log(`✅ [${sheetName}]${mapped}  ${units.length}개 호실  (인식 컬럼: ${mappedCols})`);
       totalBuildings++;
       totalUnits += units.length;
     } catch (e) {
@@ -170,9 +260,10 @@ async function main() {
     }
   }
 
-  console.log("\n" + "═".repeat(55));
+  // ── 결과 요약 ──
+  console.log("\n" + "═".repeat(60));
   console.log("📊 업로드 결과 요약");
-  console.log("═".repeat(55));
+  console.log("═".repeat(60));
   console.log(`  총 시트 수    : ${sheetNames.length} 개`);
   console.log(`  저장 완료     : ${totalBuildings} 개 건물  /  ${totalUnits} 개 호실`);
   if (errors.length) {
@@ -181,19 +272,7 @@ async function main() {
   } else {
     console.log(`  오류          : 없음 ✨`);
   }
-  console.log("═".repeat(55) + "\n");
-}
-
-function toNum(val) {
-  if (val === "" || val == null) return 0;
-  const n = Number(String(val).replace(/,/g, "").trim());
-  return isFinite(n) ? n : 0;
-}
-
-function isPositiveNum(val) {
-  if (val === "" || val == null) return false;
-  const n = Number(String(val).trim());
-  return isFinite(n) && n > 0;
+  console.log("═".repeat(60) + "\n");
 }
 
 main().catch(e => {
