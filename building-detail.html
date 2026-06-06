@@ -244,11 +244,28 @@
     }
     .unit-modal-close:hover { color: #fff; }
     /* 모달 섹션 구분 */
-    .um-section { margin-bottom: 16px; }
+    .um-section { margin-bottom: 14px; border-radius: 10px; overflow: hidden; }
     .um-section-title {
       font-size: 0.78rem; font-weight: 800; letter-spacing: 0.5px;
-      color: var(--gold); margin-bottom: 10px; padding-bottom: 6px;
-      border-bottom: 1px solid rgba(212,175,55,0.20);
+      color: #fff; padding: 7px 14px;
+    }
+    /* 분양 당시 — 파란 계열 */
+    .um-section.sale .um-section-title { background: #1a3a6e; }
+    .um-section.sale { background: rgba(26,58,110,0.18); }
+    .um-section.sale .umgrid { padding: 10px 12px 12px; }
+    /* 현재 현황 — 골드 계열 */
+    .um-section.current .um-section-title { background: #8B6914; }
+    .um-section.current { background: #0d1f3c; }
+    .um-section.current .umgrid { padding: 10px 12px 12px; }
+    .um-section.current .umfield input,
+    .um-section.current .umfield select,
+    .um-section.current .umfield textarea {
+      border-color: rgba(201,168,76,0.45);
+    }
+    .um-section.current .umfield input:focus,
+    .um-section.current .umfield select:focus,
+    .um-section.current .umfield textarea:focus {
+      border-color: #C9A84C;
     }
     .umgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @media (max-width: 480px) { .umgrid { grid-template-columns: 1fr; } }
@@ -430,7 +447,7 @@
       <div class="unit-modal-title" id="umTitle">호실 추가</div>
 
       <!-- 분양 당시 -->
-      <div class="um-section">
+      <div class="um-section sale">
         <div class="um-section-title">📋 분양 당시</div>
         <div class="umgrid">
           <div class="umfield"><label>호수 *</label><input id="u_호수" placeholder="예: 101, 202" /></div>
@@ -445,7 +462,7 @@
       </div>
 
       <!-- 현재 현황 -->
-      <div class="um-section">
+      <div class="um-section current">
         <div class="um-section-title">📊 현재 현황</div>
         <div class="umgrid">
           <div class="umfield">
@@ -949,8 +966,8 @@ async function deleteBFile(id) {
     // 분양 당시
     $("u_호수").value     = u.호수      || "";
     $("u_현업종").value   = u.현업종    || "";
-    $("u_전용_평").value  = u.전용_평   || "";
-    $("u_분양_평").value  = u.분양_평   || "";
+    $("u_전용_평").value  = u.전용_평   ? parseFloat(u.전용_평).toFixed(2)  : "";
+    $("u_분양_평").value  = u.분양_평   ? parseFloat(u.분양_평).toFixed(2)  : "";
     $("u_평당가").value   = u.평당가    || "";
     $("u_분양금액").value = u.분양금액  || "";
     $("u_보증금").value   = u.보증금    || "";
@@ -989,8 +1006,8 @@ async function deleteBFile(id) {
       연락처:      $("u_연락처").value.trim()    || null,
       보증금:      Number($("u_보증금").value)   || null,
       월차임:      Number($("u_월차임").value)   || null,
-      전용_평:     parseFloat($("u_전용_평").value)  || null,
-      분양_평:     parseFloat($("u_분양_평").value)  || null,
+      전용_평:     $("u_전용_평").value ? Math.round(parseFloat($("u_전용_평").value) * 100) / 100 : null,
+      분양_평:     $("u_분양_평").value ? Math.round(parseFloat($("u_분양_평").value) * 100) / 100 : null,
       평당가:      Number($("u_평당가").value)   || null,
       분양금액:    Number($("u_분양금액").value) || null,
       현_매매가격: Number($("u_현매매가격").value) || null,
