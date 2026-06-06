@@ -316,6 +316,31 @@
       padding: 5px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.12s;
     }
     .btn-unit-edit:hover { background: rgba(212,175,55,0.20); }
+    /* 매물 연결 버튼 */
+    .btn-listing-reg {
+      background: rgba(96,165,250,0.12); color: #93c5fd;
+      border: 1px solid rgba(96,165,250,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-reg:hover { background: rgba(96,165,250,0.22); }
+    .btn-listing-view {
+      display: inline-block; text-decoration: none;
+      background: rgba(34,197,94,0.12); color: #4ade80;
+      border: 1px solid rgba(34,197,94,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-view:hover { background: rgba(34,197,94,0.22); }
+    .btn-listing-home {
+      display: inline-block; text-decoration: none;
+      background: rgba(168,85,247,0.12); color: #c084fc;
+      border: 1px solid rgba(168,85,247,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-home:hover { background: rgba(168,85,247,0.22); }
+    .tbl-actions { display: flex; gap: 5px; align-items: center; flex-wrap: nowrap; }
     .btn-unit-del {
       background: rgba(239,68,68,0.10); color: #f87171;
       border: 1px solid rgba(239,68,68,0.22); border-radius: 8px;
@@ -442,7 +467,7 @@
             <th>보증금(만)</th>
             <th>월차임(만)</th>
             <th>상태</th>
-            <th></th>
+            <th>매물</th>
           </tr>
         </thead>
         <tbody id="unitsTbody"></tbody>
@@ -883,6 +908,19 @@ async function deleteBFile(id) {
     return name;
   }
 
+  // ── 매물등록 URL 생성 ──
+  function buildRegisterUrl(u) {
+    const p = new URLSearchParams();
+    p.set("_bldg",    bName);
+    p.set("_unit",    u.호수         || "");
+    p.set("_type",    u.현업종       || "");
+    p.set("_price",   u.현_매매가격  || "");
+    p.set("_deposit", u.현_보증금    || "");
+    p.set("_rent",    u.현_월세      || "");
+    p.set("_area",    u.전용_평      || "");
+    return "register.html?" + p.toString();
+  }
+
   // 초기 로드 (init() 완료 후 호출)
   async function loadUnits() {
     bName = await getBuildingName();
@@ -976,12 +1014,25 @@ async function deleteBFile(id) {
         <td style="text-align:right">${u.보증금 ? fmt(u.보증금) : "-"}</td>
         <td style="text-align:right">${u.월차임 ? fmt(u.월차임) : "-"}</td>
         <td><span class="sbadge ${bc}">${status}</span></td>
-        <td><button class="btn-unit-edit" data-ri="${ri}">수정</button></td>
+        <td class="tbl-actions">
+          <button class="btn-unit-edit" data-ri="${ri}">수정</button>
+          ${u.listing_id
+            ? `<a class="btn-listing-view" href="detail.html?id=${u.listing_id}">매물보기</a>`
+              + `<a class="btn-listing-home" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html?id=${u.listing_id}" target="_blank">홈페이지</a>`
+            : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`
+          }
+        </td>
       </tr>`;
     }).join("");
 
     tbody.querySelectorAll(".btn-unit-edit[data-ri]").forEach(btn => {
       btn.addEventListener("click", () => openModal(Number(btn.dataset.ri)));
+    });
+    tbody.querySelectorAll(".btn-listing-reg[data-ri]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const u = units[Number(btn.dataset.ri)];
+        location.href = buildRegisterUrl(u);
+      });
     });
   }
 

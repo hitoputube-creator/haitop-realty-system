@@ -20,6 +20,55 @@
   const DIRECTIONS = DataUtil.DIRECTIONS;
 
   init();
+  autoFillFromParams();  // 건물상세에서 넘어온 쿼리스트링 자동입력
+
+  /* ── 쿼리스트링 자동입력 ── */
+  function autoFillFromParams() {
+    const p     = new URLSearchParams(location.search);
+    const bldg  = p.get("_bldg");
+    const unit  = p.get("_unit");
+    if (!bldg && !unit) return;   // 일반 접근이면 무시
+
+    // 제목
+    const titleEl = $("title");
+    if (titleEl) titleEl.value = `[${bldg || ""}] ${unit || ""}호`.trim();
+
+    // 거래유형: 현_매매가격 있으면 매매, 없으면 임대
+    const hasPrice = Number(p.get("_price") || 0) > 0;
+    const dealTypeEl = $("dealType");
+    if (dealTypeEl) dealTypeEl.value = hasPrice ? "매매" : "임대";
+
+    // 타입 기본 상가(shop)로 세팅
+    if (elTypeSelect && elTypeSelect.value !== "shop") {
+      elTypeSelect.value = "shop";
+      elTypeSelect.dispatchEvent(new Event("change"));
+    }
+
+    // 동적 필드가 렌더된 후 값 채우기 (renderDynamicFields 이후)
+    const fill = () => {
+      const area = parseFloat(p.get("_area") || 0);
+      const PY_M2 = 3.30579;
+
+      // 전용면적
+      if ($("exPy") && area)    $("exPy").value = area.toFixed(2);
+      if ($("exM2") && area)    $("exM2").value = (area * PY_M2).toFixed(2);
+
+      // 금액
+      const deposit = Number(p.get("_deposit") || 0);
+      const rent    = Number(p.get("_rent")    || 0);
+      const price   = Number(p.get("_price")   || 0);
+      if ($("deposit")   && deposit) $("deposit").value   = deposit;
+      if ($("rent")      && rent)    $("rent").value       = rent;
+      if ($("salePrice") && price)   $("salePrice").value = price;
+
+      // 업종
+      const bizEl = $("currentBiz");
+      if (bizEl && p.get("_type")) bizEl.value = p.get("_type");
+    };
+
+    // 동적 필드 렌더 완료 대기 (renderDynamicFields 는 동기이므로 짧은 지연)
+    setTimeout(fill, 200);
+  }
 
   function init() {
     elTypeSelect.addEventListener("change", () => {
@@ -408,8 +457,36 @@
     else if (currentType.startsWith("land")) fillLand(record);
 
     DataUtil.upsertListing(record);
+
+    // 건물 호실에서 넘어온 경우: Supabase에도 저장하고 listing_id를 unit에 기록
+    const urlP  = new URLSearchParams(location.search);
+    const bldg  = urlP.get("_bldg");
+    const uNum  = urlP.get("_unit");
+    if (bldg && uNum && typeof addListingReturnId === "function") {
+      (async () => {
+        try {
+          const supaId = await addListingReturnId(record);
+          if (supaId) {
+            const rec   = await getBuildingRecord(bldg);
+            const units = Array.isArray(rec?.units) ? rec.units : [];
+            const next  = units.map(u =>
+              u.호수 === uNum ? Object.assign({}, u, { listing_id: supaId }) : u
+            );
+            await saveBuildingUnits(bldg, bldg, next);
+          }
+        } catch(e) {
+          console.warn("[매물등록] 호실 listing_id 업데이트 실패:", e.message);
+        }
+      })();
+    }
+
     alert("저장 완료");
-    location.href = "index.html";
+    // 건물상세에서 넘어온 경우 돌아가기
+    if (bldg) {
+      history.back();
+    } else {
+      location.href = "index.html";
+    }
   }
 
   function fillShop(r) {

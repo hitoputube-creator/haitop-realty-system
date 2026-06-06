@@ -152,6 +152,19 @@ async function addListing(item) {
   if (!res.ok) throw new Error("Save failed: " + await res.text());
 }
 
+// 저장 후 생성된 Supabase UUID를 반환 (건물 호실 listing_id 연동용)
+async function addListingReturnId(item) {
+  const payload = buildListingPayload(item);
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=representation" }),
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("Save failed: " + await res.text());
+  const rows = await res.json();
+  return rows[0]?.id || null;
+}
+
 async function uploadListingImage(file, listingId) {
   if (!file) throw new Error("No image file selected.");
   if (file.type && !file.type.startsWith("image/")) throw new Error("Only image files can be uploaded.");
