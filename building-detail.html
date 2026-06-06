@@ -924,15 +924,22 @@ async function deleteBFile(id) {
   // 초기 로드 (init() 완료 후 호출)
   async function loadUnits() {
     bName = await getBuildingName();
+    console.log("[호실현황] ── loadUnits 시작 ──");
+    console.log("[호실현황] URL buildingId:", typeof buildingId !== "undefined" ? buildingId : "(없음)");
+    console.log("[호실현황] #buildingName DOM:", ($("buildingName")||{}).textContent);
+    console.log("[호실현황] 최종 bName:", bName);
+
     if (!bName) {
-      console.warn("[호실현황] 건물명 없음 - 건너뜀");
+      console.warn("[호실현황] 건물명 없음 → 조회 중단");
       return;
     }
-    console.log("[호실현황] 건물명:", bName);
     try {
       const rec = await getBuildingRecord(bName);
+      console.log("[호실현황] getBuildingRecord 결과:", rec
+        ? `id=${rec.id}, name=${rec.name}, units=${Array.isArray(rec.units)?rec.units.length:0}개`
+        : "null (건물 없음)");
       units = Array.isArray(rec && rec.units) ? rec.units : [];
-      console.log("[호실현황] 호실 수:", units.length);
+      console.log("[호실현황] 최종 units 수:", units.length);
     } catch(e) {
       if (typeof showToast === "function") showToast("호실 로드 실패: " + e.message);
       console.error("[호실현황] 로드 실패:", e);

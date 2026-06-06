@@ -547,13 +547,33 @@ async function getDoneCustomers() {
 
 // ===== 건물 호실 현황 (Supabase buildings 테이블) =====
 async function getBuildingRecord(localId) {
-  const res = await fetchWithTimeout(
+  // 1순위: local_id 정확 매칭
+  const r1 = await fetchWithTimeout(
     SUPABASE_URL + "/rest/v1/buildings?local_id=eq." + encodeURIComponent(localId) + "&select=*",
     { headers }
   );
-  if (!res.ok) throw new Error("건물 조회 실패");
-  const rows = await res.json();
-  return rows.length ? rows[0] : null;
+  if (!r1.ok) throw new Error("건물 조회 실패 (local_id)");
+  const rows1 = await r1.json();
+  if (rows1.length) {
+    console.log("[getBuildingRecord] local_id 매칭:", localId, "→", rows1[0].name);
+    return rows1[0];
+  }
+
+  // 2순위: name 필드 매칭 (drive_resources.name ≠ buildings.local_id 케이스 대응)
+  console.warn("[getBuildingRecord] local_id 매칭 실패:", localId, "→ name 필드로 재시도");
+  const r2 = await fetchWithTimeout(
+    SUPABASE_URL + "/rest/v1/buildings?name=eq." + encodeURIComponent(localId) + "&select=*",
+    { headers }
+  );
+  if (!r2.ok) throw new Error("건물 조회 실패 (name)");
+  const rows2 = await r2.json();
+  if (rows2.length) {
+    console.log("[getBuildingRecord] name 매칭 성공:", localId, "→", rows2[0].name);
+    return rows2[0];
+  }
+
+  console.warn("[getBuildingRecord] 최종 실패 - 일치하는 건물 없음:", localId);
+  return null;
 }
 
 async function saveBuildingUnits(localId, name, units) {
