@@ -21,7 +21,17 @@
 const SUPABASE_URL = "https://xaxbkdnrzsghsabkdvzj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
 
-// 엑셀 컬럼 인덱스 (0-based)
+// ── 시트명 → 앱 건물명 매핑 ──────────────────────
+// 여기에 없는 시트명은 시트명 그대로 사용
+const NAME_MAP = {
+  "아름터":  "아름터워",
+  "현해":    "현해프라자",
+  "트윈1":   "트윈타워 1차",
+  "트윈2":   "트윈타워 2차",
+  "홍원":    "홍원빌딩",
+};
+
+// ── 엑셀 컬럼 인덱스 (0-based)
 const COL = {
   건물명:      0,   // A
   호수:        1,   // B
@@ -140,14 +150,18 @@ async function main() {
     }
 
     try {
+      // 시트명을 앱 건물명으로 변환 (매핑 없으면 시트명 그대로)
+      const appName = NAME_MAP[sheetName.trim()] || sheetName.trim();
+
       const res = await fetchFn(`${SUPABASE_URL}/rest/v1/buildings?on_conflict=local_id`, {
         method:  "POST",
         headers: reqHeaders,
-        body:    JSON.stringify({ local_id: sheetName, name: sheetName, units }),
+        body:    JSON.stringify({ local_id: appName, name: appName, units }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status} → ${await res.text()}`);
 
-      console.log(`✅ [${sheetName}] 저장 완료  (${units.length}개 호실)`);
+      const mapped = appName !== sheetName.trim() ? ` → [${appName}]` : "";
+      console.log(`✅ [${sheetName}]${mapped} 저장 완료  (${units.length}개 호실)`);
       totalBuildings++;
       totalUnits += units.length;
     } catch (e) {
