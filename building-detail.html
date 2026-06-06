@@ -260,6 +260,12 @@
       padding: 9px 18px; font-size: 0.88rem; cursor: pointer; font-family: inherit;
     }
     .btn-unit-ghost:hover { background: rgba(255,255,255,0.10); }
+    /* 실시간 한글 금액 힌트 */
+    .amt-hint {
+      display: block; min-height: 16px;
+      font-size: 0.74rem; font-weight: 700;
+      color: #C9A84C; margin-top: 3px; letter-spacing: 0.2px;
+    }
     .umfield label { display: block; font-size: 0.76rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; }
     .umfield input, .umfield select, .umfield textarea {
       width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
@@ -432,9 +438,9 @@
           <div class="umfield"><label>전용 (평)</label><input id="u_전용_평" type="number" step="0.01" placeholder="0.00" /></div>
           <div class="umfield"><label>분양 (평)</label><input id="u_분양_평" type="number" step="0.01" placeholder="0.00" /></div>
           <div class="umfield"><label>평당가 (만원)</label><input id="u_평당가" type="number" placeholder="0" /></div>
-          <div class="umfield"><label>분양금액 (만원)</label><input id="u_분양금액" type="number" placeholder="0" /></div>
-          <div class="umfield"><label>보증금 (만원)</label><input id="u_보증금" type="number" placeholder="0" /></div>
-          <div class="umfield"><label>월차임 (만원)</label><input id="u_월차임" type="number" placeholder="0" /></div>
+          <div class="umfield"><label>분양금액 (만원)</label><input id="u_분양금액" type="number" placeholder="0" /><span class="amt-hint" id="h_분양금액"></span></div>
+          <div class="umfield"><label>보증금 (만원)</label><input id="u_보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_보증금"></span></div>
+          <div class="umfield"><label>월차임 (만원)</label><input id="u_월차임" type="number" placeholder="0" /><span class="amt-hint" id="h_월차임"></span></div>
         </div>
       </div>
 
@@ -450,9 +456,9 @@
               <option value="매매가능">매매가능</option>
             </select>
           </div>
-          <div class="umfield"><label>(현)매매가격 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /></div>
-          <div class="umfield"><label>(현)보증금 (만원)</label><input id="u_현보증금" type="number" placeholder="0" /></div>
-          <div class="umfield"><label>(현)월세 (만원)</label><input id="u_현월세" type="number" placeholder="0" /></div>
+          <div class="umfield"><label>(현)매매가격 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /><span class="amt-hint" id="h_현매매가격"></span></div>
+          <div class="umfield"><label>(현)보증금 (만원)</label><input id="u_현보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_현보증금"></span></div>
+          <div class="umfield"><label>(현)월세 (만원)</label><input id="u_현월세" type="number" placeholder="0" /><span class="amt-hint" id="h_현월세"></span></div>
           <div class="umfield"><label>소유주</label><input id="u_소유주" placeholder="소유주 성명" /></div>
           <div class="umfield"><label>연락처</label><input id="u_연락처" placeholder="010-0000-0000" /></div>
           <div class="umfield"><label>수익률 (%)</label><input id="u_수익률" placeholder="예: 5.2" /></div>
@@ -961,6 +967,7 @@ async function deleteBFile(id) {
     $("u_추천매물").value   = u.추천매물    || "";
     $("u_비고").value       = u.비고        || "";
 
+    refreshHints(u);
     $("unitModal").classList.add("open");
     $("u_호수").focus();
   }
@@ -1031,6 +1038,51 @@ async function deleteBFile(id) {
     } catch(e) {
       if (typeof showToast === "function") showToast("삭제 실패: " + e.message);
     } finally { $("umDelete").disabled = false; }
+  }
+
+  // ── 한글 금액 변환 ──
+  // 입력: 만원 단위 숫자, 출력: "X억 X,XXX만원" 또는 "X,XXX만원"
+  function toKorAmt(val) {
+    const n = Number(val);
+    if (!n || !isFinite(n) || n <= 0) return "";
+    const eok  = Math.floor(n / 10000);
+    const man  = n % 10000;
+    if (eok > 0 && man > 0)
+      return eok.toLocaleString("ko-KR") + "억 " + man.toLocaleString("ko-KR") + "만원";
+    if (eok > 0)
+      return eok.toLocaleString("ko-KR") + "억원";
+    return n.toLocaleString("ko-KR") + "만원";
+  }
+
+  // 한글 금액 힌트를 실시간으로 갱신하는 필드 목록
+  const AMT_FIELDS = ["u_분양금액","u_보증금","u_월차임","u_현매매가격","u_현보증금","u_현월세"];
+
+  function bindAmtHints() {
+    AMT_FIELDS.forEach(function(id) {
+      const input = $(id);
+      const hint  = document.getElementById("h_" + id.replace("u_",""));
+      if (!input || !hint) return;
+      input.addEventListener("input", function() {
+        hint.textContent = toKorAmt(input.value);
+      });
+    });
+  }
+  bindAmtHints();
+
+  // 모달 열릴 때 힌트 초기값 갱신
+  function refreshHints(u) {
+    const map = {
+      u_분양금액: u.분양금액  || "",
+      u_보증금:   u.보증금    || "",
+      u_월차임:   u.월차임    || "",
+      u_현매매가격: u.현_매매가격 || "",
+      u_현보증금: u.현_보증금  || "",
+      u_현월세:   u.현_월세   || "",
+    };
+    Object.entries(map).forEach(function([id, val]) {
+      const hint = document.getElementById("h_" + id.replace("u_",""));
+      if (hint) hint.textContent = toKorAmt(val);
+    });
   }
 
   $("btnAddUnit").addEventListener("click", () => openModal(-1));
