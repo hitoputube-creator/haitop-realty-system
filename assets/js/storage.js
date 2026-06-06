@@ -549,7 +549,7 @@ async function saveBuildingUnits(localId, name, units) {
     name: name || '',
     units: Array.isArray(units) ? units : []
   });
-  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/buildings", {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/buildings?on_conflict=local_id", {
     method: "POST",
     headers: Object.assign({}, headers, { "Prefer": "resolution=merge-duplicates,return=minimal" }),
     body
