@@ -2483,28 +2483,16 @@ function closeHomepageTab(tab) {
     renderDriveTab();
   }
 
-  function _buildDriveItemsHtml(items, cat, start) {
-    const catPage = drivePageMap[cat] || 1;
-    const pageItems = items.slice(start, start + DRIVE_PER_PAGE);
-    return pageItems.map((item, idx) => {
-      const realIdx = start + idx;
-      const safeUrl = (item.url || "").replace(/'/g, "%27");
+  function _buildDriveItemsHtml(items, cat) {
+    return items.map(item => {
       const memoPreview = item.memo ? item.memo.split('\n')[0].substring(0, 60) + (item.memo.split('\n')[0].length > 60 ? '…' : '') : '';
       const linkedCount = allListings.filter(l => l.resource_id === item.id).length;
       return `
       <div class="listing-card" style="cursor:default;">
-        <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
-          <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-top:2px;">
-            <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx===0?'opacity:0.25;cursor:default;':''}"
-              ${realIdx===0?'disabled':`onclick="moveDriveOrder('${item.id}','up','${cat.replace(/'/g,"\\'")}')"`}>▲</button>
-            <button class="btn btn-ghost" style="font-size:0.6rem;padding:1px 5px;line-height:1;${realIdx===items.length-1?'opacity:0.25;cursor:default;':''}"
-              ${realIdx===items.length-1?'disabled':`onclick="moveDriveOrder('${item.id}','down','${cat.replace(/'/g,"\\'")}')"`}>▼</button>
-          </div>
-          <div style="flex:1;">
-            <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
-            ${memoPreview ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;line-height:1.4;">📝 ${memoPreview}</div>` : ''}
-            ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}
-          </div>
+        <div style="margin-bottom:10px;">
+          <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
+          ${memoPreview ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;line-height:1.4;">📝 ${memoPreview}</div>` : ''}
+          ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}
         </div>
         <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
           <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="location.href='building-detail.html?id=${item.id}'">📁 열기</button>
@@ -2549,15 +2537,12 @@ function closeHomepageTab(tab) {
       </button>`;
     }).join("");
 
-    // 선택된 카테고리 목록
+    // 선택된 카테고리 목록 (전체 표시 — 페이지네이션 없음)
     const cat = activeDriveCat;
     const items = sortedByCatOrder(cat, grouped[cat]);
-    const catPage = drivePageMap[cat] || 1;
-    const start = (catPage - 1) * DRIVE_PER_PAGE;
     const sectionHtml = `
       <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
-        <div class="listing-grid">${_buildDriveItemsHtml(items, cat, start)}</div>
-        <div id="dcpag_active" class="pagination"></div>
+        <div class="listing-grid">${_buildDriveItemsHtml(items, cat)}</div>
       </div>`;
 
     container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
@@ -2571,14 +2556,12 @@ function closeHomepageTab(tab) {
     container.querySelectorAll("[data-cidx]").forEach(btn => {
       btn.addEventListener("click", () => {
         activeDriveCat = categories[+btn.dataset.cidx];
-        drivePageMap[activeDriveCat] = drivePageMap[activeDriveCat] || 1;
+        // drivePageMap 불필요 (페이지네이션 제거)
         renderDriveTab();
       });
     });
 
-    // 페이지네이션
-    _makePagination("dcpag_active", items.length, DRIVE_PER_PAGE, catPage,
-      (p) => { drivePageMap[cat] = p; renderDriveTab(); });
+    // 페이지네이션 제거됨 — 전체 스크롤
   }
 
 
