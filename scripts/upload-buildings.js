@@ -51,6 +51,7 @@ const COL_NORM = {
   // 평당가
   "평당가":         "평당가",
   "평단가":         "평당가",
+  "평당금액":       "평당가",   // 유은9차: "평당 금액"
 
   // 분양금액
   "분양금액":       "분양금액",
@@ -118,7 +119,9 @@ function buildColMap(headerRow) {
 // ── 유틸 ─────────────────────────────────────────
 function toNum(val) {
   if (val === "" || val == null) return 0;
-  const n = Number(String(val).replace(/,/g, "").trim());
+  const s = String(val).trim();
+  if (s.startsWith("=")) return 0;   // 수식 문자열 그대로 읽혔을 때 무시
+  const n = Number(s.replace(/,/g, ""));
   return isFinite(n) ? n : 0;
 }
 function isPositiveNum(val) {
@@ -156,7 +159,9 @@ async function main() {
   console.log(`\n📂 엑셀 파일 읽는 중...\n   ${filePath}\n`);
 
   let workbook;
-  try { workbook = XLSX.readFile(filePath, { cellDates: true }); }
+  // cellFormula:false → 수식 문자열 대신 엑셀이 캐시한 계산값을 읽음
+  // (유은9차 평당가 등 ROUNDDOWN 수식 셀 대응)
+  try { workbook = XLSX.readFile(filePath, { cellDates: true, cellFormula: false }); }
   catch (e) { console.error("❌ 파일을 열 수 없습니다:", e.message); process.exit(1); }
 
   const sheetNames = workbook.SheetNames;
