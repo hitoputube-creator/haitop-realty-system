@@ -23,12 +23,12 @@ const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
 
 // ── 시트명 → 앱 건물명 매핑 ──────────────────────
 const NAME_MAP = {
-  "아름터":  "아름터워",
-  "현해":    "현해프라자",
-  "트윈1":   "트윈타워 1차",
-  "트윈2":   "트윈타워 2차",
-  "홍원":    "홍원빌딩",
-  "유은9차": "유은 9차",
+  "아름터타워": "아름터워",   // 시트명="아름터", A열="아름터타워"
+  "현해":       "현해프라자",
+  "트윈1":      "트윈타워 1차",
+  "트윈2":      "트윈타워 2차",
+  "홍원":       "홍원빌딩",
+  "유은9차":    "유은 9차",
 };
 
 // ── 컬럼명 정규화 규칙 ────────────────────────────
@@ -182,11 +182,24 @@ async function main() {
   const errors       = [];
 
   for (const sheetName of sheetNames) {
-    const appName = NAME_MAP[sheetName.trim()] || sheetName.trim();
     const sheet   = workbook.Sheets[sheetName];
     const rows    = XLSX.utils.sheet_to_json(sheet, {
       header: 1, defval: "", blankrows: false,
     });
+
+    // ── appName 결정 ──
+    // 1순위: 시트명 → NAME_MAP
+    // 2순위: 열A 첫 데이터값(건물명) → NAME_MAP  (아름터 시트처럼 시트명≠건물명 케이스)
+    // 3순위: 시트명 그대로
+    let appName = NAME_MAP[sheetName.trim()];
+    if (!appName) {
+      const colAData = rows.find(r => {
+        const v = String(r[0] || "").trim();
+        return v && v !== "건물명";   // 헤더행 제외
+      });
+      const colAName = colAData ? String(colAData[0]).trim() : "";
+      appName = NAME_MAP[colAName] || sheetName.trim();
+    }
 
     // ── 헤더 행 탐지 ──
     const hdrIdx = findHeaderRow(rows);
