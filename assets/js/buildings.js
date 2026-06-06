@@ -207,6 +207,13 @@ function renderList() {
     delBtn.textContent = "삭제";
     delBtn.onclick = () => deleteBuilding(item.id);
 
+    const detailBtn = document.createElement("a");
+    detailBtn.className = "btn mini";
+    detailBtn.textContent = "상세·호실";
+    detailBtn.href = `building-detail.html?id=${encodeURIComponent(item.id)}`;
+    detailBtn.style.cssText = "text-decoration:none;";
+
+    right.appendChild(detailBtn);
     right.appendChild(editBtn);
     right.appendChild(delBtn);
 

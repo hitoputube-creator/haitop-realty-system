@@ -1,3 +1,16 @@
+// ===== localStorage 유틸 (buildings.js 호환) =====
+const StorageUtil = {
+  getArray(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '[]') || []; } catch(e) { return []; }
+  },
+  setArray(key, arr) {
+    try { localStorage.setItem(key, JSON.stringify(arr)); } catch(e) {}
+  },
+  uid(prefix) {
+    return (prefix ? prefix + '_' : '') + Date.now().toString(36) + Math.random().toString(36).slice(2);
+  }
+};
+
 const SUPABASE_URL = "https://xaxbkdnrzsghsabkdvzj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
 const LISTING_IMAGES_BUCKET = "listing-images";
@@ -517,4 +530,29 @@ async function getDoneCustomers() {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers?status=eq.계약완료&order=completed_at.desc", { headers });
   if (!res.ok) throw new Error("완료고객 목록 조회 실패");
   return await res.json();
+}
+
+// ===== 건물 호실 현황 (Supabase buildings 테이블) =====
+async function getBuildingRecord(localId) {
+  const res = await fetchWithTimeout(
+    SUPABASE_URL + "/rest/v1/buildings?local_id=eq." + encodeURIComponent(localId) + "&select=*",
+    { headers }
+  );
+  if (!res.ok) throw new Error("건물 조회 실패");
+  const rows = await res.json();
+  return rows.length ? rows[0] : null;
+}
+
+async function saveBuildingUnits(localId, name, units) {
+  const body = JSON.stringify({
+    local_id: localId,
+    name: name || '',
+    units: Array.isArray(units) ? units : []
+  });
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/buildings", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "resolution=merge-duplicates,return=minimal" }),
+    body
+  });
+  if (!res.ok) throw new Error("호실 저장 실패: " + await res.text());
 }
