@@ -555,8 +555,191 @@
   loadResourceSelect();
   renderCat2();
 
-  // ── 빠른저장 전환 프리필 ──────────────────────────
+  // ── 건물/호실 자동입력 (buildingId + roomNo URL 파라미터) ──────────
+  (async function autofillFromBuilding() {
+    const qp     = new URLSearchParams(location.search);
+    const bldgId = qp.get("buildingId");
+    const roomNo = qp.get("roomNo");
+    if (!bldgId) return;
+
+    // 호수 정규화: 공백·"호" 제거 후 비교 (매칭 전용, 표시값은 원본 유지)
+    function normalizeRoom(s) {
+      return String(s || "").trim().replace(/호$/, "").trim();
+    }
+
+    // 주소에서 동·읍·면·리까지만 추출 (지번·번지·나머지 제거)
+    function extractDong(addr) {
+      // "동/읍/면/리" 뒤에 숫자나 공백이 오는 지점에서 자름
+      const m = addr.match(/^(.+?[동읍면리가](?:\d+동)?)\s*[\d\-,\s]/);
+      if (m) return m[1].trim();
+      // 숫자 없이 동/읍/면/리로 끝나는 경우
+      const m2 = addr.match(/^(.+?[동읍면리가])\b/);
+      return m2 ? m2[1].trim() : addr;
+    }
+
+    // 평 → ㎡ (1평 = 3.30579㎡)
+    function py2m2(py) {
+      const v = parseFloat(py);
+      return (v && isFinite(v)) ? (v * 3.30579).toFixed(2) : "";
+    }
+
+    // 만원 단위 → 원 단위 변환 후 천단위 쉼표 문자열
+    // buildings 테이블의 가격 필드는 만원 단위지만, 1억 이상이면 이미 원 단위로 저장된 것으로 판단
+    function fmtPrice(v) {
+      let n = Number(v);
+      if (!n || !isFinite(n)) return "";
+      if (n < 100000000) n = n * 10000; // 만원 단위 → 원 단위
+      return n.toLocaleString("ko-KR");
+    }
+
+    // 호수에서 층 문자열 생성
+    function floorFromRoomNo(rn) {
+      const s = normalizeRoom(rn);
+      const bm = s.match(/^[Bb](\d)/);
+      if (bm) return "지하 " + bm[1] + "층";
+      const nm = s.match(/^(\d+)/);
+      if (nm) {
+        const n  = parseInt(nm[1], 10);
+        const fl = n >= 100 ? Math.floor(n / 100) : n;
+        return "지상 " + fl + "층";
+      }
+      return "";
+    }
+
+    try {
+      // 1) drive_resources → 건물명, memo
+      const drResources = await getDriveResources();
+      const bldgRes  = drResources.find(r => r.id === bldgId);
+      const bldgName = bldgRes ? bldgRes.name : "";
+      const memo     = bldgRes ? (bldgRes.memo || "") : "";
+
+      // memo 파싱 (key: value 형식, ---추가메모--- 이전 부분만)
+      const MEMO_SEP2 = "---추가메모---";
+      const memoBody  = memo.indexOf(MEMO_SEP2) === -1 ? memo : memo.slice(0, memo.indexOf(MEMO_SEP2));
+      const memoFields = {};
+      memoBody.split("\n").forEach(line => {
+        const c = line.indexOf(":");
+        if (c === -1) return;
+        memoFields[line.slice(0, c).trim()] = line.slice(c + 1).trim();
+      });
+
+      const fullAddress  = memoFields["주소"]      || "";
+      const parkingCount = memoFields["주차대수"]  || "";
+      const approvalDate = memoFields["사용승인일"] || "";
+      const zoning       = memoFields["용도지역"]  || memoFields["용도"] || "";
+
+      // 공개주소: 동까지만 (지번·호실 노출 금지)
+      const publicAddr = fullAddress ? extractDong(fullAddress) : "";
+
+      // 2) buildings 테이블 → units → 호실 매칭
+      let unit        = null;
+      let matchedRoom = roomNo; // 화면 표시용 원본 호실명
+      if (roomNo) {
+        try {
+          const bldgRec = await getBuildingRecord(bldgName || bldgId);
+          const allUnits = Array.isArray(bldgRec && bldgRec.units) ? bldgRec.units : [];
+          const normTarget = normalizeRoom(roomNo);
+          unit = allUnits.find(u => normalizeRoom(u.호수) === normTarget) || null;
+          if (unit) matchedRoom = unit.호수; // 원본 호실명 사용
+        } catch(e) { /* units 없으면 건물정보만 채움 */ }
+      }
+
+      // 3) 층
+      const floorStr = (unit && unit.층) ? unit.층 : floorFromRoomNo(matchedRoom);
+
+      // 4) 면적
+      const exclusiveM2 = unit ? (unit.전용_m2 || py2m2(unit.전용_평)) : "";
+      const supplyM2    = unit ? (unit.분양_m2 || py2m2(unit.분양_평))  : "";
+
+      // 5) 가격
+      const deposit = unit ? fmtPrice(unit.현_보증금 || unit.보증금) : "";
+      const rent    = unit ? fmtPrice(unit.현_월세   || unit.월차임) : "";
+      const presale = unit ? fmtPrice(unit.분양금액)                 : "";
+      const sale    = unit ? fmtPrice(unit.현_매매가격)              : "";
+
+      // 6) 거래유형 자동 결정 (사용자 수정 가능)
+      let autoDealtType = "월세"; // 기본값
+      const hasRent    = !!(unit && (unit.현_월세 || unit.월차임));
+      const hasDeposit = !!(unit && (unit.현_보증금 || unit.보증금));
+      const hasSale    = !!(unit && unit.현_매매가격);
+      if (!hasRent && !hasDeposit && hasSale) autoDealtType = "매매";
+      else if (hasDeposit || hasRent)         autoDealtType = "월세";
+
+      // 7) 상세설명 자동작성
+      const descParts = [];
+      if (bldgName)    descParts.push(`■ 건물명: ${bldgName}`);
+      if (fullAddress) descParts.push(`■ 주소: ${fullAddress}`);
+      if (matchedRoom) descParts.push(`■ 호실: ${matchedRoom}`);
+      if (floorStr)    descParts.push(`■ 층: ${floorStr}`);
+      if (exclusiveM2) descParts.push(`■ 전용면적: ${exclusiveM2}㎡`);
+      if (supplyM2)    descParts.push(`■ 공급면적: ${supplyM2}㎡`);
+      if (deposit)     descParts.push(`■ 보증금: ${deposit}원`);
+      if (rent)        descParts.push(`■ 월세: ${rent}원`);
+      if (sale)        descParts.push(`■ 매매가: ${sale}원`);
+      if (parkingCount)descParts.push(`■ 주차: ${parkingCount}`);
+      if (zoning)      descParts.push(`■ 용도지역: ${zoning}`);
+      if (approvalDate)descParts.push(`■ 사용승인일: ${approvalDate}`);
+      if (unit && unit.현업종) descParts.push(`■ 현업종: ${unit.현업종}`);
+      if (unit && unit.비고)   descParts.push(`■ 비고: ${unit.비고}`);
+
+      // 8) 폼 입력
+      cat1El.value = "상가사무실";
+      renderCat2();
+      cat2El.value = "상가";
+      updateDynamicSections();
+
+      document.getElementById("dealType").value = autoDealtType;
+
+      // 공개주소: 동까지만 (지번 없음)
+      if (publicAddr)  document.getElementById("publicAddress").value = publicAddr;
+      // 지도검색주소: 실제 주소 전체 (지도 핀용)
+      if (fullAddress) document.getElementById("mapAddress").value    = fullAddress;
+      // 상세주소: 건물명 + 호실 (비공개)
+      const hoStr      = matchedRoom ? (String(matchedRoom).endsWith("호") ? matchedRoom : matchedRoom + "호") : "";
+      const detailAddr = [bldgName, hoStr].filter(Boolean).join(" ");
+      if (detailAddr)  document.getElementById("privateDetailAddress").value = detailAddr;
+
+      // 제목: 건물명 + 호실 + 상가 (최대 20자)
+      const titleVal = [bldgName, hoStr, "상가"].filter(Boolean).join(" ").slice(0, 20);
+      if (titleVal)    document.getElementById("title").value = titleVal;
+
+      if (deposit) { document.getElementById("deposit").value      = deposit;  syncRegisterPricePreview("deposit"); }
+      if (rent)    { document.getElementById("monthlyRent").value  = rent;     syncRegisterPricePreview("monthlyRent"); }
+      if (presale) { document.getElementById("presalePrice").value = presale;  syncRegisterPricePreview("presalePrice"); }
+      if (sale)    { document.getElementById("salePrice").value    = sale;     syncRegisterPricePreview("salePrice"); }
+
+      if (exclusiveM2) {
+        document.getElementById("exclusiveAreaM2").value = exclusiveM2;
+        const pyEl = document.getElementById("exclusiveAreaPy");
+        if (pyEl) pyEl.value = (parseFloat(exclusiveM2) / 3.3058).toFixed(1);
+      }
+      if (supplyM2) {
+        document.getElementById("supplyAreaM2").value = supplyM2;
+        const pyEl2 = document.getElementById("supplyAreaPy");
+        if (pyEl2) pyEl2.value = (parseFloat(supplyM2) / 3.3058).toFixed(1);
+      }
+      if (floorStr)    document.getElementById("floorInfo").value     = floorStr;
+      if (parkingCount)document.getElementById("parkingCount").value  = parkingCount;
+      if (approvalDate)document.getElementById("approvalDate").value  = approvalDate;
+      if (zoning)      document.getElementById("zoning").value        = zoning;
+      if (descParts.length) document.getElementById("detailDescription").value = descParts.join("\n");
+
+      // 자동입력 안내 배너
+      const refBox  = document.getElementById("prefillRefBox");
+      const refText = document.getElementById("prefillRefText");
+      if (refBox && refText) {
+        refText.textContent = `건물: ${bldgName || bldgId}${matchedRoom ? " / 호실: " + matchedRoom : ""} 정보가 자동 입력되었습니다. 값을 확인 후 수정하여 저장하세요.`;
+        refBox.style.display = "";
+      }
+    } catch(e) {
+      console.warn("[자동입력] 건물/호실 정보 로드 실패:", e.message);
+    }
+  })();
+
+  // ── 빠른저장 전환 프리필 (buildingId 자동입력과 충돌 방지) ──────────
   (function loadPrefill() {
+    // buildingId가 있으면 건물/호실 자동입력이 우선 — 빠른저장 프리필 스킵
+    if (new URLSearchParams(location.search).get("buildingId")) return;
     const raw = sessionStorage.getItem("hitop_detail_prefill");
     if (!raw) return;
     try {
