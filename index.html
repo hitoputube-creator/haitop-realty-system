@@ -165,10 +165,24 @@
   <!-- ===== 매물관리 탭 ===== -->
   <div id="tabProperty">
 
-    <!-- ⚡ 빠른 등록 -->
-    <div class="quick-card">
-      <div class="quick-title">⚡ 빠른 등록 — 30초 메모</div>
-      <div class="quick-sub">전화/방문 직후 핵심만 입력하고 나중에 보완하세요</div>
+    <!-- ===== 등록 방식 선택 ===== -->
+    <div class="reg-mode-selector" id="regModeSelector">
+      <button class="reg-mode-card" id="modeQuickBtn" onclick="selectRegMode('quick')">
+        <div class="reg-mode-icon">⚡</div>
+        <div class="reg-mode-title">빠른저장</div>
+        <div class="reg-mode-desc">전화/방문 직후 30초 메모용<br>내부 저장만 가능<br>홈페이지 공개 전 상세등록 필요</div>
+      </button>
+      <button class="reg-mode-card" id="modeDetailBtn" onclick="selectRegMode('detail')">
+        <div class="reg-mode-icon">📝</div>
+        <div class="reg-mode-title">상세저장</div>
+        <div class="reg-mode-desc">홈페이지 매물보내기 가능한 정식 등록<br>공개주소·지도주소·상세정보 입력</div>
+      </button>
+    </div>
+
+    <!-- ⚡ 빠른저장 폼 (모드 선택 후 표시) -->
+    <div class="quick-card" id="quickRegisterForm" style="display:none;">
+      <div class="quick-title">⚡ 빠른저장 — 30초 메모</div>
+      <div class="quick-sub" style="color:rgba(212,175,55,0.6);margin-bottom:12px;">전화/방문 직후 임시로 저장하는 내부 메모입니다. 홈페이지 공개 전 상세등록이 필요합니다.</div>
       <div class="form-grid-2" style="margin-bottom:10px;">
         <div class="field">
           <label>매물유형</label>
@@ -990,6 +1004,39 @@
 </script>
 
 <script>
+  // ===== 등록 방식 선택 =====
+  function selectRegMode(mode) {
+    const quickForm = document.getElementById("quickRegisterForm");
+    const quickBtn  = document.getElementById("modeQuickBtn");
+    const detailBtn = document.getElementById("modeDetailBtn");
+    if (mode === "quick") {
+      quickForm.style.display = "";
+      quickBtn.classList.add("active");
+      detailBtn.classList.remove("active");
+      quickForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } else {
+      location.href = "register.html";
+    }
+  }
+
+  // ===== 상세저장으로 전환 (빠른저장 → 상세저장) =====
+  function convertToDetail(id) {
+    const item = allListings.find(x => x.id === id);
+    if (!item) return;
+    // 빠른저장 데이터를 sessionStorage에 담아 register.html로 이동
+    const prefill = {
+      type:           item.type || "",
+      quick_price:    item.quick_price || "",
+      quick_contact:  item.quick_contact || item.owner_contact || "",
+      quick_memo:     item.quick_memo || item.description || "",
+      drive_links:    item.drive_links || [],
+      quick_location: item.quick_location || item.address || "",
+      source_id:      item.id
+    };
+    sessionStorage.setItem("hitop_detail_prefill", JSON.stringify(prefill));
+    location.href = "register.html";
+  }
+
   // ===== 탭 전환 =====
   function switchTab(tab) {
     const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
@@ -1366,6 +1413,11 @@ function closeHomepageTab(tab) {
   async function handlePublicToggle(id) {
     const item = allListings.find(x => x.id === id);
     if (!item) return;
+    // 빠른저장 매물은 홈페이지 공개 차단
+    if (item.quick_save === true) {
+      showToast("빠른등록 매물은 상세저장을 완료한 뒤 홈페이지로 보낼 수 있습니다.", 3500);
+      return;
+    }
     const nextPublic = item.is_public !== true;
     try {
       await updateListingPublic(id, nextPublic);
@@ -1583,7 +1635,7 @@ function closeHomepageTab(tab) {
       card.style.position = "relative";
       card.onclick = () => location.href = `detail.html?id=${item.id}`;
 
-      const isQuick = item.quick_price && !item.shop_deposit && !item.land_price && !item.officetel_price;
+      const isQuick = item.quick_save === true || (item.quick_price && !item.shop_deposit && !item.land_price && !item.officetel_price);
       const chk = selectedIds.has(item.id) ? "checked" : "";
 
       card.innerHTML = `
@@ -1608,6 +1660,7 @@ function closeHomepageTab(tab) {
         <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
         <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
           ${item.resource_id ? (() => { const res = allDriveResources.find(r => r.id === item.resource_id); return res && res.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();window.open('${res.url.replace(/'/g,"%27")}','_blank')">📁 자료보기</button>` : ''; })() : ""}
+          ${isQuick && item.status !== "거래완료" ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;border-color:rgba(212,175,55,0.45);color:var(--gold);" onclick="event.stopPropagation();convertToDetail('${item.id}')">📝 상세저장으로 전환</button>` : ""}
           <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handlePublicToggle('${item.id}')">${item.is_public === true ? '&#44277;&#44060; &#52712;&#49548;' : '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;'}</button>
           ${item.status !== "\uac70\ub798\uc644\ub8cc" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">&#9989; &#44144;&#47000;&#50756;&#47308;</button>` : ""}
           <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();location.href='property-print.html?id=${item.id}'">🖨 설명서 출력</button>
@@ -1675,13 +1728,16 @@ function closeHomepageTab(tab) {
       const driveLinks = getQuickLinks();
       const item = {
         id: "HITOP-" + Date.now(),
-        type, address,
+        type,
+        quick_location: address,   // 내부용 위치 — publicAddress로 사용 안함
+        address: address,          // 카드/목록 표시용
         title: `${getTypeLabel(type)} · ${address || price}`,
         status: isDone ? "거래완료" : "광고중",
         description: memo,
         quick_price: price,
         quick_contact: contact,
         quick_memo: memo,
+        quick_save: true,          // 빠른저장 플래그
         is_public: false,
         image_urls: []
       };

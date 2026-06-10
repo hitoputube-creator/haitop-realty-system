@@ -71,6 +71,52 @@ body {
 }
 
 /* 버튼 */
+/* ===== 등록 방식 선택 카드 ===== */
+.reg-mode-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.reg-mode-card {
+  flex: 1;
+  min-width: 180px;
+  background: radial-gradient(circle at top left, #182853 0, #0b1a33 60%, #050914 100%);
+  border: 2px solid rgba(212,175,55,0.25);
+  border-radius: 16px;
+  padding: 18px 20px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.12s ease;
+  color: var(--text-main);
+  font-family: inherit;
+}
+.reg-mode-card:hover {
+  border-color: rgba(212,175,55,0.55);
+  transform: translateY(-1px);
+}
+.reg-mode-card.active {
+  border-color: var(--gold);
+  background: radial-gradient(circle at top left, #1e3060 0, #0d2040 60%, #070e25 100%);
+  box-shadow: 0 0 0 1px rgba(212,175,55,0.3), 0 8px 24px rgba(0,0,0,0.4);
+}
+.reg-mode-icon {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.reg-mode-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.reg-mode-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
 .btn {
   border-radius: 999px;
   padding: 7px 16px;
