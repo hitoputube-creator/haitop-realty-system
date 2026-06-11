@@ -285,8 +285,7 @@
             <button id="viewToggleList" onclick="setViewMode('list')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:transparent;color:var(--text-muted);border:none;cursor:pointer;border-left:1px solid rgba(212,175,55,0.25);">☷ 목록</button>
           </div>
           <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">📋 선택매물보기</button>
-          <button class="btn btn-ghost" onclick="downloadExcel('normal')" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
-          <button class="btn btn-ghost" onclick="downloadExcel('pos')" style="font-size:0.82rem;">🏢 포스용 다운로드</button>
+          <button class="btn btn-ghost" onclick="downloadExcel()" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
           <button class="btn btn-ghost" onclick="location.href='register.html'" style="font-size:0.82rem;">+ 상세 등록</button>
         </div>
       </div>
@@ -3239,106 +3238,108 @@ function closeHomepageTab(tab) {
   }
 
   /* ══════════════════════════════════════════
-     엑셀 다운로드 — 현재 필터 기준
-     mode: 'normal' | 'pos'
+     엑셀 다운로드 — 현재 필터 기준 (6컬럼 간결형)
   ══════════════════════════════════════════ */
-  function downloadExcel(mode) {
+  function downloadExcel() {
     const items = getFilteredListings();
     if (!items.length) { showToast("⚠️ 다운로드할 매물이 없습니다."); return; }
 
-    /* 가격 필드: 저장 값은 항상 원 단위 숫자문자열 → 만원 단위 정수 반환 */
-    function toManwon(v) {
+    /* 원 단위 → 만원 단위 정수 */
+    function toMan(v) {
       const n = Number(String(v || "").replace(/,/g, ""));
-      if (!isFinite(n) || n === 0) return "";
-      return Math.round(n / 10000);
+      return (isFinite(n) && n > 0) ? Math.round(n / 10000) : 0;
     }
 
-    function dateStr(iso) {
-      if (!iso) return "";
-      return new Date(iso).toLocaleDateString("ko-KR", { year:"numeric", month:"2-digit", day:"2-digit" });
+    /* 만원 단위 숫자 → 억/만원 표기 문자열 (예: 90억, 8,000만) */
+    function fmtMan(manwon) {
+      if (!manwon) return "";
+      const eok = Math.floor(manwon / 10000);
+      const man = manwon % 10000;
+      const parts = [];
+      if (eok) parts.push(eok.toLocaleString("ko-KR") + "억");
+      if (man)  parts.push(man.toLocaleString("ko-KR") + "만");
+      return parts.join(" ");
     }
 
-    function imgUrls(item) {
-      const urls = Array.isArray(item.image_urls) ? item.image_urls : (Array.isArray(item.imageUrls) ? item.imageUrls : []);
-      return urls.filter(Boolean);
+    /* 구분: 2차구분 우선, 없으면 1차구분, 없으면 type 라벨 */
+    function getDivision(x) {
+      if (x.category2) return x.category2;
+      if (x.category1) return x.category1;
+      const typeMap = {
+        shop:"상가", office:"사무실", officetel:"오피스텔",
+        hilsstate:"힐스테이트더운정", factory:"공장/창고",
+        bizcenter:"지식산업센터", land_single:"토지",
+        land_dev:"토지", land_other:"토지", etc:"기타"
+      };
+      return typeMap[x.type] || x.type || "";
     }
 
-    let rows, sheetName, fileName;
-
-    if (mode === "normal") {
-      /* ── 일반 엑셀 다운로드 ── */
-      rows = items.map(x => ({
-        "매물번호":       x.id || "",
-        "등록일":         dateStr(x.created_at),
-        "1차구분":        x.category1 || "",
-        "2차구분":        x.category2 || "",
-        "거래유형":       x.dealType || "",
-        "매물명":         x.title || "",
-        "공개주소":       x.publicAddress || x.address || "",
-        "지도검색주소":   x.mapAddress || "",
-        "비공개상세주소": x.privateDetailAddress || "",
-        "층정보":         x.floorInfo || "",
-        "전용면적(㎡)":   x.exclusiveAreaM2 || x.areaM2 || "",
-        "전용면적(평)":   x.exclusiveAreaPy || x.areaPy || "",
-        "공급면적(㎡)":   x.supplyAreaM2 || "",
-        "공급면적(평)":   x.supplyAreaPy || "",
-        "대지면적(㎡)":   x.landAreaM2 || "",
-        "대지면적(평)":   x.landAreaPy || "",
-        "매매가(만원)":   toManwon(x.salePrice),
-        "분양가(만원)":   toManwon(x.presalePrice),
-        "보증금(만원)":   toManwon(x.deposit),
-        "월세(만원)":     toManwon(x.monthlyRent),
-        "관리비(만원)":   toManwon(x.managementFee),
-        "권리금(만원)":   toManwon(x.premium),
-        "주차대수":       x.parkingCount || "",
-        "용도지역":       x.zoning || "",
-        "사용승인일":     x.approvalDate || "",
-        "홍보스티커":     Array.isArray(x.stickers) ? x.stickers.join(", ") : "",
-        "상세설명":       x.detailDescription || "",
-        "내부메모":       x.description || "",
-        "집주인연락처":   x.owner_contact || "",
-        "홈페이지공개":   x.is_public === true ? "O" : "X",
-        "거래상태":       x.status || "",
-        "사진URL1":       imgUrls(x)[0] || "",
-        "사진URL2":       imgUrls(x)[1] || "",
-        "사진URL3":       imgUrls(x)[2] || "",
-        "사진URL4":       imgUrls(x)[3] || "",
-        "사진URL5":       imgUrls(x)[4] || "",
-      }));
-      sheetName = "매물목록";
-      fileName  = `하이탑_매물목록_${_xlsxDate()}.xlsx`;
-
-    } else {
-      /* ── 부동산포스용 다운로드 (임시 매핑) ── */
-      rows = items.map(x => ({
-        "매물종류":   `${x.category1 || ""} > ${x.category2 || ""}`,
-        "거래구분":   x.dealType || "",
-        "매물명칭":   x.title || "",
-        "소재지":     x.publicAddress || x.address || "",
-        "층":         x.floorInfo || "",
-        "전용면적(㎡)": x.exclusiveAreaM2 || x.areaM2 || "",
-        "공급면적(㎡)": x.supplyAreaM2 || "",
-        "대지면적(㎡)": x.landAreaM2 || "",
-        "매매가(만원)":   toManwon(x.salePrice),
-        "분양가(만원)":   toManwon(x.presalePrice),
-        "보증금(만원)":   toManwon(x.deposit),
-        "월세(만원)":     toManwon(x.monthlyRent),
-        "관리비(만원)":   toManwon(x.managementFee),
-        "권리금(만원)":   toManwon(x.premium),
-        "주차":       x.parkingCount || "",
-        "용도지역":   x.zoning || "",
-        "사용승인일": x.approvalDate || "",
-        "매물설명":   x.detailDescription || "",
-        "사진URL":    imgUrls(x)[0] || "",
-        "상태":       x.status || "",
-      }));
-      sheetName = "포스용매물";
-      fileName  = `하이탑_포스용_${_xlsxDate()}.xlsx`;
+    /* 대표 면적 (평 단위 문자열) */
+    function getArea(x) {
+      const t = x.type || "";
+      const cat1 = (x.category1 || "").toLowerCase();
+      // 토지
+      if (t.startsWith("land") || cat1 === "토지") {
+        const py = x.areaPy || x.landAreaPy;
+        return py ? py + "평" : "";
+      }
+      // 공장/창고
+      if (t === "factory" || cat1 === "공장창고") {
+        const py = x.landAreaPy || x.totalFloorAreaPy || x.buildingAreaPy || x.exclusiveAreaPy;
+        return py ? py + "평" : "";
+      }
+      // 오피스텔/아파트
+      if (t === "officetel" || t === "hilsstate" || t === "apartment") {
+        const py = x.exclusiveAreaPy || x.areaExclusivePy;
+        return py ? py + "평" : "";
+      }
+      // 상가/사무실/지식산업센터/기타 — 전용 우선, 없으면 공급
+      const py = x.exclusiveAreaPy || x.areaExclusivePy || x.supplyAreaPy || x.areaSupplyPy || x.areaPy;
+      return py ? py + "평" : "";
     }
+
+    /* 가격 한 칸 표기 */
+    function getPrice(x) {
+      const deal = (x.dealType || "").trim();
+      const sale   = toMan(x.salePrice);
+      const pre    = toMan(x.presalePrice);
+      const dep    = toMan(x.deposit);
+      const rent   = toMan(x.monthlyRent);
+      const jeonse = toMan(x.jeonsePriceManwon); // 구형 필드 대응
+
+      if (deal === "매매" || deal === "분양") {
+        return fmtMan(sale || pre) || "";
+      }
+      if (deal === "전세") {
+        return fmtMan(dep || jeonse) || "";
+      }
+      if (deal === "월세" || deal === "임대") {
+        const depStr  = dep  ? fmtMan(dep)  : "";
+        const rentStr = rent ? fmtMan(rent) : "";
+        if (depStr && rentStr) return depStr + "/" + rentStr;
+        if (rentStr) return rentStr;
+        return depStr;
+      }
+      // 거래유형 없거나 기타 — 있는 값 순서대로
+      if (sale) return fmtMan(sale);
+      if (dep && rent) return fmtMan(dep) + "/" + fmtMan(rent);
+      if (dep)  return fmtMan(dep);
+      if (rent) return fmtMan(rent);
+      return "";
+    }
+
+    const rows = items.map(x => ({
+      "구분":   getDivision(x),
+      "거래":   x.dealType || "",
+      "매물명": x.title || "",
+      "주소":   x.publicAddress || x.address || "",
+      "면적":   getArea(x),
+      "가격":   getPrice(x),
+    }));
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, _makeSheet(rows), sheetName);
-    XLSX.writeFile(wb, fileName);
+    XLSX.utils.book_append_sheet(wb, _makeSheet(rows), "매물목록");
+    XLSX.writeFile(wb, `하이탑_매물목록_${_xlsxDate()}.xlsx`);
     showToast(`✅ ${items.length}건 다운로드 완료`);
   }
 
