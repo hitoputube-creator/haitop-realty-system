@@ -375,6 +375,18 @@ function closeHomepageTab(tab) {
     if (!parts.length && rest) parts.push(rest.toLocaleString("ko-KR") + "원");
     return parts.length ? "약 " + parts.join(" ") : "";
   }
+  function formatWonKr(value) {
+    const digits = String(value || "").replace(/[^\d]/g, "");
+    if (!digits) return "";
+    const won = Number(digits);
+    if (!won) return "";
+    const eok = Math.floor(won / 100000000);
+    const man = Math.floor((won % 100000000) / 10000);
+    const parts = [];
+    if (eok) parts.push(eok.toLocaleString("ko-KR") + "억");
+    if (man) parts.push(man.toLocaleString("ko-KR") + "만원");
+    return parts.length ? parts.join(" ") : won.toLocaleString("ko-KR") + "원";
+  }
   function syncEditPricePreview(id) {
     const input = document.getElementById(id);
     const preview = document.getElementById(id + "_preview");
@@ -686,8 +698,14 @@ function closeHomepageTab(tab) {
       html += row("입주가능일", item.biz_available);
     }
 
-    // 빠른등록 가격
-    if (item.quick_price) html += row("가격(메모)", item.quick_price);
+    // 가격 표시: 숫자 salePrice 우선, 없을 때만 quick_price 폴백
+    const _salePriceFmt = formatWonKr(item.salePrice);
+    if (_salePriceFmt) {
+      const _dealLabel = item.dealType ? item.dealType + " " : "";
+      html += row("가격", _dealLabel + _salePriceFmt);
+    } else if (item.quick_price) {
+      html += row("가격(메모)", item.quick_price);
+    }
 
     html += `</div></div>`;
 
@@ -964,6 +982,13 @@ function closeHomepageTab(tab) {
           dealType:           gv("edit_dealType"),
           // 가격정보
           salePrice:          gv("edit_salePrice"),
+          quick_price: (() => {
+            const sp = gv("edit_salePrice");
+            if (!sp) return item.quick_price || "";
+            const dt = gv("edit_dealType");
+            const fmt = formatWonKr(sp);
+            return dt ? dt + " " + fmt : fmt;
+          })(),
           presalePrice:       gv("edit_presalePrice"),
           deposit:            gv("edit_deposit"),
           monthlyRent:        gv("edit_monthlyRent"),
