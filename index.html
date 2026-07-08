@@ -879,6 +879,21 @@
   </div>
 </div>
 
+<!-- 📂 카테고리 폴더명 수정 모달 -->
+<div id="driveCategoryEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-title">📂 카테고리 폴더명 수정</div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>새 카테고리명</label>
+      <input id="drive_cat_edit_name" type="text" placeholder="예) 운정역 상가" />
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('driveCategoryEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveCategoryEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- 📝 건물 개요 메모 모달 -->
 <div id="driveMemoModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
   <div class="modal-box" style="max-width:540px;width:95%;padding:20px;">
@@ -2585,16 +2600,22 @@ function closeHomepageTab(tab) {
     // 카테고리 버튼 (index로 식별 — 한글 따옴표 문제 완전 회피)
     const catGridHtml = categories.map((c, i) => {
       const isActive = c === activeDriveCat;
-      return `<button data-cidx="${i}" style="
-        padding:10px 14px;font-size:0.85rem;font-weight:${isActive?'700':'500'};
-        text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
-        background:${isActive?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.04)'};
-        color:${isActive?'var(--gold)':'var(--text-muted)'};
-        border-color:${isActive?'rgba(212,175,55,0.5)':'rgba(255,255,255,0.1)'};
-        transition:all 0.15s;">
-        ${isActive?'▲':'▼'} 📂 ${c}
-        <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>
-      </button>`;
+      return `<div style="display:flex;gap:4px;">
+        <button data-cidx="${i}" style="
+          flex:1;min-width:0;padding:10px 14px;font-size:0.85rem;font-weight:${isActive?'700':'500'};
+          text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
+          background:${isActive?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.04)'};
+          color:${isActive?'var(--gold)':'var(--text-muted)'};
+          border-color:${isActive?'rgba(212,175,55,0.5)':'rgba(255,255,255,0.1)'};
+          transition:all 0.15s;overflow:hidden;text-overflow:ellipsis;">
+          ${isActive?'▲':'▼'} 📂 ${c}
+          <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>
+        </button>
+        <button data-cat-edit-idx="${i}" title="폴더명 수정" style="
+          flex:0 0 auto;padding:0 10px;border-radius:8px;cursor:pointer;
+          border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
+          color:var(--text-muted);font-size:0.85rem;">✏️</button>
+      </div>`;
     }).join("");
 
     // 선택된 카테고리 목록 (전체 표시 — 페이지네이션 없음)
@@ -2618,6 +2639,12 @@ function closeHomepageTab(tab) {
         activeDriveCat = categories[+btn.dataset.cidx];
         // drivePageMap 불필요 (페이지네이션 제거)
         renderDriveTab();
+      });
+    });
+    container.querySelectorAll("[data-cat-edit-idx]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openDriveCategoryEditModal(categories[+btn.dataset.catEditIdx]);
       });
     });
 
@@ -2771,6 +2798,46 @@ function closeHomepageTab(tab) {
       await loadDriveResources();
     } catch(e) {
       showToast("❌ 수정 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "저장";
+    }
+  });
+
+  // ── 카테고리 폴더명 일괄 변경 ──
+  let editingCategoryOld = null;
+  function openDriveCategoryEditModal(oldCategory) {
+    editingCategoryOld = oldCategory;
+    document.getElementById("drive_cat_edit_name").value = oldCategory;
+    document.getElementById("driveCategoryEditModal").style.display = "flex";
+  }
+
+  document.getElementById("driveCategoryEditSaveBtn").addEventListener("click", async () => {
+    if (!editingCategoryOld) return;
+    const btn = document.getElementById("driveCategoryEditSaveBtn");
+    const newCategory = document.getElementById("drive_cat_edit_name").value.trim();
+
+    if (!newCategory) { showToast("카테고리명을 입력해주세요"); return; }
+    if (newCategory === editingCategoryOld) {
+      document.getElementById("driveCategoryEditModal").style.display = "none";
+      return;
+    }
+    const existingCategories = [...new Set(allDriveResources.map(r => r.category).filter(Boolean))];
+    if (existingCategories.includes(newCategory)) {
+      showToast("❌ 이미 존재하는 카테고리명입니다");
+      return;
+    }
+    if (!confirm("이 카테고리의 기존 자료들도 모두 새 폴더명으로 이동됩니다. 계속할까요?")) return;
+
+    const targetItems = allDriveResources.filter(r => r.category === editingCategoryOld);
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      await Promise.all(targetItems.map(item => updateDriveResource(item.id, { category: newCategory })));
+      document.getElementById("driveCategoryEditModal").style.display = "none";
+      activeDriveCat = newCategory;
+      showToast("✅ 카테고리명이 변경되었습니다");
+      await loadDriveResources();
+    } catch(e) {
+      showToast("❌ 변경 실패: " + e.message);
     } finally {
       btn.disabled = false; btn.textContent = "저장";
     }
