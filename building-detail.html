@@ -138,26 +138,52 @@
       display: none; position: fixed; inset: 0; z-index: 9999;
       background: rgba(0,0,0,0.92);
       align-items: center; justify-content: center;
-      padding: 20px;
+      padding: 20px; overflow: hidden;
     }
     #lightbox.open { display: flex; }
     #lightbox img {
       max-width: 94vw; max-height: 90vh;
       object-fit: contain; border-radius: 8px;
       box-shadow: 0 0 60px rgba(0,0,0,0.8);
+      touch-action: none; user-select: none;
+      transform-origin: center center;
+      will-change: transform;
     }
     #lightbox-close {
       position: fixed; top: 18px; right: 22px;
       font-size: 1.8rem; color: rgba(255,255,255,0.75);
       cursor: pointer; line-height: 1;
-      transition: color 0.15s;
+      transition: color 0.15s; z-index: 2;
     }
     #lightbox-close:hover { color: var(--gold); }
     #lightbox-caption {
       position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
       font-size: 0.85rem; color: rgba(255,255,255,0.55);
       background: rgba(0,0,0,0.6); border-radius: 8px; padding: 6px 16px;
+      max-width: 80vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+
+    /* ── 라이트박스 확대/축소 툴바 ── */
+    #lightbox-toolbar {
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(10,14,28,0.85);
+      border: 1px solid rgba(212,175,55,0.30);
+      border-radius: 999px; padding: 5px; z-index: 2;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .lb-btn {
+      border: none; background: transparent; color: rgba(255,255,255,0.85);
+      font-size: 0.88rem; font-weight: 700; cursor: pointer;
+      padding: 7px 13px; border-radius: 999px; line-height: 1;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+    }
+    .lb-btn:hover { background: rgba(212,175,55,0.20); color: var(--gold); }
+    .lb-btn#lb-zoom-reset { min-width: 52px; }
+    .lb-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.15); margin: 0 2px; }
+    .lb-btn.lb-close-btn { color: rgba(255,140,140,0.9); }
+    .lb-btn.lb-close-btn:hover { background: rgba(255,79,106,0.18); color: var(--danger); }
 
     /* ══════════════════════════════════
        호실 현황 섹션
@@ -550,6 +576,13 @@
 <!-- ===== 라이트박스 ===== -->
 <div id="lightbox" onclick="closeLightbox()">
   <span id="lightbox-close" onclick="closeLightbox()">✕</span>
+  <div id="lightbox-toolbar" onclick="event.stopPropagation()">
+    <button type="button" class="lb-btn" title="축소" onclick="lbZoomOut()">−</button>
+    <button type="button" class="lb-btn" id="lb-zoom-reset" title="100%로 초기화" onclick="lbZoomReset()">100%</button>
+    <button type="button" class="lb-btn" title="확대" onclick="lbZoomIn()">+</button>
+    <span class="lb-divider"></span>
+    <button type="button" class="lb-btn lb-close-btn" title="닫기" onclick="closeLightbox()">✕ 닫기</button>
+  </div>
   <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
   <div id="lightbox-caption"></div>
 </div>
@@ -594,7 +627,11 @@ function esc(s) {
 
 function isImage(url, fileName) {
   const u = (url || fileName || '').toLowerCase();
-  return /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/.test(u);
+  if (/\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/.test(u)) return true;
+  // 구글 드라이브/포토 이미지 링크는 확장자가 없는 경우가 많아 도메인·경로 패턴으로 보조 판별
+  if (/lh3\.googleusercontent\.com/.test(u)) return true;
+  if (/drive\.google\.com\/thumbnail/.test(u)) return true;
+  return false;
 }
 
 function isPdf(url, fileName) {
@@ -633,19 +670,110 @@ async function cloudinaryUpload(file, folder = 'haitop') {
 function goBack()    { window.location.href = 'index.html?tab=drive'; }
 function goOverview(){ window.location.href = `building-overview.html?id=${buildingId}`; }
 
-/* ── 라이트박스 ── */
+/* ── 라이트박스 (확대/축소/드래그 포함) ── */
+const LB_MIN_SCALE = 1, LB_MAX_SCALE = 5, LB_STEP = 0.5;
+let lbScale = 1, lbX = 0, lbY = 0;
+let lbDragging = false, lbLastX = 0, lbLastY = 0;
+let lbPinchStartDist = 0, lbPinchStartScale = 1;
+
+const lbImg = () => document.getElementById('lightbox-img');
+
+function lbApplyTransform() {
+  const img = lbImg();
+  img.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale})`;
+  img.style.cursor = lbScale > 1 ? (lbDragging ? 'grabbing' : 'grab') : 'default';
+  const label = document.getElementById('lb-zoom-reset');
+  if (label) label.textContent = Math.round(lbScale * 100) + '%';
+}
+
+function lbSetScale(next) {
+  next = Math.min(LB_MAX_SCALE, Math.max(LB_MIN_SCALE, next));
+  if (next === LB_MIN_SCALE) { lbX = 0; lbY = 0; }
+  lbScale = next;
+  lbApplyTransform();
+}
+
+function lbZoomIn()    { lbSetScale(lbScale + LB_STEP); }
+function lbZoomOut()   { lbSetScale(lbScale - LB_STEP); }
+function lbZoomReset() { lbX = 0; lbY = 0; lbSetScale(1); }
+
 function openLightbox(url, caption) {
-  document.getElementById('lightbox-img').src = url;
+  const img = lbImg();
+  img.src = url;
   document.getElementById('lightbox-caption').textContent = caption || '';
+  lbX = 0; lbY = 0; lbScale = 1;
+  lbApplyTransform();
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lightbox-img').src = '';
+  lbImg().src = '';
+  lbX = 0; lbY = 0; lbScale = 1; lbDragging = false;
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+/* 마우스 휠 / 트랙패드로 확대·축소 */
+lbImg().addEventListener('wheel', (e) => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  e.preventDefault();
+  lbSetScale(lbScale + (e.deltaY < 0 ? LB_STEP : -LB_STEP));
+}, { passive: false });
+
+/* 마우스 드래그로 이동 (확대된 상태에서만) */
+lbImg().addEventListener('mousedown', (e) => {
+  if (lbScale <= 1) return;
+  lbDragging = true; lbLastX = e.clientX; lbLastY = e.clientY;
+  lbApplyTransform();
+  e.preventDefault();
+});
+document.addEventListener('mousemove', (e) => {
+  if (!lbDragging) return;
+  lbX += e.clientX - lbLastX;
+  lbY += e.clientY - lbLastY;
+  lbLastX = e.clientX; lbLastY = e.clientY;
+  lbApplyTransform();
+});
+document.addEventListener('mouseup', () => {
+  if (!lbDragging) return;
+  lbDragging = false;
+  lbApplyTransform();
+});
+
+/* 모바일 터치: 두 손가락 핀치로 확대·축소, 한 손가락 드래그로 이동 */
+function lbTouchDist(t1, t2) {
+  return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+}
+lbImg().addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    lbPinchStartDist = lbTouchDist(e.touches[0], e.touches[1]);
+    lbPinchStartScale = lbScale;
+  } else if (e.touches.length === 1 && lbScale > 1) {
+    lbDragging = true;
+    lbLastX = e.touches[0].clientX;
+    lbLastY = e.touches[0].clientY;
+  }
+}, { passive: true });
+lbImg().addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2 && lbPinchStartDist) {
+    e.preventDefault();
+    const dist = lbTouchDist(e.touches[0], e.touches[1]);
+    lbSetScale(lbPinchStartScale * (dist / lbPinchStartDist));
+  } else if (e.touches.length === 1 && lbDragging) {
+    e.preventDefault();
+    const t = e.touches[0];
+    lbX += t.clientX - lbLastX;
+    lbY += t.clientY - lbLastY;
+    lbLastX = t.clientX; lbLastY = t.clientY;
+    lbApplyTransform();
+  }
+}, { passive: false });
+lbImg().addEventListener('touchend', () => {
+  lbDragging = false;
+  lbPinchStartDist = 0;
+  lbApplyTransform();
+});
 
 /* ══════════════════════════════════════════
    초기 로드
