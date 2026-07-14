@@ -1,3 +1,16 @@
+// ===== localStorage 유틸 (buildings.js 호환) =====
+const StorageUtil = {
+  getArray(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '[]') || []; } catch(e) { return []; }
+  },
+  setArray(key, arr) {
+    try { localStorage.setItem(key, JSON.stringify(arr)); } catch(e) {}
+  },
+  uid(prefix) {
+    return (prefix ? prefix + '_' : '') + Date.now().toString(36) + Math.random().toString(36).slice(2);
+  }
+};
+
 const SUPABASE_URL = "https://xaxbkdnrzsghsabkdvzj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
 const LISTING_IMAGES_BUCKET = "listing-images";
@@ -137,6 +150,19 @@ async function addListing(item) {
     body: JSON.stringify(payload)
   });
   if (!res.ok) throw new Error("Save failed: " + await res.text());
+}
+
+// 저장 후 생성된 Supabase UUID를 반환 (건물 호실 listing_id 연동용)
+async function addListingReturnId(item) {
+  const payload = buildListingPayload(item);
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "return=representation" }),
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("Save failed: " + await res.text());
+  const rows = await res.json();
+  return rows[0]?.id || null;
 }
 
 async function uploadListingImage(file, listingId) {
@@ -517,4 +543,49 @@ async function getDoneCustomers() {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers?status=eq.계약완료&order=completed_at.desc", { headers });
   if (!res.ok) throw new Error("완료고객 목록 조회 실패");
   return await res.json();
+}
+
+// ===== 건물 호실 현황 (Supabase buildings 테이블) =====
+async function getBuildingRecord(localId) {
+  // 1순위: local_id 정확 매칭
+  const r1 = await fetchWithTimeout(
+    SUPABASE_URL + "/rest/v1/buildings?local_id=eq." + encodeURIComponent(localId) + "&select=*",
+    { headers }
+  );
+  if (!r1.ok) throw new Error("건물 조회 실패 (local_id)");
+  const rows1 = await r1.json();
+  if (rows1.length) {
+    console.log("[getBuildingRecord] local_id 매칭:", localId, "→", rows1[0].name);
+    return rows1[0];
+  }
+
+  // 2순위: name 필드 매칭 (drive_resources.name ≠ buildings.local_id 케이스 대응)
+  console.warn("[getBuildingRecord] local_id 매칭 실패:", localId, "→ name 필드로 재시도");
+  const r2 = await fetchWithTimeout(
+    SUPABASE_URL + "/rest/v1/buildings?name=eq." + encodeURIComponent(localId) + "&select=*",
+    { headers }
+  );
+  if (!r2.ok) throw new Error("건물 조회 실패 (name)");
+  const rows2 = await r2.json();
+  if (rows2.length) {
+    console.log("[getBuildingRecord] name 매칭 성공:", localId, "→", rows2[0].name);
+    return rows2[0];
+  }
+
+  console.warn("[getBuildingRecord] 최종 실패 - 일치하는 건물 없음:", localId);
+  return null;
+}
+
+async function saveBuildingUnits(localId, name, units) {
+  const body = JSON.stringify({
+    local_id: localId,
+    name: name || '',
+    units: Array.isArray(units) ? units : []
+  });
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/buildings?on_conflict=local_id", {
+    method: "POST",
+    headers: Object.assign({}, headers, { "Prefer": "resolution=merge-duplicates,return=minimal" }),
+    body
+  });
+  if (!res.ok) throw new Error("호실 저장 실패: " + await res.text());
 }

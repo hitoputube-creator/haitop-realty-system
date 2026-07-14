@@ -138,26 +138,252 @@
       display: none; position: fixed; inset: 0; z-index: 9999;
       background: rgba(0,0,0,0.92);
       align-items: center; justify-content: center;
-      padding: 20px;
+      padding: 20px; overflow: hidden;
     }
     #lightbox.open { display: flex; }
     #lightbox img {
       max-width: 94vw; max-height: 90vh;
       object-fit: contain; border-radius: 8px;
       box-shadow: 0 0 60px rgba(0,0,0,0.8);
+      touch-action: none; user-select: none;
+      transform-origin: center center;
+      will-change: transform;
     }
     #lightbox-close {
       position: fixed; top: 18px; right: 22px;
       font-size: 1.8rem; color: rgba(255,255,255,0.75);
       cursor: pointer; line-height: 1;
-      transition: color 0.15s;
+      transition: color 0.15s; z-index: 2;
     }
     #lightbox-close:hover { color: var(--gold); }
     #lightbox-caption {
       position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
       font-size: 0.85rem; color: rgba(255,255,255,0.55);
       background: rgba(0,0,0,0.6); border-radius: 8px; padding: 6px 16px;
+      max-width: 80vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+
+    /* ── 라이트박스 확대/축소 툴바 ── */
+    #lightbox-toolbar {
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(10,14,28,0.85);
+      border: 1px solid rgba(212,175,55,0.30);
+      border-radius: 999px; padding: 5px; z-index: 2;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .lb-btn {
+      border: none; background: transparent; color: rgba(255,255,255,0.85);
+      font-size: 0.88rem; font-weight: 700; cursor: pointer;
+      padding: 7px 13px; border-radius: 999px; line-height: 1;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+    }
+    .lb-btn:hover { background: rgba(212,175,55,0.20); color: var(--gold); }
+    .lb-btn#lb-zoom-reset { min-width: 52px; }
+    .lb-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.15); margin: 0 2px; }
+    .lb-btn.lb-close-btn { color: rgba(255,140,140,0.9); }
+    .lb-btn.lb-close-btn:hover { background: rgba(255,79,106,0.18); color: var(--danger); }
+
+    /* ══════════════════════════════════
+       호실 현황 섹션
+    ══════════════════════════════════ */
+    /* 요약 카드 */
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr 1fr; } }
+    .sum-card {
+      border-radius: 14px; padding: 14px 16px; text-align: center;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .sum-card.occupied { background: rgba(34,197,94,0.10);  border-color: rgba(34,197,94,0.25); }
+    .sum-card.vacant   { background: rgba(239,68,68,0.10);  border-color: rgba(239,68,68,0.25); }
+    .sum-card.forsale  { background: rgba(234,179,8,0.10);  border-color: rgba(234,179,8,0.25); }
+    .sum-card.revenue  { background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.25); }
+    .sum-num   { font-size: 1.65rem; font-weight: 900; line-height: 1; }
+    .sum-label { font-size: 0.76rem; color: var(--muted); margin-top: 5px; }
+    .sum-card.occupied .sum-num { color: #4ade80; }
+    .sum-card.vacant   .sum-num { color: #f87171; }
+    .sum-card.forsale  .sum-num { color: #facc15; }
+    .sum-card.revenue  .sum-num { color: #93c5fd; }
+
+    /* 층 필터 탭 */
+    .floor-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .ftab {
+      border: 1px solid var(--border); background: rgba(5,10,30,0.65);
+      padding: 6px 14px; border-radius: 999px; cursor: pointer;
+      font-size: 0.82rem; color: var(--muted); font-weight: 700; transition: 0.12s;
+    }
+    .ftab.active {
+      border-color: rgba(212,175,55,0.45); background: rgba(212,175,55,0.16);
+      color: rgba(255,255,255,0.92);
+    }
+
+    /* 호실 테이블 */
+    .units-wrap { overflow-x: auto; }
+    .units-tbl { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
+    .units-tbl th {
+      text-align: left; padding: 9px 12px; font-size: 0.75rem; color: var(--muted);
+      font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.15);
+    }
+    .units-tbl td {
+      padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.88); vertical-align: middle;
+    }
+    .units-tbl tr:last-child td { border-bottom: none; }
+    .units-tbl tr:hover td { background: rgba(212,175,55,0.04); }
+
+    /* 상태 배지 */
+    .sbadge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 0.74rem; font-weight: 700;
+    }
+    .sbadge.임차중  { background: rgba(34,197,94,0.18);  color: #4ade80;  border: 1px solid rgba(34,197,94,0.30); }
+    .sbadge.공실   { background: rgba(239,68,68,0.18);  color: #f87171;  border: 1px solid rgba(239,68,68,0.30); }
+    .sbadge.매매가능 { background: rgba(234,179,8,0.18);  color: #facc15;  border: 1px solid rgba(234,179,8,0.30); }
+
+    /* 빈 상태 */
+    .units-empty {
+      text-align: center; color: var(--muted); padding: 38px 20px; font-size: 0.88rem;
+    }
+
+    /* 호실 모달 */
+    .unit-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9100;
+      background: rgba(0,0,0,0.75);
+      align-items: flex-start; justify-content: center;
+      padding: 24px 16px; overflow-y: auto;
+    }
+    .unit-modal-overlay.open { display: flex; }
+    .unit-modal-box {
+      background: linear-gradient(145deg, #0E1C34 0%, #132040 100%);
+      border: 1px solid rgba(212,175,55,0.30); border-radius: 20px;
+      padding: 24px; width: 100%; max-width: 620px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.7); position: relative;
+    }
+    .unit-modal-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 16px; color: rgba(255,255,255,0.95); }
+    .unit-modal-close {
+      position: absolute; top: 18px; right: 18px;
+      background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer;
+    }
+    .unit-modal-close:hover { color: #fff; }
+    /* 모달 섹션 구분 */
+    .um-section { margin-bottom: 14px; border-radius: 10px; overflow: hidden; }
+    .um-section-title {
+      font-size: 0.78rem; font-weight: 800; letter-spacing: 0.5px;
+      color: #fff; padding: 7px 14px;
+    }
+    /* 분양 당시 — 파란 계열 */
+    .um-section.sale .um-section-title { background: #1a3a6e; }
+    .um-section.sale { background: rgba(26,58,110,0.18); }
+    .um-section.sale .umgrid { padding: 10px 12px 12px; }
+    /* 현재 현황 — 골드 계열 */
+    .um-section.current .um-section-title { background: #8B6914; }
+    .um-section.current { background: #0d1f3c; }
+    .um-section.current .umgrid { padding: 10px 12px 12px; }
+    .um-section.current .umfield input,
+    .um-section.current .umfield select,
+    .um-section.current .umfield textarea {
+      border-color: rgba(201,168,76,0.45);
+    }
+    .um-section.current .umfield input:focus,
+    .um-section.current .umfield select:focus,
+    .um-section.current .umfield textarea:focus {
+      border-color: #C9A84C;
+    }
+    .umgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 480px) { .umgrid { grid-template-columns: 1fr; } }
+    .umgrid .full { grid-column: 1 / -1; }
+    /* 취소 버튼 */
+    .btn-unit-ghost {
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.14); border-radius: 10px;
+      padding: 9px 18px; font-size: 0.88rem; cursor: pointer; font-family: inherit;
+    }
+    .btn-unit-ghost:hover { background: rgba(255,255,255,0.10); }
+    /* 면적 듀얼 입력 (평 ↔ m²) */
+    .area-dual { grid-column: 1 / -1; }
+    .area-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto;
+      gap: 6px; align-items: center; margin-top: 5px;
+    }
+    .area-arrow {
+      font-size: 1rem; font-weight: 900;
+      color: #C9A84C; text-align: center; padding: 0 2px;
+    }
+    .area-unit { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+    .area-auto { color: #C9A84C !important; }  /* 자동계산값 골드 */
+    /* 실시간 한글 금액 힌트 */
+    .amt-hint {
+      display: block; min-height: 16px;
+      font-size: 0.74rem; font-weight: 700;
+      color: #C9A84C; margin-top: 3px; letter-spacing: 0.2px;
+    }
+    .umfield label { display: block; font-size: 0.76rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; }
+    .umfield input, .umfield select, .umfield textarea {
+      width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; padding: 9px 12px; font-size: 0.88rem;
+      color: rgba(255,255,255,0.92); font-family: inherit; outline: none; transition: border-color 0.15s;
+    }
+    .umfield input:focus, .umfield select:focus, .umfield textarea:focus {
+      border-color: rgba(212,175,55,0.55);
+    }
+    .umfield textarea { resize: vertical; min-height: 66px; }
+    .umfield select option { background: #0D1728; }
+    .unit-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+    /* 소형 버튼 */
+    .btn-unit-edit {
+      background: rgba(212,175,55,0.10); color: #D4AF37;
+      border: 1px solid rgba(212,175,55,0.25); border-radius: 8px;
+      padding: 5px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.12s;
+    }
+    .btn-unit-edit:hover { background: rgba(212,175,55,0.20); }
+    /* 매물 연결 버튼 */
+    .btn-listing-reg {
+      background: rgba(96,165,250,0.12); color: #93c5fd;
+      border: 1px solid rgba(96,165,250,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-reg:hover { background: rgba(96,165,250,0.22); }
+    .btn-listing-view {
+      display: inline-block; text-decoration: none;
+      background: rgba(34,197,94,0.12); color: #4ade80;
+      border: 1px solid rgba(34,197,94,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-view:hover { background: rgba(34,197,94,0.22); }
+    .btn-listing-home {
+      display: inline-block; text-decoration: none;
+      background: rgba(168,85,247,0.12); color: #c084fc;
+      border: 1px solid rgba(168,85,247,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-home:hover { background: rgba(168,85,247,0.22); }
+    .tbl-actions { display: flex; gap: 5px; align-items: center; flex-wrap: nowrap; }
+    .btn-unit-del {
+      background: rgba(239,68,68,0.10); color: #f87171;
+      border: 1px solid rgba(239,68,68,0.22); border-radius: 8px;
+      padding: 5px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.12s;
+    }
+    .btn-unit-del:hover { background: rgba(239,68,68,0.20); }
+    .btn-unit-add {
+      background: linear-gradient(135deg, #D4AF37 0%, #B8962A 100%); color: #000;
+      border: none; border-radius: 10px; padding: 9px 20px;
+      font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: 0.15s;
+    }
+    .btn-unit-add:hover { opacity: 0.88; }
+    .unit-sec-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; gap: 10px;
+    }
+    .unit-sec-head h3 { margin: 0; font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.92); }
   </style>
 </head>
 <body>
@@ -207,7 +433,7 @@
   </div>
 
   <!-- ===== 기타 자료 ===== -->
-  <div class="card">
+  <div class="card" style="margin-bottom:20px;">
     <div class="sec-title">📄 기타 자료</div>
 
     <!-- 파일 업로드 -->
@@ -225,11 +451,138 @@
     </div>
   </div>
 
+  <!-- ===== 호실 현황 ===== -->
+  <div class="card">
+    <div class="unit-sec-head">
+      <h3>🏬 호실 현황</h3>
+      <button class="btn-unit-add" id="btnAddUnit">+ 호실 추가</button>
+    </div>
+
+    <!-- 요약 카드 -->
+    <div class="summary-grid">
+      <div class="sum-card occupied">
+        <div class="sum-num" id="sumOccupied">-</div>
+        <div class="sum-label">임차중</div>
+      </div>
+      <div class="sum-card vacant">
+        <div class="sum-num" id="sumVacant">-</div>
+        <div class="sum-label">공실</div>
+      </div>
+      <div class="sum-card forsale">
+        <div class="sum-num" id="sumForSale">-</div>
+        <div class="sum-label">매매가능</div>
+      </div>
+      <div class="sum-card revenue">
+        <div class="sum-num" id="sumRevenue">-</div>
+        <div class="sum-label">월차임 합계(만)</div>
+      </div>
+    </div>
+
+    <!-- 층 필터 탭 -->
+    <div class="floor-tabs" id="unitFloorTabs"></div>
+
+    <!-- 테이블 -->
+    <div class="units-wrap">
+      <table class="units-tbl">
+        <thead>
+          <tr>
+            <th>호수</th>
+            <th>업종</th>
+            <th>소유주</th>
+            <th>연락처</th>
+            <th>보증금(만)</th>
+            <th>월차임(만)</th>
+            <th>상태</th>
+            <th>매물</th>
+          </tr>
+        </thead>
+        <tbody id="unitsTbody"></tbody>
+      </table>
+    </div>
+    <div id="unitsEmpty" class="units-empty" style="display:none;">
+      등록된 호실이 없습니다. [+ 호실 추가]를 눌러 시작하세요.
+    </div>
+  </div>
+
+  <!-- ★ 호실 추가/수정 모달 ★ -->
+  <div class="unit-modal-overlay" id="unitModal">
+    <div class="unit-modal-box">
+      <button class="unit-modal-close" id="umClose">✕</button>
+      <div class="unit-modal-title" id="umTitle">호실 추가</div>
+
+      <!-- 분양 당시 -->
+      <div class="um-section sale">
+        <div class="um-section-title">📋 분양 당시</div>
+        <div class="umgrid">
+          <div class="umfield"><label>호수 *</label><input id="u_호수" placeholder="예: 101, 202" /></div>
+          <div class="umfield"><label>업종</label><input id="u_현업종" placeholder="예: 음식점, 학원" /></div>
+          <div class="umfield area-dual full">
+            <label>전용 면적</label>
+            <div class="area-row">
+              <input id="u_전용_평" type="number" step="0.01" placeholder="평" />
+              <span class="area-arrow">↔</span>
+              <input id="u_전용_m2" type="number" step="0.01" placeholder="m²" class="area-auto" />
+              <span class="area-unit">m²</span>
+            </div>
+          </div>
+          <div class="umfield area-dual full">
+            <label>분양 면적</label>
+            <div class="area-row">
+              <input id="u_분양_평" type="number" step="0.01" placeholder="평" />
+              <span class="area-arrow">↔</span>
+              <input id="u_분양_m2" type="number" step="0.01" placeholder="m²" class="area-auto" />
+              <span class="area-unit">m²</span>
+            </div>
+          </div>
+          <div class="umfield"><label>평당가 (만원)</label><input id="u_평당가" type="number" placeholder="0" /></div>
+          <div class="umfield"><label>분양금액 (만원)</label><input id="u_분양금액" type="number" placeholder="0" /><span class="amt-hint" id="h_분양금액"></span></div>
+          <div class="umfield"><label>보증금 (만원)</label><input id="u_보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_보증금"></span></div>
+          <div class="umfield"><label>월차임 (만원)</label><input id="u_월차임" type="number" placeholder="0" /><span class="amt-hint" id="h_월차임"></span></div>
+        </div>
+      </div>
+
+      <!-- 현재 현황 -->
+      <div class="um-section current">
+        <div class="um-section-title">📊 현재 현황</div>
+        <div class="umgrid">
+          <div class="umfield">
+            <label>상태 *</label>
+            <select id="u_공실여부">
+              <option value="임차중">임차중</option>
+              <option value="공실">공실</option>
+              <option value="매매가능">매매가능</option>
+            </select>
+          </div>
+          <div class="umfield"><label>(현)매매가격 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /><span class="amt-hint" id="h_현매매가격"></span></div>
+          <div class="umfield"><label>(현)보증금 (만원)</label><input id="u_현보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_현보증금"></span></div>
+          <div class="umfield"><label>(현)월세 (만원)</label><input id="u_현월세" type="number" placeholder="0" /><span class="amt-hint" id="h_현월세"></span></div>
+          <div class="umfield"><label>소유주</label><input id="u_소유주" placeholder="소유주 성명" /></div>
+          <div class="umfield"><label>연락처</label><input id="u_연락처" placeholder="010-0000-0000" /></div>
+          <div class="umfield"><label>수익률 (%)</label><input id="u_수익률" placeholder="예: 5.2" /></div>
+          <div class="umfield"><label>추천매물</label><input id="u_추천매물" placeholder="추천 여부" /></div>
+          <div class="umfield full"><label>비고</label><textarea id="u_비고" placeholder="특이사항 등 자유 입력"></textarea></div>
+        </div>
+      </div>
+
+      <div class="unit-modal-actions">
+        <button class="btn-unit-ghost" id="umCancel">취소</button>
+        <button class="btn-unit-del" id="umDelete" style="display:none;">삭제</button>
+        <button class="btn-unit-add" id="umSave">저장</button>
+      </div>
+    </div>
+  </div>
 </div><!-- /page -->
 
 <!-- ===== 라이트박스 ===== -->
 <div id="lightbox" onclick="closeLightbox()">
   <span id="lightbox-close" onclick="closeLightbox()">✕</span>
+  <div id="lightbox-toolbar" onclick="event.stopPropagation()">
+    <button type="button" class="lb-btn" title="축소" onclick="lbZoomOut()">−</button>
+    <button type="button" class="lb-btn" id="lb-zoom-reset" title="100%로 초기화" onclick="lbZoomReset()">100%</button>
+    <button type="button" class="lb-btn" title="확대" onclick="lbZoomIn()">+</button>
+    <span class="lb-divider"></span>
+    <button type="button" class="lb-btn lb-close-btn" title="닫기" onclick="closeLightbox()">✕ 닫기</button>
+  </div>
   <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
   <div id="lightbox-caption"></div>
 </div>
@@ -274,7 +627,11 @@ function esc(s) {
 
 function isImage(url, fileName) {
   const u = (url || fileName || '').toLowerCase();
-  return /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/.test(u);
+  if (/\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/.test(u)) return true;
+  // 구글 드라이브/포토 이미지 링크는 확장자가 없는 경우가 많아 도메인·경로 패턴으로 보조 판별
+  if (/lh3\.googleusercontent\.com/.test(u)) return true;
+  if (/drive\.google\.com\/thumbnail/.test(u)) return true;
+  return false;
 }
 
 function isPdf(url, fileName) {
@@ -313,19 +670,110 @@ async function cloudinaryUpload(file, folder = 'haitop') {
 function goBack()    { window.location.href = 'index.html?tab=drive'; }
 function goOverview(){ window.location.href = `building-overview.html?id=${buildingId}`; }
 
-/* ── 라이트박스 ── */
+/* ── 라이트박스 (확대/축소/드래그 포함) ── */
+const LB_MIN_SCALE = 1, LB_MAX_SCALE = 5, LB_STEP = 0.5;
+let lbScale = 1, lbX = 0, lbY = 0;
+let lbDragging = false, lbLastX = 0, lbLastY = 0;
+let lbPinchStartDist = 0, lbPinchStartScale = 1;
+
+const lbImg = () => document.getElementById('lightbox-img');
+
+function lbApplyTransform() {
+  const img = lbImg();
+  img.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale})`;
+  img.style.cursor = lbScale > 1 ? (lbDragging ? 'grabbing' : 'grab') : 'default';
+  const label = document.getElementById('lb-zoom-reset');
+  if (label) label.textContent = Math.round(lbScale * 100) + '%';
+}
+
+function lbSetScale(next) {
+  next = Math.min(LB_MAX_SCALE, Math.max(LB_MIN_SCALE, next));
+  if (next === LB_MIN_SCALE) { lbX = 0; lbY = 0; }
+  lbScale = next;
+  lbApplyTransform();
+}
+
+function lbZoomIn()    { lbSetScale(lbScale + LB_STEP); }
+function lbZoomOut()   { lbSetScale(lbScale - LB_STEP); }
+function lbZoomReset() { lbX = 0; lbY = 0; lbSetScale(1); }
+
 function openLightbox(url, caption) {
-  document.getElementById('lightbox-img').src = url;
+  const img = lbImg();
+  img.src = url;
   document.getElementById('lightbox-caption').textContent = caption || '';
+  lbX = 0; lbY = 0; lbScale = 1;
+  lbApplyTransform();
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lightbox-img').src = '';
+  lbImg().src = '';
+  lbX = 0; lbY = 0; lbScale = 1; lbDragging = false;
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+/* 마우스 휠 / 트랙패드로 확대·축소 */
+lbImg().addEventListener('wheel', (e) => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  e.preventDefault();
+  lbSetScale(lbScale + (e.deltaY < 0 ? LB_STEP : -LB_STEP));
+}, { passive: false });
+
+/* 마우스 드래그로 이동 (확대된 상태에서만) */
+lbImg().addEventListener('mousedown', (e) => {
+  if (lbScale <= 1) return;
+  lbDragging = true; lbLastX = e.clientX; lbLastY = e.clientY;
+  lbApplyTransform();
+  e.preventDefault();
+});
+document.addEventListener('mousemove', (e) => {
+  if (!lbDragging) return;
+  lbX += e.clientX - lbLastX;
+  lbY += e.clientY - lbLastY;
+  lbLastX = e.clientX; lbLastY = e.clientY;
+  lbApplyTransform();
+});
+document.addEventListener('mouseup', () => {
+  if (!lbDragging) return;
+  lbDragging = false;
+  lbApplyTransform();
+});
+
+/* 모바일 터치: 두 손가락 핀치로 확대·축소, 한 손가락 드래그로 이동 */
+function lbTouchDist(t1, t2) {
+  return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+}
+lbImg().addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    lbPinchStartDist = lbTouchDist(e.touches[0], e.touches[1]);
+    lbPinchStartScale = lbScale;
+  } else if (e.touches.length === 1 && lbScale > 1) {
+    lbDragging = true;
+    lbLastX = e.touches[0].clientX;
+    lbLastY = e.touches[0].clientY;
+  }
+}, { passive: true });
+lbImg().addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2 && lbPinchStartDist) {
+    e.preventDefault();
+    const dist = lbTouchDist(e.touches[0], e.touches[1]);
+    lbSetScale(lbPinchStartScale * (dist / lbPinchStartDist));
+  } else if (e.touches.length === 1 && lbDragging) {
+    e.preventDefault();
+    const t = e.touches[0];
+    lbX += t.clientX - lbLastX;
+    lbY += t.clientY - lbLastY;
+    lbLastX = t.clientX; lbLastY = t.clientY;
+    lbApplyTransform();
+  }
+}, { passive: false });
+lbImg().addEventListener('touchend', () => {
+  lbDragging = false;
+  lbPinchStartDist = 0;
+  lbApplyTransform();
+});
 
 /* ══════════════════════════════════════════
    초기 로드
@@ -527,7 +975,395 @@ async function deleteBFile(id) {
   } catch(e) { showToast('❌ 삭제 실패: ' + e.message); }
 }
 
-init();
+(async function () {
+  await init();
+  // init() 완료 후 호실 현황 로드 (buildingName DOM 보장)
+  if (typeof window._loadBuildingUnits === "function") {
+    window._loadBuildingUnits();
+  }
+})();
+
+/* ======================================================
+   호실 현황 로직
+   - window._loadBuildingUnits 로 init() 완료 후 안전하게 호출
+   - 건물명(#buildingName DOM) -> local_id 로 Supabase 조회
+====================================================== */
+(function () {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  let units       = [];
+  let editIdx     = -1;
+  let filterFloor = "전체";
+  let bName       = "";
+
+  function fmt(n) {
+    const v = Number(n);
+    return (v && isFinite(v)) ? v.toLocaleString("ko-KR") : "-";
+  }
+
+  // 호수 -> 층 번호 문자열: 101->1, 201->2, 1001->10, B101->B1
+  function floorOf(room) {
+    const s = String(room || "").trim();
+    const bm = s.match(/^[Bb](\d)/);
+    if (bm) return "B" + bm[1];
+    const nm = s.match(/^(\d+)/);
+    if (nm) {
+      const n = parseInt(nm[1], 10);
+      if (n >= 1000) return String(Math.floor(n / 100));
+      if (n >= 100)  return String(Math.floor(n / 100));
+      return String(n);
+    }
+    return "기타";
+  }
+
+  function floorLabel(f) {
+    if (f === "전체") return "전체";
+    return f + "층";
+  }
+
+  // 건물명 읽기 (DOM 갱신 대기)
+  async function getBuildingName() {
+    let name = ($("buildingName") || {}).textContent || "";
+    if (!name || name === "건물 상세") {
+      for (let i = 0; i < 6; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        name = ($("buildingName") || {}).textContent || "";
+        if (name && name !== "건물 상세") break;
+      }
+    }
+    return name;
+  }
+
+  // ── 매물등록 URL 생성 ──
+  function buildRegisterUrl(u) {
+    const p = new URLSearchParams();
+    if (typeof buildingId !== "undefined" && buildingId) p.set("buildingId", buildingId);
+    if (u.호수) p.set("roomNo", u.호수);
+    return "register.html?" + p.toString();
+  }
+
+  // 초기 로드 (init() 완료 후 호출)
+  async function loadUnits() {
+    bName = await getBuildingName();
+    console.log("[호실현황] ── loadUnits 시작 ──");
+    console.log("[호실현황] URL buildingId:", typeof buildingId !== "undefined" ? buildingId : "(없음)");
+    console.log("[호실현황] #buildingName DOM:", ($("buildingName")||{}).textContent);
+    console.log("[호실현황] 최종 bName:", bName);
+
+    if (!bName) {
+      console.warn("[호실현황] 건물명 없음 → 조회 중단");
+      return;
+    }
+    try {
+      const rec = await getBuildingRecord(bName);
+      console.log("[호실현황] getBuildingRecord 결과:", rec
+        ? `id=${rec.id}, name=${rec.name}, units=${Array.isArray(rec.units)?rec.units.length:0}개`
+        : "null (건물 없음)");
+      units = Array.isArray(rec && rec.units) ? rec.units : [];
+      console.log("[호실현황] 최종 units 수:", units.length);
+    } catch(e) {
+      if (typeof showToast === "function") showToast("호실 로드 실패: " + e.message);
+      console.error("[호실현황] 로드 실패:", e);
+      units = [];
+    }
+    renderAll();
+  }
+
+  // init() 완료 후 외부에서 호출
+  window._loadBuildingUnits = loadUnits;
+
+  function renderAll() {
+    renderSummary();
+    renderFloorTabs();
+    renderTable();
+  }
+
+  function renderSummary() {
+    const occ  = units.filter(u => u.공실여부 === "임차중").length;
+    const vac  = units.filter(u => u.공실여부 === "공실").length;
+    const sale = units.filter(u => u.공실여부 === "매매가능").length;
+    const rev  = units.reduce((s, u) => s + (Number(u.월차임) || 0), 0);
+    $("sumOccupied").textContent = occ;
+    $("sumVacant").textContent   = vac;
+    $("sumForSale").textContent  = sale;
+    $("sumRevenue").textContent  = rev ? rev.toLocaleString("ko-KR") : "-";
+  }
+
+  function renderFloorTabs() {
+    const seen = {};
+    const floors = [];
+    units.forEach(u => {
+      const f = floorOf(u.호수);
+      if (f && !seen[f]) { seen[f] = true; floors.push(f); }
+    });
+    floors.sort((a, b) => {
+      if (a.startsWith("B") && !b.startsWith("B")) return -1;
+      if (!a.startsWith("B") && b.startsWith("B")) return 1;
+      return parseInt(a.replace("B","")) - parseInt(b.replace("B",""));
+    });
+
+    const tabs = ["전체"].concat(floors);
+    $("unitFloorTabs").innerHTML = tabs.map(f =>
+      `<button class="ftab${f === filterFloor ? " active" : ""}" data-floor="${f}">${floorLabel(f)}</button>`
+    ).join("");
+
+    $("unitFloorTabs").querySelectorAll(".ftab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterFloor = btn.dataset.floor;
+        renderAll();
+      });
+    });
+  }
+
+  function renderTable() {
+    const filtered = filterFloor === "전체"
+      ? units
+      : units.filter(u => floorOf(u.호수) === filterFloor);
+
+    const tbody = $("unitsTbody");
+    const empty = $("unitsEmpty");
+
+    if (!filtered.length) {
+      tbody.innerHTML = "";
+      empty.style.display = "";
+      return;
+    }
+    empty.style.display = "none";
+
+    tbody.innerHTML = filtered.map(u => {
+      const ri     = units.indexOf(u);
+      const status = u.공실여부 || "공실";
+      const bc     = status === "임차중" ? "임차중" : status === "공실" ? "공실" : "매매가능";
+      return `<tr>
+        <td><strong>${u.호수 || "-"}</strong></td>
+        <td>${u.현업종 || "-"}</td>
+        <td>${u.소유주 || "-"}</td>
+        <td>${u.연락처 || "-"}</td>
+        <td style="text-align:right">${u.보증금 ? fmt(u.보증금) : "-"}</td>
+        <td style="text-align:right">${u.월차임 ? fmt(u.월차임) : "-"}</td>
+        <td><span class="sbadge ${bc}">${status}</span></td>
+        <td class="tbl-actions">
+          <button class="btn-unit-edit" data-ri="${ri}">수정</button>
+          ${u.listing_id
+            ? `<a class="btn-listing-view" href="detail.html?id=${u.listing_id}">매물보기</a>`
+              + `<a class="btn-listing-home" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html?id=${u.listing_id}" target="_blank">홈페이지</a>`
+            : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`
+          }
+        </td>
+      </tr>`;
+    }).join("");
+
+    tbody.querySelectorAll(".btn-unit-edit[data-ri]").forEach(btn => {
+      btn.addEventListener("click", () => openModal(Number(btn.dataset.ri)));
+    });
+    tbody.querySelectorAll(".btn-listing-reg[data-ri]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const u = units[Number(btn.dataset.ri)];
+        location.href = buildRegisterUrl(u);
+      });
+    });
+  }
+
+  function openModal(idx) {
+    editIdx = idx;
+    const isNew = idx < 0;
+    $("umTitle").textContent    = isNew ? "호실 추가" : "호실 수정";
+    $("umDelete").style.display = isNew ? "none" : "";
+    const u = isNew ? {} : units[idx];
+
+    // 분양 당시
+    $("u_호수").value     = u.호수      || "";
+    $("u_현업종").value   = u.현업종    || "";
+    $("u_전용_평").value  = u.전용_평 ? parseFloat(u.전용_평).toFixed(2) : "";
+    $("u_전용_m2").value  = u.전용_평 ? (parseFloat(u.전용_평) * 3.30579).toFixed(2) : "";
+    $("u_분양_평").value  = u.분양_평 ? parseFloat(u.분양_평).toFixed(2) : "";
+    $("u_분양_m2").value  = u.분양_평 ? (parseFloat(u.분양_평) * 3.30579).toFixed(2) : "";
+    // m² 자동계산 색 표시
+    [$("u_전용_m2"), $("u_분양_m2")].forEach(el => {
+      if (el) el.style.color = el.value ? "#C9A84C" : "";
+    });
+    $("u_평당가").value   = u.평당가    || "";
+    $("u_분양금액").value = u.분양금액  || "";
+    $("u_보증금").value   = u.보증금    || "";
+    $("u_월차임").value   = u.월차임    || "";
+
+    // 현재 현황
+    $("u_공실여부").value   = u.공실여부    || "임차중";
+    $("u_현매매가격").value = u.현_매매가격 || "";
+    $("u_현보증금").value   = u.현_보증금   || "";
+    $("u_현월세").value     = u.현_월세     || "";
+    $("u_소유주").value     = u.소유주      || "";
+    $("u_연락처").value     = u.연락처      || "";
+    $("u_수익률").value     = u.수익률      || "";
+    $("u_추천매물").value   = u.추천매물    || "";
+    $("u_비고").value       = u.비고        || "";
+
+    refreshHints(u);
+    $("unitModal").classList.add("open");
+    $("u_호수").focus();
+  }
+
+  function closeModal() {
+    $("unitModal").classList.remove("open");
+    editIdx = -1;
+  }
+
+  async function saveUnit() {
+    const 호수 = $("u_호수").value.trim();
+    if (!호수) { if (typeof showToast === "function") showToast("호수를 입력하세요."); return; }
+
+    const unit = {
+      호수,
+      공실여부:    $("u_공실여부").value,
+      현업종:      $("u_현업종").value.trim()    || null,
+      소유주:      $("u_소유주").value.trim()    || null,
+      연락처:      $("u_연락처").value.trim()    || null,
+      보증금:      Number($("u_보증금").value)   || null,
+      월차임:      Number($("u_월차임").value)   || null,
+      전용_평:     $("u_전용_평").value ? Math.round(parseFloat($("u_전용_평").value) * 100) / 100 : null,
+      분양_평:     $("u_분양_평").value ? Math.round(parseFloat($("u_분양_평").value) * 100) / 100 : null,
+      평당가:      Number($("u_평당가").value)   || null,
+      분양금액:    Number($("u_분양금액").value) || null,
+      현_매매가격: Number($("u_현매매가격").value) || null,
+      현_보증금:   Number($("u_현보증금").value)   || null,
+      현_월세:     Number($("u_현월세").value)     || null,
+      수익률:      $("u_수익률").value.trim()    || null,
+      추천매물:    $("u_추천매물").value.trim()  || null,
+      비고:        $("u_비고").value.trim()      || null,
+      updated_at:  new Date().toISOString()
+    };
+
+    const next = [...units];
+    if (editIdx < 0) next.push(unit); else next[editIdx] = unit;
+
+    $("umSave").disabled = true;
+    $("umSave").textContent = "저장 중...";
+    try {
+      await saveBuildingUnits(bName, bName, next);
+      units = next;
+      closeModal();
+      renderAll();
+      if (typeof showToast === "function")
+        showToast(editIdx < 0 ? "호실이 추가되었습니다." : "수정 완료되었습니다.");
+    } catch(e) {
+      if (typeof showToast === "function") showToast("저장 실패: " + e.message);
+      console.error("[호실현황] 저장 실패:", e);
+    } finally {
+      $("umSave").disabled = false;
+      $("umSave").textContent = "저장";
+    }
+  }
+
+  async function deleteUnit() {
+    if (editIdx < 0) return;
+    const u = units[editIdx];
+    if (!confirm(`'${u.호수}' 호실을 삭제하시겠습니까?`)) return;
+    const next = units.filter((_, i) => i !== editIdx);
+    $("umDelete").disabled = true;
+    try {
+      await saveBuildingUnits(bName, bName, next);
+      units = next;
+      closeModal();
+      renderAll();
+      if (typeof showToast === "function") showToast("삭제 완료되었습니다.");
+    } catch(e) {
+      if (typeof showToast === "function") showToast("삭제 실패: " + e.message);
+    } finally { $("umDelete").disabled = false; }
+  }
+
+  // ── 한글 금액 변환 ──
+  // 입력: 만원 단위 숫자, 출력: "X억 X,XXX만원" 또는 "X,XXX만원"
+  function toKorAmt(val) {
+    const n = Number(val);
+    if (!n || !isFinite(n) || n <= 0) return "";
+    const eok  = Math.floor(n / 10000);
+    const man  = n % 10000;
+    if (eok > 0 && man > 0)
+      return eok.toLocaleString("ko-KR") + "억 " + man.toLocaleString("ko-KR") + "만원";
+    if (eok > 0)
+      return eok.toLocaleString("ko-KR") + "억원";
+    return n.toLocaleString("ko-KR") + "만원";
+  }
+
+  // 한글 금액 힌트를 실시간으로 갱신하는 필드 목록
+  const AMT_FIELDS = ["u_분양금액","u_보증금","u_월차임","u_현매매가격","u_현보증금","u_현월세"];
+
+  function bindAmtHints() {
+    AMT_FIELDS.forEach(function(id) {
+      const input = $(id);
+      const hint  = document.getElementById("h_" + id.replace("u_",""));
+      if (!input || !hint) return;
+      input.addEventListener("input", function() {
+        hint.textContent = toKorAmt(input.value);
+      });
+    });
+  }
+  bindAmtHints();
+
+  // ── 평 ↔ m² 양방향 변환 바인딩 ──
+  const PY_TO_M2 = 3.30579;
+  function bindAreaPair(pyId, m2Id) {
+    const pyEl = $(pyId);
+    const m2El = $(m2Id);
+    if (!pyEl || !m2El) return;
+    pyEl.addEventListener("input", () => {
+      const v = parseFloat(pyEl.value);
+      if (!isNaN(v) && v > 0) {
+        m2El.value = (v * PY_TO_M2).toFixed(2);
+        m2El.style.color = "#C9A84C";
+      } else {
+        m2El.value = "";
+        m2El.style.color = "";
+      }
+    });
+    m2El.addEventListener("input", () => {
+      const v = parseFloat(m2El.value);
+      if (!isNaN(v) && v > 0) {
+        pyEl.value = (v / PY_TO_M2).toFixed(2);
+        m2El.style.color = "#C9A84C";
+      } else {
+        pyEl.value = "";
+        m2El.style.color = "";
+      }
+    });
+  }
+  bindAreaPair("u_전용_평", "u_전용_m2");
+  bindAreaPair("u_분양_평", "u_분양_m2");
+
+  // 모달 열릴 때 힌트 초기값 갱신
+  function refreshHints(u) {
+    const map = {
+      u_분양금액: u.분양금액  || "",
+      u_보증금:   u.보증금    || "",
+      u_월차임:   u.월차임    || "",
+      u_현매매가격: u.현_매매가격 || "",
+      u_현보증금: u.현_보증금  || "",
+      u_현월세:   u.현_월세   || "",
+    };
+    Object.entries(map).forEach(function([id, val]) {
+      const hint = document.getElementById("h_" + id.replace("u_",""));
+      if (hint) hint.textContent = toKorAmt(val);
+    });
+  }
+
+  $("btnAddUnit").addEventListener("click", () => openModal(-1));
+  $("umSave").addEventListener("click", saveUnit);
+  $("umDelete").addEventListener("click", deleteUnit);
+  $("umCancel").addEventListener("click", closeModal);
+  $("umClose").addEventListener("click", closeModal);
+  $("unitModal").addEventListener("click", e => { if (e.target === $("unitModal")) closeModal(); });
+
+  // fallback: init() 2초 후에도 미로드 시 재시도
+  setTimeout(() => {
+    if (units.length === 0 && bName === "") {
+      console.log("[호실현황] fallback 재시도");
+      loadUnits();
+    }
+  }, 2000);
+
+})();
 </script>
 </body>
 </html>
