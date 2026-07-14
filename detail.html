@@ -67,13 +67,17 @@
 </script>
 
 <!-- 수정 모달 -->
-<div id="editModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
-  <div class="modal-box" style="max-width:620px;width:95%;padding:20px;">
-    <div class="modal-title">✏️ 매물 수정</div>
+<div id="editModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="edit-modal-header">
+      <div class="modal-title">✏️ 매물 수정</div>
+      <button type="button" class="edit-modal-close" aria-label="닫기" onclick="document.getElementById('editModal').style.display='none'">✕</button>
+    </div>
+    <div class="edit-modal-body">
 
     <!-- 기본정보 -->
     <div class="modal-section-title">📋 기본정보</div>
-    <div class="form-grid-2" style="margin-bottom:10px;">
+    <div class="edit-grid-3">
       <div class="field">
         <label>1차구분</label>
         <select id="edit_category1">
@@ -112,7 +116,7 @@
         <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="edit_privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호" />
       </div>
-      <div class="field">
+      <div class="field" style="grid-column:1 / -1;">
         <label>제목</label>
         <input id="edit_title" type="text" placeholder="매물 제목" maxlength="20" />
       </div>
@@ -120,7 +124,7 @@
 
     <!-- 가격정보 -->
     <div class="modal-section-title">💰 가격정보</div>
-    <div class="form-grid-2" style="margin-bottom:10px;">
+    <div class="edit-grid-3">
       <div class="field"><label>매매가</label><input id="edit_salePrice" type="text" placeholder="예: 12억 5,000만" />
         <div class="price-preview" id="edit_salePrice_preview"></div></div>
       <div class="field"><label>분양가</label><input id="edit_presalePrice" type="text" placeholder="예: 8억 9,000만" />
@@ -138,6 +142,7 @@
     <!-- 면적정보 (조건부) -->
     <div id="edit_area_land" style="display:none;">
       <div class="modal-section-title">📐 면적정보</div>
+      <div class="edit-area-flex">
       <div class="area-row" style="margin-bottom:10px;">
         <span class="area-label">토지면적</span>
         <input id="edit_areaM2" type="number" min="0" step="0.01" placeholder="0.00" />
@@ -145,50 +150,55 @@
         <input id="edit_areaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
       </div>
+      </div>
     </div>
 
     <div id="edit_area_exclusive" style="display:none;">
       <div class="modal-section-title">📐 면적정보</div>
+      <div class="edit-area-flex">
       <div class="area-row"><span class="area-label">전용면적</span>
         <input id="edit_exclusiveAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
         <span class="area-unit">㎡</span>
         <input id="edit_exclusiveAreaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
       </div>
-      <div class="area-row" style="margin-top:6px;margin-bottom:10px;"><span class="area-label">공급면적</span>
+      <div class="area-row" style="margin-bottom:10px;"><span class="area-label">공급면적</span>
         <input id="edit_supplyAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
         <span class="area-unit">㎡</span>
         <input id="edit_supplyAreaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
       </div>
+      </div>
     </div>
 
     <div id="edit_area_building" style="display:none;">
       <div class="modal-section-title">📐 면적정보</div>
+      <div class="edit-area-flex">
       <div class="area-row"><span class="area-label">대지면적</span>
         <input id="edit_landAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
         <span class="area-unit">㎡</span>
         <input id="edit_landAreaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
       </div>
-      <div class="area-row" style="margin-top:6px;"><span class="area-label">건축면적</span>
+      <div class="area-row"><span class="area-label">건축면적</span>
         <input id="edit_buildingAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
         <span class="area-unit">㎡</span>
         <input id="edit_buildingAreaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
       </div>
-      <div class="area-row" style="margin-top:6px;margin-bottom:10px;"><span class="area-label">연면적</span>
+      <div class="area-row" style="margin-bottom:10px;"><span class="area-label">연면적</span>
         <input id="edit_totalFloorAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
         <span class="area-unit">㎡</span>
         <input id="edit_totalFloorAreaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
+      </div>
       </div>
     </div>
 
     <!-- 추가정보 (공장·상가·건물) -->
     <div id="edit_commercial_section" style="display:none;">
       <div class="modal-section-title">🏢 추가정보 <span style="color:var(--text-muted);font-size:0.75rem;">(공장·상가·건물)</span></div>
-      <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="edit-grid-4">
         <div class="field"><label>층정보</label><input id="edit_floorInfo" type="text" placeholder="예: 지상 1층" /></div>
         <div class="field"><label>용도지역</label><input id="edit_zoning" type="text" placeholder="예: 준공업지역" /></div>
         <div class="field"><label>주차대수</label><input id="edit_parkingCount" type="text" placeholder="예: 10대" /></div>
@@ -198,7 +208,7 @@
 
     <!-- 홍보스티커 -->
     <div class="modal-section-title">🏷️ 홍보스티커</div>
-    <div class="sticker-grid" style="margin-bottom:10px;">
+    <div class="sticker-grid edit-sticker-grid" style="margin-bottom:10px;">
       <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="추천매물" /> 추천매물</label>
       <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="급매물" /> 급매물</label>
       <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="수익형" /> 수익형</label>
@@ -214,7 +224,7 @@
     <div class="modal-section-title">📝 매물설명</div>
     <div class="field" style="margin-bottom:8px;">
       <label>공개 매물설명 <span style="color:var(--text-muted);font-size:0.75rem;">(상세보기 표시)</span></label>
-      <textarea id="edit_detailDescription" rows="3" placeholder="입지, 도로접근성, 추천업종, 임대조건 등" style="width:100%;box-sizing:border-box;"></textarea>
+      <textarea id="edit_detailDescription" rows="7" placeholder="입지, 도로접근성, 추천업종, 임대조건 등" style="width:100%;box-sizing:border-box;"></textarea>
     </div>
     <div class="field" style="margin-bottom:10px;">
       <label>내부 메모 <span style="color:var(--text-muted);font-size:0.75rem;">(비공개)</span></label>
@@ -255,7 +265,9 @@
       </div>
     </div>
 
-    <div class="modal-btns">
+    </div><!-- /edit-modal-body -->
+
+    <div class="modal-btns edit-modal-footer">
       <button class="btn btn-ghost" onclick="document.getElementById('editModal').style.display='none'">취소</button>
       <button class="btn btn-primary" id="editSaveBtn">저장</button>
     </div>
