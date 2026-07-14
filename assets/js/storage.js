@@ -55,6 +55,40 @@ async function fetchWithTimeout(url, options = {}, timeout = 10000) {
   }
 }
 
+// ===== 전화번호 자동 하이픈 포맷 (소유주 연락처1/2 등에서 공용 사용) =====
+function phoneDigitsOnly(value) {
+  return String(value || "").replace(/[^0-9]/g, "");
+}
+function formatKoreanPhoneInput(value) {
+  const digits = phoneDigitsOnly(value);
+  if (!digits) return "";
+  if (digits.startsWith("02")) {
+    const d = digits.slice(0, 10);
+    if (d.length < 3) return d;
+    if (d.length < 6) return d.slice(0, 2) + "-" + d.slice(2);
+    if (d.length < 10) return d.slice(0, 2) + "-" + d.slice(2, d.length - 4) + "-" + d.slice(d.length - 4);
+    return d.slice(0, 2) + "-" + d.slice(2, 6) + "-" + d.slice(6, 10);
+  }
+  const d = digits.slice(0, 11);
+  if (d.length < 4) return d;
+  if (d.length < 7) return d.slice(0, 3) + "-" + d.slice(3);
+  if (d.length < 11) return d.slice(0, 3) + "-" + d.slice(3, d.length - 4) + "-" + d.slice(d.length - 4);
+  return d.slice(0, 3) + "-" + d.slice(3, 7) + "-" + d.slice(7, 11);
+}
+function setupPhoneAutoFormat(inputEl) {
+  if (!inputEl || inputEl.dataset.phoneFormatBound === "1") return;
+  inputEl.dataset.phoneFormatBound = "1";
+  const reformat = () => {
+    const caretFromEnd = inputEl.value.length - (inputEl.selectionEnd ?? inputEl.value.length);
+    const formatted = formatKoreanPhoneInput(inputEl.value);
+    if (inputEl.value !== formatted) inputEl.value = formatted;
+    const pos = Math.max(0, inputEl.value.length - caretFromEnd);
+    try { inputEl.setSelectionRange(pos, pos); } catch (e) {}
+  };
+  inputEl.addEventListener("input", reformat);
+  inputEl.addEventListener("blur", reformat);
+}
+
 function getListingImageUrls(item = {}) {
   if (Array.isArray(item.image_urls)) return item.image_urls.filter(Boolean);
   if (Array.isArray(item.imageUrls)) return item.imageUrls.filter(Boolean);

@@ -245,14 +245,30 @@
     <div class="card-title"><span>🔒 내부전용</span></div>
     <div class="form-grid-2">
       <div class="field">
-        <label>집주인 연락처</label>
-        <input id="owner_contact" type="tel" placeholder="010-0000-0000" />
+        <label>소유주명</label>
+        <input id="owner_name" type="text" placeholder="예) 홍길동" />
+      </div>
+      <div class="field">
+        <label>연락처1</label>
+        <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
+        <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addOwnerPhone2()">+ 연락처 추가</button>
+      </div>
+      <div id="ownerPhone2Row" class="field" style="display:none;grid-column:1 / -1;">
+        <label>연락처2</label>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input id="owner_phone2" type="tel" placeholder="010-0000-0000" style="flex:1;" />
+          <button type="button" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeOwnerPhone2()">삭제</button>
+        </div>
       </div>
       <div class="field">
         <label>드라이브 자료 연결</label>
         <select id="resource_id">
           <option value="">-- 연결 안함 --</option>
         </select>
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <label>소유주 메모 / 특이사항</label>
+        <textarea id="owner_memo" rows="2" placeholder="예) 통화 가능 시간, 특이사항 등"></textarea>
       </div>
     </div>
   </section>
@@ -466,6 +482,22 @@
   }
   document.addEventListener("DOMContentLoaded", setupRegisterPricePreviews);
 
+  // 소유주 연락처2 토글
+  function addOwnerPhone2() {
+    document.getElementById('ownerPhone2Row').style.display = '';
+    document.getElementById('addOwnerPhone2Btn').style.display = 'none';
+    document.getElementById('owner_phone2').focus();
+  }
+  function removeOwnerPhone2() {
+    document.getElementById('owner_phone2').value = '';
+    document.getElementById('ownerPhone2Row').style.display = 'none';
+    document.getElementById('addOwnerPhone2Btn').style.display = '';
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    setupPhoneAutoFormat(document.getElementById('owner_phone1'));
+    setupPhoneAutoFormat(document.getElementById('owner_phone2'));
+  });
+
 
   // ── 저장 ────────────────────────────────────────
   document.getElementById('saveBtn').addEventListener('click', async () => {
@@ -529,7 +561,19 @@
       approvalDate: gv('approvalDate'),
       // 기타
       detailDescription: gv('detailDescription'),
-      owner_contact:     gv('owner_contact'),
+      owner_name:   gv('owner_name'),
+      owner_phone1: gv('owner_phone1'),
+      owner_phone2: (() => {
+        const rowVisible = document.getElementById('ownerPhone2Row').style.display !== 'none';
+        if (!rowVisible) return '';
+        const p1 = gv('owner_phone1'), p2 = gv('owner_phone2');
+        if (p2 && phoneDigitsOnly(p2) === phoneDigitsOnly(p1)) {
+          showToast('연락처2가 연락처1과 동일하여 저장하지 않았습니다.');
+          return '';
+        }
+        return p2;
+      })(),
+      owner_memo:   gv('owner_memo'),
       stickers,
     };
 
@@ -757,10 +801,10 @@
         renderCat2();
       }
 
-      // 집주인 연락처
+      // 집주인 연락처 (빠른저장 → 연락처1로 승계)
       if (p.quick_contact) {
-        const ownerEl = document.getElementById("owner_contact");
-        if (ownerEl && !ownerEl.value) ownerEl.value = p.quick_contact;
+        const phone1El = document.getElementById("owner_phone1");
+        if (phone1El && !phone1El.value) phone1El.value = formatKoreanPhoneInput(p.quick_contact);
       }
       // 내부 메모 + 가격 참고 (quick_price는 자유형식 텍스트이므로 숫자 필드에 넣지 않음)
       const descEl = document.getElementById("description");

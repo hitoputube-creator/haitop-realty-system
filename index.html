@@ -1044,7 +1044,7 @@
     const prefill = {
       type:           item.type || "",
       quick_price:    item.quick_price || "",
-      quick_contact:  item.quick_contact || item.owner_contact || "",
+      quick_contact:  item.quick_contact || item.owner_phone1 || item.owner_contact || "",
       quick_memo:     item.quick_memo || item.description || "",
       drive_links:    item.drive_links || [],
       quick_location: item.quick_location || item.address || "",
@@ -1119,7 +1119,7 @@ if (tab === "done")       renderDoneList();
     if (!_calItem) return;
     const loc = _calItem.address || _calItem.title || "매물";
     const price = formatPrice(_calItem) || "-";
-    const contact = _calItem.quick_contact || _calItem.owner_contact || "-";
+    const contact = _calItem.quick_contact || _calItem.owner_phone1 || _calItem.owner_contact || "-";
     const type = getTypeLabel(_calItem.type);
     document.getElementById("cal_preview").innerHTML =
       `<b>제목:</b> ${loc} ${_calType}<br><b>유형:</b> ${type}<br><b>가격:</b> ${price}<br><b>집주인:</b> ${contact}`;
@@ -1146,7 +1146,7 @@ if (tab === "done")       renderDoneList();
 
     const loc = _calItem.address || _calItem.title || "매물";
     const price = formatPrice(_calItem) || "";
-    const contact = _calItem.quick_contact || _calItem.owner_contact || "";
+    const contact = _calItem.quick_contact || _calItem.owner_phone1 || _calItem.owner_contact || "";
     const typeLabel = getTypeLabel(_calItem.type);
 
     const title = encodeURIComponent(`${loc} ${_calType}`);
@@ -1276,7 +1276,7 @@ if (tab === "done")       renderDoneList();
       const memo = (item.quick_memo || item.description || "");
       const memoShort = memo.length > 30 ? memo.substring(0, 30) + "…" : memo;
       const owner = item.owner_name || item.quick_owner || "";
-      const contact = item.owner_contact || item.quick_contact || "";
+      const contact = item.owner_phone1 || item.owner_contact || item.quick_contact || "";
       const chk = selectedIds.has(item.id) ? "checked" : "";
       return `<tr class="${isDone ? "done-row" : ""}">
         <td style="text-align:center;width:36px;" onclick="event.stopPropagation()">
@@ -1371,7 +1371,7 @@ if (tab === "done")       renderDoneList();
       const memoShort = memo.length > 20 ? memo.substring(0, 20) + "…" : memo;
       const isDone = item.status === "거래완료";
       const owner = item.owner_name || item.quick_owner || "";
-      const contact = item.owner_contact || item.quick_contact || "";
+      const contact = item.owner_phone1 || item.owner_contact || item.quick_contact || "";
       const chk = selectedIds.has(item.id) ? "checked" : "";
       return `<tr class="${isDone ? "done-row" : ""}" style="cursor:pointer;">
         <td onclick="event.stopPropagation()" style="text-align:center;width:36px;">
@@ -1526,7 +1526,7 @@ function closeHomepageTab(tab) {
     if (searchKeyword) {
       const kw = searchKeyword.toLowerCase();
       filtered = filtered.filter(item => {
-        const fields = [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.description].join(" ").toLowerCase();
+        const fields = [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.owner_phone1, item.owner_name, item.description].join(" ").toLowerCase();
         return fields.includes(kw);
       });
     }
@@ -1670,7 +1670,7 @@ function closeHomepageTab(tab) {
         <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
         <div class="listing-price">${formatPrice(item)}</div>
         <div class="card-expand-wrap" data-expanded="false">
-          ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
+          ${(item.owner_phone1||item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.owner_phone1||item.quick_contact||item.owner_contact}</div>` : ""}
           ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
           ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
           ${(item.drive_links && item.drive_links.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">${item.drive_links.map(l=>`<a href="${l.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:0.73rem;color:var(--gold);text-decoration:none;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;padding:2px 7px;">📁 ${l.name||"링크"}</a>`).join("")}</div>` : ""}
@@ -1783,8 +1783,8 @@ function closeHomepageTab(tab) {
       item.title, item.address,
       item.quick_price, item.salePrice, item.deposit, item.monthlyRent,
       item.quick_memo, item.description, item.detailDescription,
-      item.quick_contact, item.owner_contact,
-      item.owner_name, item.zoning, item.floorInfo
+      item.quick_contact, item.owner_contact, item.owner_phone1, item.owner_phone2,
+      item.owner_name, item.owner_memo, item.zoning, item.floorInfo
     ].join(" ").toLowerCase().includes(kw);
   }
 
@@ -1805,7 +1805,7 @@ function closeHomepageTab(tab) {
       <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
       <div class="listing-price">${formatPrice(item)}</div>
       <div class="card-expand-wrap" data-expanded="false">
-        ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
+        ${(item.owner_phone1||item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.owner_phone1||item.quick_contact||item.owner_contact}</div>` : ""}
         ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
         ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
         <div class="card-expand-fade"></div>
@@ -1953,7 +1953,7 @@ function closeHomepageTab(tab) {
         <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
         <div class="listing-price">${formatPrice(item)}</div>
         <div class="card-expand-wrap" data-expanded="false">
-          ${(item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.quick_contact||item.owner_contact}</div>` : ""}
+          ${(item.owner_phone1||item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.owner_phone1||item.quick_contact||item.owner_contact}</div>` : ""}
           ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
           ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
           <div class="card-expand-fade"></div>
@@ -3200,7 +3200,7 @@ function closeHomepageTab(tab) {
       "유형": getTypeLabel(item.type),
       "주소": item.address || item.title || "",
       "가격": formatPrice(item),
-      "연락처": item.quick_contact || "",
+      "연락처": item.owner_phone1 || item.quick_contact || item.owner_contact || "",
       "메모": item.quick_memo || item.description || "",
       "등록일": item.created_at ? new Date(item.created_at).toLocaleDateString("ko-KR") : "",
       "상태": item.status || "진행중"
@@ -3227,7 +3227,7 @@ function closeHomepageTab(tab) {
         "유형": getTypeLabel(item.type),
         "주소": item.address || item.title || "",
         "가격": formatPrice(item),
-        "연락처": item.quick_contact || "",
+        "연락처": item.owner_phone1 || item.quick_contact || item.owner_contact || "",
         "메모": item.quick_memo || item.description || "",
         "등록일": item.created_at ? new Date(item.created_at).toLocaleDateString("ko-KR") : "",
         "상태": item.status || "진행중"

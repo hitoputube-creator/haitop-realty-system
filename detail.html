@@ -235,12 +235,28 @@
     <div class="modal-section-title">🔒 내부전용</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
       <div class="field">
-        <label>집주인 연락처</label>
-        <input id="edit_owner_contact" type="tel" placeholder="010-0000-0000" />
+        <label>소유주명</label>
+        <input id="edit_owner_name" type="text" placeholder="예) 홍길동" />
+      </div>
+      <div class="field">
+        <label>연락처1</label>
+        <input id="edit_owner_phone1" type="tel" placeholder="010-0000-0000" />
+        <button type="button" id="editAddOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addEditOwnerPhone2()">+ 연락처 추가</button>
+      </div>
+      <div id="edit_ownerPhone2Row" class="field" style="display:none;grid-column:1 / -1;">
+        <label>연락처2</label>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input id="edit_owner_phone2" type="tel" placeholder="010-0000-0000" style="flex:1;" />
+          <button type="button" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeEditOwnerPhone2()">삭제</button>
+        </div>
       </div>
       <div class="field">
         <label>드라이브 자료 연결</label>
         <select id="edit_resource_id"><option value="">-- 연결 안함 --</option></select>
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <label>소유주 메모 / 특이사항</label>
+        <textarea id="edit_owner_memo" rows="2" placeholder="예) 통화 가능 시간, 특이사항 등"></textarea>
       </div>
     </div>
 
@@ -428,6 +444,22 @@ function closeHomepageTab(tab) {
   }
   document.addEventListener("DOMContentLoaded", setupEditPricePreviews);
 
+  // 소유주 연락처2 토글
+  function addEditOwnerPhone2() {
+    document.getElementById("edit_ownerPhone2Row").style.display = "";
+    document.getElementById("editAddOwnerPhone2Btn").style.display = "none";
+    document.getElementById("edit_owner_phone2").focus();
+  }
+  function removeEditOwnerPhone2() {
+    document.getElementById("edit_owner_phone2").value = "";
+    document.getElementById("edit_ownerPhone2Row").style.display = "none";
+    document.getElementById("editAddOwnerPhone2Btn").style.display = "";
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    setupPhoneAutoFormat(document.getElementById("edit_owner_phone1"));
+    setupPhoneAutoFormat(document.getElementById("edit_owner_phone2"));
+  });
+
 
   // 면적 자동계산 (edit 모달용)
   const EDIT_SQM_PY = [
@@ -566,7 +598,23 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_detailDescription").value = item.detailDescription || "";
     document.getElementById("edit_description").value       = item.description || item.quick_memo || "";
     // 내부전용
-    document.getElementById("edit_owner_contact").value = item.owner_contact || item.quick_contact || "";
+    document.getElementById("edit_owner_name").value   = item.owner_name || "";
+    document.getElementById("edit_owner_phone1").value = item.owner_phone1 || "";
+    if (item.owner_phone2) {
+      document.getElementById("edit_owner_phone2").value = item.owner_phone2;
+      document.getElementById("edit_ownerPhone2Row").style.display = "";
+      document.getElementById("editAddOwnerPhone2Btn").style.display = "none";
+    } else {
+      document.getElementById("edit_owner_phone2").value = "";
+      document.getElementById("edit_ownerPhone2Row").style.display = "none";
+      document.getElementById("editAddOwnerPhone2Btn").style.display = "";
+    }
+    const _legacyContact = item.owner_contact || item.quick_contact || "";
+    let _ownerMemoVal = item.owner_memo || "";
+    if (!_ownerMemoVal && !item.owner_phone1 && _legacyContact) {
+      _ownerMemoVal = `[기존 연락처] ${_legacyContact}`;
+    }
+    document.getElementById("edit_owner_memo").value = _ownerMemoVal;
     document.getElementById("edit_resource_id").value   = item.resource_id || "";
     // 공개
     document.getElementById("edit_is_public").checked = item.is_public === true;
@@ -623,7 +671,7 @@ function closeHomepageTab(tab) {
     } else {
       html += `<button class="btn btn-ghost" id="undoneBtn">↩ 광고중으로 변경</button>`;
     }
-    const _contact = item.owner_contact || item.quick_contact;
+    const _contact = item.owner_phone1 || item.owner_contact || item.quick_contact;
     if (_contact) {
       html += `<a class="contact-btn" href="tel:${_contact}">📞 ${_contact}</a>`;
     }
@@ -646,7 +694,10 @@ function closeHomepageTab(tab) {
     html += `<div class="info-card"><div class="info-grid">`;
     html += row("매물구분", getTypeLabel(item.type));
     html += row("공개주소", item.publicAddress || item.address);
-    html += row("집주인 연락처", item.owner_contact || item.quick_contact);
+    html += row("소유주명", item.owner_name);
+    html += row("연락처1", item.owner_phone1 || item.owner_contact || item.quick_contact);
+    html += row("연락처2", item.owner_phone2);
+    html += row("소유주 메모", item.owner_memo);
 
     if (item.type === "shop" || item.type === "office") {
       html += row("거래유형", item.shop_dealType);
@@ -1020,8 +1071,19 @@ function closeHomepageTab(tab) {
           approvalDate:       gv("edit_approvalDate"),
           // 기타
           detailDescription:  gv("edit_detailDescription"),
-          owner_contact:      gv("edit_owner_contact"),
-          quick_contact:      gv("edit_owner_contact"),
+          owner_name:         gv("edit_owner_name"),
+          owner_phone1:       gv("edit_owner_phone1"),
+          owner_phone2:       (() => {
+            const rowVisible = document.getElementById("edit_ownerPhone2Row").style.display !== "none";
+            if (!rowVisible) return "";
+            const p1 = gv("edit_owner_phone1"), p2 = gv("edit_owner_phone2");
+            if (p2 && phoneDigitsOnly(p2) === phoneDigitsOnly(p1)) {
+              showToast("연락처2가 연락처1과 동일하여 저장하지 않았습니다.");
+              return "";
+            }
+            return p2;
+          })(),
+          owner_memo:         gv("edit_owner_memo"),
           stickers,
         });
 
