@@ -326,16 +326,18 @@
   function updateDynamicSections() {
     const cat1 = cat1El.value;
     const cat2 = cat2El.value;
-    document.getElementById('propertyType').value = (cat1 && cat2) ? getTypeFromCategory(cat1, cat2) : '';
+    // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
+    const storageCat1 = resolveStorageCategory1(cat1, cat2);
+    document.getElementById('propertyType').value = (cat1 && cat2) ? getTypeFromCategory(storageCat1, cat2) : '';
 
     document.querySelectorAll('.area-section').forEach(el => el.style.display = 'none');
-    const variant = AREA_MAP[cat1];
+    const variant = AREA_MAP[storageCat1];
     if (variant) {
       const el = document.querySelector('.area-' + variant);
       if (el) el.style.display = '';
     }
     document.querySelector('.commercial-section').style.display =
-      COMMERCIAL_CATS.includes(cat1) ? '' : 'none';
+      COMMERCIAL_CATS.includes(storageCat1) ? '' : 'none';
   }
 
   cat1El.addEventListener('change', renderCat2);
@@ -501,9 +503,11 @@
 
   // ── 저장 ────────────────────────────────────────
   document.getElementById('saveBtn').addEventListener('click', async () => {
-    const cat1 = cat1El.value;
+    const cat1Raw = cat1El.value;
     const cat2 = cat2El.value;
-    if (!cat1 || !cat2) { showToast('1차·2차구분을 선택하세요'); return; }
+    if (!cat1Raw || !cat2) { showToast('1차·2차구분을 선택하세요'); return; }
+    // 상가주택·다가구주택은 화면상 "주거용"에서 선택하지만, 실제 저장은 건물빌딩으로 통일한다.
+    const cat1 = resolveStorageCategory1(cat1Raw, cat2);
     const title = document.getElementById('title').value.trim();
     if (!title) { showToast('제목을 입력하세요'); return; }
 
