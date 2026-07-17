@@ -26,10 +26,12 @@ function convertToDetail(id) {
 const listingContainer = document.getElementById("listingContainer");
 const emptyMessage = document.getElementById("emptyMessage");
 const filterRow = document.getElementById("filterRow");
+const subFilterRow = document.getElementById("subFilterRow");
 const countBadge = document.getElementById("countBadge");
 const paginationEl = document.getElementById("pagination");
 
-let currentFilter = "all";
+let currentMajor = "";   // "" = 전체, 그 외 PROPERTY_CATEGORY_STANDARD의 키
+let currentSub = "";     // "" = 대분류 전체, 그 외 표준 세부구분값
 let searchKeyword = "";
 let currentSort = "newest";
 let currentPage = 1;
@@ -86,7 +88,7 @@ function renderPreview() {
         <input type="checkbox" ${chk} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="togglePreviewCheck('${item.id}',this.checked)" />
       </td>
       <td style="text-align:center;color:var(--text-muted);font-size:0.76rem;width:28px;">${i + 1}</td>
-      <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getTypeLabel(item.type)}</span></td>
+      <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getListingCategoryLabel(item)}</span></td>
       <td style="font-weight:500;">${item.address || item.title || ""}</td>
       <td style="font-size:0.82rem;">${formatPrice(item)}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
@@ -178,7 +180,7 @@ function renderListView(items) {
       <td onclick="event.stopPropagation()" style="text-align:center;width:36px;">
         <input type="checkbox" data-sel="${item.id}" ${chk} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelect('${item.id}',this.checked)" />
       </td>
-      <td onclick="location.href='detail.html?id=${item.id}'">${getTypeLabel(item.type)}</td>
+      <td onclick="location.href='detail.html?id=${item.id}'">${getListingCategoryLabel(item)}</td>
       <td onclick="location.href='detail.html?id=${item.id}'">${item.address || item.title || ""}</td>
       <td onclick="location.href='detail.html?id=${item.id}'">${formatPrice(item)}</td>
       <td onclick="location.href='detail.html?id=${item.id}'">${owner}</td>
@@ -223,24 +225,18 @@ function closeHomepageTab(tab) {
   try { if (tab) tab.close(); } catch (_) {}
 }
 
-function mapTypeToFilter(type) {
-  if (type === "shop") return "shop";
-  if (type === "office") return "office";
-  if (type === "officetel") return "officetel";
-  if (type === "hilsstate") return "hilsstate";
-  if (type && type.startsWith("land")) return "land";
-  if (type === "factory") return "factory";
-  if (type === "bizcenter") return "bizcenter";
-  if (type === "etc") return "etc";
-  return "other";
+function matchesCategoryFilter(item) {
+  if (!currentMajor) return true;
+  const cat = normalizeListingCategory(item);
+  if (cat.majorKey !== currentMajor) return false;
+  if (currentSub) return cat.subCategory === currentSub;
+  return true;
 }
 
 function getFilteredListings() {
   let filtered = allListings.filter(item => {
-    if (currentFilter === "done") return item.status === "거래완료";
-    if (item.status === "거래완료") return false;
-    if (currentFilter === "all") return true;
-    return mapTypeToFilter(item.type) === currentFilter;
+    if (item.status === "거래완료") return includeCompleted && matchesCategoryFilter(item);
+    return matchesCategoryFilter(item);
   });
   if (searchKeyword) {
     const kw = searchKeyword.toLowerCase();
@@ -296,7 +292,7 @@ function renderList() {
     emptyMessage.style.display = "none";
     const kw = searchKeyword.toLowerCase();
     let items = kw
-      ? allListings.filter(item => matchesKeyword(item, kw))
+      ? allListings.filter(item => matchesKeyword(item, kw) && matchesCategoryFilter(item) && (includeCompleted || item.status !== "거래완료"))
       : getFilteredListings();
     if (kw) items.sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
     countBadge.textContent = items.length ? `(${items.length}건)` : "";
@@ -307,8 +303,8 @@ function renderList() {
   // 통합검색 모드
   if (searchKeyword) {
     const kw = searchKeyword.toLowerCase();
-    const activeItems = allListings.filter(item => item.status !== "거래완료" && matchesKeyword(item, kw));
-    const doneItems   = allListings.filter(item => item.status === "거래완료"  && matchesKeyword(item, kw));
+    const activeItems = allListings.filter(item => item.status !== "거래완료" && matchesKeyword(item, kw) && matchesCategoryFilter(item));
+    const doneItems   = allListings.filter(item => item.status === "거래완료"  && matchesKeyword(item, kw) && matchesCategoryFilter(item));
     activeItems.sort((a, b) => new Date(b.created_at||0) - new Date(a.created_at||0));
     doneItems.sort((a, b) => new Date(b.completed_at||b.created_at||0) - new Date(a.completed_at||a.created_at||0));
 
@@ -380,7 +376,7 @@ function renderList() {
         <input type="checkbox" data-sel="${item.id}" ${chk} style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;margin:0;" onchange="toggleSelect('${item.id}',this.checked)" />
       </div>
       <div class="badge-row" style="margin-bottom:6px;padding-right:28px;">
-        <span class="badge">${getTypeLabel(item.type)}</span>
+        <span class="badge">${getListingCategoryLabel(item)}</span>
         ${isQuick ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
         ${item.status === "거래완료" ? '<span class="badge badge-red">거래완료</span>' : ""}
         ${renderPublicBadge(item)}
@@ -437,11 +433,35 @@ document.getElementById("sortSelect").addEventListener("change", (e) => {
   renderList();
 });
 
+function renderSubFilterRow() {
+  const standard = PROPERTY_CATEGORY_STANDARD[currentMajor];
+  if (!standard) {
+    subFilterRow.style.display = "none";
+    subFilterRow.innerHTML = "";
+    return;
+  }
+  subFilterRow.style.display = "flex";
+  subFilterRow.innerHTML = [`<button class="filter-btn sub active" data-sub="">전체</button>`]
+    .concat(standard.children.map(c => `<button class="filter-btn sub" data-sub="${c}">${c}</button>`))
+    .join("");
+  subFilterRow.querySelectorAll(".filter-btn.sub").forEach(btn => {
+    btn.addEventListener("click", () => {
+      subFilterRow.querySelectorAll(".filter-btn.sub").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentSub = btn.dataset.sub;
+      currentPage = 1;
+      renderList();
+    });
+  });
+}
+
 filterRow.querySelectorAll(".filter-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     filterRow.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    currentFilter = btn.dataset.filter;
+    currentMajor = btn.dataset.major;
+    currentSub = "";
+    renderSubFilterRow();
     currentPage = 1;
     renderList();
   });
@@ -478,15 +498,7 @@ function downloadExcel() {
   }
 
   function getDivision(x) {
-    if (x.category2) return x.category2;
-    if (x.category1) return x.category1;
-    const typeMap = {
-      shop:"상가", office:"사무실", officetel:"오피스텔",
-      hilsstate:"힐스테이트더운정", factory:"공장/창고",
-      bizcenter:"지식산업센터", land_single:"토지",
-      land_dev:"토지", land_other:"토지", etc:"기타"
-    };
-    return typeMap[x.type] || x.type || "";
+    return getListingCategoryLabel(x);
   }
 
   function getArea(x) {
@@ -572,7 +584,7 @@ async function exportAll() {
     const wb = XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(wb, _makeSheet(listings.map(item => ({
-      "유형": getTypeLabel(item.type),
+      "유형": getListingCategoryLabel(item),
       "주소": item.address || item.title || "",
       "가격": formatPrice(item),
       "연락처": item.owner_phone1 || item.quick_contact || item.owner_contact || "",

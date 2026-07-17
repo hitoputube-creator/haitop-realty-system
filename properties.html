@@ -170,17 +170,14 @@
         <span style="font-size:0.75rem;color:var(--text-muted)">거래완료 매물 자동 숨김</span>
       </div>
       <div class="filter-row" id="filterRow">
-        <button class="filter-btn active" data-filter="all">전체</button>
-        <button class="filter-btn" data-filter="shop">상가</button>
-        <button class="filter-btn" data-filter="office">사무실</button>
-        <button class="filter-btn" data-filter="officetel">오피스텔</button>
-        <button class="filter-btn" data-filter="hilsstate">힐스테이트더운정</button>
-        <button class="filter-btn" data-filter="land">토지</button>
-        <button class="filter-btn" data-filter="factory">공장/창고</button>
-        <button class="filter-btn" data-filter="bizcenter">지식산업센터</button>
-        <button class="filter-btn" data-filter="etc">기타</button>
-        <button class="filter-btn" data-filter="done">거래완료</button>
+        <button class="filter-btn active" data-major="">전체</button>
+        <button class="filter-btn" data-major="공장창고">공장·창고</button>
+        <button class="filter-btn" data-major="상가사무실">상가·사무실</button>
+        <button class="filter-btn" data-major="토지">토지</button>
+        <button class="filter-btn" data-major="주거용">주거용</button>
+        <button class="filter-btn" data-major="건물빌딩">건물·빌딩</button>
       </div>
+      <div class="filter-row" id="subFilterRow" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(212,175,55,0.12);"></div>
     </section>
 
     <!-- 목록 -->

@@ -139,7 +139,7 @@ function updateCalPreview() {
   const loc = _calItem.address || _calItem.title || "매물";
   const price = formatPrice(_calItem) || "-";
   const contact = _calItem.quick_contact || _calItem.owner_phone1 || _calItem.owner_contact || "-";
-  const type = getTypeLabel(_calItem.type);
+  const type = getListingCategoryLabel(_calItem);
   document.getElementById("cal_preview").innerHTML =
     `<b>제목:</b> ${loc} ${_calType}<br><b>유형:</b> ${type}<br><b>가격:</b> ${price}<br><b>집주인:</b> ${contact}`;
 }
@@ -166,7 +166,7 @@ document.getElementById("calConfirmBtn").addEventListener("click", () => {
   const loc = _calItem.address || _calItem.title || "매물";
   const price = formatPrice(_calItem) || "";
   const contact = _calItem.quick_contact || _calItem.owner_phone1 || _calItem.owner_contact || "";
-  const typeLabel = getTypeLabel(_calItem.type);
+  const typeLabel = getListingCategoryLabel(_calItem);
 
   const title = encodeURIComponent(`${loc} ${_calType}`);
   const details = encodeURIComponent(`매물유형: ${typeLabel}\n가격: ${price}\n집주인 연락처: ${contact}`);
@@ -197,7 +197,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const isDone = item.status === "거래완료";
   card.innerHTML = `
     <div class="badge-row" style="margin-bottom:6px;">
-      <span class="badge">${getTypeLabel(item.type)}</span>
+      <span class="badge">${getListingCategoryLabel(item)}</span>
       ${isQuick && !isDone ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
       ${isDone ? '<span class="badge badge-red">거래완료</span>' : ""}
       ${renderPublicBadge(item)}

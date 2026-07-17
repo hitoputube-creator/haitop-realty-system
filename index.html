@@ -235,16 +235,20 @@
       <div class="quick-sub">과거 거래 이력을 기록하거나 거래완료 매물을 바로 등록하세요</div>
       <div class="form-grid-2" style="margin-bottom:10px;">
         <div class="field">
-          <label>매물유형</label>
-          <select id="d_type">
-            <option value="shop">상가</option>
-            <option value="office">사무실</option>
-            <option value="officetel">오피스텔</option>
-            <option value="hilsstate">힐스테이트더운정</option>
-            <option value="land_single">토지</option>
-            <option value="factory">공장/창고</option>
-            <option value="bizcenter">지식산업센터</option>
-            <option value="etc">기타</option>
+          <label>1차구분</label>
+          <select id="d_category1">
+            <option value="">선택하세요</option>
+            <option value="공장창고">공장·창고</option>
+            <option value="상가사무실">상가·사무실</option>
+            <option value="토지">토지</option>
+            <option value="주거용">주거용</option>
+            <option value="건물빌딩">건물·빌딩</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>2차구분</label>
+          <select id="d_category2">
+            <option value="">1차구분을 먼저 선택하세요</option>
           </select>
         </div>
         <div class="field">
@@ -881,7 +885,7 @@ if (tab === "done")       renderDoneList();
       card.onclick = () => location.href = `detail.html?id=${item.id}`;
       card.innerHTML = `
         <div class="badge-row" style="margin-bottom:6px;">
-          <span class="badge">${getTypeLabel(item.type)}</span>
+          <span class="badge">${getListingCategoryLabel(item)}</span>
           <span class="badge badge-red">거래완료</span>
         </div>
         <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
@@ -922,8 +926,24 @@ if (tab === "done")       renderDoneList();
     document.getElementById("d_date").value = today;
   })();
 
+  // 1차구분 선택 시 2차구분(표준 세부카테고리) 채우기 — register.html의 renderCat2()와 동일 기준(CATEGORY_OPTIONS) 사용.
+  function renderDoneCategory2() {
+    const cat1 = document.getElementById("d_category1").value;
+    const cat2El = document.getElementById("d_category2");
+    const opts = CATEGORY_OPTIONS[cat1] || [];
+    cat2El.innerHTML = opts.length
+      ? `<option value="">선택하세요</option>` + opts.map(v => `<option value="${v}">${v}</option>`).join("")
+      : '<option value="">1차구분을 먼저 선택하세요</option>';
+  }
+  document.getElementById("d_category1").addEventListener("change", renderDoneCategory2);
+
   document.getElementById("doneSaveBtn").addEventListener("click", async () => {
-    const type    = document.getElementById("d_type").value;
+    const cat1Raw = document.getElementById("d_category1").value;
+    const cat2    = document.getElementById("d_category2").value;
+    // 상가주택·다가구주택·단독주택·전원주택은 화면상 "주거용"에서 선택하지만, 실제 저장은 기존 데이터와 동일 규격을 사용한다.
+    const category1 = cat1Raw ? resolveStorageCategory1(cat1Raw, cat2) : "";
+    const category2 = cat1Raw ? cat2 : "";
+    const type    = (category1 && category2) ? getTypeFromCategory(category1, category2) : "";
     const address = document.getElementById("d_address").value.trim();
     const price   = document.getElementById("d_price").value.trim();
     const contact = document.getElementById("d_contact").value.trim();
@@ -935,10 +955,13 @@ if (tab === "done")       renderDoneList();
     const btn = document.getElementById("doneSaveBtn");
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
+      const categoryLabel = (cat1Raw && PROPERTY_CATEGORY_STANDARD[cat1Raw])
+        ? (cat2 ? `${PROPERTY_CATEGORY_STANDARD[cat1Raw].label} / ${cat2}` : PROPERTY_CATEGORY_STANDARD[cat1Raw].label)
+        : "확인 필요";
       const item = {
         id: "HITOP-" + Date.now(),
-        type, address,
-        title: `${getTypeLabel(type)} · ${address || price}`,
+        type, category1, category2, address,
+        title: `${categoryLabel} · ${address || price}`,
         status: "거래완료",
         description: memo,
         quick_price: price,
@@ -951,6 +974,8 @@ if (tab === "done")       renderDoneList();
       await addListing(item);
       ["d_address","d_price","d_contact","d_memo"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("d_date").value = new Date().toISOString().slice(0, 10);
+      document.getElementById("d_category1").value = "";
+      renderDoneCategory2();
       showToast("✅ 거래완료 등록 완료!");
       await loadListings();
       renderDoneList();

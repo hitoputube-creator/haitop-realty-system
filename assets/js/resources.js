@@ -10,13 +10,7 @@ function showToast(msg, duration = 2000) {
   setTimeout(() => t.classList.remove("show"), duration);
 }
 
-// 매물연결 모달에 표시할 매물 유형/가격 표기 (register.html 저장 구조 기준)
-function getTypeLabel(type) {
-  const map = { shop:"상가", office:"사무실", officetel:"오피스텔", hilsstate:"힐스테이트더운정", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
-  if (map[type]) return map[type];
-  if (type && type.startsWith("land")) return "토지";
-  return "기타";
-}
+// 매물연결 모달에 표시할 매물 유형 표기 — storage.js의 표준 카테고리 정규화(getListingCategoryLabel) 사용.
 
 function _fmtWon(v) {
   const n = Number(String(v).replace(/,/g, ""));
@@ -274,7 +268,7 @@ function renderDriveLinkList() {
       <input type="checkbox" data-lid="${l.id}" ${checked?'checked':''} style="width:auto;accent-color:var(--gold);" />
       <div style="flex:1;">
         <div style="font-size:0.85rem;font-weight:600;color:var(--text-main);">${l.address || l.title || "(주소 미입력)"}</div>
-        <div style="font-size:0.74rem;color:var(--text-muted);">${getTypeLabel(l.type)} · ${formatPrice(l)}</div>
+        <div style="font-size:0.74rem;color:var(--text-muted);">${getListingCategoryLabel(l)} · ${formatPrice(l)}</div>
       </div>
     </label>`;
   }).join("");
