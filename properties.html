@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>HITOP 부동산 매물관리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="assets/js/storage.js"></script>
+  <style>
+    /* 목록보기 테이블 — 모바일에서는 컨테이너 내부 가로 스크롤만 허용 (페이지 전체 스크롤 방지) */
+    #listingContainer { overflow-x: auto; }
+    #listViewTable { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    #listViewTable thead th { background:#1a2a4a; color:#d4af37; padding:8px 10px; text-align:left; font-weight:600; position:sticky;top:0; }
+    #listViewTable tbody td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; cursor:pointer; }
+    #listViewTable tbody tr:hover td { background:rgba(212,175,55,0.07); }
+    #listViewTable tbody tr.done-row td { color:#777; }
+    #listViewTable tbody tr.done-row:hover td { background:rgba(255,255,255,0.03); }
+    /* 선택매물보기 테이블 */
+    #selectedViewTableWrap { overflow-x: auto; }
+    #selectedViewTable { width:100%; border-collapse:collapse; font-size:0.83rem; }
+    #selectedViewTable thead th { padding:9px 10px; text-align:left; font-weight:600; color:var(--text-muted); border-bottom:2px solid rgba(212,175,55,0.25); }
+    #selectedViewTable tbody td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; }
+    #selectedViewTable tbody tr:hover td { background:rgba(212,175,55,0.05); }
+    #selectedViewTable tbody tr.done-row td { color:#666; }
+    /* 인쇄 */
+    @media print {
+      body * { visibility: hidden; }
+      #selectedPrintArea, #selectedPrintArea * { visibility: visible; }
+      #selectedPrintArea {
+        position: absolute; top: 0; left: 0;
+        width: 100%; padding: 20px; box-sizing: border-box; background: #fff;
+      }
+      #selectedPrintHeader { display: flex !important; }
+      #selectedViewTable { font-size: 10px; width: 100%; border-collapse: collapse; }
+      #selectedViewTable thead th {
+        background: #1a2a4a !important; color: #d4af37 !important;
+        padding: 6px 8px; border-bottom: none;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      }
+      #selectedViewTable tbody td {
+        padding: 5px 8px; border-bottom: 1px solid #ddd !important;
+        color: #111 !important; vertical-align: top;
+      }
+      #selectedViewTable tbody tr.done-row td {
+        color: #888 !important; background: #f5f5f5 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      }
+      thead { display: table-header-group; }
+    }
+    @media screen {
+      #printHeader { display: none; }
+      #selectedPrintHeader { display: none; }
+    }
+    /* 카드 더보기/접기 공통 */
+    .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
+    .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:linear-gradient(transparent,var(--bg-card)); pointer-events:none; }
+    .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(212,175,55,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
+  </style>
+</head>
+<body>
+
+<!-- 비밀번호 잠금 화면 -->
+<div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:99998;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+  <div style="text-align:center;margin-bottom:36px;">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#d4af37,#f0c040);border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">🏢</div>
+    <div style="font-size:1.4rem;font-weight:800;color:#d4af37;letter-spacing:0.5px;">HITOP 부동산</div>
+    <div style="font-size:0.8rem;color:#666;margin-top:4px;">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+  </div>
+  <div style="width:100%;max-width:320px;">
+    <input id="authInput" type="password" placeholder="비밀번호를 입력하세요"
+      style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:#1a1a1a;border:1px solid #333;border-radius:10px;color:#e0e0e0;outline:none;margin-bottom:10px;text-align:center;letter-spacing:2px;" />
+    <div id="authError" style="font-size:0.82rem;color:#e05252;text-align:center;min-height:20px;margin-bottom:10px;"></div>
+    <button id="authBtn" style="width:100%;padding:14px;background:#d4af37;color:#000;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">확인</button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const PW = "hitop2025";
+    const KEY = "hitop_auth";
+    function unlock() {
+      document.getElementById("authOverlay").style.display = "none";
+    }
+    function tryAuth() {
+      const val = document.getElementById("authInput").value;
+      if (val === PW) {
+        sessionStorage.setItem(KEY, "1");
+        unlock();
+      } else {
+        document.getElementById("authError").textContent = "비밀번호가 틀렸습니다.";
+        document.getElementById("authInput").value = "";
+        document.getElementById("authInput").focus();
+      }
+    }
+    if (sessionStorage.getItem(KEY) === "1") {
+      // 이미 인증됨 — 오버레이 숨김
+    } else {
+      document.getElementById("authOverlay").style.display = "flex";
+      document.getElementById("authBtn").addEventListener("click", tryAuth);
+      document.getElementById("authInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") tryAuth();
+        document.getElementById("authError").textContent = "";
+      });
+    }
+  })();
+</script>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="logo-main">HITOP 부동산 매물관리</div>
+      <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      <a class="btn btn-ghost" href="index.html" style="font-size:0.82rem;text-decoration:none;">🗂️ 통합관리</a>
+      <a class="btn btn-ghost" href="resources.html" style="font-size:0.82rem;text-decoration:none;">📁 자료관리</a>
+      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem;text-decoration:none;">🏠 매물홈페이지</a>
+      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html" style="font-size:0.82rem;text-decoration:none;">💼 업무센터</a>
+      <button class="btn btn-ghost" onclick="exportAll()" style="font-size:0.82rem;">📥 전체 백업</button>
+      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/Commercial-Property-Quote/" target="_blank" style="font-size:0.82rem;text-decoration:none;">🧮 견적서</a>
+      <a class="btn btn-ghost" href="https://calendar.google.com" target="_blank" style="font-size:0.82rem;text-decoration:none;">📅 캘린더</a>
+      <button class="btn btn-ghost" onclick="openContractModal()" style="font-size:0.82rem;">📨 계약문자</button>
+    </div>
+  </header>
+  <div class="header-line"></div>
+
+  <!-- ===== 매물관리 ===== -->
+  <div id="tabProperty">
+
+    <!-- ===== 등록 방식 선택 ===== -->
+    <div class="reg-mode-selector" id="regModeSelector">
+      <button class="reg-mode-card" id="modeQuickBtn" onclick="selectRegMode('quick')">
+        <div class="reg-mode-icon">⚡</div>
+        <div class="reg-mode-title">빠른저장</div>
+        <div class="reg-mode-desc">전화/방문 직후 30초 메모용<br>내부 저장만 가능<br>홈페이지 공개 전 상세등록 필요</div>
+      </button>
+      <button class="reg-mode-card" id="modeDetailBtn" onclick="selectRegMode('detail')">
+        <div class="reg-mode-icon">📝</div>
+        <div class="reg-mode-title">상세저장</div>
+        <div class="reg-mode-desc">홈페이지 매물보내기 가능한 정식 등록<br>공개주소·지도주소·상세정보 입력</div>
+      </button>
+    </div>
+
+    <!-- ⚡ 빠른저장 폼 (모드 선택 후 표시) -->
+    <div class="quick-card" id="quickRegisterForm" style="display:none;">
+      <div class="quick-title">⚡ 빠른저장 — 30초 메모</div>
+      <div class="quick-sub" style="color:rgba(212,175,55,0.6);margin-bottom:12px;">전화/방문 직후 임시로 저장하는 내부 메모입니다. 홈페이지 공개 전 상세등록이 필요합니다.</div>
+      <div class="form-grid-2" style="margin-bottom:10px;">
+        <div class="field">
+          <label>매물유형</label>
+          <select id="q_type">
+            <option value="shop">상가</option>
+            <option value="office">사무실</option>
+            <option value="officetel">오피스텔</option>
+            <option value="hilsstate">힐스테이트더운정</option>
+            <option value="land_single">토지</option>
+            <option value="factory">공장/창고</option>
+            <option value="bizcenter">지식산업센터</option>
+            <option value="etc">기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>위치 (간단히)</label>
+          <input id="q_address" type="text" placeholder="예) 운정역 근처 1층" />
+        </div>
+        <div class="field">
+          <label>가격 (보증금 또는 매매가)</label>
+          <input id="q_price" type="text" placeholder="예) 보증금 5000 / 월세 300" />
+        </div>
+        <div class="field">
+          <label>집주인 연락처</label>
+          <input id="q_contact" type="tel" placeholder="010-0000-0000" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>메모 (특이사항)</label>
+        <textarea id="q_memo" rows="4" placeholder="예) 1층 공실, 즉시입주 가능, 권리금 없음" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px;">📁 드라이브 링크 (선택)</label>
+        <div id="q_links_container"></div>
+        <button class="btn btn-ghost" style="width:100%;font-size:0.82rem;margin-top:4px;" onclick="addQuickLinkRow()">+ 링크 추가</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);">
+          <input type="checkbox" id="q_done" style="width:auto;accent-color:var(--gold);" />
+          거래완료로 등록 (과거 이력 입력용)
+        </label>
+        <button class="btn btn-primary" id="quickSaveBtn">⚡ 빠른 저장</button>
+      </div>
+    </div>
+
+    <!-- 검색 + 정렬 -->
+    <section class="card">
+      <div class="card-title"><span>🔍 검색 / 정렬</span></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:0;">
+        <div class="field" style="flex:1;margin-bottom:0;">
+          <input id="searchInput" type="text" placeholder="주소, 메모, 가격 등으로 검색..." />
+        </div>
+        <button class="btn btn-primary" id="searchBtn" style="flex-shrink:0;padding:8px 14px;font-size:0.85rem;">🔍 검색</button>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">
+          <input type="checkbox" id="includeCompletedChk" style="width:auto;accent-color:var(--gold);" />
+          거래완료 포함
+        </label>
+        <div class="field" style="flex:0 0 auto;min-width:110px;margin-bottom:0;">
+          <select id="sortSelect">
+            <option value="newest">최신순</option>
+            <option value="oldest">오래된순</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 필터 -->
+    <section class="card">
+      <div class="card-title">
+        <span>유형별 필터</span>
+        <span style="font-size:0.75rem;color:var(--text-muted)">거래완료 매물 자동 숨김</span>
+      </div>
+      <div class="filter-row" id="filterRow">
+        <button class="filter-btn active" data-filter="all">전체</button>
+        <button class="filter-btn" data-filter="shop">상가</button>
+        <button class="filter-btn" data-filter="office">사무실</button>
+        <button class="filter-btn" data-filter="officetel">오피스텔</button>
+        <button class="filter-btn" data-filter="hilsstate">힐스테이트더운정</button>
+        <button class="filter-btn" data-filter="land">토지</button>
+        <button class="filter-btn" data-filter="factory">공장/창고</button>
+        <button class="filter-btn" data-filter="bizcenter">지식산업센터</button>
+        <button class="filter-btn" data-filter="etc">기타</button>
+        <button class="filter-btn" data-filter="done">거래완료</button>
+      </div>
+    </section>
+
+    <!-- 목록 -->
+    <section class="card">
+      <div class="card-title no-print" style="flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+          <label id="cardSelectBar" style="display:none;align-items:center;gap:5px;cursor:pointer;font-size:0.78rem;color:var(--text-muted);user-select:none;">
+            <input type="checkbox" id="cardSelectAll" style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelectAll(_currentCardItems,this.checked)" />
+            전체선택
+          </label>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div style="display:flex;border:1px solid rgba(212,175,55,0.35);border-radius:7px;overflow:hidden;">
+            <button id="viewToggleCard" onclick="setViewMode('card')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:rgba(212,175,55,0.2);color:var(--gold);border:none;cursor:pointer;">☰ 카드</button>
+            <button id="viewToggleList" onclick="setViewMode('list')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:transparent;color:var(--text-muted);border:none;cursor:pointer;border-left:1px solid rgba(212,175,55,0.25);">☷ 목록</button>
+          </div>
+          <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">📋 선택매물보기</button>
+          <button class="btn btn-ghost" onclick="downloadExcel()" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
+          <button class="btn btn-ghost" onclick="location.href='register.html'" style="font-size:0.82rem;">+ 상세 등록</button>
+        </div>
+      </div>
+      <div id="printArea">
+        <!-- 인쇄 헤더 (화면에선 숨김) -->
+        <div id="printHeader" style="justify-content:space-between;align-items:flex-end;margin-bottom:6px;">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#000;">🏢 하이탑부동산 매물목록</div>
+            <div id="printKeyword" style="font-size:10px;color:#555;margin-top:2px;"></div>
+          </div>
+          <div style="font-size:10px;color:#666;text-align:right;" id="printDate"></div>
+        </div>
+        <!-- 통합검색: 현재매물 섹션 헤더 -->
+        <div id="unifiedPropertyLabel" style="display:none;font-weight:600;font-size:0.88rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(212,175,55,0.2);">현재매물 <span id="unifiedPropertyCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+        <div id="listingContainer" class="listing-grid"></div>
+        <div id="emptyMessage" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+          등록된 매물이 없습니다.
+        </div>
+        <div id="pagination" class="pagination"></div>
+        <!-- 통합검색: 거래완료 섹션 -->
+        <div id="unifiedDoneSection" style="display:none;">
+          <div style="font-weight:600;font-size:0.88rem;color:#e88;margin-top:16px;margin-bottom:8px;padding-top:14px;padding-bottom:6px;border-top:1px solid rgba(238,136,136,0.2);border-bottom:1px solid rgba(238,136,136,0.2);">거래완료 <span id="unifiedDoneCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+          <div id="unifiedDoneContainer" class="listing-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 선택매물보기 (2단계) ===== -->
+    <section id="selectedPreviewSection" class="card" style="display:none;">
+      <div class="card-title no-print">
+        <span>선택된 매물 <span id="previewCount" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="goBackToList()">← 목록으로</button>
+          <button class="btn btn-primary" onclick="doPrint()">🖨️ 인쇄</button>
+        </div>
+      </div>
+      <!-- 인쇄 영역 -->
+      <div id="selectedPrintArea">
+        <div id="selectedPrintHeader" style="justify-content:space-between;align-items:flex-end;margin-bottom:8px;">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#000;">🏢 하이탑부동산 매물목록</div>
+            <div id="selectedPrintKeyword" style="font-size:10px;color:#555;margin-top:2px;"></div>
+          </div>
+          <div id="selectedPrintDate" style="font-size:10px;color:#666;text-align:right;"></div>
+        </div>
+        <div id="selectedViewTableWrap"></div>
+      </div>
+    </section>
+
+  </div>
+
+</div>
+
+<!-- 📅 일정 추가 모달 -->
+<div id="calModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-title">📅 구글 캘린더 일정 추가</div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>일정 유형</label>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="cal-type-btn active" data-type="잔금일정">잔금 일정</button>
+        <button class="cal-type-btn" data-type="손님미팅">손님 미팅</button>
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:12px;">
+      <div class="field">
+        <label>날짜</label>
+        <input id="cal_date" type="date" />
+      </div>
+      <div class="field">
+        <label>시간</label>
+        <input id="cal_time" type="time" value="10:00" />
+      </div>
+    </div>
+    <div id="cal_preview" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('calModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="calConfirmBtn">📅 캘린더 열기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- 전역 에러 오버레이 -->
+<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+  <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
+  <div style="font-size:1.1rem;font-weight:700;color:#e0e0e0;margin-bottom:8px;">연결 오류가 발생했습니다</div>
+  <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
+  <button onclick="location.reload()" style="background:#d4af37;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
+</div>
+
+<script>
+  function showAppError(msg) {
+    const el = document.getElementById("appErrorOverlay");
+    if (!el) return;
+    document.getElementById("appErrorMsg").textContent = msg || "새로고침 해주세요.";
+    el.style.display = "flex";
+  }
+  window.onerror = function(msg, src, line, col, err) {
+    showAppError((err && err.message) || msg || "알 수 없는 오류가 발생했습니다.");
+  };
+  window.onunhandledrejection = function(e) {
+    const msg = (e.reason && e.reason.message) || String(e.reason) || "비동기 오류가 발생했습니다.";
+    if (msg.includes("저장 실패") || msg.includes("수정 실패") || msg.includes("삭제 실패")) return;
+    showAppError(msg);
+  };
+
+  function showToast(msg, duration = 2000) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), duration);
+  }
+</script>
+
+<!-- ===== 계약문자 모달 ===== -->
+<style>
+#contractModal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(2,3,10,0.88);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 20px 12px;
+  overflow-y: auto;
+}
+.cm-wrap {
+  background: radial-gradient(circle at top left, #182853 0, #0b1a33 45%, #050914 100%);
+  border: 1px solid rgba(212,175,55,0.45);
+  border-radius: 18px;
+  width: 100%; max-width: 700px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  margin-bottom: 20px;
+}
+.cm-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(212,175,55,0.25);
+}
+.cm-header h2 { font-size: 1.1rem; color: var(--gold); margin: 0; }
+.cm-close {
+  background: transparent; border: none; color: var(--text-muted);
+  font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0 4px;
+}
+.cm-close:hover { color: var(--text-main); }
+.cm-section { margin-bottom: 14px; }
+.cm-section-title {
+  font-size: 0.75rem; color: var(--gold-soft); font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
+}
+.cm-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cm-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 520px) {
+  .cm-grid2, .cm-grid3 { grid-template-columns: 1fr; }
+}
+.cm-field label {
+  display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px;
+}
+.cm-field input[type=text],
+.cm-field input[type=number],
+.cm-field input[type=date],
+.cm-field input[type=time],
+.cm-field select,
+.cm-field textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color-scheme: dark;
+}
+.cm-field input:focus,
+.cm-field textarea:focus { outline: none; border-color: rgba(212,175,55,0.6); }
+.cm-toggle-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.cm-toggle {
+  padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; cursor: pointer;
+  border: 1px solid rgba(212,175,55,0.35); background: transparent; color: var(--text-muted);
+  transition: 0.15s;
+}
+.cm-toggle.active {
+  background: linear-gradient(135deg, #f3d27b, #d4af37);
+  color: #201608; font-weight: bold; border-color: transparent;
+}
+.cm-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 14px 0; }
+.cm-calc-box {
+  font-size: 0.83rem; color: var(--gold-soft);
+  background: rgba(212,175,55,0.07);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 8px; padding: 8px 12px;
+  margin-top: 4px;
+}
+.cm-output {
+  width: 100%;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(212,175,55,0.3);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 0.84rem;
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  line-height: 1.7;
+  padding: 14px;
+  min-height: 320px;
+  resize: vertical;
+}
+.cm-checkbox-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.cm-checkbox-row input[type=checkbox] {
+  width: auto; accent-color: var(--gold); cursor: pointer; transform: scale(1.15);
+}
+.cm-checkbox-row label {
+  font-size: 0.85rem; color: var(--text-muted); cursor: pointer; margin: 0;
+}
+</style>
+
+<div id="contractModal" style="display:none;">
+  <div class="cm-wrap">
+
+    <div class="cm-header">
+      <h2>📨 계약문자 생성</h2>
+      <button class="cm-close" onclick="closeContractModal()">✕</button>
+    </div>
+
+    <!-- 단지명 + 용도 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>단지명</label>
+          <input id="cm_complex" type="text" placeholder="예) 더퍼스트레지던스">
+        </div>
+        <div class="cm-field">
+          <label>용도</label>
+          <div class="cm-toggle-group" style="margin-top:4px;">
+            <button class="cm-toggle active" data-group="cm_usage" data-val="업무용" onclick="cmToggle(this)">업무용</button>
+            <button class="cm-toggle" data-group="cm_usage" data-val="주거용" onclick="cmToggle(this)">주거용</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 동 / 호수 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>동</label>
+          <input id="cm_dong" type="text" placeholder="예) 101">
+        </div>
+        <div class="cm-field">
+          <label>호수</label>
+          <input id="cm_ho" type="text" placeholder="예) 305">
+        </div>
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 보증금 / 월차임 / 선후불 -->
+    <div class="cm-section">
+      <div class="cm-section-title">계약 조건</div>
+      <div class="cm-grid2" style="margin-bottom:10px;">
+        <div class="cm-field">
+          <label>보증금 (만원)</label>
+          <input id="cm_deposit" type="number" placeholder="1000" oninput="cmCalc()">
+        </div>
+        <div class="cm-field">
+          <label>월차임 (만원)</label>
+          <input id="cm_monthly" type="number" placeholder="100">
+        </div>
+      </div>
+      <div class="cm-field">
+        <label>선불 / 후불</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_pay_timing" data-val="선불" onclick="cmToggle(this)">선불</button>
+          <button class="cm-toggle" data-group="cm_pay_timing" data-val="후불" onclick="cmToggle(this)">후불</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 계약금 -->
+    <div class="cm-section">
+      <div class="cm-section-title">계약금</div>
+      <div class="cm-field" style="margin-bottom:10px;">
+        <label>계약금 전액 (만원)</label>
+        <input id="cm_earnest" type="number" placeholder="100" oninput="cmCalc()">
+      </div>
+      <div class="cm-field" style="margin-bottom:8px;">
+        <label>입금방식</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_pay_method" data-val="전액입금" onclick="cmToggle(this);cmTogglePartial()">전액입금</button>
+          <button class="cm-toggle" data-group="cm_pay_method" data-val="일부입금" onclick="cmToggle(this);cmTogglePartial()">일부입금</button>
+        </div>
+      </div>
+      <div id="cm_partial_section" style="display:none;">
+        <div class="cm-field" style="margin-bottom:6px;">
+          <label>오늘 입금액 (만원)</label>
+          <input id="cm_partial_amount" type="number" placeholder="50" oninput="cmCalc()">
+        </div>
+        <div class="cm-calc-box" id="cm_remaining_display">잔여계약금: — 만원</div>
+      </div>
+    </div>
+
+    <!-- 잔금 + 잔금일 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>잔금 (자동계산)</label>
+          <div class="cm-calc-box" id="cm_balance_display" style="min-height:36px;display:flex;align-items:center;">— 만원</div>
+        </div>
+        <div class="cm-field">
+          <label>잔금일</label>
+          <input id="cm_balance_date" type="date" onchange="cmCalcEndDate()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 계약서 작성일 + 계약기간 -->
+    <div class="cm-section">
+      <div class="cm-grid2" style="margin-bottom:10px;">
+        <div class="cm-field">
+          <label>계약서 작성일</label>
+          <input id="cm_contract_date" type="date">
+        </div>
+        <div class="cm-field">
+          <label>계약서 작성 시간</label>
+          <input id="cm_contract_time" type="time" value="14:00">
+        </div>
+      </div>
+      <div class="cm-field" style="margin-bottom:8px;">
+        <label>계약기간</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_period" data-val="12" onclick="cmToggle(this);cmCalcEndDate()">12개월</button>
+          <button class="cm-toggle" data-group="cm_period" data-val="24" onclick="cmToggle(this);cmCalcEndDate()">24개월</button>
+        </div>
+      </div>
+      <div class="cm-calc-box" id="cm_period_display">계약기간: —</div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 근저당 / 공동중개 -->
+    <div class="cm-section">
+      <div class="cm-checkbox-row">
+        <input type="checkbox" id="cm_mortgage_chk" onchange="cmToggleMortgage()">
+        <label for="cm_mortgage_chk">근저당 있음</label>
+      </div>
+      <div id="cm_mortgage_section" style="display:none;margin-bottom:10px;" class="cm-field">
+        <label>채권최고액 (원)</label>
+        <input id="cm_mortgage_amount" type="text" placeholder="예) 120,000,000">
+      </div>
+
+      <div class="cm-checkbox-row">
+        <input type="checkbox" id="cm_coop_chk" onchange="cmToggleCoop()">
+        <label for="cm_coop_chk">공동중개</label>
+      </div>
+      <div id="cm_coop_section" style="display:none;" class="cm-field">
+        <label>상대 부동산명</label>
+        <input id="cm_coop_name" type="text" placeholder="예) ○○부동산">
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 임대인 계좌 -->
+    <div class="cm-section">
+      <div class="cm-section-title">임대인 계좌</div>
+      <div class="cm-grid3">
+        <div class="cm-field">
+          <label>소유자명</label>
+          <input id="cm_owner" type="text" placeholder="홍길동">
+        </div>
+        <div class="cm-field">
+          <label>은행명</label>
+          <input id="cm_bank" type="text" placeholder="국민은행">
+        </div>
+        <div class="cm-field">
+          <label>계좌번호</label>
+          <input id="cm_account" type="text" placeholder="123-456-789012">
+        </div>
+      </div>
+    </div>
+
+    <!-- 특약사항 -->
+    <div class="cm-section">
+      <div class="cm-field">
+        <label>추가 특약사항 (자유입력)</label>
+        <textarea id="cm_special" rows="3" placeholder="추가 특약이 있으면 입력하세요&#10;여러 줄 입력 가능합니다"></textarea>
+      </div>
+    </div>
+
+    <!-- 문자발송일 -->
+    <div class="cm-section">
+      <div class="cm-field" style="max-width:220px;">
+        <label>문자발송일</label>
+        <input id="cm_send_date" type="date">
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 액션 버튼 -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-primary" style="flex:1;font-size:0.9rem;" onclick="cmGenerate()">📨 문자 생성</button>
+      <button class="btn btn-ghost" style="font-size:0.9rem;" onclick="cmCopy()">📋 복사하기</button>
+    </div>
+
+    <!-- 출력 영역 -->
+    <div class="cm-field">
+      <label>생성된 문자 (직접 수정 가능)</label>
+      <textarea id="cm_output" class="cm-output" placeholder="'문자 생성' 버튼을 클릭하면 완성된 계약 문자가 여기에 표시됩니다."></textarea>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/js/listings-shared.js"></script>
+<script src="assets/js/properties.js"></script>
+</body>
+</html>
