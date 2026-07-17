@@ -2,49 +2,197 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <title>HITOP 부동산 자료관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>하이탑부동산 자료관리</title>
-  <style>
-    html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: #081022;
-    }
-    #resourcesFrame {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: #081022;
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="assets/js/storage.js"></script>
 </head>
 <body>
-  <iframe id="resourcesFrame" src="index.html" title="하이탑부동산 자료관리"></iframe>
 
-  <script>
-    const frame = document.getElementById('resourcesFrame');
+<!-- 비밀번호 잠금 화면 -->
+<div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:99998;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+  <div style="text-align:center;margin-bottom:36px;">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#d4af37,#f0c040);border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">🏢</div>
+    <div style="font-size:1.4rem;font-weight:800;color:#d4af37;letter-spacing:0.5px;">HITOP 부동산</div>
+    <div style="font-size:0.8rem;color:#666;margin-top:4px;">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+  </div>
+  <div style="width:100%;max-width:320px;">
+    <input id="authInput" type="password" placeholder="비밀번호를 입력하세요"
+      style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:#1a1a1a;border:1px solid #333;border-radius:10px;color:#e0e0e0;outline:none;margin-bottom:10px;text-align:center;letter-spacing:2px;" />
+    <div id="authError" style="font-size:0.82rem;color:#e05252;text-align:center;min-height:20px;margin-bottom:10px;"></div>
+    <button id="authBtn" style="width:100%;padding:14px;background:#d4af37;color:#000;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">확인</button>
+  </div>
+</div>
 
-    frame.addEventListener('load', () => {
-      try {
-        const doc = frame.contentDocument || frame.contentWindow.document;
-        const driveButton = doc.querySelector('[data-tab="drive"]');
-
-        if (driveButton) driveButton.click();
-
-        const tabNav = doc.querySelector('.tab-nav');
-        if (tabNav) tabNav.style.display = 'none';
-
-        const pageTitle = doc.querySelector('.logo-main');
-        if (pageTitle) pageTitle.textContent = 'HITOP 부동산 자료관리';
-
-        doc.title = '하이탑부동산 자료관리';
-      } catch (error) {
-        console.error('자료관리 화면 초기화 오류:', error);
+<script>
+  (function() {
+    const PW = "hitop2025";
+    const KEY = "hitop_auth";
+    function unlock() {
+      document.getElementById("authOverlay").style.display = "none";
+    }
+    function tryAuth() {
+      const val = document.getElementById("authInput").value;
+      if (val === PW) {
+        sessionStorage.setItem(KEY, "1");
+        unlock();
+      } else {
+        document.getElementById("authError").textContent = "비밀번호가 틀렸습니다.";
+        document.getElementById("authInput").value = "";
+        document.getElementById("authInput").focus();
       }
-    });
-  </script>
+    }
+    if (sessionStorage.getItem(KEY) === "1") {
+      // 이미 인증됨 — 오버레이 숨김
+    } else {
+      document.getElementById("authOverlay").style.display = "flex";
+      document.getElementById("authBtn").addEventListener("click", tryAuth);
+      document.getElementById("authInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") tryAuth();
+        document.getElementById("authError").textContent = "";
+      });
+    }
+  })();
+</script>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="logo-main">HITOP 부동산 자료관리</div>
+      <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      <a class="btn btn-ghost" href="index.html" style="font-size:0.82rem;text-decoration:none;">🗂️ 매물관리</a>
+      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem;text-decoration:none;">🏠 매물홈페이지</a>
+      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html" style="font-size:0.82rem;text-decoration:none;">💼 업무센터</a>
+      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/Commercial-Property-Quote/" target="_blank" style="font-size:0.82rem;text-decoration:none;">🧮 견적서</a>
+      <a class="btn btn-ghost" href="https://calendar.google.com" target="_blank" style="font-size:0.82rem;text-decoration:none;">📅 캘린더</a>
+    </div>
+  </header>
+  <div class="header-line"></div>
+
+  <!-- ===== 자료 등록 ===== -->
+  <div class="quick-card">
+    <div class="quick-title">📁 자료 등록</div>
+    <div class="quick-sub">카테고리와 건물명, 구글 드라이브 링크를 입력하세요</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>카테고리</label>
+        <select id="drive_cat_select">
+          <option value="">-- 직접 입력 --</option>
+        </select>
+        <input id="drive_category" type="text" placeholder="카테고리 직접 입력 또는 위에서 선택" style="margin-top:6px;" />
+      </div>
+      <div class="field">
+        <label>건물명</label>
+        <input id="drive_name" type="text" placeholder="예) 명품3차" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>드라이브 링크</label>
+      <input id="drive_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>건물 개요 메모 — 기본 정보 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <textarea id="drive_memo_basic_reg" rows="8" style="width:100%;resize:vertical;min-height:200px;box-sizing:border-box;font-family:inherit;"></textarea>
+    </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>추가 메모 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <textarea id="drive_memo_extra_reg" rows="3" placeholder="기타 특이사항 입력" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+    </div>
+    <button class="btn btn-primary" id="driveSaveBtn" style="width:100%;">💾 저장</button>
+  </div>
+
+  <!-- ===== 자료 목록 ===== -->
+  <div id="driveContent"></div>
+
+</div>
+
+<!-- ✏️ 자료보기 수정 모달 -->
+<div id="driveEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-title">✏️ 자료 수정</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>카테고리</label>
+        <input id="drive_edit_category" type="text" placeholder="예) 운정역 상가" />
+      </div>
+      <div class="field">
+        <label>건물명</label>
+        <input id="drive_edit_name" type="text" placeholder="예) 명품3차" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>드라이브 링크</label>
+      <input id="drive_edit_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('driveEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 📂 카테고리 폴더명 수정 모달 -->
+<div id="driveCategoryEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-title">📂 카테고리 폴더명 수정</div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>새 카테고리명</label>
+      <input id="drive_cat_edit_name" type="text" placeholder="예) 운정역 상가" />
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('driveCategoryEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveCategoryEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🔗 매물연결 모달 -->
+<div id="driveLinkModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
+  <div class="modal-box" style="max-width:560px;width:95%;padding:20px;">
+    <div class="modal-title">🔗 매물 연결</div>
+    <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">이 건물 자료와 연결할 매물을 선택하세요 (복수 선택 가능)</div>
+    <div id="driveLinkListArea" style="max-height:400px;overflow-y:auto;margin-bottom:14px;">
+      <div class="loading"><span class="spinner"></span>불러오는 중...</div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('driveLinkModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveLinkSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- 전역 에러 오버레이 -->
+<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+  <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
+  <div style="font-size:1.1rem;font-weight:700;color:#e0e0e0;margin-bottom:8px;">연결 오류가 발생했습니다</div>
+  <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
+  <button onclick="location.reload()" style="background:#d4af37;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
+</div>
+
+<script>
+  function showAppError(msg) {
+    const el = document.getElementById("appErrorOverlay");
+    if (!el) return;
+    document.getElementById("appErrorMsg").textContent = msg || "새로고침 해주세요.";
+    el.style.display = "flex";
+  }
+  window.onerror = function(msg, src, line, col, err) {
+    showAppError((err && err.message) || msg || "알 수 없는 오류가 발생했습니다.");
+  };
+  window.onunhandledrejection = function(e) {
+    const msg = (e.reason && e.reason.message) || String(e.reason) || "비동기 오류가 발생했습니다.";
+    if (msg.includes("저장 실패") || msg.includes("수정 실패") || msg.includes("삭제 실패")) return;
+    showAppError(msg);
+  };
+</script>
+
+<script src="assets/js/resources.js"></script>
 </body>
 </html>
