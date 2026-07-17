@@ -56,6 +56,12 @@
     .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
     .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:linear-gradient(transparent,var(--bg-card)); pointer-events:none; }
     .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(212,175,55,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
+    /* 상단 도구 영역 — 모바일에서는 상세등록 버튼 / 검색창을 각각 한 줄씩 쌓는다 */
+    @media (max-width: 480px) {
+      .toolbar-row { flex-direction: column; align-items: stretch; }
+      .toolbar-row #detailRegisterBtn { width: 100%; }
+      .toolbar-row .field { width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -131,77 +137,19 @@
   <!-- ===== 매물관리 ===== -->
   <div id="tabProperty">
 
-    <!-- ===== 등록 방식 선택 ===== -->
-    <div class="reg-mode-selector" id="regModeSelector">
-      <button class="reg-mode-card" id="modeQuickBtn" onclick="selectRegMode('quick')">
-        <div class="reg-mode-icon">⚡</div>
-        <div class="reg-mode-title">빠른저장</div>
-        <div class="reg-mode-desc">전화/방문 직후 30초 메모용<br>내부 저장만 가능<br>홈페이지 공개 전 상세등록 필요</div>
-      </button>
-      <button class="reg-mode-card" id="modeDetailBtn" onclick="selectRegMode('detail')">
-        <div class="reg-mode-icon">📝</div>
-        <div class="reg-mode-title">상세저장</div>
-        <div class="reg-mode-desc">홈페이지 매물보내기 가능한 정식 등록<br>공개주소·지도주소·상세정보 입력</div>
-      </button>
-    </div>
-
-    <!-- ⚡ 빠른저장 폼 (모드 선택 후 표시) -->
-    <div class="quick-card" id="quickRegisterForm" style="display:none;">
-      <div class="quick-title">⚡ 빠른저장 — 30초 메모</div>
-      <div class="quick-sub" style="color:rgba(212,175,55,0.6);margin-bottom:12px;">전화/방문 직후 임시로 저장하는 내부 메모입니다. 홈페이지 공개 전 상세등록이 필요합니다.</div>
-      <div class="form-grid-2" style="margin-bottom:10px;">
-        <div class="field">
-          <label>매물유형</label>
-          <select id="q_type">
-            <option value="shop">상가</option>
-            <option value="office">사무실</option>
-            <option value="officetel">오피스텔</option>
-            <option value="hilsstate">힐스테이트더운정</option>
-            <option value="land_single">토지</option>
-            <option value="factory">공장/창고</option>
-            <option value="bizcenter">지식산업센터</option>
-            <option value="etc">기타</option>
-          </select>
+    <!-- ===== 상단 도구 영역 (상세등록 · 검색 · 보기전환) ===== -->
+    <section class="card" style="padding:12px 16px;">
+      <div class="toolbar-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="detailRegisterBtn" style="flex:0 0 auto;white-space:nowrap;padding:8px 16px;">+ 상세등록</button>
+        <div class="field" style="flex:1;min-width:160px;margin-bottom:0;">
+          <input id="searchInput" type="text" placeholder="🔍 매물번호·주소·매물명·메모 검색..." />
         </div>
-        <div class="field">
-          <label>위치 (간단히)</label>
-          <input id="q_address" type="text" placeholder="예) 운정역 근처 1층" />
-        </div>
-        <div class="field">
-          <label>가격 (보증금 또는 매매가)</label>
-          <input id="q_price" type="text" placeholder="예) 보증금 5000 / 월세 300" />
-        </div>
-        <div class="field">
-          <label>집주인 연락처</label>
-          <input id="q_contact" type="tel" placeholder="010-0000-0000" />
+        <div style="display:flex;border:1px solid rgba(212,175,55,0.35);border-radius:7px;overflow:hidden;flex:0 0 auto;">
+          <button id="viewToggleCard" onclick="setViewMode('card')" style="padding:8px 12px;font-size:0.78rem;font-weight:600;background:rgba(212,175,55,0.2);color:var(--gold);border:none;cursor:pointer;">☰ 카드</button>
+          <button id="viewToggleList" onclick="setViewMode('list')" style="padding:8px 12px;font-size:0.78rem;font-weight:600;background:transparent;color:var(--text-muted);border:none;cursor:pointer;border-left:1px solid rgba(212,175,55,0.25);">☷ 목록</button>
         </div>
       </div>
-      <div class="field" style="margin-bottom:10px;">
-        <label>메모 (특이사항)</label>
-        <textarea id="q_memo" rows="4" placeholder="예) 1층 공실, 즉시입주 가능, 권리금 없음" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
-      </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px;">📁 드라이브 링크 (선택)</label>
-        <div id="q_links_container"></div>
-        <button class="btn btn-ghost" style="width:100%;font-size:0.82rem;margin-top:4px;" onclick="addQuickLinkRow()">+ 링크 추가</button>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);">
-          <input type="checkbox" id="q_done" style="width:auto;accent-color:var(--gold);" />
-          거래완료로 등록 (과거 이력 입력용)
-        </label>
-        <button class="btn btn-primary" id="quickSaveBtn">⚡ 빠른 저장</button>
-      </div>
-    </div>
-
-    <!-- 검색 + 정렬 -->
-    <section class="card">
-      <div class="card-title"><span>🔍 검색 / 정렬</span></div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:0;">
-        <div class="field" style="flex:1;margin-bottom:0;">
-          <input id="searchInput" type="text" placeholder="주소, 메모, 가격 등으로 검색..." />
-        </div>
-        <button class="btn btn-primary" id="searchBtn" style="flex-shrink:0;padding:8px 14px;font-size:0.85rem;">🔍 검색</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">
         <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">
           <input type="checkbox" id="includeCompletedChk" style="width:auto;accent-color:var(--gold);" />
           거래완료 포함
@@ -246,13 +194,8 @@
           </label>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <div style="display:flex;border:1px solid rgba(212,175,55,0.35);border-radius:7px;overflow:hidden;">
-            <button id="viewToggleCard" onclick="setViewMode('card')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:rgba(212,175,55,0.2);color:var(--gold);border:none;cursor:pointer;">☰ 카드</button>
-            <button id="viewToggleList" onclick="setViewMode('list')" style="padding:5px 12px;font-size:0.78rem;font-weight:600;background:transparent;color:var(--text-muted);border:none;cursor:pointer;border-left:1px solid rgba(212,175,55,0.25);">☷ 목록</button>
-          </div>
           <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">📋 선택매물보기</button>
           <button class="btn btn-ghost" onclick="downloadExcel()" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
-          <button class="btn btn-ghost" onclick="location.href='register.html'" style="font-size:0.82rem;">+ 상세 등록</button>
         </div>
       </div>
       <div id="printArea">

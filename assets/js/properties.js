@@ -1,19 +1,11 @@
-// ===== 등록 방식 선택 =====
-function selectRegMode(mode) {
-  const quickForm = document.getElementById("quickRegisterForm");
-  const quickBtn  = document.getElementById("modeQuickBtn");
-  const detailBtn = document.getElementById("modeDetailBtn");
-  if (mode === "quick") {
-    quickForm.style.display = "";
-    quickBtn.classList.add("active");
-    detailBtn.classList.remove("active");
-    quickForm.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  } else {
-    location.href = "register.html";
-  }
+// ===== 상세등록 시작 =====
+// 신규 상세등록은 항상 register.html의 빈 폼에서 시작한다 (sessionStorage 프리필을 남기지 않음).
+function startDetailRegister() {
+  location.href = "register.html";
 }
+document.getElementById("detailRegisterBtn").addEventListener("click", startDetailRegister);
 
-// ===== 상세저장으로 전환 (빠른저장 → 상세저장) =====
+// ===== 상세저장으로 전환 (기존 빠른저장 매물 → 상세등록) =====
 function convertToDetail(id) {
   const item = allListings.find(x => x.id === id);
   if (!item) return;
@@ -28,29 +20,6 @@ function convertToDetail(id) {
   };
   sessionStorage.setItem("hitop_detail_prefill", JSON.stringify(prefill));
   location.href = "register.html";
-}
-
-// ===== 드라이브 링크 헬퍼 (빠른 등록 폼) =====
-function addQuickLinkRow(name, url) {
-  const c = document.getElementById("q_links_container");
-  const row = document.createElement("div");
-  row.className = "ql-row";
-  row.style.cssText = "display:flex;gap:5px;align-items:center;margin-bottom:5px;";
-  row.innerHTML = `
-    <input type="text" value="${name||""}" placeholder="이름 (예: 토지대장)"
-      style="width:110px;flex-shrink:0;" />
-    <input type="text" value="${url||""}" placeholder="https://drive.google.com/..."
-      style="flex:1;" />
-    <button onclick="this.closest('.ql-row').remove()"
-      style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1.1rem;padding:0 4px;flex-shrink:0;">✕</button>
-  `;
-  c.appendChild(row);
-}
-function getQuickLinks() {
-  return [...document.querySelectorAll("#q_links_container .ql-row")].map(row => {
-    const ins = row.querySelectorAll("input");
-    return { name: ins[0].value.trim(), url: ins[1].value.trim() };
-  }).filter(l => l.url);
 }
 
 // ===== 매물관리 =====
@@ -444,55 +413,6 @@ function renderList() {
   renderPagination(filtered.length);
 }
 
-// 빠른 저장
-document.getElementById("quickSaveBtn").addEventListener("click", async () => {
-  const type    = document.getElementById("q_type").value;
-  const address = document.getElementById("q_address").value.trim();
-  const price   = document.getElementById("q_price").value.trim();
-  const contact = document.getElementById("q_contact").value.trim();
-  const memo    = document.getElementById("q_memo").value.trim();
-
-  if (!address && !price) {
-    showToast("위치 또는 가격 중 하나는 입력해주세요");
-    return;
-  }
-
-  const btn = document.getElementById("quickSaveBtn");
-  btn.disabled = true; btn.textContent = "저장 중...";
-
-  try {
-    const isDone = document.getElementById("q_done").checked;
-    const driveLinks = getQuickLinks();
-    const item = {
-      id: "HITOP-" + Date.now(),
-      type,
-      quick_location: address,   // 내부용 위치 — publicAddress로 사용 안함
-      address: address,          // 카드/목록 표시용
-      title: `${getTypeLabel(type)} · ${address || price}`,
-      status: isDone ? "거래완료" : "광고중",
-      description: memo,
-      quick_price: price,
-      quick_contact: contact,
-      quick_memo: memo,
-      quick_save: true,          // 빠른저장 플래그
-      is_public: false,
-      image_urls: []
-    };
-    if (driveLinks.length) item.drive_links = driveLinks;
-    if (isDone) item.completed_at = new Date().toISOString();
-    await addListing(item);
-    ["q_address","q_price","q_contact","q_memo"].forEach(id => document.getElementById(id).value = "");
-    document.getElementById("q_done").checked = false;
-    document.getElementById("q_links_container").innerHTML = "";
-    showToast("✅ 저장완료!");
-    await loadListings();
-  } catch(e) {
-    showToast("❌ 저장 실패: " + e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = "⚡ 빠른 저장";
-  }
-});
-
 // 인쇄
 document.getElementById("printBtn").addEventListener("click", printSelected);
 
@@ -504,7 +424,6 @@ function doSearch() {
 document.getElementById("searchInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") doSearch();
 });
-document.getElementById("searchBtn").addEventListener("click", doSearch);
 
 document.getElementById("includeCompletedChk").addEventListener("change", (e) => {
   includeCompleted = e.target.checked;
@@ -931,32 +850,27 @@ function cmCopy() {
   });
 }
 
-// ===== 업무일지 매물보내기 연동 (?memo= 파라미터로 진입 시 빠른저장 메모 자동입력) =====
+// ===== 업무일지 매물보내기 연동 =====
+// 빠른저장 폼이 사라졌으므로, ?memo= 등으로 진입하면 register.html의 상세등록 폼으로
+// 넘겨준다. register.html은 sessionStorage("hitop_detail_prefill")를 읽어
+// quick_memo→설명, quick_contact→연락처1, quick_location→참고 위치, type→1차구분으로
+// 자동입력하는 기존 로직(빠른저장→상세저장 전환과 동일 경로)을 그대로 재사용한다.
 (function () {
-  function applyMemoParam() {
-    const params = new URLSearchParams(window.location.search);
-    const memo = params.get('memo');
-    if (!memo) return;
+  const params = new URLSearchParams(window.location.search);
+  const memo = params.get('memo');
+  if (!memo) return;
 
-    const ta = document.getElementById('q_memo');
-    if (ta) {
-      ta.value = memo;
-      ta.focus();
-      setTimeout(function () {
-        ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
-    }
-
-    const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete('memo');
-    history.replaceState({}, '', cleanUrl.toString());
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyMemoParam);
-  } else {
-    applyMemoParam();
-  }
+  const prefill = {
+    type:           params.get('type') || params.get('property_type') || '',
+    quick_price:    '',
+    quick_contact:  params.get('contact') || '',
+    quick_memo:     memo,
+    drive_links:    [],
+    quick_location: params.get('address') || '',
+    source_id:      null
+  };
+  sessionStorage.setItem('hitop_detail_prefill', JSON.stringify(prefill));
+  location.replace('register.html');
 })();
 
 // ===== 초기 로딩 =====

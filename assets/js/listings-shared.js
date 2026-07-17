@@ -76,7 +76,7 @@ function renderPublicBadge(item) {
 
 function matchesKeyword(item, kw) {
   return [
-    item.title, item.address,
+    item.id, item.title, item.address,
     item.quick_price, item.salePrice, item.deposit, item.monthlyRent,
     item.quick_memo, item.description, item.detailDescription,
     item.quick_contact, item.owner_contact, item.owner_phone1, item.owner_phone2,
