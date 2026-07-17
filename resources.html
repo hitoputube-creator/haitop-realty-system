@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>하이탑부동산 자료관리</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #081022;
+    }
+    #resourcesFrame {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #081022;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="resourcesFrame" src="index.html" title="하이탑부동산 자료관리"></iframe>
+
+  <script>
+    const frame = document.getElementById('resourcesFrame');
+
+    frame.addEventListener('load', () => {
+      try {
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        const driveButton = doc.querySelector('[data-tab="drive"]');
+
+        if (driveButton) driveButton.click();
+
+        const tabNav = doc.querySelector('.tab-nav');
+        if (tabNav) tabNav.style.display = 'none';
+
+        const pageTitle = doc.querySelector('.logo-main');
+        if (pageTitle) pageTitle.textContent = 'HITOP 부동산 자료관리';
+
+        doc.title = '하이탑부동산 자료관리';
+      } catch (error) {
+        console.error('자료관리 화면 초기화 오류:', error);
+      }
+    });
+  </script>
+</body>
+</html>
