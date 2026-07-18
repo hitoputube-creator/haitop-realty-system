@@ -27,7 +27,8 @@ const listingContainer = document.getElementById("listingContainer");
 const emptyMessage = document.getElementById("emptyMessage");
 const filterRow = document.getElementById("filterRow");
 const subFilterRow = document.getElementById("subFilterRow");
-const tagFilterRow = document.getElementById("tagFilterRow");
+const complexFilterWrap = document.getElementById("complexFilterWrap");
+const complexFilterSelect = document.getElementById("complexFilterSelect");
 const countBadge = document.getElementById("countBadge");
 const paginationEl = document.getElementById("pagination");
 
@@ -453,10 +454,22 @@ function renderSubFilterRow() {
       subFilterRow.querySelectorAll(".filter-btn.sub").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       currentSub = btn.dataset.sub;
+      updateComplexFilterVisibility();
       currentPage = 1;
       renderList();
     });
   });
+}
+
+// 단지(예: 힐스테이트더운정) 드롭다운은 "주거용" 전체/아파트/오피스텔에서만 노출한다.
+// 단독주택·전원주택·상가주택·다가구주택 및 다른 대분류에서는 숨기고, 숨겨질 때는 선택값도 초기화한다.
+function updateComplexFilterVisibility() {
+  const visible = currentMajor === "주거용" && (currentSub === "" || currentSub === "아파트" || currentSub === "오피스텔");
+  complexFilterWrap.style.display = visible ? "" : "none";
+  if (!visible && currentTag) {
+    currentTag = "";
+    complexFilterSelect.value = "";
+  }
 }
 
 filterRow.querySelectorAll(".filter-btn").forEach(btn => {
@@ -466,23 +479,20 @@ filterRow.querySelectorAll(".filter-btn").forEach(btn => {
     currentMajor = btn.dataset.major;
     currentSub = "";
     renderSubFilterRow();
+    updateComplexFilterVisibility();
     currentPage = 1;
     renderList();
   });
 });
 
-// 단지·태그 필터 — 매물유형(대분류/세부) 필터와 별개로 토글(다시 누르면 해제), AND로 결합된다.
-tagFilterRow.querySelectorAll(".filter-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const tag = btn.dataset.tag;
-    const turningOn = currentTag !== tag;
-    tagFilterRow.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    currentTag = turningOn ? tag : "";
-    if (turningOn) btn.classList.add("active");
-    currentPage = 1;
-    renderList();
-  });
+// 단지 필터 — 매물유형(대분류/세부) 필터와 별개로 AND 결합되는 드롭다운.
+complexFilterSelect.addEventListener("change", () => {
+  currentTag = complexFilterSelect.value;
+  currentPage = 1;
+  renderList();
 });
+
+updateComplexFilterVisibility(); // 초기 상태(전체 매물)에서는 숨김
 
 /* ══════════════════════════════════════════
    엑셀 다운로드 — 현재 필터 기준 (6컬럼 간결형)
