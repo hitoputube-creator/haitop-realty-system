@@ -55,6 +55,42 @@ body {
 .header-line { border-bottom: 1px solid rgba(212,175,55,0.45); margin: 8px 0 16px; }
 .page-title { font-size: 1.4rem; font-weight: 600; color: var(--gold); margin-bottom: 16px; }
 
+/* ══════════════════════════════════════════
+   공통 상단 내비게이션 (모든 관리 화면 공용 — assets/js/nav.js가 렌더링)
+   일반 테두리는 청회색, 현재 페이지·업무도구만 골드로 강조한다.
+══════════════════════════════════════════ */
+:root { --border-slate: rgba(148,163,184,0.32); }
+.main-nav { margin-left: auto; display: flex; align-items: center; gap: 6px; position: relative; }
+.nav-link {
+  height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px;
+  border-radius: 8px; border: 1px solid var(--border-slate);
+  color: var(--text-muted); font-size: 0.82rem; text-decoration: none;
+  background: transparent; cursor: pointer; white-space: nowrap; font-family: inherit;
+  transition: 0.15s ease;
+}
+.nav-link:hover { border-color: rgba(148,163,184,0.55); color: var(--text-main); }
+.nav-link.active { border-color: var(--gold); color: var(--gold-soft); background: rgba(212,175,55,0.1); }
+.nav-caret { font-size: 0.65rem; }
+.nav-dropdown { position: relative; }
+.nav-dropdown-menu {
+  display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;
+  min-width: 150px; background: #0b1a33; border: 1px solid var(--border-slate);
+  border-radius: 10px; padding: 6px; box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+  flex-direction: column; gap: 2px;
+}
+.nav-dropdown.open .nav-dropdown-menu { display: flex; }
+.nav-dropdown-menu a, .nav-dropdown-menu button {
+  display: block; width: 100%; text-align: left; background: transparent; border: none;
+  color: var(--text-muted); font-size: 0.82rem; padding: 8px 10px; border-radius: 6px;
+  cursor: pointer; text-decoration: none; font-family: inherit;
+}
+.nav-dropdown-menu a:hover, .nav-dropdown-menu button:hover { background: rgba(148,163,184,0.14); color: var(--text-main); }
+.back-to-properties { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 720px) {
+  .header { flex-wrap: wrap; row-gap: 8px; }
+  .main-nav { margin-left: 0; width: 100%; flex-wrap: wrap; }
+}
+
 /* 카드 */
 .card {
   background: radial-gradient(circle at top left, #182853 0, #0b1a33 45%, #050914 100%);

@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
   <script src="assets/js/storage.js?v=20260604-address-split"></script>
+  <script src="assets/js/nav.js"></script>
 </head>
-<body>
+<body data-nav-active="properties">
 <div class="page">
 
   <header class="header">
@@ -16,11 +17,12 @@
       <div class="logo-main">HITOP 부동산</div>
       <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
     </div>
+    <nav class="main-nav" id="mainNav"></nav>
   </header>
   <div class="header-line"></div>
 
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-    <button class="btn btn-ghost" onclick="history.back()">← 뒤로</button>
+    <a class="btn btn-ghost back-to-properties" href="properties.html">← 매물관리로 돌아가기</a>
     <h1 class="page-title" style="margin:0;">📝 상세저장 — 홈페이지 공개용 매물 등록</h1>
   </div>
   <div style="font-size:0.82rem;color:rgba(212,175,55,0.6);margin-bottom:16px;padding:10px 14px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:10px;">
@@ -597,7 +599,7 @@
       }
       await addListing(item);
       showToast('✅ 저장완료!');
-      setTimeout(() => location.href = 'index.html', 1000);
+      setTimeout(() => location.href = 'properties.html', 1000);
     } catch(e) {
       showToast('❌ 저장 실패: ' + e.message);
       btn.disabled = false; btn.textContent = '저장하기';

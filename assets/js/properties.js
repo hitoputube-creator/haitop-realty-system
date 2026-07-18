@@ -4,23 +4,7 @@ function startDetailRegister() {
   location.href = "register.html";
 }
 document.getElementById("detailRegisterBtn").addEventListener("click", startDetailRegister);
-
-// ===== 상단 메뉴 "업무도구" 드롭다운 =====
-(function setupToolsDropdown() {
-  const dropdown = document.getElementById("toolsDropdown");
-  const toggleBtn = document.getElementById("toolsDropdownBtn");
-  if (!dropdown || !toggleBtn) return;
-  toggleBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    dropdown.classList.toggle("open");
-  });
-  document.addEventListener("click", (e) => {
-    if (!dropdown.contains(e.target)) dropdown.classList.remove("open");
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") dropdown.classList.remove("open");
-  });
-})();
+// 상단 메뉴 "업무도구" 드롭다운은 assets/js/nav.js에서 모든 화면 공통으로 렌더링·제어한다.
 
 // ===== 상세저장으로 전환 (기존 빠른저장 매물 → 상세등록) =====
 function convertToDetail(id) {
@@ -161,7 +145,7 @@ window.addEventListener("afterprint", () => {
   goBackToList();
 });
 
-function setViewMode(mode) {
+function setViewMode(mode, opts = {}) {
   viewMode = mode;
   const cardBtn = document.getElementById("viewToggleCard");
   const listBtn = document.getElementById("viewToggleList");
@@ -178,9 +162,11 @@ function setViewMode(mode) {
     listingContainer.className = "";
     cardSelectBar.style.display = "none";
   }
+  if (opts.skipRender) return; // 상태 복원 시 데이터 로딩 전 중복 렌더 방지용
   currentPage = 1;
   renderList();
   updatePrintBtn();
+  saveFilterState();
 }
 
 function renderListView(items) {
@@ -438,6 +424,7 @@ function doSearch() {
   searchKeyword = document.getElementById("searchInput").value.trim();
   currentPage = 1;
   renderList();
+  saveFilterState();
 }
 document.getElementById("searchInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") doSearch();
@@ -447,12 +434,14 @@ document.getElementById("includeCompletedChk").addEventListener("change", (e) =>
   includeCompleted = e.target.checked;
   currentPage = 1;
   renderList();
+  saveFilterState();
 });
 
 document.getElementById("sortSelect").addEventListener("change", (e) => {
   currentSort = e.target.value;
   currentPage = 1;
   renderList();
+  saveFilterState();
 });
 
 function renderSubFilterRow() {
@@ -474,6 +463,7 @@ function renderSubFilterRow() {
       updateComplexFilterVisibility();
       currentPage = 1;
       renderList();
+      saveFilterState();
     });
   });
 }
@@ -499,6 +489,7 @@ filterRow.querySelectorAll(".filter-btn").forEach(btn => {
     updateComplexFilterVisibility();
     currentPage = 1;
     renderList();
+    saveFilterState();
   });
 });
 
@@ -507,9 +498,8 @@ complexFilterSelect.addEventListener("change", () => {
   currentTag = complexFilterSelect.value;
   currentPage = 1;
   renderList();
+  saveFilterState();
 });
-
-updateComplexFilterVisibility(); // 초기 상태(전체 매물)에서는 숨김
 
 /* ══════════════════════════════════════════
    엑셀 다운로드 — 현재 필터 기준 (6컬럼 간결형)
@@ -929,5 +919,77 @@ function cmCopy() {
   location.replace('register.html');
 })();
 
+// ===== 필터·보기 상태 저장/복원 (매물 상세·등록 화면을 왕복해도 유지) =====
+const FILTER_STATE_KEY = "hitop_properties_filter_state";
+
+function saveFilterState() {
+  try {
+    sessionStorage.setItem(FILTER_STATE_KEY, JSON.stringify({
+      searchKeyword, currentMajor, currentSub, currentTag,
+      includeCompleted, currentSort, viewMode,
+      scrollY: window.scrollY
+    }));
+  } catch (e) { /* 세션스토리지 사용 불가 시 조용히 무시 */ }
+}
+
+let _restoredScrollY = null;
+
+function restoreFilterState() {
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(FILTER_STATE_KEY) || "null"); } catch (e) { saved = null; }
+  if (saved) {
+    searchKeyword = saved.searchKeyword || "";
+    document.getElementById("searchInput").value = searchKeyword;
+
+    currentSort = saved.currentSort === "oldest" ? "oldest" : "newest";
+    document.getElementById("sortSelect").value = currentSort;
+
+    includeCompleted = !!saved.includeCompleted;
+    document.getElementById("includeCompletedChk").checked = includeCompleted;
+
+    currentMajor = saved.currentMajor && PROPERTY_CATEGORY_STANDARD[saved.currentMajor] ? saved.currentMajor : "";
+    filterRow.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.major === currentMajor));
+    renderSubFilterRow();
+
+    if (currentMajor && saved.currentSub) {
+      const subBtn = subFilterRow.querySelector(`.filter-btn.sub[data-sub="${CSS.escape(saved.currentSub)}"]`);
+      if (subBtn) {
+        subFilterRow.querySelectorAll(".filter-btn.sub").forEach(b => b.classList.remove("active"));
+        subBtn.classList.add("active");
+        currentSub = saved.currentSub;
+      }
+    }
+
+    updateComplexFilterVisibility();
+    if (saved.currentTag && complexFilterWrap.style.display !== "none") {
+      currentTag = saved.currentTag;
+      complexFilterSelect.value = currentTag;
+    }
+
+    setViewMode(saved.viewMode === "list" ? "list" : "card", { skipRender: true });
+
+    if (typeof saved.scrollY === "number") _restoredScrollY = saved.scrollY;
+  } else {
+    updateComplexFilterVisibility(); // 저장된 상태가 없는 첫 진입 — 기본값(전체 매물)에서는 숨김
+  }
+}
+
+restoreFilterState();
+
+// 다른 화면(register.html/detail.html)으로 이동하기 직전 스크롤 위치까지 최종 저장.
+window.addEventListener("beforeunload", saveFilterState);
+
+// 상단 메뉴 "업무도구"에서 전체 백업/계약문자를 누르고 다른 화면에서 넘어온 경우 자동 실행.
+(function handleNavAction() {
+  const action = new URLSearchParams(location.search).get("navAction");
+  if (action === "exportAll" && typeof exportAll === "function") exportAll();
+  if (action === "openContractModal" && typeof openContractModal === "function") openContractModal();
+})();
+
 // ===== 초기 로딩 =====
-loadListings();
+loadListings().then(() => {
+  if (_restoredScrollY != null) {
+    window.scrollTo(0, _restoredScrollY);
+    _restoredScrollY = null;
+  }
+});

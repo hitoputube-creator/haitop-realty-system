@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="assets/css/style.css" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/storage.js"></script>
+  <script src="assets/js/nav.js"></script>
   <style>
     /* 목록보기 테이블 */
     #listViewTable { width:100%; border-collapse:collapse; font-size:0.82rem; }
@@ -83,7 +84,7 @@
     @keyframes recSpin { to { transform:rotate(360deg); } }
   </style>
 </head>
-<body>
+<body data-nav-active="index">
 
 <!-- 비밀번호 잠금 화면 -->
 <div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:99998;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
@@ -140,14 +141,7 @@
       <div class="logo-main">HITOP 부동산</div>
       <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
     </div>
-    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
-      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem;text-decoration:none;">🏠 매물홈페이지</a>
-      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html" style="font-size:0.82rem;text-decoration:none;">💼 업무센터</a>
-      <button class="btn btn-ghost" onclick="exportAll()" style="font-size:0.82rem;">📥 전체 백업</button>
-      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/Commercial-Property-Quote/" target="_blank" style="font-size:0.82rem;text-decoration:none;">🧮 견적서</a>
-      <a class="btn btn-ghost" href="https://calendar.google.com" target="_blank" style="font-size:0.82rem;text-decoration:none;">📅 캘린더</a>
-      <button class="btn btn-ghost" onclick="openContractModal()" style="font-size:0.82rem;">📨 계약문자</button>
-    </div>
+    <nav class="main-nav" id="mainNav"></nav>
   </header>
   <div class="header-line"></div>
 
