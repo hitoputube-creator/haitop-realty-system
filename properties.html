@@ -56,12 +56,67 @@
     .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
     .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:linear-gradient(transparent,var(--bg-card)); pointer-events:none; }
     .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(212,175,55,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
-    /* 상단 도구 영역 — 모바일에서는 상세등록 버튼 / 검색창을 각각 한 줄씩 쌓는다 */
+    /* ══════════════════════════════════════════
+       2단계: 상단 메뉴 · 검색/필터 영역 정리
+       (일반 테두리는 청회색, 선택 상태·주요 버튼만 골드)
+    ══════════════════════════════════════════ */
+    :root { --border-slate: rgba(148,163,184,0.32); }
+
+    /* ── 상단 메뉴: 한 줄, 주요 4개 + 업무도구 드롭다운 ── */
+    .main-nav { margin-left: auto; display: flex; align-items: center; gap: 6px; position: relative; }
+    .nav-link {
+      height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px;
+      border-radius: 8px; border: 1px solid var(--border-slate);
+      color: var(--text-muted); font-size: 0.82rem; text-decoration: none;
+      background: transparent; cursor: pointer; white-space: nowrap; font-family: inherit;
+      transition: 0.15s ease;
+    }
+    .nav-link:hover { border-color: rgba(148,163,184,0.55); color: var(--text-main); }
+    .nav-link.active { border-color: var(--gold); color: var(--gold-soft); background: rgba(212,175,55,0.1); }
+    .nav-caret { font-size: 0.65rem; }
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-menu {
+      display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;
+      min-width: 150px; background: #0b1a33; border: 1px solid var(--border-slate);
+      border-radius: 10px; padding: 6px; box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+      flex-direction: column; gap: 2px;
+    }
+    .nav-dropdown.open .nav-dropdown-menu { display: flex; }
+    .nav-dropdown-menu a, .nav-dropdown-menu button {
+      display: block; width: 100%; text-align: left; background: transparent; border: none;
+      color: var(--text-muted); font-size: 0.82rem; padding: 8px 10px; border-radius: 6px;
+      cursor: pointer; text-decoration: none; font-family: inherit;
+    }
+    .nav-dropdown-menu a:hover, .nav-dropdown-menu button:hover { background: rgba(148,163,184,0.14); color: var(--text-main); }
+    @media (max-width: 720px) {
+      .header { flex-wrap: wrap; row-gap: 8px; }
+      .main-nav { margin-left: 0; width: 100%; flex-wrap: wrap; }
+    }
+
+    /* ── 검색·정렬·필터 통합 카드 ── */
+    .filter-panel-card { padding: 14px 16px; }
+    .toolbar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .toolbar-row .search-field { flex: 1 1 200px; margin-bottom: 0; }
+    .toolbar-row input, .toolbar-row select { height: 36px; padding: 0 12px; }
+    .include-done-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+    .sort-select { width: auto; min-width: 100px; flex: 0 0 auto; }
+    .view-toggle-group { display: flex; border: 1px solid var(--border-slate); border-radius: 8px; overflow: hidden; flex-shrink: 0; height: 36px; }
+    .view-toggle-group button { height: 100%; padding: 0 16px; font-size: 0.78rem; font-weight: 600; background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-family: inherit; }
+    .view-toggle-group button + button { border-left: 1px solid var(--border-slate); }
+    .filter-divider { border-top: 1px solid var(--border-slate); margin: 12px 0; }
+    .filter-panel-title { font-size: 0.85rem; color: var(--gold-soft); margin-bottom: 8px; }
+
+    /* 모바일: 상세등록 버튼 / 검색창을 각각 한 줄씩 쌓는다 */
     @media (max-width: 480px) {
       .toolbar-row { flex-direction: column; align-items: stretch; }
       .toolbar-row #detailRegisterBtn { width: 100%; }
       .toolbar-row .field { width: 100%; }
+      .toolbar-row .include-done-label { width: 100%; }
+      .toolbar-row .sort-select { width: 100%; }
+      .view-toggle-group { width: 100%; }
+      .view-toggle-group button { flex: 1; }
     }
+
     /* 유형별 필터 박스 — 매물유형 버튼(왼쪽) + 단지 필터 드롭다운(오른쪽) */
     .filter-panel-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .filter-panel-row .filter-row { flex: 1 1 auto; }
@@ -131,54 +186,52 @@
       <div class="logo-main">HITOP 부동산 매물관리</div>
       <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
     </div>
-    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
-      <a class="btn btn-ghost" href="index.html" style="font-size:0.82rem;text-decoration:none;">🗂️ 통합관리</a>
-      <a class="btn btn-ghost" href="resources.html" style="font-size:0.82rem;text-decoration:none;">📁 자료관리</a>
-      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem;text-decoration:none;">🏠 매물홈페이지</a>
-      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html" style="font-size:0.82rem;text-decoration:none;">💼 업무센터</a>
-      <button class="btn btn-ghost" onclick="exportAll()" style="font-size:0.82rem;">📥 전체 백업</button>
-      <a class="btn btn-ghost" href="https://hitoputube-creator.github.io/Commercial-Property-Quote/" target="_blank" style="font-size:0.82rem;text-decoration:none;">🧮 견적서</a>
-      <a class="btn btn-ghost" href="https://calendar.google.com" target="_blank" style="font-size:0.82rem;text-decoration:none;">📅 캘린더</a>
-      <button class="btn btn-ghost" onclick="openContractModal()" style="font-size:0.82rem;">📨 계약문자</button>
-    </div>
+    <nav class="main-nav">
+      <a class="nav-link" href="index.html">통합관리</a>
+      <a class="nav-link active" href="properties.html">매물관리</a>
+      <a class="nav-link" href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html">업무센터</a>
+      <a class="nav-link" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html" target="_blank" rel="noopener noreferrer">홈페이지</a>
+      <div class="nav-dropdown" id="toolsDropdown">
+        <button type="button" class="nav-link" id="toolsDropdownBtn">업무도구 <span class="nav-caret">▾</span></button>
+        <div class="nav-dropdown-menu" id="toolsDropdownMenu">
+          <a href="resources.html">자료관리</a>
+          <button type="button" onclick="exportAll()">전체 백업</button>
+          <a href="https://hitoputube-creator.github.io/Commercial-Property-Quote/" target="_blank" rel="noopener noreferrer">견적서</a>
+          <button type="button" onclick="openContractModal()">계약문자</button>
+          <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer">캘린더</a>
+        </div>
+      </div>
+    </nav>
   </header>
   <div class="header-line"></div>
 
   <!-- ===== 매물관리 ===== -->
   <div id="tabProperty">
 
-    <!-- ===== 상단 도구 영역 (상세등록 · 검색 · 보기전환) ===== -->
-    <section class="card" style="padding:12px 16px;">
-      <div class="toolbar-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button class="btn btn-primary" id="detailRegisterBtn" style="flex:0 0 auto;white-space:nowrap;padding:8px 16px;">+ 상세등록</button>
-        <div class="field" style="flex:1;min-width:160px;margin-bottom:0;">
-          <input id="searchInput" type="text" placeholder="🔍 매물번호·주소·매물명·메모 검색..." />
+    <!-- ===== 검색·정렬·필터 통합 영역 ===== -->
+    <section class="card filter-panel-card">
+      <div class="toolbar-row" id="toolbarRow">
+        <button class="btn btn-primary" id="detailRegisterBtn" style="flex:0 0 auto;white-space:nowrap;">+ 새 매물 등록</button>
+        <div class="field search-field">
+          <input id="searchInput" type="text" placeholder="매물번호·주소·매물명·메모·단지명 검색" />
         </div>
-        <div style="display:flex;border:1px solid rgba(212,175,55,0.35);border-radius:7px;overflow:hidden;flex:0 0 auto;">
-          <button id="viewToggleCard" onclick="setViewMode('card')" style="padding:8px 12px;font-size:0.78rem;font-weight:600;background:rgba(212,175,55,0.2);color:var(--gold);border:none;cursor:pointer;">☰ 카드</button>
-          <button id="viewToggleList" onclick="setViewMode('list')" style="padding:8px 12px;font-size:0.78rem;font-weight:600;background:transparent;color:var(--text-muted);border:none;cursor:pointer;border-left:1px solid rgba(212,175,55,0.25);">☷ 목록</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">
-        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">
+        <label class="include-done-label">
           <input type="checkbox" id="includeCompletedChk" style="width:auto;accent-color:var(--gold);" />
           거래완료 포함
         </label>
-        <div class="field" style="flex:0 0 auto;min-width:110px;margin-bottom:0;">
-          <select id="sortSelect">
-            <option value="newest">최신순</option>
-            <option value="oldest">오래된순</option>
-          </select>
+        <select id="sortSelect" class="sort-select">
+          <option value="newest">최신순</option>
+          <option value="oldest">오래된순</option>
+        </select>
+        <div class="view-toggle-group">
+          <button id="viewToggleCard" onclick="setViewMode('card')">카드</button>
+          <button id="viewToggleList" onclick="setViewMode('list')">목록</button>
         </div>
       </div>
-    </section>
 
-    <!-- 필터 -->
-    <section class="card">
-      <div class="card-title">
-        <span>유형별 필터</span>
-        <span style="font-size:0.75rem;color:var(--text-muted)">거래완료 매물 자동 숨김</span>
-      </div>
+      <div class="filter-divider"></div>
+
+      <div class="filter-panel-title">유형별 필터</div>
       <div class="filter-panel-row" id="filterPanelRow">
         <div class="filter-row" id="filterRow">
           <button class="filter-btn active" data-major="">전체</button>

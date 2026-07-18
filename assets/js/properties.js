@@ -5,6 +5,23 @@ function startDetailRegister() {
 }
 document.getElementById("detailRegisterBtn").addEventListener("click", startDetailRegister);
 
+// ===== 상단 메뉴 "업무도구" 드롭다운 =====
+(function setupToolsDropdown() {
+  const dropdown = document.getElementById("toolsDropdown");
+  const toggleBtn = document.getElementById("toolsDropdownBtn");
+  if (!dropdown || !toggleBtn) return;
+  toggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("open");
+  });
+  document.addEventListener("click", (e) => {
+    if (!dropdown.contains(e.target)) dropdown.classList.remove("open");
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") dropdown.classList.remove("open");
+  });
+})();
+
 // ===== 상세저장으로 전환 (기존 빠른저장 매물 → 상세등록) =====
 function convertToDetail(id) {
   const item = allListings.find(x => x.id === id);
@@ -245,7 +262,7 @@ function getFilteredListings() {
   if (searchKeyword) {
     const kw = searchKeyword.toLowerCase();
     filtered = filtered.filter(item => {
-      const fields = [item.title, item.address, item.quick_price, item.quick_memo, item.quick_contact, item.owner_phone1, item.owner_name, item.description].join(" ").toLowerCase();
+      const fields = [item.id, item.title, item.address, item.complexName, item.quick_price, item.quick_memo, item.quick_contact, item.owner_phone1, item.owner_name, item.description].join(" ").toLowerCase();
       return fields.includes(kw);
     });
   }
