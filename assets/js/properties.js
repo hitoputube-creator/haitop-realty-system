@@ -27,11 +27,13 @@ const listingContainer = document.getElementById("listingContainer");
 const emptyMessage = document.getElementById("emptyMessage");
 const filterRow = document.getElementById("filterRow");
 const subFilterRow = document.getElementById("subFilterRow");
+const tagFilterRow = document.getElementById("tagFilterRow");
 const countBadge = document.getElementById("countBadge");
 const paginationEl = document.getElementById("pagination");
 
 let currentMajor = "";   // "" = 전체, 그 외 PROPERTY_CATEGORY_STANDARD의 키
 let currentSub = "";     // "" = 대분류 전체, 그 외 표준 세부구분값
+let currentTag = "";     // "" = 없음, 그 외 COMPLEX_TAG_MATCHERS의 키(예: "힐스테이트더운정") — 대분류·세부와 별개로 AND 결합
 let searchKeyword = "";
 let currentSort = "newest";
 let currentPage = 1;
@@ -226,6 +228,7 @@ function closeHomepageTab(tab) {
 }
 
 function matchesCategoryFilter(item) {
+  if (currentTag && !matchesComplexTag(item, currentTag)) return false;
   if (!currentMajor) return true;
   const cat = normalizeListingCategory(item);
   if (cat.majorKey !== currentMajor) return false;
@@ -377,6 +380,7 @@ function renderList() {
       </div>
       <div class="badge-row" style="margin-bottom:6px;padding-right:28px;">
         <span class="badge">${getListingCategoryLabel(item)}</span>
+        ${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ""}
         ${isQuick ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
         ${item.status === "거래완료" ? '<span class="badge badge-red">거래완료</span>' : ""}
         ${renderPublicBadge(item)}
@@ -462,6 +466,19 @@ filterRow.querySelectorAll(".filter-btn").forEach(btn => {
     currentMajor = btn.dataset.major;
     currentSub = "";
     renderSubFilterRow();
+    currentPage = 1;
+    renderList();
+  });
+});
+
+// 단지·태그 필터 — 매물유형(대분류/세부) 필터와 별개로 토글(다시 누르면 해제), AND로 결합된다.
+tagFilterRow.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const tag = btn.dataset.tag;
+    const turningOn = currentTag !== tag;
+    tagFilterRow.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    currentTag = turningOn ? tag : "";
+    if (turningOn) btn.classList.add("active");
     currentPage = 1;
     renderList();
   });

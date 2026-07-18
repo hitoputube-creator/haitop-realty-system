@@ -155,6 +155,27 @@ function getListingCategoryLabel(item = {}) {
   return normalizeListingCategory(item).displayLabel;
 }
 
+// ===== \ub2e8\uc9c0\u00b7\ud0dc\uadf8 \ud544\ud130(\ub300\ubd84\ub958\uc640 \ubb34\uad00, DB \uc2a4\ud0a4\ub9c8 \ubcc0\uacbd \uc5c6\uc74c) =====
+// \ub9e4\ubb3c \ub300\ubd84\ub958/\uc138\ubd80\uad6c\ubd84\uacfc \ubcc4\uac1c\ub85c, \ud2b9\uc815 \ub2e8\uc9c0(\uc608: \ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815)\uc5d0 \uc18d\ud558\ub294 \ub9e4\ubb3c\uc744 \ucc3e\uae30 \uc704\ud55c \ub9e4\uce6d \ud568\uc218.
+// \uc0c8 DB \uceec\ub7fc\uc744 \ucd94\uac00\ud558\uc9c0 \uc54a\uace0 \uae30\uc874 data JSON \uad6c\uc870 \uc548\uc758 \ud544\ub4dc\ub9cc \uc0ac\uc6a9\ud55c\ub2e4:
+//  - \ub808\uac70\uc2dc type="hilsstate" (\uae30\uc874 26\uac74 \ub4f1 \u2014 \uc0ad\uc81c\u00b7\ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0 \uadf8\ub300\ub85c \ub9e4\uce6d)
+//  - complexName(\uc2e0\uaddc \ub4f1\ub85d/\uc218\uc815 \uc2dc \uc785\ub825\ud558\ub294 "\ub2e8\uc9c0\uba85" \ud544\ub4dc, data JSON\uc5d0 \uc800\uc7a5)
+//  - stickers \ubc30\uc5f4\uc5d0 \ub2e8\uc9c0\uba85\uc774 \ud3ec\ud568\ub41c \uacbd\uc6b0
+//  - category2\uc5d0 \ub2e8\uc9c0\uba85\uc774 \ub0a8\uc544\uc788\ub294 \uacbd\uc6b0(\ub808\uac70\uc2dc \ud638\ud658)
+const COMPLEX_TAG_MATCHERS = {
+  "\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815": (item) => {
+    if (item.type === "hilsstate") return true;
+    if (item.complexName === "\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815") return true;
+    if (Array.isArray(item.stickers) && item.stickers.includes("\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815")) return true;
+    if (item.category2 === "\ud790\uc2a4\ud14c\uc774\ud2b8\ub354\uc6b4\uc815") return true;
+    return false;
+  }
+};
+function matchesComplexTag(item, tag) {
+  const matcher = COMPLEX_TAG_MATCHERS[tag];
+  return matcher ? matcher(item) : false;
+}
+
 const headers = {
   "Content-Type": "application/json",
   "apikey": SUPABASE_KEY,

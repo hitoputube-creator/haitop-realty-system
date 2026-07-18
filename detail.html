@@ -115,6 +115,10 @@
         <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="edit_privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호" />
       </div>
+      <div class="field">
+        <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
+        <input id="edit_complexName" type="text" placeholder="예) 힐스테이트더운정" />
+      </div>
       <div class="field" style="grid-column:1 / -1;">
         <label>제목</label>
         <input id="edit_title" type="text" placeholder="매물 제목" maxlength="20" />
@@ -359,7 +363,11 @@ function closeHomepageTab(tab) {
     // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
     const storageCat1 = resolveStorageCategory1(cat1, cat2);
     const hidden = document.getElementById("edit_propertyType");
-    if (hidden) hidden.value = getTypeFromCategory(storageCat1, cat2);
+    // 세부구분이 표준값과 일치할 때만 'type'을 재계산한다. "확인 필요"(레거시 원본값, 예: 힐스테이트더운정)
+    // 상태일 때는 openEditModal에서 채워둔 기존 type(예: "hilsstate")을 임의로 덮어쓰지 않고 그대로 보존한다.
+    if (hidden && (CATEGORY_OPTIONS[storageCat1] || []).includes(cat2)) {
+      hidden.value = getTypeFromCategory(storageCat1, cat2);
+    }
 
     ["edit_area_land","edit_area_exclusive","edit_area_building"].forEach(id => {
       const el = document.getElementById(id);
@@ -554,6 +562,9 @@ function closeHomepageTab(tab) {
   // ── 수정 모달 ──
   function openEditModal(item) {
     const category = getCategoryFromListing(item);
+    // 세부구분이 표준값과 일치하지 않는 "확인 필요" 상태일 때 type을 임의로 덮어쓰지 않도록,
+    // 기존 원본 type 값을 먼저 채워둔다(updateEditDynamicSections가 표준 일치 시에만 재계산함).
+    document.getElementById("edit_propertyType").value = item.type || "";
     // 기존 category1="건물빌딩"+category2="상가주택"/"다가구주택" 매물은 화면상 "주거용" 그룹으로 표시한다.
     document.getElementById("edit_category1").value = resolveDisplayCategory1(category.category1, category.category2);
     renderEditCategory2Options(category.category2);
@@ -563,6 +574,8 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
     document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
+    // 레거시 type="hilsstate" 매물은 단지명 필드가 비어 있어도 "힐스테이트더운정"을 자동 표시한다(세부유형은 강제 선택하지 않음).
+    document.getElementById("edit_complexName").value        = item.complexName || (item.type === "hilsstate" ? "힐스테이트더운정" : "");
     document.getElementById("edit_title").value              = item.title || "";
     // 가격정보
     document.getElementById("edit_salePrice").value     = item.salePrice || "";
@@ -682,11 +695,12 @@ function closeHomepageTab(tab) {
     html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
     html += `</div>`;
 
-    html += `<div style="margin-bottom:8px;"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span></div>`;
+    html += `<div style="margin-bottom:8px;"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? ' <span class="badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
 
     // 기본 정보 카드
     html += `<div class="info-card"><div class="info-grid">`;
     html += row("매물구분", getListingCategoryLabel(item));
+    html += row("단지명", item.complexName || (item.type === "hilsstate" ? "힐스테이트더운정" : ""));
     html += row("공개주소", item.publicAddress || item.address);
     html += row("소유주명", item.owner_name);
     html += row("연락처1", item.owner_phone1 || item.owner_contact || item.quick_contact);
@@ -1019,6 +1033,7 @@ function closeHomepageTab(tab) {
         const publicAddress      = gv("edit_publicAddress");
         const mapAddress         = gv("edit_mapAddress");
         const privateDetailAddress = gv("edit_privateDetailAddress");
+        const complexName        = gv("edit_complexName");
         const editTitle          = gv("edit_title");
         const stickers           = Array.from(document.querySelectorAll("input[name='edit_stickers']:checked")).map(c => c.value);
         const newImageFiles      = _editNewImageFiles;
@@ -1030,6 +1045,7 @@ function closeHomepageTab(tab) {
           publicAddress,
           mapAddress,
           privateDetailAddress,
+          complexName,
           description:        gv("edit_description"),
           resource_id:        gv("edit_resource_id") || null,
           is_public:          document.getElementById("edit_is_public").checked,

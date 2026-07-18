@@ -198,6 +198,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   card.innerHTML = `
     <div class="badge-row" style="margin-bottom:6px;">
       <span class="badge">${getListingCategoryLabel(item)}</span>
+      ${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ""}
       ${isQuick && !isDone ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
       ${isDone ? '<span class="badge badge-red">거래완료</span>' : ""}
       ${renderPublicBadge(item)}
