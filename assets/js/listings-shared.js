@@ -69,6 +69,73 @@ function formatPrice(item) {
   return detailPx || item.quick_price || "";
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[ch]));
+}
+
+function idForCall(value) {
+  return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\r?\n/g, " ");
+}
+
+function getListingNumber(item) {
+  return item.listingNo || item.listing_no || item.propertyNo || item.property_no ||
+    item.no || (item.id ? String(item.id).replace(/^HITOP-/, "").slice(-8) : "-");
+}
+
+function getDealTypeLabel(item) {
+  return item.dealType || item.shop_dealType || item.officetel_dealType ||
+    item.factory_dealType || item.biz_dealType || (item.type?.startsWith("land") ? "매매" : "-");
+}
+
+function formatPyValue(value) {
+  const n = Number(value);
+  if (!isFinite(n) || n <= 0) return "";
+  return `${Number.isInteger(n) ? n : n.toFixed(1)}평`;
+}
+
+function getAreaText(item) {
+  const exclusive = formatPyValue(item.areaExclusivePy || item.exclusiveAreaPy);
+  const supply = formatPyValue(item.areaSupplyPy || item.supplyAreaPy);
+  const land = formatPyValue(item.landAreaPy || item.land_area_py || item.land_py);
+  const generic = formatPyValue(item.areaPy || item.shop_area_py || item.officetel_area_py || item.factory_area_py || item.biz_area_py);
+  if (exclusive && supply) return `전용 ${exclusive} / 분양 ${supply}`;
+  if (exclusive) return `전용 ${exclusive}`;
+  if (supply) return `분양 ${supply}`;
+  if (land) return `대지 ${land}`;
+  return generic || "-";
+}
+
+function getBuildingName(item) {
+  return item.buildingName || item.building_name || item.complexName || item.complex_name || item.shop_building || "-";
+}
+
+function getUpdatedDateText(item) {
+  return formatDate(item.updated_at || item.updatedAt || item.updated_at_local || item.created_at);
+}
+
+function isNeedsCheck(item) {
+  const status = String(item.status || "");
+  return status.includes("확인") || item.quick_save === true;
+}
+
+function getStatusLabel(item) {
+  if (item.status === "거래완료") return "거래완료";
+  if (isNeedsCheck(item)) return "확인 필요";
+  return item.status || "광고중";
+}
+
+function getStatusClass(item) {
+  if (item.status === "거래완료") return "status-done";
+  if (isNeedsCheck(item)) return "status-needs";
+  return "status-active";
+}
+
+function getListingName(item) {
+  return item.title && item.title !== item.address ? item.title : getBuildingName(item);
+}
+
 function renderPublicBadge(item) {
   const isPublic = item && item.is_public === true;
   return `<span class="badge" style="background:${isPublic ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${isPublic ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${isPublic ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${isPublic ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;' : '&#48708;&#44277;&#44060;'}</span>`;
@@ -76,7 +143,8 @@ function renderPublicBadge(item) {
 
 function matchesKeyword(item, kw) {
   return [
-    item.id, item.title, item.address, item.complexName,
+    item.id, getListingNumber(item), getStatusLabel(item), getListingCategoryLabel(item),
+    item.title, item.address, getDealTypeLabel(item), formatPrice(item), getAreaText(item), getBuildingName(item),
     item.quick_price, item.salePrice, item.deposit, item.monthlyRent,
     item.quick_memo, item.description, item.detailDescription,
     item.quick_contact, item.owner_contact, item.owner_phone1, item.owner_phone2,
@@ -191,34 +259,62 @@ document.getElementById("calConfirmBtn").addEventListener("click", () => {
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
 function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const card = document.createElement("div");
-  card.className = "listing-card";
-  card.onclick = () => location.href = `detail.html?id=${item.id}`;
-  const isQuick = item.quick_price && !item.shop_deposit && !item.land_price && !item.officetel_price;
+  const statusClass = getStatusClass(item);
+  card.className = `listing-card listing-card-modern ${statusClass}`;
+  card.onclick = () => location.href = `detail.html?id=${encodeURIComponent(item.id)}`;
+  const isQuick = item.quick_save === true;
   const isDone = item.status === "거래완료";
+  const chk = typeof selectedIds !== "undefined" && selectedIds.has(item.id) ? "checked" : "";
+  const idArg = idForCall(item.id);
+  const detailUrl = `detail.html?id=${encodeURIComponent(item.id)}`;
+  const editAction = isQuick && typeof convertToDetail === "function"
+    ? `convertToDetail('${idArg}')`
+    : `location.href='detail.html?id=${encodeURIComponent(item.id)}&edit=1'`;
+  const statusAction = isDone || revert ? `handleRevertListing('${idArg}')` : `handleDealDone('${idArg}')`;
+  const statusText = isDone || revert ? "진행중으로" : "거래완료";
+  const description = item.description || item.detailDescription || "";
+  const memo = item.quick_memo || item.owner_memo || "";
+  const buildingName = getBuildingName(item);
   card.innerHTML = `
-    <div class="badge-row" style="margin-bottom:6px;">
-      <span class="badge">${getListingCategoryLabel(item)}</span>
-      ${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ""}
-      ${isQuick && !isDone ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
-      ${isDone ? '<span class="badge badge-red">거래완료</span>' : ""}
-      ${renderPublicBadge(item)}
-      ${!isDone && showActiveBadge ? '<span class="badge" style="background:rgba(80,180,100,0.18);color:#5cb85c;border:1px solid rgba(80,180,100,0.35);">매물중</span>' : ""}
+    <div class="listing-select" onclick="event.stopPropagation()">
+      ${typeof toggleSelect === "function" ? `<input type="checkbox" data-sel="${escapeHtml(item.id)}" ${chk} onchange="toggleSelect('${idArg}',this.checked)" />` : ""}
     </div>
-    <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
-    <div class="listing-price">${formatPrice(item)}</div>
-    <div class="card-expand-wrap" data-expanded="false">
-      ${(item.owner_phone1||item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.owner_phone1||item.quick_contact||item.owner_contact}</div>` : ""}
-      ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
-      ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
-      <div class="card-expand-fade"></div>
+    <div class="listing-card-head">
+      <span class="listing-no-pill">No. ${escapeHtml(getListingNumber(item))}</span>
+      <span class="status-pill ${statusClass}">${escapeHtml(getStatusLabel(item))}</span>
+      <span class="category-pill">${escapeHtml(getListingCategoryLabel(item))}</span>
     </div>
-    <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
-    <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
-      ${revert ? `<button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="event.stopPropagation();handleRevertListing('${item.id}')">↩ 매물로 되돌리기</button>` : ""}
-      <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handlePublicToggle('${item.id}')">${item.is_public === true ? '&#44277;&#44060; &#52712;&#49548;' : '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;'}</button>
-      ${!isDone && !revert ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">&#9989; &#44144;&#47000;&#50756;&#47308;</button>` : ""}
-      <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();location.href='property-print.html?id=${item.id}'">🖨 설명서 출력</button>
-      <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
+    <div class="listing-address">${escapeHtml(item.address || "(주소 미입력)")}</div>
+    <div class="listing-name">${escapeHtml(getListingName(item) || "-")}</div>
+    <div class="listing-facts">
+      <div class="listing-fact">
+        <span>가격</span>
+        <strong>${escapeHtml(formatPrice(item) || "-")}</strong>
+      </div>
+      <div class="listing-fact">
+        <span>면적</span>
+        <strong>${escapeHtml(getAreaText(item))}</strong>
+      </div>
+      <div class="listing-fact">
+        <span>거래</span>
+        <strong>${escapeHtml(getDealTypeLabel(item))}</strong>
+      </div>
+      <div class="listing-fact">
+        <span>단지</span>
+        <strong>${escapeHtml(buildingName)}</strong>
+      </div>
+    </div>
+    <div class="listing-notes">
+      ${description ? `<p><span>설명</span>${escapeHtml(description)}</p>` : ""}
+      ${memo ? `<p><span>메모</span>${escapeHtml(memo)}</p>` : ""}
+      ${item.completed_at ? `<p class="done-date"><span>완료일</span>${escapeHtml(formatDate(item.completed_at))}</p>` : ""}
+      ${!description && !memo && !item.completed_at ? `<p><span>메모</span>등록된 설명이나 메모가 없습니다.</p>` : ""}
+    </div>
+    <div class="listing-actions">
+      <button class="btn btn-ghost" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>
+      <button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>
+      <button class="btn btn-status" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
+      <button class="btn btn-primary" onclick="event.stopPropagation();handlePublicToggle('${idArg}')">${item.is_public === true ? "홈페이지 해제" : "홈페이지 공개"}</button>
     </div>
   `;
   return card;

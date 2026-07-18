@@ -251,6 +251,262 @@ textarea { resize: vertical; min-height: 120px; }
 .listing-price  { font-size: 0.88rem; color: var(--text-main); margin-bottom: 7px; }
 .badge-row      { display: flex; gap: 6px; flex-wrap: wrap; }
 
+.listing-card-modern {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 248px;
+  border-radius: 12px;
+  border: 1px solid rgba(126, 151, 184, 0.26);
+  background: #132238;
+  box-shadow: none;
+}
+.listing-card-modern:hover {
+  border-color: rgba(212,175,55,0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.24);
+}
+.listing-card-modern.status-needs {
+  border-color: rgba(82,130,224,0.5);
+  background: linear-gradient(180deg, rgba(22,43,72,0.98), #132238);
+}
+.listing-card-modern.status-done {
+  border-color: rgba(148, 160, 178, 0.22);
+  background: #101a2b;
+  opacity: 0.78;
+}
+.listing-select {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+.listing-select input,
+#listViewTable input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+.listing-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 28px;
+  min-width: 0;
+}
+.listing-no-pill,
+.status-pill,
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(126,151,184,0.32);
+  padding: 0 8px;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.035);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.listing-no-pill {
+  color: var(--gold-soft);
+  border-color: rgba(212,175,55,0.45);
+  background: rgba(212,175,55,0.08);
+  flex: 0 0 auto;
+}
+.status-pill {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+.category-pill {
+  flex: 1 1 auto;
+}
+.status-pill.status-active {
+  color: #6fd28f;
+  border-color: rgba(111,210,143,0.45);
+  background: rgba(111,210,143,0.1);
+}
+.status-pill.status-needs {
+  color: #8fb6ff;
+  border-color: rgba(82,130,224,0.55);
+  background: rgba(82,130,224,0.15);
+}
+.status-pill.status-done {
+  color: #aeb7c5;
+  border-color: rgba(174,183,197,0.36);
+  background: rgba(174,183,197,0.08);
+}
+.listing-address {
+  color: #f4f7fb;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.listing-name {
+  min-height: 18px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.listing-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.listing-fact {
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(126,151,184,0.16);
+  background: rgba(6,12,26,0.34);
+  padding: 8px 9px;
+}
+.listing-fact span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+.listing-fact strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.listing-notes {
+  display: grid;
+  gap: 5px;
+  min-height: 44px;
+}
+.listing-notes p {
+  display: -webkit-box;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.listing-notes p:first-child { -webkit-line-clamp: 3; }
+.listing-notes p span {
+  margin-right: 6px;
+  color: #8ea3c3;
+  font-weight: 700;
+}
+.listing-notes .done-date { color: #aeb7c5; }
+.listing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+.listing-actions .btn {
+  flex: 0 1 auto;
+  min-width: 62px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+.listing-actions .btn-status {
+  background: transparent;
+  color: #8fb6ff;
+  border: 1px solid rgba(82,130,224,0.45);
+}
+.listing-actions .btn-status:hover {
+  background: rgba(82,130,224,0.12);
+}
+
+.list-table-wrap {
+  width: 100%;
+  max-height: min(68vh, 720px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid rgba(126,151,184,0.2);
+  border-radius: 12px;
+  background: #101b2e;
+}
+#listViewTable {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+#listViewTable col.col-select { width: 38px; }
+#listViewTable col.col-status { width: 86px; }
+#listViewTable col.col-number { width: 96px; }
+#listViewTable col.col-category { width: 128px; }
+#listViewTable col.col-address { width: auto; }
+#listViewTable col.col-deal { width: 78px; }
+#listViewTable col.col-price { width: 148px; }
+#listViewTable col.col-area { width: 126px; }
+#listViewTable col.col-building { width: 122px; }
+#listViewTable col.col-updated { width: 92px; }
+#listViewTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 9px;
+  background: #172640;
+  color: var(--gold-soft);
+  border-bottom: 1px solid rgba(212,175,55,0.2);
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#listViewTable tbody td {
+  padding: 9px;
+  border-bottom: 1px solid rgba(126,151,184,0.12);
+  color: var(--text-main);
+  vertical-align: middle;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#listViewTable tbody tr:hover td { background: rgba(82,130,224,0.08); }
+#listViewTable tbody tr.status-needs td { background: rgba(82,130,224,0.045); }
+#listViewTable tbody tr.status-done td { color: #7f8998; background: rgba(255,255,255,0.015); }
+#listViewTable .col-select {
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+#listViewTable .table-address,
+#listViewTable .table-subtitle {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#listViewTable .table-address { color: #f4f7fb; font-weight: 650; }
+#listViewTable .table-subtitle {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
 /* 상세 */
 .detail-title   { font-size: 1.35rem; font-weight: 600; color: var(--gold); margin-bottom: 10px; }
 .photo-main     { width: 100%; border-radius: 14px; max-height: 340px; object-fit: cover; border: 1px solid rgba(212,175,55,0.3); }
@@ -403,7 +659,47 @@ textarea { resize: vertical; min-height: 120px; }
   .info-grid    { grid-template-columns: 1fr; }
   .page         { padding: 16px 12px 60px; }
   .listing-grid { grid-template-columns: 1fr; }
+  .tab-nav {
+    flex-wrap: wrap;
+    gap: 4px;
+    overflow: visible;
+  }
   .tab-btn      { font-size: 0.82rem; padding: 7px 14px; }
+  .listing-card-modern { min-height: 0; padding: 13px; }
+  .listing-card-head { align-items: flex-start; flex-wrap: wrap; }
+  .category-pill { flex-basis: 100%; }
+  .listing-facts { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .listing-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .listing-actions .btn { width: 100%; min-width: 0; }
+  .list-table-wrap { border-radius: 10px; max-height: 70vh; }
+  #listViewTable { font-size: 0.76rem; }
+  #listViewTable col.col-select { width: 32px; }
+  #listViewTable col.col-status { width: 72px; }
+  #listViewTable col.col-number { width: 70px; }
+  #listViewTable col.col-price { width: 84px; }
+  #listViewTable col.col-category,
+  #listViewTable col.col-deal,
+  #listViewTable col.col-area,
+  #listViewTable col.col-building,
+  #listViewTable col.col-updated { width: 0; }
+  #listViewTable th.col-category,
+  #listViewTable td.col-category,
+  #listViewTable th.col-deal,
+  #listViewTable td.col-deal,
+  #listViewTable th.col-area,
+  #listViewTable td.col-area,
+  #listViewTable th.col-building,
+  #listViewTable td.col-building,
+  #listViewTable th.col-updated,
+  #listViewTable td.col-updated { display: none; }
+  #listViewTable thead th,
+  #listViewTable tbody td { padding: 8px 6px; }
+  #listViewTable .status-pill {
+    max-width: 64px;
+    padding: 0 6px;
+    font-size: 0.68rem;
+  }
+  #listViewTable .table-subtitle { display: none; }
 }
 
 

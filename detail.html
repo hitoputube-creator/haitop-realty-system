@@ -1017,6 +1017,9 @@ function closeHomepageTab(tab) {
       _currentItem = item;
       document.getElementById("detailArea").innerHTML = renderDetail(item);
       rebindButtons();
+      if (params.get("edit") === "1") {
+        setTimeout(() => openEditModal(item), 0);
+      }
 
       // 수정
       document.getElementById("editSaveBtn").addEventListener("click", async () => {

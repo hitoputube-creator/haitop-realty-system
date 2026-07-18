@@ -176,42 +176,57 @@ function renderListView(items) {
   }
   const allChecked = items.length > 0 && items.every(i => selectedIds.has(i.id));
   const rows = items.map(item => {
-    const memo = (item.quick_memo || item.description || "");
-    const memoShort = memo.length > 20 ? memo.substring(0, 20) + "…" : memo;
-    const isDone = item.status === "거래완료";
-    const owner = item.owner_name || item.quick_owner || "";
-    const contact = item.owner_phone1 || item.owner_contact || item.quick_contact || "";
     const chk = selectedIds.has(item.id) ? "checked" : "";
-    return `<tr class="${isDone ? "done-row" : ""}" style="cursor:pointer;">
-      <td onclick="event.stopPropagation()" style="text-align:center;width:36px;">
-        <input type="checkbox" data-sel="${item.id}" ${chk} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelect('${item.id}',this.checked)" />
+    const idArg = idForCall(item.id);
+    const statusClass = getStatusClass(item);
+    const name = getListingName(item);
+    return `<tr class="${statusClass}" onclick="location.href='detail.html?id=${encodeURIComponent(item.id)}'">
+      <td class="col-select" onclick="event.stopPropagation()">
+        <input type="checkbox" data-sel="${escapeHtml(item.id)}" ${chk} onchange="toggleSelect('${idArg}',this.checked)" />
       </td>
-      <td onclick="location.href='detail.html?id=${item.id}'">${getListingCategoryLabel(item)}</td>
-      <td onclick="location.href='detail.html?id=${item.id}'">${item.address || item.title || ""}</td>
-      <td onclick="location.href='detail.html?id=${item.id}'">${formatPrice(item)}</td>
-      <td onclick="location.href='detail.html?id=${item.id}'">${owner}</td>
-      <td onclick="location.href='detail.html?id=${item.id}'">${contact}</td>
-      <td onclick="location.href='detail.html?id=${item.id}'"><span style="font-size:0.8rem;padding:2px 7px;border-radius:4px;background:${isDone ? 'rgba(238,136,136,0.15)' : 'rgba(82,197,100,0.12)'};color:${isDone ? '#e88' : '#52c564'};">${item.status || "광고중"}</span></td>
-      <td onclick="event.stopPropagation();handlePublicToggle('${item.id}')" style="cursor:pointer;">${renderPublicBadge(item)}</td>
-      <td onclick="location.href='detail.html?id=${item.id}'" style="color:var(--text-muted);font-size:0.78rem;">${memoShort}</td>
+      <td class="col-status"><span class="status-pill ${statusClass}">${escapeHtml(getStatusLabel(item))}</span></td>
+      <td class="col-number">${escapeHtml(getListingNumber(item))}</td>
+      <td class="col-category">${escapeHtml(getListingCategoryLabel(item))}</td>
+      <td class="col-address">
+        <span class="table-address">${escapeHtml(item.address || "(주소 미입력)")}</span>
+        <span class="table-subtitle">${escapeHtml(name && name !== "-" ? name : "")}</span>
+      </td>
+      <td class="col-deal">${escapeHtml(getDealTypeLabel(item))}</td>
+      <td class="col-price">${escapeHtml(formatPrice(item) || "-")}</td>
+      <td class="col-area">${escapeHtml(getAreaText(item))}</td>
+      <td class="col-building">${escapeHtml(getBuildingName(item))}</td>
+      <td class="col-updated">${escapeHtml(getUpdatedDateText(item))}</td>
     </tr>`;
   }).join("");
-  listingContainer.innerHTML = `<table id="listViewTable">
+  listingContainer.innerHTML = `<div class="list-table-wrap"><table id="listViewTable">
+    <colgroup>
+      <col class="col-select" />
+      <col class="col-status" />
+      <col class="col-number" />
+      <col class="col-category" />
+      <col class="col-address" />
+      <col class="col-deal" />
+      <col class="col-price" />
+      <col class="col-area" />
+      <col class="col-building" />
+      <col class="col-updated" />
+    </colgroup>
     <thead><tr>
-      <th style="width:36px;text-align:center;">
-        <input type="checkbox" id="listSelectAll" ${allChecked ? "checked" : ""} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelectAll(_currentListItems,this.checked)" />
+      <th class="col-select">
+        <input type="checkbox" id="listSelectAll" ${allChecked ? "checked" : ""} onchange="toggleSelectAll(_currentListItems,this.checked)" />
       </th>
-      <th style="width:80px;">유형</th>
-      <th>주소</th>
-      <th style="width:150px;">가격</th>
-      <th style="width:80px;">소유주</th>
-      <th style="width:110px;">연락처</th>
-      <th style="width:72px;">상태</th>
-      <th style="width:90px;">공개</th>
-      <th style="width:140px;">메모</th>
+      <th class="col-status">상태</th>
+      <th class="col-number">매물번호</th>
+      <th class="col-category">분류</th>
+      <th class="col-address">주소</th>
+      <th class="col-deal">거래유형</th>
+      <th class="col-price">가격</th>
+      <th class="col-area">면적</th>
+      <th class="col-building">단지명</th>
+      <th class="col-updated">수정일</th>
     </tr></thead>
     <tbody>${rows}</tbody>
-  </table>`;
+  </table></div>`;
   _currentListItems = items; // 전체선택용 참조 저장
 }
 let _currentListItems = [];
@@ -247,10 +262,7 @@ function getFilteredListings() {
   });
   if (searchKeyword) {
     const kw = searchKeyword.toLowerCase();
-    filtered = filtered.filter(item => {
-      const fields = [item.id, item.title, item.address, item.complexName, item.quick_price, item.quick_memo, item.quick_contact, item.owner_phone1, item.owner_name, item.description].join(" ").toLowerCase();
-      return fields.includes(kw);
-    });
+    filtered = filtered.filter(item => matchesKeyword(item, kw));
   }
   filtered.sort((a, b) => {
     const da = new Date(a.created_at || 0);
@@ -286,66 +298,7 @@ function renderPagination(total) {
 function renderList() {
   listingContainer.innerHTML = "";
   const unifiedPropertyLabel = document.getElementById("unifiedPropertyLabel");
-  const unifiedPropertyCount = document.getElementById("unifiedPropertyCount");
   const unifiedDoneSection   = document.getElementById("unifiedDoneSection");
-  const unifiedDoneCount     = document.getElementById("unifiedDoneCount");
-  const unifiedDoneContainer = document.getElementById("unifiedDoneContainer");
-
-  // ── 목록보기 모드 ──
-  if (viewMode === "list") {
-    unifiedPropertyLabel.style.display = "none";
-    unifiedDoneSection.style.display = "none";
-    paginationEl.innerHTML = "";
-    emptyMessage.style.display = "none";
-    const kw = searchKeyword.toLowerCase();
-    let items = kw
-      ? allListings.filter(item => matchesKeyword(item, kw) && matchesCategoryFilter(item) && (includeCompleted || item.status !== "거래완료"))
-      : getFilteredListings();
-    if (kw) items.sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
-    countBadge.textContent = items.length ? `(${items.length}건)` : "";
-    renderListView(items);
-    return;
-  }
-
-  // 통합검색 모드
-  if (searchKeyword) {
-    const kw = searchKeyword.toLowerCase();
-    const activeItems = allListings.filter(item => item.status !== "거래완료" && matchesKeyword(item, kw) && matchesCategoryFilter(item));
-    const doneItems   = allListings.filter(item => item.status === "거래완료"  && matchesKeyword(item, kw) && matchesCategoryFilter(item));
-    activeItems.sort((a, b) => new Date(b.created_at||0) - new Date(a.created_at||0));
-    doneItems.sort((a, b) => new Date(b.completed_at||b.created_at||0) - new Date(a.completed_at||a.created_at||0));
-
-    countBadge.textContent = "";
-    paginationEl.innerHTML = "";
-
-    if (activeItems.length) {
-      unifiedPropertyLabel.style.display = "";
-      unifiedPropertyCount.textContent = `(${activeItems.length}건)`;
-      emptyMessage.style.display = "none";
-      activeItems.forEach(item => listingContainer.appendChild(makeCard(item)));
-      _initExpandCards(listingContainer);
-    } else {
-      unifiedPropertyLabel.style.display = "none";
-      emptyMessage.style.display = "none";
-    }
-
-    if (includeCompleted && doneItems.length) {
-      unifiedDoneSection.style.display = "";
-      unifiedDoneCount.textContent = `(${doneItems.length}건)`;
-      unifiedDoneContainer.innerHTML = "";
-      doneItems.forEach(item => unifiedDoneContainer.appendChild(makeCard(item, { revert: true })));
-      _initExpandCards(unifiedDoneContainer);
-    } else {
-      unifiedDoneSection.style.display = "none";
-    }
-
-    if (!activeItems.length && !(includeCompleted && doneItems.length)) {
-      emptyMessage.style.display = "block";
-    }
-    return;
-  }
-
-  // 일반 모드
   unifiedPropertyLabel.style.display = "none";
   unifiedDoneSection.style.display   = "none";
 
@@ -362,57 +315,23 @@ function renderList() {
   const start = (currentPage - 1) * ITEMS_PER_PAGE;
   const pageItems = filtered.slice(start, start + ITEMS_PER_PAGE);
 
-  const allChk = pageItems.length > 0 && pageItems.every(i => selectedIds.has(i.id));
   const cardSelectBar = document.getElementById("cardSelectBar");
   const cardSelectAll = document.getElementById("cardSelectAll");
+
+  if (viewMode === "list") {
+    cardSelectBar.style.display = "none";
+    _currentListItems = pageItems;
+    renderListView(pageItems);
+    renderPagination(filtered.length);
+    return;
+  }
+
+  const allChk = pageItems.length > 0 && pageItems.every(i => selectedIds.has(i.id));
   cardSelectBar.style.display = "flex";
   cardSelectAll.checked = allChk;
   _currentCardItems = pageItems;
 
-  pageItems.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "listing-card";
-    card.style.position = "relative";
-    card.onclick = () => location.href = `detail.html?id=${item.id}`;
-
-    const isQuick = item.quick_save === true || (item.quick_price && !item.shop_deposit && !item.land_price && !item.officetel_price);
-    const chk = selectedIds.has(item.id) ? "checked" : "";
-
-    card.innerHTML = `
-      <div onclick="event.stopPropagation()" style="position:absolute;top:12px;right:12px;z-index:2;">
-        <input type="checkbox" data-sel="${item.id}" ${chk} style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;margin:0;" onchange="toggleSelect('${item.id}',this.checked)" />
-      </div>
-      <div class="badge-row" style="margin-bottom:6px;padding-right:28px;">
-        <span class="badge">${getListingCategoryLabel(item)}</span>
-        ${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ""}
-        ${isQuick ? '<span class="badge badge-blue">⚡빠른등록</span>' : ""}
-        ${item.status === "거래완료" ? '<span class="badge badge-red">거래완료</span>' : ""}
-        ${renderPublicBadge(item)}
-      </div>
-      <div class="listing-title">${item.address || item.title || "(주소 미입력)"}</div>
-      <div class="listing-price">${formatPrice(item)}</div>
-      <div class="card-expand-wrap" data-expanded="false">
-        ${(item.owner_phone1||item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.owner_phone1||item.quick_contact||item.owner_contact}</div>` : ""}
-        ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
-        ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
-        ${(item.drive_links && item.drive_links.length) ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">${item.drive_links.map(l=>`<a href="${l.url}" target="_blank" onclick="event.stopPropagation()" style="font-size:0.73rem;color:var(--gold);text-decoration:none;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;padding:2px 7px;">📁 ${l.name||"링크"}</a>`).join("")}</div>` : ""}
-        <div class="card-expand-fade"></div>
-      </div>
-      <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
-      <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
-        ${item.resource_id ? (() => { const res = allDriveResources.find(r => r.id === item.resource_id); return res && res.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();window.open('${res.url.replace(/'/g,"%27")}','_blank')">📁 자료보기</button>` : ''; })() : ""}
-        ${isQuick && item.status !== "거래완료" ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;border-color:rgba(212,175,55,0.45);color:var(--gold);" onclick="event.stopPropagation();convertToDetail('${item.id}')">📝 상세저장으로 전환</button>` : ""}
-        <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handlePublicToggle('${item.id}')">${item.is_public === true ? '&#44277;&#44060; &#52712;&#49548;' : '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;'}</button>
-        ${item.status !== "거래완료" ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDealDone('${item.id}')">✅ 거래완료</button>` : ""}
-        <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();location.href='property-print.html?id=${item.id}'">🖨 설명서 출력</button>
-        <button class="btn-cal" onclick="event.stopPropagation();openCalModal(${JSON.stringify(item).replace(/"/g,'&quot;')})">📅 일정 추가</button>
-      </div>
-    `;
-
-    listingContainer.appendChild(card);
-  });
-  _initExpandCards(listingContainer);
-  _currentCardItems = pageItems;
+  pageItems.forEach(item => listingContainer.appendChild(makeCard(item)));
 
   renderPagination(filtered.length);
 }
