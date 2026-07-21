@@ -317,6 +317,22 @@ async function getListingById(id) {
   return normalizeListingRow(rows[0]);
 }
 
+// ===== AI 매물등록 대기(listing_intakes) =====
+async function getListingIntakeById(id) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listing_intakes?id=eq." + encodeURIComponent(id), { headers });
+  if (!res.ok) throw new Error("등록 대기 정보 조회 실패");
+  const rows = await res.json();
+  return rows[0] || null;
+}
+async function updateListingIntakeStatus(id, status) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listing_intakes?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify({ status: status })
+  });
+  if (!res.ok) throw new Error("등록 대기 상태 변경 실패: " + await res.text());
+}
+
 async function addListing(item) {
   const payload = buildListingPayload(item);
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings", {

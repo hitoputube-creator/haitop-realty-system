@@ -34,6 +34,12 @@
     <span id="prefillRefText"></span>
   </div>
 
+  <!-- AI 매물등록 자동입력 안내 (?intake=ID 쿼리파라미터가 있을 때만 표시) -->
+  <div id="aiIntakeBanner" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;padding:10px 14px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:10px;">
+    <strong style="color:var(--gold);">🤖 AI가 자동으로 채운 내용입니다.</strong> 확인 후 등록해주세요.
+    <div id="aiIntakeNote" style="margin-top:4px;color:#e0a030;"></div>
+  </div>
+
   <!-- ① 기본정보 -->
   <section class="card">
     <div class="card-title"><span>📋 기본정보</span></div>
@@ -319,6 +325,7 @@
 
   const cat1El = document.getElementById('category1Select');
   const cat2El = document.getElementById('category2Select');
+  let currentIntakeId = null; // ?intake=ID로 들어왔을 때만 채워짐 — 저장 성공 시 listing_intakes.status 갱신용
 
   function renderCat2() {
     const opts = CATEGORY_OPTIONS[cat1El.value] || [];
@@ -599,6 +606,13 @@
         item.imageUrls  = urls;
       }
       await addListing(item);
+      if (currentIntakeId) {
+        try {
+          await updateListingIntakeStatus(currentIntakeId, 'registered');
+        } catch (e) {
+          console.warn('[intake] 상태 업데이트 실패:', e.message);
+        }
+      }
       showToast('✅ 저장완료!');
       setTimeout(() => location.href = 'properties.html', 1000);
     } catch(e) {
@@ -611,12 +625,65 @@
   loadResourceSelect();
   renderCat2();
 
+  // ── AI 매물등록 자동입력 (intake URL 파라미터) ──────────
+  (async function autofillFromIntake() {
+    const intakeId = new URLSearchParams(location.search).get("intake");
+    if (!intakeId) return;
+
+    try {
+      const intake = await getListingIntakeById(intakeId);
+      if (!intake) {
+        showToast('❌ 등록 대기 정보를 찾을 수 없습니다.');
+        return;
+      }
+      currentIntakeId = intake.id;
+
+      if (intake.category1) {
+        cat1El.value = intake.category1;
+        renderCat2();
+        if (intake.category2) cat2El.value = intake.category2;
+        updateDynamicSections();
+      }
+      if (intake.deal_type) document.getElementById("dealType").value = intake.deal_type;
+      if (intake.title) document.getElementById("title").value = String(intake.title).slice(0, 20);
+      if (intake.address) {
+        document.getElementById("publicAddress").value = intake.address;
+        document.getElementById("mapAddress").value = intake.address;
+      }
+      if (intake.sale_price)   { document.getElementById("salePrice").value    = intake.sale_price;   syncRegisterPricePreview("salePrice"); }
+      if (intake.deposit)      { document.getElementById("deposit").value      = intake.deposit;      syncRegisterPricePreview("deposit"); }
+      if (intake.monthly_rent) { document.getElementById("monthlyRent").value  = intake.monthly_rent; syncRegisterPricePreview("monthlyRent"); }
+      if (intake.area_m2) {
+        const variant = AREA_MAP[intake.category1];
+        const fieldId = variant === 'land' ? 'areaM2' : variant === 'exclusive' ? 'exclusiveAreaM2' : variant === 'building' ? 'totalFloorAreaM2' : null;
+        const el = fieldId ? document.getElementById(fieldId) : null;
+        if (el) { el.value = intake.area_m2; el.dispatchEvent(new Event('input')); }
+      }
+      if (intake.floor_info)         document.getElementById("floorInfo").value         = intake.floor_info;
+      if (intake.detail_description) document.getElementById("detailDescription").value = intake.detail_description;
+      if (intake.customer_name)  document.getElementById("owner_name").value   = intake.customer_name;
+      if (intake.customer_phone) document.getElementById("owner_phone1").value = intake.customer_phone;
+
+      const banner = document.getElementById("aiIntakeBanner");
+      const noteEl = document.getElementById("aiIntakeNote");
+      if (banner) {
+        if (intake.status !== 'pending') {
+          banner.innerHTML = `<strong style="color:#e05252;">⚠️ 이 등록 요청은 이미 "${intake.status === 'registered' ? '등록 완료' : '처리'}" 상태입니다.</strong> 중복 등록되지 않도록 다시 저장하기 전에 확인해주세요.`;
+        }
+        if (noteEl) noteEl.textContent = intake.ai_confidence_note || '';
+        banner.style.display = "";
+      }
+    } catch (e) {
+      showToast('❌ 등록 대기 정보 로드 실패: ' + e.message);
+    }
+  })();
+
   // ── 건물/호실 자동입력 (buildingId + roomNo URL 파라미터) ──────────
   (async function autofillFromBuilding() {
     const qp     = new URLSearchParams(location.search);
     const bldgId = qp.get("buildingId");
     const roomNo = qp.get("roomNo");
-    if (!bldgId) return;
+    if (!bldgId || qp.get("intake")) return;
 
     // 호수 정규화: 공백·"호" 제거 후 비교 (매칭 전용, 표시값은 원본 유지)
     function normalizeRoom(s) {
@@ -794,8 +861,9 @@
 
   // ── 빠른저장 전환 프리필 (buildingId 자동입력과 충돌 방지) ──────────
   (function loadPrefill() {
-    // buildingId가 있으면 건물/호실 자동입력이 우선 — 빠른저장 프리필 스킵
-    if (new URLSearchParams(location.search).get("buildingId")) return;
+    // buildingId/intake가 있으면 각각의 자동입력이 우선 — 빠른저장 프리필 스킵
+    const _qp = new URLSearchParams(location.search);
+    if (_qp.get("buildingId") || _qp.get("intake")) return;
     const raw = sessionStorage.getItem("hitop_detail_prefill");
     if (!raw) return;
     try {
