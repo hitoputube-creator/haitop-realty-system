@@ -515,6 +515,7 @@
     const cat1 = resolveStorageCategory1(cat1Raw, cat2);
     const title = document.getElementById('title').value.trim();
     if (!title) { showToast('제목을 입력하세요'); return; }
+    if (!document.getElementById('dealType').value) { showToast('거래유형을 선택하세요'); return; }
 
     const type = document.getElementById('propertyType').value || 'etc';
     const stickers = Array.from(document.querySelectorAll('input[name="stickers"]:checked')).map(c => c.value);

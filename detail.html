@@ -96,7 +96,7 @@
         <input id="edit_propertyType" type="hidden" value="" />
       </div>
       <div class="field">
-        <label>거래유형</label>
+        <label>거래유형 <span style="color:var(--gold)">*</span></label>
         <select id="edit_dealType">
           <option value="">선택하세요</option>
           <option value="매매">매매</option>
@@ -1023,6 +1023,7 @@ function closeHomepageTab(tab) {
 
       // 수정
       document.getElementById("editSaveBtn").addEventListener("click", async () => {
+        if (!document.getElementById("edit_dealType").value) { showToast("거래유형을 선택하세요"); return; }
         const btn = document.getElementById("editSaveBtn");
         btn.disabled = true; btn.textContent = "저장 중...";
         updateEditDynamicSections();
