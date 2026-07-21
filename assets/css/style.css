@@ -71,6 +71,14 @@ body {
 .nav-link:hover { border-color: rgba(148,163,184,0.55); color: var(--text-main); }
 .nav-link.active { border-color: var(--gold); color: var(--gold-soft); background: rgba(212,175,55,0.1); }
 .nav-caret { font-size: 0.65rem; }
+.nav-logout-btn {
+  height: 34px; padding: 0 12px; display: inline-flex; align-items: center;
+  border-radius: 8px; border: 1px solid var(--gold);
+  color: var(--gold); font-size: 0.78rem; font-weight: 600;
+  background: transparent; cursor: pointer; white-space: nowrap; font-family: inherit;
+  transition: 0.15s ease;
+}
+.nav-logout-btn:hover { background: var(--gold); color: #000; }
 .nav-dropdown { position: relative; }
 .nav-dropdown-menu {
   display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;

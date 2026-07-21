@@ -18,6 +18,11 @@ const NAV_TOOLS = [
   { label: "캘린더",    href: "https://calendar.google.com", external: true }
 ];
 
+function hitopLogout() {
+  sessionStorage.removeItem("hitop_auth");
+  location.reload();
+}
+
 function renderMainNav() {
   const mount = document.getElementById("mainNav");
   if (!mount) return;
@@ -48,6 +53,7 @@ function renderMainNav() {
       <button type="button" class="${toolsActiveCls}" id="toolsDropdownBtn">업무도구 <span class="nav-caret">▾</span></button>
       <div class="nav-dropdown-menu" id="toolsDropdownMenu">${toolsHtml}</div>
     </div>
+    <button type="button" class="nav-logout-btn" onclick="hitopLogout()">로그아웃</button>
   `;
 
   const dropdown = document.getElementById("toolsDropdown");
