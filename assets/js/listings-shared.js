@@ -256,6 +256,15 @@ document.getElementById("calConfirmBtn").addEventListener("click", () => {
   document.getElementById("calModal").style.display = "none";
 });
 
+// 체크마크(✅) 나열 설명을 카드용 1~2줄 요약으로 압축
+function summarizeDescription(text) {
+  if (!text) return "";
+  const marked = String(text).split(/[✅✔️✔☑️]/).map(s => s.trim()).filter(Boolean);
+  if (marked.length > 1) return marked.slice(0, 2).join(", ");
+  const lines = String(text).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  return lines.slice(0, 2).join(" ");
+}
+
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
 function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const card = document.createElement("div");
@@ -275,46 +284,53 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const description = item.description || item.detailDescription || "";
   const memo = item.quick_memo || item.owner_memo || "";
   const buildingName = getBuildingName(item);
+
+  const summaryParts = [];
+  const areaText = getAreaText(item);
+  if (areaText && areaText !== "-") summaryParts.push(areaText);
+  const dealLabel = getDealTypeLabel(item);
+  if (dealLabel && dealLabel !== "-") summaryParts.push(dealLabel);
+  if (buildingName && buildingName !== "-") summaryParts.push(buildingName);
+  const summaryLine = summaryParts.length ? summaryParts.join(" · ") : "-";
+
+  let descText = summarizeDescription(description) || summarizeDescription(memo);
+  if (!descText) {
+    descText = item.completed_at ? `완료일 ${formatDate(item.completed_at)}` : "등록된 설명이나 메모가 없습니다.";
+  } else if (isDone && item.completed_at) {
+    descText += ` · 완료일 ${formatDate(item.completed_at)}`;
+  }
+
   card.innerHTML = `
     <div class="listing-select" onclick="event.stopPropagation()">
       ${typeof toggleSelect === "function" ? `<input type="checkbox" data-sel="${escapeHtml(item.id)}" ${chk} onchange="toggleSelect('${idArg}',this.checked)" />` : ""}
     </div>
-    <div class="listing-card-head">
-      <span class="listing-no-pill">No. ${escapeHtml(getListingNumber(item))}</span>
-      <span class="status-pill ${statusClass}">${escapeHtml(getStatusLabel(item))}</span>
-      <span class="category-pill">${escapeHtml(getListingCategoryLabel(item))}</span>
+    <div class="listing-meta">
+      <span class="lc-no">No. ${escapeHtml(getListingNumber(item))}</span>
+      <span class="lc-sep">·</span>
+      <span class="lc-type">${escapeHtml(getListingCategoryLabel(item))}</span>
+      <span class="lc-sep">·</span>
+      <span class="lc-status ${statusClass}">${escapeHtml(getStatusLabel(item))}</span>
     </div>
-    <div class="listing-address">${escapeHtml(item.address || "(주소 미입력)")}</div>
-    <div class="listing-name">${escapeHtml(getListingName(item) || "-")}</div>
-    <div class="listing-facts">
-      <div class="listing-fact">
-        <span>가격</span>
-        <strong>${escapeHtml(formatPrice(item) || "-")}</strong>
-      </div>
-      <div class="listing-fact">
-        <span>면적</span>
-        <strong>${escapeHtml(getAreaText(item))}</strong>
-      </div>
-      <div class="listing-fact">
-        <span>거래</span>
-        <strong>${escapeHtml(getDealTypeLabel(item))}</strong>
-      </div>
-      <div class="listing-fact">
-        <span>단지</span>
-        <strong>${escapeHtml(buildingName)}</strong>
-      </div>
-    </div>
-    <div class="listing-notes">
-      ${description ? `<p><span>설명</span>${escapeHtml(description)}</p>` : ""}
-      ${memo ? `<p><span>메모</span>${escapeHtml(memo)}</p>` : ""}
-      ${item.completed_at ? `<p class="done-date"><span>완료일</span>${escapeHtml(formatDate(item.completed_at))}</p>` : ""}
-      ${!description && !memo && !item.completed_at ? `<p><span>메모</span>등록된 설명이나 메모가 없습니다.</p>` : ""}
-    </div>
+    <div class="lc-title">${escapeHtml(item.address || "(주소 미입력)")}</div>
+    <div class="lc-price">${escapeHtml(formatPrice(item) || "-")}</div>
+    <div class="lc-summary">${escapeHtml(summaryLine)}</div>
+    <div class="lc-desc${isDone ? " lc-desc-done" : ""}">${escapeHtml(descText)}</div>
     <div class="listing-actions">
-      <button class="btn btn-ghost" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>
-      <button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>
-      <button class="btn btn-status" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
-      <button class="btn btn-primary" onclick="event.stopPropagation();handlePublicToggle('${idArg}')">${item.is_public === true ? "홈페이지 해제" : "홈페이지 공개"}</button>
+      <div class="lc-actions-main">
+        <button class="btn btn-primary" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>
+        <button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>
+      </div>
+      <div class="lc-actions-side">
+        <button class="lc-status-chip${isDone ? " done" : ""}" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
+        <div class="lc-toggle" onclick="event.stopPropagation()">
+          <span class="lc-toggle-label">홈페이지</span>
+          <span class="lc-switch">
+            <input type="checkbox" ${item.is_public === true ? "checked" : ""} onchange="handlePublicToggle('${idArg}')">
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </span>
+        </div>
+      </div>
     </div>
   `;
   return card;

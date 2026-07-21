@@ -292,16 +292,7 @@ textarea { resize: vertical; min-height: 120px; }
   accent-color: var(--gold);
   cursor: pointer;
 }
-.listing-card-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-right: 28px;
-  min-width: 0;
-}
-.listing-no-pill,
-.status-pill,
-.category-pill {
+.status-pill {
   display: inline-flex;
   align-items: center;
   max-width: 100%;
@@ -312,24 +303,12 @@ textarea { resize: vertical; min-height: 120px; }
   padding: 0 8px;
   font-size: 0.72rem;
   line-height: 1;
+  font-weight: 700;
   color: var(--text-muted);
   background: rgba(255,255,255,0.035);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.listing-no-pill {
-  color: var(--gold-soft);
-  border-color: rgba(212,175,55,0.45);
-  background: rgba(212,175,55,0.08);
-  flex: 0 0 auto;
-}
-.status-pill {
-  flex: 0 0 auto;
-  font-weight: 700;
-}
-.category-pill {
-  flex: 1 1 auto;
 }
 .status-pill.status-active {
   color: #6fd28f;
@@ -346,97 +325,137 @@ textarea { resize: vertical; min-height: 120px; }
   border-color: rgba(174,183,197,0.36);
   background: rgba(174,183,197,0.08);
 }
-.listing-address {
-  color: #f4f7fb;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.35;
+
+/* ── 카드 상단 미니 메타 라인 (No. · 유형 · 상태) ── */
+.listing-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 28px;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.listing-meta span { min-width: 0; }
+.lc-no, .lc-type {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.listing-name {
-  min-height: 18px;
+.lc-sep { opacity: 0.45; flex: 0 0 auto; }
+.lc-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.lc-status::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+.lc-status.status-active { color: #6fd28f; }
+.lc-status.status-needs  { color: #8fb6ff; }
+.lc-status.status-done   { color: #aeb7c5; }
+
+/* ── 제목(주소) · 가격 ── */
+.lc-title {
+  color: #f8fafc;
+  font-size: 1.16rem;
+  font-weight: 800;
+  line-height: 1.32;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lc-price {
+  color: var(--gold);
+  font-size: 1.28rem;
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 면적·거래·단지 한 줄 요약 ── */
+.lc-summary {
   color: var(--text-muted);
   font-size: 0.8rem;
-  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.listing-facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-.listing-fact {
-  min-width: 0;
-  border-radius: 10px;
-  border: 1px solid rgba(126,151,184,0.16);
-  background: rgba(6,12,26,0.34);
-  padding: 8px 9px;
-}
-.listing-fact span {
-  display: block;
-  margin-bottom: 3px;
-  color: var(--text-muted);
-  font-size: 0.68rem;
-}
-.listing-fact strong {
-  display: block;
-  color: var(--text-main);
-  font-size: 0.82rem;
-  font-weight: 650;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.listing-notes {
-  display: grid;
-  gap: 5px;
-  min-height: 44px;
-}
-.listing-notes p {
+
+/* ── 설명 1~2줄 요약 ── */
+.lc-desc {
+  color: #c3cbdc;
+  font-size: 0.79rem;
+  line-height: 1.5;
   display: -webkit-box;
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  line-height: 1.45;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.listing-notes p:first-child { -webkit-line-clamp: 3; }
-.listing-notes p span {
-  margin-right: 6px;
-  color: #8ea3c3;
-  font-weight: 700;
-}
-.listing-notes .done-date { color: #aeb7c5; }
+.lc-desc.lc-desc-done { color: #aeb7c5; }
+
+/* ── 액션 바: 상세/수정 + 거래완료 칩 + 홈페이지 토글 ── */
 .listing-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: auto;
+  padding-top: 11px;
+  border-top: 1px solid rgba(126,151,184,0.14);
 }
-.listing-actions .btn {
-  flex: 0 1 auto;
-  min-width: 62px;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  line-height: 1.2;
-}
-.listing-actions .btn-status {
+.lc-actions-main { display: flex; gap: 6px; min-width: 0; }
+.lc-actions-main .btn { padding: 7px 15px; font-size: 0.8rem; font-weight: 600; }
+.lc-actions-side { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+
+.lc-status-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(224,82,82,0.4);
   background: transparent;
-  color: #8fb6ff;
-  border: 1px solid rgba(82,130,224,0.45);
+  color: #e08a8a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.15s;
+  white-space: nowrap;
 }
-.listing-actions .btn-status:hover {
-  background: rgba(82,130,224,0.12);
+.lc-status-chip:hover { background: rgba(224,82,82,0.1); }
+.lc-status-chip.done {
+  border-color: rgba(148,160,178,0.32);
+  color: #8a93a3;
+  background: rgba(148,160,178,0.07);
 }
+.lc-status-chip.done:hover { background: rgba(148,160,178,0.13); }
+
+.lc-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.lc-toggle-label { font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; }
+.lc-switch { position: relative; display: inline-block; width: 32px; height: 18px; flex: 0 0 auto; }
+.lc-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.lc-switch .track {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(126,151,184,0.35);
+  border-radius: 999px;
+  transition: 0.18s;
+}
+.lc-switch .thumb {
+  position: absolute; width: 12px; height: 12px; left: 2px; top: 2px;
+  border-radius: 50%; background: var(--text-muted);
+  transition: 0.18s;
+}
+.lc-switch input:checked ~ .track { background: rgba(212,175,55,0.22); border-color: var(--gold); }
+.lc-switch input:checked ~ .thumb { transform: translateX(14px); background: var(--gold); }
+.lc-switch input:focus-visible ~ .track { box-shadow: 0 0 0 2px rgba(212,175,55,0.35); }
 
 .list-table-wrap {
   width: 100%;
@@ -666,11 +685,10 @@ textarea { resize: vertical; min-height: 120px; }
   }
   .tab-btn      { font-size: 0.82rem; padding: 7px 14px; }
   .listing-card-modern { min-height: 0; padding: 13px; }
-  .listing-card-head { align-items: flex-start; flex-wrap: wrap; }
-  .category-pill { flex-basis: 100%; }
-  .listing-facts { grid-template-columns: 1fr 1fr; gap: 6px; }
-  .listing-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .listing-actions .btn { width: 100%; min-width: 0; }
+  .listing-meta { flex-wrap: wrap; }
+  .listing-actions { flex-wrap: wrap; }
+  .lc-actions-main { flex: 1 1 auto; }
+  .lc-actions-main .btn { flex: 1; }
   .list-table-wrap { border-radius: 10px; max-height: 70vh; }
   #listViewTable { font-size: 0.76rem; }
   #listViewTable col.col-select { width: 32px; }
