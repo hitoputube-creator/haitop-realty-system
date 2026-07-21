@@ -265,16 +265,12 @@ function matchesDealFilter(item) {
   return t === currentDealFilter;
 }
 
-// 유형별 필터와 거래유형 필터는 독립적 OR로 결합한다: 둘 다 선택 시 (유형 일치) OR (거래유형 일치).
+// 유형별 필터와 거래유형 필터는 AND(교집합)로 결합한다: 둘 다 선택 시 (유형 일치) AND (거래유형 일치).
 // 하나만 선택된 경우 그 조건만 적용, 둘 다 미선택이면 전체 노출.
 function matchesAllFilters(item) {
-  const hasMajor = !!currentMajor;
-  const hasDeal = !!currentDealFilter;
-  if (!hasMajor && !hasDeal) return true;
-  const majorOk = hasMajor && matchesCategoryFilter(item);
-  const dealOk = hasDeal && matchesDealFilter(item);
-  if (hasMajor && hasDeal) return majorOk || dealOk;
-  return hasMajor ? majorOk : dealOk;
+  if (currentMajor && !matchesCategoryFilter(item)) return false;
+  if (currentDealFilter && !matchesDealFilter(item)) return false;
+  return true;
 }
 
 function getFilteredListings() {
