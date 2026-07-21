@@ -30,12 +30,14 @@ const filterRow = document.getElementById("filterRow");
 const subFilterRow = document.getElementById("subFilterRow");
 const complexFilterWrap = document.getElementById("complexFilterWrap");
 const complexFilterSelect = document.getElementById("complexFilterSelect");
+const dealFilterRow = document.getElementById("dealFilterRow");
 const countBadge = document.getElementById("countBadge");
 const paginationEl = document.getElementById("pagination");
 
 let currentMajor = "";   // "" = 전체, 그 외 PROPERTY_CATEGORY_STANDARD의 키
 let currentSub = "";     // "" = 대분류 전체, 그 외 표준 세부구분값
 let currentTag = "";     // "" = 없음, 그 외 COMPLEX_TAG_MATCHERS의 키(예: "힐스테이트더운정") — 대분류·세부와 별개로 AND 결합
+let currentDealFilter = ""; // "" = 없음, 그 외 "매매"/"임대"/"전세"/"월세" — 유형별 필터와는 독립적 OR로 결합
 let searchKeyword = "";
 let currentSort = "newest";
 let currentPage = 1;
@@ -255,10 +257,30 @@ function matchesCategoryFilter(item) {
   return true;
 }
 
+// "임대"는 전세·월세를 모두 포함하는 상위 개념(구조화 데이터에 "임대"라는 값 자체는 존재하지 않음)
+function matchesDealFilter(item) {
+  if (!currentDealFilter) return false;
+  const t = getTransactionType(item);
+  if (currentDealFilter === "임대") return t === "월세" || t === "전세";
+  return t === currentDealFilter;
+}
+
+// 유형별 필터와 거래유형 필터는 독립적 OR로 결합한다: 둘 다 선택 시 (유형 일치) OR (거래유형 일치).
+// 하나만 선택된 경우 그 조건만 적용, 둘 다 미선택이면 전체 노출.
+function matchesAllFilters(item) {
+  const hasMajor = !!currentMajor;
+  const hasDeal = !!currentDealFilter;
+  if (!hasMajor && !hasDeal) return true;
+  const majorOk = hasMajor && matchesCategoryFilter(item);
+  const dealOk = hasDeal && matchesDealFilter(item);
+  if (hasMajor && hasDeal) return majorOk || dealOk;
+  return hasMajor ? majorOk : dealOk;
+}
+
 function getFilteredListings() {
   let filtered = allListings.filter(item => {
-    if (item.status === "거래완료") return includeCompleted && matchesCategoryFilter(item);
-    return matchesCategoryFilter(item);
+    if (item.status === "거래완료") return includeCompleted && matchesAllFilters(item);
+    return matchesAllFilters(item);
   });
   if (searchKeyword) {
     const kw = searchKeyword.toLowerCase();
@@ -387,6 +409,27 @@ function renderSubFilterRow() {
   });
 }
 
+// 거래유형 필터 — 기본은 [매매][임대], "주거용" 선택 시에는 [매매][전세][월세]로 교체된다.
+// 유형별 필터와 별개로 클릭 시 즉시 재조회되며, 이미 활성화된 버튼을 다시 누르면 선택 해제된다.
+function renderDealFilterRow() {
+  const options = currentMajor === "주거용" ? ["매매", "전세", "월세"] : ["매매", "임대"];
+  if (currentDealFilter && !options.includes(currentDealFilter)) currentDealFilter = "";
+  dealFilterRow.innerHTML = options.map(v =>
+    `<button class="filter-btn deal${v === currentDealFilter ? " active" : ""}" data-deal="${v}">${v}</button>`
+  ).join("");
+  dealFilterRow.querySelectorAll(".filter-btn.deal").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentDealFilter = currentDealFilter === btn.dataset.deal ? "" : btn.dataset.deal;
+      dealFilterRow.querySelectorAll(".filter-btn.deal").forEach(b =>
+        b.classList.toggle("active", b.dataset.deal === currentDealFilter)
+      );
+      currentPage = 1;
+      renderList();
+      saveFilterState();
+    });
+  });
+}
+
 // 단지(예: 힐스테이트더운정) 드롭다운은 "주거용" 전체/아파트/오피스텔에서만 노출한다.
 // 단독주택·전원주택·상가주택·다가구주택 및 다른 대분류에서는 숨기고, 숨겨질 때는 선택값도 초기화한다.
 function updateComplexFilterVisibility() {
@@ -405,6 +448,7 @@ filterRow.querySelectorAll(".filter-btn").forEach(btn => {
     currentMajor = btn.dataset.major;
     currentSub = "";
     renderSubFilterRow();
+    renderDealFilterRow();
     updateComplexFilterVisibility();
     currentPage = 1;
     renderList();
@@ -844,7 +888,7 @@ const FILTER_STATE_KEY = "hitop_properties_filter_state";
 function saveFilterState() {
   try {
     sessionStorage.setItem(FILTER_STATE_KEY, JSON.stringify({
-      searchKeyword, currentMajor, currentSub, currentTag,
+      searchKeyword, currentMajor, currentSub, currentTag, currentDealFilter,
       includeCompleted, currentSort, viewMode,
       scrollY: window.scrollY
     }));
@@ -869,6 +913,8 @@ function restoreFilterState() {
     currentMajor = saved.currentMajor && PROPERTY_CATEGORY_STANDARD[saved.currentMajor] ? saved.currentMajor : "";
     filterRow.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.major === currentMajor));
     renderSubFilterRow();
+    currentDealFilter = saved.currentDealFilter || "";
+    renderDealFilterRow();
 
     if (currentMajor && saved.currentSub) {
       const subBtn = subFilterRow.querySelector(`.filter-btn.sub[data-sub="${CSS.escape(saved.currentSub)}"]`);
@@ -890,6 +936,7 @@ function restoreFilterState() {
     if (typeof saved.scrollY === "number") _restoredScrollY = saved.scrollY;
   } else {
     updateComplexFilterVisibility(); // 저장된 상태가 없는 첫 진입 — 기본값(전체 매물)에서는 숨김
+    renderDealFilterRow();
   }
 }
 

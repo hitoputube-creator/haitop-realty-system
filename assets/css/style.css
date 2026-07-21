@@ -374,12 +374,31 @@ textarea { resize: vertical; min-height: 120px; }
   text-overflow: ellipsis;
 }
 .lc-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.lc-price-text {
   color: var(--gold);
   font-size: 1.28rem;
   font-weight: 800;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
+.lc-deal-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.lc-deal-badge.deal-sale    { background: rgba(212,175,55,0.22); color: #f3d27b; border: 1px solid rgba(212,175,55,0.4); }
+.lc-deal-badge.deal-monthly { background: rgba(82,130,224,0.2);  color: #8fb6ff; border: 1px solid rgba(82,130,224,0.4); }
+.lc-deal-badge.deal-jeonse  { background: rgba(76,175,125,0.2);  color: #6fd28f; border: 1px solid rgba(76,175,125,0.4); }
 
 /* ── 면적·거래·단지 한 줄 요약 ── */
 .lc-summary {

@@ -84,10 +84,15 @@
     .filter-panel-row .filter-row { flex: 1 1 auto; }
     .complex-filter-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
     .complex-filter-wrap select { width: auto; min-width: 150px; padding: 5px 8px; font-size: 0.8rem; }
+    /* 거래유형 필터 — 유형별 필터 오른쪽에 별도로 노출 (주거용 선택 시 전세·월세로 교체) */
+    .deal-filter-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+    .deal-filter-wrap .filter-row { flex-wrap: nowrap; }
     /* 모바일에서는 같은 박스 내부 하단에 전체 폭으로 배치 */
     @media (max-width: 480px) {
       .complex-filter-wrap { width: 100%; margin-top: 8px; }
       .complex-filter-wrap select { flex: 1; min-width: 0; }
+      .deal-filter-wrap { width: 100%; margin-top: 8px; }
+      .deal-filter-wrap .filter-row { flex-wrap: wrap; }
     }
   </style>
 </head>
@@ -195,6 +200,11 @@
             <option value="">전체 단지</option>
             <option value="힐스테이트더운정">힐스테이트더운정</option>
           </select>
+        </div>
+        <!-- 거래유형 필터 — 유형별 필터와 독립적 OR로 결합. 주거용 선택 시 전세·월세로 교체됨 -->
+        <div class="deal-filter-wrap" id="dealFilterWrap">
+          <span>거래유형</span>
+          <div class="filter-row" id="dealFilterRow"></div>
         </div>
       </div>
       <div class="filter-row" id="subFilterRow" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(212,175,55,0.12);"></div>

@@ -89,6 +89,20 @@ function getDealTypeLabel(item) {
     item.factory_dealType || item.biz_dealType || (item.type?.startsWith("land") ? "매매" : "-");
 }
 
+// 거래유형(매매/전세/월세) 분류 — 구조화 필드가 없는 빠른등록 매물은 quick_price 텍스트에서 추출
+function getTransactionType(item) {
+  const structured = item.dealType || item.shop_dealType || item.officetel_dealType ||
+    item.factory_dealType || item.biz_dealType || "";
+  if (structured.indexOf("전세") > -1) return "전세";
+  if (structured.indexOf("월세") > -1) return "월세";
+  if (structured.indexOf("매매") > -1) return "매매";
+  if (item.type && item.type.startsWith("land")) return "매매";
+  const m = String(item.quick_price || "").match(/전세|월세|매매/);
+  return m ? m[0] : "";
+}
+
+const DEAL_BADGE_CLASS = { "매매": "deal-sale", "월세": "deal-monthly", "전세": "deal-jeonse" };
+
 function formatPyValue(value) {
   const n = Number(value);
   if (!isFinite(n) || n <= 0) return "";
@@ -284,6 +298,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const description = item.description || item.detailDescription || "";
   const memo = item.quick_memo || item.owner_memo || "";
   const buildingName = getBuildingName(item);
+  const dealType = getTransactionType(item);
 
   const summaryParts = [];
   const areaText = getAreaText(item);
@@ -312,7 +327,10 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
       <span class="lc-status ${statusClass}">${escapeHtml(getStatusLabel(item))}</span>
     </div>
     <div class="lc-title">${escapeHtml(item.address || "(주소 미입력)")}</div>
-    <div class="lc-price">${escapeHtml(formatPrice(item) || "-")}</div>
+    <div class="lc-price">
+      ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType]}">${escapeHtml(dealType)}</span>` : ""}
+      <span class="lc-price-text">${escapeHtml(formatPrice(item) || "-")}</span>
+    </div>
     <div class="lc-summary">${escapeHtml(summaryLine)}</div>
     <div class="lc-desc${isDone ? " lc-desc-done" : ""}">${escapeHtml(descText)}</div>
     <div class="listing-actions">
