@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-  <script src="assets/js/storage.js?v=20260604-address-split"></script>
+  <script src="assets/js/storage.js?v=20260722-building-lookup"></script>
   <script src="assets/js/nav.js"></script>
 </head>
 <body data-nav-active="properties">
@@ -32,6 +32,12 @@
   <div id="prefillRefBox" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;padding:10px 14px;background:rgba(80,180,100,0.07);border:1px solid rgba(80,180,100,0.2);border-radius:10px;">
     <strong style="color:#5cb85c;">📌 빠른저장 내용 참고</strong><br />
     <span id="prefillRefText"></span>
+  </div>
+
+  <!-- 건축물대장 자동조회 결과 참고 (자동조회 성공 시에만 표시) -->
+  <div id="buildingLookupRefBox" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;padding:10px 14px;background:rgba(80,180,100,0.07);border:1px solid rgba(80,180,100,0.2);border-radius:10px;">
+    <strong style="color:#5cb85c;">📐 건축물대장 자동입력 참고</strong><br />
+    <span id="buildingLookupRefText"></span>
   </div>
 
   <!-- ① 기본정보 -->
@@ -79,7 +85,11 @@
       </div>
       <div class="field">
         <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
-        <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075, 경기 파주시 숲속노을로 150" />
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075, 경기 파주시 숲속노을로 150" style="flex:1;" />
+          <button type="button" id="lookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
+        </div>
+        <span id="lookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
       <div class="field">
         <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
@@ -347,6 +357,90 @@
 
   cat1El.addEventListener('change', renderCat2);
   cat2El.addEventListener('change', updateDynamicSections);
+
+  // ── 건축물대장 자동조회 (지도검색주소 기준, 버튼 클릭 시에만 실행) ──────────
+  (function setupBuildingLookup() {
+    const btn = document.getElementById('lookupBuildingBtn');
+    const statusEl = document.getElementById('lookupBuildingStatus');
+    const refBox = document.getElementById('buildingLookupRefBox');
+    const refText = document.getElementById('buildingLookupRefText');
+    if (!btn) return;
+
+    // "20020531" → "2002-05-31" (approvalDate 필드가 기대하는 형식)
+    function formatAprDay(raw) {
+      const digits = String(raw || '').replace(/[^0-9]/g, '');
+      if (digits.length !== 8) return '';
+      return digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6, 8);
+    }
+
+    btn.addEventListener('click', async () => {
+      const address = document.getElementById('mapAddress').value.trim();
+      if (!address) {
+        showToast('❌ 지도검색주소를 먼저 입력해주세요.');
+        return;
+      }
+
+      btn.disabled = true;
+      if (statusEl) statusEl.textContent = '조회 중...';
+      if (refBox) refBox.style.display = 'none';
+
+      try {
+        const result = await lookupBuildingRegister(address);
+        const filled = [];
+
+        // 연면적 → category1/category2에 따라 areaM2 / exclusiveAreaM2 / totalFloorAreaM2 중 해당 필드
+        const storageCat1 = resolveStorageCategory1(cat1El.value, cat2El.value);
+        const variant = AREA_MAP[storageCat1];
+        const areaFieldId = variant === 'land' ? 'areaM2' : variant === 'exclusive' ? 'exclusiveAreaM2' : variant === 'building' ? 'totalFloorAreaM2' : null;
+        if (result.area_m2 && areaFieldId) {
+          const el = document.getElementById(areaFieldId);
+          if (el) {
+            el.value = result.area_m2;
+            el.dispatchEvent(new Event('input'));
+            filled.push('연면적');
+          }
+        }
+
+        if (result.floor_info) {
+          const el = document.getElementById('floorInfo');
+          if (el) { el.value = result.floor_info; filled.push('층수'); }
+        }
+
+        const aprDay = formatAprDay(result.use_apr_day);
+        if (aprDay) {
+          const el = document.getElementById('approvalDate');
+          if (el) { el.value = aprDay; filled.push('사용승인일'); }
+        }
+
+        const extraParts = [
+          result.main_purpose ? `주용도: ${result.main_purpose}` : null,
+          result.structure ? `구조: ${result.structure}` : null,
+        ].filter(Boolean);
+        if (extraParts.length) {
+          const el = document.getElementById('detailDescription');
+          if (el) {
+            const note = `[건축물대장 조회 결과]\n${extraParts.join('\n')}`;
+            el.value = el.value ? (el.value + '\n\n' + note) : note;
+            filled.push('상세설명 참고');
+          }
+        }
+
+        if (statusEl) statusEl.textContent = '✅ 자동입력됨';
+        if (refBox && refText) {
+          refText.textContent = (filled.length ? filled.join(', ') + ' 항목이 ' : '') + '건축물대장 조회 결과로 자동 입력되었습니다. 값을 확인 후 저장하세요.';
+          refBox.style.display = '';
+        }
+      } catch (err) {
+        if (statusEl) statusEl.textContent = '';
+        const msg = err && err.status === 404
+          ? '건축물대장 정보를 찾을 수 없습니다'
+          : ((err && err.message) || String(err));
+        showToast('❌ ' + msg, 4000);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  })();
 
   // ── 면적 자동계산 (㎡ → 평) ──────────────────────
   const SQM_PY = [

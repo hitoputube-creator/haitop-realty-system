@@ -302,6 +302,23 @@ function buildListingPayload(item) {
   return payload;
 }
 
+// ===== 건축물대장 자동조회 (lookup-building-register Edge Function) =====
+async function lookupBuildingRegister(address) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/functions/v1/lookup-building-register", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ address })
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* 응답 본문이 JSON이 아닌 경우 무시 */ }
+  if (!res.ok) {
+    const err = new Error((data && data.error) || ("건축물대장 조회 실패 (" + res.status + ")"));
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
 async function getListings() {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?order=created_at.desc", { headers });
   if (!res.ok) throw new Error("Listing lookup failed");
