@@ -86,7 +86,7 @@
       <div class="field">
         <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075, 경기 파주시 숲속노을로 150" style="flex:1;" />
+          <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1384, 914호" style="flex:1;" />
           <button type="button" id="lookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
         </div>
         <span id="lookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
@@ -390,7 +390,14 @@
       return digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6, 8);
     }
 
-    // "115동 1층, 상가 101호" 같은 상세주소에서 호수만 추출한다.
+    // 지도검색주소에 "와동동 1384, 914호"처럼 호수까지 같이 적었을 때만 추출한다.
+    // 번지 숫자(1384)를 호수로 착각하지 않도록 "호" 글자가 붙은 경우만 인정한다.
+    function extractHoFromAddress(address) {
+      const hoMatch = String(address || '').match(/(\d+)\s*호/);
+      return hoMatch ? hoMatch[1] : '';
+    }
+
+    // "115동 1층, 상가 101호" 같은 상세주소·동호수 필드에서 호수만 추출한다.
     // 동/층 등 다른 숫자와 섞여 있을 수 있어 "숫자+호" 패턴을 우선 찾는다.
     function extractHoNm(detailAddress) {
       const s = String(detailAddress || '');
@@ -406,7 +413,9 @@
         showToast('❌ 지도검색주소를 먼저 입력해주세요.');
         return;
       }
-      const hoNm = extractHoNm(document.getElementById('privateDetailAddress').value);
+      // 지도검색주소에 호수를 같이 적었으면 그걸 우선 쓰고, 없으면 상세주소·동호수
+      // 필드를 대신 확인한다 (기존 방식과의 호환).
+      const hoNm = extractHoFromAddress(address) || extractHoNm(document.getElementById('privateDetailAddress').value);
 
       btn.disabled = true;
       if (statusEl) statusEl.textContent = '조회 중...';
