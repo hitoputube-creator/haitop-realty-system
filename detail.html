@@ -276,6 +276,9 @@
     <!-- 이미지 -->
     <div class="modal-section-title">📷 이미지 (최대 5장)</div>
     <div class="field" style="margin-bottom:14px;">
+      <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;margin-bottom:8px;">
+        홈페이지에 공개할 사진만 체크하세요. 체크 해제한 사진은 내부 매물관리에서만 보관됩니다.
+      </div>
       <div id="edit_image_preview" class="image-preview-row"></div>
       <div id="edit_image_slots" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
         <input class="edit-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />
@@ -310,7 +313,9 @@
 <script>
   let _allDriveResources = [];
   let _editImageUrls = [];
+  let _editPublicImageUrls = [];
   let _editNewImageFiles = [];
+  let _editNewImagePublicFlags = [];
   const HOMEPAGE_LISTINGS_URL = "https://hitoputube-creator.github.io/hitop-property-platform/listings.html";
 function createHomepageTab() {
   const tab = window.open("about:blank", "_blank");
@@ -418,6 +423,10 @@ function closeHomepageTab(tab) {
     if (man) parts.push(man.toLocaleString("ko-KR") + "만원");
     return parts.length ? parts.join(" ") : won.toLocaleString("ko-KR") + "원";
   }
+
+  function escapeAttr(value) {
+    return String(value || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  }
   function syncEditPricePreview(id) {
     const input = document.getElementById(id);
     const preview = document.getElementById(id + "_preview");
@@ -488,15 +497,23 @@ function closeHomepageTab(tab) {
     const wrap = document.getElementById("edit_image_preview");
     if (!wrap) return;
     const existingHtml = _editImageUrls.map((url, idx) => `
-      <span class="image-preview-thumb">
-        <img src="${url}" alt="listing image ${idx + 1}" />
+      <span class="image-preview-thumb image-preview-thumb-selectable">
+        <img src="${escapeAttr(url)}" alt="listing image ${idx + 1}" />
         <button type="button" onclick="removeEditImage(${idx})">&times;</button>
+        <label class="image-public-check">
+          <input type="checkbox" ${_editPublicImageUrls.includes(url) ? "checked" : ""} onchange="setEditImagePublic(${idx}, this.checked)" />
+          공개
+        </label>
       </span>
     `).join("");
     const newHtml = _editNewImageFiles.map((file, idx) => `
-      <span class="image-preview-thumb">
+      <span class="image-preview-thumb image-preview-thumb-selectable">
         <img src="${URL.createObjectURL(file)}" alt="new listing image ${idx + 1}" />
         <button type="button" onclick="removeEditNewImage(${idx})">&times;</button>
+        <label class="image-public-check">
+          <input type="checkbox" ${_editNewImagePublicFlags[idx] !== false ? "checked" : ""} onchange="setEditNewImagePublic(${idx}, this.checked)" />
+          공개
+        </label>
       </span>
     `).join("");
     wrap.innerHTML = existingHtml + newHtml;
@@ -537,17 +554,37 @@ function closeHomepageTab(tab) {
       showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
     }
     _editNewImageFiles = _editNewImageFiles.concat(toAdd);
+    _editNewImagePublicFlags = _editNewImagePublicFlags.concat(toAdd.map(() => true));
     input.value = "";
     renderEditImagePreview();
   }
 
+  function setEditImagePublic(idx, checked) {
+    const url = _editImageUrls[idx];
+    if (!url) return;
+    if (checked) {
+      if (!_editPublicImageUrls.includes(url)) _editPublicImageUrls.push(url);
+    } else {
+      _editPublicImageUrls = _editPublicImageUrls.filter(v => v !== url);
+    }
+    renderEditImagePreview();
+  }
+
+  function setEditNewImagePublic(idx, checked) {
+    _editNewImagePublicFlags[idx] = checked === true;
+    renderEditImagePreview();
+  }
+
   function removeEditImage(idx) {
+    const removed = _editImageUrls[idx];
     _editImageUrls.splice(idx, 1);
+    _editPublicImageUrls = _editPublicImageUrls.filter(url => url !== removed);
     renderEditImagePreview();
   }
 
   function removeEditNewImage(idx) {
     _editNewImageFiles.splice(idx, 1);
+    _editNewImagePublicFlags.splice(idx, 1);
     renderEditImagePreview();
   }
 
@@ -631,7 +668,12 @@ function closeHomepageTab(tab) {
     const slots = document.getElementById("edit_image_slots");
     if (slots) slots.innerHTML = '<input class="edit-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />';
     _editImageUrls = getListingImageUrls(item);
+    _editPublicImageUrls = getPublicListingImageUrls(item).filter(url => _editImageUrls.includes(url));
+    if (item.is_public === true && !_editPublicImageUrls.length && _editImageUrls.length) {
+      _editPublicImageUrls = _editImageUrls.slice();
+    }
     _editNewImageFiles = [];
+    _editNewImagePublicFlags = [];
     renderEditImagePreview();
     document.getElementById("editModal").style.display = "flex";
   }
@@ -988,6 +1030,13 @@ function closeHomepageTab(tab) {
     if (sendHomeBtn) {
       sendHomeBtn.addEventListener("click", async () => {
         const nextPublic = _currentItem.is_public !== true;
+        if (nextPublic && getListingImageUrls(_currentItem).length > 0) {
+          openEditModal(_currentItem);
+          document.getElementById("edit_is_public").checked = true;
+          showToast("공개할 사진을 체크한 뒤 저장하세요.", 3500);
+          document.getElementById("edit_image_preview")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
         sendHomeBtn.disabled = true;
         try {
           await updateListingPublic(id, nextPublic);
@@ -1055,8 +1104,10 @@ function closeHomepageTab(tab) {
           description:        gv("edit_description"),
           resource_id:        gv("edit_resource_id") || null,
           is_public:          document.getElementById("edit_is_public").checked,
-          image_urls:         _editImageUrls,
+          image_urls:         [],
           imageUrls:          _editImageUrls,
+          allImageUrls:       _editImageUrls,
+          publicImageUrls:    _editPublicImageUrls.filter(url => _editImageUrls.includes(url)),
           drive_links:        item.drive_links || [],
           // 기본정보 추가
           dealType:           gv("edit_dealType"),
@@ -1107,8 +1158,18 @@ function closeHomepageTab(tab) {
         try {
           if (newImageFiles.length) {
             const uploadedUrls = await uploadListingImages(newImageFiles, id, _editImageUrls.length);
-            updated.image_urls = _editImageUrls.concat(uploadedUrls).slice(0, MAX_LISTING_IMAGES);
-            updated.imageUrls  = updated.image_urls;
+            const allUrls = _editImageUrls.concat(uploadedUrls).slice(0, MAX_LISTING_IMAGES);
+            const publicUploadedUrls = uploadedUrls.filter((url, idx) => _editNewImagePublicFlags[idx] !== false);
+            const publicUrls = _editPublicImageUrls.concat(publicUploadedUrls).filter(url => allUrls.includes(url));
+            updated.allImageUrls = allUrls;
+            updated.imageUrls = allUrls;
+            updated.publicImageUrls = publicUrls;
+            updated.image_urls = updated.is_public ? publicUrls : [];
+          } else {
+            updated.allImageUrls = _editImageUrls.slice(0, MAX_LISTING_IMAGES);
+            updated.imageUrls = updated.allImageUrls;
+            updated.publicImageUrls = _editPublicImageUrls.filter(url => updated.allImageUrls.includes(url));
+            updated.image_urls = updated.is_public ? updated.publicImageUrls : [];
           }
           await updateListing(id, updated);
           _currentItem = updated;

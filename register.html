@@ -86,7 +86,7 @@
       <div class="field">
         <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1384, 914호" style="flex:1;" />
+          <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
           <button type="button" id="lookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
         </div>
         <span id="lookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
@@ -291,6 +291,9 @@
   <!-- ⑧ 이미지 -->
   <section class="card">
     <div class="card-title"><span>📷 이미지 (최대 5장)</span></div>
+    <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;margin-bottom:8px;">
+      업무일지에서 보낸 사진은 자동으로 들어옵니다. 홈페이지에 공개할 사진만 체크하세요.
+    </div>
     <div id="imageUploadPreview" class="image-preview-row"></div>
     <div id="imageUploadSlots" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
       <input class="reg-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />
@@ -407,22 +410,32 @@
       return anyDigits ? anyDigits[0] : '';
     }
 
+    // "103동 4802호"처럼 동 번호가 같이 있으면 추출한다. 법정동 이름(예: "와동동")은
+    // 숫자 없이 한글+동이라 "숫자+동" 패턴과 겹치지 않는다.
+    function extractDongNm(text) {
+      const m = String(text || '').match(/(\d+)\s*동/);
+      return m ? m[1] : '';
+    }
+
     btn.addEventListener('click', async () => {
       const address = document.getElementById('mapAddress').value.trim();
       if (!address) {
         showToast('❌ 지도검색주소를 먼저 입력해주세요.');
         return;
       }
-      // 지도검색주소에 호수를 같이 적었으면 그걸 우선 쓰고, 없으면 상세주소·동호수
-      // 필드를 대신 확인한다 (기존 방식과의 호환).
-      const hoNm = extractHoFromAddress(address) || extractHoNm(document.getElementById('privateDetailAddress').value);
+      const detailAddressVal = document.getElementById('privateDetailAddress').value;
+      // 지도검색주소에 호수/동을 같이 적었으면 그걸 우선 쓰고, 없으면 상세주소·동호수
+      // 필드를 대신 확인한다 (기존 방식과의 호환). 같은 호수가 여러 동에 있는
+      // 대단지에서는 동 정보가 없으면 정확한 호실을 특정하지 못할 수 있다.
+      const hoNm = extractHoFromAddress(address) || extractHoNm(detailAddressVal);
+      const dongNm = extractDongNm(address) || extractDongNm(detailAddressVal);
 
       btn.disabled = true;
       if (statusEl) statusEl.textContent = '조회 중...';
       if (refBox) refBox.style.display = 'none';
 
       try {
-        const result = await lookupBuildingRegister(address, { hoNm });
+        const result = await lookupBuildingRegister(address, { hoNm, dongNm });
         const filled = [];
 
         // 연면적 → category1/category2에 따라 areaM2 / exclusiveAreaM2 / totalFloorAreaM2 중 해당 필드
@@ -509,33 +522,90 @@
 
   // ── 이미지 ──────────────────────────────────────
   let _selectedImages = [];
+  let _selectedImagePublicFlags = [];
+  let _importedImageUrls = [];
+  let _importedImagePublicFlags = [];
+
+  function escapeAttr(value) {
+    return String(value || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  }
+
+  function getRegisterImageTotal() {
+    return _importedImageUrls.length + _selectedImages.length;
+  }
+
+  function uniqueRegisterUrls(urls) {
+    const seen = new Set();
+    return (Array.isArray(urls) ? urls : [])
+      .map(url => String(url || "").trim())
+      .filter(Boolean)
+      .filter(url => {
+        if (seen.has(url)) return false;
+        seen.add(url);
+        return true;
+      })
+      .slice(0, MAX_LISTING_IMAGES);
+  }
+
+  function setRegImportedImagePublic(idx, checked) {
+    _importedImagePublicFlags[idx] = checked === true;
+    renderImagePreview();
+  }
+
+  function setRegNewImagePublic(idx, checked) {
+    _selectedImagePublicFlags[idx] = checked === true;
+    renderImagePreview();
+  }
 
   function renderImagePreview() {
     const wrap = document.getElementById('imageUploadPreview');
     if (!wrap) return;
-    wrap.innerHTML = _selectedImages.map((file, idx) => `
-      <span class="image-preview-thumb">
-        <img src="${URL.createObjectURL(file)}" alt="image ${idx + 1}" />
-        <button type="button" onclick="removeRegImage(${idx})">&times;</button>
+    const importedHtml = _importedImageUrls.map((url, idx) => `
+      <span class="image-preview-thumb image-preview-thumb-selectable">
+        <img src="${escapeAttr(url)}" alt="업무일지 이미지 ${idx + 1}" />
+        <button type="button" onclick="removeImportedRegImage(${idx})">&times;</button>
+        <label class="image-public-check">
+          <input type="checkbox" ${_importedImagePublicFlags[idx] !== false ? 'checked' : ''} onchange="setRegImportedImagePublic(${idx}, this.checked)" />
+          공개
+        </label>
       </span>
     `).join('');
+    const newHtml = _selectedImages.map((file, idx) => `
+      <span class="image-preview-thumb image-preview-thumb-selectable">
+        <img src="${URL.createObjectURL(file)}" alt="image ${idx + 1}" />
+        <button type="button" onclick="removeRegImage(${idx})">&times;</button>
+        <label class="image-public-check">
+          <input type="checkbox" ${_selectedImagePublicFlags[idx] !== false ? 'checked' : ''} onchange="setRegNewImagePublic(${idx}, this.checked)" />
+          공개
+        </label>
+      </span>
+    `).join('');
+    wrap.innerHTML = importedHtml + newHtml;
     const countEl = document.getElementById('imageCount');
-    if (countEl) countEl.textContent = `${_selectedImages.length} / ${MAX_LISTING_IMAGES}`;
+    if (countEl) countEl.textContent = `${getRegisterImageTotal()} / ${MAX_LISTING_IMAGES}`;
     const addBtn = document.getElementById('addImageSlotBtn');
-    if (addBtn) addBtn.disabled = _selectedImages.length >= MAX_LISTING_IMAGES;
+    if (addBtn) addBtn.disabled = getRegisterImageTotal() >= MAX_LISTING_IMAGES;
+  }
+
+  function removeImportedRegImage(idx) {
+    _importedImageUrls.splice(idx, 1);
+    _importedImagePublicFlags.splice(idx, 1);
+    renderImagePreview();
   }
 
   function removeRegImage(idx) {
     _selectedImages.splice(idx, 1);
+    _selectedImagePublicFlags.splice(idx, 1);
     renderImagePreview();
   }
 
   function handleRegImageSlot(input) {
     const files = Array.from(input.files || []).filter(f => f.type.startsWith('image/'));
-    const remaining = MAX_LISTING_IMAGES - _selectedImages.length;
+    const remaining = MAX_LISTING_IMAGES - getRegisterImageTotal();
     const toAdd = files.slice(0, remaining);
     if (files.length > remaining) showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
     _selectedImages = _selectedImages.concat(toAdd);
+    _selectedImagePublicFlags = _selectedImagePublicFlags.concat(toAdd.map(() => true));
     input.value = '';
     renderImagePreview();
   }
@@ -545,7 +615,7 @@
   });
 
   document.getElementById('addImageSlotBtn').addEventListener('click', function() {
-    if (_selectedImages.length >= MAX_LISTING_IMAGES) {
+    if (getRegisterImageTotal() >= MAX_LISTING_IMAGES) {
       showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
       return;
     }
@@ -683,6 +753,9 @@
       is_public:   g('is_public').checked,
       resource_id: gv('resource_id') || null,
       image_urls:  [],
+      imageUrls:   [],
+      allImageUrls: [],
+      publicImageUrls: [],
       // 기본정보 추가
       dealType:       gv('dealType'),
       // 가격정보
@@ -734,8 +807,22 @@
     try {
       if (_selectedImages.length) {
         const urls = await uploadListingImages(_selectedImages, item.id);
-        item.image_urls = urls;
-        item.imageUrls  = urls;
+        const importedUrls = uniqueRegisterUrls(_importedImageUrls);
+        const allUrls = uniqueRegisterUrls(importedUrls.concat(urls));
+        const publicImportedUrls = importedUrls.filter((url, idx) => _importedImagePublicFlags[idx] !== false);
+        const publicUploadedUrls = urls.filter((url, idx) => _selectedImagePublicFlags[idx] !== false);
+        const publicUrls = uniqueRegisterUrls(publicImportedUrls.concat(publicUploadedUrls));
+        item.allImageUrls = allUrls;
+        item.imageUrls = allUrls;
+        item.publicImageUrls = publicUrls;
+        item.image_urls = item.is_public ? publicUrls : [];
+      } else {
+        const importedUrls = uniqueRegisterUrls(_importedImageUrls);
+        const publicUrls = importedUrls.filter((url, idx) => _importedImagePublicFlags[idx] !== false);
+        item.allImageUrls = importedUrls;
+        item.imageUrls = importedUrls;
+        item.publicImageUrls = publicUrls;
+        item.image_urls = item.is_public ? publicUrls : [];
       }
       await addListing(item);
       showToast('✅ 저장완료!');
@@ -936,6 +1023,50 @@
     // buildingId가 있으면 건물 자동입력이 우선 — 빠른저장 프리필 스킵
     const _qp = new URLSearchParams(location.search);
     if (_qp.get("buildingId")) return;
+
+    const importedMemo = _qp.get("memo") || "";
+    if (importedMemo) {
+      const titleParam = _qp.get("title") || "";
+      const nameParam = _qp.get("customerName") || "";
+      const phoneParam = _qp.get("customerPhone") || "";
+      const descEl = document.getElementById("description");
+      if (descEl && !descEl.value.trim()) descEl.value = importedMemo;
+      const detailEl = document.getElementById("detailDescription");
+      if (detailEl && !detailEl.value.trim()) detailEl.value = importedMemo;
+      const titleEl = document.getElementById("title");
+      if (titleEl && titleParam && !titleEl.value.trim()) titleEl.value = titleParam.slice(0, 20);
+      const ownerEl = document.getElementById("owner_name");
+      if (ownerEl && nameParam && !ownerEl.value.trim()) ownerEl.value = nameParam;
+      const phoneEl = document.getElementById("owner_phone1");
+      if (phoneEl && phoneParam && !phoneEl.value.trim()) phoneEl.value = formatKoreanPhoneInput(phoneParam);
+
+      const rawPhotos = _qp.get("photos") || "";
+      if (rawPhotos) {
+        try {
+          const parsed = JSON.parse(rawPhotos);
+          const urls = uniqueRegisterUrls((Array.isArray(parsed) ? parsed : [])
+            .map(photo => typeof photo === "string" ? photo : (photo && (photo.url || photo.public_url)))
+          );
+          const remaining = MAX_LISTING_IMAGES - getRegisterImageTotal();
+          const toImport = urls.slice(0, remaining);
+          _importedImageUrls = uniqueRegisterUrls(_importedImageUrls.concat(toImport));
+          _importedImagePublicFlags = _importedImageUrls.map((_, idx) => _importedImagePublicFlags[idx] !== false);
+          renderImagePreview();
+          if (urls.length > remaining) showToast(`업무일지 사진은 최대 ${MAX_LISTING_IMAGES}장까지만 가져왔습니다.`, 3500);
+        } catch (e) {
+          console.warn("[업무일지 사진 가져오기 실패]", e.message || e);
+        }
+      }
+
+      const refBox = document.getElementById("prefillRefBox");
+      const refText = document.getElementById("prefillRefText");
+      if (refBox && refText) {
+        refText.textContent = `업무일지 메모와 첨부사진 ${_importedImageUrls.length}장이 자동 입력되었습니다. 공개할 사진만 체크 후 저장하세요.`;
+        refBox.style.display = "";
+      }
+      return;
+    }
+
     const raw = sessionStorage.getItem("hitop_detail_prefill");
     if (!raw) return;
     try {

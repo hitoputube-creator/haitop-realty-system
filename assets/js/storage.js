@@ -230,17 +230,67 @@ function setupPhoneAutoFormat(inputEl) {
   inputEl.addEventListener("blur", reformat);
 }
 
+function uniqueImageUrls(list) {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : [])
+    .map(v => String(v || "").trim())
+    .filter(Boolean)
+    .filter(url => {
+      if (seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    });
+}
+
+function getAllListingImageUrls(item = {}) {
+  const data = item.data && typeof item.data === "object" ? item.data : {};
+  return uniqueImageUrls(
+    Array.isArray(item.allImageUrls) ? item.allImageUrls :
+    Array.isArray(item.all_image_urls) ? item.all_image_urls :
+    Array.isArray(data.allImageUrls) ? data.allImageUrls :
+    Array.isArray(data.all_image_urls) ? data.all_image_urls :
+    Array.isArray(data.imageUrls) ? data.imageUrls :
+    Array.isArray(data.image_urls) ? data.image_urls :
+    Array.isArray(item.imageUrls) ? item.imageUrls :
+    Array.isArray(item.image_urls) ? item.image_urls : []
+  );
+}
+
+function getPublicListingImageUrls(item = {}) {
+  const data = item.data && typeof item.data === "object" ? item.data : {};
+  const hasExplicitPublic =
+    Array.isArray(item.publicImageUrls) ||
+    Array.isArray(item.public_image_urls) ||
+    Array.isArray(data.publicImageUrls) ||
+    Array.isArray(data.public_image_urls);
+  const publicUrls = uniqueImageUrls(
+    Array.isArray(item.publicImageUrls) ? item.publicImageUrls :
+    Array.isArray(item.public_image_urls) ? item.public_image_urls :
+    Array.isArray(data.publicImageUrls) ? data.publicImageUrls :
+    Array.isArray(data.public_image_urls) ? data.public_image_urls :
+    Array.isArray(item.image_urls) ? item.image_urls : []
+  );
+  if (hasExplicitPublic) return publicUrls;
+  return item.is_public === true ? getAllListingImageUrls(item) : publicUrls;
+}
+
 function getListingImageUrls(item = {}) {
-  if (Array.isArray(item.image_urls)) return item.image_urls.filter(Boolean);
-  if (Array.isArray(item.imageUrls)) return item.imageUrls.filter(Boolean);
-  return [];
+  return getAllListingImageUrls(item);
 }
 
 function normalizeListingRow(r) {
   const data = r.data && typeof r.data === "object" ? r.data : {};
-  const dataImages = Array.isArray(data.image_urls) ? data.image_urls : (Array.isArray(data.imageUrls) ? data.imageUrls : []);
-  const imageUrls = Array.isArray(r.image_urls) ? r.image_urls : dataImages;
   const isPublic = r.is_public === true || data.is_public === true;
+  const allImageUrls = getAllListingImageUrls(Object.assign({}, data, {
+    image_urls: r.image_urls,
+    imageUrls: data.imageUrls,
+    allImageUrls: data.allImageUrls,
+    all_image_urls: data.all_image_urls
+  }));
+  const publicImageUrls = getPublicListingImageUrls(Object.assign({}, data, {
+    image_urls: r.image_urls,
+    is_public: isPublic
+  }));
   return Object.assign({
     id: r.id,
     type: r.type,
@@ -254,8 +304,10 @@ function normalizeListingRow(r) {
     category2: r.category2 || r.category_2 || data.category2 || ''
   }, data, {
     is_public: isPublic,
-    image_urls: imageUrls,
-    imageUrls: imageUrls
+    image_urls: allImageUrls,
+    imageUrls: allImageUrls,
+    allImageUrls,
+    publicImageUrls
   });
 }
 
@@ -272,7 +324,13 @@ function buildListingPayload(item) {
   const description = data.description;
   const resource_id = data.resource_id !== undefined ? (data.resource_id || null) : undefined;
   const is_public = data.is_public === true;
-  const image_urls = getListingImageUrls(data).slice(0, MAX_LISTING_IMAGES);
+  const allImageUrls = getAllListingImageUrls(data).slice(0, MAX_LISTING_IMAGES);
+  const hasExplicitPublic = Array.isArray(data.publicImageUrls) || Array.isArray(data.public_image_urls);
+  const publicImageUrls = (hasExplicitPublic
+    ? uniqueImageUrls(data.publicImageUrls || data.public_image_urls)
+    : (is_public ? allImageUrls : [])
+  ).filter(url => allImageUrls.includes(url)).slice(0, MAX_LISTING_IMAGES);
+  const image_urls = is_public ? publicImageUrls : [];
 
   delete data.id;
   delete data.created_at;
@@ -289,12 +347,18 @@ function buildListingPayload(item) {
   delete data.is_public;
   delete data.image_urls;
   delete data.imageUrls;
+  delete data.allImageUrls;
+  delete data.all_image_urls;
+  delete data.publicImageUrls;
+  delete data.public_image_urls;
 
   data.category1 = category1;
   data.category2 = category2;
   data.is_public = is_public;
   data.image_urls = image_urls;
-  data.imageUrls = image_urls;
+  data.imageUrls = allImageUrls;
+  data.allImageUrls = allImageUrls;
+  data.publicImageUrls = publicImageUrls;
 
   const payload = { type, title, address, status, description, is_public, image_urls, category1, category2, data };
   if (id !== undefined) payload.id = id;
