@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-  <script src="assets/js/storage.js?v=20260722-building-lookup"></script>
+  <script src="assets/js/storage.js?v=20260722-building-lookup-honm"></script>
   <script src="assets/js/nav.js"></script>
 </head>
 <body data-nav-active="properties">
@@ -373,19 +373,30 @@
       return digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6, 8);
     }
 
+    // "115동 1층, 상가 101호" 같은 상세주소에서 호수만 추출한다.
+    // 동/층 등 다른 숫자와 섞여 있을 수 있어 "숫자+호" 패턴을 우선 찾는다.
+    function extractHoNm(detailAddress) {
+      const s = String(detailAddress || '');
+      const hoMatch = s.match(/(\d+)\s*호/);
+      if (hoMatch) return hoMatch[1];
+      const anyDigits = s.match(/\d+/);
+      return anyDigits ? anyDigits[0] : '';
+    }
+
     btn.addEventListener('click', async () => {
       const address = document.getElementById('mapAddress').value.trim();
       if (!address) {
         showToast('❌ 지도검색주소를 먼저 입력해주세요.');
         return;
       }
+      const hoNm = extractHoNm(document.getElementById('privateDetailAddress').value);
 
       btn.disabled = true;
       if (statusEl) statusEl.textContent = '조회 중...';
       if (refBox) refBox.style.display = 'none';
 
       try {
-        const result = await lookupBuildingRegister(address);
+        const result = await lookupBuildingRegister(address, { hoNm });
         const filled = [];
 
         // 연면적 → category1/category2에 따라 areaM2 / exclusiveAreaM2 / totalFloorAreaM2 중 해당 필드
@@ -425,10 +436,18 @@
           }
         }
 
-        if (statusEl) statusEl.textContent = '✅ 자동입력됨';
-        if (refBox && refText) {
-          refText.textContent = (filled.length ? filled.join(', ') + ' 항목이 ' : '') + '건축물대장 조회 결과로 자동 입력되었습니다. 값을 확인 후 저장하세요.';
-          refBox.style.display = '';
+        if (result.unit_area_warning) {
+          if (statusEl) statusEl.textContent = '⚠️ 건물 전체 면적으로 채워짐 — 확인 필요';
+          if (refBox && refText) {
+            refText.textContent = '⚠️ 호실(' + (hoNm || '?') + '호) 전유면적을 찾지 못해 건물 전체 면적으로 채워졌습니다. 연면적 값을 직접 확인 후 저장하세요.';
+            refBox.style.display = '';
+          }
+        } else {
+          if (statusEl) statusEl.textContent = '✅ 자동입력됨';
+          if (refBox && refText) {
+            refText.textContent = (filled.length ? filled.join(', ') + ' 항목이 ' : '') + '건축물대장 조회 결과로 자동 입력되었습니다. 값을 확인 후 저장하세요.';
+            refBox.style.display = '';
+          }
         }
       } catch (err) {
         if (statusEl) statusEl.textContent = '';

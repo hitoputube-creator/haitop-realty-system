@@ -303,12 +303,19 @@ function buildListingPayload(item) {
 }
 
 // ===== 건축물대장 자동조회 (lookup-building-register Edge Function) =====
-async function lookupBuildingRegister(address) {
+// hoNm(호수)을 넘기면 집합건물의 경우 표제부(건물 전체 연면적) 대신 전유부의
+// 해당 호실 전유면적을 우선 반환한다. dongNm(동)은 대부분 상가/오피스텔이
+// 단일동이라 생략 가능.
+async function lookupBuildingRegister(address, opts) {
+  opts = opts || {};
+  // hoNm이 있으면 전유부를 여러 페이지 순회하며 찾을 수 있어 일반 조회보다 오래
+  // 걸릴 수 있다 (최악의 경우 못 찾고 끝까지 스캔) — 넉넉하게 25초로 설정.
+  const timeout = opts.hoNm ? 25000 : 10000;
   const res = await fetchWithTimeout(SUPABASE_URL + "/functions/v1/lookup-building-register", {
     method: "POST",
     headers,
-    body: JSON.stringify({ address })
-  });
+    body: JSON.stringify({ address, hoNm: opts.hoNm || "", dongNm: opts.dongNm || "" })
+  }, timeout);
   let data = null;
   try { data = await res.json(); } catch (e) { /* 응답 본문이 JSON이 아닌 경우 무시 */ }
   if (!res.ok) {

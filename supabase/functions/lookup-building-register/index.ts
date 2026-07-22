@@ -1,9 +1,15 @@
 // lookup-building-register
 //
-// 주소를 받아 법정동코드를 검색(StanReginCd)한 뒤, 국토교통부 건축HUB
-// 건축물대장정보 서비스(BldRgstHubService, 표제부)를 조회해
-// 연면적/주용도/층수/구조/사용승인일을 반환한다. BUILDING_REGISTER_API_KEY는
-// 이 함수 안에서만 사용하며 프론트엔드에는 절대 노출하지 않는다.
+// 주소(+선택적으로 호수/동)를 받아 법정동코드를 검색(StanReginCd)한 뒤
+// 국토교통부 건축HUB 건축물대장정보 서비스(BldRgstHubService)를 조회한다.
+// - 표제부(getBrTitleInfo): 건물 전체 정보 — 주용도/구조/사용승인일, (호수 미지정 시) 연면적
+// - 전유부 면적(getBrExposPubuseAreaInfo, hoNm 지정 시): 해당 호실의 실제 전유면적
+//   집합건물(오피스텔/상가 등)은 표제부의 연면적이 건물 "전체" 면적이라 호실별
+//   면적과 다르므로, hoNm이 주어지면 전유부 면적 조회 결과를 우선 사용한다.
+//   전유부 조회에 실패하거나 일치하는 호실을 못 찾으면 표제부 값으로 대체하고
+//   detail_note에 경고를 남긴다.
+// BUILDING_REGISTER_API_KEY는 이 함수 안에서만 사용하며 프론트엔드에는 절대
+// 노출하지 않는다.
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -41,6 +47,11 @@ interface ParsedAddress {
   ji: string;
 }
 
+interface Codes {
+  sigunguCd: string;
+  bjdongCd: string;
+}
+
 // 자유 텍스트 주소를 최대한 파싱한다 — 실패하면 null.
 // 회사가 파주시 관내에서만 영업하므로 시/군/구가 없으면 "파주시"를 기본값으로 둔다.
 function parseAddress(address: string): ParsedAddress | null {
@@ -66,7 +77,7 @@ function parseAddress(address: string): ParsedAddress | null {
 }
 
 // 법정동코드 검색 (행정표준코드관리시스템, StanReginCd) → 5자리 시군구코드 + 5자리 법정동코드
-async function lookupDongCode(sigunguName: string, dongName: string): Promise<{ sigunguCd: string; bjdongCd: string } | null> {
+async function lookupDongCode(sigunguName: string, dongName: string): Promise<Codes | null> {
   if (!LEGAL_DONG_CODE_API_KEY) {
     throw new Error("LEGAL_DONG_CODE_API_KEY가 설정되지 않았습니다.");
   }
@@ -93,26 +104,26 @@ async function lookupDongCode(sigunguName: string, dongName: string): Promise<{ 
   return { sigunguCd: code.slice(0, 5), bjdongCd: code.slice(5, 10) };
 }
 
-// 건축HUB 건축물대장정보 서비스 — 표제부(연면적/주용도/층수/구조/사용승인일)
-async function lookupBuildingRegister(parsed: ParsedAddress) {
-  const codes = await lookupDongCode(parsed.sigunguName, parsed.dongName);
-  if (!codes) throw new Error(`"${parsed.sigunguName} ${parsed.dongName}"에 대한 법정동코드를 찾지 못했습니다.`);
-
-  const url = `https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo` +
+function bldRgstHubUrl(op: string, codes: Codes, parsed: ParsedAddress): string {
+  return `https://apis.data.go.kr/1613000/BldRgstHubService/${op}` +
     `?ServiceKey=${BUILDING_REGISTER_API_KEY}` +
     `&_type=json` +
     `&sigunguCd=${codes.sigunguCd}` +
     `&bjdongCd=${codes.bjdongCd}` +
     `&platGbCd=${parsed.platGbCd}` +
     `&bun=${parsed.bun.padStart(4, "0")}` +
-    `&ji=${parsed.ji.padStart(4, "0")}` +
-    `&numOfRows=5`;
+    `&ji=${parsed.ji.padStart(4, "0")}`;
+}
+
+// 건축HUB 건축물대장정보 서비스 — 표제부(연면적/주용도/층수/구조/사용승인일)
+async function lookupTitleInfo(codes: Codes, parsed: ParsedAddress) {
+  const url = `${bldRgstHubUrl("getBrTitleInfo", codes, parsed)}&numOfRows=5`;
 
   const res = await fetch(url);
   const rawText = await res.text();
 
   if (!res.ok) {
-    console.error(`[lookup-building-register] HTTP ${res.status} ${res.statusText}`);
+    console.error(`[lookup-building-register] getBrTitleInfo HTTP ${res.status} ${res.statusText}`);
     throw new Error(`건축물대장 조회 실패 (${res.status} ${res.statusText})`);
   }
 
@@ -120,19 +131,76 @@ async function lookupBuildingRegister(parsed: ParsedAddress) {
   try {
     data = JSON.parse(rawText);
   } catch (parseErr) {
-    console.error(`[lookup-building-register] 응답이 JSON이 아님: ${String(parseErr)}`);
+    console.error(`[lookup-building-register] getBrTitleInfo 응답이 JSON이 아님: ${String(parseErr)}`);
     throw new Error("건축물대장 응답 파싱 실패 (JSON 형식이 아닙니다)");
   }
 
   const header = data?.response?.header;
   if (header && header.resultCode && header.resultCode !== "00") {
-    console.error(`[lookup-building-register] resultCode=${header.resultCode} resultMsg=${header.resultMsg}`);
+    console.error(`[lookup-building-register] getBrTitleInfo resultCode=${header.resultCode} resultMsg=${header.resultMsg}`);
     throw new Error(`건축물대장 조회 실패: resultCode=${header.resultCode} resultMsg=${header.resultMsg || "(메시지 없음)"}`);
   }
 
   const items = data?.response?.body?.items?.item;
   const item = Array.isArray(items) ? items[0] : items;
   return { raw: data, item: item ?? null };
+}
+
+// 건축HUB 건축물대장정보 서비스 — 전유공용면적(getBrExposPubuseAreaInfo)
+// 집합건물의 특정 호실("전유" 구분) 실제 전유면적을 찾는다. 최대 MAX_PAGES 페이지까지
+// 페이지네이션하며(1페이지=100건), 못 찾으면 null을 반환한다.
+async function lookupExclusiveArea(
+  codes: Codes,
+  parsed: ParsedAddress,
+  hoNm: string,
+  dongNm: string
+): Promise<number | null> {
+  // numOfRows=100 기준 최대 6페이지(600건)까지만 스캔한다 — 그 이상은 프론트엔드
+  // 타임아웃(25초)을 넘길 위험이 커서, 못 찾으면 표제부 값으로 안전하게 대체한다.
+  const MAX_PAGES = 6;
+  const base = bldRgstHubUrl("getBrExposPubuseAreaInfo", codes, parsed);
+
+  for (let pageNo = 1; pageNo <= MAX_PAGES; pageNo++) {
+    const url = `${base}&numOfRows=100&pageNo=${pageNo}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error(`[lookup-building-register] getBrExposPubuseAreaInfo HTTP ${res.status}`);
+      return null;
+    }
+    const rawText = await res.text();
+    let data: any;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      console.error(`[lookup-building-register] getBrExposPubuseAreaInfo 응답이 JSON이 아님`);
+      return null;
+    }
+
+    const header = data?.response?.header;
+    if (header && header.resultCode && header.resultCode !== "00") {
+      console.error(`[lookup-building-register] getBrExposPubuseAreaInfo resultCode=${header.resultCode} resultMsg=${header.resultMsg}`);
+      return null;
+    }
+
+    const items = data?.response?.body?.items?.item;
+    const arr: any[] = Array.isArray(items) ? items : items ? [items] : [];
+
+    const match = arr.find((it) => {
+      if (String(it.exposPubuseGbCd) !== "1") return false; // "전유"만 (공용 제외)
+      if (String(it.hoNm || "").trim() !== hoNm) return false;
+      if (dongNm && String(it.dongNm || "").trim() !== dongNm) return false;
+      return true;
+    });
+    if (match) {
+      const area = Number(match.area);
+      return Number.isFinite(area) && area > 0 ? area : null;
+    }
+
+    const totalCount = Number(data?.response?.body?.totalCount || 0);
+    if (arr.length === 0 || pageNo * 100 >= totalCount) break;
+  }
+
+  return null;
 }
 
 Deno.serve(async (req: Request) => {
@@ -146,7 +214,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "BUILDING_REGISTER_API_KEY가 설정되지 않았습니다." }, 500);
   }
 
-  let body: { address?: string };
+  let body: { address?: string; hoNm?: string; dongNm?: string };
   try {
     body = await req.json();
   } catch {
@@ -154,6 +222,8 @@ Deno.serve(async (req: Request) => {
   }
 
   const address = (body.address || "").trim();
+  const hoNm = (body.hoNm || "").trim();
+  const dongNm = (body.dongNm || "").trim();
   if (!address) {
     return jsonResponse({ error: "조회할 주소(address)가 없습니다." }, 400);
   }
@@ -165,8 +235,11 @@ Deno.serve(async (req: Request) => {
 
   let raw: unknown;
   let item: Record<string, unknown> | null;
+  let codes: Codes | null;
   try {
-    const result = await lookupBuildingRegister(parsed);
+    codes = await lookupDongCode(parsed.sigunguName, parsed.dongName);
+    if (!codes) throw new Error(`"${parsed.sigunguName} ${parsed.dongName}"에 대한 법정동코드를 찾지 못했습니다.`);
+    const result = await lookupTitleInfo(codes, parsed);
     raw = result.raw;
     item = result.item;
   } catch (err) {
@@ -180,7 +253,24 @@ Deno.serve(async (req: Request) => {
   }
 
   const totArea = Number(item.totArea);
-  const areaM2 = Number.isFinite(totArea) && totArea > 0 ? totArea : null;
+  const buildingAreaM2 = Number.isFinite(totArea) && totArea > 0 ? totArea : null;
+
+  let areaM2 = buildingAreaM2;
+  let unitAreaWarning = false;
+
+  if (hoNm) {
+    try {
+      const exclusiveArea = await lookupExclusiveArea(codes, parsed, hoNm, dongNm);
+      if (exclusiveArea != null) {
+        areaM2 = exclusiveArea;
+      } else {
+        unitAreaWarning = true;
+      }
+    } catch (e) {
+      console.error(`[lookup-building-register] 전유부 조회 실패: ${e instanceof Error ? e.message : String(e)}`);
+      unitAreaWarning = true;
+    }
+  }
 
   const grndFlrCnt = item.grndFlrCnt ? String(item.grndFlrCnt) : null;
   const ugrndFlrCnt = item.ugrndFlrCnt ? String(item.ugrndFlrCnt) : null;
@@ -194,6 +284,9 @@ Deno.serve(async (req: Request) => {
     item.strctCdNm ? `구조: ${item.strctCdNm}` : null,
     item.useAprDay ? `사용승인일: ${item.useAprDay}` : null,
   ].filter(Boolean);
+  if (unitAreaWarning) {
+    detailParts.push("⚠️ 건물 전체 면적입니다 — 호실별 면적은 직접 확인 필요");
+  }
 
   return jsonResponse({
     area_m2: areaM2,
@@ -202,6 +295,7 @@ Deno.serve(async (req: Request) => {
     structure: item.strctCdNm || null,
     use_apr_day: item.useAprDay || null,
     detail_note: detailParts.length ? `[건축물대장 조회 결과]\n${detailParts.join("\n")}` : null,
+    unit_area_warning: unitAreaWarning,
     raw,
   });
 });
