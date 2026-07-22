@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-  <script src="assets/js/storage.js?v=20260722-building-lookup-honm"></script>
+  <script src="assets/js/storage.js?v=20260722-quick-buildings"></script>
   <script src="assets/js/nav.js"></script>
 </head>
 <body data-nav-active="properties">
@@ -78,6 +78,10 @@
           <option value="광고중">광고중</option>
           <option value="거래완료">거래완료</option>
         </select>
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
+        <select id="quickBuildingSelect"></select>
       </div>
       <div class="field">
         <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
@@ -332,6 +336,8 @@
 
   const cat1El = document.getElementById('category1Select');
   const cat2El = document.getElementById('category2Select');
+
+  setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName');
 
   function renderCat2() {
     const opts = CATEGORY_OPTIONS[cat1El.value] || [];

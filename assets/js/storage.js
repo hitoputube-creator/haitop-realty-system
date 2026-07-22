@@ -16,6 +16,83 @@ const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
 const LISTING_IMAGES_BUCKET = "listing-images";
 const MAX_LISTING_IMAGES = 5;
 
+// ===== 자주쓰는 운정역 상가·오피스텔 (등록/수정 화면 주소 빠른선택용) =====
+// 출처: 운정역 상가 주소.pdf. 전부 와동동 소재.
+const UNJEONG_QUICK_BUILDINGS = [
+  { name: "덕진빌딩", category: "상가", addr: "와동동 1426-1" },
+  { name: "명품3차", category: "상가", addr: "와동동 1466-1" },
+  { name: "법조타운", category: "상가", addr: "와동동 1384" },
+  { name: "브릭스(BRICKS)", category: "상가", addr: "와동동 1464" },
+  { name: "세안파크", category: "상가", addr: "와동동 1452" },
+  { name: "송림로데오", category: "상가", addr: "와동동 1434-1" },
+  { name: "송림메디컬", category: "상가", addr: "와동동 1450-1" },
+  { name: "아름터타워", category: "상가", addr: "와동동 1458-1" },
+  { name: "아주빌딩", category: "상가", addr: "와동동 1429" },
+  { name: "월드9차", category: "상가", addr: "와동동 1426" },
+  { name: "월드10차", category: "상가", addr: "와동동 1423-2" },
+  { name: "월드11차", category: "상가", addr: "와동동 1423-1" },
+  { name: "월드12차", category: "상가", addr: "와동동 1431-1" },
+  { name: "월드15차", category: "상가", addr: "와동동 1462" },
+  { name: "월드로데오", category: "상가", addr: "와동동 1438" },
+  { name: "월드스퀘어", category: "상가", addr: "와동동 1456-3" },
+  { name: "유은8차", category: "상가", addr: "와동동 1454-1" },
+  { name: "유은9차", category: "상가", addr: "와동동 1460" },
+  { name: "트윈타워1차", category: "상가", addr: "와동동 1442" },
+  { name: "트윈타워2차", category: "상가", addr: "와동동 1443" },
+  { name: "더운정퍼스트", category: "상가", addr: "와동동 1436" },
+  { name: "프라임타워", category: "상가", addr: "와동동 1469-1" },
+  { name: "한미프라자", category: "상가", addr: "와동동 1469-1" },
+  { name: "현해", category: "상가", addr: "와동동 1464-1" },
+  { name: "홍원프라자", category: "상가", addr: "와동동 1437" },
+  { name: "한강듀클래스", category: "상가", addr: "와동동 1484, 1484-2" },
+  { name: "힐데스하임", category: "오피스텔", addr: "와동동 1498" },
+  { name: "엠버418", category: "오피스텔", addr: "와동동 1454" },
+  { name: "브릿지(Bridge)10", category: "오피스텔", addr: "와동동 1444, 1444-1" },
+  { name: "디에이블", category: "오피스텔", addr: "와동동 1456-1" },
+  { name: "레이크필드위버젠", category: "오피스텔", addr: "와동동 1433-1" },
+  { name: "남광하우스토리", category: "오피스텔", addr: "와동동 1431" },
+  { name: "클래스원", category: "오피스텔", addr: "와동동 1454-2" },
+  { name: "센트럴하이뷰", category: "오피스텔", addr: "와동동 1433" },
+  { name: "아르젠", category: "오피스텔", addr: "와동동 1484-1" },
+  { name: "힐스테이트더운정1단지", category: "오피스텔", addr: "와동동 1471-2" },
+  { name: "힐스테이트더운정2단지", category: "오피스텔", addr: "와동동 1471-3" },
+  { name: "푸르지오파크라인1단지", category: "오피스텔", addr: "와동동 1500" },
+  { name: "푸르지오파크라인2단지", category: "오피스텔", addr: "와동동 1498-2" },
+];
+
+// register.html / detail.html(수정 모달) 공용: 빠른선택 <select>를 채우고,
+// 선택 시 공개주소·지도검색주소·단지명을 자동입력한다.
+function setupQuickBuildingSelect(selectId, publicId, mapId, complexId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+
+  const byCategory = {};
+  UNJEONG_QUICK_BUILDINGS.forEach((b, i) => {
+    (byCategory[b.category] = byCategory[b.category] || []).push(i);
+  });
+  let html = '<option value="">직접 입력 (목록에 없는 건물)</option>';
+  Object.keys(byCategory).forEach((cat) => {
+    html += `<optgroup label="${cat}">`;
+    byCategory[cat].forEach((i) => {
+      html += `<option value="${i}">${UNJEONG_QUICK_BUILDINGS[i].name}</option>`;
+    });
+    html += "</optgroup>";
+  });
+  sel.innerHTML = html;
+
+  sel.addEventListener("change", () => {
+    if (!sel.value) return;
+    const b = UNJEONG_QUICK_BUILDINGS[Number(sel.value)];
+    if (!b) return;
+    const publicEl = document.getElementById(publicId);
+    const mapEl = document.getElementById(mapId);
+    const complexEl = document.getElementById(complexId);
+    if (publicEl) publicEl.value = "파주시 와동동";
+    if (mapEl) mapEl.value = "파주시 " + b.addr;
+    if (complexEl) complexEl.value = b.name;
+  });
+}
+
 // ===== \ud45c\uc900 \ub9e4\ubb3c \uce74\ud14c\uace0\ub9ac (1\ub2e8\uacc4 \uac1c\ud3b8 \u2014 \ud648\ud398\uc774\uc9c0 \uce74\ud14c\uace0\ub9ac\uc640 \ud1b5\uc77c) =====
 // \ud654\uba74(\ub4f1\ub85d\u00b7\uc218\uc815\u00b7\ud544\ud130)\uc5d0\ub294 \uc544\ub798 5\uac1c \ub300\ubd84\ub958\ub9cc \ub178\ucd9c\ud55c\ub2e4. DB \uc800\uc7a5 \uad6c\uc870\ub294 \ubc14\uafb8\uc9c0 \uc54a\uc73c\uba70,
 // "\uc8fc\uac70\uc6a9" \uc544\ub798\uc5d0\uc11c \uace0\ub978 \uc0c1\uac00\uc8fc\ud0dd\u00b7\ub2e4\uac00\uad6c\uc8fc\ud0dd\u00b7\ub2e8\ub3c5\uc8fc\ud0dd\u00b7\uc804\uc6d0\uc8fc\ud0dd\uc740 \uc800\uc7a5 \uc2dc\uc810\uc5d0
