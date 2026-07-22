@@ -358,6 +358,23 @@
   cat1El.addEventListener('change', renderCat2);
   cat2El.addEventListener('change', updateDynamicSections);
 
+  // ── 공개주소 → 지도검색주소 자동복사 (번지는 직접 추가 입력) ──────────
+  // 지도검색주소가 비어있거나 아직 공개주소와 동일한(=사용자가 번지를 덧붙이지
+  // 않은) 상태일 때만 따라 채운다. 번지를 추가하는 순간부터는 더 이상 덮어쓰지 않음.
+  (function setupPublicToMapAddressSync() {
+    const publicEl = document.getElementById('publicAddress');
+    const mapEl = document.getElementById('mapAddress');
+    if (!publicEl || !mapEl) return;
+    let lastSynced = mapEl.value;
+
+    publicEl.addEventListener('input', () => {
+      if (mapEl.value === '' || mapEl.value === lastSynced) {
+        mapEl.value = publicEl.value;
+        lastSynced = mapEl.value;
+      }
+    });
+  })();
+
   // ── 건축물대장 자동조회 (지도검색주소 기준, 버튼 클릭 시에만 실행) ──────────
   (function setupBuildingLookup() {
     const btn = document.getElementById('lookupBuildingBtn');
