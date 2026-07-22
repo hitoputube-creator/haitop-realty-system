@@ -323,7 +323,6 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
       <span class="lc-no">No. ${escapeHtml(getListingNumber(item))}</span>
       <span class="lc-sep">·</span>
       <span class="lc-type">${escapeHtml(getListingCategoryLabel(item))}</span>
-      <span class="lc-sep">·</span>
       <span class="lc-status ${statusClass}">${escapeHtml(getStatusLabel(item))}</span>
     </div>
     <div class="lc-title">${escapeHtml(item.address || "(주소 미입력)")}</div>
