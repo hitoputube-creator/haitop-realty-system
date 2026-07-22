@@ -58,7 +58,12 @@ function parseAddress(address: string): ParsedAddress | null {
   const sigunguMatch = address.match(/([가-힣]+시|[가-힣]+군|[가-힣]+구)/);
   const sigunguName = sigunguMatch ? sigunguMatch[1] : "파주시";
 
-  const dongMatches = [...address.matchAll(/[가-힣0-9]+(?:읍|면|동|리)/g)];
+  // 법정동 이름은 항상 번지 앞(콤마 이전)에 온다. "와동동 1471-2, 103동 4802호"처럼
+  // 콤마 뒤에 건물 동/호수가 오면 "103동"도 "숫자+동" 패턴에 걸려 법정동으로
+  // 착각할 수 있어, 콤마 이전 구간에서만 법정동을 찾는다.
+  const commaIdx = address.indexOf(",");
+  const dongSearchArea = commaIdx === -1 ? address : address.slice(0, commaIdx);
+  const dongMatches = [...dongSearchArea.matchAll(/[가-힣0-9]+(?:읍|면|동|리)/g)];
   if (dongMatches.length === 0) return null;
   const dongName = dongMatches[dongMatches.length - 1][0];
 
@@ -147,25 +152,31 @@ async function lookupTitleInfo(codes: Codes, parsed: ParsedAddress) {
 }
 
 // 건축HUB 건축물대장정보 서비스 — 전유공용면적(getBrExposPubuseAreaInfo)
-// 집합건물의 특정 호실("전유" 구분) 실제 전유면적을 찾는다. 최대 MAX_PAGES 페이지까지
-// 페이지네이션하며(1페이지=100건), 못 찾으면 null을 반환한다.
+// 집합건물의 특정 호실("전유" 구분) 실제 전유면적을 찾는다.
+//
+// [중요] hoNm을 요청 쿼리파라미터로 함께 보내면 국토부 서버가 실제로 필터링해준다
+// (실측: 21,618건 → 60건). 클라이언트에서 전체를 페이지네이션하며 스캔하는 방식은
+// 대단지(수만 건)에서는 스캔 한도를 넘어가 못 찾는 경우가 있어 폐기하고, 서버
+// 필터링을 사용한다. dongNm은 등록 표기 형식이 제각각("103동"/"103" 등)일 수 있어
+// 서버 파라미터로 넘기지 않고, hoNm으로 좁힌 소수의 결과 안에서 숫자만 비교해
+// 클라이언트에서 매칭한다. 같은 호수가 여러 동에 걸쳐 있는데 동을 특정할 수 없으면
+// (동 정보 없음 + 후보 2개 이상) 안전하게 null을 반환해 표제부 값으로 대체시킨다.
 async function lookupExclusiveArea(
   codes: Codes,
   parsed: ParsedAddress,
   hoNm: string,
-  dongNm: string
+  dongDigits: string
 ): Promise<number | null> {
-  // numOfRows=100 기준 최대 6페이지(600건)까지만 스캔한다 — 그 이상은 프론트엔드
-  // 타임아웃(25초)을 넘길 위험이 커서, 못 찾으면 표제부 값으로 안전하게 대체한다.
-  const MAX_PAGES = 6;
-  const base = bldRgstHubUrl("getBrExposPubuseAreaInfo", codes, parsed);
+  const MAX_PAGES = 3; // hoNm 서버 필터링 덕분에 보통 1페이지로 충분 — 안전 마진만 확보
+  const base = `${bldRgstHubUrl("getBrExposPubuseAreaInfo", codes, parsed)}&hoNm=${encodeURIComponent(hoNm)}`;
 
+  const candidates: any[] = [];
   for (let pageNo = 1; pageNo <= MAX_PAGES; pageNo++) {
     const url = `${base}&numOfRows=100&pageNo=${pageNo}`;
     const res = await fetch(url);
     if (!res.ok) {
       console.error(`[lookup-building-register] getBrExposPubuseAreaInfo HTTP ${res.status}`);
-      return null;
+      break;
     }
     const rawText = await res.text();
     let data: any;
@@ -173,34 +184,43 @@ async function lookupExclusiveArea(
       data = JSON.parse(rawText);
     } catch {
       console.error(`[lookup-building-register] getBrExposPubuseAreaInfo 응답이 JSON이 아님`);
-      return null;
+      break;
     }
 
     const header = data?.response?.header;
     if (header && header.resultCode && header.resultCode !== "00") {
       console.error(`[lookup-building-register] getBrExposPubuseAreaInfo resultCode=${header.resultCode} resultMsg=${header.resultMsg}`);
-      return null;
+      break;
     }
 
     const items = data?.response?.body?.items?.item;
     const arr: any[] = Array.isArray(items) ? items : items ? [items] : [];
-
-    const match = arr.find((it) => {
-      if (String(it.exposPubuseGbCd) !== "1") return false; // "전유"만 (공용 제외)
-      if (String(it.hoNm || "").trim() !== hoNm) return false;
-      if (dongNm && String(it.dongNm || "").trim() !== dongNm) return false;
-      return true;
+    arr.forEach((it) => {
+      if (String(it.exposPubuseGbCd) === "1" && String(it.hoNm || "").trim() === hoNm) {
+        candidates.push(it);
+      }
     });
-    if (match) {
-      const area = Number(match.area);
-      return Number.isFinite(area) && area > 0 ? area : null;
-    }
 
     const totalCount = Number(data?.response?.body?.totalCount || 0);
     if (arr.length === 0 || pageNo * 100 >= totalCount) break;
   }
 
-  return null;
+  if (candidates.length === 0) return null;
+
+  let picked: any = null;
+  if (dongDigits) {
+    picked = candidates.find((it) => String(it.dongNm || "").replace(/[^0-9]/g, "") === dongDigits) || null;
+  } else if (candidates.length === 1) {
+    picked = candidates[0];
+  } else {
+    // 동 정보 없이 같은 호수가 여러 동에 걸쳐 있음 — 어느 동인지 특정 불가
+    console.error(`[lookup-building-register] hoNm=${hoNm} 후보 ${candidates.length}건(동 특정 불가)`);
+    return null;
+  }
+  if (!picked) return null;
+
+  const area = Number(picked.area);
+  return Number.isFinite(area) && area > 0 ? area : null;
 }
 
 Deno.serve(async (req: Request) => {
@@ -260,7 +280,8 @@ Deno.serve(async (req: Request) => {
 
   if (hoNm) {
     try {
-      const exclusiveArea = await lookupExclusiveArea(codes, parsed, hoNm, dongNm);
+      const dongDigits = dongNm.replace(/[^0-9]/g, "");
+      const exclusiveArea = await lookupExclusiveArea(codes, parsed, hoNm, dongDigits);
       if (exclusiveArea != null) {
         areaM2 = exclusiveArea;
       } else {

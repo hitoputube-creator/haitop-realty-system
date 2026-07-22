@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-<script src="assets/js/storage.js?v=20260604-address-split"></script>
+<script src="assets/js/storage.js?v=20260722-building-lookup-honm"></script>
 <script src="assets/js/nav.js"></script>
 </head>
 <body data-nav-active="properties">
@@ -77,6 +77,12 @@
     </div>
     <div class="edit-modal-body">
 
+    <!-- 건축물대장 자동조회 결과 참고 (자동조회 성공 시에만 표시) -->
+    <div id="editBuildingLookupRefBox" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;padding:10px 14px;background:rgba(80,180,100,0.07);border:1px solid rgba(80,180,100,0.2);border-radius:10px;">
+      <strong style="color:#5cb85c;">📐 건축물대장 자동입력 참고</strong><br />
+      <span id="editBuildingLookupRefText"></span>
+    </div>
+
     <!-- 기본정보 -->
     <div class="modal-section-title">📋 기본정보</div>
     <div class="edit-grid-3">
@@ -111,7 +117,11 @@
       </div>
       <div class="field">
         <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
-        <input id="edit_mapAddress" type="text" placeholder="예) 파주시 동패동 2075" />
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="edit_mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
+          <button type="button" id="editLookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
+        </div>
+        <span id="editLookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
       <div class="field">
         <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
@@ -600,6 +610,12 @@ function closeHomepageTab(tab) {
 
   // ── 수정 모달 ──
   function openEditModal(item) {
+    // 이전에 열었던 매물의 건축물대장 자동조회 상태(배너/상태문구)가 남아있지 않도록 초기화
+    const lookupStatusEl = document.getElementById("editLookupBuildingStatus");
+    if (lookupStatusEl) lookupStatusEl.textContent = "";
+    const lookupRefBox = document.getElementById("editBuildingLookupRefBox");
+    if (lookupRefBox) lookupRefBox.style.display = "none";
+
     const category = getCategoryFromListing(item);
     // 세부구분이 표준값과 일치하지 않는 "확인 필요" 상태일 때 type을 임의로 덮어쓰지 않도록,
     // 기존 원본 type 값을 먼저 채워둔다(updateEditDynamicSections가 표준 일치 시에만 재계산함).
@@ -690,6 +706,141 @@ function closeHomepageTab(tab) {
   document.getElementById("editAddImageSlotBtn")?.addEventListener("click", addEditImageSlot);
   document.getElementById("edit_category1")?.addEventListener("change", () => renderEditCategory2Options());
   document.getElementById("edit_category2")?.addEventListener("change", updateEditDynamicSections);
+
+  // ── 공개주소 → 지도검색주소 자동복사 (번지는 직접 추가 입력) ──────────
+  (function setupEditPublicToMapAddressSync() {
+    const publicEl = document.getElementById('edit_publicAddress');
+    const mapEl = document.getElementById('edit_mapAddress');
+    if (!publicEl || !mapEl) return;
+    let lastSynced = mapEl.value;
+
+    publicEl.addEventListener('input', () => {
+      if (mapEl.value === '' || mapEl.value === lastSynced) {
+        mapEl.value = publicEl.value;
+        lastSynced = mapEl.value;
+      }
+    });
+  })();
+
+  // ── 건축물대장 자동조회 (지도검색주소 기준, 버튼 클릭 시에만 실행) ──────────
+  (function setupEditBuildingLookup() {
+    const btn = document.getElementById('editLookupBuildingBtn');
+    const statusEl = document.getElementById('editLookupBuildingStatus');
+    const refBox = document.getElementById('editBuildingLookupRefBox');
+    const refText = document.getElementById('editBuildingLookupRefText');
+    if (!btn) return;
+
+    // "20020531" → "2002-05-31" (approvalDate 필드가 기대하는 형식)
+    function formatAprDay(raw) {
+      const digits = String(raw || '').replace(/[^0-9]/g, '');
+      if (digits.length !== 8) return '';
+      return digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6, 8);
+    }
+
+    // 지도검색주소에 "와동동 1384, 914호"처럼 호수까지 같이 적었을 때만 추출한다.
+    // 번지 숫자(1384)를 호수로 착각하지 않도록 "호" 글자가 붙은 경우만 인정한다.
+    function extractHoFromAddress(address) {
+      const hoMatch = String(address || '').match(/(\d+)\s*호/);
+      return hoMatch ? hoMatch[1] : '';
+    }
+
+    // "115동 1층, 상가 101호" 같은 상세주소·동호수 필드에서 호수만 추출한다.
+    function extractHoNm(detailAddress) {
+      const s = String(detailAddress || '');
+      const hoMatch = s.match(/(\d+)\s*호/);
+      if (hoMatch) return hoMatch[1];
+      const anyDigits = s.match(/\d+/);
+      return anyDigits ? anyDigits[0] : '';
+    }
+
+    // "103동 4802호"처럼 동 번호가 같이 있으면 추출한다. 법정동 이름(예: "와동동")은
+    // 숫자 없이 한글+동이라 "숫자+동" 패턴과 겹치지 않는다.
+    function extractDongNm(text) {
+      const m = String(text || '').match(/(\d+)\s*동/);
+      return m ? m[1] : '';
+    }
+
+    btn.addEventListener('click', async () => {
+      const address = document.getElementById('edit_mapAddress').value.trim();
+      if (!address) {
+        showToast('❌ 지도검색주소를 먼저 입력해주세요.');
+        return;
+      }
+      const detailAddressVal = document.getElementById('edit_privateDetailAddress').value;
+      const hoNm = extractHoFromAddress(address) || extractHoNm(detailAddressVal);
+      const dongNm = extractDongNm(address) || extractDongNm(detailAddressVal);
+
+      btn.disabled = true;
+      if (statusEl) statusEl.textContent = '조회 중...';
+      if (refBox) refBox.style.display = 'none';
+
+      try {
+        const result = await lookupBuildingRegister(address, { hoNm, dongNm });
+        const filled = [];
+
+        // 연면적 → category1/category2에 따라 edit_areaM2 / edit_exclusiveAreaM2 / edit_totalFloorAreaM2 중 해당 필드
+        const cat1 = document.getElementById('edit_category1').value;
+        const cat2 = document.getElementById('edit_category2').value;
+        const storageCat1 = resolveStorageCategory1(cat1, cat2);
+        const variant = EDIT_AREA_MAP[storageCat1];
+        const areaFieldId = variant === 'land' ? 'edit_areaM2' : variant === 'exclusive' ? 'edit_exclusiveAreaM2' : variant === 'building' ? 'edit_totalFloorAreaM2' : null;
+        if (result.area_m2 && areaFieldId) {
+          const el = document.getElementById(areaFieldId);
+          if (el) {
+            el.value = result.area_m2;
+            el.dispatchEvent(new Event('input'));
+            filled.push('연면적');
+          }
+        }
+
+        if (result.floor_info) {
+          const el = document.getElementById('edit_floorInfo');
+          if (el) { el.value = result.floor_info; filled.push('층수'); }
+        }
+
+        const aprDay = formatAprDay(result.use_apr_day);
+        if (aprDay) {
+          const el = document.getElementById('edit_approvalDate');
+          if (el) { el.value = aprDay; filled.push('사용승인일'); }
+        }
+
+        const extraParts = [
+          result.main_purpose ? `주용도: ${result.main_purpose}` : null,
+          result.structure ? `구조: ${result.structure}` : null,
+        ].filter(Boolean);
+        if (extraParts.length) {
+          const el = document.getElementById('edit_detailDescription');
+          if (el) {
+            const note = `[건축물대장 조회 결과]\n${extraParts.join('\n')}`;
+            el.value = el.value ? (el.value + '\n\n' + note) : note;
+            filled.push('상세설명 참고');
+          }
+        }
+
+        if (result.unit_area_warning) {
+          if (statusEl) statusEl.textContent = '⚠️ 건물 전체 면적으로 채워짐 — 확인 필요';
+          if (refBox && refText) {
+            refText.textContent = '⚠️ 호실(' + (hoNm || '?') + '호) 전유면적을 찾지 못해 건물 전체 면적으로 채워졌습니다. 연면적 값을 직접 확인 후 저장하세요.';
+            refBox.style.display = '';
+          }
+        } else {
+          if (statusEl) statusEl.textContent = '✅ 자동입력됨';
+          if (refBox && refText) {
+            refText.textContent = (filled.length ? filled.join(', ') + ' 항목이 ' : '') + '건축물대장 조회 결과로 자동 입력되었습니다. 값을 확인 후 저장하세요.';
+            refBox.style.display = '';
+          }
+        }
+      } catch (err) {
+        if (statusEl) statusEl.textContent = '';
+        const msg = err && err.status === 404
+          ? '건축물대장 정보를 찾을 수 없습니다'
+          : ((err && err.message) || String(err));
+        showToast('❌ ' + msg, 4000);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  })();
 
   function getTypeLabel(type) {
     const map = { shop:"상가", office:"사무실", officetel:"오피스텔", hilsstate:"힐스테이트더운정", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
