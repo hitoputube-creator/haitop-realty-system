@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-  <script src="assets/js/storage.js?v=20260723-retry-timeout"></script>
+  <script src="assets/js/storage.js?v=20260723-quick-filter"></script>
   <script src="assets/js/nav.js"></script>
 </head>
 <body data-nav-active="properties">
@@ -337,7 +337,7 @@
   const cat1El = document.getElementById('category1Select');
   const cat2El = document.getElementById('category2Select');
 
-  setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName');
+  setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName', 'category1Select', 'category2Select');
 
   function renderCat2() {
     const opts = CATEGORY_OPTIONS[cat1El.value] || [];

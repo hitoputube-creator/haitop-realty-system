@@ -61,24 +61,37 @@ const UNJEONG_QUICK_BUILDINGS = [
 ];
 
 // register.html / detail.html(수정 모달) 공용: 빠른선택 <select>를 채우고,
-// 선택 시 공개주소·지도검색주소·단지명을 자동입력한다.
-function setupQuickBuildingSelect(selectId, publicId, mapId, complexId) {
+// 선택 시 공개주소·지도검색주소·단지명을 자동입력한다. 2차구분이 "오피스텔"이면
+// 오피스텔만, 그 외(상가 등)면 상가+오피스텔 전체를 보여준다.
+function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category1Id, category2Id) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
 
-  const byCategory = {};
-  UNJEONG_QUICK_BUILDINGS.forEach((b, i) => {
-    (byCategory[b.category] = byCategory[b.category] || []).push(i);
-  });
-  let html = '<option value="">직접 입력 (목록에 없는 건물)</option>';
-  Object.keys(byCategory).forEach((cat) => {
-    html += `<optgroup label="${cat}">`;
-    byCategory[cat].forEach((i) => {
-      html += `<option value="${i}">${UNJEONG_QUICK_BUILDINGS[i].name}</option>`;
+  function render() {
+    const cat2 = category2Id ? (document.getElementById(category2Id)?.value || "") : "";
+    const onlyOfficetel = cat2 === "오피스텔";
+    const prevValue = sel.value;
+
+    const byCategory = {};
+    UNJEONG_QUICK_BUILDINGS.forEach((b, i) => {
+      if (onlyOfficetel && b.category !== "오피스텔") return;
+      (byCategory[b.category] = byCategory[b.category] || []).push(i);
     });
-    html += "</optgroup>";
-  });
-  sel.innerHTML = html;
+    let html = '<option value="">직접 입력 (목록에 없는 건물)</option>';
+    Object.keys(byCategory).forEach((cat) => {
+      html += `<optgroup label="${cat}">`;
+      byCategory[cat].forEach((i) => {
+        html += `<option value="${i}">${UNJEONG_QUICK_BUILDINGS[i].name}</option>`;
+      });
+      html += "</optgroup>";
+    });
+    sel.innerHTML = html;
+    if (prevValue && sel.querySelector(`option[value="${prevValue}"]`)) {
+      sel.value = prevValue;
+    }
+  }
+
+  render();
 
   sel.addEventListener("change", () => {
     if (!sel.value) return;
@@ -91,6 +104,15 @@ function setupQuickBuildingSelect(selectId, publicId, mapId, complexId) {
     if (mapEl) mapEl.value = "파주시 " + b.addr;
     if (complexEl) complexEl.value = b.name;
   });
+
+  if (category2Id) {
+    const cat2El = document.getElementById(category2Id);
+    if (cat2El) cat2El.addEventListener("change", render);
+  }
+  if (category1Id) {
+    const cat1El = document.getElementById(category1Id);
+    if (cat1El) cat1El.addEventListener("change", render);
+  }
 }
 
 // ===== \ud45c\uc900 \ub9e4\ubb3c \uce74\ud14c\uace0\ub9ac (1\ub2e8\uacc4 \uac1c\ud3b8 \u2014 \ud648\ud398\uc774\uc9c0 \uce74\ud14c\uace0\ub9ac\uc640 \ud1b5\uc77c) =====
