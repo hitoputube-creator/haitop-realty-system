@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-  <script src="assets/js/storage.js?v=20260722-quick-buildings"></script>
+  <script src="assets/js/storage.js?v=20260723-retry-timeout"></script>
   <script src="assets/js/nav.js"></script>
 </head>
 <body data-nav-active="properties">
@@ -496,10 +496,18 @@
         }
       } catch (err) {
         if (statusEl) statusEl.textContent = '';
-        const msg = err && err.status === 404
-          ? '건축물대장 정보를 찾을 수 없습니다'
-          : ((err && err.message) || String(err));
-        showToast('❌ ' + msg, 4000);
+        let msg;
+        if (err && err.status === 404) {
+          msg = '건축물대장 정보를 찾을 수 없습니다';
+        } else if (err && (err.status === 502 || err.status === undefined)) {
+          // 502(국토부 API 오류)나 타임아웃은 대부분 data.go.kr 게이트웨이의
+          // 일시적인 장애다 — 서버에서 이미 재시도했는데도 실패한 경우이므로
+          // 잠시 후 다시 시도해보라고 안내한다.
+          msg = ((err && err.message) || String(err)) + ' — 국토부 API 일시 장애일 수 있습니다. 잠시 후 다시 시도해주세요.';
+        } else {
+          msg = (err && err.message) || String(err);
+        }
+        showToast('❌ ' + msg, 5000);
       } finally {
         btn.disabled = false;
       }

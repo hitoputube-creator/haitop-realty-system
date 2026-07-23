@@ -81,6 +81,18 @@ function parseAddress(address: string): ParsedAddress | null {
   };
 }
 
+// data.go.kr 게이트웨이가 가끔 일시적으로 500을 던진다(실측 확인 — 연속 2번
+// 실패한 사례도 있어 최대 2회까지 재시도한다). 5xx일 때만 짧은 대기 후
+// 재시도한다. 4xx는 재시도해도 소용없으므로 바로 반환한다.
+async function fetchWithRetry(url: string, init?: RequestInit, retries = 2, delayMs = 400): Promise<Response> {
+  let res = await fetch(url, init);
+  for (let attempt = 0; attempt < retries && res.status >= 500; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    res = await fetch(url, init);
+  }
+  return res;
+}
+
 // 법정동코드 검색 (행정표준코드관리시스템, StanReginCd) → 5자리 시군구코드 + 5자리 법정동코드
 async function lookupDongCode(sigunguName: string, dongName: string): Promise<Codes | null> {
   if (!LEGAL_DONG_CODE_API_KEY) {
@@ -91,7 +103,7 @@ async function lookupDongCode(sigunguName: string, dongName: string): Promise<Co
     `&type=json&pageNo=1&numOfRows=20` +
     `&locatadd_nm=${encodeURIComponent(`${sigunguName} ${dongName}`)}`;
 
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; hitop-realty-system/1.0)" },
   });
   if (!res.ok) {
@@ -124,7 +136,7 @@ function bldRgstHubUrl(op: string, codes: Codes, parsed: ParsedAddress): string 
 async function lookupTitleInfo(codes: Codes, parsed: ParsedAddress) {
   const url = `${bldRgstHubUrl("getBrTitleInfo", codes, parsed)}&numOfRows=5`;
 
-  const res = await fetch(url);
+  const res = await fetchWithRetry(url);
   const rawText = await res.text();
 
   if (!res.ok) {
@@ -173,7 +185,7 @@ async function lookupExclusiveArea(
   const candidates: any[] = [];
   for (let pageNo = 1; pageNo <= MAX_PAGES; pageNo++) {
     const url = `${base}&numOfRows=100&pageNo=${pageNo}`;
-    const res = await fetch(url);
+    const res = await fetchWithRetry(url);
     if (!res.ok) {
       console.error(`[lookup-building-register] getBrExposPubuseAreaInfo HTTP ${res.status}`);
       break;
