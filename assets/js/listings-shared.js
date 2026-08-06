@@ -360,9 +360,9 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
         <button class="btn btn-primary" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>
         <button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>
         ${deleteButton}
-        <button class="lc-status-chip${isDone ? " done" : ""}" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
       </div>
       <div class="lc-actions-side">
+        <button class="lc-status-chip${isDone ? " done" : ""}" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
         <div class="lc-toggle" onclick="event.stopPropagation()">
           <span class="lc-toggle-label">홈페이지</span>
           <span class="lc-switch">
