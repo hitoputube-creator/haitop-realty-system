@@ -1098,23 +1098,52 @@
         renderCat2();
       }
 
-      // 집주인 연락처 (빠른저장 → 연락처1로 승계)
-      if (p.quick_contact) {
+      const titleValue = p.title || "";
+      const nameValue = p.customerName || p.customer_name || "";
+      const phoneValue = p.customerPhone || p.customer_phone || p.quick_contact || "";
+      const titleEl = document.getElementById("title");
+      if (titleEl && titleValue && !titleEl.value.trim()) titleEl.value = titleValue.slice(0, 20);
+      const ownerEl = document.getElementById("owner_name");
+      if (ownerEl && nameValue && !ownerEl.value.trim()) ownerEl.value = nameValue;
+      // 집주인 연락처 (빠른저장/업무일지 → 연락처1로 승계)
+      if (phoneValue) {
         const phone1El = document.getElementById("owner_phone1");
-        if (phone1El && !phone1El.value) phone1El.value = formatKoreanPhoneInput(p.quick_contact);
+        if (phone1El && !phone1El.value) phone1El.value = formatKoreanPhoneInput(phoneValue);
       }
       // 내부 메모 + 가격 참고 (quick_price는 자유형식 텍스트이므로 숫자 필드에 넣지 않음)
+      const priceLine = p.quick_price ? `[빠른저장 가격 참고: ${p.quick_price}]\n` : "";
+      const memoLine  = p.quick_memo  || "";
       const descEl = document.getElementById("description");
       if (descEl) {
-        const priceLine = p.quick_price ? `[빠른저장 가격 참고: ${p.quick_price}]\n` : "";
-        const memoLine  = p.quick_memo  || "";
         if (!descEl.value) descEl.value = (priceLine + memoLine).trim();
+      }
+      const detailEl = document.getElementById("detailDescription");
+      if (detailEl && !detailEl.value.trim()) detailEl.value = (priceLine + memoLine).trim();
+      const rawPhotos = p.photos || "";
+      if (rawPhotos) {
+        try {
+          const parsed = typeof rawPhotos === "string" ? JSON.parse(rawPhotos) : rawPhotos;
+          const urls = uniqueRegisterUrls((Array.isArray(parsed) ? parsed : [])
+            .map(photo => typeof photo === "string" ? photo : (photo && (photo.url || photo.public_url)))
+          );
+          const remaining = MAX_LISTING_IMAGES - getRegisterImageTotal();
+          const toImport = urls.slice(0, remaining);
+          _importedImageUrls = uniqueRegisterUrls(_importedImageUrls.concat(toImport));
+          _importedImagePublicFlags = _importedImageUrls.map((_, idx) => _importedImagePublicFlags[idx] !== false);
+          renderImagePreview();
+          if (urls.length > remaining) showToast(`업무일지 사진은 최대 ${MAX_LISTING_IMAGES}장까지만 가져왔습니다.`, 3500);
+        } catch (e) {
+          console.warn("[업무일지 사진 가져오기 실패]", e.message || e);
+        }
       }
       // 공개주소/지도주소는 직접 입력 — 빠른저장 위치는 참고용으로만 표시
       const refBox = document.getElementById("prefillRefBox");
       const refText = document.getElementById("prefillRefText");
-      if (refBox && refText && p.quick_location) {
-        refText.textContent = `빠른저장 위치(참고용, 직접 확인 후 공개주소에 입력): ${p.quick_location}`;
+      if (refBox && refText && (p.quick_location || p.quick_memo || _importedImageUrls.length)) {
+        const locationText = p.quick_location
+          ? ` / 위치 참고: ${p.quick_location}`
+          : "";
+        refText.textContent = `업무일지 메모와 첨부사진 ${_importedImageUrls.length}장이 자동 입력되었습니다.${locationText}`;
         refBox.style.display = "";
       }
     } catch(e) { /* 무시 */ }

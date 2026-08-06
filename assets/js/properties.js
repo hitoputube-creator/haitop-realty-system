@@ -868,11 +868,15 @@ function cmCopy() {
   const prefill = {
     type:           params.get('type') || params.get('property_type') || '',
     quick_price:    '',
-    quick_contact:  params.get('contact') || '',
+    quick_contact:  params.get('contact') || params.get('customerPhone') || '',
     quick_memo:     memo,
     drive_links:    [],
     quick_location: params.get('address') || '',
-    source_id:      null
+    source_id:      params.get('diaryId') || null,
+    title:          params.get('title') || '',
+    customerName:   params.get('customerName') || '',
+    customerPhone:  params.get('customerPhone') || params.get('contact') || '',
+    photos:         params.get('photos') || ''
   };
   sessionStorage.setItem('hitop_detail_prefill', JSON.stringify(prefill));
   location.replace('register.html');
