@@ -260,15 +260,9 @@
       <div class="field">
         <label>연락처1</label>
         <input id="edit_owner_phone1" type="tel" placeholder="010-0000-0000" />
-        <button type="button" id="editAddOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addEditOwnerPhone2()">+ 연락처 추가</button>
+        <button type="button" id="editAddOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addEditContactRow()">+ 연락처 추가</button>
       </div>
-      <div id="edit_ownerPhone2Row" class="field" style="display:none;grid-column:1 / -1;">
-        <label>연락처2</label>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <input id="edit_owner_phone2" type="tel" placeholder="010-0000-0000" style="flex:1;" />
-          <button type="button" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeEditOwnerPhone2()">삭제</button>
-        </div>
-      </div>
+      <div id="edit_additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field">
         <label>드라이브 자료 연결</label>
         <select id="edit_resource_id"><option value="">-- 연결 안함 --</option></select>
@@ -471,19 +465,64 @@ function closeHomepageTab(tab) {
   document.addEventListener("DOMContentLoaded", setupEditPricePreviews);
 
   // 소유주 연락처2 토글
-  function addEditOwnerPhone2() {
-    document.getElementById("edit_ownerPhone2Row").style.display = "";
-    document.getElementById("editAddOwnerPhone2Btn").style.display = "none";
-    document.getElementById("edit_owner_phone2").focus();
+  // 추가 연락처(다중) — 이름(선택) + 연락처 + 삭제, 여러 명 추가 가능
+  let _editContactRowSeq = 0;
+  function makeEditContactRowHtml(idx) {
+    return `<div class="contact-row" data-idx="${idx}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+      <input type="text" class="contact-name-input" placeholder="이름 또는 관계자명(선택)" style="flex:0 0 140px;" />
+      <input type="tel" class="contact-phone-input" placeholder="010-0000-0000" style="flex:1;" />
+      <button type="button" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeEditContactRow(this)">삭제</button>
+    </div>`;
   }
-  function removeEditOwnerPhone2() {
-    document.getElementById("edit_owner_phone2").value = "";
-    document.getElementById("edit_ownerPhone2Row").style.display = "none";
-    document.getElementById("editAddOwnerPhone2Btn").style.display = "";
+  function addEditContactRow(name, phone) {
+    const wrap = document.getElementById('edit_additionalContactsWrap');
+    const idx = _editContactRowSeq++;
+    wrap.insertAdjacentHTML('beforeend', makeEditContactRowHtml(idx));
+    const row = wrap.querySelector(`.contact-row[data-idx="${idx}"]`);
+    const nameInput = row.querySelector('.contact-name-input');
+    const phoneInput = row.querySelector('.contact-phone-input');
+    nameInput.value = name || '';
+    phoneInput.value = phone || '';
+    setupPhoneAutoFormat(phoneInput);
+    phoneInput.addEventListener('blur', checkEditContactDuplicates);
+    if (!phone) nameInput.focus();
+  }
+  function removeEditContactRow(btn) {
+    btn.closest('.contact-row').remove();
+  }
+  function checkEditContactDuplicates() {
+    const p1 = phoneDigitsOnly(document.getElementById('edit_owner_phone1').value);
+    const seen = new Set(p1 ? [p1] : []);
+    let dup = false;
+    document.querySelectorAll('#edit_additionalContactsWrap .contact-phone-input').forEach(input => {
+      const digits = phoneDigitsOnly(input.value);
+      if (!digits) { input.style.borderColor = ''; return; }
+      if (seen.has(digits)) { dup = true; input.style.borderColor = 'var(--red,#e05252)'; }
+      else { input.style.borderColor = ''; seen.add(digits); }
+    });
+    if (dup) showToast('연락처1 또는 다른 추가 연락처와 번호가 중복되었습니다.');
+    return dup;
+  }
+  function collectEditAdditionalContacts() {
+    const p1Digits = phoneDigitsOnly(document.getElementById('edit_owner_phone1').value);
+    const seen = new Set(p1Digits ? [p1Digits] : []);
+    const result = [];
+    let hadDup = false;
+    document.querySelectorAll('#edit_additionalContactsWrap .contact-row').forEach(row => {
+      const name = row.querySelector('.contact-name-input').value.trim();
+      const phone = row.querySelector('.contact-phone-input').value.trim();
+      if (!phone) return;
+      const digits = phoneDigitsOnly(phone);
+      if (seen.has(digits)) { hadDup = true; return; }
+      seen.add(digits);
+      result.push({ name, phone });
+    });
+    if (hadDup) showToast('연락처1 또는 다른 추가 연락처와 중복된 번호는 저장하지 않았습니다.');
+    return result;
   }
   document.addEventListener("DOMContentLoaded", () => {
     setupPhoneAutoFormat(document.getElementById("edit_owner_phone1"));
-    setupPhoneAutoFormat(document.getElementById("edit_owner_phone2"));
+    document.getElementById("edit_owner_phone1").addEventListener('blur', checkEditContactDuplicates);
   });
 
 
@@ -666,14 +705,14 @@ function closeHomepageTab(tab) {
     // 내부전용
     document.getElementById("edit_owner_name").value   = item.owner_name || "";
     document.getElementById("edit_owner_phone1").value = item.owner_phone1 || "";
-    if (item.owner_phone2) {
-      document.getElementById("edit_owner_phone2").value = item.owner_phone2;
-      document.getElementById("edit_ownerPhone2Row").style.display = "";
-      document.getElementById("editAddOwnerPhone2Btn").style.display = "none";
-    } else {
-      document.getElementById("edit_owner_phone2").value = "";
-      document.getElementById("edit_ownerPhone2Row").style.display = "none";
-      document.getElementById("editAddOwnerPhone2Btn").style.display = "";
+    // 추가 연락처: 신규 다중 목록이 있으면 그대로, 없으면 기존 연락처2를 1건으로 승계 표시
+    document.getElementById("edit_additionalContactsWrap").innerHTML = "";
+    _editContactRowSeq = 0;
+    const existingContacts = Array.isArray(item.additional_contacts) ? item.additional_contacts : [];
+    if (existingContacts.length) {
+      existingContacts.forEach(c => addEditContactRow(c && c.name, c && c.phone));
+    } else if (item.owner_phone2) {
+      addEditContactRow("", item.owner_phone2);
     }
     const _legacyContact = item.owner_contact || item.quick_contact || "";
     let _ownerMemoVal = item.owner_memo || "";
@@ -1064,6 +1103,10 @@ function closeHomepageTab(tab) {
       detailField("소유주명", firstDetailValue(item.owner_name, item.quick_owner)),
       detailField("연락처1", contact),
       detailField("연락처2", item.owner_phone2),
+      detailField("관계자 연락처", (Array.isArray(item.additional_contacts) ? item.additional_contacts : [])
+        .filter(c => c && c.phone)
+        .map(c => c.name ? `${c.name} - ${c.phone}` : c.phone)
+        .join("\n"), { wide: true, pre: true }),
       detailField("추가 연락처", differentValue(firstDetailValue(item.owner_contact, item.quick_contact), contact)),
       detailField("소유주 메모", item.owner_memo, { wide: true, pre: true }),
     ], { private: true });
@@ -1321,6 +1364,7 @@ function closeHomepageTab(tab) {
         const editTitle          = gv("edit_title");
         const stickers           = Array.from(document.querySelectorAll("input[name='edit_stickers']:checked")).map(c => c.value);
         const newImageFiles      = _editNewImageFiles;
+        const _editAdditionalContacts = collectEditAdditionalContacts();
 
         const updated = Object.assign({}, item, {
           type, category1, category2,
@@ -1370,16 +1414,8 @@ function closeHomepageTab(tab) {
           detailDescription:  gv("edit_detailDescription"),
           owner_name:         gv("edit_owner_name"),
           owner_phone1:       gv("edit_owner_phone1"),
-          owner_phone2:       (() => {
-            const rowVisible = document.getElementById("edit_ownerPhone2Row").style.display !== "none";
-            if (!rowVisible) return "";
-            const p1 = gv("edit_owner_phone1"), p2 = gv("edit_owner_phone2");
-            if (p2 && phoneDigitsOnly(p2) === phoneDigitsOnly(p1)) {
-              showToast("연락처2가 연락처1과 동일하여 저장하지 않았습니다.");
-              return "";
-            }
-            return p2;
-          })(),
+          additional_contacts: _editAdditionalContacts,
+          owner_phone2:       _editAdditionalContacts.length ? _editAdditionalContacts[0].phone : "",
           owner_memo:         gv("edit_owner_memo"),
           stickers,
         });

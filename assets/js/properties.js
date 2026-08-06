@@ -1027,8 +1027,9 @@ function cmCopy() {
 // ===== 업무일지 매물보내기 연동 =====
 // 빠른저장 폼이 사라졌으므로, ?memo= 등으로 진입하면 register.html의 상세등록 폼으로
 // 넘겨준다. register.html은 sessionStorage("hitop_detail_prefill")를 읽어
-// quick_memo→설명, quick_contact→연락처1, quick_location→참고 위치, type→1차구분으로
-// 자동입력하는 기존 로직(빠른저장→상세저장 전환과 동일 경로)을 그대로 재사용한다.
+// quick_memo→내부 메모(비공개, description 필드), quick_contact→연락처1, quick_location→참고 위치,
+// type→1차구분으로 자동입력하는 기존 로직(빠른저장→상세저장 전환과 동일 경로)을 그대로 재사용한다.
+// 공개 매물설명(detailDescription)에는 자동입력하지 않는다 — 공개 여부는 등록자가 직접 판단해 입력한다.
 (function () {
   const params = new URLSearchParams(window.location.search);
   const memo = params.get('memo');

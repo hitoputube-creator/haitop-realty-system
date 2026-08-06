@@ -270,15 +270,9 @@
       <div class="field">
         <label>연락처1</label>
         <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
-        <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addOwnerPhone2()">+ 연락처 추가</button>
+        <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addContactRow()">+ 연락처 추가</button>
       </div>
-      <div id="ownerPhone2Row" class="field" style="display:none;grid-column:1 / -1;">
-        <label>연락처2</label>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <input id="owner_phone2" type="tel" placeholder="010-0000-0000" style="flex:1;" />
-          <button type="button" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeOwnerPhone2()">삭제</button>
-        </div>
-      </div>
+      <div id="additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field">
         <label>드라이브 자료 연결</label>
         <select id="resource_id">
@@ -712,20 +706,64 @@
   }
   document.addEventListener("DOMContentLoaded", setupRegisterPricePreviews);
 
-  // 소유주 연락처2 토글
-  function addOwnerPhone2() {
-    document.getElementById('ownerPhone2Row').style.display = '';
-    document.getElementById('addOwnerPhone2Btn').style.display = 'none';
-    document.getElementById('owner_phone2').focus();
+  // 추가 연락처(다중) — 이름(선택) + 연락처 + 삭제, 여러 명 추가 가능
+  let _contactRowSeq = 0;
+  function makeContactRowHtml(idx) {
+    return `<div class="contact-row" data-idx="${idx}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+      <input type="text" class="contact-name-input" placeholder="이름 또는 관계자명(선택)" style="flex:0 0 140px;" />
+      <input type="tel" class="contact-phone-input" placeholder="010-0000-0000" style="flex:1;" />
+      <button type="button" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeContactRow(this)">삭제</button>
+    </div>`;
   }
-  function removeOwnerPhone2() {
-    document.getElementById('owner_phone2').value = '';
-    document.getElementById('ownerPhone2Row').style.display = 'none';
-    document.getElementById('addOwnerPhone2Btn').style.display = '';
+  function addContactRow(name, phone) {
+    const wrap = document.getElementById('additionalContactsWrap');
+    const idx = _contactRowSeq++;
+    wrap.insertAdjacentHTML('beforeend', makeContactRowHtml(idx));
+    const row = wrap.querySelector(`.contact-row[data-idx="${idx}"]`);
+    const nameInput = row.querySelector('.contact-name-input');
+    const phoneInput = row.querySelector('.contact-phone-input');
+    nameInput.value = name || '';
+    phoneInput.value = phone || '';
+    setupPhoneAutoFormat(phoneInput);
+    phoneInput.addEventListener('blur', checkContactDuplicates);
+    if (!phone) nameInput.focus();
+  }
+  function removeContactRow(btn) {
+    btn.closest('.contact-row').remove();
+  }
+  function checkContactDuplicates() {
+    const p1 = phoneDigitsOnly(document.getElementById('owner_phone1').value);
+    const seen = new Set(p1 ? [p1] : []);
+    let dup = false;
+    document.querySelectorAll('#additionalContactsWrap .contact-phone-input').forEach(input => {
+      const digits = phoneDigitsOnly(input.value);
+      if (!digits) { input.style.borderColor = ''; return; }
+      if (seen.has(digits)) { dup = true; input.style.borderColor = 'var(--red,#e05252)'; }
+      else { input.style.borderColor = ''; seen.add(digits); }
+    });
+    if (dup) showToast('연락처1 또는 다른 추가 연락처와 번호가 중복되었습니다.');
+    return dup;
+  }
+  function collectAdditionalContacts() {
+    const p1Digits = phoneDigitsOnly(document.getElementById('owner_phone1').value);
+    const seen = new Set(p1Digits ? [p1Digits] : []);
+    const result = [];
+    let hadDup = false;
+    document.querySelectorAll('#additionalContactsWrap .contact-row').forEach(row => {
+      const name = row.querySelector('.contact-name-input').value.trim();
+      const phone = row.querySelector('.contact-phone-input').value.trim();
+      if (!phone) return;
+      const digits = phoneDigitsOnly(phone);
+      if (seen.has(digits)) { hadDup = true; return; }
+      seen.add(digits);
+      result.push({ name, phone });
+    });
+    if (hadDup) showToast('연락처1 또는 다른 추가 연락처와 중복된 번호는 저장하지 않았습니다.');
+    return result;
   }
   document.addEventListener("DOMContentLoaded", () => {
     setupPhoneAutoFormat(document.getElementById('owner_phone1'));
-    setupPhoneAutoFormat(document.getElementById('owner_phone2'));
+    document.getElementById('owner_phone1').addEventListener('blur', checkContactDuplicates);
   });
 
 
@@ -752,6 +790,7 @@
     const mapAddress           = document.getElementById("mapAddress").value.trim();
     const privateDetailAddress = document.getElementById("privateDetailAddress").value.trim();
     const complexName          = document.getElementById("complexName").value.trim();
+    const _additionalContacts  = collectAdditionalContacts();
 
     const item = {
       id: 'HITOP-' + Date.now(),
@@ -801,16 +840,8 @@
       detailDescription: gv('detailDescription'),
       owner_name:   gv('owner_name'),
       owner_phone1: gv('owner_phone1'),
-      owner_phone2: (() => {
-        const rowVisible = document.getElementById('ownerPhone2Row').style.display !== 'none';
-        if (!rowVisible) return '';
-        const p1 = gv('owner_phone1'), p2 = gv('owner_phone2');
-        if (p2 && phoneDigitsOnly(p2) === phoneDigitsOnly(p1)) {
-          showToast('연락처2가 연락처1과 동일하여 저장하지 않았습니다.');
-          return '';
-        }
-        return p2;
-      })(),
+      additional_contacts: _additionalContacts,
+      owner_phone2: _additionalContacts.length ? _additionalContacts[0].phone : '',
       owner_memo:   gv('owner_memo'),
       stickers,
     };
@@ -1043,10 +1074,9 @@
       const titleParam = _qp.get("title") || "";
       const nameParam = _qp.get("customerName") || "";
       const phoneParam = _qp.get("customerPhone") || "";
+      // 내부 메모(비공개)에만 채운다 — 공개 매물설명(detailDescription)은 공란 유지
       const descEl = document.getElementById("description");
       if (descEl && !descEl.value.trim()) descEl.value = importedMemo;
-      const detailEl = document.getElementById("detailDescription");
-      if (detailEl && !detailEl.value.trim()) detailEl.value = importedMemo;
       const titleEl = document.getElementById("title");
       if (titleEl && titleParam && !titleEl.value.trim()) titleEl.value = titleParam.slice(0, 20);
       const ownerEl = document.getElementById("owner_name");
@@ -1113,12 +1143,11 @@
       // 내부 메모 + 가격 참고 (quick_price는 자유형식 텍스트이므로 숫자 필드에 넣지 않음)
       const priceLine = p.quick_price ? `[빠른저장 가격 참고: ${p.quick_price}]\n` : "";
       const memoLine  = p.quick_memo  || "";
+      // 내부 메모(비공개)에만 채운다 — 공개 매물설명(detailDescription)은 공란 유지
       const descEl = document.getElementById("description");
       if (descEl) {
         if (!descEl.value) descEl.value = (priceLine + memoLine).trim();
       }
-      const detailEl = document.getElementById("detailDescription");
-      if (detailEl && !detailEl.value.trim()) detailEl.value = (priceLine + memoLine).trim();
       const rawPhotos = p.photos || "";
       if (rawPhotos) {
         try {
