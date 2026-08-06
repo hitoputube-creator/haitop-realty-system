@@ -860,38 +860,132 @@ function closeHomepageTab(tab) {
     return "기타";
   }
 
-  function row(label, value) {
-    if (!value) return "";
-    return `<div><div class="info-label">${label}</div><div class="info-value">${value}</div></div>`;
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function hasDetailValue(value) {
+    if (value === null || value === undefined) return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === "object") return Object.keys(value).length > 0;
+    return String(value).trim() !== "";
+  }
+
+  function firstDetailValue(...values) {
+    return values.find(hasDetailValue) ?? "";
+  }
+
+  function detailText(value) {
+    if (!hasDetailValue(value)) return "";
+    if (Array.isArray(value)) return value.map(v => detailText(v)).filter(Boolean).join(", ");
+    if (typeof value === "object") return "";
+    return String(value).trim();
+  }
+
+  function formatWonOrText(value) {
+    const text = detailText(value);
+    if (!text) return "";
+    const formatted = formatWonKr(text);
+    return formatted || text;
+  }
+
+  function formatManWon(value) {
+    const text = detailText(value);
+    if (!text) return "";
+    const digits = text.replace(/[^\d.]/g, "");
+    if (!digits) return text;
+    const num = Number(digits);
+    if (!Number.isFinite(num)) return text;
+    return num.toLocaleString("ko-KR") + "만원";
+  }
+
+  function withSuffix(value, suffix) {
+    const text = detailText(value);
+    if (!text) return "";
+    return text.endsWith(suffix) ? text : text + suffix;
+  }
+
+  function formatAreaPair(m2, py) {
+    const parts = [];
+    const m2Text = detailText(m2);
+    const pyText = detailText(py);
+    if (m2Text) parts.push(m2Text + "㎡");
+    if (pyText) parts.push(pyText + "평");
+    return parts.join(" / ");
+  }
+
+  function formatDateValue(value) {
+    const text = detailText(value);
+    if (!text) return "";
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) return text;
+    return date.toLocaleDateString("ko-KR");
+  }
+
+  function detailField(label, value, opts = {}) {
+    const raw = opts.raw === true ? value : detailText(value);
+    if (!hasDetailValue(raw) && opts.required !== true) return "";
+    const display = hasDetailValue(raw) ? String(raw) : "-";
+    const classes = ["detail-read-value"];
+    if (opts.pre) classes.push("pre-line");
+    if (opts.price) classes.push("price");
+    const itemClass = opts.wide ? "detail-read-item wide" : "detail-read-item";
+    return `<div class="${itemClass}">
+      <div class="detail-read-label">${escapeHtml(label)}</div>
+      <div class="${classes.join(" ")}">${opts.html ? display : escapeHtml(display)}</div>
+    </div>`;
+  }
+
+  function detailSection(title, rows, opts = {}) {
+    const body = rows.filter(Boolean).join("");
+    if (!body && opts.required !== true) return "";
+    const sectionClass = opts.private ? "detail-section private-section" : "detail-section";
+    return `<section class="${sectionClass}">
+      <div class="detail-section-title">${escapeHtml(title)}</div>
+      <div class="detail-read-grid">${body || detailField("등록 정보", "-", { required: true })}</div>
+    </section>`;
+  }
+
+  function detailChips(values) {
+    const list = Array.isArray(values) ? values.map(detailText).filter(Boolean) : [];
+    if (!list.length) return "";
+    return `<div class="detail-chip-list">${list.map(v => `<span class="detail-chip">${escapeHtml(v)}</span>`).join("")}</div>`;
+  }
+
+  function differentValue(value, base) {
+    const text = detailText(value);
+    return text && text !== detailText(base) ? text : "";
   }
 
   function renderDetail(item) {
     let html = "";
+    const category = getCategoryFromListing(item);
     const imageUrls = getListingImageUrls(item);
+    const contact = firstDetailValue(item.owner_phone1, item.owner_contact, item.quick_contact);
+    const complexName = firstDetailValue(item.complexName, item.officetel_complex, item.buildingName, item.building_name, item.complex_name, item.shop_building, item.type === "hilsstate" ? "힐스테이트더운정" : "");
+    const publicAddress = firstDetailValue(item.publicAddress, item.displayAddress, item.quick_location, item.address);
+    const mapAddress = firstDetailValue(item.mapAddress, item.roadAddress, item.jibunAddress, item.locationAddress, item.privateAddress, item.address);
+    const detailAddress = firstDetailValue(item.privateDetailAddress, item.detailAddress);
 
-    // 상태 배지
     if (item.status === "거래완료") {
       html += `<div class="deal-status">거래완료</div>`;
     }
 
-    // 제목
-    html += `<div class="detail-title">${item.title || getListingCategoryLabel(item)}</div>`;
+    html += `<div class="detail-title">${escapeHtml(item.title || getListingCategoryLabel(item))}</div>`;
 
-    // 액션 버튼
-    html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">`;
+    html += `<div class="detail-actions">`;
     if (item.status !== "거래완료") {
       html += `<button class="btn btn-success" id="doneBtn">✅ 거래완료 처리</button>`;
     } else {
       html += `<button class="btn btn-ghost" id="undoneBtn">↩ 광고중으로 변경</button>`;
     }
-    const _contact = item.owner_phone1 || item.owner_contact || item.quick_contact;
-    if (_contact) {
-      html += `<a class="contact-btn" href="tel:${_contact}">📞 ${_contact}</a>`;
+    if (contact) {
+      html += `<a class="contact-btn" href="tel:${escapeAttr(contact)}">📞 ${escapeHtml(contact)}</a>`;
     }
     if (item.resource_id) {
       const res = _allDriveResources.find(r => r.id === item.resource_id);
       if (res && res.url) {
-        html += `<a class="btn btn-ghost" href="${res.url}" target="_blank" style="text-decoration:none;">📁 자료보기</a>`;
+        html += `<a class="btn btn-ghost" href="${escapeAttr(res.url)}" target="_blank" rel="noopener" style="text-decoration:none;">📁 자료보기</a>`;
       }
     }
     html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button>`;
@@ -901,144 +995,116 @@ function closeHomepageTab(tab) {
     html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
     html += `</div>`;
 
-    html += `<div style="margin-bottom:8px;"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? ' <span class="badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
+    html += `<div class="detail-badges"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
 
-    // 기본 정보 카드
-    html += `<div class="info-card"><div class="info-grid">`;
-    html += row("매물구분", getListingCategoryLabel(item));
-    html += row("단지명", item.complexName || (item.type === "hilsstate" ? "힐스테이트더운정" : ""));
-    html += row("공개주소", item.publicAddress || item.address);
-    html += row("소유주명", item.owner_name);
-    html += row("연락처1", item.owner_phone1 || item.owner_contact || item.quick_contact);
-    html += row("연락처2", item.owner_phone2);
-    html += row("소유주 메모", item.owner_memo);
+    html += detailSection("기본정보", [
+      detailField("1차 구분", category.category1 || item.category1),
+      detailField("2차 구분", category.category2 || item.category2),
+      detailField("거래유형", firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "")),
+      detailField("제목", item.title),
+      detailField("단지명", complexName),
+      detailField("매물구분", getListingCategoryLabel(item))
+    ], { required: true });
 
-    if (item.type === "shop" || item.type === "office") {
-      html += row("거래유형", item.shop_dealType);
-      html += row("층수", item.shop_floor);
-      html += row("전용면적", item.shop_area_py ? item.shop_area_py+"평" : "");
-      html += row("보증금", item.shop_deposit ? Number(item.shop_deposit).toLocaleString("ko-KR")+"만원" : "");
-      html += row("월세", item.shop_monthlyRent ? Number(item.shop_monthlyRent).toLocaleString("ko-KR")+"만원" : "");
-      html += row("관리비", item.shop_maintenance ? item.shop_maintenance+"만원" : "");
-      html += row("권리금", item.shop_premium);
-      html += row("임대상태", item.shop_status);
-      html += row("예상 수익률", item.shop_yield ? item.shop_yield+"%" : "");
-      html += row("주차", item.shop_parking);
-      html += row("입주가능일", item.shop_available);
-    }
-    if (item.type === "officetel" || item.type === "hilsstate") {
-      if (item.type === "hilsstate") html += row("단지명", "힐스테이트더운정");
-      else html += row("단지명", item.officetel_complex);
-      html += row("타입", item.officetel_type);
-      html += row("구조", item.officetel_structure);
-      html += row("층수", item.officetel_floor);
-      html += row("거래유형", item.officetel_dealType);
-      html += row("금액", item.officetel_price ? Number(item.officetel_price).toLocaleString("ko-KR")+"만원" : "");
-      html += row("전용면적", item.officetel_area_py ? item.officetel_area_py+"평" : "");
-      html += row("향", item.officetel_direction);
-      html += row("일반사업자", item.officetel_biz);
-      html += row("전입", item.officetel_resident);
-      html += row("주차", item.officetel_parking);
-      html += row("입주가능일", item.officetel_available);
-    }
-    if (item.type && item.type.startsWith("land")) {
-      html += row("토지종류", item.land_kind);
-      html += row("면적", item.land_area_py ? item.land_area_py+"평" : "");
-      html += row("지목", item.land_jimok);
-      html += row("용도지역", item.land_zone);
-      html += row("건폐율", item.land_coverage ? item.land_coverage+"%" : "");
-      html += row("용적률", item.land_far ? item.land_far+"%" : "");
-      html += row("도로", item.land_road);
-      html += row("형상", item.land_shape);
-      html += row("매매가", item.land_price ? Number(item.land_price).toLocaleString("ko-KR")+"만원" : "");
-    }
-    if (item.type === "factory") {
-      html += row("구분", item.factory_kind);
-      html += row("대지면적", item.factory_siteArea_py ? item.factory_siteArea_py+"평" : "");
-      html += row("건물면적", item.factory_buildArea_py ? item.factory_buildArea_py+"평" : "");
-      html += row("층고", item.factory_height ? item.factory_height+"m" : "");
-      html += row("전력", item.factory_power ? item.factory_power+"kW" : "");
-      html += row("대형차", item.factory_truck);
-      html += row("거래유형", item.factory_dealType);
-      html += row("금액", item.factory_price ? Number(item.factory_price).toLocaleString("ko-KR")+"만원" : "");
-      html += row("주차", item.factory_parking);
-      html += row("입주가능일", item.factory_available);
-    }
-    if (item.type === "bizcenter") {
-      html += row("센터명", item.biz_name);
-      html += row("구분", item.biz_kind);
-      html += row("층수", item.biz_floor);
-      html += row("전용면적", item.biz_privArea_py ? item.biz_privArea_py+"평" : "");
-      html += row("거래유형", item.biz_dealType);
-      html += row("금액", item.biz_price ? Number(item.biz_price).toLocaleString("ko-KR")+"만원" : "");
-      html += row("주차", item.biz_parking);
-      html += row("입주가능일", item.biz_available);
-    }
+    html += detailSection("주소정보", [
+      detailField("고객에게 공개되는 주소", publicAddress),
+      detailField("지도검색용 비공개 주소", mapAddress),
+      detailField("상세주소·동호수", detailAddress),
+    ], { private: true });
 
-    // 가격 표시: 숫자 salePrice 우선, 없을 때만 quick_price 폴백
-    const _salePriceFmt = formatWonKr(item.salePrice);
-    if (_salePriceFmt) {
-      const _dealLabel = item.dealType ? item.dealType + " " : "";
-      html += row("가격", _dealLabel + _salePriceFmt);
-    } else if (item.quick_price) {
-      html += row("가격(메모)", item.quick_price);
-    }
+    html += detailSection("가격·면적", [
+      detailField("매매가", formatWonOrText(item.salePrice), { price: true }),
+      detailField("분양가", formatWonOrText(item.presalePrice), { price: true }),
+      detailField("보증금", formatWonOrText(item.deposit), { price: true }),
+      detailField("월세", formatWonOrText(item.monthlyRent), { price: true }),
+      detailField("관리비", formatWonOrText(item.managementFee), { price: true }),
+      detailField("권리금", formatWonOrText(item.premium), { price: true }),
+      detailField("상가 보증금", formatManWon(item.shop_deposit), { price: true }),
+      detailField("상가 월세", formatManWon(item.shop_monthlyRent), { price: true }),
+      detailField("상가 관리비", formatManWon(item.shop_maintenance), { price: true }),
+      detailField("상가 권리금", item.shop_premium, { price: true }),
+      detailField("오피스텔 금액", formatManWon(item.officetel_price), { price: true }),
+      detailField("토지 매매가", formatManWon(item.land_price), { price: true }),
+      detailField("공장·창고 금액", formatManWon(item.factory_price), { price: true }),
+      detailField("지식산업센터 금액", formatManWon(item.biz_price), { price: true }),
+      detailField("가격 메모", item.quick_price, { price: true }),
+      detailField("토지면적", formatAreaPair(item.areaM2, item.areaPy)),
+      detailField("전용면적", formatAreaPair(item.exclusiveAreaM2 || item.shop_area_sqm || item.officetel_area_sqm || item.biz_privArea_sqm, item.exclusiveAreaPy || item.shop_area_py || item.officetel_area_py || item.biz_privArea_py)),
+      detailField("공급면적", formatAreaPair(item.supplyAreaM2, item.supplyAreaPy)),
+      detailField("대지면적", formatAreaPair(item.landAreaM2 || item.factory_siteArea_sqm, item.landAreaPy || item.factory_siteArea_py || item.factory_land_py)),
+      detailField("건축면적", formatAreaPair(item.buildingAreaM2 || item.factory_buildArea_sqm, item.buildingAreaPy || item.factory_buildArea_py || item.factory_area_py)),
+      detailField("연면적", formatAreaPair(item.totalFloorAreaM2, item.totalFloorAreaPy)),
+      detailField("레거시 토지면적", formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py)),
+    ]);
 
-    html += `</div></div>`;
+    html += detailSection("주소·건물정보", [
+      detailField("건축물 용도", firstDetailValue(item.buildingUse, item.mainUse, item.useType, item.factory_kind, item.biz_kind, item.land_kind)),
+      detailField("건물 구조", firstDetailValue(item.buildingStructure, item.structure, item.officetel_structure)),
+      detailField("층수", firstDetailValue(item.floorInfo, item.floor, item.floorTxt, item.shop_floor, item.officetel_floor, item.biz_floor)),
+      detailField("사용승인일", item.approvalDate),
+      detailField("방향", firstDetailValue(item.direction, item.officetel_direction)),
+      detailField("주차", firstDetailValue(item.parkingCount, item.shop_parking, item.officetel_parking, item.factory_parking, item.biz_parking)),
+      detailField("입주 가능일", firstDetailValue(item.availableDate, item.moveInDate, item.shop_available, item.officetel_available, item.factory_available, item.biz_available)),
+      detailField("용도지역", firstDetailValue(item.zoning, item.land_zone)),
+      detailField("지목", item.land_jimok),
+      detailField("도로 조건", firstDetailValue(item.roadAccess, item.land_road)),
+      detailField("형상", item.land_shape),
+      detailField("건폐율", withSuffix(item.land_coverage, "%")),
+      detailField("용적률", withSuffix(item.land_far, "%")),
+      detailField("층고", withSuffix(item.factory_height, "m")),
+      detailField("전력", withSuffix(item.factory_power, "kW")),
+      detailField("대형차 진입", item.factory_truck),
+      detailField("일반사업자", item.officetel_biz),
+      detailField("전입", item.officetel_resident),
+      detailField("임대상태", item.shop_status),
+      detailField("예상 수익률", withSuffix(item.shop_yield, "%")),
+    ]);
 
-    // 관리자 전용: 비공개 주소 정보
-    const _mapAddr    = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
-    const _detailAddr = item.privateDetailAddress || item.detailAddress || "";
-    if (_mapAddr || _detailAddr) {
-      html += `<div class="desc-card" style="border:1px solid rgba(255,100,100,0.2);background:rgba(255,60,60,0.04);">
-        <div class="desc-title" style="color:#e08888;margin-bottom:8px;">🔒 비공개 주소 (관리자용)</div>
-        <div style="font-size:0.85rem;line-height:1.8;">`;
-      if (_mapAddr)    html += `<div><span style="color:#888;font-size:0.78rem;">지도검색주소</span><br/><span style="color:#e0e0e0;">${_mapAddr.replace(/</g,"&lt;")}</span></div>`;
-      if (_detailAddr) html += `<div style="margin-top:6px;"><span style="color:#888;font-size:0.78rem;">상세주소·동호수</span><br/><span style="color:#e0e0e0;">${_detailAddr.replace(/</g,"&lt;")}</span></div>`;
-      html += `</div></div>`;
-    }
+    html += detailSection("소유주·연락처", [
+      detailField("소유주명", firstDetailValue(item.owner_name, item.quick_owner)),
+      detailField("연락처1", contact),
+      detailField("연락처2", item.owner_phone2),
+      detailField("추가 연락처", differentValue(firstDetailValue(item.owner_contact, item.quick_contact), contact)),
+      detailField("소유주 메모", item.owner_memo, { wide: true, pre: true }),
+    ], { private: true });
 
-    // 메모/설명
-    if (item.description || item.quick_memo) {
-      html += `<div class="desc-card">
-        <div class="desc-title">📝 메모 / 상세 설명</div>
-        <div style="font-size:0.88rem;line-height:1.6;">${(item.description||item.quick_memo||"").replace(/\n/g,"<br>")}</div>
-      </div>`;
-    }
+    html += detailSection("설명·메모", [
+      detailField("공개 매물설명", item.detailDescription, { wide: true, pre: true }),
+      detailField("비공개 내부메모", item.description, { wide: true, pre: true }),
+      detailField("빠른등록 메모", differentValue(item.quick_memo, item.description), { wide: true, pre: true }),
+      detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true }),
+    ]);
 
-    // 빌딩자료 보기 (resource_id 연결된 경우)
+    let materialHtml = "";
     if (item.resource_id) {
       const res = _allDriveResources.find(r => r.id === item.resource_id);
       if (res) {
-        const memoHtml = res.memo
-          ? `<div style="margin-top:8px;font-size:0.82rem;color:var(--text-muted);line-height:1.6;white-space:pre-wrap;">${res.memo.replace(/</g,'&lt;')}</div>`
-          : "";
-        html += `<div class="desc-card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <div class="desc-title" style="margin-bottom:0;">🏢 연결된 빌딩 자료</div>
-            ${res.url ? `<a href="${res.url}" target="_blank" class="btn btn-primary" style="font-size:0.78rem;padding:5px 14px;text-decoration:none;">📁 빌딩자료 보기</a>` : ""}
+        const memoHtml = res.memo ? `<div class="detail-read-value pre-line" style="margin-top:8px;color:var(--text-muted);">${escapeHtml(res.memo)}</div>` : "";
+        materialHtml += `<div class="detail-read-item wide">
+          <div class="detail-read-label">연결된 빌딩 자료</div>
+          <div class="detail-resource-row">
+            <div class="detail-read-value">${escapeHtml([res.category, res.name].filter(Boolean).join(" · ") || "빌딩 자료")}</div>
+            ${res.url ? `<a href="${escapeAttr(res.url)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.78rem;padding:5px 14px;text-decoration:none;">📁 빌딩자료 보기</a>` : ""}
           </div>
-          <div style="font-size:0.88rem;color:var(--gold-soft);">${res.category || ""} · ${res.name || ""}</div>
           ${memoHtml}
         </div>`;
       }
     }
 
-    // 드라이브 링크
-    const links = item.drive_links || [];
-    html += `<div class="desc-card" id="driveLinksCard">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div class="desc-title" style="margin-bottom:0;">📁 드라이브 링크</div>
+    const links = Array.isArray(item.drive_links) ? item.drive_links : [];
+    materialHtml += `<div class="detail-read-item wide" id="driveLinksCard">
+      <div class="detail-section-title" style="margin:0 0 10px 0;">
+        <span>드라이브 링크</span>
         <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="showAddLinkForm()">+ 링크 추가</button>
       </div>
       <div id="driveLinksArea">
         ${links.length ? links.map((l,i)=>`
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:6px;">
-            <span style="flex:1;font-size:0.88rem;color:var(--gold-soft);">📄 ${l.name||"링크"}</span>
-            <a href="${l.url}" target="_blank" class="btn btn-primary" style="font-size:0.75rem;padding:3px 12px;text-decoration:none;">열기</a>
+          <div class="detail-resource-row" style="margin-bottom:7px;">
+            <span class="detail-read-value" style="flex:1;color:var(--gold-soft);">📄 ${escapeHtml(l && l.name ? l.name : "링크")}</span>
+            ${l && l.url ? `<a href="${escapeAttr(l.url)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.75rem;padding:3px 12px;text-decoration:none;">열기</a>` : ""}
             <button onclick="deleteDriveLink(${i})" style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1rem;padding:0 4px;">✕</button>
           </div>`).join("")
-        : `<div style="font-size:0.82rem;color:var(--text-muted);">등록된 링크가 없습니다</div>`}
+        : `<div class="detail-read-value" style="color:var(--text-muted);font-size:0.82rem;">등록된 링크가 없습니다</div>`}
       </div>
       <div id="addLinkForm" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,175,55,0.15);">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
@@ -1050,21 +1116,22 @@ function closeHomepageTab(tab) {
       </div>
     </div>`;
 
-    // 이미지 (맨 하단, 썸네일)
     if (imageUrls.length) {
-      html += `<div class="desc-card">
-        <div class="desc-title" style="margin-bottom:8px;">📷 매물 이미지</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${imageUrls.map((url, idx) => `<img src="${url}" alt="listing image ${idx + 1}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;border:1px solid rgba(212,175,55,0.28);" />`).join("")}
+      materialHtml += `<div class="detail-read-item wide">
+        <div class="detail-read-label">등록된 모든 매물 이미지</div>
+        <div class="detail-image-grid">
+          ${imageUrls.map((url, idx) => `<a class="detail-image-link" href="${escapeAttr(url)}" target="_blank" rel="noopener"><img src="${escapeAttr(url)}" alt="listing image ${idx + 1}" /></a>`).join("")}
         </div>
       </div>`;
     }
+    html += `<section class="detail-section"><div class="detail-section-title">이미지·자료</div><div class="detail-read-grid">${materialHtml}</div></section>`;
 
-    // 등록일
-    if (item.created_at) {
-      const d = new Date(item.created_at);
-      html += `<div style="margin-top:12px;font-size:0.75rem;color:var(--text-muted);text-align:right;">등록일: ${d.toLocaleDateString("ko-KR")}</div>`;
-    }
+    html += detailSection("등록상태", [
+      detailField("거래상태", item.status || "광고중", { required: true }),
+      detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true }),
+      detailField("등록일", formatDateValue(item.created_at)),
+      detailField("최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))),
+    ], { required: true });
 
     return html;
   }
