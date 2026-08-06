@@ -234,6 +234,24 @@ function renderListView(items) {
 let _currentListItems = [];
 let _currentCardItems = [];
 
+function makeListingColumnHeader() {
+  const header = document.createElement("div");
+  header.className = "listing-column-header";
+  header.setAttribute("aria-hidden", "true");
+  header.innerHTML = `
+    <div class="listing-cell-select">선택</div>
+    <div class="listing-cell-type">매물종류</div>
+    <div class="listing-cell-deal">거래유형</div>
+    <div class="listing-cell-address">소재지</div>
+    <div class="listing-cell-price">금액</div>
+    <div class="listing-cell-owner">소유주</div>
+    <div class="listing-cell-phone">연락처</div>
+    <div class="listing-cell-note">비고설명</div>
+    <div class="listing-cell-actions">관리</div>
+  `;
+  return header;
+}
+
 const HOMEPAGE_LISTINGS_URL = "https://hitoputube-creator.github.io/hitop-property-platform/listings.html";
 function createHomepageTab() {
   const tab = window.open("about:blank", "_blank");
@@ -349,6 +367,7 @@ function renderList() {
   cardSelectAll.checked = allChk;
   _currentCardItems = pageItems;
 
+  listingContainer.appendChild(makeListingColumnHeader());
   pageItems.forEach(item => listingContainer.appendChild(makeCard(item)));
 
   renderPagination(filtered.length);

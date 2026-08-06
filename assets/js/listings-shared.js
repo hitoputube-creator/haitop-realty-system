@@ -279,11 +279,33 @@ function summarizeDescription(text) {
   return lines.slice(0, 2).join(" ");
 }
 
+function displayCellValue(value) {
+  const text = String(value ?? "").trim();
+  return text || "-";
+}
+
+function getListingOwnerName(item) {
+  return displayCellValue(item.owner_name || item.quick_owner);
+}
+
+function getListingPhone1(item) {
+  return displayCellValue(item.owner_phone1 || item.owner_contact || item.quick_contact);
+}
+
+function getListingPhone2(item) {
+  return String(item.owner_phone2 || "").trim();
+}
+
+function getListingNoteText(item) {
+  const source = item.description || item.detailDescription || item.quick_memo || item.owner_memo || "";
+  return displayCellValue(summarizeDescription(source) || source);
+}
+
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
 function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const card = document.createElement("div");
   const statusClass = getStatusClass(item);
-  card.className = `listing-card listing-card-modern ${statusClass}`;
+  card.className = `listing-card listing-card-modern listing-row-card ${statusClass}`;
   card.onclick = () => location.href = `detail.html?id=${encodeURIComponent(item.id)}`;
   const isQuick = item.quick_save === true;
   const isDone = item.status === "거래완료";
@@ -295,44 +317,42 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     : `location.href='detail.html?id=${encodeURIComponent(item.id)}&edit=1'`;
   const statusAction = isDone || revert ? `handleRevertListing('${idArg}')` : `handleDealDone('${idArg}')`;
   const statusText = isDone || revert ? "진행중으로" : "거래완료";
-  const description = item.description || item.detailDescription || "";
-  const memo = item.quick_memo || item.owner_memo || "";
-  const buildingName = getBuildingName(item);
   const dealType = getTransactionType(item);
-
-  const summaryParts = [];
-  const areaText = getAreaText(item);
-  if (areaText && areaText !== "-") summaryParts.push(areaText);
-  const dealLabel = getDealTypeLabel(item);
-  if (dealLabel && dealLabel !== "-") summaryParts.push(dealLabel);
-  if (buildingName && buildingName !== "-") summaryParts.push(buildingName);
-  const summaryLine = summaryParts.length ? summaryParts.join(" · ") : "-";
-
-  let descText = summarizeDescription(description) || summarizeDescription(memo);
-  if (!descText) {
-    descText = item.completed_at ? `완료일 ${formatDate(item.completed_at)}` : "등록된 설명이나 메모가 없습니다.";
-  } else if (isDone && item.completed_at) {
-    descText += ` · 완료일 ${formatDate(item.completed_at)}`;
-  }
+  const categoryLabel = getListingCategoryLabel(item);
+  const statusLabel = getStatusLabel(item);
+  const addressText = item.address || "(주소 미입력)";
+  const listingNo = getListingNumber(item);
+  const priceText = formatPrice(item) || "-";
+  const ownerName = getListingOwnerName(item);
+  const phone1 = getListingPhone1(item);
+  const phone2 = getListingPhone2(item);
+  const noteText = getListingNoteText(item);
 
   card.innerHTML = `
-    <div class="listing-select" onclick="event.stopPropagation()">
+    <div class="listing-cell listing-cell-select" data-label="선택" onclick="event.stopPropagation()">
       ${typeof toggleSelect === "function" ? `<input type="checkbox" data-sel="${escapeHtml(item.id)}" ${chk} onchange="toggleSelect('${idArg}',this.checked)" />` : ""}
     </div>
-    <div class="listing-meta">
-      <span class="lc-no">No. ${escapeHtml(getListingNumber(item))}</span>
-      <span class="lc-sep">·</span>
-      <span class="lc-type">${escapeHtml(getListingCategoryLabel(item))}</span>
-      <span class="lc-status ${statusClass}">${escapeHtml(getStatusLabel(item))}</span>
+    <div class="listing-cell listing-cell-type" data-label="매물종류">
+      <span class="lc-type">${escapeHtml(categoryLabel)}</span>
+      <span class="lc-status ${statusClass}">${escapeHtml(statusLabel)}</span>
     </div>
-    <div class="lc-title">${escapeHtml(item.address || "(주소 미입력)")}</div>
-    <div class="lc-price">
-      ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType]}">${escapeHtml(dealType)}</span>` : ""}
-      <span class="lc-price-text">${escapeHtml(formatPrice(item) || "-")}</span>
+    <div class="listing-cell listing-cell-deal" data-label="거래유형">
+      ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType] || ""}">${escapeHtml(dealType)}</span>` : "<span>-</span>"}
     </div>
-    <div class="lc-summary">${escapeHtml(summaryLine)}</div>
-    <div class="lc-desc${isDone ? " lc-desc-done" : ""}">${escapeHtml(descText)}</div>
-    <div class="listing-actions">
+    <div class="listing-cell listing-cell-address" data-label="소재지">
+      <span class="lc-title">${escapeHtml(addressText)}</span>
+      <span class="lc-no">No. ${escapeHtml(listingNo)}</span>
+    </div>
+    <div class="listing-cell listing-cell-price" data-label="금액">
+      <span class="lc-price-text">${escapeHtml(priceText)}</span>
+    </div>
+    <div class="listing-cell listing-cell-owner" data-label="소유주">${escapeHtml(ownerName)}</div>
+    <div class="listing-cell listing-cell-phone" data-label="연락처">
+      <span>${escapeHtml(phone1)}</span>
+      ${phone2 ? `<span class="lc-phone-secondary">${escapeHtml(phone2)}</span>` : ""}
+    </div>
+    <div class="listing-cell listing-cell-note${isDone ? " lc-desc-done" : ""}" data-label="비고설명">${escapeHtml(noteText)}</div>
+    <div class="listing-cell listing-cell-actions listing-actions" data-label="관리">
       <div class="lc-actions-main">
         <button class="btn btn-primary" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>
         <button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>

@@ -878,6 +878,322 @@ textarea { resize: vertical; min-height: 120px; }
   #listViewTable .table-subtitle { display: none; }
 }
 
+/* 표형 카드 보기: 헤더와 행이 같은 열 기준을 공유 */
+.listing-grid {
+  --property-row-columns:
+    28px
+    86px
+    62px
+    minmax(175px, 1.5fr)
+    minmax(105px, 0.8fr)
+    70px
+    105px
+    minmax(145px, 1.1fr)
+    140px;
+  gap: 8px;
+}
+.listing-column-header,
+.listing-card.listing-row-card {
+  display: grid;
+  grid-template-columns: var(--property-row-columns);
+  column-gap: 7px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.listing-column-header {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(126,151,184,0.22);
+  border-bottom-color: rgba(212,175,55,0.32);
+  border-radius: 8px;
+  background: rgba(8,18,36,0.94);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.listing-card.listing-row-card {
+  min-height: 72px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border-color: rgba(126,151,184,0.24);
+  background: #132238;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.listing-card.listing-row-card:hover {
+  transform: none;
+  box-shadow: none;
+  background: #172940;
+  border-color: rgba(212,175,55,0.45);
+}
+.listing-card.listing-row-card.status-needs {
+  border-color: rgba(82,130,224,0.45);
+  background: #152640;
+}
+.listing-card.listing-row-card.status-done {
+  border-color: rgba(148,160,178,0.22);
+  background: #101a2b;
+  opacity: 0.78;
+}
+.listing-cell {
+  min-width: 0;
+  color: var(--text-main);
+  font-size: 12.5px;
+  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.listing-cell-select {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.listing-cell-select input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+.listing-cell-type {
+  gap: 4px;
+  overflow: hidden;
+}
+.listing-cell-deal {
+  align-items: flex-start;
+}
+.listing-cell-address {
+  gap: 3px;
+}
+.listing-cell-price {
+  color: var(--gold);
+  overflow: hidden;
+}
+.listing-cell-owner,
+.listing-cell-phone {
+  color: #d7deea;
+  overflow: hidden;
+  word-break: keep-all;
+}
+.listing-cell-owner {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.listing-cell-phone > span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lc-phone-secondary {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.listing-cell-note {
+  color: #c3cbdc;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.listing-row-card .lc-title {
+  color: #f8fafc;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.listing-row-card .lc-no {
+  color: var(--text-muted);
+  font-size: 10.5px;
+  line-height: 1.2;
+}
+.listing-row-card .lc-type {
+  max-width: 100%;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.listing-row-card .lc-status {
+  max-width: 100%;
+  font-size: 10.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.listing-row-card .lc-status::before {
+  width: 4px;
+  height: 4px;
+}
+.listing-row-card .lc-deal-badge {
+  max-width: 100%;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.listing-row-card .lc-price-text {
+  color: var(--gold);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.listing-row-card .listing-actions {
+  gap: 4px;
+  padding: 0;
+  border: 0;
+}
+.listing-row-card .lc-actions-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+.listing-row-card .lc-actions-main .btn,
+.listing-row-card .lc-status-chip {
+  min-height: 22px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  line-height: 1;
+}
+.listing-row-card .lc-actions-main .btn {
+  justify-content: center;
+}
+.listing-row-card .lc-actions-side {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+.listing-row-card .lc-status-chip {
+  width: 100%;
+  border-color: rgba(224,82,82,0.44);
+  color: #e08a8a;
+  background: transparent;
+}
+.listing-row-card .lc-status-chip.done {
+  border-color: rgba(148,160,178,0.34);
+  color: #8a93a3;
+}
+.listing-row-card .lc-toggle {
+  min-height: 16px;
+  justify-content: space-between;
+  gap: 5px;
+}
+.listing-row-card .lc-toggle-label {
+  font-size: 10.5px;
+}
+.listing-row-card .lc-switch {
+  width: 28px;
+  height: 14px;
+}
+.listing-row-card .lc-switch input {
+  z-index: 2;
+}
+.listing-row-card .lc-switch .track,
+.listing-row-card .lc-switch .thumb {
+  pointer-events: none;
+}
+.listing-row-card .lc-switch .thumb {
+  width: 8px;
+  height: 8px;
+}
+.listing-row-card .lc-switch input:checked ~ .thumb {
+  transform: translateX(14px);
+}
+
+@media (max-width: 1100px) {
+  .listing-column-header {
+    display: none;
+  }
+  .listing-card.listing-row-card {
+    grid-template-columns: 24px minmax(0, 1fr) minmax(105px, 0.45fr) 136px;
+    grid-template-areas:
+      "select type deal actions"
+      "select address price actions"
+      "select owner phone actions"
+      "select note note actions";
+    row-gap: 6px;
+    min-height: 98px;
+    padding: 10px;
+  }
+  .listing-cell-select { grid-area: select; }
+  .listing-cell-type { grid-area: type; }
+  .listing-cell-deal { grid-area: deal; }
+  .listing-cell-address { grid-area: address; }
+  .listing-cell-price { grid-area: price; }
+  .listing-cell-owner { grid-area: owner; }
+  .listing-cell-phone { grid-area: phone; }
+  .listing-cell-note { grid-area: note; }
+  .listing-cell-actions { grid-area: actions; }
+}
+
+@media (max-width: 720px) {
+  .listing-card.listing-row-card {
+    grid-template-columns: 22px minmax(0, 1fr);
+    grid-template-areas:
+      "select type"
+      "address address"
+      "deal deal"
+      "price price"
+      "owner owner"
+      "phone phone"
+      "note note"
+      "actions actions";
+    gap: 7px 8px;
+    min-height: 0;
+    padding: 10px;
+  }
+  .listing-cell:not(.listing-cell-select):not(.listing-cell-actions)::before {
+    content: attr(data-label);
+    margin-bottom: 2px;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .listing-cell {
+    font-size: 12px;
+  }
+  .listing-row-card .lc-title {
+    font-size: 13px;
+  }
+  .listing-row-card .lc-price-text {
+    font-size: 13px;
+  }
+  .listing-cell-actions {
+    padding-top: 7px;
+    border-top: 1px solid rgba(126,151,184,0.14);
+  }
+  .listing-row-card .lc-actions-side {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .listing-row-card .lc-toggle {
+    justify-content: flex-end;
+  }
+}
+
 
 /* Price input preview */
 .price-preview {
