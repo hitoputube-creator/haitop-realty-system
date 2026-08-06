@@ -317,6 +317,9 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     : `location.href='detail.html?id=${encodeURIComponent(item.id)}&edit=1'`;
   const statusAction = isDone || revert ? `handleRevertListing('${idArg}')` : `handleDealDone('${idArg}')`;
   const statusText = isDone || revert ? "진행중으로" : "거래완료";
+  const deleteButton = typeof handleDeleteListingFromCard === "function"
+    ? `<button class="btn btn-danger lc-delete-btn" onclick="event.stopPropagation();handleDeleteListingFromCard('${idArg}')">삭제</button>`
+    : "";
   const dealType = getTransactionType(item);
   const categoryLabel = getListingCategoryLabel(item);
   const statusLabel = getStatusLabel(item);
@@ -356,9 +359,10 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
       <div class="lc-actions-main">
         <button class="btn btn-primary" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>
         <button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>
+        ${deleteButton}
+        <button class="lc-status-chip${isDone ? " done" : ""}" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
       </div>
       <div class="lc-actions-side">
-        <button class="lc-status-chip${isDone ? " done" : ""}" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
         <div class="lc-toggle" onclick="event.stopPropagation()">
           <span class="lc-toggle-label">홈페이지</span>
           <span class="lc-switch">

@@ -184,6 +184,19 @@ body {
   border: 1px solid rgba(224,82,82,0.4);
 }
 .btn-danger:hover { background: rgba(224,82,82,0.1); }
+body[data-nav-active="properties"] #deleteSelectedBtn.btn-select-delete {
+  color: #ff8a8a;
+  border-color: rgba(224,82,82,0.48);
+}
+body[data-nav-active="properties"] #deleteSelectedBtn.btn-select-delete:hover:not(:disabled) {
+  background: rgba(224,82,82,0.12);
+  border-color: rgba(224,82,82,0.72);
+}
+body[data-nav-active="properties"] #deleteSelectedBtn.btn-select-delete:disabled {
+  color: rgba(255,138,138,0.72);
+  border-color: rgba(224,82,82,0.26);
+  background: transparent;
+}
 .btn-success {
   background: transparent; color: var(--green);
   border: 1px solid rgba(76,175,125,0.4);
@@ -932,7 +945,7 @@ textarea { resize: vertical; min-height: 120px; }
     70px
     105px
     minmax(145px, 1.1fr)
-    140px;
+    172px;
   gap: 8px;
 }
 .listing-column-header,
@@ -1109,15 +1122,15 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .listing-row-card .lc-actions-main {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
 }
 .listing-row-card .lc-actions-main .btn,
 .listing-row-card .lc-status-chip {
   min-height: 22px;
-  padding: 3px 6px;
+  padding: 3px 4px;
   border-radius: 5px;
-  font-size: 10.5px;
+  font-size: 10px;
   line-height: 1;
 }
 .listing-row-card .lc-actions-main .btn {
@@ -1130,6 +1143,7 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .listing-row-card .lc-status-chip {
   width: 100%;
+  min-width: 0;
   border-color: rgba(224,82,82,0.44);
   color: #e08a8a;
   background: transparent;
@@ -1170,7 +1184,7 @@ textarea { resize: vertical; min-height: 120px; }
     display: none;
   }
   .listing-card.listing-row-card {
-    grid-template-columns: 24px minmax(0, 1fr) minmax(105px, 0.45fr) 136px;
+    grid-template-columns: 24px minmax(0, 1fr) minmax(105px, 0.45fr) 172px;
     grid-template-areas:
       "select type deal actions"
       "select address price actions"

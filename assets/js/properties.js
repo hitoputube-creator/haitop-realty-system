@@ -44,15 +44,52 @@ let currentPage = 1;
 let includeCompleted = false;
 let viewMode = "card"; // "card" | "list"
 let selectedIds = new Set(); // 선택된 매물 ID 집합
+let deletingSelected = false;
 const ITEMS_PER_PAGE = 10;
+
+function pruneSelectedIds() {
+  if (!Array.isArray(allListings) || !selectedIds.size) return false;
+  const existingIds = new Set(allListings.map(item => item && item.id).filter(Boolean));
+  let changed = false;
+  selectedIds.forEach(id => {
+    if (!existingIds.has(id)) {
+      selectedIds.delete(id);
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function updateVisibleSelectAllState() {
+  const selectAll = viewMode === "list"
+    ? document.getElementById("listSelectAll")
+    : document.getElementById("cardSelectAll");
+  const items = viewMode === "list" ? _currentListItems : _currentCardItems;
+  if (!selectAll || !Array.isArray(items)) return;
+  const validItems = items.filter(item => item && item.id);
+  const selectedCount = validItems.filter(item => selectedIds.has(item.id)).length;
+  selectAll.checked = validItems.length > 0 && selectedCount === validItems.length;
+  selectAll.indeterminate = selectedCount > 0 && selectedCount < validItems.length;
+}
 
 function updatePrintBtn() {
   const btn = document.getElementById("printBtn");
   const n = selectedIds.size;
-  btn.textContent = n > 0 ? `🖨️ 선택인쇄 (${n}건)` : "🖨️ 선택인쇄";
-  btn.disabled = n === 0;
-  btn.style.opacity = n === 0 ? "0.4" : "1";
-  btn.style.cursor = n === 0 ? "not-allowed" : "pointer";
+  if (btn) {
+    btn.textContent = n > 0 ? `🖨️ 선택인쇄 (${n}건)` : "📋 선택매물보기";
+    btn.disabled = n === 0;
+    btn.style.opacity = n === 0 ? "0.4" : "1";
+    btn.style.cursor = n === 0 ? "not-allowed" : "pointer";
+  }
+
+  const deleteBtn = document.getElementById("deleteSelectedBtn");
+  if (deleteBtn) {
+    deleteBtn.textContent = deletingSelected ? "삭제 중..." : `선택삭제 (${n}건)`;
+    deleteBtn.disabled = deletingSelected || n === 0;
+    deleteBtn.style.opacity = n === 0 || deletingSelected ? "0.45" : "1";
+    deleteBtn.style.cursor = n === 0 || deletingSelected ? "not-allowed" : "pointer";
+  }
+  updateVisibleSelectAllState();
 }
 
 function toggleSelect(id, checked) {
@@ -61,7 +98,7 @@ function toggleSelect(id, checked) {
 }
 
 function toggleSelectAll(items, checked) {
-  items.forEach(item => { if (checked) selectedIds.add(item.id); else selectedIds.delete(item.id); });
+  (items || []).forEach(item => { if (item && item.id) { if (checked) selectedIds.add(item.id); else selectedIds.delete(item.id); } });
   updatePrintBtn();
   renderList(); // 체크박스 상태 갱신
 }
@@ -72,6 +109,110 @@ const _listingSections = () => [
   ...document.querySelectorAll("#tabProperty > section.card:not(#selectedPreviewSection)")
 ];
 
+function getSelectedListings() {
+  pruneSelectedIds();
+  return allListings.filter(item => selectedIds.has(item.id));
+}
+
+function getBulkDeleteLabel(item) {
+  const number = typeof getListingNumber === "function" ? getListingNumber(item) : "";
+  const name = typeof getListingName === "function" ? getListingName(item) : "";
+  const address = item.address || "";
+  const primary = name && name !== "-" ? name : address;
+  return [number ? `No.${number}` : "", primary].filter(Boolean).join(" / ") || item.id;
+}
+
+function notifyBulkDelete(message, duration = 3500) {
+  if (typeof showToast === "function") showToast(message, duration);
+  else alert(message);
+}
+
+function refreshSelectionDisplay() {
+  const filtered = getFilteredListings();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const previewSection = document.getElementById("selectedPreviewSection");
+  const previewOpen = previewSection && previewSection.style.display !== "none";
+  if (previewOpen) {
+    if (selectedIds.size) {
+      renderPreview();
+      updatePrintBtn();
+    } else {
+      goBackToList();
+    }
+    return;
+  }
+  renderList();
+  updatePrintBtn();
+}
+
+async function deleteSelectedListings() {
+  if (deletingSelected || !selectedIds.size) return;
+  const selectedListings = getSelectedListings();
+  if (!selectedListings.length) {
+    updatePrintBtn();
+    return;
+  }
+
+  const count = selectedListings.length;
+  const sample = selectedListings.slice(0, 6).map((item, index) => `${index + 1}. ${getBulkDeleteLabel(item)}`).join("\n");
+  const more = count > 6 ? `\n외 ${count - 6}건` : "";
+  const publicWarning = selectedListings.some(item => item.is_public === true)
+    ? "\n\n홈페이지 공개 중인 매물이 포함되어 있습니다."
+    : "";
+  const message = `선택한 매물 ${count}건을 삭제하시겠습니까? 삭제한 매물은 복구하기 어렵습니다.\n\n${sample}${more}${publicWarning}`;
+  if (!confirm(message)) return;
+
+  deletingSelected = true;
+  updatePrintBtn();
+
+  const succeeded = [];
+  const failed = [];
+  for (const item of selectedListings) {
+    try {
+      await deleteListing(item.id);
+      succeeded.push(item.id);
+    } catch (error) {
+      failed.push({ id: item.id, error });
+    }
+  }
+
+  if (succeeded.length) {
+    const deletedIds = new Set(succeeded);
+    allListings = allListings.filter(item => !deletedIds.has(item.id));
+    succeeded.forEach(id => selectedIds.delete(id));
+  }
+
+  deletingSelected = false;
+  refreshSelectionDisplay();
+
+  if (failed.length) {
+    notifyBulkDelete(`선택한 매물 ${count}건 중 ${succeeded.length}건을 삭제했고 ${failed.length}건은 삭제하지 못했습니다.`, 4500);
+  } else {
+    notifyBulkDelete(`선택한 매물 ${count}건을 삭제했습니다.`);
+  }
+}
+
+async function handleDeleteListingFromCard(id) {
+  const item = allListings.find(listing => listing.id === id);
+  const label = item ? getBulkDeleteLabel(item) : id;
+  const publicWarning = item && item.is_public === true
+    ? "\n\n홈페이지 공개 중인 매물입니다."
+    : "";
+  if (!confirm(`${label} 매물을 삭제하시겠습니까? 삭제하면 복구가 어렵습니다.${publicWarning}`)) return;
+
+  try {
+    await deleteListing(id);
+    selectedIds.delete(id);
+    allListings = allListings.filter(listing => listing.id !== id);
+    refreshSelectionDisplay();
+    notifyBulkDelete("매물을 삭제했습니다.");
+  } catch (error) {
+    notifyBulkDelete("삭제 실패: " + error.message, 4500);
+  }
+}
+
 function printSelected() {
   if (!selectedIds.size) return;
   _listingSections().forEach(el => { if (el) el.style.display = "none"; });
@@ -80,7 +221,7 @@ function printSelected() {
 }
 
 function renderPreview() {
-  const list = allListings.filter(l => selectedIds.has(l.id));
+  const list = getSelectedListings();
   document.getElementById("previewCount").textContent = `(${list.length}건)`;
   const rows = list.map((item, i) => {
     const isDone = item.status === "거래완료";
@@ -332,6 +473,7 @@ function renderPagination(total) {
 }
 
 function renderList() {
+  pruneSelectedIds();
   listingContainer.innerHTML = "";
   const unifiedPropertyLabel = document.getElementById("unifiedPropertyLabel");
   const unifiedDoneSection   = document.getElementById("unifiedDoneSection");
@@ -342,12 +484,17 @@ function renderList() {
   countBadge.textContent = filtered.length ? `(${filtered.length}건)` : "";
 
   if (!filtered.length) {
+    const cardSelectBar = document.getElementById("cardSelectBar");
+    if (cardSelectBar) cardSelectBar.style.display = "none";
     emptyMessage.style.display = "block";
     paginationEl.innerHTML = "";
+    updatePrintBtn();
     return;
   }
   emptyMessage.style.display = "none";
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  if (currentPage > totalPages) currentPage = totalPages;
   const start = (currentPage - 1) * ITEMS_PER_PAGE;
   const pageItems = filtered.slice(start, start + ITEMS_PER_PAGE);
 
@@ -359,6 +506,7 @@ function renderList() {
     _currentListItems = pageItems;
     renderListView(pageItems);
     renderPagination(filtered.length);
+    updatePrintBtn();
     return;
   }
 
@@ -371,10 +519,12 @@ function renderList() {
   pageItems.forEach(item => listingContainer.appendChild(makeCard(item)));
 
   renderPagination(filtered.length);
+  updatePrintBtn();
 }
 
 // 인쇄
 document.getElementById("printBtn").addEventListener("click", printSelected);
+document.getElementById("deleteSelectedBtn")?.addEventListener("click", deleteSelectedListings);
 
 function doSearch() {
   searchKeyword = document.getElementById("searchInput").value.trim();
