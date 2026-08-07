@@ -19,8 +19,11 @@ const NAV_TOOLS = [
 ];
 
 function hitopLogout() {
-  sessionStorage.removeItem("hitop_auth");
-  location.reload();
+  if (typeof hitopAdminLogout === "function") {
+    hitopAdminLogout();
+  } else {
+    location.replace("login.html");
+  }
 }
 
 function renderMainNav() {
