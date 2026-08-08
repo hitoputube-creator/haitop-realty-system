@@ -952,7 +952,7 @@ textarea { resize: vertical; min-height: 120px; }
 .listing-card.listing-row-card {
   display: grid;
   grid-template-columns: var(--property-row-columns);
-  column-gap: 7px;
+  column-gap: 4px;
   align-items: center;
   width: 100%;
   min-width: 0;
