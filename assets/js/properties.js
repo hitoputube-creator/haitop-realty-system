@@ -535,6 +535,7 @@ function doSearch() {
 document.getElementById("searchInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") doSearch();
 });
+document.getElementById("searchBtn")?.addEventListener("click", doSearch);
 
 document.getElementById("includeCompletedChk").addEventListener("change", (e) => {
   includeCompleted = e.target.checked;

@@ -63,6 +63,7 @@
     .toolbar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .toolbar-row .search-field { flex: 1 1 200px; margin-bottom: 0; }
     .toolbar-row input, .toolbar-row select { height: 36px; padding: 0 12px; }
+    .toolbar-row #searchBtn { height: 36px; padding: 0 18px; }
     .include-done-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
     .sort-select { width: auto; min-width: 100px; flex: 0 0 auto; }
     .view-toggle-group { display: flex; border: 1px solid var(--border-slate); border-radius: 8px; overflow: hidden; flex-shrink: 0; height: 36px; }
@@ -75,6 +76,7 @@
     @media (max-width: 480px) {
       .toolbar-row { flex-direction: column; align-items: stretch; }
       .toolbar-row #detailRegisterBtn { width: 100%; }
+      .toolbar-row #searchBtn { width: 100%; }
       .toolbar-row .field { width: 100%; }
       .toolbar-row .include-done-label { width: 100%; }
       .toolbar-row .sort-select { width: 100%; }
@@ -124,6 +126,7 @@
         <div class="field search-field">
           <input id="searchInput" type="text" placeholder="매물번호·주소·매물명·메모·단지명 검색" />
         </div>
+        <button class="btn btn-ghost" id="searchBtn" style="flex:0 0 auto;white-space:nowrap;">검색</button>
         <label class="include-done-label">
           <input type="checkbox" id="includeCompletedChk" style="width:auto;accent-color:var(--gold);" />
           거래완료 포함
