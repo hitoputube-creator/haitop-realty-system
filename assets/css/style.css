@@ -1160,9 +1160,14 @@ textarea { resize: vertical; min-height: 120px; }
   min-height: 16px;
   justify-content: space-between;
   gap: 5px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 .listing-row-card .lc-toggle-label {
   font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 .listing-row-card .lc-switch {
   width: 28px;
