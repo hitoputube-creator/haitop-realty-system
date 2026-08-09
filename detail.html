@@ -973,10 +973,50 @@ function closeHomepageTab(tab) {
   function detailSection(title, rows, opts = {}) {
     const body = rows.filter(Boolean).join("");
     if (!body && opts.required !== true) return "";
-    const sectionClass = opts.private ? "detail-section private-section" : "detail-section";
+    let sectionClass = opts.private ? "detail-section private-section" : "detail-section";
+    if (opts.extraClass) sectionClass += " " + opts.extraClass;
     return `<section class="${sectionClass}">
       <div class="detail-section-title">${escapeHtml(title)}</div>
       <div class="detail-read-grid">${body || detailField("등록 정보", "-", { required: true })}</div>
+    </section>`;
+  }
+
+  // 건물 기본 정보 표의 한 항목(label+value)을 렌더링한다. 값이 없으면 항상 "—"로 표시한다
+  // (표 형태를 유지하기 위해 detailField와 달리 값이 비어도 행 자체는 생략하지 않는다).
+  function biCell(label, value) {
+    const text = detailText(value);
+    return `<div class="bi-label">${escapeHtml(label)}</div><div class="bi-value">${escapeHtml(text || "—")}</div>`;
+  }
+
+  // 건물 관련 정보를 한눈에 보는 압축 표. 매물 데이터·저장 구조는 건드리지 않고
+  // 기존 필드를 그대로 읽어서 표시만 한다. 관리사무소·규모는 현재 데이터 모델에
+  // 해당 필드가 없어 항상 "—"로 표시된다.
+  function renderBuildingInfoTable(item, category, complexName, publicAddress) {
+    const categoryText = firstDetailValue(
+      [category.category1, category.category2].filter(Boolean).join(" · "),
+      getListingCategoryLabel(item)
+    );
+    const landArea = formatAreaPair(item.areaM2, item.areaPy);
+    const totalFloorArea = formatAreaPair(item.totalFloorAreaM2, item.totalFloorAreaPy);
+    const parking = firstDetailValue(item.parkingCount, item.shop_parking, item.officetel_parking, item.factory_parking, item.biz_parking);
+    const structure = firstDetailValue(item.buildingStructure, item.structure, item.officetel_structure);
+
+    const cells = [
+      biCell("주소", publicAddress),
+      biCell("건물명", complexName),
+      biCell("카테고리", categoryText),
+      biCell("토지면적", landArea),
+      biCell("주차대수", parking),
+      biCell("연면적", totalFloorArea),
+      biCell("사용승인일", item.approvalDate),
+      biCell("관리사무소", ""),
+      biCell("구조", structure),
+      biCell("규모", ""),
+    ].join("");
+
+    return `<section class="detail-section building-info-section">
+      <div class="detail-section-title">건물 기본 정보</div>
+      <div class="building-info-table">${cells}</div>
     </section>`;
   }
 
@@ -1071,13 +1111,14 @@ function closeHomepageTab(tab) {
       detailField("레거시 토지면적", formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py)),
     ]);
 
+    // 건물 관련 핵심 정보는 아래 "건물 기본 정보" 표로 통합해서 한눈에 보이게 한다.
+    html += renderBuildingInfoTable(item, category, complexName, publicAddress);
+
     html += detailSection("주소·건물정보", [
       detailField("건축물 용도", firstDetailValue(item.buildingUse, item.mainUse, item.useType, item.factory_kind, item.biz_kind, item.land_kind)),
-      detailField("건물 구조", firstDetailValue(item.buildingStructure, item.structure, item.officetel_structure)),
+      // 구조·사용승인일·주차대수는 위 "건물 기본 정보" 표에 이미 표시되므로 여기서는 중복 노출하지 않는다.
       detailField("층수", firstDetailValue(item.floorInfo, item.floor, item.floorTxt, item.shop_floor, item.officetel_floor, item.biz_floor)),
-      detailField("사용승인일", item.approvalDate),
       detailField("방향", firstDetailValue(item.direction, item.officetel_direction)),
-      detailField("주차", firstDetailValue(item.parkingCount, item.shop_parking, item.officetel_parking, item.factory_parking, item.biz_parking)),
       detailField("입주 가능일", firstDetailValue(item.availableDate, item.moveInDate, item.shop_available, item.officetel_available, item.factory_available, item.biz_available)),
       detailField("용도지역", firstDetailValue(item.zoning, item.land_zone)),
       detailField("지목", item.land_jimok),
@@ -1111,7 +1152,7 @@ function closeHomepageTab(tab) {
       detailField("비공개 내부메모", item.description, { wide: true, pre: true }),
       detailField("빠른등록 메모", differentValue(item.quick_memo, item.description), { wide: true, pre: true }),
       detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true }),
-    ]);
+    ], { extraClass: "description-section" });
 
     let materialHtml = "";
     if (item.resource_id) {

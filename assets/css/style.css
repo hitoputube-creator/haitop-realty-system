@@ -666,6 +666,56 @@ textarea { resize: vertical; min-height: 120px; }
 .detail-image-link { display: block; border-radius: 8px; overflow: hidden; border: 1px solid rgba(216,184,74,0.28); background: rgba(0,0,0,0.18); }
 .detail-image-link img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
 
+/* 건물 기본 정보 — 압축형 2열 표 (PC: 항목·값 2쌍/행, 모바일: 1쌍/행) */
+.building-info-table {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.building-info-table .bi-label,
+.building-info-table .bi-value {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+.building-info-table .bi-label {
+  background: var(--bg-soft);
+  color: var(--gold-soft);
+  font-weight: 600;
+  white-space: nowrap;
+  word-break: keep-all;
+  border-right: 1px solid var(--border-soft);
+}
+.building-info-table .bi-value {
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.building-info-table .bi-label:nth-last-child(-n+2),
+.building-info-table .bi-value:nth-last-child(-n+1) { border-bottom: none; }
+
+/* 설명·메모 카드 — 항목명과 내용 사이 간격을 명확히, 과도한 여백 없이 압축 */
+.detail-section.description-section .detail-read-grid { gap: 14px 14px; }
+.detail-section.description-section .detail-read-label { margin-bottom: 6px; font-weight: 600; }
+.detail-section.description-section .detail-read-value.pre-line { line-height: 1.6; }
+
+@media (max-width: 720px) {
+  .building-info-table {
+    grid-template-columns: auto 1fr;
+  }
+  .building-info-table .bi-label,
+  .building-info-table .bi-value {
+    font-size: 0.82rem;
+    padding: 8px 10px;
+  }
+}
+
 /* 빠른등록 강조 */
 .quick-card {
   background: linear-gradient(135deg, rgba(216,184,74,0.12), rgba(24,40,83,0.9));
