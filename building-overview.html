@@ -17,6 +17,76 @@
       content: ''; flex: 1; height: 1px;
       background: linear-gradient(90deg, rgba(212,175,55,0.3), transparent);
     }
+    .section-head-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 20px;
+    }
+    .section-head-row .section-title { margin-bottom: 0; }
+
+    /* ── 상단 요약 카드 3칸 ── */
+    .summary-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1.4fr;
+      gap: 12px; margin-bottom: 20px;
+    }
+    .summary-cell {
+      background: linear-gradient(145deg, var(--panel) 0%, var(--panel2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(216,184,74,0.10);
+      min-width: 0;
+    }
+    .summary-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; color: rgba(180,200,230,0.6);
+      margin-bottom: 6px;
+    }
+    .summary-value {
+      font-size: 1rem; font-weight: 700; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .summary-value.empty { color: rgba(255,255,255,0.28); font-weight: 400; }
+    .drive-cell .drive-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .drive-cell .btn { font-size: 0.82rem; padding: 8px 12px; }
+
+    /* ── 읽기전용 기본정보 표 (반응형 그리드) ── */
+    .info-table {
+      display: grid;
+      grid-template-columns: minmax(96px,150px) 1fr minmax(96px,150px) 1fr;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .info-table-label, .info-table-value {
+      padding: 12px 14px;
+      font-size: 0.88rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      min-width: 0;
+    }
+    .info-table-label {
+      background: rgba(16,31,50,0.85);
+      color: var(--gold);
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    .info-table-value {
+      background: rgba(4,8,20,0.35);
+      color: var(--text);
+      font-weight: 500;
+      word-break: break-word;
+    }
+    .info-table-value.empty { color: rgba(255,255,255,0.28); }
+    .info-table > :nth-last-child(-n+4) { border-bottom: none; }
+
+    /* ── 추가 메모 (읽기전용) ── */
+    .extra-memo-view {
+      font-size: 0.9rem; line-height: 1.9; color: var(--text);
+      white-space: pre-wrap; word-break: break-word;
+      padding: 4px 2px;
+    }
+    .extra-memo-view.empty { color: rgba(255,255,255,0.28); }
+
+    /* ── 기존 편집 폼 ── */
     .form-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px;
     }
@@ -36,6 +106,18 @@
       white-space: pre-wrap; display: none;
     }
     .preview-box.show { display: block; }
+
+    /* ── 모바일 반응형 ── */
+    @media (max-width: 720px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      .summary-value { white-space: normal; }
+      .info-table { grid-template-columns: minmax(88px,120px) 1fr; }
+      .info-table > :nth-last-child(-n+4) { border-bottom: 1px solid var(--border); }
+      .info-table > :nth-last-child(-n+2) { border-bottom: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .btn-row { justify-content: stretch; }
+      .btn-row .btn { flex: 1; }
+    }
   </style>
 </head>
 <body>
@@ -47,7 +129,7 @@
       <div class="logo"></div>
       <div class="brand-text">
         <h1 id="buildingName">건물 개요</h1>
-        <p>건물 기본 정보를 수정하고 저장하세요</p>
+        <p>건물 기본 정보를 확인하세요</p>
       </div>
     </div>
     <div class="actions">
@@ -56,9 +138,43 @@
     </div>
   </header>
 
-  <!-- 개요 폼 -->
-  <div class="card">
-    <div class="section-title">📝 건물 기본 정보</div>
+  <!-- ===== 상단 요약 3칸 ===== -->
+  <div class="summary-grid">
+    <div class="summary-cell">
+      <div class="summary-label">카테고리</div>
+      <div class="summary-value" id="sumCategory">—</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-label">건물명</div>
+      <div class="summary-value" id="sumName">—</div>
+    </div>
+    <div class="summary-cell drive-cell">
+      <div class="summary-label">드라이브 링크</div>
+      <div class="drive-actions">
+        <button class="btn primary" id="driveOpenBtn" onclick="openDriveLink()">📂 Google Drive 열기</button>
+        <button class="btn ghost" id="driveCopyBtn" onclick="copyDriveLink()">🔗 링크 복사</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 읽기전용 건물 기본정보 표 ===== -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-head-row">
+      <div class="section-title">🏢 건물 기본 정보</div>
+      <button class="btn" id="editToggleBtn" onclick="toggleEditMode()">✏️ 수정</button>
+    </div>
+    <div class="info-table" id="infoTable"></div>
+  </div>
+
+  <!-- ===== 추가 메모 (읽기전용) ===== -->
+  <div class="card" id="extraMemoCard" style="margin-bottom:20px;">
+    <div class="section-title">🗒 추가 메모</div>
+    <div class="extra-memo-view" id="extraMemoView">—</div>
+  </div>
+
+  <!-- ===== 개요 편집 폼 (기본 숨김) ===== -->
+  <div class="card" id="editFormCard" style="display:none;">
+    <div class="section-title">📝 건물 기본 정보 수정</div>
 
     <div class="form-grid">
       <div class="field">
@@ -85,9 +201,13 @@
         <label>연면적</label>
         <input id="ov_total" type="text" placeholder="예: 8,500평" />
       </div>
-      <div class="field full">
+      <div class="field">
         <label>관리사무소</label>
         <input id="ov_mgmt" type="text" placeholder="예: 031-000-0000" />
+      </div>
+      <div class="field">
+        <label>규모</label>
+        <input id="ov_scale" type="text" placeholder="예: 지상 10층 / 연면적 8,500평" />
       </div>
     </div>
 
@@ -113,12 +233,28 @@
 <script src="assets/js/auth.js"></script>
 <script>
 const MEMO_SEP      = '---추가메모---';
-const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토지면적','연면적','관리사무소'];
-const FIELD_IDS     = ['ov_address','ov_parking','ov_approval','ov_structure','ov_land','ov_total','ov_mgmt'];
+const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토지면적','연면적','관리사무소','규모'];
+const FIELD_IDS     = ['ov_address','ov_parking','ov_approval','ov_structure','ov_land','ov_total','ov_mgmt','ov_scale'];
+
+// 읽기전용 표에 표시할 순서 — 매물정보 외 건물명/카테고리는 memo가 아닌 drive_resources 컬럼값을 쓴다.
+const INFO_TABLE_ROWS = [
+  { label: '주소',      value: () => memoFields['주소'] },
+  { label: '건물명',    value: () => buildingData && buildingData.name },
+  { label: '카테고리',  value: () => buildingData && buildingData.category },
+  { label: '토지면적',  value: () => memoFields['토지면적'] },
+  { label: '주차대수',  value: () => memoFields['주차대수'] },
+  { label: '연면적',    value: () => memoFields['연면적'] },
+  { label: '사용승인일',value: () => memoFields['사용승인일'] },
+  { label: '관리사무소',value: () => memoFields['관리사무소'] },
+  { label: '구조',      value: () => memoFields['구조'] },
+  { label: '규모',      value: () => memoFields['규모'] },
+];
 
 const params     = new URLSearchParams(location.search);
 const buildingId = params.get('id');
 let buildingData = null;
+let memoFields   = {};
+let memoExtra    = '';
 
 function showToast(msg, dur = 2500) {
   const t = document.getElementById('toast');
@@ -128,6 +264,12 @@ function showToast(msg, dur = 2500) {
 
 function goBack()   { window.location.href = 'index.html?tab=drive'; }
 function goDetail() { window.location.href = `building-detail.html?id=${buildingId}`; }
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 // ── 메모 파싱 ──
 function parseMemo(raw) {
@@ -166,6 +308,57 @@ function populateForm(memo) {
   document.getElementById('ov_extra').value = extra;
 }
 
+// ── 읽기전용 뷰 렌더링 ──
+function renderReadOnlyViews() {
+  const parsed = parseMemo(buildingData ? buildingData.memo || '' : '');
+  memoFields = parsed.fields;
+  memoExtra  = parsed.extra;
+
+  document.getElementById('sumCategory').textContent = buildingData?.category || '—';
+  document.getElementById('sumCategory').classList.toggle('empty', !buildingData?.category);
+  document.getElementById('sumName').textContent = buildingData?.name || '—';
+  document.getElementById('sumName').classList.toggle('empty', !buildingData?.name);
+
+  const hasUrl = !!(buildingData && buildingData.url);
+  document.getElementById('driveOpenBtn').disabled = !hasUrl;
+  document.getElementById('driveCopyBtn').disabled = !hasUrl;
+  document.getElementById('driveOpenBtn').style.opacity = hasUrl ? '1' : '0.45';
+  document.getElementById('driveCopyBtn').style.opacity = hasUrl ? '1' : '0.45';
+
+  const tableHtml = INFO_TABLE_ROWS.map(row => {
+    const val = row.value() || '';
+    return `<div class="info-table-label">${esc(row.label)}</div>` +
+           `<div class="info-table-value${val ? '' : ' empty'}">${val ? esc(val) : '—'}</div>`;
+  }).join('');
+  document.getElementById('infoTable').innerHTML = tableHtml;
+
+  const extraEl = document.getElementById('extraMemoView');
+  extraEl.textContent = memoExtra || '등록된 추가 메모가 없습니다.';
+  extraEl.classList.toggle('empty', !memoExtra);
+}
+
+// ── 수정 모드 토글 ──
+function toggleEditMode() {
+  const formCard = document.getElementById('editFormCard');
+  const opening  = formCard.style.display === 'none';
+  if (opening) populateForm(buildingData ? buildingData.memo || '' : '');
+  formCard.style.display = opening ? '' : 'none';
+  document.getElementById('editToggleBtn').textContent = opening ? '✕ 수정 취소' : '✏️ 수정';
+  if (opening) formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── 드라이브 링크 열기/복사 ──
+function openDriveLink() {
+  if (!buildingData || !buildingData.url) return;
+  window.open(buildingData.url, '_blank', 'noopener');
+}
+function copyDriveLink() {
+  if (!buildingData || !buildingData.url) return;
+  navigator.clipboard.writeText(buildingData.url)
+    .then(() => showToast('🔗 링크를 복사했습니다.'))
+    .catch(() => showToast('❌ 복사에 실패했습니다.'));
+}
+
 // ── 초기 로드 ──
 async function init() {
   if (!buildingId) { alert('건물 ID가 없습니다.'); goBack(); return; }
@@ -177,7 +370,7 @@ async function init() {
     document.getElementById('buildingName').textContent = buildingData.name;
     document.title = `하이탑부동산 | ${buildingData.name} 개요`;
 
-    populateForm(buildingData.memo || '');
+    renderReadOnlyViews();
   } catch(e) {
     showToast('❌ 불러오기 실패: ' + e.message);
   }
@@ -188,6 +381,9 @@ async function saveOverview() {
   const memo = buildMemo();
   try {
     await updateDriveResource(buildingId, { memo });
+    buildingData.memo = memo;
+    renderReadOnlyViews();
+    toggleEditMode();
     showToast('✅ 저장되었습니다.');
   } catch(e) {
     showToast('❌ 저장 실패: ' + e.message);
