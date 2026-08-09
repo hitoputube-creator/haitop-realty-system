@@ -873,6 +873,8 @@
         item.image_urls = item.is_public ? publicUrls : [];
       }
       await addListing(item);
+      const _diaryId = new URLSearchParams(location.search).get('diaryId');
+      if (_diaryId) await linkDiaryEntryToListing(_diaryId, item.id);
       showToast('✅ 저장완료!');
       setTimeout(() => location.href = 'properties.html', 1000);
     } catch(e) {

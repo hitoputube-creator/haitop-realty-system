@@ -757,6 +757,74 @@ textarea { resize: vertical; min-height: 120px; }
 .quick-title { font-size: 1rem; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
 .quick-sub   { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px; }
 
+/* 빠른 고객등록 - 높이를 줄이고 검색을 헤더에 통합한 컴팩트 버전 */
+.quick-card-compact { padding: 14px 16px; }
+.quick-card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+.quick-card-head .quick-title, .quick-card-head .quick-sub { margin-bottom: 2px; }
+.cust-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px 12px; margin-bottom: 8px; }
+.cust-form-grid .field { margin-bottom: 0; }
+
+/* 고객 목록 - PC 압축 표 */
+.cust-table-wrap { display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+.cust-table-head, .cust-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr 0.7fr 1fr 1fr 1.3fr 0.9fr 1.6fr;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+}
+.cust-table-head {
+  background: var(--bg-soft);
+  color: var(--gold-soft);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.cust-row { border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.82rem; }
+.cust-row:hover { background: rgba(255,255,255,0.03); }
+.cust-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); }
+.cust-cell-name { font-weight: 700; color: var(--gold-soft); }
+.cust-cell-actions { display: flex; gap: 4px; flex-wrap: wrap; white-space: normal; }
+.cust-cell-actions .btn { font-size: 0.72rem; padding: 3px 8px; }
+.cust-cell .contact-btn { padding: 2px 8px; font-size: 0.78rem; }
+
+/* 고객 상세 모달 */
+.cust-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; margin-bottom: 10px; }
+.cust-detail-grid span { display: block; font-size: 0.74rem; color: var(--gold-soft); margin-bottom: 2px; }
+.cust-detail-grid strong { font-size: 0.86rem; color: var(--text-main); font-weight: 500; }
+.cust-detail-memo { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px 10px; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; white-space: pre-wrap; }
+.cust-detail-section-title { font-size: 0.85rem; color: var(--gold); font-weight: 700; margin: 6px 0 8px; }
+.cust-history-list { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+.cust-history-item {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  grid-template-areas: "date title writer" "date snippet writer";
+  gap: 2px 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+  text-decoration: none;
+  color: inherit;
+}
+.cust-history-item:hover { background: rgba(216,184,74,0.08); }
+.cust-history-date { grid-area: date; font-size: 0.72rem; color: var(--text-muted); }
+.cust-history-title { grid-area: title; font-size: 0.82rem; color: var(--gold-soft); font-weight: 600; }
+.cust-history-snippet { grid-area: snippet; font-size: 0.76rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cust-history-writer { grid-area: writer; font-size: 0.72rem; color: var(--text-muted); align-self: start; }
+
+@media (max-width: 900px) {
+  .cust-table-head { display: none; }
+  .cust-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 10px 12px;
+  }
+  .cust-cell { white-space: normal; overflow: visible; text-overflow: unset; width: auto; }
+  .cust-cell-name { flex: 1 1 100%; font-size: 0.92rem; }
+  .cust-cell-actions { flex: 1 1 100%; justify-content: flex-end; margin-top: 4px; }
+}
+
 /* 로딩 */
 .loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; }
 .spinner {
@@ -910,6 +978,9 @@ textarea { resize: vertical; min-height: 120px; }
 
 @media (max-width: 720px) {
   .form-grid-2  { grid-template-columns: 1fr; }
+  .cust-form-grid { grid-template-columns: 1fr 1fr; }
+  .quick-card-head { flex-direction: column; align-items: stretch; }
+  .cust-detail-grid { grid-template-columns: 1fr; }
   .info-grid    { grid-template-columns: 1fr; }
   .detail-title { font-size: 1.15rem; }
   .detail-actions .btn,

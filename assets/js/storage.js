@@ -528,6 +528,24 @@ async function addListingReturnId(item) {
   return rows[0]?.id || null;
 }
 
+// 업무일지(haitop-realestate-diary)에서 "매물보내기"로 넘어온 매물을 저장한 뒤,
+// 원래 업무일지 메모(work_diary)에 새로 생긴 매물 id를 역연결한다.
+// work_diary는 같은 Supabase 프로젝트를 쓰는 다른 앱 소유 테이블이지만, RLS가
+// authenticated 전체 CRUD를 허용하므로(로그인 세션 재사용) 직접 PATCH할 수 있다.
+async function linkDiaryEntryToListing(diaryId, listingId) {
+  if (!diaryId || !listingId) return;
+  try {
+    const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/work_diary?id=eq." + encodeURIComponent(diaryId), {
+      method: "PATCH",
+      headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+      body: JSON.stringify({ listing_id: listingId })
+    });
+    if (!res.ok) console.warn("[업무일지 매물 연결 실패]", await res.text());
+  } catch (e) {
+    console.warn("[업무일지 매물 연결 실패]", e.message || e);
+  }
+}
+
 async function uploadListingImage(file, listingId) {
   if (!file) throw new Error("No image file selected.");
   if (file.type && !file.type.startsWith("image/")) throw new Error("Only image files can be uploaded.");
@@ -906,6 +924,58 @@ async function getDoneCustomers() {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers?status=eq.계약완료&order=completed_at.desc", { headers });
   if (!res.ok) throw new Error("완료고객 목록 조회 실패");
   return await res.json();
+}
+async function getCustomerById(id) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers?id=eq." + encodeURIComponent(id), { headers });
+  if (!res.ok) throw new Error("고객 조회 실패");
+  const rows = await res.json();
+  return rows[0] || null;
+}
+function generateCustomerCode() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const suffix = (window.crypto && crypto.randomUUID)
+    ? crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()
+    : Math.random().toString(16).slice(2, 10).toUpperCase();
+  return `C-${y}${m}${day}-${suffix}`;
+}
+function normalizeCustomerPhone(phone) {
+  return (phone || "").replace(/[^0-9]/g, "");
+}
+
+// haitop-realestate-diary와 같은 Supabase 프로젝트를 공유하는 work_diary 테이블에서
+// 업무일지 이력을 읽는다(고객페이지 "업무일지 이력"/최근업무·최근상담일용). 이 앱은
+// work_diary를 저장하지 않고 조회만 한다.
+async function getCustomerDiaryHistory(customerId) {
+  const res = await fetchWithTimeout(
+    SUPABASE_URL + "/rest/v1/work_diary?customer_id=eq." + encodeURIComponent(customerId) +
+      "&link_key=neq.__daily_schedule__&select=id,date,title,content,writer,created_at&order=date.desc,created_at.desc",
+    { headers }
+  );
+  if (!res.ok) throw new Error("업무일지 이력 조회 실패");
+  return await res.json();
+}
+
+// 목록 화면의 "최근업무"/"최근상담일" 컬럼용 - 여러 고객의 최신 업무일지 1건씩을 한 번에 조회.
+async function getLatestDiaryActivityForCustomers(customerIds) {
+  const ids = (customerIds || []).filter(Boolean);
+  if (!ids.length) return {};
+  const inList = ids.map(id => encodeURIComponent(id)).join(",");
+  const res = await fetchWithTimeout(
+    SUPABASE_URL + "/rest/v1/work_diary?customer_id=in.(" + inList + ")" +
+      "&link_key=neq.__daily_schedule__&select=customer_id,date,title,content,created_at&order=date.desc,created_at.desc",
+    { headers }
+  );
+  if (!res.ok) return {};
+  const rows = await res.json();
+  const map = {};
+  rows.forEach(row => {
+    if (!row.customer_id || map[row.customer_id]) return; // 이미 최신 1건을 담았으면 스킵(정렬돼 있으므로 첫 항목이 최신)
+    map[row.customer_id] = row;
+  });
+  return map;
 }
 
 // ===== 건물 호실 현황 (Supabase buildings 테이블) =====

@@ -118,10 +118,17 @@
   <div id="tabCustomer">
 
     <!-- ⚡ 빠른 고객등록 -->
-    <div class="quick-card">
-      <div class="quick-title">👥 빠른 고객등록</div>
-      <div class="quick-sub">상담 직후 고객 정보를 빠르게 기록하세요</div>
-      <div class="form-grid-2" style="margin-bottom:10px;">
+    <div class="quick-card quick-card-compact">
+      <div class="quick-card-head">
+        <div>
+          <div class="quick-title">👥 빠른 고객등록</div>
+          <div class="quick-sub">상담 직후 고객 정보를 빠르게 기록하세요</div>
+        </div>
+        <div class="field" style="margin:0;min-width:220px;flex:1;max-width:340px;">
+          <input id="customerSearchInput" type="text" placeholder="🔍 이름, 연락처, 메모 검색..." />
+        </div>
+      </div>
+      <div class="cust-form-grid">
         <div class="field">
           <label>이름</label>
           <input id="c_name" type="text" placeholder="고객 이름" />
@@ -131,50 +138,73 @@
           <input id="c_contact" type="tel" placeholder="010-0000-0000" />
         </div>
         <div class="field">
-          <label>원하는 매물유형</label>
+          <label>구분</label>
+          <select id="c_role">
+            <option value="">미정</option>
+            <option value="매수">매수</option>
+            <option value="임차">임차</option>
+            <option value="매도">매도</option>
+            <option value="임대">임대</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>찾는 매물유형</label>
           <select id="c_type">
             <option value="">미정</option>
-            <option value="shop">상가/사무실</option>
-            <option value="officetel">오피스텔</option>
-            <option value="land">토지</option>
-            <option value="factory">공장/창고</option>
-            <option value="bizcenter">지식산업센터</option>
+            <option value="공장창고">공장창고</option>
+            <option value="상가사무실">상가사무실</option>
+            <option value="토지">토지</option>
+            <option value="주거용">주거용</option>
+            <option value="기타">기타</option>
           </select>
         </div>
         <div class="field">
           <label>예산</label>
           <input id="c_budget" type="text" placeholder="예) 5억 이하, 월세 200 이하" />
         </div>
+        <div class="field">
+          <label>관심지역</label>
+          <input id="c_region" type="text" placeholder="예) 운정역 근처" />
+        </div>
       </div>
-      <div class="field" style="margin-bottom:12px;">
+      <div class="field" style="margin-bottom:8px;">
         <label>메모 (요구사항)</label>
-        <textarea id="c_memo" rows="4" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+        <textarea id="c_memo" rows="2" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:44px;box-sizing:border-box;"></textarea>
       </div>
       <div style="text-align:right;">
         <button class="btn btn-primary" id="customerSaveBtn">💾 고객 저장</button>
       </div>
     </div>
 
-    <!-- 고객 검색 -->
-    <section class="card">
-      <div class="card-title"><span>🔍 고객 검색</span></div>
-      <div class="field">
-        <input id="customerSearchInput" type="text" placeholder="이름, 연락처, 메모 등으로 검색..." />
-      </div>
-    </section>
-
     <!-- 고객 목록 -->
     <section class="card">
       <div class="card-title">
         <span>고객 목록 <span id="customerCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
       </div>
-      <div id="customerContainer" class="listing-grid"></div>
+      <div id="customerTableWrap" class="cust-table-wrap">
+        <div class="cust-table-head">
+          <span>고객명</span><span>연락처</span><span>구분</span><span>찾는매물</span><span>예산</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
+        </div>
+        <div id="customerContainer"></div>
+      </div>
       <div id="customerEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
         등록된 고객이 없습니다.
       </div>
       <div id="customerPagination" class="pagination"></div>
     </section>
 
+  </div>
+
+  <!-- 고객 상세 모달 -->
+  <div id="customerDetailModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:480px;">
+      <div class="modal-title" id="custDetailTitle">고객 상세</div>
+      <div id="custDetailBody"></div>
+      <div class="modal-btns">
+        <button class="btn" onclick="document.getElementById('customerDetailModal').style.display='none'">닫기</button>
+      </div>
+    </div>
   </div>
 
   <!-- ===== 거래완료관리 탭 ===== -->
@@ -288,11 +318,11 @@
           <label>원하는 매물유형</label>
           <select id="dc_type">
             <option value="">미정</option>
-            <option value="shop">상가/사무실</option>
-            <option value="officetel">오피스텔</option>
-            <option value="land">토지</option>
-            <option value="factory">공장/창고</option>
-            <option value="bizcenter">지식산업센터</option>
+            <option value="공장창고">공장창고</option>
+            <option value="상가사무실">상가사무실</option>
+            <option value="토지">토지</option>
+            <option value="주거용">주거용</option>
+            <option value="기타">기타</option>
           </select>
         </div>
         <div class="field">
@@ -539,19 +569,34 @@
         <input id="ce_contact" type="tel" placeholder="010-0000-0000" />
       </div>
       <div class="field">
-        <label>원하는 매물유형</label>
+        <label>구분</label>
+        <select id="ce_role">
+          <option value="">미정</option>
+          <option value="매수">매수</option>
+          <option value="임차">임차</option>
+          <option value="매도">매도</option>
+          <option value="임대">임대</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>찾는 매물유형</label>
         <select id="ce_type">
           <option value="">미정</option>
-          <option value="shop">상가/사무실</option>
-          <option value="officetel">오피스텔</option>
-          <option value="land">토지</option>
-          <option value="factory">공장/창고</option>
-          <option value="bizcenter">지식산업센터</option>
+          <option value="공장창고">공장창고</option>
+          <option value="상가사무실">상가사무실</option>
+          <option value="토지">토지</option>
+          <option value="주거용">주거용</option>
+          <option value="기타">기타</option>
         </select>
       </div>
       <div class="field">
         <label>예산</label>
         <input id="ce_budget" type="text" placeholder="예) 5억 이하, 월세 200 이하" />
+      </div>
+      <div class="field">
+        <label>관심지역</label>
+        <input id="ce_region" type="text" placeholder="예) 운정역 근처" />
       </div>
     </div>
     <div class="field" style="margin-bottom:14px;">
@@ -940,9 +985,17 @@ if (tab === "done")       renderDoneList();
   const CUST_PER_PAGE = 10;
   let customerSearch = "";
 
+  // 레거시 매물유형 코드(shop/officetel/...)와 새 한글 값(상가/사무실 등)을 모두 그대로 보여준다.
+  const LEGACY_TYPE_LABEL = { shop:"상가/사무실", officetel:"오피스텔", land:"토지", factory:"공장/창고", bizcenter:"지식산업센터" };
   function getCustomerTypeLabel(type) {
-    const map = { shop:"상가/사무실", officetel:"오피스텔", land:"토지", factory:"공장/창고", bizcenter:"지식산업센터" };
-    return map[type] || "미정";
+    if (!type) return "—";
+    return LEGACY_TYPE_LABEL[type] || type;
+  }
+
+  let customerDiaryActivity = {}; // { customerId: {date, title, content} }
+
+  function escapeHtmlCust(v) {
+    return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
   function renderCustomers() {
@@ -955,7 +1008,7 @@ if (tab === "done")       renderDoneList();
     if (customerSearch) {
       const kw = customerSearch.toLowerCase();
       filtered = filtered.filter(c =>
-        [c.name, c.contact, c.memo, c.budget].join(" ").toLowerCase().includes(kw)
+        [c.name, c.phone, c.memo, c.desired_price, c.desired_region, c.customer_role].join(" ").toLowerCase().includes(kw)
       );
     }
 
@@ -971,53 +1024,76 @@ if (tab === "done")       renderDoneList();
     const custStart = (customerPage - 1) * CUST_PER_PAGE;
     const custPageItems = filtered.slice(custStart, custStart + CUST_PER_PAGE);
     custPageItems.forEach(c => {
-      const card = document.createElement("div");
-      card.className = "listing-card";
+      const row = document.createElement("div");
+      row.className = "cust-row";
+      const activity = customerDiaryActivity[c.id];
+      const lastWork = activity ? (activity.title || (activity.content || "").slice(0, 24)) : "—";
+      const lastDate = activity && activity.date ? formatDate(activity.date) : "—";
 
-      card.innerHTML = `
-        <div class="badge-row" style="margin-bottom:6px;">
-          ${c.type ? `<span class="badge">${getCustomerTypeLabel(c.type)}</span>` : ""}
-          ${c.status === "계약완료"
-            ? '<span class="badge badge-red">계약완료</span>'
-            : '<span class="badge badge-green">상담중</span>'}
-        </div>
-        <div class="listing-title">${c.name || "(이름 미입력)"}</div>
-        <div class="card-expand-wrap" data-expanded="false">
-          ${c.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.contact}" onclick="event.stopPropagation()">📞 ${c.contact}</a></div>` : ""}
-          ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
-          ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
-          <div class="card-expand-fade"></div>
-        </div>
-        <button class="card-expand-btn" onclick="toggleCardExpand(this)">▼ 더보기</button>
-        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
-          <button class="btn" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">✏️ 수정</button>
-          ${c.status !== "계약완료"
-            ? `<button class="btn btn-success" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleContractDone('${c.id}')">✅ 완료고객으로</button>`
-            : ""}
-          <button class="btn btn-danger" style="font-size:0.75rem;padding:4px 10px;" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">🗑 삭제</button>
-        </div>
+      row.innerHTML = `
+        <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}</span>
+        <span class="cust-cell" data-label="연락처">${c.phone ? `<a class="contact-btn" href="tel:${escapeHtmlCust(c.phone)}" onclick="event.stopPropagation()">📞 ${escapeHtmlCust(c.phone)}</a>` : "—"}</span>
+        <span class="cust-cell" data-label="구분">${c.customer_role ? `<span class="badge">${escapeHtmlCust(c.customer_role)}</span>` : "—"}</span>
+        <span class="cust-cell" data-label="찾는매물">${getCustomerTypeLabel(c.property_category)}</span>
+        <span class="cust-cell" data-label="예산">${escapeHtmlCust(c.desired_price) || "—"}</span>
+        <span class="cust-cell" data-label="최근업무">${escapeHtmlCust(lastWork)}</span>
+        <span class="cust-cell" data-label="최근상담일">${lastDate}</span>
+        <span class="cust-cell cust-cell-actions" data-label="관리">
+          <button class="btn" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
+          <button class="btn" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">업무일지</button>
+          <button class="btn" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">수정</button>
+          <button class="btn btn-danger" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
+        </span>
       `;
-
-      container.appendChild(card);
+      container.appendChild(row);
     });
-    _initExpandCards(container);
     _makePagination("customerPagination", filtered.length, CUST_PER_PAGE, customerPage, (p) => { customerPage = p; renderCustomers(); });
   }
 
-  async function handleContractDone(id) {
-    if (!confirm("계약완료로 처리하시겠습니까?\n완료일자가 자동 저장됩니다.")) return;
+  const DIARY_APP_URL = "https://hitoputube-creator.github.io/haitop-realestate-diary/";
+
+  function openCustomerDiary(id) {
+    window.open(DIARY_APP_URL + "?customerId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");
+  }
+
+  async function openCustomerDetail(id) {
+    const c = allCustomers.find(x => x.id === id) || await getCustomerById(id);
+    if (!c) { showToast("고객 정보를 찾을 수 없습니다"); return; }
+    document.getElementById("custDetailTitle").textContent = `👤 ${c.name || "(이름 미입력)"}`;
+    const body = document.getElementById("custDetailBody");
+    body.innerHTML = `
+      <div class="cust-detail-grid">
+        <div><span>연락처</span><strong>${escapeHtmlCust(c.phone) || "—"}</strong></div>
+        <div><span>구분</span><strong>${escapeHtmlCust(c.customer_role) || "—"}</strong></div>
+        <div><span>찾는매물</span><strong>${getCustomerTypeLabel(c.property_category)}</strong></div>
+        <div><span>예산</span><strong>${escapeHtmlCust(c.desired_price) || "—"}</strong></div>
+        <div><span>관심지역</span><strong>${escapeHtmlCust(c.desired_region) || "—"}</strong></div>
+        <div><span>상태</span><strong>${escapeHtmlCust(c.status) || "—"}</strong></div>
+      </div>
+      ${c.memo ? `<div class="cust-detail-memo">📝 ${escapeHtmlCust(c.memo)}</div>` : ""}
+      <div class="cust-detail-section-title">업무일지 이력</div>
+      <div id="custDetailHistory" class="cust-history-list"><div class="loading" style="padding:14px;"><span class="spinner"></span>불러오는 중...</div></div>
+    `;
+    document.getElementById("customerDetailModal").style.display = "flex";
     try {
-      await updateCustomer(id, { status: "계약완료", completed_at: new Date().toISOString() });
-      showToast("✅ 계약완료 처리됨");
-      await loadCustomers();
-      // 완료고객관리 탭으로 이동
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelector('[data-tab="donecustomer"]').classList.add("active");
-      document.getElementById("tabCustomer").style.display     = "none";
-      document.getElementById("tabDoneCustomer").style.display = "";
-      await loadDoneCustomers();
-    } catch(e) {
-      showToast("❌ 오류: " + e.message);
+      const history = await getCustomerDiaryHistory(id);
+      const historyEl = document.getElementById("custDetailHistory");
+      if (!historyEl) return;
+      if (!history.length) {
+        historyEl.innerHTML = `<div style="color:var(--text-muted);font-size:0.8rem;padding:6px 0;">업무일지 이력이 없습니다</div>`;
+        return;
+      }
+      historyEl.innerHTML = history.map(h => `
+        <a class="cust-history-item" href="${DIARY_APP_URL}?customerId=${encodeURIComponent(id)}" target="_blank" rel="noopener noreferrer">
+          <span class="cust-history-date">${formatDate(h.date)}</span>
+          <span class="cust-history-title">${escapeHtmlCust(h.title) || "(제목 없음)"}</span>
+          <span class="cust-history-snippet">${escapeHtmlCust((h.content || "").slice(0, 40))}</span>
+          <span class="cust-history-writer">${escapeHtmlCust(h.writer) || ""}</span>
+        </a>
+      `).join("");
+    } catch (e) {
+      const historyEl = document.getElementById("custDetailHistory");
+      if (historyEl) historyEl.innerHTML = `<div style="color:var(--red);font-size:0.8rem;">불러오기 실패: ${escapeHtmlCust(e.message)}</div>`;
     }
   }
 
@@ -1043,7 +1119,7 @@ if (tab === "done")       renderDoneList();
     let filtered = allDoneCustomers.filter(c => {
       if (!doneCustomerSearch) return true;
       const q = doneCustomerSearch;
-      return [c.name, c.contact, c.budget, c.memo].join(" ").includes(q);
+      return [c.name, c.phone, c.desired_price, c.memo].join(" ").includes(q);
     });
 
     const badge = document.getElementById("doneCustomerCountBadge");
@@ -1071,13 +1147,13 @@ if (tab === "done")       renderDoneList();
       const completedAt = c.completed_at ? formatDate(c.completed_at) : "-";
       card.innerHTML = `
         <div class="badge-row" style="margin-bottom:6px;">
-          ${c.type ? `<span class="badge">${getCustomerTypeLabel(c.type)}</span>` : ""}
+          ${c.property_category ? `<span class="badge">${getCustomerTypeLabel(c.property_category)}</span>` : ""}
           <span class="badge badge-red">계약완료</span>
         </div>
         <div class="listing-title">${c.name || "(이름 미입력)"}</div>
         <div class="card-expand-wrap" data-expanded="false">
-          ${c.contact ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.contact}" onclick="event.stopPropagation()">📞 ${c.contact}</a></div>` : ""}
-          ${c.budget ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.budget}</div>` : ""}
+          ${c.phone ? `<div style="margin-top:6px;"><a class="contact-btn" href="tel:${c.phone}" onclick="event.stopPropagation()">📞 ${c.phone}</a></div>` : ""}
+          ${c.desired_price ? `<div style="margin-top:6px;font-size:0.82rem;color:var(--text-main);">💰 ${c.desired_price}</div>` : ""}
           ${c.memo ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${c.memo}</div>` : ""}
           <div style="margin-top:8px;font-size:0.78rem;color:var(--gold-soft);">✅ 계약완료일: ${completedAt}</div>
           <div class="card-expand-fade"></div>
@@ -1094,20 +1170,21 @@ if (tab === "done")       renderDoneList();
 
   document.getElementById("doneCustomerSaveBtn").addEventListener("click", async () => {
     const name    = document.getElementById("dc_name").value.trim();
-    const contact = document.getElementById("dc_contact").value.trim();
+    const phone   = document.getElementById("dc_contact").value.trim();
     const type    = document.getElementById("dc_type").value;
     const budget  = document.getElementById("dc_budget").value.trim();
     const memo    = document.getElementById("dc_memo").value.trim();
     const dateVal = document.getElementById("dc_completed_at").value;
 
-    if (!name && !contact) { showToast("이름 또는 연락처 중 하나는 입력해주세요"); return; }
+    if (!name && !phone) { showToast("이름 또는 연락처 중 하나는 입력해주세요"); return; }
 
     const btn = document.getElementById("doneCustomerSaveBtn");
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
       await addCustomer({
-        id: "CUST-" + Date.now(),
-        name, contact, type, budget, memo,
+        customer_code: generateCustomerCode(),
+        name, phone, phone_normalized: normalizeCustomerPhone(phone),
+        property_category: type || null, desired_price: budget || null, memo,
         status: "계약완료",
         completed_at: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
       });
@@ -1143,9 +1220,11 @@ if (tab === "done")       renderDoneList();
     if (!c) return;
     editingCustomerId = id;
     document.getElementById("ce_name").value    = c.name    || "";
-    document.getElementById("ce_contact").value = c.contact || "";
-    document.getElementById("ce_type").value    = c.type    || "";
-    document.getElementById("ce_budget").value  = c.budget  || "";
+    document.getElementById("ce_contact").value = c.phone   || "";
+    document.getElementById("ce_role").value    = c.customer_role || "";
+    document.getElementById("ce_type").value    = c.property_category || "";
+    document.getElementById("ce_budget").value  = c.desired_price || "";
+    document.getElementById("ce_region").value  = c.desired_region || "";
     document.getElementById("ce_memo").value    = c.memo    || "";
     document.getElementById("customerEditModal").style.display = "flex";
   }
@@ -1154,12 +1233,16 @@ if (tab === "done")       renderDoneList();
     const btn = document.getElementById("customerEditSaveBtn");
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
+      const phone = document.getElementById("ce_contact").value.trim();
       await updateCustomer(editingCustomerId, {
-        name:    document.getElementById("ce_name").value.trim(),
-        contact: document.getElementById("ce_contact").value.trim(),
-        type:    document.getElementById("ce_type").value,
-        budget:  document.getElementById("ce_budget").value.trim(),
-        memo:    document.getElementById("ce_memo").value.trim()
+        name:              document.getElementById("ce_name").value.trim(),
+        phone:             phone,
+        phone_normalized:  normalizeCustomerPhone(phone),
+        customer_role:     document.getElementById("ce_role").value || null,
+        property_category: document.getElementById("ce_type").value || null,
+        desired_price:     document.getElementById("ce_budget").value.trim() || null,
+        desired_region:    document.getElementById("ce_region").value.trim() || null,
+        memo:              document.getElementById("ce_memo").value.trim()
       });
       document.getElementById("customerEditModal").style.display = "none";
       showToast("✅ 수정 완료!");
@@ -1169,13 +1252,15 @@ if (tab === "done")       renderDoneList();
   });
 
   document.getElementById("customerSaveBtn").addEventListener("click", async () => {
-    const name     = document.getElementById("c_name").value.trim();
-    const contact  = document.getElementById("c_contact").value.trim();
+    const name    = document.getElementById("c_name").value.trim();
+    const phone   = document.getElementById("c_contact").value.trim();
+    const role    = document.getElementById("c_role").value;
     const type    = document.getElementById("c_type").value;
-    const budget   = document.getElementById("c_budget").value.trim();
-    const memo     = document.getElementById("c_memo").value.trim();
+    const budget  = document.getElementById("c_budget").value.trim();
+    const region  = document.getElementById("c_region").value.trim();
+    const memo    = document.getElementById("c_memo").value.trim();
 
-    if (!name && !contact) {
+    if (!name && !phone) {
       showToast("이름 또는 연락처 중 하나는 입력해주세요");
       return;
     }
@@ -1184,14 +1269,29 @@ if (tab === "done")       renderDoneList();
     btn.disabled = true; btn.textContent = "저장 중...";
 
     try {
-      await addCustomer({
-        id: "CUST-" + Date.now(),
-        name, contact, type, budget, memo,
-        status: "상담중"
-      });
-      ["c_name","c_contact","c_budget","c_memo"].forEach(id => document.getElementById(id).value = "");
+      // 같은 연락처의 고객이 이미 있으면 새로 만들지 않고 그 고객을 그대로 쓴다
+      // (haitop-realestate-diary의 resolveOrCreateCustomer와 동일한 dedup 기준: phone_normalized).
+      const digits = normalizeCustomerPhone(phone);
+      let existing = null;
+      if (digits) existing = allCustomers.find(c => c.phone_normalized === digits);
+      if (existing) {
+        showToast(`이미 등록된 고객입니다: ${existing.name || existing.phone} (기존 정보 유지)`);
+      } else {
+        await addCustomer({
+          customer_code: generateCustomerCode(),
+          name, phone, phone_normalized: digits,
+          customer_role: role || null,
+          property_category: type || null,
+          desired_price: budget || null,
+          desired_region: region || null,
+          memo,
+          status: "신규"
+        });
+        showToast("✅ 고객 저장완료!");
+      }
+      ["c_name","c_contact","c_budget","c_region","c_memo"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("c_type").value = "";
-      showToast("✅ 고객 저장완료!");
+      document.getElementById("c_role").value = "";
       await loadCustomers();
     } catch(e) {
       showToast("❌ 저장 실패: " + e.message);
@@ -1212,13 +1312,28 @@ if (tab === "done")       renderDoneList();
     try {
       allCustomers = await getCustomers();
       renderCustomers();
+      // 최근업무/최근상담일은 work_diary 조회가 필요해 약간 늦게 채워진다 - 목록은 먼저 보여준다.
+      const ids = allCustomers.filter(c => c.status !== "계약완료").map(c => c.id);
+      customerDiaryActivity = await getLatestDiaryActivityForCustomers(ids);
+      renderCustomers();
     } catch(e) {
       container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
     }
   }
 
   // 고객 탭이 기본 진입 화면이므로 페이지 로드 시 미리 불러온다
-  loadCustomers();
+  loadCustomers().then(() => {
+    // 업무일지의 "고객보기" 버튼 등에서 ?tab=customer&customerId=...로 들어오면 상세를 바로 연다
+    const qp = new URLSearchParams(location.search);
+    const wantCustomerId = qp.get("customerId");
+    if (wantCustomerId) {
+      openCustomerDetail(wantCustomerId);
+      const url = new URL(location.href);
+      url.searchParams.delete("customerId");
+      url.searchParams.delete("tab");
+      history.replaceState({}, "", url.toString());
+    }
+  });
 
   // ===== 참고매물 탭 =====
   let allReferenceProperties = [];
@@ -1784,9 +1899,11 @@ if (tab === "done")       renderDoneList();
       const activeCustomers = customers.filter(c => c.status !== "계약완료");
       XLSX.utils.book_append_sheet(wb, _makeSheet(activeCustomers.map(c => ({
         "이름": c.name || "",
-        "연락처": c.contact || "",
-        "매물유형": getCustomerTypeLabel(c.type),
-        "예산": c.budget || "",
+        "연락처": c.phone || "",
+        "구분": c.customer_role || "",
+        "매물유형": getCustomerTypeLabel(c.property_category),
+        "예산": c.desired_price || "",
+        "관심지역": c.desired_region || "",
         "메모": c.memo || "",
         "상태": c.status || ""
       }))), "고객관리");
@@ -1794,9 +1911,9 @@ if (tab === "done")       renderDoneList();
       // 완료고객
       XLSX.utils.book_append_sheet(wb, _makeSheet(doneCustomers.map(c => ({
         "이름": c.name || "",
-        "연락처": c.contact || "",
-        "매물유형": getCustomerTypeLabel(c.type),
-        "예산": c.budget || "",
+        "연락처": c.phone || "",
+        "매물유형": getCustomerTypeLabel(c.property_category),
+        "예산": c.desired_price || "",
         "메모": c.memo || "",
         "계약완료일": c.completed_at ? new Date(c.completed_at).toLocaleDateString("ko-KR") : ""
       }))), "완료고객");
