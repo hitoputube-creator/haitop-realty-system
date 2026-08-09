@@ -981,42 +981,119 @@ function closeHomepageTab(tab) {
     </section>`;
   }
 
-  // 건물 기본 정보 표의 한 항목(label+value)을 렌더링한다. 값이 없으면 항상 "—"로 표시한다
+  // 매물 상세정보 표의 한 항목(label+value)을 렌더링한다. 값이 없으면 항상 "—"로 표시한다
   // (표 형태를 유지하기 위해 detailField와 달리 값이 비어도 행 자체는 생략하지 않는다).
-  function biCell(label, value) {
+  function iptCell(label, value) {
     const text = detailText(value);
-    return `<div class="bi-label">${escapeHtml(label)}</div><div class="bi-value">${escapeHtml(text || "—")}</div>`;
+    return `<div class="ipt-label">${escapeHtml(label)}</div><div class="ipt-value">${escapeHtml(text || "—")}</div>`;
   }
 
-  // 건물 관련 정보를 한눈에 보는 압축 표. 매물 데이터·저장 구조는 건드리지 않고
-  // 기존 필드를 그대로 읽어서 표시만 한다. 관리사무소·규모는 현재 데이터 모델에
-  // 해당 필드가 없어 항상 "—"로 표시된다.
-  function renderBuildingInfoTable(item, category, complexName, publicAddress) {
-    const categoryText = firstDetailValue(
-      [category.category1, category.category2].filter(Boolean).join(" · "),
-      getListingCategoryLabel(item)
+  // pairs 개수에 맞춰 한 행(row)을 만든다. 데스크톱은 pairs 개수만큼 열이 나뉘고,
+  // 모바일(720px 이하)에서는 CSS가 모든 행을 "항목 | 값" 1쌍짜리 열로 통일한다.
+  function iptRow(pairs) {
+    const cells = pairs.map(([label, value]) => iptCell(label, value)).join("");
+    return `<div class="ipt-row ipt-row-${pairs.length}">${cells}</div>`;
+  }
+
+  // 값이 실제로 있는 [라벨, 값] 쌍만 남겨서 최대 maxPerRow개씩 행으로 묶는다.
+  // "추가 정보" 표처럼 항목 개수가 매물마다 달라지는 곳에 쓴다.
+  function packRows(pairs, maxPerRow = 3) {
+    const valid = pairs.filter(([, value]) => hasDetailValue(detailText(value)));
+    const rows = [];
+    for (let i = 0; i < valid.length; i += maxPerRow) {
+      rows.push(iptRow(valid.slice(i, i + maxPerRow)));
+    }
+    return rows.join("");
+  }
+
+  // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나로 합친 압축 표.
+  // 기존 필드를 그대로 읽어서 표시만 하며, 새 필드나 저장 구조 변경은 없다.
+  function renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact) {
+    const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "");
+    const rentOrSale = firstDetailValue(
+      dealType === "매매" ? formatWonOrText(item.salePrice) : "",
+      formatWonOrText(item.monthlyRent),
+      formatWonOrText(item.salePrice)
+    );
+    const exclusiveArea = formatAreaPair(
+      item.exclusiveAreaM2 || item.shop_area_sqm || item.officetel_area_sqm || item.biz_privArea_sqm,
+      item.exclusiveAreaPy || item.shop_area_py || item.officetel_area_py || item.biz_privArea_py
     );
     const landArea = formatAreaPair(item.areaM2, item.areaPy);
     const totalFloorArea = formatAreaPair(item.totalFloorAreaM2, item.totalFloorAreaPy);
     const parking = firstDetailValue(item.parkingCount, item.shop_parking, item.officetel_parking, item.factory_parking, item.biz_parking);
     const structure = firstDetailValue(item.buildingStructure, item.structure, item.officetel_structure);
+    const floorInfo = firstDetailValue(item.floorInfo, item.floor, item.floorTxt, item.shop_floor, item.officetel_floor, item.biz_floor);
+    const direction = firstDetailValue(item.direction, item.officetel_direction);
+    const availableDate = firstDetailValue(item.availableDate, item.moveInDate, item.shop_available, item.officetel_available, item.factory_available, item.biz_available);
+    const ownerName = firstDetailValue(item.owner_name, item.quick_owner);
+    const buildingUse = firstDetailValue(item.buildingUse, item.mainUse, item.useType, item.factory_kind, item.biz_kind, item.land_kind);
+    const zoning = firstDetailValue(item.zoning, item.land_zone);
+    const heightPower = [withSuffix(item.factory_height, "m"), withSuffix(item.factory_power, "kW")].filter(Boolean).join(" / ");
 
-    const cells = [
-      biCell("주소", publicAddress),
-      biCell("건물명", complexName),
-      biCell("카테고리", categoryText),
-      biCell("토지면적", landArea),
-      biCell("주차대수", parking),
-      biCell("연면적", totalFloorArea),
-      biCell("사용승인일", item.approvalDate),
-      biCell("관리사무소", ""),
-      biCell("구조", structure),
-      biCell("규모", ""),
+    const rows = [
+      iptRow([["1차구분", category.category1 || item.category1], ["2차구분", category.category2 || item.category2], ["거래유형", dealType]]),
+      iptRow([["제목", item.title]]),
+      iptRow([["공개주소", publicAddress], ["비공개주소", mapAddress]]),
+      iptRow([["보증금", formatWonOrText(item.deposit)], ["월세/매매가", rentOrSale], ["전용면적", exclusiveArea]]),
+      iptRow([["건물명", complexName], ["토지면적", landArea], ["연면적", totalFloorArea]]),
+      iptRow([["주차대수", parking], ["사용승인일", item.approvalDate], ["구조", structure]]),
+      iptRow([["층수", floorInfo], ["방향", direction], ["입주가능일", availableDate]]),
+      iptRow([["소유주", ownerName], ["연락처1", contact], ["연락처2", item.owner_phone2]]),
+      iptRow([["건축물용도", buildingUse], ["용도지역", zoning], ["지목", item.land_jimok]]),
+      iptRow([["건폐율", withSuffix(item.land_coverage, "%")], ["용적률", withSuffix(item.land_far, "%")], ["층고/전력", heightPower]]),
     ].join("");
 
-    return `<section class="detail-section building-info-section">
-      <div class="detail-section-title">건물 기본 정보</div>
-      <div class="building-info-table">${cells}</div>
+    const detailAddress = firstDetailValue(item.privateDetailAddress, item.detailAddress);
+    const relatedContacts = (Array.isArray(item.additional_contacts) ? item.additional_contacts : [])
+      .filter(c => c && c.phone)
+      .map(c => c.name ? `${c.name} ${c.phone}` : c.phone)
+      .join(", ");
+    const extraContact = differentValue(firstDetailValue(item.owner_contact, item.quick_contact), contact);
+
+    // 핵심표에 없는 나머지 필드들. 실제 값이 있는 것만 packRows가 걸러서 보여준다.
+    const extraPairs = [
+      ["매물구분", getListingCategoryLabel(item)],
+      ["분양가", formatWonOrText(item.presalePrice)],
+      ["관리비", formatWonOrText(item.managementFee)],
+      ["권리금", formatWonOrText(item.premium)],
+      ["상가 보증금", formatManWon(item.shop_deposit)],
+      ["상가 월세", formatManWon(item.shop_monthlyRent)],
+      ["상가 관리비", formatManWon(item.shop_maintenance)],
+      ["상가 권리금", item.shop_premium],
+      ["오피스텔 금액", formatManWon(item.officetel_price)],
+      ["토지 매매가", formatManWon(item.land_price)],
+      ["공장·창고 금액", formatManWon(item.factory_price)],
+      ["지식산업센터 금액", formatManWon(item.biz_price)],
+      ["가격 메모", item.quick_price],
+      ["공급면적", formatAreaPair(item.supplyAreaM2, item.supplyAreaPy)],
+      ["대지면적", formatAreaPair(item.landAreaM2 || item.factory_siteArea_sqm, item.landAreaPy || item.factory_siteArea_py || item.factory_land_py)],
+      ["건축면적", formatAreaPair(item.buildingAreaM2 || item.factory_buildArea_sqm, item.buildingAreaPy || item.factory_buildArea_py || item.factory_area_py)],
+      ["레거시 토지면적", formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py)],
+      ["상세주소·동호수", detailAddress],
+      ["도로조건", firstDetailValue(item.roadAccess, item.land_road)],
+      ["형상", item.land_shape],
+      ["대형차진입", item.factory_truck],
+      ["일반사업자", item.officetel_biz],
+      ["전입", item.officetel_resident],
+      ["임대상태", item.shop_status],
+      ["예상수익률", withSuffix(item.shop_yield, "%")],
+      ["관계자 연락처", relatedContacts],
+      ["추가 연락처", extraContact],
+      ["소유주 메모", item.owner_memo],
+    ];
+    const extraRows = packRows(extraPairs, 3);
+    const extraInfoHtml = extraRows
+      ? `<button type="button" class="extra-info-toggle" id="extraInfoToggle" aria-expanded="false" aria-controls="extraInfoTable">
+          <span>추가 정보 보기</span><span class="extra-info-caret">▾</span>
+        </button>
+        <div class="listing-info-table extra-info-table" id="extraInfoTable" hidden>${extraRows}</div>`
+      : "";
+
+    return `<section class="detail-section listing-info-section">
+      <div class="detail-section-title">매물 상세정보</div>
+      <div class="listing-info-table">${rows}</div>
+      ${extraInfoHtml}
     </section>`;
   }
 
@@ -1039,7 +1116,6 @@ function closeHomepageTab(tab) {
     const complexName = firstDetailValue(item.complexName, item.officetel_complex, item.buildingName, item.building_name, item.complex_name, item.shop_building, item.type === "hilsstate" ? "힐스테이트더운정" : "");
     const publicAddress = firstDetailValue(item.publicAddress, item.displayAddress, item.quick_location, item.address);
     const mapAddress = firstDetailValue(item.mapAddress, item.roadAddress, item.jibunAddress, item.locationAddress, item.privateAddress, item.address);
-    const detailAddress = firstDetailValue(item.privateDetailAddress, item.detailAddress);
 
     if (item.status === "거래완료") {
       html += `<div class="deal-status">거래완료</div>`;
@@ -1071,81 +1147,8 @@ function closeHomepageTab(tab) {
 
     html += `<div class="detail-badges"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
 
-    html += detailSection("기본정보", [
-      detailField("1차 구분", category.category1 || item.category1),
-      detailField("2차 구분", category.category2 || item.category2),
-      detailField("거래유형", firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "")),
-      detailField("제목", item.title),
-      detailField("단지명", complexName),
-      detailField("매물구분", getListingCategoryLabel(item))
-    ], { required: true });
-
-    html += detailSection("주소정보", [
-      detailField("고객에게 공개되는 주소", publicAddress),
-      detailField("지도검색용 비공개 주소", mapAddress),
-      detailField("상세주소·동호수", detailAddress),
-    ], { private: true });
-
-    html += detailSection("가격·면적", [
-      detailField("매매가", formatWonOrText(item.salePrice), { price: true }),
-      detailField("분양가", formatWonOrText(item.presalePrice), { price: true }),
-      detailField("보증금", formatWonOrText(item.deposit), { price: true }),
-      detailField("월세", formatWonOrText(item.monthlyRent), { price: true }),
-      detailField("관리비", formatWonOrText(item.managementFee), { price: true }),
-      detailField("권리금", formatWonOrText(item.premium), { price: true }),
-      detailField("상가 보증금", formatManWon(item.shop_deposit), { price: true }),
-      detailField("상가 월세", formatManWon(item.shop_monthlyRent), { price: true }),
-      detailField("상가 관리비", formatManWon(item.shop_maintenance), { price: true }),
-      detailField("상가 권리금", item.shop_premium, { price: true }),
-      detailField("오피스텔 금액", formatManWon(item.officetel_price), { price: true }),
-      detailField("토지 매매가", formatManWon(item.land_price), { price: true }),
-      detailField("공장·창고 금액", formatManWon(item.factory_price), { price: true }),
-      detailField("지식산업센터 금액", formatManWon(item.biz_price), { price: true }),
-      detailField("가격 메모", item.quick_price, { price: true }),
-      detailField("토지면적", formatAreaPair(item.areaM2, item.areaPy)),
-      detailField("전용면적", formatAreaPair(item.exclusiveAreaM2 || item.shop_area_sqm || item.officetel_area_sqm || item.biz_privArea_sqm, item.exclusiveAreaPy || item.shop_area_py || item.officetel_area_py || item.biz_privArea_py)),
-      detailField("공급면적", formatAreaPair(item.supplyAreaM2, item.supplyAreaPy)),
-      detailField("대지면적", formatAreaPair(item.landAreaM2 || item.factory_siteArea_sqm, item.landAreaPy || item.factory_siteArea_py || item.factory_land_py)),
-      detailField("건축면적", formatAreaPair(item.buildingAreaM2 || item.factory_buildArea_sqm, item.buildingAreaPy || item.factory_buildArea_py || item.factory_area_py)),
-      detailField("연면적", formatAreaPair(item.totalFloorAreaM2, item.totalFloorAreaPy)),
-      detailField("레거시 토지면적", formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py)),
-    ]);
-
-    // 건물 관련 핵심 정보는 아래 "건물 기본 정보" 표로 통합해서 한눈에 보이게 한다.
-    html += renderBuildingInfoTable(item, category, complexName, publicAddress);
-
-    html += detailSection("주소·건물정보", [
-      detailField("건축물 용도", firstDetailValue(item.buildingUse, item.mainUse, item.useType, item.factory_kind, item.biz_kind, item.land_kind)),
-      // 구조·사용승인일·주차대수는 위 "건물 기본 정보" 표에 이미 표시되므로 여기서는 중복 노출하지 않는다.
-      detailField("층수", firstDetailValue(item.floorInfo, item.floor, item.floorTxt, item.shop_floor, item.officetel_floor, item.biz_floor)),
-      detailField("방향", firstDetailValue(item.direction, item.officetel_direction)),
-      detailField("입주 가능일", firstDetailValue(item.availableDate, item.moveInDate, item.shop_available, item.officetel_available, item.factory_available, item.biz_available)),
-      detailField("용도지역", firstDetailValue(item.zoning, item.land_zone)),
-      detailField("지목", item.land_jimok),
-      detailField("도로 조건", firstDetailValue(item.roadAccess, item.land_road)),
-      detailField("형상", item.land_shape),
-      detailField("건폐율", withSuffix(item.land_coverage, "%")),
-      detailField("용적률", withSuffix(item.land_far, "%")),
-      detailField("층고", withSuffix(item.factory_height, "m")),
-      detailField("전력", withSuffix(item.factory_power, "kW")),
-      detailField("대형차 진입", item.factory_truck),
-      detailField("일반사업자", item.officetel_biz),
-      detailField("전입", item.officetel_resident),
-      detailField("임대상태", item.shop_status),
-      detailField("예상 수익률", withSuffix(item.shop_yield, "%")),
-    ]);
-
-    html += detailSection("소유주·연락처", [
-      detailField("소유주명", firstDetailValue(item.owner_name, item.quick_owner)),
-      detailField("연락처1", contact),
-      detailField("연락처2", item.owner_phone2),
-      detailField("관계자 연락처", (Array.isArray(item.additional_contacts) ? item.additional_contacts : [])
-        .filter(c => c && c.phone)
-        .map(c => c.name ? `${c.name} - ${c.phone}` : c.phone)
-        .join("\n"), { wide: true, pre: true }),
-      detailField("추가 연락처", differentValue(firstDetailValue(item.owner_contact, item.quick_contact), contact)),
-      detailField("소유주 메모", item.owner_memo, { wide: true, pre: true }),
-    ], { private: true });
+    // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나의 "매물 상세정보" 표로 통합.
+    html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
 
     html += detailSection("설명·메모", [
       detailField("공개 매물설명", item.detailDescription, { wide: true, pre: true }),
@@ -1304,6 +1307,16 @@ function closeHomepageTab(tab) {
   function rebindButtons() {
     const item = _currentItem;
     const id   = item.id;
+    const extraInfoToggle = document.getElementById("extraInfoToggle");
+    const extraInfoTable  = document.getElementById("extraInfoTable");
+    if (extraInfoToggle && extraInfoTable) {
+      extraInfoToggle.addEventListener("click", () => {
+        const expanded = extraInfoToggle.getAttribute("aria-expanded") === "true";
+        extraInfoToggle.setAttribute("aria-expanded", String(!expanded));
+        extraInfoTable.hidden = expanded;
+        extraInfoToggle.querySelector("span").textContent = expanded ? "추가 정보 보기" : "추가 정보 닫기";
+      });
+    }
     const doneBtn   = document.getElementById("doneBtn");
     const undoneBtn = document.getElementById("undoneBtn");
     if (doneBtn) doneBtn.addEventListener("click", async () => {

@@ -666,24 +666,31 @@ textarea { resize: vertical; min-height: 120px; }
 .detail-image-link { display: block; border-radius: 8px; overflow: hidden; border: 1px solid rgba(216,184,74,0.28); background: rgba(0,0,0,0.18); }
 .detail-image-link img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
 
-/* 건물 기본 정보 — 압축형 2열 표 (PC: 항목·값 2쌍/행, 모바일: 1쌍/행) */
-.building-info-table {
-  display: grid;
-  grid-template-columns: auto 1fr auto 1fr;
+/* 매물 상세정보 — 기본정보·주소·가격·면적·건물정보·소유주 연락처를 합친 압축 표.
+   행마다 독립된 grid로 짜서(ipt-row-1/2/3) 3쌍/2쌍/1쌍 행이 서로의 열에 섞이지 않는다. */
+.listing-info-table {
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   overflow: hidden;
 }
-.building-info-table .bi-label,
-.building-info-table .bi-value {
-  padding: 8px 12px;
+.ipt-row {
+  display: grid;
+  border-bottom: 1px solid var(--border-soft);
+}
+.ipt-row:last-child { border-bottom: none; }
+.ipt-row-3 { grid-template-columns: repeat(3, auto 1fr); }
+.ipt-row-2 { grid-template-columns: repeat(2, auto 1fr); }
+.ipt-row-1 { grid-template-columns: auto 1fr; }
+.ipt-label, .ipt-value {
+  padding: 6px 10px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--border-soft);
-  font-size: 0.84rem;
-  line-height: 1.4;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
-.building-info-table .bi-label {
+.ipt-label {
   background: var(--bg-soft);
   color: var(--gold-soft);
   font-weight: 600;
@@ -691,14 +698,36 @@ textarea { resize: vertical; min-height: 120px; }
   word-break: keep-all;
   border-right: 1px solid var(--border-soft);
 }
-.building-info-table .bi-value {
+.ipt-value {
   background: var(--bg-card);
   color: var(--text-main);
   font-weight: 500;
   overflow-wrap: anywhere;
 }
-.building-info-table .bi-label:nth-last-child(-n+2),
-.building-info-table .bi-value:nth-last-child(-n+1) { border-bottom: none; }
+
+/* 추가 정보 접이식 토글 — 기본은 접힌 상태, 눌러야만 나머지 표가 펼쳐진다 */
+.extra-info-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px dashed var(--border-soft);
+  border-radius: 8px;
+  color: var(--gold-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+.extra-info-toggle:hover { background: rgba(216,184,74,0.08); }
+.extra-info-caret { font-size: 0.7rem; transition: transform 0.15s ease; }
+.extra-info-toggle[aria-expanded="true"] .extra-info-caret { transform: rotate(180deg); }
+.extra-info-table { margin-top: 8px; }
 
 /* 설명·메모 카드 — 항목명과 내용 사이 간격을 명확히, 과도한 여백 없이 압축 */
 .detail-section.description-section .detail-read-grid { gap: 14px 14px; }
@@ -706,13 +735,12 @@ textarea { resize: vertical; min-height: 120px; }
 .detail-section.description-section .detail-read-value.pre-line { line-height: 1.6; }
 
 @media (max-width: 720px) {
-  .building-info-table {
+  .ipt-row-2, .ipt-row-3 {
     grid-template-columns: auto 1fr;
   }
-  .building-info-table .bi-label,
-  .building-info-table .bi-value {
-    font-size: 0.82rem;
-    padding: 8px 10px;
+  .ipt-label, .ipt-value {
+    font-size: 0.8rem;
+    padding: 6px 9px;
   }
 }
 
