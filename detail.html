@@ -983,16 +983,28 @@ function closeHomepageTab(tab) {
 
   // 매물 상세정보 표의 한 항목(label+value)을 렌더링한다. 값이 없으면 항상 "—"로 표시한다
   // (표 형태를 유지하기 위해 detailField와 달리 값이 비어도 행 자체는 생략하지 않는다).
-  function iptCell(label, value) {
+  // .listing-info-table은 표 전체가 하나의 고정 6열 grid이므로(행마다 독립 grid가 아님),
+  // 모든 행의 라벨·구분선이 항상 같은 위치에 온다. valueClass로 짧은 행의 마지막 값 칸만
+  // 남는 열까지 넓혀 채운다(중간 라벨의 시작 위치는 절대 건드리지 않는다).
+  function iptCell(label, value, valueClass) {
     const text = detailText(value);
-    return `<div class="ipt-label">${escapeHtml(label)}</div><div class="ipt-value">${escapeHtml(text || "—")}</div>`;
+    const cls = valueClass ? ` ${valueClass}` : "";
+    return `<div class="ipt-label">${escapeHtml(label)}</div><div class="ipt-value${cls}">${escapeHtml(text || "—")}</div>`;
   }
 
-  // pairs 개수에 맞춰 한 행(row)을 만든다. 데스크톱은 pairs 개수만큼 열이 나뉘고,
-  // 모바일(720px 이하)에서는 CSS가 모든 행을 "항목 | 값" 1쌍짜리 열로 통일한다.
+  // pairs(1~3쌍)를 표의 고정 6열(라벨·값 x3) 기준에 맞춰 셀로 펼친다.
+  // 3쌍이면 6열을 그대로 채우고, 2쌍/1쌍이면 마지막 값 칸만 남는 열까지 span해서
+  // 표 오른쪽 끝까지 채운다 - 이렇게 해야 다음 라벨의 시작 열이 항상 동일하게 유지된다.
+  // 모바일(720px 이하)에서는 CSS가 span을 해제해 모든 셀을 "항목 | 값" 1쌍씩 2열로 되돌린다.
   function iptRow(pairs) {
-    const cells = pairs.map(([label, value]) => iptCell(label, value)).join("");
-    return `<div class="ipt-row ipt-row-${pairs.length}">${cells}</div>`;
+    const n = pairs.length;
+    return pairs.map(([label, value], i) => {
+      const isLastPair = i === n - 1;
+      let valueClass = "";
+      if (isLastPair && n === 1) valueClass = "ipt-value-span5";
+      else if (isLastPair && n === 2) valueClass = "ipt-value-span3";
+      return iptCell(label, value, valueClass);
+    }).join("");
   }
 
   // 값이 실제로 있는 [라벨, 값] 쌍만 남겨서 최대 maxPerRow개씩 행으로 묶는다.

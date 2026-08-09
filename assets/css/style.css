@@ -667,34 +667,28 @@ textarea { resize: vertical; min-height: 120px; }
 .detail-image-link img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
 
 /* 매물 상세정보 — 기본정보·주소·가격·면적·건물정보·소유주 연락처를 합친 압축 표.
-   행마다 독립된 grid로 짜서(ipt-row-1/2/3) 3쌍/2쌍/1쌍 행이 서로의 열에 섞이지 않는다. */
+   표 전체가 하나의 고정 6열(라벨·값 x3) grid다 - 행마다 독립된 grid를 쓰면 라벨 폭이
+   행마다 다르게 계산돼 세로 구분선이 어긋나므로, 셀을 모두 이 grid에 평평하게 배치하고
+   2쌍/1쌍짜리 행은 마지막 값 칸만 남는 열까지 span해서 다음 라벨 시작 위치를 지킨다. */
 .listing-info-table {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 92px minmax(0, 1fr));
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   overflow: hidden;
 }
-.ipt-row {
-  display: grid;
-  border-bottom: 1px solid var(--border-soft);
-}
-.ipt-row:last-child { border-bottom: none; }
-.ipt-row-3 { grid-template-columns: repeat(3, auto 1fr); }
-.ipt-row-2 { grid-template-columns: repeat(2, auto 1fr); }
-.ipt-row-1 { grid-template-columns: auto 1fr; }
 .ipt-label, .ipt-value {
   padding: 6px 10px;
   display: flex;
   align-items: center;
   font-size: 0.82rem;
   line-height: 1.35;
+  border-bottom: 1px solid var(--border-soft);
 }
 .ipt-label {
   background: var(--bg-soft);
   color: var(--gold-soft);
   font-weight: 600;
-  white-space: nowrap;
   word-break: keep-all;
   border-right: 1px solid var(--border-soft);
 }
@@ -702,8 +696,13 @@ textarea { resize: vertical; min-height: 120px; }
   background: var(--bg-card);
   color: var(--text-main);
   font-weight: 500;
+  text-align: left;
   overflow-wrap: anywhere;
 }
+/* 2쌍 행의 마지막 값(비공개주소 등)은 남은 3칸(라벨+값+빈칸 없음)까지, 1쌍 행(제목)의
+   값은 남은 5칸 전체까지 넓힌다 - 그 행의 마지막 칸이라 다음 라벨 위치에 영향 없다. */
+.ipt-value-span3 { grid-column: span 3; }
+.ipt-value-span5 { grid-column: span 5; }
 
 /* 추가 정보 접이식 토글 — 기본은 접힌 상태, 눌러야만 나머지 표가 펼쳐진다 */
 .extra-info-toggle {
@@ -735,8 +734,12 @@ textarea { resize: vertical; min-height: 120px; }
 .detail-section.description-section .detail-read-value.pre-line { line-height: 1.6; }
 
 @media (max-width: 720px) {
-  .ipt-row-2, .ipt-row-3 {
+  /* PC용 고정 6열을 강제하지 않는다 - 모든 셀을 "항목 | 값" 1쌍짜리 2열로 되돌린다. */
+  .listing-info-table {
     grid-template-columns: auto 1fr;
+  }
+  .ipt-value-span3, .ipt-value-span5 {
+    grid-column: auto;
   }
   .ipt-label, .ipt-value {
     font-size: 0.8rem;
