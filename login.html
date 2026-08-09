@@ -4,38 +4,41 @@
   <meta charset="UTF-8" />
   <title>관리자 로그인 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" as="style" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+  <link rel="stylesheet" href="assets/css/tokens.css" />
   <script src="assets/js/storage.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
-<body style="margin:0;background:#0d0d0d;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:-apple-system,'Malgun Gothic',sans-serif;">
+<body style="margin:0;background:radial-gradient(circle at top, var(--panel2) 0, var(--bg) 45%, var(--bg2) 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;color:var(--txt);">
   <div style="width:100%;max-width:320px;">
     <div style="text-align:center;margin-bottom:36px;">
-      <div style="width:56px;height:56px;background:linear-gradient(135deg,#d4af37,#f0c040);border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">🏢</div>
-      <div style="font-size:1.4rem;font-weight:800;color:#d4af37;letter-spacing:0.5px;">HITOP 부동산</div>
-      <div style="font-size:0.8rem;color:#666;margin-top:4px;">관리자 로그인</div>
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#d8b84a,#f0c040);border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;border:1px solid rgba(216,184,74,0.45);">🏢</div>
+      <div style="font-size:1.4rem;font-weight:800;color:var(--gold);letter-spacing:0.5px;">HITOP 부동산</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:4px;">관리자 로그인</div>
     </div>
-    <div id="resetSuccessBanner" style="display:none;font-size:0.82rem;color:#d4af37;text-align:center;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
+    <div id="resetSuccessBanner" style="display:none;font-size:0.82rem;color:var(--gold);text-align:center;background:var(--gold2);border:1px solid rgba(216,184,74,0.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
       비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.
     </div>
 
     <input id="loginEmail" type="email" placeholder="이메일" autocomplete="username"
-      style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:#1a1a1a;border:1px solid #333;border-radius:10px;color:#e0e0e0;outline:none;margin-bottom:10px;" />
+      style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);outline:none;margin-bottom:10px;" />
 
     <div id="loginPanel">
       <input id="loginPassword" type="password" placeholder="비밀번호" autocomplete="current-password"
-        style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:#1a1a1a;border:1px solid #333;border-radius:10px;color:#e0e0e0;outline:none;margin-bottom:10px;" />
-      <div id="loginError" style="font-size:0.82rem;color:#e05252;text-align:center;min-height:20px;margin-bottom:10px;"></div>
-      <button id="loginBtn" style="width:100%;padding:14px;background:#d4af37;color:#000;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">로그인</button>
-      <button id="forgotPwLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:#888;font-size:0.8rem;cursor:pointer;margin-top:6px;">비밀번호를 잊으셨나요?</button>
+        style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);outline:none;margin-bottom:10px;" />
+      <div id="loginError" style="font-size:0.82rem;color:var(--danger);text-align:center;min-height:20px;margin-bottom:10px;"></div>
+      <button id="loginBtn" style="width:100%;padding:14px;background:var(--gold);color:#071422;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">로그인</button>
+      <button id="forgotPwLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:var(--sub);font-size:0.8rem;cursor:pointer;margin-top:6px;">비밀번호를 잊으셨나요?</button>
     </div>
 
     <div id="forgotPanel" style="display:none;">
-      <div style="font-size:0.8rem;color:#888;text-align:center;margin-bottom:14px;line-height:1.5;">
+      <div style="font-size:0.8rem;color:var(--sub);text-align:center;margin-bottom:14px;line-height:1.5;">
         위 이메일로 비밀번호 재설정 링크를 보내드립니다.
       </div>
-      <div id="forgotStatus" style="font-size:0.82rem;color:#d4af37;text-align:center;min-height:20px;margin-bottom:10px;"></div>
-      <button id="sendResetBtn" type="button" style="width:100%;padding:14px;background:#d4af37;color:#000;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">재설정 메일 보내기</button>
-      <button id="backToLoginLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:#888;font-size:0.8rem;cursor:pointer;margin-top:6px;">로그인으로 돌아가기</button>
+      <div id="forgotStatus" style="font-size:0.82rem;color:var(--gold);text-align:center;min-height:20px;margin-bottom:10px;"></div>
+      <button id="sendResetBtn" type="button" style="width:100%;padding:14px;background:var(--gold);color:#071422;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">재설정 메일 보내기</button>
+      <button id="backToLoginLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:var(--sub);font-size:0.8rem;cursor:pointer;margin-top:6px;">로그인으로 돌아가기</button>
     </div>
   </div>
 

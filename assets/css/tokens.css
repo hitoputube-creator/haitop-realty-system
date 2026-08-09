@@ -1,0 +1,39 @@
+/* assets/css/tokens.css - 하이탑 공통 디자인 토큰 (업무센터 기준 / hitop-ai-workcenter) */
+
+:root {
+  /* ── 업무센터 코어 토큰 ── */
+  --bg: #071625;                 /* 페이지 배경 (딥 네이비) */
+  --bg2: #0a1722;
+  --panel: #101f32;              /* 패널 배경 */
+  --panel2: #15283d;             /* 밝은 패널 배경 */
+  --card: #172b42;               /* 카드 배경 */
+  --card2: #1b324c;             /* 카드 hover 배경 */
+  --line: #294057;              /* 테두리 (얇은) */
+  --line2: #35516c;              /* 테두리 (진한) */
+  --txt: #f5f8fb;               /* 본문 텍스트 */
+  --sub: #b4c2d2;               /* 보조 텍스트 */
+  --muted: #8193a8;             /* 흐린 텍스트 */
+  --gold: #d8b84a;              /* 포인트 골드 */
+  --gold2: rgba(216,184,74,.13);  /* 골드 배경(연한) */
+  --blue: #5f9fd8;  --blue2: rgba(95,159,216,.14);
+  --danger: #ff8585;
+
+  /* ── 매물관리 앱 호환 토큰 (업무센터 값으로 일원화) ── */
+  --bg-main: #071625;
+  --bg-card: #172b42;
+  --bg-soft: #101f32;
+  --surface: #101f32;
+  --surface2: #15283d;
+  --text: #f5f8fb;
+  --text-main: #f5f8fb;
+  --text-muted: #b4c2d2;
+  --gold-soft: #d8b84a;
+  --gold-light: #e7ca70;
+  --gold-dim: rgba(216,184,74,.12);
+  --border: rgba(53,81,108,.86);
+  --border-soft: rgba(255,255,255,.08);
+  --border-slate: rgba(148,163,184,.32);
+  --red: var(--danger);
+  --green: #4caf7d;
+  --radius: 14px;
+}

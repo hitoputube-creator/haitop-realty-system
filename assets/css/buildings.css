@@ -5,7 +5,7 @@
   gap:12px;
   padding:14px 16px;
   border:1px solid var(--border);
-  background:linear-gradient(180deg, rgba(17,29,51,0.92), rgba(10,16,30,0.92));
+  background:linear-gradient(180deg, rgba(23,43,66,0.92), rgba(16,31,50,0.92));
   border-radius:16px;
   box-shadow:0 12px 28px rgba(0,0,0,0.35);
 }
@@ -18,8 +18,8 @@
   width:38px;
   height:38px;
   border-radius:12px;
-  background:radial-gradient(circle at 30% 20%, rgba(212,175,55,0.35), rgba(212,175,55,0.05));
-  border:1px solid rgba(212,175,55,0.35);
+  background:radial-gradient(circle at 30% 20%, rgba(216,184,74,0.35), rgba(216,184,74,0.05));
+  border:1px solid rgba(216,184,74,0.35);
 }
 .brand-text h1{
   margin:0;
@@ -66,7 +66,7 @@
 }
 .tab{
   border:1px solid var(--border);
-  background:rgba(5,10,30,0.65);
+  background:var(--panel);
   padding:8px 10px;
   border-radius:999px;
   cursor:pointer;
@@ -75,8 +75,8 @@
   font-weight:800;
 }
 .tab.active{
-  border-color:rgba(212,175,55,0.45);
-  background:rgba(212,175,55,0.16);
+  border-color:rgba(216,184,74,0.45);
+  background:rgba(216,184,74,0.16);
   color:rgba(255,255,255,0.92);
 }
 
@@ -141,8 +141,8 @@
   user-select:none;
 }
 .chip.active{
-  border-color:rgba(212,175,55,0.45);
-  background:rgba(212,175,55,0.16);
+  border-color:rgba(216,184,74,0.45);
+  background:rgba(216,184,74,0.16);
   color:rgba(255,255,255,0.92);
 }
 
@@ -156,7 +156,7 @@
   border:1px solid var(--border);
   border-radius:16px;
   padding:12px 12px;
-  background:rgba(6,10,22,0.35);
+background:rgba(6,10,22,0.35);
   display:grid;
   grid-template-columns: 1fr auto;
   gap:10px;
@@ -165,7 +165,7 @@
   transition:0.15s ease;
 }
 .item:hover{
-  border-color:rgba(212,175,55,0.35);
+  border-color:rgba(216,184,74,0.35);
   transform:translateY(-1px);
 }
 .meta{
@@ -198,8 +198,8 @@
   font-size:0.72rem;
   border-radius:999px;
   padding:4px 9px;
-  border:1px solid rgba(212,175,55,0.25);
-  background:rgba(212,175,55,0.10);
+  border:1px solid rgba(216,184,74,0.25);
+  background:rgba(216,184,74,0.10);
   color:rgba(255,255,255,0.88);
 }
 .badge.gray{
