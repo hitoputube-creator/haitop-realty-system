@@ -596,10 +596,10 @@
 <script>
 /* ═══════════════════════════════════════════
    Cloudinary 설정
+   업로드 서명은 브라우저가 직접 만들지 않는다 — Secret은 이제 이 코드에
+   존재하지 않고, Supabase Edge Function(cloudinary-sign-upload)이 로그인·
+   관리자 여부를 확인한 뒤 서명을 발급해준다.
 ═══════════════════════════════════════════ */
-const CLOUDINARY_CLOUD  = 'dljw2pjvn';
-const CLOUDINARY_KEY    = '324442129185332';
-const CLOUDINARY_SECRET = '8uawLQywBtkUYqfVXYwV7DCWwFI';
 
 const MEMO_SEP = '---추가메모---';
 const OV_FIELDS = [
@@ -643,25 +643,33 @@ function isPdf(url, fileName) {
 }
 
 /* ── Cloudinary 서명 업로드 ── */
-async function sha1Hex(str) {
-  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+async function getCloudinarySignature(folder) {
+  const { data, error } = await hitopAuthClient.functions.invoke('cloudinary-sign-upload', {
+    body: { folder },
+  });
+  if (error) {
+    let msg = error.message || 'Cloudinary 서명 발급에 실패했습니다.';
+    try {
+      const body = await error.context.json();
+      if (body && body.error) msg = body.error;
+    } catch (_) { /* 응답 본문을 못 읽으면 기본 메시지 사용 */ }
+    throw new Error(msg);
+  }
+  return data;
 }
 
 async function cloudinaryUpload(file, folder = 'haitop') {
-  const ts      = Math.round(Date.now() / 1000);
-  const paramStr = `folder=${folder}&timestamp=${ts}${CLOUDINARY_SECRET}`;
-  const sig     = await sha1Hex(paramStr);
+  const { signature, timestamp, apiKey, cloudName } = await getCloudinarySignature(folder);
 
   const fd = new FormData();
   fd.append('file', file);
-  fd.append('api_key', CLOUDINARY_KEY);
-  fd.append('timestamp', ts);
+  fd.append('api_key', apiKey);
+  fd.append('timestamp', timestamp);
   fd.append('folder', folder);
-  fd.append('signature', sig);
+  fd.append('signature', signature);
 
   const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`,
+    `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
     { method: 'POST', body: fd }
   );
   const data = await res.json();
