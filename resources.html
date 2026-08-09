@@ -26,8 +26,13 @@
   </header>
   <div class="header-line"></div>
 
+  <!-- ===== 자료 등록 토글 버튼 ===== -->
+  <div style="margin:16px 0 10px;">
+    <button class="btn btn-primary" id="driveRegisterToggleBtn">📁 자료 등록</button>
+  </div>
+
   <!-- ===== 자료 등록 ===== -->
-  <div class="quick-card">
+  <div class="quick-card" id="driveRegisterCard" style="display:none;">
     <div class="quick-title">📁 자료 등록</div>
     <div class="quick-sub">카테고리와 건물명, 구글 드라이브 링크를 입력하세요</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
@@ -143,6 +148,21 @@
     if (msg.includes("저장 실패") || msg.includes("수정 실패") || msg.includes("삭제 실패")) return;
     showAppError(msg);
   };
+</script>
+
+<script>
+  (function () {
+    var toggleBtn = document.getElementById("driveRegisterToggleBtn");
+    var card = document.getElementById("driveRegisterCard");
+    if (!toggleBtn || !card) return;
+    function setOpen(open) {
+      card.style.display = open ? "" : "none";
+      toggleBtn.textContent = open ? "📁 자료 등록 접기" : "📁 자료 등록";
+    }
+    toggleBtn.addEventListener("click", function () {
+      setOpen(card.style.display === "none");
+    });
+  })();
 </script>
 
 <script src="assets/js/resources.js"></script>
