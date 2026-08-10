@@ -54,6 +54,17 @@
       #printHeader { display: none; }
       #selectedPrintHeader { display: none; }
     }
+    /* ── 고객 목록: 관리 버튼 역할별 색상 (흰색 기본 버튼 제거) ── */
+    .cust-act-detail { background:transparent; border-color:rgba(95,159,216,0.55); color:var(--blue); }
+    .cust-act-detail:hover { background:rgba(95,159,216,0.15); }
+    .cust-act-edit { background:transparent; border-color:rgba(216,184,74,0.55); color:var(--gold); }
+    .cust-act-edit:hover { background:rgba(216,184,74,0.15); }
+    .cust-act-diary { background:transparent; border-color:rgba(45,212,191,0.55); color:#2dd4bf; }
+    .cust-act-diary:hover { background:rgba(45,212,191,0.15); }
+    .cust-act-break { flex-basis:100%; height:0; }
+    /* ── 고객 목록: 연락처를 박스 없는 텍스트로 표시 ── */
+    .cust-phone-link { display:inline-flex; align-items:center; gap:5px; color:var(--text-main); text-decoration:none; background:none; border:none; padding:0; }
+    .cust-phone-link:hover { color:var(--gold-soft); text-decoration:underline; }
     /* 카드 더보기/접기 공통 */
     .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
     .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:linear-gradient(transparent,var(--bg-card)); pointer-events:none; }
@@ -117,15 +128,12 @@
   <!-- ===== 고객관리 탭 ===== -->
   <div id="tabCustomer">
 
-    <!-- ⚡ 빠른 고객등록 -->
-    <div class="quick-card quick-card-compact">
+    <!-- ⚡ 빠른 고객등록 (기본 숨김 · '+ 고객 등록' 버튼으로 열고 닫음) -->
+    <div class="quick-card quick-card-compact" id="customerQuickCard" style="display:none;">
       <div class="quick-card-head">
         <div>
           <div class="quick-title">👥 빠른 고객등록</div>
           <div class="quick-sub">상담 직후 고객 정보를 빠르게 기록하세요</div>
-        </div>
-        <div class="field" style="margin:0;min-width:220px;flex:1;max-width:340px;">
-          <input id="customerSearchInput" type="text" placeholder="🔍 이름, 연락처, 메모 검색..." />
         </div>
       </div>
       <div class="cust-form-grid">
@@ -172,15 +180,22 @@
         <label>메모 (요구사항)</label>
         <textarea id="c_memo" rows="2" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:44px;box-sizing:border-box;"></textarea>
       </div>
-      <div style="text-align:right;">
+      <div style="display:flex;justify-content:flex-end;gap:8px;">
+        <button class="btn btn-ghost" id="customerCancelBtn">취소</button>
         <button class="btn btn-primary" id="customerSaveBtn">💾 고객 저장</button>
       </div>
     </div>
 
     <!-- 고객 목록 -->
     <section class="card">
-      <div class="card-title">
+      <div class="card-title" style="flex-wrap:wrap;row-gap:10px;">
         <span>고객 목록 <span id="customerCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:220px;max-width:440px;">
+          <div class="field" style="margin:0;flex:1;min-width:0;">
+            <input id="customerSearchInput" type="text" placeholder="🔍 이름, 연락처, 메모 검색..." />
+          </div>
+          <button class="btn btn-primary" id="customerAddToggleBtn" style="white-space:nowrap;flex-shrink:0;">+ 고객 등록</button>
+        </div>
       </div>
       <div id="customerTableWrap" class="cust-table-wrap">
         <div class="cust-table-head">
@@ -1032,17 +1047,18 @@ if (tab === "done")       renderDoneList();
 
       row.innerHTML = `
         <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}</span>
-        <span class="cust-cell" data-label="연락처">${c.phone ? `<a class="contact-btn" href="tel:${escapeHtmlCust(c.phone)}" onclick="event.stopPropagation()">📞 ${escapeHtmlCust(c.phone)}</a>` : "—"}</span>
+        <span class="cust-cell" data-label="연락처">${c.phone ? `<a class="cust-phone-link" href="tel:${escapeHtmlCust(c.phone)}" onclick="event.stopPropagation()">📞 ${escapeHtmlCust(c.phone)}</a>` : "—"}</span>
         <span class="cust-cell" data-label="구분">${c.customer_role ? `<span class="badge">${escapeHtmlCust(c.customer_role)}</span>` : "—"}</span>
         <span class="cust-cell" data-label="찾는매물">${getCustomerTypeLabel(c.property_category)}</span>
         <span class="cust-cell" data-label="예산">${escapeHtmlCust(c.desired_price) || "—"}</span>
         <span class="cust-cell" data-label="최근업무">${escapeHtmlCust(lastWork)}</span>
         <span class="cust-cell" data-label="최근상담일">${lastDate}</span>
         <span class="cust-cell cust-cell-actions" data-label="관리">
-          <button class="btn" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
-          <button class="btn" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">업무일지</button>
-          <button class="btn" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">수정</button>
+          <button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
+          <button class="btn cust-act-edit" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">수정</button>
           <button class="btn btn-danger" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
+          <span class="cust-act-break"></span>
+          <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">업무일지</button>
         </span>
       `;
       container.appendChild(row);
@@ -1251,6 +1267,28 @@ if (tab === "done")       renderDoneList();
     finally { btn.disabled = false; btn.textContent = "저장"; }
   });
 
+  // ⚡ 빠른 고객등록 카드 열기/닫기
+  function resetCustomerQuickForm() {
+    ["c_name","c_contact","c_budget","c_region","c_memo"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("c_type").value = "";
+    document.getElementById("c_role").value = "";
+  }
+  function closeCustomerQuickCard() {
+    document.getElementById("customerQuickCard").style.display = "none";
+    document.getElementById("customerAddToggleBtn").textContent = "+ 고객 등록";
+  }
+  document.getElementById("customerAddToggleBtn").addEventListener("click", () => {
+    const card = document.getElementById("customerQuickCard");
+    const willOpen = card.style.display === "none";
+    card.style.display = willOpen ? "" : "none";
+    document.getElementById("customerAddToggleBtn").textContent = willOpen ? "✕ 닫기" : "+ 고객 등록";
+    if (willOpen) document.getElementById("c_name").focus();
+  });
+  document.getElementById("customerCancelBtn").addEventListener("click", () => {
+    resetCustomerQuickForm();
+    closeCustomerQuickCard();
+  });
+
   document.getElementById("customerSaveBtn").addEventListener("click", async () => {
     const name    = document.getElementById("c_name").value.trim();
     const phone   = document.getElementById("c_contact").value.trim();
@@ -1289,9 +1327,8 @@ if (tab === "done")       renderDoneList();
         });
         showToast("✅ 고객 저장완료!");
       }
-      ["c_name","c_contact","c_budget","c_region","c_memo"].forEach(id => document.getElementById(id).value = "");
-      document.getElementById("c_type").value = "";
-      document.getElementById("c_role").value = "";
+      resetCustomerQuickForm();
+      closeCustomerQuickCard();
       await loadCustomers();
     } catch(e) {
       showToast("❌ 저장 실패: " + e.message);
