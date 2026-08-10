@@ -768,7 +768,7 @@ textarea { resize: vertical; min-height: 120px; }
 .cust-table-wrap { display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
 .cust-table-head, .cust-row {
   display: grid;
-  grid-template-columns: 1.1fr 1.2fr 0.7fr 1fr 1fr 1.3fr 0.9fr 1.6fr;
+  grid-template-columns: 1.05fr 1.1fr 0.65fr 0.9fr 0.9fr 1.25fr 0.8fr minmax(186px, 1.7fr);
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
@@ -783,8 +783,24 @@ textarea { resize: vertical; min-height: 120px; }
 .cust-row:hover { background: rgba(255,255,255,0.03); }
 .cust-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); }
 .cust-cell-name { font-weight: 700; color: var(--gold-soft); }
-.cust-cell-actions { display: flex; gap: 4px; flex-wrap: wrap; white-space: normal; }
-.cust-cell-actions .btn { font-size: 0.72rem; padding: 3px 8px; }
+.cust-cell-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+  white-space: normal;
+}
+.cust-cell-actions .btn {
+  width: 100%;
+  min-height: 30px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.cust-cell-actions .cust-act-diary { grid-column: 1 / -1; }
 .cust-cell .contact-btn { padding: 2px 8px; font-size: 0.78rem; }
 
 /* 고객 상세 모달 */
@@ -814,15 +830,23 @@ textarea { resize: vertical; min-height: 120px; }
 @media (max-width: 900px) {
   .cust-table-head { display: none; }
   .cust-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
     gap: 4px 10px;
     padding: 10px 12px;
   }
-  .cust-cell { white-space: normal; overflow: visible; text-overflow: unset; width: auto; }
-  .cust-cell-name { flex: 1 1 100%; font-size: 0.92rem; }
-  .cust-cell-actions { flex: 1 1 100%; justify-content: flex-end; margin-top: 4px; }
+  .cust-cell { white-space: normal; overflow: visible; text-overflow: unset; width: 100%; }
+  .cust-cell-name { grid-column: 1 / -1; font-size: 0.92rem; }
+  .cust-cell-actions { grid-column: 1 / -1; width: 100%; margin-top: 6px; }
+  .cust-cell-actions .btn { min-height: 34px; font-size: 0.8rem; }
+}
+
+@media (max-width: 520px) {
+  .cust-cell-actions {
+    width: min(100%, 330px);
+    justify-self: start;
+  }
 }
 
 /* 로딩 */

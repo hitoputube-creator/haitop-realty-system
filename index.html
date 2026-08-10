@@ -55,13 +55,14 @@
       #selectedPrintHeader { display: none; }
     }
     /* ── 고객 목록: 관리 버튼 역할별 색상 (흰색 기본 버튼 제거) ── */
-    .cust-act-detail { background:transparent; border-color:rgba(95,159,216,0.55); color:var(--blue); }
-    .cust-act-detail:hover { background:rgba(95,159,216,0.15); }
-    .cust-act-edit { background:transparent; border-color:rgba(216,184,74,0.55); color:var(--gold); }
-    .cust-act-edit:hover { background:rgba(216,184,74,0.15); }
-    .cust-act-diary { background:transparent; border-color:rgba(45,212,191,0.55); color:#2dd4bf; }
-    .cust-act-diary:hover { background:rgba(45,212,191,0.15); }
-    .cust-act-break { flex-basis:100%; height:0; }
+    .cust-act-detail { background:#3f7fbd; color:#fff; border-color:rgba(140,188,229,0.22); }
+    .cust-act-detail:hover { background:#4d8fd0; }
+    .cust-act-edit { background:#d4ae3f; color:#071625; border-color:rgba(231,202,112,0.32); }
+    .cust-act-edit:hover { background:#e0bd53; }
+    .cust-act-delete { background:#c84646; color:#fff; border-color:rgba(255,133,133,0.24); }
+    .cust-act-delete:hover { background:#d65353; }
+    .cust-act-diary { background:#2f8f8a; color:#fff; border-color:rgba(92,196,190,0.26); }
+    .cust-act-diary:hover { background:#37a29c; }
     /* ── 고객 목록: 연락처를 박스 없는 텍스트로 표시 ── */
     .cust-phone-link { display:inline-flex; align-items:center; gap:5px; color:var(--text-main); text-decoration:none; background:none; border:none; padding:0; }
     .cust-phone-link:hover { color:var(--gold-soft); text-decoration:underline; }
@@ -1056,8 +1057,7 @@ if (tab === "done")       renderDoneList();
         <span class="cust-cell cust-cell-actions" data-label="관리">
           <button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
           <button class="btn cust-act-edit" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">수정</button>
-          <button class="btn btn-danger" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
-          <span class="cust-act-break"></span>
+          <button class="btn cust-act-delete" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
           <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">업무일지</button>
         </span>
       `;
