@@ -766,20 +766,25 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* 고객 목록 - PC 압축 표 */
 .cust-table-wrap { display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+#tabCustomer .card-title { font-size: 1.08rem; }
+#customerSearchInput { font-size: 1rem; }
+#customerAddToggleBtn { font-size: 0.98rem; }
+#customerPagination .page-btn { font-size: 0.95rem; padding: 7px 16px; }
+#customerPagination .page-info { font-size: 0.95rem; }
 .cust-table-head, .cust-row {
   display: grid;
-  grid-template-columns: 1.05fr 1.1fr 0.65fr 0.9fr 0.9fr 1.25fr 0.8fr minmax(186px, 1.7fr);
+  grid-template-columns: 1.15fr 1.2fr 0.95fr 1.35fr 0.9fr minmax(210px, 1.35fr);
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 10px 12px;
 }
 .cust-table-head {
   background: var(--bg-soft);
   color: var(--gold-soft);
-  font-size: 0.76rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
-.cust-row { border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.82rem; }
+.cust-row { border-top: 1px solid rgba(255,255,255,0.06); font-size: 1rem; }
 .cust-row:hover { background: rgba(255,255,255,0.03); }
 .cust-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); }
 .cust-cell-name { font-weight: 700; color: var(--gold-soft); }
@@ -787,7 +792,7 @@ textarea { resize: vertical; min-height: 120px; }
   display: flex;
   flex-wrap: nowrap;
   width: fit-content;
-  height: 24px;
+  height: 30px;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid rgba(216,184,74,0.5);
@@ -795,15 +800,15 @@ textarea { resize: vertical; min-height: 120px; }
   white-space: nowrap;
 }
 .cust-cell-actions .btn {
-  flex: 0 0 34px;
-  width: 34px;
-  height: 24px;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 30px;
   margin: 0;
   padding: 0;
   border: none;
   border-right: 1px solid rgba(216,184,74,0.35);
   border-radius: 0;
-  font-size: 0.66rem;
+  font-size: 0.82rem;
   font-weight: 700;
   line-height: 1;
   display: flex;
@@ -812,7 +817,7 @@ textarea { resize: vertical; min-height: 120px; }
   white-space: nowrap;
 }
 .cust-cell-actions .btn:last-child { border-right: none; }
-.cust-cell .contact-btn { padding: 2px 8px; font-size: 0.78rem; }
+.cust-cell .contact-btn { padding: 3px 9px; font-size: 0.95rem; }
 
 /* 고객 상세 모달 */
 .cust-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; margin-bottom: 10px; }
@@ -848,7 +853,7 @@ textarea { resize: vertical; min-height: 120px; }
     padding: 10px 12px;
   }
   .cust-cell { white-space: normal; overflow: visible; text-overflow: unset; width: 100%; }
-  .cust-cell-name { grid-column: 1 / -1; font-size: 0.92rem; }
+  .cust-cell-name { grid-column: 1 / -1; font-size: 1.08rem; }
   .cust-cell-actions { grid-column: 1 / -1; width: fit-content; margin-top: 6px; justify-self: start; }
 }
 

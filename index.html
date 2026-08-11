@@ -190,7 +190,7 @@
     <!-- 고객 목록 -->
     <section class="card">
       <div class="card-title" style="flex-wrap:wrap;row-gap:10px;">
-        <span>고객 목록 <span id="customerCountBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+        <span>고객 목록 <span id="customerCountBadge" style="font-size:0.95rem;color:var(--text-muted);"></span></span>
         <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:220px;max-width:440px;">
           <div class="field" style="margin:0;flex:1;min-width:0;">
             <input id="customerSearchInput" type="text" placeholder="🔍 이름, 연락처, 메모 검색..." />
@@ -200,11 +200,11 @@
       </div>
       <div id="customerTableWrap" class="cust-table-wrap">
         <div class="cust-table-head">
-          <span>고객명</span><span>연락처</span><span>구분</span><span>찾는매물</span><span>예산</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
+          <span>고객명</span><span>연락처</span><span>예산</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
         </div>
         <div id="customerContainer"></div>
       </div>
-      <div id="customerEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+      <div id="customerEmpty" style="display:none;font-size:1rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
         등록된 고객이 없습니다.
       </div>
       <div id="customerPagination" class="pagination"></div>
@@ -1049,8 +1049,6 @@ if (tab === "done")       renderDoneList();
       row.innerHTML = `
         <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}</span>
         <span class="cust-cell" data-label="연락처">${c.phone ? `<a class="cust-phone-link" href="tel:${escapeHtmlCust(c.phone)}" onclick="event.stopPropagation()">📞 ${escapeHtmlCust(c.phone)}</a>` : "—"}</span>
-        <span class="cust-cell" data-label="구분">${c.customer_role ? `<span class="badge">${escapeHtmlCust(c.customer_role)}</span>` : "—"}</span>
-        <span class="cust-cell" data-label="찾는매물">${getCustomerTypeLabel(c.property_category)}</span>
         <span class="cust-cell" data-label="예산">${escapeHtmlCust(c.desired_price) || "—"}</span>
         <span class="cust-cell" data-label="최근업무">${escapeHtmlCust(lastWork)}</span>
         <span class="cust-cell" data-label="최근상담일">${lastDate}</span>
