@@ -1064,7 +1064,7 @@ if (tab === "done")       renderDoneList();
     _makePagination("customerPagination", filtered.length, CUST_PER_PAGE, customerPage, (p) => { customerPage = p; renderCustomers(); });
   }
 
-  const DIARY_APP_URL = "https://hitoputube-creator.github.io/haitop-realestate-diary/";
+  const DIARY_APP_URL = "https://haitop-realestate-diary.vercel.app/";
 
   function openCustomerDiary(id) {
     window.open(DIARY_APP_URL + "?customerId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");

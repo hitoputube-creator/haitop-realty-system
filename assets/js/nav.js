@@ -15,7 +15,7 @@ const NAV_TOOLS = [
   { label: "전체 백업", action: "exportAll" },
   { label: "견적서",    href: "https://hitoputube-creator.github.io/Commercial-Property-Quote/", external: true },
   { label: "계약문자",  action: "openContractModal" },
-  { label: "업무일지",  href: "https://hitoputube-creator.github.io/haitop-realestate-diary/", external: true }
+  { label: "업무일지",  href: "https://haitop-realestate-diary.vercel.app/", external: true }
 ];
 
 function hitopLogout() {
