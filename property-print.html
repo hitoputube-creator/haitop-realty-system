@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>부동산 매물 제안서 — 하이탑부동산</title>
-<script src="assets/js/storage.js"></script>
+<script src="assets/js/storage.js?v=20260817-proposal-fields"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
@@ -118,6 +118,16 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
 
 /* ── 사진/도면 ── */
 #photo-area { margin-bottom:24px; }
+.resource-box { background:#f8fbff; border:1px solid var(--border);
+  border-radius:9px; padding:12px 14px; display:flex; align-items:center;
+  justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
+.resource-name { color:var(--accent); font-size:13px; font-weight:800; }
+.resource-meta { color:var(--text-m); font-size:11.5px; margin-top:2px; }
+.resource-link { display:inline-flex; align-items:center; justify-content:center;
+  min-height:32px; padding:6px 14px; border-radius:999px;
+  background:rgba(26,58,107,.08); border:1px solid #c0d0e8;
+  color:var(--accent); text-decoration:none; font-size:12px; font-weight:800; }
+.resource-link:hover { background:rgba(26,58,107,.14); }
 .photo-upload-strip { display:flex; gap:8px; margin-bottom:10px; }
 .photo-add-btn { display:inline-flex; align-items:center; gap:5px;
   padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700;
@@ -237,7 +247,7 @@ input[type=file].hidden-file { display:none; }
   html, body { background:white !important; }
   .screen-controls { display:none !important; }
   #ep-overlay, #ep-panel { display:none !important; }
-  .photo-upload-strip { display:none !important; }
+  .photo-upload-strip, .resource-link { display:none !important; }
   .photo-del-btn { display:none !important; }
   .page-wrap { max-width:100%; margin:0; padding:0; }
   #property-page { box-shadow:none !important; border-radius:0 !important; }
@@ -315,6 +325,7 @@ input[type=file].hidden-file { display:none; }
               <option value="officetel">오피스텔</option>
               <option value="hilsstate">힐스테이트더운정</option>
               <option value="factory">공장/창고</option>
+              <option value="warehouse">창고</option>
               <option value="land">토지</option>
               <option value="etc">기타</option>
             </select>
@@ -496,7 +507,7 @@ input[type=file].hidden-file { display:none; }
             <div class="sum-value" id="sum-price">—</div>
           </div>
           <div class="sum-card">
-            <div class="sum-label">전용면적</div>
+            <div class="sum-label" id="sum-area-label">전용면적</div>
             <div class="sum-value" id="sum-area">—</div>
           </div>
         </div>
@@ -514,7 +525,13 @@ input[type=file].hidden-file { display:none; }
         <div class="desc-box" id="prop-description"></div>
       </div>
 
-      <!-- ⑤ 사진/도면 -->
+      <!-- ⑤ 연결 자료 -->
+      <div id="resource-area" style="display:none;">
+        <div class="section-title"><span>📁</span> 연결 자료</div>
+        <div id="resource-card"></div>
+      </div>
+
+      <!-- ⑥ 사진/도면 -->
       <div id="photo-area">
         <div class="section-title"><span>📷</span> 사진 · 도면</div>
         <div class="photo-upload-strip">
@@ -529,7 +546,7 @@ input[type=file].hidden-file { display:none; }
 
     </div><!-- /page-body -->
 
-    <!-- ⑥ 하단 회사정보 -->
+    <!-- ⑦ 하단 회사정보 -->
     <div id="contact-area" style="margin:0 28px 22px; border-radius:10px;">
       <div class="contact-head">
         <div class="contact-company">하이탑부동산공인중개사사무소</div>
@@ -590,6 +607,20 @@ input[type=file].hidden-file { display:none; }
       return (uk % 1 === 0 ? uk : uk.toFixed(1)) + '억';
     }
     return num.toLocaleString('ko-KR') + '만';
+  }
+  function fmtWonText(raw) {
+    const text = v(raw);
+    if (!text) return '';
+    if (/[억만]/.test(text)) return text;
+    const digits = text.replace(/[^\d]/g, '');
+    if (!digits) return text;
+    const num = Number(digits);
+    if (!isFinite(num) || num === 0) return '';
+    if (num < 10000) return text;
+    const eok = Math.floor(num / 100000000);
+    const man = Math.floor((num % 100000000) / 10000);
+    if (eok > 0) return eok + '억' + (man ? ' ' + man.toLocaleString('ko-KR') + '만' : '');
+    return man.toLocaleString('ko-KR') + '만';
   }
   function fmtArea(py, m2) {
     const hasPy = py !== null && py !== undefined && String(py).trim() !== '';
@@ -656,6 +687,15 @@ input[type=file].hidden-file { display:none; }
     return;
   }
 
+  let allDriveResources = [];
+  if (item.resource_id || item.resourceId) {
+    try {
+      allDriveResources = await getDriveResources();
+    } catch(e) {
+      console.warn('연결 자료 목록을 불러오지 못했습니다:', e.message || e);
+    }
+  }
+
   /* ── localStorage 오버레이 로드 ── */
   let extra = {};
   try {
@@ -681,7 +721,7 @@ input[type=file].hidden-file { display:none; }
   ══════════════════════════ */
   function getTypeLabel(t) {
     const m = { shop:'상가', office:'사무실', officetel:'오피스텔',
-      hilsstate:'힐스테이트더운정', factory:'공장/창고',
+      hilsstate:'힐스테이트더운정', factory:'공장/창고', warehouse:'창고',
       bizcenter:'지식산업센터', land:'토지', etc:'기타' };
     if (m[t]) return m[t];
     if (t && t.startsWith('land')) return '토지';
@@ -692,12 +732,13 @@ input[type=file].hidden-file { display:none; }
      머지 값 추출 헬퍼
   ══════════════════════════ */
   function getType()     { return v(extra._type,    item.type) || 'etc'; }
-  function getTitle()    { return v(extra._title,   item.title, item.address); }
-  function getAddress()  { return v(extra._address, item.address); }
+  function getTitle()    { return v(extra._title,   item.title, item.publicAddress, item.address); }
+  function getAddress()  { return v(extra._address, item.publicAddress, item.displayAddress, item.address, item.mapAddress); }
 
   function getDealType() {
     /* extra 오버라이드 우선 */
     if (v(extra._dealType)) return extra._dealType;
+    if (v(item.dealType)) return item.dealType;
     /* Supabase 타입별 필드 */
     const t = getType();
     const sb = v(item.shop_dealType, item.officetel_dealType, item.factory_dealType);
@@ -710,6 +751,22 @@ input[type=file].hidden-file { display:none; }
 
   function getPriceDisplay() {
     if (v(extra._priceDisplay)) return extra._priceDisplay;
+    const deal = getDealType();
+    const sale = fmtWonText(item.salePrice);
+    const presale = fmtWonText(item.presalePrice);
+    const deposit = fmtWonText(item.deposit);
+    const rent = fmtWonText(item.monthlyRent);
+    if ((deal === '월세' || deal === '임대' || deal === '단기임대') && (deposit || rent)) {
+      if (deposit && rent) return deposit + ' / ' + rent;
+      return deposit || rent;
+    }
+    if (deal === '전세' && deposit) return deposit;
+    if (deal === '매매' && sale) return sale;
+    if (sale) return sale;
+    if (deposit && rent) return deposit + ' / ' + rent;
+    if (deposit) return deposit;
+    if (rent) return rent;
+    if (presale) return '분양 ' + presale;
     const t = getType();
 
     /* shop / office */
@@ -746,18 +803,39 @@ input[type=file].hidden-file { display:none; }
     return '';
   }
 
-  function getAreaPy() { return v(extra._areaPy, item.shop_area_py, item.officetel_area_py, item.factory_buildArea_py, item.land_area_py); }
-  function getAreaM2() { return v(extra._areaM2, item.shop_area_m2, item.officetel_area_m2, item.factory_buildArea_m2, item.land_area_m2); }
-  function getSupplyPy() { return v(extra._supplyPy, item.shop_supply_py, item.officetel_supply_py); }
-  function getSupplyM2() { return v(extra._supplyM2, item.shop_supply_m2, item.officetel_supply_m2); }
-  function getFloor()  { return v(extra._floor,      item.shop_floor, item.officetel_floor); }
-  function getAvailable() { return v(extra._available, item.shop_available, item.officetel_available); }
-  function getParking()   { return v(extra._parking,   item.shop_parking,   item.officetel_parking); }
+  function getAreaPy() {
+    const t = getType();
+    if (t && t.startsWith('land')) return v(extra._areaPy, item.areaPy, item.landAreaPy, item.land_area_py);
+    if (t === 'factory' || t === 'warehouse') return v(extra._areaPy, item.totalFloorAreaPy, item.buildingAreaPy, item.factory_buildArea_py);
+    return v(extra._areaPy, item.exclusiveAreaPy, item.areaPy, item.shop_area_py, item.officetel_area_py, item.factory_buildArea_py, item.land_area_py);
+  }
+  function getAreaM2() {
+    const t = getType();
+    if (t && t.startsWith('land')) return v(extra._areaM2, item.areaM2, item.landAreaM2, item.land_area_m2);
+    if (t === 'factory' || t === 'warehouse') return v(extra._areaM2, item.totalFloorAreaM2, item.buildingAreaM2, item.factory_buildArea_m2);
+    return v(extra._areaM2, item.exclusiveAreaM2, item.areaM2, item.shop_area_m2, item.officetel_area_m2, item.factory_buildArea_m2, item.land_area_m2);
+  }
+  function getSupplyPy() { return v(extra._supplyPy, item.supplyAreaPy, item.shop_supply_py, item.officetel_supply_py); }
+  function getSupplyM2() { return v(extra._supplyM2, item.supplyAreaM2, item.shop_supply_m2, item.officetel_supply_m2); }
+  function getFloor()  { return v(extra._floor, item.floorInfo, item.shop_floor, item.officetel_floor); }
+  function getAvailable() { return v(extra._available, item.moveInDate, item.availableDate, item.shop_available, item.officetel_available); }
+  function getParking()   { return v(extra._parking, item.parkingCount, item.shop_parking, item.officetel_parking); }
   function getDirection() { return v(extra._direction, item.officetel_direction); }
-  function getMaintenance() { return v(extra._maintenance, item.shop_maintenance); }
-  function getPremium()     { return v(extra._premium, item.shop_premium); }
+  function getMaintenance() { return v(extra._maintenance, item.managementFee, item.shop_maintenance); }
+  function getPremium()     { return v(extra._premium, item.premium, item.shop_premium); }
   function getDescription() {
-    return v(extra._desc, item.description, item.quick_memo);
+    return v(extra._desc, item.detailDescription, item.description, item.quick_memo);
+  }
+  function getAreaLabel() {
+    const t = getType();
+    if (t && t.startsWith('land')) return '토지면적';
+    if (t === 'factory' || t === 'warehouse') return '연면적';
+    return '전용면적';
+  }
+  function getLinkedResource() {
+    const rid = v(item.resource_id, item.resourceId);
+    if (!rid || !Array.isArray(allDriveResources)) return null;
+    return allDriveResources.find(r => r.id === rid) || null;
   }
 
   /* ══════════════════════════
@@ -787,6 +865,7 @@ input[type=file].hidden-file { display:none; }
 
     /* 전용면적 */
     const areaStr = fmtArea(getAreaPy(), getAreaM2());
+    setEl('sum-area-label', getAreaLabel());
     const areaEl  = document.getElementById('sum-area');
     areaEl.textContent = areaStr || '미입력';
     areaEl.classList.toggle('sm', areaStr.length > 10);
@@ -814,7 +893,7 @@ input[type=file].hidden-file { display:none; }
     addRow2(tbody, '소재지',  v(getAddress(),'—'), '매물구분', tl);
     addRow2(tbody, '거래방식', deal || '—',         '가격',    price || '—');
     if (areaStr || supStr)
-      addRow2(tbody, '전용면적', areaStr || '—', '계약(공급)면적', supStr || '—');
+      addRow2(tbody, getAreaLabel(), areaStr || '—', '계약(공급)면적', supStr || '—');
 
     /* 층 정보 */
     if (floor || totalF)
@@ -822,8 +901,8 @@ input[type=file].hidden-file { display:none; }
 
     /* 비용 */
     if (maint || premium)
-      addRow2(tbody, '권리금', premium ? premium + '만원' : '—',
-                     '관리비', maint   ? maint + '만원'   : '별도 협의');
+      addRow2(tbody, '권리금', premium || '—',
+                     '관리비', maint || '별도 협의');
 
     /* 입주/주차 */
     if (avail || parking)
@@ -856,8 +935,8 @@ input[type=file].hidden-file { display:none; }
       const road  = v(item.land_road);
       if (la || jimok) addRow2(tbody, '토지면적', la || '—', '지목', jimok || '—');
       if (zone || road) addRow2(tbody, '용도지역', zone || '—', '도로', road || '—');
-    } else if (t === 'factory') {
-      const siteA  = fmtArea(item.factory_siteArea_py,  item.factory_siteArea_m2);
+    } else if (t === 'factory' || t === 'warehouse') {
+      const siteA  = fmtArea(v(item.landAreaPy, item.factory_siteArea_py), v(item.landAreaM2, item.factory_siteArea_m2));
       const height = item.factory_height;
       const power  = item.factory_power;
       const truck  = item.factory_truck;
@@ -878,6 +957,28 @@ input[type=file].hidden-file { display:none; }
       d || '매물에 대한 상세 설명은 담당 공인중개사에게 문의해주세요. (031-949-8969)');
   }
 
+  function renderResource() {
+    const area = document.getElementById('resource-area');
+    const card = document.getElementById('resource-card');
+    const res = getLinkedResource();
+    if (!area || !card) return;
+    if (!res) {
+      area.style.display = 'none';
+      card.innerHTML = '';
+      return;
+    }
+    const title = [res.category, res.name].filter(Boolean).join(' · ') || '연결 자료';
+    area.style.display = '';
+    card.innerHTML = `
+      <div class="resource-box">
+        <div>
+          <div class="resource-name">${esc(title)}</div>
+          ${res.memo ? `<div class="resource-meta">${esc(res.memo)}</div>` : ''}
+        </div>
+        ${res.url ? `<a class="resource-link" href="${esc(res.url)}" target="_blank" rel="noopener">자료 열기</a>` : ''}
+      </div>`;
+  }
+
   /* ══════════════════════════
      전체 렌더 (초기 + 저장 후)
   ══════════════════════════ */
@@ -886,6 +987,7 @@ input[type=file].hidden-file { display:none; }
     renderSummary();
     renderInfoTable();
     renderDescription();
+    renderResource();
     renderPhotos();
   }
 
@@ -899,11 +1001,21 @@ input[type=file].hidden-file { display:none; }
 
   /* ── localStorage: 메타데이터만 저장 (수 KB) ── */
   function loadPhotos() {
+    let hasSavedPhotos = false;
     try {
       const raw = localStorage.getItem(LS_PHOTOS(id));
-      if (raw) photos = JSON.parse(raw);
+      if (raw) {
+        photos = JSON.parse(raw);
+        hasSavedPhotos = true;
+      }
     } catch(e) { photos = [null, null]; }
     if (!Array.isArray(photos) || photos.length < 2) photos = [null, null];
+    if (!hasSavedPhotos) {
+      const listingPhotos = (typeof getPublicListingImageUrls === 'function' ? getPublicListingImageUrls(item) : [])
+        .slice(0, 2)
+        .map((url, idx) => ({ url, path: '', name: '매물 사진 ' + (idx + 1), uploadedAt: '' }));
+      photos = [listingPhotos[0] || null, listingPhotos[1] || null];
+    }
   }
 
   function savePhotos() {
@@ -1109,14 +1221,14 @@ input[type=file].hidden-file { display:none; }
     const price = getPriceDisplay();
 
     document.getElementById('ep-title').value   = v(extra._title,   item.title, '');
-    document.getElementById('ep-address').value = v(extra._address, item.address, '');
+    document.getElementById('ep-address').value = v(extra._address, getAddress(), '');
     document.getElementById('ep-deal').value    = deal;
 
-    /* 가격 — 빠른메모 파싱 결과를 폼에 채움 */
-    const rawPrice = v(extra._priceDisplay, item.quick_price, '');
+    /* 가격 — 실제 매물 가격 표시값을 폼에 채움 */
+    const rawPrice = v(extra._priceDisplay, getPriceDisplay(), item.quick_price, '');
     const parsed   = parseQuickPrice(rawPrice);
     /* extra가 있으면 그대로, 없으면 파싱된 값 */
-    document.getElementById('ep-price').value = v(extra._priceDisplay, parsed.priceDisplay, '');
+    document.getElementById('ep-price').value = v(extra._priceDisplay, parsed.priceDisplay, price, '');
 
     /* 타입 셀렉트 */
     const typeSelect = document.getElementById('ep-type');
@@ -1146,7 +1258,7 @@ input[type=file].hidden-file { display:none; }
     document.getElementById('ep-hvac').value       = v(extra._hvac,      item.shop_hvac, '');
 
     /* 설명 */
-    document.getElementById('ep-desc').value = v(extra._desc, item.description, item.quick_memo, '');
+    document.getElementById('ep-desc').value = v(extra._desc, getDescription(), '');
 
     /* 상태 초기화 */
     const st = document.getElementById('ep-status');
