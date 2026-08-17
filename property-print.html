@@ -154,17 +154,19 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
 input[type=file].hidden-file { display:none; }
 
 /* ── 하단 회사정보 ── */
-#contact-area { background:linear-gradient(135deg,var(--navy),var(--navy2));
-  border-radius:10px; padding:18px 24px 17px; }
-.contact-head { display:flex; align-items:flex-end; justify-content:space-between;
-  gap:16px; margin-bottom:10px; padding-bottom:9px; border-bottom:1px solid rgba(255,255,255,.14); }
-.contact-company { color:var(--gold2); font-size:16px; font-weight:900;
-  letter-spacing:-.3px; }
-.contact-phone { color:#fff; font-size:15px; font-weight:900; white-space:nowrap; }
-.contact-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:5px 18px; }
-.contact-line { color:#b8c8dc; font-size:11.2px; line-height:1.6; }
-.contact-line.full { grid-column:1 / -1; }
-.contact-label { color:#d8e2f0; font-weight:800; margin-right:4px; }
+#contact-area { background:var(--navy);
+  border-radius:10px; padding:16px 22px 15px; }
+.contact-head { display:grid; grid-template-columns:1fr auto; align-items:end;
+  gap:16px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.16); }
+.contact-company { color:var(--gold2); font-size:15.5px; font-weight:900;
+  letter-spacing:-.2px; }
+.contact-phone { color:#fff; font-size:15px; font-weight:900; white-space:nowrap; text-align:right; }
+.contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px 28px; }
+.contact-line { display:grid; grid-template-columns:76px 1fr; align-items:baseline;
+  gap:8px; color:#c7d4e6; font-size:11.2px; line-height:1.55; min-width:0; }
+.contact-line.full { grid-column:auto; }
+.contact-label { color:#8fa6c2; font-weight:800; white-space:nowrap; }
+.contact-value { min-width:0; overflow-wrap:anywhere; }
 
 /* ── 페이지 하단 ── */
 .page-footer { margin-top:10px; padding:8px 28px;
@@ -234,6 +236,9 @@ input[type=file].hidden-file { display:none; }
   .photo-grid-2 { grid-template-columns:1fr; }
   .info-table th { width:28%; font-size:11px; }
   #ep-panel { width:100vw; }
+  .contact-head { grid-template-columns:1fr; gap:4px; }
+  .contact-phone { text-align:left; }
+  .contact-grid { grid-template-columns:1fr; gap:6px; }
 }
 @media(max-width:480px) {
   .summary-grid { grid-template-columns:1fr 1fr; }
@@ -553,12 +558,12 @@ input[type=file].hidden-file { display:none; }
         <div class="contact-phone">T. 031-949-8969</div>
       </div>
       <div class="contact-grid">
-        <div class="contact-line"><span class="contact-label">대표</span>주현희</div>
-        <div class="contact-line"><span class="contact-label">팩스</span>031-944-1108</div>
-        <div class="contact-line full"><span class="contact-label">주소</span>경기도 파주시 책향기로 830, 1층</div>
-        <div class="contact-line"><span class="contact-label">사업자등록번호</span>305-48-62183</div>
-        <div class="contact-line"><span class="contact-label">중개사무소 등록번호</span>41480-2016-00026</div>
-        <div class="contact-line full"><span class="contact-label">이메일</span>newpajucity@naver.com</div>
+        <div class="contact-line"><span class="contact-label">대표</span><span class="contact-value">주현희</span></div>
+        <div class="contact-line"><span class="contact-label">팩스</span><span class="contact-value">031-944-1108</span></div>
+        <div class="contact-line"><span class="contact-label">주소</span><span class="contact-value">경기도 파주시 책향기로 830, 1층</span></div>
+        <div class="contact-line"><span class="contact-label">등록번호</span><span class="contact-value">41480-2016-00026</span></div>
+        <div class="contact-line"><span class="contact-label">사업자번호</span><span class="contact-value">305-48-62183</span></div>
+        <div class="contact-line"><span class="contact-label">이메일</span><span class="contact-value">newpajucity@naver.com</span></div>
       </div>
     </div>
 
