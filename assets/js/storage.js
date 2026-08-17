@@ -61,16 +61,25 @@ const UNJEONG_QUICK_BUILDINGS = [
 ];
 
 // register.html / detail.html(수정 모달) 공용: 빠른선택 <select>를 채우고,
-// 선택 시 공개주소·지도검색주소·단지명을 자동입력한다. 2차구분이 "오피스텔"이면
-// 오피스텔만, 그 외(상가 등)면 상가+오피스텔 전체를 보여준다.
+// 선택 시 공개주소·지도검색주소·단지명을 자동입력한다. 공장창고·토지는
+// 운정역 상가/오피스텔 빠른선택을 숨기고, 2차구분이 "오피스텔"이면 오피스텔만 보여준다.
 function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category1Id, category2Id) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
+  const field = sel.closest(".field");
 
   function render() {
+    const cat1 = category1Id ? (document.getElementById(category1Id)?.value || "") : "";
     const cat2 = category2Id ? (document.getElementById(category2Id)?.value || "") : "";
+    const hiddenForCategory = cat1 === "공장창고" || cat1 === "토지";
     const onlyOfficetel = cat2 === "오피스텔";
     const prevValue = sel.value;
+
+    if (field) field.style.display = hiddenForCategory ? "none" : "";
+    if (hiddenForCategory) {
+      sel.value = "";
+      return;
+    }
 
     const byCategory = {};
     UNJEONG_QUICK_BUILDINGS.forEach((b, i) => {
