@@ -239,6 +239,27 @@ textarea { resize: vertical; min-height: 120px; }
   height: 72px;
   flex: 1 1 auto;
 }
+.image-preview-thumb-doc {
+  height: 72px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: rgba(212,175,55,0.06);
+  cursor: pointer;
+  font-size: 1.3rem;
+}
+.image-preview-thumb-doc span {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+}
 .image-public-check {
   display: flex;
   align-items: center;

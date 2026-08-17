@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="assets/css/style.css?v=20260817-description-emoji" />
-<script src="assets/js/storage.js?v=20260817-description-emoji"></script>
+<link rel="stylesheet" href="assets/css/style.css?v=20260817-doc-upload" />
+<script src="assets/js/storage.js?v=20260817-doc-upload"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
@@ -289,14 +289,15 @@
     </div>
 
     <!-- 이미지 -->
-    <div class="modal-section-title">📷 이미지 (최대 5장)</div>
+    <div class="modal-section-title">📷 이미지·문서 (최대 5장)</div>
     <div class="field" style="margin-bottom:14px;">
       <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;margin-bottom:8px;">
         홈페이지에 공개할 사진만 체크하세요. 체크 해제한 사진은 내부 매물관리에서만 보관됩니다.
+        PDF 문서(등기부등본·건축물대장 등)는 홈페이지에 공개되지 않고 내부 매물관리에서만 보관됩니다.
       </div>
       <div id="edit_image_preview" class="image-preview-row"></div>
       <div id="edit_image_slots" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
-        <input class="edit-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />
+        <input class="edit-img-slot" type="file" accept="image/*,.pdf" multiple style="font-size:0.82rem;" />
       </div>
       <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
         <button type="button" id="editAddImageSlotBtn" class="btn btn-ghost" style="font-size:0.82rem;padding:4px 10px;">+ 추가</button>
@@ -556,26 +557,38 @@ function closeHomepageTab(tab) {
   function renderEditImagePreview() {
     const wrap = document.getElementById("edit_image_preview");
     if (!wrap) return;
-    const existingHtml = _editImageUrls.map((url, idx) => `
+    const existingHtml = _editImageUrls.map((url, idx) => {
+      const isDoc = !isListingImageFile(url);
+      return `
       <span class="image-preview-thumb image-preview-thumb-selectable">
-        <img src="${escapeAttr(url)}" alt="listing image ${idx + 1}" />
+        ${isDoc
+          ? `<div class="image-preview-thumb-doc" onclick="window.open('${escapeAttr(url)}','_blank')">📄<span>PDF 문서</span></div>`
+          : `<img src="${escapeAttr(url)}" alt="listing image ${idx + 1}" />`}
         <button type="button" onclick="removeEditImage(${idx})">&times;</button>
+        ${isDoc ? "" : `
         <label class="image-public-check">
           <input type="checkbox" ${_editPublicImageUrls.includes(url) ? "checked" : ""} onchange="setEditImagePublic(${idx}, this.checked)" />
           공개
-        </label>
+        </label>`}
       </span>
-    `).join("");
-    const newHtml = _editNewImageFiles.map((file, idx) => `
+    `;
+    }).join("");
+    const newHtml = _editNewImageFiles.map((file, idx) => {
+      const isDoc = !file.type.startsWith("image/");
+      return `
       <span class="image-preview-thumb image-preview-thumb-selectable">
-        <img src="${URL.createObjectURL(file)}" alt="new listing image ${idx + 1}" />
+        ${isDoc
+          ? `<div class="image-preview-thumb-doc">📄<span>${escapeAttr(file.name || "PDF 문서")}</span></div>`
+          : `<img src="${URL.createObjectURL(file)}" alt="new listing image ${idx + 1}" />`}
         <button type="button" onclick="removeEditNewImage(${idx})">&times;</button>
+        ${isDoc ? "" : `
         <label class="image-public-check">
           <input type="checkbox" ${_editNewImagePublicFlags[idx] !== false ? "checked" : ""} onchange="setEditNewImagePublic(${idx}, this.checked)" />
           공개
-        </label>
+        </label>`}
       </span>
-    `).join("");
+    `;
+    }).join("");
     wrap.innerHTML = existingHtml + newHtml;
     updateEditImageSlots();
   }
@@ -598,7 +611,7 @@ function closeHomepageTab(tab) {
     if (!slots) return;
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*";
+    input.accept = "image/*,.pdf";
     input.multiple = true;
     input.className = "edit-img-slot";
     input.style.fontSize = "0.82rem";
@@ -607,14 +620,17 @@ function closeHomepageTab(tab) {
   }
 
   function handleEditImageSlotChange(input) {
-    const files = Array.from(input.files || []).filter(f => f.type.startsWith("image/"));
+    const files = Array.from(input.files || []).filter(f =>
+      f.type.startsWith("image/") || f.type === "application/pdf" || /\.pdf$/i.test(f.name || "")
+    );
     const remaining = MAX_LISTING_IMAGES - _editImageUrls.length - _editNewImageFiles.length;
     const toAdd = files.slice(0, remaining);
     if (files.length > remaining) {
-      showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
+      showToast(`이미지·문서는 최대 ${MAX_LISTING_IMAGES}개까지 업로드할 수 있습니다.`);
     }
     _editNewImageFiles = _editNewImageFiles.concat(toAdd);
-    _editNewImagePublicFlags = _editNewImagePublicFlags.concat(toAdd.map(() => true));
+    // PDF 문서는 홈페이지에 노출할 수 없으므로 기본적으로 "공개" 대상에서 제외한다.
+    _editNewImagePublicFlags = _editNewImagePublicFlags.concat(toAdd.map(f => f.type.startsWith("image/")));
     input.value = "";
     renderEditImagePreview();
   }
@@ -733,7 +749,7 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_is_public").checked = item.is_public === true;
     // 이미지
     const slots = document.getElementById("edit_image_slots");
-    if (slots) slots.innerHTML = '<input class="edit-img-slot" type="file" accept="image/*" multiple style="font-size:0.82rem;" />';
+    if (slots) slots.innerHTML = '<input class="edit-img-slot" type="file" accept="image/*,.pdf" multiple style="font-size:0.82rem;" />';
     _editImageUrls = getListingImageUrls(item);
     _editPublicImageUrls = getPublicListingImageUrls(item).filter(url => _editImageUrls.includes(url));
     if (item.is_public === true && !_editPublicImageUrls.length && _editImageUrls.length) {

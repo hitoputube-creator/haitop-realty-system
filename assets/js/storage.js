@@ -16,6 +16,13 @@ const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
 const LISTING_IMAGES_BUCKET = "listing-images";
 const MAX_LISTING_IMAGES = 5;
 
+// 매물 이미지 첨부 영역은 사진 외에 PDF 문서(등기부등본·건축물대장 등)도 받는다.
+// 공개 홈페이지 이미지 갤러리는 실제 이미지 파일만 노출해야 하므로, 이 판별은
+// 업로드 허용 여부뿐 아니라 공개용 image_urls를 걸러내는 데도 재사용한다.
+function isListingImageFile(nameOrUrl) {
+  return /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(nameOrUrl || "");
+}
+
 // ===== 자주쓰는 운정역 상가·오피스텔 (등록/수정 화면 주소 빠른선택용) =====
 // 출처: 운정역 상가 주소.pdf. 전부 와동동 소재.
 const UNJEONG_QUICK_BUILDINGS = [
@@ -463,7 +470,7 @@ function buildListingPayload(item) {
   const publicImageUrls = (hasExplicitPublic
     ? uniqueImageUrls(data.publicImageUrls || data.public_image_urls)
     : (is_public ? allImageUrls : [])
-  ).filter(url => allImageUrls.includes(url)).slice(0, MAX_LISTING_IMAGES);
+  ).filter(url => allImageUrls.includes(url) && isListingImageFile(url)).slice(0, MAX_LISTING_IMAGES);
   const image_urls = is_public ? publicImageUrls : [];
 
   delete data.id;
@@ -582,8 +589,10 @@ async function linkDiaryEntryToListing(diaryId, listingId) {
 }
 
 async function uploadListingImage(file, listingId) {
-  if (!file) throw new Error("No image file selected.");
-  if (file.type && !file.type.startsWith("image/")) throw new Error("Only image files can be uploaded.");
+  if (!file) throw new Error("No file selected.");
+  const isImage = file.type ? file.type.startsWith("image/") : isListingImageFile(file.name);
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+  if (!isImage && !isPdf) throw new Error("이미지 또는 PDF 파일만 업로드할 수 있습니다.");
 
   const rawExt = (file.name || "").split(".").pop() || "jpg";
   const ext = rawExt.replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "jpg";
