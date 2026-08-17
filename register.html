@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-  <script src="assets/js/storage.js?v=20260817-complex-hide"></script>
+  <link rel="stylesheet" href="assets/css/style.css?v=20260817-description-emoji" />
+  <script src="assets/js/storage.js?v=20260817-description-emoji"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
@@ -254,6 +254,18 @@
     <div class="card-title"><span>📝 매물설명</span></div>
     <div class="field" style="margin-bottom:10px;">
       <label>공개 매물설명 <span style="color:var(--text-muted);font-size:0.75rem;">(상세보기 표시)</span></label>
+      <div class="emoji-toolbar" data-emoji-target="detailDescription" aria-label="매물설명 이모지">
+        <button type="button" class="emoji-btn" data-emoji="✅" title="체크">✅</button>
+        <button type="button" class="emoji-btn" data-emoji="📍" title="위치">📍</button>
+        <button type="button" class="emoji-btn" data-emoji="🚗" title="주차">🚗</button>
+        <button type="button" class="emoji-btn" data-emoji="🏭" title="공장">🏭</button>
+        <button type="button" class="emoji-btn" data-emoji="🏢" title="건물">🏢</button>
+        <button type="button" class="emoji-btn" data-emoji="🌿" title="환경">🌿</button>
+        <button type="button" class="emoji-btn" data-emoji="👍" title="추천">👍</button>
+        <button type="button" class="emoji-btn" data-emoji="⭐" title="강조">⭐</button>
+        <button type="button" class="emoji-btn" data-emoji="💰" title="가격">💰</button>
+        <button type="button" class="emoji-btn" data-emoji="🔹" title="항목">🔹</button>
+      </div>
       <textarea id="detailDescription" rows="4" placeholder="입지, 도로접근성, 추천업종, 임대조건, 특이사항 등"></textarea>
     </div>
     <div class="field">
@@ -335,6 +347,7 @@
   const cat2El = document.getElementById('category2Select');
 
   const syncQuickBuildingFields = setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName', 'category1Select', 'category2Select');
+  setupListingDescriptionEmojiToolbar('detailDescription');
 
   function renderCat2() {
     const opts = CATEGORY_OPTIONS[cat1El.value] || [];

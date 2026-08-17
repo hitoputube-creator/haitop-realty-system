@@ -129,6 +129,27 @@ function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category
   return render;
 }
 
+function setupListingDescriptionEmojiToolbar(textareaId) {
+  const textarea = document.getElementById(textareaId);
+  const toolbar = document.querySelector(`[data-emoji-target="${textareaId}"]`);
+  if (!textarea || !toolbar || toolbar.dataset.emojiReady === "true") return;
+  toolbar.dataset.emojiReady = "true";
+
+  toolbar.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-emoji]");
+    if (!button || !toolbar.contains(button)) return;
+    const emoji = button.dataset.emoji || "";
+    const insertText = emoji + " ";
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? textarea.value.length;
+    textarea.value = textarea.value.slice(0, start) + insertText + textarea.value.slice(end);
+    const cursor = start + insertText.length;
+    textarea.focus();
+    textarea.setSelectionRange(cursor, cursor);
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
 // ===== \ud45c\uc900 \ub9e4\ubb3c \uce74\ud14c\uace0\ub9ac (1\ub2e8\uacc4 \uac1c\ud3b8 \u2014 \ud648\ud398\uc774\uc9c0 \uce74\ud14c\uace0\ub9ac\uc640 \ud1b5\uc77c) =====
 // \ud654\uba74(\ub4f1\ub85d\u00b7\uc218\uc815\u00b7\ud544\ud130)\uc5d0\ub294 \uc544\ub798 5\uac1c \ub300\ubd84\ub958\ub9cc \ub178\ucd9c\ud55c\ub2e4. DB \uc800\uc7a5 \uad6c\uc870\ub294 \ubc14\uafb8\uc9c0 \uc54a\uc73c\uba70,
 // "\uc8fc\uac70\uc6a9" \uc544\ub798\uc5d0\uc11c \uace0\ub978 \uc0c1\uac00\uc8fc\ud0dd\u00b7\ub2e4\uac00\uad6c\uc8fc\ud0dd\u00b7\ub2e8\ub3c5\uc8fc\ud0dd\u00b7\uc804\uc6d0\uc8fc\ud0dd\uc740 \uc800\uc7a5 \uc2dc\uc810\uc5d0

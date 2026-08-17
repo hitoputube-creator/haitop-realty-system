@@ -733,6 +733,33 @@ textarea { resize: vertical; min-height: 120px; }
 .detail-section.description-section .detail-read-label { margin-bottom: 6px; font-weight: 600; }
 .detail-section.description-section .detail-read-value.pre-line { line-height: 1.6; }
 
+.emoji-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+.emoji-btn {
+  width: 34px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  border-radius: 8px;
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--text-main);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.emoji-btn:hover,
+.emoji-btn:focus-visible {
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.18);
+  outline: none;
+}
+
 @media (max-width: 720px) {
   /* PC용 고정 6열을 강제하지 않는다 - 모든 셀을 "항목 | 값" 1쌍짜리 2열로 되돌린다. */
   .listing-info-table {
