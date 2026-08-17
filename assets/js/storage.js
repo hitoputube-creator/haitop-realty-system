@@ -62,11 +62,13 @@ const UNJEONG_QUICK_BUILDINGS = [
 
 // register.html / detail.html(수정 모달) 공용: 빠른선택 <select>를 채우고,
 // 선택 시 공개주소·지도검색주소·단지명을 자동입력한다. 공장창고·토지는
-// 운정역 상가/오피스텔 빠른선택을 숨기고, 2차구분이 "오피스텔"이면 오피스텔만 보여준다.
+// 운정역 상가/오피스텔 빠른선택과 단지명 입력을 숨기고, 2차구분이 "오피스텔"이면 오피스텔만 보여준다.
 function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category1Id, category2Id) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
   const field = sel.closest(".field");
+  const complexEl = document.getElementById(complexId);
+  const complexField = complexEl ? complexEl.closest(".field") : null;
 
   function render() {
     const cat1 = category1Id ? (document.getElementById(category1Id)?.value || "") : "";
@@ -76,8 +78,10 @@ function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category
     const prevValue = sel.value;
 
     if (field) field.style.display = hiddenForCategory ? "none" : "";
+    if (complexField) complexField.style.display = hiddenForCategory ? "none" : "";
     if (hiddenForCategory) {
       sel.value = "";
+      if (complexEl) complexEl.value = "";
       return;
     }
 
@@ -108,7 +112,6 @@ function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category
     if (!b) return;
     const publicEl = document.getElementById(publicId);
     const mapEl = document.getElementById(mapId);
-    const complexEl = document.getElementById(complexId);
     if (publicEl) publicEl.value = "파주시 와동동";
     if (mapEl) mapEl.value = "파주시 " + b.addr;
     if (complexEl) complexEl.value = b.name;
@@ -122,6 +125,8 @@ function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category
     const cat1El = document.getElementById(category1Id);
     if (cat1El) cat1El.addEventListener("change", render);
   }
+
+  return render;
 }
 
 // ===== \ud45c\uc900 \ub9e4\ubb3c \uce74\ud14c\uace0\ub9ac (1\ub2e8\uacc4 \uac1c\ud3b8 \u2014 \ud648\ud398\uc774\uc9c0 \uce74\ud14c\uace0\ub9ac\uc640 \ud1b5\uc77c) =====

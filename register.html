@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-  <script src="assets/js/storage.js?v=20260817-quick-building-hide"></script>
+  <script src="assets/js/storage.js?v=20260817-complex-hide"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
@@ -334,13 +334,14 @@
   const cat1El = document.getElementById('category1Select');
   const cat2El = document.getElementById('category2Select');
 
-  setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName', 'category1Select', 'category2Select');
+  const syncQuickBuildingFields = setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName', 'category1Select', 'category2Select');
 
   function renderCat2() {
     const opts = CATEGORY_OPTIONS[cat1El.value] || [];
     cat2El.innerHTML = opts.length
       ? opts.map(v => `<option value="${v}">${v}</option>`).join('')
       : '<option value="">1차구분을 먼저 선택하세요</option>';
+    if (typeof syncQuickBuildingFields === "function") syncQuickBuildingFields();
     updateDynamicSections();
   }
 

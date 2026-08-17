@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20260604-address-split" />
-<script src="assets/js/storage.js?v=20260817-quick-building-hide"></script>
+<script src="assets/js/storage.js?v=20260817-complex-hide"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
@@ -669,6 +669,7 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
     // 레거시 type="hilsstate" 매물은 단지명 필드가 비어 있어도 "힐스테이트더운정"을 자동 표시한다(세부유형은 강제 선택하지 않음).
     document.getElementById("edit_complexName").value        = item.complexName || (item.type === "hilsstate" ? "힐스테이트더운정" : "");
+    if (typeof syncEditQuickBuildingFields === "function") syncEditQuickBuildingFields();
     document.getElementById("edit_title").value              = item.title || "";
     // 가격정보
     document.getElementById("edit_salePrice").value     = item.salePrice || "";
@@ -745,7 +746,7 @@ function closeHomepageTab(tab) {
   document.getElementById("edit_category1")?.addEventListener("change", () => renderEditCategory2Options());
   document.getElementById("edit_category2")?.addEventListener("change", updateEditDynamicSections);
 
-  setupQuickBuildingSelect('edit_quickBuildingSelect', 'edit_publicAddress', 'edit_mapAddress', 'edit_complexName', 'edit_category1', 'edit_category2');
+  const syncEditQuickBuildingFields = setupQuickBuildingSelect('edit_quickBuildingSelect', 'edit_publicAddress', 'edit_mapAddress', 'edit_complexName', 'edit_category1', 'edit_category2');
 
   // ── 공개주소 → 지도검색주소 자동복사 (번지는 직접 추가 입력) ──────────
   (function setupEditPublicToMapAddressSync() {
