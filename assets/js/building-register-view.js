@@ -8,31 +8,37 @@
     const style = document.createElement('style');
     style.textContent = `
       .br-overlay { position:fixed; inset:0; z-index:10000; display:none; align-items:center;
-        justify-content:center; padding:18px; background:rgba(0,0,0,.78); }
+        justify-content:center; padding:12px; background:rgba(0,0,0,.78); }
       .br-overlay.open { display:flex; }
-      .br-box { width:min(100%,760px); max-height:90vh; overflow:auto; padding:22px;
+      .br-box { width:min(100%,940px); box-sizing:border-box; max-height:calc(100vh - 24px); overflow:auto; padding:16px 20px;
         border:1px solid rgba(216,184,74,.48); border-radius:16px; background:#10213b;
         color:#f8f3e6; box-shadow:0 20px 60px rgba(0,0,0,.55); }
-      .br-box h2 { margin:0 0 8px; font-size:1.15rem; }
-      .br-box p { color:#b9c5d8; font-size:.83rem; line-height:1.5; }
-      .br-box label { display:block; margin:12px 0 5px; font-size:.82rem; }
+      .br-box h2 { margin:0 0 4px; font-size:1.1rem; }
+      .br-box p { margin:4px 0 8px; color:#b9c5d8; font-size:.8rem; line-height:1.4; }
+      .br-inputs { display:grid; grid-template-columns:minmax(0,2fr) minmax(100px,1fr); gap:12px; }
+      .br-box label { display:block; margin:0 0 4px; font-size:.78rem; }
       .br-box input { width:100%; box-sizing:border-box; border:1px solid #4b5c77;
-        border-radius:7px; background:#0a1830; color:#fff; padding:10px; font:inherit; }
-      .br-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
-      .br-actions button { border:1px solid #8b7432; border-radius:7px; padding:9px 13px;
+        border-radius:7px; background:#0a1830; color:#fff; padding:7px 9px; font:inherit; }
+      .br-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+      .br-actions button { border:1px solid #8b7432; border-radius:7px; padding:7px 12px;
         background:#192c47; color:#fff; cursor:pointer; }
       .br-actions .br-fetch { background:#9a781b; font-weight:700; }
       .br-actions button:disabled { opacity:.5; cursor:wait; }
       .br-error { color:#ff9d9d !important; }
-      .br-result { margin-top:16px; border-top:1px solid #41516a; padding-top:12px; }
-      .br-result table { width:100%; border-collapse:collapse; font-size:.86rem; }
+      .br-result { margin-top:10px; border-top:1px solid #41516a; padding-top:5px; }
+      .br-result table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:.83rem; }
       .br-result tr { border-bottom:1px solid #32445d; }
       .br-result tr:nth-child(even) { background:rgba(255,255,255,.025); }
-      .br-result th, .br-result td { padding:9px 12px; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
-      .br-result th { width:34%; color:#b9c5d8; font-weight:500; }
-      .br-result td { color:#f8f3e6; font-weight:650; }
-      @media(max-width:600px) {
-        .br-result th, .br-result td { padding:8px 6px; }
+      .br-result th, .br-result td { padding:6px 8px; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+      .br-result th { width:16%; color:#b9c5d8; font-weight:500; }
+      .br-result td { width:34%; color:#f8f3e6; font-weight:650; }
+      .br-result td:nth-child(2) { border-right:1px solid #32445d; }
+      .br-result #brWarning { margin:7px 2px 0; font-size:.75rem; }
+      @media(max-width:700px) {
+        .br-inputs { grid-template-columns:1fr; gap:8px; }
+        .br-result tr { display:grid; grid-template-columns:minmax(95px,38%) minmax(0,1fr); }
+        .br-result th, .br-result td { width:auto; padding:6px; }
+        .br-result td:nth-child(2) { border-right:0; border-bottom:1px solid #32445d; }
       }
     `;
     document.head.appendChild(style);
@@ -41,8 +47,8 @@
     dialog.innerHTML = `<div class="br-box" role="dialog" aria-modal="true" aria-labelledby="brTitle">
       <h2 id="brTitle">건축물대장정보 확인</h2>
       <p>주소와 호수를 확인한 뒤 조회하세요. 조회 결과는 호실 정보에 자동 저장되지 않습니다.</p>
-      <label for="brAddress">건물 지번주소</label><input id="brAddress" autocomplete="off" placeholder="예: 경기도 파주시 와동동 1456-3">
-      <label for="brRoom">호수</label><input id="brRoom" autocomplete="off" placeholder="예: 101">
+      <div class="br-inputs"><div><label for="brAddress">건물 지번주소</label><input id="brAddress" autocomplete="off" placeholder="예: 경기도 파주시 와동동 1456-3"></div>
+      <div><label for="brRoom">호수</label><input id="brRoom" autocomplete="off" placeholder="예: 101"></div></div>
       <p class="br-error" id="brError" role="alert"></p>
       <div class="br-result" id="brResult" hidden><table id="brDetails" aria-label="건축물대장 조회 결과"><tbody></tbody></table><p id="brWarning"></p></div>
       <div class="br-actions"><button type="button" class="br-close">닫기</button>
@@ -97,14 +103,16 @@
         ];
         const details = dialog.querySelector('#brDetails tbody');
         details.replaceChildren();
-        for (const [label, value] of fields) {
+        for (let index = 0; index < fields.length; index += 2) {
           const row = document.createElement('tr');
-          const heading = document.createElement('th');
-          heading.scope = 'row';
-          heading.textContent = label;
-          const cell = document.createElement('td');
-          cell.textContent = value;
-          row.append(heading, cell);
+          for (const [label, value] of fields.slice(index, index + 2)) {
+            const heading = document.createElement('th');
+            heading.scope = 'row';
+            heading.textContent = label;
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.append(heading, cell);
+          }
           details.appendChild(row);
         }
         dialog.querySelector('#brWarning').textContent = info.unit_area_warning
