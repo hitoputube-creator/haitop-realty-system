@@ -1600,7 +1600,19 @@ textarea { resize: vertical; min-height: 120px; }
 .cust-consultation-meta, .cust-history-help { font-size: .8rem; color: var(--text-muted); line-height: 1.6; }
 .cust-consultation-title { display: block; color: var(--gold-soft); margin: 8px 0; overflow-wrap: anywhere; }
 .cust-consultation-content { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; font-size: .9rem; }
+.cust-consultation.is-editing > .cust-consultation-title,
+.cust-consultation.is-editing > .cust-consultation-content { display: none; }
 .cust-consultation-actions, .cust-consultation-attachments { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.cust-consultation-actions a.btn,
+.cust-consultation-actions a.btn:visited {
+  display: inline-flex; align-items: center; color: #f8f3e6;
+  background: rgba(216,184,74,.12); border: 1px solid rgba(216,184,74,.75);
+  text-decoration: none; font-weight: 600;
+}
+.cust-consultation-actions a.btn:hover,
+.cust-consultation-actions a.btn:focus-visible {
+  color: #fff; background: rgba(216,184,74,.27); border-color: var(--gold);
+}
 .cust-attachment { white-space: normal; overflow-wrap: anywhere; text-align: left; max-width: 100%; }
 .cust-consultation-editor { margin-top: 16px; border-top: 1px solid rgba(216,184,74,.22); padding-top: 14px; }
 .cust-consultation-editor label { display: block; margin: 8px 0; color: var(--gold-soft); }
