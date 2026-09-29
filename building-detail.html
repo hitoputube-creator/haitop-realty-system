@@ -915,6 +915,7 @@ function renderFloors(floors) {
   let draggedCard = null;
   let dropped = false;
   const cards = [...el.querySelectorAll('.floor-card')];
+
   cards.forEach(card => {
     card.addEventListener('dragstart', event => {
       draggedCard = card;
@@ -923,29 +924,43 @@ function renderFloors(floors) {
       event.dataTransfer.setData('text/plain', card.dataset.floorId);
       requestAnimationFrame(() => card.classList.add('dragging'));
     });
-    card.addEventListener('dragover', event => {
-      if (!draggedCard || card === draggedCard) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'move';
-      cards.forEach(item => item.classList.remove('drop-target'));
-      card.classList.add('drop-target');
-      const rect = card.getBoundingClientRect();
-      const after = event.clientX > rect.left + rect.width / 2;
-      el.insertBefore(draggedCard, after ? card.nextSibling : card);
-    });
-    card.addEventListener('drop', event => {
-      if (!draggedCard) return;
-      event.preventDefault();
-      dropped = true;
-      cards.forEach(item => item.classList.remove('drop-target'));
-      saveFloorCardOrder(el);
-    });
     card.addEventListener('dragend', () => {
       cards.forEach(item => item.classList.remove('dragging', 'drop-target'));
       draggedCard = null;
       if (!dropped) renderFloors(floors);
     });
   });
+
+  // 드래그 도중 DOM을 옮기면 브라우저의 drop 대상이 바뀔 수 있다.
+  // 놓는 순간에만 카드를 이동하고, 그 결과를 저장한다.
+  el.ondragover = event => {
+    if (!draggedCard) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    const target = event.target.closest('.floor-card');
+    cards.forEach(item => item.classList.toggle('drop-target', item === target && item !== draggedCard));
+  };
+  el.ondrop = event => {
+    if (!draggedCard) return;
+    event.preventDefault();
+    dropped = true;
+    const target = event.target.closest('.floor-card');
+    if (target && target !== draggedCard) {
+      const rect = target.getBoundingClientRect();
+      const after = event.clientX > rect.left + rect.width / 2;
+      el.insertBefore(draggedCard, after ? target.nextSibling : target);
+    } else if (!target) {
+      el.appendChild(draggedCard);
+    }
+    cards.forEach(item => item.classList.remove('drop-target'));
+    const nextIds = [...el.querySelectorAll('.floor-card')].map(card => card.dataset.floorId);
+    const oldIds = floors.map(floor => floor.id);
+    if (nextIds.some((id, index) => id !== oldIds[index])) {
+      saveFloorCardOrder(el);
+    } else {
+      renderFloors(floors);
+    }
+  };
 }
 
 async function saveFloorCardOrder(grid) {
