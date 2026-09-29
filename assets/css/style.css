@@ -86,6 +86,7 @@ body {
 @media (max-width: 720px) {
   .header { flex-wrap: wrap; row-gap: 8px; }
   .main-nav { margin-left: 0; width: 100%; flex-wrap: wrap; }
+  .nav-dropdown-menu { left: 0; right: auto; max-width: calc(100vw - 32px); }
 }
 
 /* 카드 */
