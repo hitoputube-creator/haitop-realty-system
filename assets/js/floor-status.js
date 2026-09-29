@@ -12,6 +12,7 @@
   let units = [];
   let floorKey = '';
   let selectedRoom = '';
+  let detailEditing = false;
   let editing = false;
   let zoom = 1;
   const changes = new Map();
@@ -132,6 +133,109 @@
     $('roomDetail').appendChild(line);
   }
 
+  const editableFields = ['현업종', '공실여부', '소유주', '연락처', '현_보증금', '현_월세'];
+  function editableSnapshot(unit) {
+    return editableFields.map(key => unit[key] ?? null);
+  }
+  function editField(form, label, name, value, options) {
+    const wrapper = document.createElement('label');
+    wrapper.textContent = label;
+    const input = document.createElement(options ? 'select' : 'input');
+    input.name = name;
+    if (options) {
+      options.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item;
+        option.textContent = item;
+        input.appendChild(option);
+      });
+    } else if (name === '현_보증금' || name === '현_월세') {
+      input.type = 'number';
+      input.min = '0';
+      input.step = '1';
+      input.placeholder = '비우면 기존 가격 표시';
+    } else input.type = name === '연락처' ? 'tel' : 'text';
+    input.value = value == null ? '' : String(value);
+    wrapper.appendChild(input);
+    form.appendChild(wrapper);
+  }
+
+  function renderEditForm(unit) {
+    const box = $('roomDetail');
+    const form = document.createElement('form');
+    form.className = 'status-edit-form';
+    editField(form, '업종', '현업종', unit.현업종);
+    editField(form, '상태', '공실여부', statusOf(unit), ['임차중', '공실', '매매가능']);
+    editField(form, '소유주', '소유주', unit.소유주);
+    editField(form, '연락처', '연락처', unit.연락처);
+    editField(form, '현재 보증금 (만원)', '현_보증금', unit.현_보증금);
+    editField(form, '현재 월세 (만원)', '현_월세', unit.현_월세);
+    const actions = document.createElement('div');
+    actions.className = 'status-edit-actions';
+    const save = document.createElement('button');
+    save.type = 'submit';
+    save.className = 'status-button';
+    save.textContent = '저장';
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'status-button';
+    cancel.textContent = '취소';
+    cancel.addEventListener('click', () => { detailEditing = false; renderDetail(); });
+    actions.append(save, cancel);
+    form.appendChild(actions);
+    form.addEventListener('submit', event => { event.preventDefault(); saveUnitDetails(unit, form, save); });
+    box.appendChild(form);
+  }
+
+  async function saveUnitDetails(original, form, saveButton) {
+    const room = roomId(original);
+    const data = Object.fromEntries(new FormData(form).entries());
+    const amount = key => {
+      const value = String(data[key] || '').trim();
+      if (!value) return null;
+      const number = Number(value);
+      if (!Number.isFinite(number) || number < 0) throw new Error('보증금과 월세는 0 이상의 숫자로 입력해 주세요.');
+      return number;
+    };
+    let values;
+    try {
+      values = {
+        현업종: data.현업종.trim() || null,
+        공실여부: data.공실여부,
+        소유주: data.소유주.trim() || null,
+        연락처: data.연락처.trim() || null,
+        현_보증금: amount('현_보증금'),
+        현_월세: amount('현_월세')
+      };
+    } catch (error) { message(error.message); return; }
+    saveButton.disabled = true;
+    message(`${room}호 내용을 저장하는 중...`);
+    try {
+      const record = await getBuildingRecord(buildingName);
+      if (!record || !Array.isArray(record.units)) throw new Error('건물 호실 데이터를 찾을 수 없습니다.');
+      const current = record.units.find(unit => roomId(unit) === room);
+      if (!current) throw new Error(`${room}호를 다시 찾을 수 없습니다. 새로고침해 주세요.`);
+      if (JSON.stringify(editableSnapshot(current)) !== JSON.stringify(editableSnapshot(original))) {
+        units = record.units;
+        detailEditing = false;
+        render();
+        throw new Error('다른 화면에서 이 호실이 수정됐습니다. 새 내용을 확인한 뒤 다시 수정해 주세요.');
+      }
+      const updated = record.units.map(unit => roomId(unit) === room
+        ? { ...unit, ...values, updated_at: new Date().toISOString() } : unit);
+      await saveBuildingUnits(record.local_id, record.name || buildingName, updated);
+      const saved = await getBuildingRecord(buildingName);
+      const savedUnit = saved && Array.isArray(saved.units) && saved.units.find(unit => roomId(unit) === room);
+      if (!savedUnit || editableFields.some(key => (savedUnit[key] ?? null) !== (values[key] ?? null)))
+        throw new Error('저장한 내용을 다시 확인하지 못했습니다. 새로고침 후 확인해 주세요.');
+      units = saved.units;
+      detailEditing = false;
+      render();
+      message(`${room}호 현황을 저장했습니다.`);
+    } catch (error) { message('저장 실패: ' + error.message); }
+    finally { saveButton.disabled = false; }
+  }
+
   function renderDetail() {
     const box = $('roomDetail');
     box.replaceChildren();
@@ -141,22 +245,37 @@
     const title = document.createElement('h3');
     title.textContent = roomId(unit) + (roomId(unit).endsWith('호') ? '' : '호');
     box.appendChild(title);
+    if (detailEditing) { renderEditForm(unit); return; }
     appendDetail('업종', businessOf(unit));
     appendDetail('상태', statusOf(unit));
     appendDetail('소유주', unit.소유주 || '—');
     appendDetail('연락처', unit.연락처 || '—');
     appendDetail('보증금', displayPrice(unit.현_보증금, unit.보증금));
     appendDetail('월세', displayPrice(unit.현_월세, unit.월차임));
+    const actions = document.createElement('div');
+    actions.className = 'status-detail-actions';
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.className = 'status-button';
+    editButton.textContent = '호실 현황 수정';
+    editButton.addEventListener('click', () => { detailEditing = true; renderDetail(); });
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'status-button registry';
     button.textContent = '건축물대장정보 확인';
     button.addEventListener('click', () => openBuildingRegisterInfo(address, roomId(unit)));
-    box.appendChild(button);
+    actions.append(editButton, button);
+    box.appendChild(actions);
   }
 
   function render() { renderPins(); renderRooms(); renderDetail(); }
-  function selectRoom(room) { selectedRoom = room; render(); }
+  function selectRoom(room) {
+    if (room === selectedRoom && detailEditing) return;
+    if (room !== selectedRoom && detailEditing && !confirm('저장하지 않은 호실 현황 수정을 취소할까요?')) return;
+    if (room !== selectedRoom) detailEditing = false;
+    selectedRoom = room;
+    render();
+  }
 
   function setEditing(on) {
     editing = on;
@@ -172,6 +291,7 @@
   function setFloor(key) {
     floorKey = key;
     selectedRoom = '';
+    detailEditing = false;
     $('floorChoice').value = key;
     $('planCaption').textContent = `${floor.floor_number} 평면도 · ${key}층 호실 현황. 위치를 지정하지 않은 호실은 오른쪽 목록에 표시됩니다.`;
     render();
@@ -269,6 +389,7 @@
 
   $('planStage').addEventListener('click', event => {
     if (!editing || event.target.closest('.unit-pin')) return;
+    if (detailEditing) { message('호실 현황 수정을 저장하거나 취소한 후 위치를 지정해 주세요.'); return; }
     if (!selectedRoom) { message('오른쪽 목록에서 호실을 먼저 선택해 주세요.'); return; }
     const bounds = $('planStage').getBoundingClientRect();
     if (!bounds.width || !bounds.height) return;
@@ -281,6 +402,10 @@
   });
   $('floorChoice').addEventListener('change', event => {
     const key = event.target.value;
+    if (detailEditing && !confirm('저장하지 않은 호실 현황 수정을 취소하고 층을 바꿀까요?')) {
+      event.target.value = floorKey;
+      return;
+    }
     if (changes.size && !confirm('저장하지 않은 위치 변경을 버리고 층을 바꿀까요?')) {
       event.target.value = floorKey;
       return;
@@ -289,12 +414,14 @@
     setFloor(key);
   });
   $('editPositions').addEventListener('click', () => {
+    if (detailEditing) { message('호실 현황 수정을 저장하거나 취소한 후 위치를 설정해 주세요.'); return; }
     if (editing && changes.size && !confirm('저장하지 않은 위치 변경을 버릴까요?')) return;
     if (editing) changes.clear();
     setEditing(!editing);
     render();
   });
   $('removePosition').addEventListener('click', () => {
+    if (detailEditing) { message('호실 현황 수정을 저장하거나 취소한 후 위치를 삭제해 주세요.'); return; }
     if (!selectedRoom) return;
     changes.set(selectedRoom, null);
     render();
