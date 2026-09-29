@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>하이탑부동산 | 층별 현황보기</title>
+  <link rel="stylesheet" href="assets/css/app.css" />
+  <style>
+    body { margin:0; background:#081727; color:#f8f3e6; font-family:Pretendard,system-ui,sans-serif; }
+    .status-page { max-width:1650px; margin:auto; padding:22px; }
+    .status-header { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
+    .status-header h1 { margin:0; font-size:1.4rem; }
+    .status-header p { margin:4px 0 0; color:#b9c5d8; }
+    .status-button { border:1px solid rgba(216,184,74,.6); border-radius:8px; padding:9px 13px;
+      background:#122844; color:#f8f3e6; font:inherit; font-size:.85rem; cursor:pointer; text-decoration:none; }
+    .status-button:hover, .status-button:focus-visible { border-color:#e2bd42; background:#25405f; }
+    .status-button.primary { background:#a17b19; color:#fff; font-weight:700; }
+    .status-button:disabled { opacity:.55; cursor:wait; }
+    .status-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-bottom:16px; }
+    .status-toolbar select { padding:9px; min-width:95px; border-radius:7px; background:#122844; color:#fff; border:1px solid #536989; }
+    .status-toolbar .spacer { flex:1; }
+    .status-shell { display:grid; grid-template-columns:minmax(0,1fr) 275px; gap:16px; align-items:start; }
+    .status-plan, .status-side { border:1px solid #36516e; border-radius:12px; background:#10213b; overflow:hidden; }
+    .status-scroll { overflow:auto; max-height:calc(100vh - 225px); min-height:340px; }
+    .status-stage { width:100%; min-width:900px; position:relative; line-height:0; cursor:default; }
+    .status-stage.editing { cursor:crosshair; }
+    .status-stage img { display:block; width:100%; height:auto; user-select:none; -webkit-user-drag:none; }
+    .status-pins { position:absolute; inset:0; pointer-events:none; }
+    .unit-pin { position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center;
+      max-width:82px; min-width:48px; padding:3px 5px; border:2px solid currentColor; border-radius:7px;
+      color:#4ade80; background:rgba(5,22,31,.92); box-shadow:0 2px 6px rgba(0,0,0,.55);
+      font:inherit; font-size:11px; line-height:1.2; cursor:pointer; pointer-events:auto; z-index:1; }
+    .unit-pin.vacant { color:#ff9494; }
+    .unit-pin.sale { color:#e2bd42; }
+    .unit-pin.selected { outline:2px solid #fff; z-index:2; }
+    .unit-pin span { color:#fff; display:block; max-width:70px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .status-caption { padding:12px 14px; color:#b9c5d8; font-size:.83rem; line-height:1.5; }
+    .status-side { padding:15px; }
+    .status-side h2 { margin:0 0 10px; font-size:1rem; color:#e2bd42; }
+    .status-help { color:#b9c5d8; font-size:.82rem; line-height:1.5; }
+    .status-rooms { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; max-height:235px; overflow:auto; margin:12px 0; }
+    .status-room { padding:7px 4px; border-radius:6px; border:1px solid #476079;
+      background:#0d1d34; color:#f8f3e6; text-align:center; cursor:pointer; font:inherit; font-size:.78rem; }
+    .status-room.selected { border-color:#e2bd42; background:#5d4919; }
+    .status-room small { display:block; color:#b9c5d8; font-size:.69rem; }
+    .status-detail { border-top:1px solid #40556e; padding-top:12px; font-size:.86rem; line-height:1.65; }
+    .status-detail h3 { margin:0 0 6px; }
+    .status-detail .line { overflow-wrap:anywhere; }
+    .status-detail .registry { margin-top:10px; }
+    .status-message { margin:10px 0; min-height:1.3em; color:#e2bd42; font-size:.85rem; }
+    .status-legend { display:flex; flex-wrap:wrap; gap:12px; color:#b9c5d8; font-size:.8rem; }
+    .status-legend b { color:#4ade80; }
+    .status-legend b.vacant { color:#ff9494; }
+    .status-legend b.sale { color:#e2bd42; }
+    [hidden] { display:none !important; }
+    @media(max-width:900px) { .status-page { padding:12px; } .status-shell { grid-template-columns:1fr; }
+      .status-scroll { max-height:60vh; } }
+  </style>
+</head>
+<body>
+  <main class="status-page">
+    <header class="status-header">
+      <div><h1 id="statusTitle">층별 현황보기</h1><p id="statusAddress"></p></div>
+      <a class="status-button" id="backLink" href="building-detail.html">← 건물 상세로</a>
+    </header>
+    <div class="status-toolbar">
+      <label for="floorChoice">층</label><select id="floorChoice"></select>
+      <button type="button" class="status-button" id="zoomOut" aria-label="도면 축소">−</button>
+      <span id="zoomLabel">100%</span>
+      <button type="button" class="status-button" id="zoomIn" aria-label="도면 확대">+</button>
+      <span class="spacer"></span>
+      <button type="button" class="status-button" id="editPositions">위치 설정</button>
+      <button type="button" class="status-button" id="removePosition" hidden>선택 위치 삭제</button>
+      <button type="button" class="status-button primary" id="savePositions" hidden>위치 저장</button>
+    </div>
+    <div class="status-legend"><span><b>●</b> 임차중</span><span><b class="vacant">●</b> 공실</span><span><b class="sale">●</b> 매매가능</span></div>
+    <p class="status-message" id="statusMessage" role="status">불러오는 중...</p>
+    <div class="status-shell">
+      <section class="status-plan" aria-label="층별 평면도">
+        <div class="status-scroll" id="planScroll">
+          <div class="status-stage" id="planStage"><img id="planImage" alt="층별 평면도" /><div class="status-pins" id="planPins"></div></div>
+        </div>
+        <div class="status-caption" id="planCaption">호실을 누르면 상세 정보가 표시됩니다.</div>
+      </section>
+      <aside class="status-side">
+        <h2>호실 현황</h2>
+        <p class="status-help" id="positionHelp">호실을 선택하면 업종과 상태를 볼 수 있습니다.</p>
+        <div class="status-rooms" id="roomList"></div>
+        <div class="status-detail" id="roomDetail">호실을 선택해 주세요.</div>
+      </aside>
+    </div>
+  </main>
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/admin-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/building-register-view.js"></script>
+  <script src="assets/js/floor-status.js"></script>
+</body>
+</html>

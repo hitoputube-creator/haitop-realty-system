@@ -95,6 +95,12 @@
       font-size: 0.78rem; font-weight: 700; color: var(--gold);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .floor-status-link, .floor-status-link:visited {
+      padding: 5px 7px; border: 1px solid rgba(216,184,74,.65); border-radius: 6px;
+      color: #f8f3e6; background: rgba(216,184,74,.15); font-size: .72rem;
+      text-decoration: none; white-space: nowrap;
+    }
+    .floor-status-link:hover, .floor-status-link:focus-visible { color:#fff; background:rgba(216,184,74,.28); }
     .btn-icon {
       border: none; background: transparent;
       color: rgba(255,100,100,0.7); cursor: pointer;
@@ -567,6 +573,7 @@
       </div>
 
       <div class="unit-modal-actions">
+        <button class="btn-unit-ghost" id="umRegistry" type="button" style="display:none;">건축물대장정보 확인</button>
         <button class="btn-unit-ghost" id="umCancel">취소</button>
         <button class="btn-unit-del" id="umDelete" style="display:none;">삭제</button>
         <button class="btn-unit-add" id="umSave">저장</button>
@@ -595,6 +602,7 @@
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
+<script src="assets/js/building-register-view.js"></script>
 <script>
 /* ═══════════════════════════════════════════
    Cloudinary 설정
@@ -616,6 +624,7 @@ const OV_FIELDS = [
 
 const params     = new URLSearchParams(location.search);
 const buildingId = params.get('id');
+let buildingAddress = '';
 
 /* ── 유틸 ── */
 function showToast(msg, dur = 2500) {
@@ -799,6 +808,7 @@ async function init() {
     if (building) {
       document.getElementById('buildingName').textContent = building.name;
       document.title = `하이탑부동산 | ${building.name}`;
+      buildingAddress = parseMemoFields(building.memo || '').주소 || '';
       renderInfoGrid(building.memo || '');
     }
   } catch(e) { /* 이름 로드 실패 무시 */ }
@@ -855,8 +865,9 @@ function renderFloors(floors) {
     const url  = f.cloudinary_url;
     const name = esc(f.file_name);
     const badge = esc(f.floor_number);
+    const image = isImage(url, f.file_name);
 
-    const previewHtml = isImage(url, f.file_name)
+    const previewHtml = image
       ? `<img class="floor-thumb" src="${esc(url)}" alt="${badge}"
            loading="lazy"
            onclick="openLightbox('${esc(url)}','${badge} — ${name}')">`
@@ -870,6 +881,7 @@ function renderFloors(floors) {
       ${previewHtml}
       <div class="floor-card-foot">
         <span class="floor-badge">${badge}</span>
+        ${image ? `<a class="floor-status-link" href="floor-status.html?id=${encodeURIComponent(buildingId)}&floorId=${encodeURIComponent(f.id)}">현황보기</a>` : ''}
         <button class="btn-icon" title="삭제" onclick="deleteFloor('${f.id}')">🗑</button>
       </div>
     </div>`;
@@ -1199,6 +1211,7 @@ async function deleteBFile(id) {
     const isNew = idx < 0;
     $("umTitle").textContent    = isNew ? "호실 추가" : "호실 수정";
     $("umDelete").style.display = isNew ? "none" : "";
+    $("umRegistry").style.display = isNew ? "none" : "";
     const u = isNew ? {} : units[idx];
 
     // 분양 당시
@@ -1243,6 +1256,7 @@ async function deleteBFile(id) {
     if (!호수) { if (typeof showToast === "function") showToast("호수를 입력하세요."); return; }
 
     const unit = {
+      ...(editIdx >= 0 ? units[editIdx] : {}),
       호수,
       공실여부:    $("u_공실여부").value,
       현업종:      $("u_현업종").value.trim()    || null,
@@ -1379,6 +1393,10 @@ async function deleteBFile(id) {
   $("btnAddUnit").addEventListener("click", () => openModal(-1));
   $("umSave").addEventListener("click", saveUnit);
   $("umDelete").addEventListener("click", deleteUnit);
+  $("umRegistry").addEventListener("click", () => {
+    if (editIdx < 0) return;
+    openBuildingRegisterInfo(buildingAddress, units[editIdx].호수);
+  });
   $("umCancel").addEventListener("click", closeModal);
   $("umClose").addEventListener("click", closeModal);
   $("unitModal").addEventListener("click", e => { if (e.target === $("unitModal")) closeModal(); });
