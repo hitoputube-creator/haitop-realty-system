@@ -20,6 +20,7 @@
     .status-button:disabled { opacity:.55; cursor:wait; }
     .status-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px; }
     .status-toolbar select { width:130px; max-width:100%; padding:8px; border-radius:7px; background:#122844; color:#fff; border:1px solid #536989; }
+    .status-toolbar #buildingChoice { width:min(230px,45vw); }
     .status-toolbar .spacer { flex:1; }
     .status-shell { display:grid; grid-template-columns:minmax(0,1fr) 275px; gap:16px; align-items:start; }
     .status-plan, .status-side { border:1px solid #36516e; border-radius:12px; background:#10213b; overflow:hidden; }
@@ -72,10 +73,11 @@
   <main class="status-page">
     <header class="status-header">
       <div><h1 id="statusTitle">층별 현황보기</h1><p id="statusAddress"></p></div>
-      <div class="status-header-links"><a class="status-button" href="floor-status-overview.html">다른 건물 1층 현황</a><a class="status-button" id="backLink" href="building-detail.html">← 건물 상세로</a></div>
+      <div class="status-header-links"><a class="status-button" id="otherBuildings" href="floor-status-overview.html">다른 건물 같은 층 현황</a><a class="status-button" id="backLink" href="building-detail.html">← 건물 상세로</a></div>
     </header>
     <div class="status-toolbar">
-      <label for="floorChoice">층</label><select id="floorChoice"></select>
+      <label for="buildingChoice">건물</label><select id="buildingChoice" aria-label="건물 선택"></select>
+      <label for="floorChoice">층</label><select id="floorChoice" aria-label="층 선택"></select>
       <button type="button" class="status-button" id="zoomOut" aria-label="도면 축소">−</button>
       <span id="zoomLabel">100%</span>
       <button type="button" class="status-button" id="zoomIn" aria-label="도면 확대">+</button>
@@ -106,6 +108,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/building-register-view.js?v=20260929-compact-table"></script>
-  <script src="assets/js/floor-status.js"></script>
+  <script src="assets/js/floor-status.js?v=20260929-building-floor"></script>
 </body>
 </html>
