@@ -228,6 +228,8 @@
       font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08);
       background: rgba(0,0,0,0.15);
     }
+    .units-tbl .current-rent-heading { text-align: center; color: var(--gold); }
+    .units-tbl .current-rent-heading small { display: block; color: var(--muted); font-weight: 400; }
     .units-tbl td {
       padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
       color: rgba(255,255,255,0.88); vertical-align: middle;
@@ -486,14 +488,17 @@
       <table class="units-tbl">
         <thead>
           <tr>
-            <th>호수</th>
-            <th>업종</th>
-            <th>소유주</th>
-            <th>연락처</th>
+            <th rowspan="2" scope="col">호수</th>
+            <th rowspan="2" scope="col">업종</th>
+            <th rowspan="2" scope="col">소유주</th>
+            <th rowspan="2" scope="col">연락처</th>
+            <th colspan="2" scope="colgroup" class="current-rent-heading">현재 임차가격<small>미입력 시 기존 가격</small></th>
+            <th rowspan="2" scope="col">상태</th>
+            <th rowspan="2" scope="col">매물</th>
+          </tr>
+          <tr>
             <th>보증금(만)</th>
             <th>월차임(만)</th>
-            <th>상태</th>
-            <th>매물</th>
           </tr>
         </thead>
         <tbody id="unitsTbody"></tbody>
@@ -1014,6 +1019,17 @@ async function deleteBFile(id) {
     return (v && isFinite(v)) ? v.toLocaleString("ko-KR") : "-";
   }
 
+  function effectiveUnitPrice(current, original) {
+    return current !== null && current !== undefined && current !== "" ? current : original;
+  }
+
+  function currentRentPrice(current, original) {
+    const price = effectiveUnitPrice(current, original);
+    if (price === null || price === undefined || price === "") return "-";
+    const amount = Number(price);
+    return Number.isFinite(amount) ? amount.toLocaleString("ko-KR") : "-";
+  }
+
   // 호수 -> 층 번호 문자열: 101->1, 201->2, 1001->10, B101->B1
   function floorOf(room) {
     const s = String(room || "").trim();
@@ -1095,7 +1111,7 @@ async function deleteBFile(id) {
     const occ  = units.filter(u => u.공실여부 === "임차중").length;
     const vac  = units.filter(u => u.공실여부 === "공실").length;
     const sale = units.filter(u => u.공실여부 === "매매가능").length;
-    const rev  = units.reduce((s, u) => s + (Number(u.월차임) || 0), 0);
+    const rev  = units.reduce((s, u) => s + (Number(effectiveUnitPrice(u.현_월세, u.월차임)) || 0), 0);
     $("sumOccupied").textContent = occ;
     $("sumVacant").textContent   = vac;
     $("sumForSale").textContent  = sale;
@@ -1152,8 +1168,8 @@ async function deleteBFile(id) {
         <td>${u.현업종 || "-"}</td>
         <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
-        <td style="text-align:right">${u.보증금 ? fmt(u.보증금) : "-"}</td>
-        <td style="text-align:right">${u.월차임 ? fmt(u.월차임) : "-"}</td>
+        <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
+        <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
         <td><span class="sbadge ${bc}">${status}</span></td>
         <td class="tbl-actions">
           <button class="btn-unit-edit" data-ri="${ri}">수정</button>
