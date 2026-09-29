@@ -51,22 +51,32 @@
     return Boolean(item.cloudinary_url) && !/\.pdf(?:\?|$)/i.test(item.cloudinary_url || item.file_name || '');
   }
 
+  function floorSortNumber(key) {
+    const basement = String(key).match(/^B(\d+)$/i);
+    if (basement) return -Number(basement[1]);
+    const number = Number(key);
+    return Number.isFinite(number) ? number : Infinity;
+  }
+
   function floorsForBuilding(id) {
-    return availableFloors.filter(item => item.building_id === id);
+    return availableFloors.filter(item => item.building_id === id)
+      .sort((a, b) => floorSortNumber(floorKeys(a.floor_number)[0]) -
+                      floorSortNumber(floorKeys(b.floor_number)[0]));
   }
 
   function fillFloorChoice(id) {
     const select = $('floorChoice');
     select.replaceChildren();
-    floorsForBuilding(id).forEach(item => {
-      floorKeys(item.floor_number).forEach(key => {
-        const option = document.createElement('option');
-        option.value = item.id + '|' + key;
-        option.textContent = key + '층';
-        option.dataset.floorId = item.id;
-        option.dataset.floorKey = key;
-        select.appendChild(option);
-      });
+    const choices = floorsForBuilding(id)
+      .flatMap(item => floorKeys(item.floor_number).map(key => ({ item, key })))
+      .sort((a, b) => floorSortNumber(a.key) - floorSortNumber(b.key));
+    choices.forEach(({ item, key }) => {
+      const option = document.createElement('option');
+      option.value = item.id + '|' + key;
+      option.textContent = key + '층';
+      option.dataset.floorId = item.id;
+      option.dataset.floorKey = key;
+      select.appendChild(option);
     });
   }
 
