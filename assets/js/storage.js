@@ -798,6 +798,18 @@ async function addBuildingFloor(item) {
   });
   if (!res.ok) throw new Error("평면도 저장 실패: " + await res.text());
 }
+async function updateBuildingFloor(id, changes) {
+  const url = SUPABASE_URL + '/rest/v1/building_floors?id=eq.' + encodeURIComponent(id);
+  const res = await fetchWithTimeout(url, {
+    method: 'PATCH',
+    headers: Object.assign({}, headers, { 'Prefer': 'return=representation' }),
+    body: JSON.stringify(changes)
+  });
+  if (!res.ok) throw new Error('평면도 수정 실패: ' + await res.text());
+  const updated = await res.json();
+  if (updated.length !== 1) throw new Error('수정할 평면도를 찾지 못했습니다.');
+  return updated[0];
+}
 async function deleteBuildingFloor(id) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?id=eq." + encodeURIComponent(id), {
     method: "DELETE", headers
