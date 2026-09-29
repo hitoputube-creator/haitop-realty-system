@@ -166,7 +166,7 @@
     <div class="section-head-row">
       <div class="section-title">🏢 건물 기본 정보</div>
       <div class="overview-actions">
-        <button class="btn" id="registerFillBtn" onclick="fillFromBuildingRegister()">🏢 건축물대장 빈칸 채우기</button>
+        <button class="btn" id="registerFillBtn" onclick="fillFromBuildingRegister()">🏢 건축물대장 채우기</button>
         <button class="btn" id="editToggleBtn" onclick="toggleEditMode()">✏️ 수정</button>
       </div>
     </div>
@@ -205,6 +205,10 @@
         <input id="ov_land" type="text" placeholder="예: 1,200평" />
       </div>
       <div class="field">
+        <label>건축면적</label>
+        <input id="ov_footprint" type="text" placeholder="건축물대장에서 채우거나 직접 입력" />
+      </div>
+      <div class="field">
         <label>연면적</label>
         <input id="ov_total" type="text" placeholder="예: 8,500평" />
       </div>
@@ -240,8 +244,8 @@
 <script src="assets/js/auth.js"></script>
 <script>
 const MEMO_SEP      = '---추가메모---';
-const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토지면적','연면적','관리사무소','규모'];
-const FIELD_IDS     = ['ov_address','ov_parking','ov_approval','ov_structure','ov_land','ov_total','ov_mgmt','ov_scale'];
+const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토지면적','건축면적','연면적','관리사무소','규모'];
+const FIELD_IDS     = ['ov_address','ov_parking','ov_approval','ov_structure','ov_land','ov_footprint','ov_total','ov_mgmt','ov_scale'];
 
 // 읽기전용 표에 표시할 순서 — 매물정보 외 건물명/카테고리는 memo가 아닌 drive_resources 컬럼값을 쓴다.
 const INFO_TABLE_ROWS = [
@@ -249,6 +253,7 @@ const INFO_TABLE_ROWS = [
   { label: '건물명',    value: () => buildingData && buildingData.name },
   { label: '카테고리',  value: () => buildingData && buildingData.category },
   { label: '토지면적',  value: () => memoFields['토지면적'] },
+  { label: '건축면적',  value: () => memoFields['건축면적'] },
   { label: '주차대수',  value: () => memoFields['주차대수'] },
   { label: '연면적',    value: () => memoFields['연면적'] },
   { label: '사용승인일',value: () => memoFields['사용승인일'] },
@@ -323,7 +328,7 @@ function formatRegisterArea(value) {
   return `${pyeong.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}평 (${squareMeters.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}㎡)`;
 }
 
-function fillMissingMemo(raw, candidates) {
+function fillRegisterMemo(raw, candidates, overwriteLabels = []) {
   const marker = raw.indexOf(MEMO_SEP);
   const basic = (marker < 0 ? raw : raw.slice(0, marker)).trimEnd();
   const suffix = marker < 0 ? '' : raw.slice(marker);
@@ -337,7 +342,8 @@ function fillMissingMemo(raw, candidates) {
       return colon >= 0 && line.slice(0, colon).trim() === label;
     });
     if (index >= 0) {
-      if (lines[index].slice(lines[index].indexOf(':') + 1).trim()) return;
+      const current = lines[index].slice(lines[index].indexOf(':') + 1).trim();
+      if (current === value || (current && !overwriteLabels.includes(label))) return;
       lines[index] = `${label}: ${value}`;
     } else {
       lines.push(`${label}: ${value}`);
@@ -364,15 +370,30 @@ async function fillFromBuildingRegister() {
     const date = String(info.use_apr_day || '');
     const candidates = {
       '토지면적': formatRegisterArea(info.land_area_m2),
+      '건축면적': formatRegisterArea(info.footprint_area_m2),
       '연면적': formatRegisterArea(info.total_area_m2),
       '주차대수': info.parking_count == null ? '' : `${Number(info.parking_count).toLocaleString('ko-KR')}대`,
       '사용승인일': /^\d{8}$/.test(date) ? `${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6)}` : date,
       '구조': info.structure || '',
       '규모': info.floor_info || ''
     };
-    const result = fillMissingMemo(buildingData.memo || '', candidates);
+    const previousLand = (parseMemo(buildingData.memo || '').fields['토지면적'] || '').trim();
+    if (/외\s*\d+\s*필지/.test(address) && previousLand && candidates['토지면적']) {
+      const oldNumber = previousLand.match(/[\d,]+(?:\.\d+)?/);
+      const oldPyeong = oldNumber ? Number(oldNumber[0].replace(/,/g, '')) : NaN;
+      const newPyeong = Number(info.land_area_m2) / 3.305785;
+      if (!Number.isFinite(oldPyeong) || Math.abs(oldPyeong - newPyeong) > 0.02) {
+        const applyLand = confirm(
+          '여러 필지 주소입니다. 대표 지번으로 조회된 건축물대장 대지면적이 기존 값과 다릅니다.\n' +
+          '기존: ' + previousLand + '\n조회: ' + candidates['토지면적'] +
+          '\n대장 원본에서 필지 포함 여부를 확인한 뒤 적용하세요. 토지면적을 바꿀까요?'
+        );
+        if (!applyLand) delete candidates['토지면적'];
+      }
+    }
+    const result = fillRegisterMemo(buildingData.memo || '', candidates, ['토지면적', '건축면적']);
     if (!result.filled.length) {
-      showToast('조회된 값 중 채울 수 있는 빈 항목이 없습니다.', 4000);
+      showToast('건축물대장에서 새로 반영할 값이 없습니다.', 4000);
       return;
     }
     stage = '저장';
@@ -385,7 +406,7 @@ async function fillFromBuildingRegister() {
   } finally {
     button.disabled = false;
     editButton.disabled = false;
-    button.textContent = '🏢 건축물대장 빈칸 채우기';
+    button.textContent = '🏢 건축물대장 채우기';
   }
 }
 
