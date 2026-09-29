@@ -68,7 +68,11 @@
     .status-legend b.sale { color:#e2bd42; }
     [hidden] { display:none !important; }
     @media(max-width:900px) { .status-page { padding:12px; } .status-shell { grid-template-columns:1fr; }
-      .status-scroll { max-height:60vh; } }
+      .status-scroll { max-height:60vh; min-height:0; touch-action:pan-x pan-y; }
+      .unit-pin { min-width:30px; padding:3px 4px; }
+      .unit-pin span { display:none; }
+      .unit-pin.selected span { display:block; }
+    }
   </style>
 </head>
 <body>
@@ -110,6 +114,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/building-register-view.js?v=20260929-compact-table"></script>
-  <script src="assets/js/floor-status.js?v=20260929-numeric-floor-order"></script>
+  <script src="assets/js/floor-status.js?v=20260929-mobile-pinch"></script>
 </body>
 </html>
