@@ -780,6 +780,11 @@ async function deleteRecommendedFilesByRecId(recommendedId) {
 }
 
 // ===== 건물 층별 평면도 =====
+async function getAllBuildingFloors() {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?select=id,building_id,floor_number,cloudinary_url,file_name&order=created_at.asc", { headers });
+  if (!res.ok) throw new Error("평면도 목록 조회 실패");
+  return await res.json();
+}
 async function getBuildingFloors(buildingId) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?building_id=eq." + encodeURIComponent(buildingId) + "&order=created_at.asc", { headers });
   if (!res.ok) throw new Error("평면도 목록 조회 실패");
