@@ -209,14 +209,14 @@
     const pair = document.createElement('div');
     pair.className = 'status-area-pair';
     const meters = document.createElement('input');
-    meters.type = 'number'; meters.min = '0'; meters.step = '0.01';
+    meters.type = 'number'; meters.min = '0'; meters.step = 'any';
     meters.name = name + '_m2'; meters.placeholder = '㎡'; meters.setAttribute('aria-label', label + ' 제곱미터');
     const pyeong = document.createElement('input');
-    pyeong.type = 'number'; pyeong.min = '0'; pyeong.step = '0.01';
+    pyeong.type = 'number'; pyeong.min = '0'; pyeong.step = 'any';
     pyeong.name = name; pyeong.placeholder = '평'; pyeong.setAttribute('aria-label', label + ' 평');
-    if (value !== null && value !== undefined && value !== '') {
-      pyeong.value = value;
-      meters.value = (Number(value) * squareMetersPerPyeong).toFixed(2);
+    if (value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))) {
+      pyeong.value = Number(value).toFixed(2);
+      meters.value = (Number(pyeong.value) * squareMetersPerPyeong).toFixed(2);
     }
     meters.addEventListener('input', () => { pyeong.value = meters.value === '' ? '' : (Number(meters.value) / squareMetersPerPyeong).toFixed(2); });
     pyeong.addEventListener('input', () => { meters.value = pyeong.value === '' ? '' : (Number(pyeong.value) * squareMetersPerPyeong).toFixed(2); });
