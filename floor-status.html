@@ -8,17 +8,18 @@
   <link rel="stylesheet" href="assets/css/app.css" />
   <style>
     body { margin:0; background:#081727; color:#f8f3e6; }
-    .status-page { max-width:1650px; margin:auto; padding:22px; }
-    .status-header { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
-    .status-header h1 { margin:0; font-size:1.4rem; }
-    .status-header p { margin:4px 0 0; color:#b9c5d8; }
+    .status-page { max-width:1650px; margin:auto; padding:14px 22px; }
+    .status-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+    .status-header h1 { margin:0; font-size:1.25rem; }
+    .status-header p { margin:2px 0 0; color:#b9c5d8; font-size:.83rem; }
+    .status-header-links { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .status-button { border:1px solid rgba(216,184,74,.6); border-radius:8px; padding:9px 13px;
       background:#122844; color:#f8f3e6; font:inherit; font-size:.85rem; cursor:pointer; text-decoration:none; }
     .status-button:hover, .status-button:focus-visible { border-color:#e2bd42; background:#25405f; }
     .status-button.primary { background:#a17b19; color:#fff; font-weight:700; }
     .status-button:disabled { opacity:.55; cursor:wait; }
-    .status-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-bottom:16px; }
-    .status-toolbar select { padding:9px; min-width:95px; border-radius:7px; background:#122844; color:#fff; border:1px solid #536989; }
+    .status-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px; }
+    .status-toolbar select { width:130px; max-width:100%; padding:8px; border-radius:7px; background:#122844; color:#fff; border:1px solid #536989; }
     .status-toolbar .spacer { flex:1; }
     .status-shell { display:grid; grid-template-columns:minmax(0,1fr) 275px; gap:16px; align-items:start; }
     .status-plan, .status-side { border:1px solid #36516e; border-radius:12px; background:#10213b; overflow:hidden; }
@@ -49,7 +50,8 @@
     .status-detail h3 { margin:0 0 6px; }
     .status-detail .line { overflow-wrap:anywhere; }
     .status-detail .registry { margin-top:10px; }
-    .status-message { margin:10px 0; min-height:1.3em; color:#e2bd42; font-size:.85rem; }
+    .status-message { margin:0; min-height:1.3em; color:#e2bd42; font-size:.85rem; }
+    .status-meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; margin:0 0 8px; }
     .status-legend { display:flex; flex-wrap:wrap; gap:12px; color:#b9c5d8; font-size:.8rem; }
     .status-legend b { color:#4ade80; }
     .status-legend b.vacant { color:#ff9494; }
@@ -63,7 +65,7 @@
   <main class="status-page">
     <header class="status-header">
       <div><h1 id="statusTitle">층별 현황보기</h1><p id="statusAddress"></p></div>
-      <div class="status-toolbar"><a class="status-button" href="floor-status-overview.html">다른 건물 1층 현황</a><a class="status-button" id="backLink" href="building-detail.html">← 건물 상세로</a></div>
+      <div class="status-header-links"><a class="status-button" href="floor-status-overview.html">다른 건물 1층 현황</a><a class="status-button" id="backLink" href="building-detail.html">← 건물 상세로</a></div>
     </header>
     <div class="status-toolbar">
       <label for="floorChoice">층</label><select id="floorChoice"></select>
@@ -75,8 +77,8 @@
       <button type="button" class="status-button" id="removePosition" hidden>선택 위치 삭제</button>
       <button type="button" class="status-button primary" id="savePositions" hidden>위치 저장</button>
     </div>
-    <div class="status-legend"><span><b>●</b> 임차중</span><span><b class="vacant">●</b> 공실</span><span><b class="sale">●</b> 매매가능</span></div>
-    <p class="status-message" id="statusMessage" role="status">불러오는 중...</p>
+    <div class="status-meta"><div class="status-legend"><span><b>●</b> 임차중</span><span><b class="vacant">●</b> 공실</span><span><b class="sale">●</b> 매매가능</span></div>
+      <p class="status-message" id="statusMessage" role="status">불러오는 중...</p></div>
     <div class="status-shell">
       <section class="status-plan" aria-label="층별 평면도">
         <div class="status-scroll" id="planScroll">
