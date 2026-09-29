@@ -22,7 +22,7 @@
     .status-shell { display:grid; grid-template-columns:minmax(0,1fr) 275px; gap:16px; align-items:start; }
     .status-plan, .status-side { border:1px solid #36516e; border-radius:12px; background:#10213b; overflow:hidden; }
     .status-scroll { overflow:auto; max-height:calc(100vh - 225px); min-height:340px; }
-    .status-stage { width:100%; min-width:900px; position:relative; line-height:0; cursor:default; }
+    .status-stage { width:100%; min-width:0; position:relative; line-height:0; cursor:default; }
     .status-stage.editing { cursor:crosshair; }
     .status-stage img { display:block; width:100%; height:auto; user-select:none; -webkit-user-drag:none; }
     .status-pins { position:absolute; inset:0; pointer-events:none; }
@@ -42,7 +42,8 @@
     .status-room { padding:7px 4px; border-radius:6px; border:1px solid #476079;
       background:#0d1d34; color:#f8f3e6; text-align:center; cursor:pointer; font:inherit; font-size:.78rem; }
     .status-room.selected { border-color:#e2bd42; background:#5d4919; }
-    .status-room small { display:block; color:#b9c5d8; font-size:.69rem; }
+    .status-room small { display:block; color:#b9c5d8; font-size:.69rem; overflow-wrap:anywhere; }
+    .status-room small + small { color:#e2bd42; font-size:.64rem; }
     .status-detail { border-top:1px solid #40556e; padding-top:12px; font-size:.86rem; line-height:1.65; }
     .status-detail h3 { margin:0 0 6px; }
     .status-detail .line { overflow-wrap:anywhere; }
@@ -61,7 +62,7 @@
   <main class="status-page">
     <header class="status-header">
       <div><h1 id="statusTitle">층별 현황보기</h1><p id="statusAddress"></p></div>
-      <a class="status-button" id="backLink" href="building-detail.html">← 건물 상세로</a>
+      <div class="status-toolbar"><a class="status-button" href="floor-status-overview.html">다른 건물 1층 현황</a><a class="status-button" id="backLink" href="building-detail.html">← 건물 상세로</a></div>
     </header>
     <div class="status-toolbar">
       <label for="floorChoice">층</label><select id="floorChoice"></select>
