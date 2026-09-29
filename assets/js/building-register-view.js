@@ -25,12 +25,18 @@
       .br-actions button:disabled { opacity:.5; cursor:wait; }
       .br-error { color:#ff9d9d !important; }
       .br-result { margin-top:16px; border-top:1px solid #41516a; padding-top:12px; }
-      .br-result dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0; font-size:.9rem; }
-      .br-result .br-field { display:grid; grid-template-columns:minmax(84px,40%) minmax(0,1fr); gap:6px;
-        padding:10px; border:1px solid #41516a; border-radius:7px; background:#0d1d34; }
-      .br-result dt { color:#b9c5d8; }
-      .br-result dd { margin:0; overflow-wrap:anywhere; }
-      @media(max-width:600px) { .br-result dl { grid-template-columns:1fr; } }
+      .br-result table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:.86rem; }
+      .br-result tr { border-bottom:1px solid #32445d; }
+      .br-result tr:last-child { border-bottom:0; }
+      .br-result th, .br-result td { padding:9px 7px; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+      .br-result th { width:22%; color:#b9c5d8; font-weight:500; }
+      .br-result td { width:28%; color:#f8f3e6; font-weight:650; }
+      .br-result td:nth-child(2) { border-right:1px solid #32445d; }
+      @media(max-width:600px) {
+        .br-result tr { display:grid; grid-template-columns:minmax(100px,38%) minmax(0,1fr); }
+        .br-result th, .br-result td { width:auto; padding:8px 5px; }
+        .br-result td:nth-child(2) { border-right:0; }
+      }
     `;
     document.head.appendChild(style);
     dialog = document.createElement('div');
@@ -41,7 +47,7 @@
       <label for="brAddress">건물 지번주소</label><input id="brAddress" autocomplete="off" placeholder="예: 경기도 파주시 와동동 1456-3">
       <label for="brRoom">호수</label><input id="brRoom" autocomplete="off" placeholder="예: 101">
       <p class="br-error" id="brError" role="alert"></p>
-      <div class="br-result" id="brResult" hidden><dl id="brDetails"></dl><p id="brWarning"></p></div>
+      <div class="br-result" id="brResult" hidden><table id="brDetails" aria-label="건축물대장 조회 결과"><tbody></tbody></table><p id="brWarning"></p></div>
       <div class="br-actions"><button type="button" class="br-close">닫기</button>
         <button type="button" class="br-fetch">정보 조회</button></div>
     </div>`;
@@ -87,18 +93,20 @@
           ['건물 주용도', info.main_purpose || '조회되지 않음'],
           ['건물 구조', info.structure || '조회되지 않음']
         ];
-        const details = dialog.querySelector('#brDetails');
+        const details = dialog.querySelector('#brDetails tbody');
         details.replaceChildren();
-        fields.forEach(([label, value]) => {
-          const dt = document.createElement('dt');
-          const dd = document.createElement('dd');
-          dt.textContent = label;
-          dd.textContent = value;
-          const field = document.createElement('div');
-          field.className = 'br-field';
-          field.append(dt, dd);
-          details.appendChild(field);
-        });
+        for (let index = 0; index < fields.length; index += 2) {
+          const row = document.createElement('tr');
+          fields.slice(index, index + 2).forEach(([label, value]) => {
+            const heading = document.createElement('th');
+            heading.scope = 'row';
+            heading.textContent = label;
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.append(heading, cell);
+          });
+          details.appendChild(row);
+        }
         dialog.querySelector('#brWarning').textContent = info.unit_area_warning
           ? '이 호실의 전유·공용면적을 확인하지 못했습니다. 연면적은 건물 전체 면적이므로 호실 면적으로 사용하지 마세요. 원본 대장과 대조해 주세요.'
           : '전유+공용 합계는 조회된 면적의 합산값입니다. 공용면적이 제공되지 않으면 표시하지 않습니다. 원본 대장과 대조해 주세요.';
