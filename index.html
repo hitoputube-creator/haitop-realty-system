@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>하이탑부동산 매물 목록</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20260929-customer-history-contrast" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260929-customer-history-edit" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/storage.js?v=20260929-customer-history"></script>
   <script src="assets/js/admin-guard.js"></script>
@@ -1126,6 +1126,7 @@ if (tab === "done")       renderDoneList();
         editButton.onclick = () => {
           if (card.querySelector('form')) return;
           editButton.hidden = true;
+          card.classList.add('is-editing');
           const form = document.createElement('form');
           form.className = 'cust-consultation-editor';
           form.innerHTML = `<label>상담 제목<input name="title" type="text"></label>
@@ -1135,7 +1136,7 @@ if (tab === "done")       renderDoneList();
             <div class="cust-consultation-actions"><button type="submit" class="btn btn-primary">상담 저장</button><button type="button" class="btn consult-cancel">취소</button></div>`;
           form.elements.title.value = entry.title || '';
           form.elements.content.value = entry.content || '';
-          form.querySelector('.consult-cancel').onclick = () => { form.remove(); editButton.hidden = false; };
+          form.querySelector('.consult-cancel').onclick = () => { form.remove(); card.classList.remove('is-editing'); editButton.hidden = false; };
           form.onsubmit = async event => {
             event.preventDefault();
             const content = form.elements.content.value.trim();
@@ -1148,7 +1149,7 @@ if (tab === "done")       renderDoneList();
               Object.assign(entry, saved);
               card.querySelector('.cust-consultation-title').textContent = saved.title || '(제목 없음)';
               card.querySelector('.cust-consultation-content').textContent = saved.content;
-              form.remove(); editButton.hidden = false;
+              form.remove(); card.classList.remove('is-editing'); editButton.hidden = false;
               showToast('상담 기록을 저장했습니다. 업무일지에도 반영됩니다.');
               loadCustomers();
             } catch(error) {
