@@ -113,8 +113,13 @@
       const label = document.createElement('strong');
       label.textContent = room.endsWith('호') ? room : room + '호';
       const hint = document.createElement('small');
-      hint.textContent = validPosition(positionOf(unit)) ? businessOf(unit) : '위치 미설정';
+      hint.textContent = businessOf(unit);
       button.append(label, hint);
+      if (!validPosition(positionOf(unit))) {
+        const locationHint = document.createElement('small');
+        locationHint.textContent = '위치 미설정';
+        button.appendChild(locationHint);
+      }
       button.addEventListener('click', () => selectRoom(room));
       list.appendChild(button);
     });
@@ -172,9 +177,9 @@
   }
 
   function changeZoom(delta) {
-    zoom = Math.max(1, Math.min(2.5, zoom + delta));
+    zoom = Math.max(.5, Math.min(2.5, zoom + delta));
     $('planStage').style.width = Math.round(zoom * 100) + '%';
-    $('planStage').style.minWidth = Math.round(900 * zoom) + 'px';
+    $('planStage').style.minWidth = '0';
     $('zoomLabel').textContent = Math.round(zoom * 100) + '%';
   }
 
@@ -255,6 +260,7 @@
       image.alt = `${buildingName} ${floor.floor_number} 평면도`;
       image.onerror = () => message('평면도 이미지를 열지 못했습니다. 이미지 링크를 확인해 주세요.');
       image.src = floor.cloudinary_url;
+      changeZoom(-.25);
       setFloor(keys[0]);
     } catch (error) { message('불러오기 실패: ' + error.message); }
   }
