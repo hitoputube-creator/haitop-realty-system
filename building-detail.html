@@ -64,6 +64,12 @@
     .floor-card:hover { border-color: rgba(212,175,55,0.35); }
     #floorGrid .floor-card-foot { flex-wrap: wrap; justify-content: flex-end; }
     #floorGrid .floor-badge { flex: 1 1 100%; }
+    #floorGrid .floor-card { cursor: grab; }
+    #floorGrid .floor-card:active { cursor: grabbing; }
+    #floorGrid .floor-card.dragging { opacity: .42; border-color: var(--gold); }
+    #floorGrid .floor-card.drop-target { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(216,184,74,.28); }
+    .floor-sort-hint { font-size: .78rem; color: var(--muted); margin: 4px 0 0; }
+    .floor-sort-hint.saving { color: var(--gold); }
     .floor-edit-btn {
       padding: 5px 7px; border: 1px solid rgba(216,184,74,.65); border-radius: 6px;
       color: #f8f3e6; background: rgba(216,184,74,.15); font-size: .72rem;
@@ -444,6 +450,7 @@
       <div class="spinner-sm"></div> 업로드 중…
     </div>
 
+    <p id="floorSortHint" class="floor-sort-hint" aria-live="polite">도면 카드를 원하는 위치로 끌어 놓으면 순서가 저장됩니다.</p>
     <div class="floor-grid" id="floorGrid">
       <div class="empty-state" style="grid-column:1/-1;">등록된 평면도가 없습니다.</div>
     </div>
@@ -607,7 +614,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20260929-floor-replace"></script>
+<script src="assets/js/storage.js?v=20260929-floor-order"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
@@ -878,7 +885,7 @@ function renderFloors(floors) {
 
     const previewHtml = image
       ? `<img class="floor-thumb" src="${esc(url)}" alt="${badge}"
-           loading="lazy"
+           loading="lazy" draggable="false"
            onclick="openLightbox('${esc(url)}','${badge} — ${name}')">`
       : `<div class="floor-pdf" onclick="window.open('${esc(url)}','_blank')">
            <div class="floor-pdf-icon">📄</div>
@@ -886,7 +893,7 @@ function renderFloors(floors) {
          </div>`;
 
     return `
-    <div class="floor-card">
+    <div class="floor-card" data-floor-id="${esc(f.id)}" draggable="true">
       ${previewHtml}
       <div class="floor-card-foot">
         <span class="floor-badge">${badge}</span>
@@ -904,6 +911,61 @@ function renderFloors(floors) {
   el.querySelectorAll('.floor-replacement').forEach(input => {
     input.addEventListener('change', () => replaceFloorFile(input));
   });
+
+  let draggedCard = null;
+  let dropped = false;
+  const cards = [...el.querySelectorAll('.floor-card')];
+  cards.forEach(card => {
+    card.addEventListener('dragstart', event => {
+      draggedCard = card;
+      dropped = false;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', card.dataset.floorId);
+      requestAnimationFrame(() => card.classList.add('dragging'));
+    });
+    card.addEventListener('dragover', event => {
+      if (!draggedCard || card === draggedCard) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      cards.forEach(item => item.classList.remove('drop-target'));
+      card.classList.add('drop-target');
+      const rect = card.getBoundingClientRect();
+      const after = event.clientX > rect.left + rect.width / 2;
+      el.insertBefore(draggedCard, after ? card.nextSibling : card);
+    });
+    card.addEventListener('drop', event => {
+      if (!draggedCard) return;
+      event.preventDefault();
+      dropped = true;
+      cards.forEach(item => item.classList.remove('drop-target'));
+      saveFloorCardOrder(el);
+    });
+    card.addEventListener('dragend', () => {
+      cards.forEach(item => item.classList.remove('dragging', 'drop-target'));
+      draggedCard = null;
+      if (!dropped) renderFloors(floors);
+    });
+  });
+}
+
+async function saveFloorCardOrder(grid) {
+  const hint = document.getElementById('floorSortHint');
+  const ids = [...grid.querySelectorAll('.floor-card')].map(card => card.dataset.floorId);
+  hint.textContent = '순서를 저장하는 중…';
+  hint.classList.add('saving');
+  grid.querySelectorAll('.floor-card').forEach(card => { card.draggable = false; });
+  try {
+    await saveBuildingFloorOrder(buildingId, ids);
+    await loadFloors();
+    showToast('✅ 평면도 순서가 저장되었습니다.');
+    hint.textContent = '도면 카드를 원하는 위치로 끌어 놓으면 순서가 저장됩니다.';
+  } catch (error) {
+    await loadFloors();
+    hint.textContent = '순서 저장에 실패했습니다. 다시 시도해 주세요.';
+    showToast('❌ ' + error.message);
+  } finally {
+    hint.classList.remove('saving');
+  }
 }
 
 async function replaceFloorFile(input) {
