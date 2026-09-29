@@ -10,7 +10,7 @@
       .br-overlay { position:fixed; inset:0; z-index:10000; display:none; align-items:center;
         justify-content:center; padding:18px; background:rgba(0,0,0,.78); }
       .br-overlay.open { display:flex; }
-      .br-box { width:min(100%,570px); max-height:90vh; overflow:auto; padding:22px;
+      .br-box { width:min(100%,760px); max-height:90vh; overflow:auto; padding:22px;
         border:1px solid rgba(216,184,74,.48); border-radius:16px; background:#10213b;
         color:#f8f3e6; box-shadow:0 20px 60px rgba(0,0,0,.55); }
       .br-box h2 { margin:0 0 8px; font-size:1.15rem; }
@@ -25,9 +25,12 @@
       .br-actions button:disabled { opacity:.5; cursor:wait; }
       .br-error { color:#ff9d9d !important; }
       .br-result { margin-top:16px; border-top:1px solid #41516a; padding-top:12px; }
-      .br-result dl { display:grid; grid-template-columns:110px 1fr; gap:9px; margin:0; font-size:.9rem; }
+      .br-result dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0; font-size:.9rem; }
+      .br-result .br-field { display:grid; grid-template-columns:minmax(84px,40%) minmax(0,1fr); gap:6px;
+        padding:10px; border:1px solid #41516a; border-radius:7px; background:#0d1d34; }
       .br-result dt { color:#b9c5d8; }
       .br-result dd { margin:0; overflow-wrap:anywhere; }
+      @media(max-width:600px) { .br-result dl { grid-template-columns:1fr; } }
     `;
     document.head.appendChild(style);
     dialog = document.createElement('div');
@@ -63,14 +66,26 @@
       try {
         const dong = address.match(/(?:^|\s)(\d+)\s*동(?:\s|,|$)/);
         const info = await lookupBuildingRegister(address, { hoNm: room, dongNm: dong ? dong[1] : '' });
+        const area = value => value == null || value === '' ? '조회되지 않음' : `${Number(value).toLocaleString('ko-KR')}㎡`;
+        const date = value => /^\d{8}$/.test(String(value || ''))
+          ? `${String(value).slice(0,4)}.${String(value).slice(4,6)}.${String(value).slice(6)}` : (value || '조회되지 않음');
         const fields = [
+          ['건물명', info.building_name || '조회되지 않음'],
+          ['동명', info.unit_dong_name || info.dong_name || '조회되지 않음'],
           ['호수', room + '호'],
-          [info.unit_area_warning ? '건물 전체 면적' : '호실 전유면적',
-            info.area_m2 != null ? `${Number(info.area_m2).toLocaleString('ko-KR')}㎡` : '조회되지 않음'],
-          ['건물 주용도', info.main_purpose || '—'],
-          ['건물 구조', info.structure || '—'],
-          ['층수', info.floor_info || '—'],
-          ['사용승인일', info.use_apr_day || '—']
+          ['해당 층', info.unit_floor || '조회되지 않음'],
+          ['지상·지하 층수', info.floor_info || '조회되지 않음'],
+          ['대지면적', area(info.land_area_m2)],
+          ['건축면적', area(info.footprint_area_m2)],
+          ['연면적', area(info.total_area_m2)],
+          ['호실 전유면적', info.unit_area_warning ? '조회되지 않음' : area(info.exclusive_area_m2 ?? info.area_m2)],
+          ['호실 공용면적', area(info.common_area_m2)],
+          ['전유+공용 합계', area(info.supply_area_m2)],
+          ['주차대수', info.parking_count == null ? '조회되지 않음' : `${Number(info.parking_count).toLocaleString('ko-KR')}대`],
+          ['사용승인일', date(info.use_apr_day)],
+          ['호실 용도', info.unit_purpose || '조회되지 않음'],
+          ['건물 주용도', info.main_purpose || '조회되지 않음'],
+          ['건물 구조', info.structure || '조회되지 않음']
         ];
         const details = dialog.querySelector('#brDetails');
         details.replaceChildren();
@@ -79,11 +94,14 @@
           const dd = document.createElement('dd');
           dt.textContent = label;
           dd.textContent = value;
-          details.append(dt, dd);
+          const field = document.createElement('div');
+          field.className = 'br-field';
+          field.append(dt, dd);
+          details.appendChild(field);
         });
         dialog.querySelector('#brWarning').textContent = info.unit_area_warning
-          ? '이 호실의 전유면적을 확인하지 못했습니다. 위 면적은 건물 전체 면적이므로 호실 면적으로 사용하지 마세요.'
-          : '공공데이터 조회 정보입니다. 원본 대장과 대조해 주세요.';
+          ? '이 호실의 전유·공용면적을 확인하지 못했습니다. 연면적은 건물 전체 면적이므로 호실 면적으로 사용하지 마세요. 원본 대장과 대조해 주세요.'
+          : '전유+공용 합계는 조회된 면적의 합산값입니다. 공용면적이 제공되지 않으면 표시하지 않습니다. 원본 대장과 대조해 주세요.';
         resultBox.hidden = false;
       } catch (e) {
         error.textContent = e.message || '건축물대장정보 조회에 실패했습니다.';

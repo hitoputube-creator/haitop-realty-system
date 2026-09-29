@@ -173,16 +173,24 @@ async function lookupTitleInfo(codes: Codes, parsed: ParsedAddress) {
 // 서버 파라미터로 넘기지 않고, hoNm으로 좁힌 소수의 결과 안에서 숫자만 비교해
 // 클라이언트에서 매칭한다. 같은 호수가 여러 동에 걸쳐 있는데 동을 특정할 수 없으면
 // (동 정보 없음 + 후보 2개 이상) 안전하게 null을 반환해 표제부 값으로 대체시킨다.
+interface UnitAreaInfo {
+  exclusiveArea: number;
+  commonArea: number | null;
+  unitPurpose: string | null;
+  unitFloor: string | null;
+  unitDong: string | null;
+}
+
 async function lookupExclusiveArea(
   codes: Codes,
   parsed: ParsedAddress,
   hoNm: string,
   dongDigits: string
-): Promise<number | null> {
+): Promise<UnitAreaInfo | null> {
   const MAX_PAGES = 3; // hoNm 서버 필터링 덕분에 보통 1페이지로 충분 — 안전 마진만 확보
   const base = `${bldRgstHubUrl("getBrExposPubuseAreaInfo", codes, parsed)}&hoNm=${encodeURIComponent(hoNm)}`;
 
-  const candidates: any[] = [];
+  const matchingRows: any[] = [];
   for (let pageNo = 1; pageNo <= MAX_PAGES; pageNo++) {
     const url = `${base}&numOfRows=100&pageNo=${pageNo}`;
     const res = await fetchWithRetry(url);
@@ -208,15 +216,14 @@ async function lookupExclusiveArea(
     const items = data?.response?.body?.items?.item;
     const arr: any[] = Array.isArray(items) ? items : items ? [items] : [];
     arr.forEach((it) => {
-      if (String(it.exposPubuseGbCd) === "1" && String(it.hoNm || "").trim() === hoNm) {
-        candidates.push(it);
-      }
+      if (String(it.hoNm || "").trim() === hoNm) matchingRows.push(it);
     });
 
     const totalCount = Number(data?.response?.body?.totalCount || 0);
     if (arr.length === 0 || pageNo * 100 >= totalCount) break;
   }
 
+  const candidates = matchingRows.filter((it) => String(it.exposPubuseGbCd) === "1");
   if (candidates.length === 0) return null;
 
   let picked: any = null;
@@ -232,7 +239,24 @@ async function lookupExclusiveArea(
   if (!picked) return null;
 
   const area = Number(picked.area);
-  return Number.isFinite(area) && area > 0 ? area : null;
+  if (!Number.isFinite(area) || area <= 0) return null;
+  const sameDong = (it: any) => String(it.dongNm || "").replace(/[^0-9]/g, "") ===
+    String(picked.dongNm || "").replace(/[^0-9]/g, "");
+  const commonRows = matchingRows.filter((it) =>
+    String(it.exposPubuseGbCd) === "2" && sameDong(it) &&
+    (!picked.mgmBldrgstPk || !it.mgmBldrgstPk || it.mgmBldrgstPk === picked.mgmBldrgstPk));
+  const commonAreas = commonRows.map((it) => Number(it.area)).filter((n) => Number.isFinite(n) && n > 0);
+  const floorNo = Number(picked.flrNo);
+  const floorGb = String(picked.flrGbCdNm || "");
+  const unitFloor = Number.isFinite(floorNo) && floorNo !== 0
+    ? `${floorGb.includes("지하") || floorNo < 0 ? "지하 " : ""}${Math.abs(floorNo)}층` : null;
+  return {
+    exclusiveArea: area,
+    commonArea: commonAreas.length ? Math.round(commonAreas.reduce((sum, n) => sum + n, 0) * 100) / 100 : null,
+    unitPurpose: picked.mainPurpsCdNm || null,
+    unitFloor,
+    unitDong: picked.dongNm || null,
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -289,13 +313,14 @@ Deno.serve(async (req: Request) => {
 
   let areaM2 = buildingAreaM2;
   let unitAreaWarning = false;
+  let unitInfo: UnitAreaInfo | null = null;
 
   if (hoNm) {
     try {
       const dongDigits = dongNm.replace(/[^0-9]/g, "");
-      const exclusiveArea = await lookupExclusiveArea(codes, parsed, hoNm, dongDigits);
-      if (exclusiveArea != null) {
-        areaM2 = exclusiveArea;
+      unitInfo = await lookupExclusiveArea(codes, parsed, hoNm, dongDigits);
+      if (unitInfo != null) {
+        areaM2 = unitInfo.exclusiveArea;
       } else {
         unitAreaWarning = true;
       }
@@ -311,6 +336,17 @@ Deno.serve(async (req: Request) => {
     ? (ugrndFlrCnt && ugrndFlrCnt !== "0" ? `지상 ${grndFlrCnt}층/지하 ${ugrndFlrCnt}층` : `지상 ${grndFlrCnt}층`)
     : null;
 
+  const numericField = (key: string): number | null => {
+    const value = item[key];
+    if (value === null || value === undefined || value === "") return null;
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 ? number : null;
+  };
+  const parkingFields = ["indrMechUtcnt", "oudrMechUtcnt", "indrAutoUtcnt", "oudrAutoUtcnt"];
+  const parkingNumbers = parkingFields.map(numericField);
+  const parkingCount = parkingNumbers.some((value) => value !== null)
+    ? parkingNumbers.reduce((sum: number, value) => sum + (value || 0), 0) : null;
+
   const detailParts = [
     item.mainPurpsCdNm ? `주용도: ${item.mainPurpsCdNm}` : null,
     floorInfo ? `층수: ${floorInfo}` : null,
@@ -323,6 +359,19 @@ Deno.serve(async (req: Request) => {
 
   return jsonResponse({
     area_m2: areaM2,
+    building_name: item.bldNm || null,
+    dong_name: item.dongNm || null,
+    unit_dong_name: unitInfo?.unitDong || null,
+    unit_floor: unitInfo?.unitFloor || null,
+    exclusive_area_m2: unitInfo?.exclusiveArea || null,
+    common_area_m2: unitInfo?.commonArea ?? null,
+    supply_area_m2: unitInfo?.commonArea != null
+      ? Math.round((unitInfo.exclusiveArea + unitInfo.commonArea) * 100) / 100 : null,
+    total_area_m2: buildingAreaM2,
+    land_area_m2: numericField("platArea"),
+    footprint_area_m2: numericField("archArea"),
+    parking_count: parkingCount,
+    unit_purpose: unitInfo?.unitPurpose || null,
     floor_info: floorInfo,
     main_purpose: item.mainPurpsCdNm || null,
     structure: item.strctCdNm || null,
