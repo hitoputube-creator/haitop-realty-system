@@ -11,6 +11,7 @@
   let buildingName = '';
   let units = [];
   let floorKey = '';
+  let availableFloors = [];
   let selectedRoom = '';
   let detailEditing = false;
   let editing = false;
@@ -43,6 +44,38 @@
     }
     const one = s.match(/(\d+)/);
     return one ? [one[1]] : [];
+  }
+
+  function isImageFloor(item) {
+    return Boolean(item.cloudinary_url) && !/\.pdf(?:\?|$)/i.test(item.cloudinary_url || item.file_name || '');
+  }
+
+  function floorsForBuilding(id) {
+    return availableFloors.filter(item => item.building_id === id);
+  }
+
+  function fillFloorChoice(id) {
+    const select = $('floorChoice');
+    select.replaceChildren();
+    floorsForBuilding(id).forEach(item => {
+      floorKeys(item.floor_number).forEach(key => {
+        const option = document.createElement('option');
+        option.value = item.id + '|' + key;
+        option.textContent = key + '층';
+        option.dataset.floorId = item.id;
+        option.dataset.floorKey = key;
+        select.appendChild(option);
+      });
+    });
+  }
+
+  function navigateTo(nextBuildingId, nextFloor, key) {
+    if (detailEditing && !confirm('저장하지 않은 호실 현황 수정을 취소하고 이동할까요?')) return false;
+    if (changes.size && !confirm('저장하지 않은 위치 변경을 버리고 이동할까요?')) return false;
+    changes.clear();
+    const query = new URLSearchParams({ id: nextBuildingId, floorId: nextFloor.id, floor: key });
+    location.href = 'floor-status.html?' + query.toString();
+    return true;
   }
 
   function sameFloorUnits() {
@@ -292,7 +325,9 @@
     floorKey = key;
     selectedRoom = '';
     detailEditing = false;
-    $('floorChoice').value = key;
+    $('floorChoice').value = floor.id + '|' + key;
+    $('otherBuildings').href = 'floor-status-overview.html?floor=' + encodeURIComponent(key);
+    $('otherBuildings').textContent = `다른 건물 ${key}층 현황`;
     $('planCaption').textContent = `${floor.floor_number} 평면도 · ${key}층 호실 현황. 위치를 지정하지 않은 호실은 오른쪽 목록에 표시됩니다.`;
     render();
     message(sameFloorUnits().length ? `${key}층 호실 ${sameFloorUnits().length}개` : '이 층에 등록된 호실이 없습니다.');
@@ -356,12 +391,21 @@
       const { data, error } = await hitopAuthClient.auth.getSession();
       if (error || !data.session) { hitopRedirectToLogin(); return; }
       hitopApplyAuthHeader(data.session);
-      const [resources, floors] = await Promise.all([getDriveResources(), getBuildingFloors(buildingId)]);
+      const [resources, floors] = await Promise.all([getDriveResources(), getAllBuildingFloors()]);
       building = resources.find(item => item.id === buildingId);
       floor = floors.find(item => item.id === floorId);
       if (!building || !floor) throw new Error('건물 또는 평면도 자료를 찾을 수 없습니다.');
       if (/\.pdf(?:\?|$)/i.test(floor.cloudinary_url || floor.file_name || ''))
         throw new Error('PDF 평면도는 이미지로 등록한 후 현황보기를 사용할 수 있습니다.');
+      availableFloors = floors.filter(item => isImageFloor(item) && floorKeys(item.floor_number).length);
+      resources.filter(item => floorsForBuilding(item.id).length).forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        $('buildingChoice').appendChild(option);
+      });
+      $('buildingChoice').value = buildingId;
+      fillFloorChoice(buildingId);
       buildingName = building.name;
       const addressLine = String(building.memo || '').split('\n').find(line => /^주소\s*:/.test(line));
       address = addressLine ? addressLine.replace(/^주소\s*:/, '').trim() : '';
@@ -372,18 +416,13 @@
       document.title = `하이탑부동산 | ${buildingName} ${floor.floor_number} 현황`;
       const keys = floorKeys(floor.floor_number);
       if (!keys.length) throw new Error('평면도에 층 번호가 없습니다. 층 이름을 확인해 주세요.');
-      keys.forEach(key => {
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = key + '층';
-        $('floorChoice').appendChild(option);
-      });
       const image = $('planImage');
       image.alt = `${buildingName} ${floor.floor_number} 평면도`;
       image.onerror = () => message('평면도 이미지를 열지 못했습니다. 이미지 링크를 확인해 주세요.');
       image.src = floor.cloudinary_url;
       changeZoom(-.25);
-      setFloor(keys[0]);
+      const requestedKey = params.get('floor');
+      setFloor(requestedKey && keys.includes(requestedKey) ? requestedKey : keys[0]);
     } catch (error) { message('불러오기 실패: ' + error.message); }
   }
 
@@ -401,17 +440,31 @@
     message(`${selectedRoom}호 위치를 지정했습니다. 위치 저장을 누르면 반영됩니다.`);
   });
   $('floorChoice').addEventListener('change', event => {
-    const key = event.target.value;
+    const option = event.target.selectedOptions[0];
+    const nextFloor = availableFloors.find(item => item.id === option.dataset.floorId);
+    if (!nextFloor) return;
+    if (nextFloor.id !== floor.id) {
+      if (!navigateTo(buildingId, nextFloor, option.dataset.floorKey)) event.target.value = floor.id + '|' + floorKey;
+      return;
+    }
     if (detailEditing && !confirm('저장하지 않은 호실 현황 수정을 취소하고 층을 바꿀까요?')) {
-      event.target.value = floorKey;
+      event.target.value = floor.id + '|' + floorKey;
       return;
     }
     if (changes.size && !confirm('저장하지 않은 위치 변경을 버리고 층을 바꿀까요?')) {
-      event.target.value = floorKey;
+      event.target.value = floor.id + '|' + floorKey;
       return;
     }
     changes.clear();
-    setFloor(key);
+    setFloor(option.dataset.floorKey);
+  });
+  $('buildingChoice').addEventListener('change', event => {
+    const id = event.target.value;
+    const choices = floorsForBuilding(id);
+    const match = choices.find(item => floorKeys(item.floor_number).includes(floorKey));
+    const target = match || choices[0];
+    if (!target || !navigateTo(id, target, match ? floorKey : floorKeys(target.floor_number)[0]))
+      event.target.value = buildingId;
   });
   $('editPositions').addEventListener('click', () => {
     if (detailEditing) { message('호실 현황 수정을 저장하거나 취소한 후 위치를 설정해 주세요.'); return; }
