@@ -786,9 +786,17 @@ async function getAllBuildingFloors() {
   return await res.json();
 }
 async function getBuildingFloors(buildingId) {
-  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?building_id=eq." + encodeURIComponent(buildingId) + "&order=created_at.asc", { headers });
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?building_id=eq." + encodeURIComponent(buildingId) + "&order=sort_order.asc.nullslast,created_at.asc", { headers });
   if (!res.ok) throw new Error("평면도 목록 조회 실패");
   return await res.json();
+}
+async function saveBuildingFloorOrder(buildingId, floorIds) {
+  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/rpc/reorder_building_floors", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ p_building_id: buildingId, p_floor_ids: floorIds })
+  });
+  if (!res.ok) throw new Error("순서 저장 실패: " + await res.text());
 }
 async function addBuildingFloor(item) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors", {
