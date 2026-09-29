@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <title>하이탑부동산 매물 목록</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20260929-customer-history" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/storage.js?v=20260929-customer-history"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
@@ -178,7 +178,7 @@
         </div>
       </div>
       <div class="field" style="margin-bottom:8px;">
-        <label>메모 (요구사항)</label>
+        <label>고객 기본 메모 (요구사항)</label>
         <textarea id="c_memo" rows="2" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:44px;box-sizing:border-box;"></textarea>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;">
@@ -351,7 +351,7 @@
         </div>
       </div>
       <div class="field" style="margin-bottom:12px;">
-        <label>메모 (요구사항)</label>
+        <label>고객 기본 메모 (요구사항)</label>
         <textarea id="dc_memo" rows="4" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
       </div>
       <div style="text-align:right;">
@@ -616,9 +616,12 @@
       </div>
     </div>
     <div class="field" style="margin-bottom:14px;">
-      <label>메모 (요구사항)</label>
+      <label>고객 기본 메모 (요구사항)</label>
       <textarea id="ce_memo" rows="6" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
     </div>
+    <div class="cust-detail-section-title">상담 기록 · 업무일지</div>
+    <p class="cust-history-help">기본 메모와 별도로 저장된 상담입니다. 각 기록의 ‘상담 수정’에서 변경하고 저장하세요.</p>
+    <div id="custEditHistory" class="cust-history-list"></div>
     <div class="modal-btns">
       <button class="btn" onclick="document.getElementById('customerEditModal').style.display='none'">취소</button>
       <button class="btn btn-primary" id="customerEditSaveBtn">저장</button>
@@ -1079,7 +1082,7 @@ if (tab === "done")       renderDoneList();
       <div class="cust-detail-grid">
         <div><span>연락처</span><strong>${escapeHtmlCust(c.phone) || "—"}</strong></div>
         <div><span>구분</span><strong>${escapeHtmlCust(c.customer_role) || "—"}</strong></div>
-        <div><span>찾는매물</span><strong>${getCustomerTypeLabel(c.property_category)}</strong></div>
+        <div><span>찾는매물</span><strong>${escapeHtmlCust(getCustomerTypeLabel(c.property_category))}</strong></div>
         <div><span>예산</span><strong>${escapeHtmlCust(c.desired_price) || "—"}</strong></div>
         <div><span>관심지역</span><strong>${escapeHtmlCust(c.desired_region) || "—"}</strong></div>
         <div><span>상태</span><strong>${escapeHtmlCust(c.status) || "—"}</strong></div>
@@ -1089,25 +1092,105 @@ if (tab === "done")       renderDoneList();
       <div id="custDetailHistory" class="cust-history-list"><div class="loading" style="padding:14px;"><span class="spinner"></span>불러오는 중...</div></div>
     `;
     document.getElementById("customerDetailModal").style.display = "flex";
+    await renderCustomerHistory(document.getElementById('custDetailHistory'), id);
+  }
+
+  async function renderCustomerHistory(container, customerId) {
+    const request = Symbol();
+    container._historyRequest = request;
+    container.innerHTML = '<div class="loading">상담 기록을 불러오는 중...</div>';
+    const current = () => container.isConnected && container._historyRequest === request;
     try {
-      const history = await getCustomerDiaryHistory(id);
-      const historyEl = document.getElementById("custDetailHistory");
-      if (!historyEl) return;
+      const history = await getCustomerDiaryHistory(customerId);
+      if (!current()) return;
+      container.replaceChildren();
       if (!history.length) {
-        historyEl.innerHTML = `<div style="color:var(--text-muted);font-size:0.8rem;padding:6px 0;">업무일지 이력이 없습니다</div>`;
+        container.textContent = '연결된 상담 기록이 없습니다.';
         return;
       }
-      historyEl.innerHTML = history.map(h => `
-        <a class="cust-history-item" href="${DIARY_APP_URL}?customerId=${encodeURIComponent(id)}" target="_blank" rel="noopener noreferrer">
-          <span class="cust-history-date">${formatDate(h.date)}</span>
-          <span class="cust-history-title">${escapeHtmlCust(h.title) || "(제목 없음)"}</span>
-          <span class="cust-history-snippet">${escapeHtmlCust((h.content || "").slice(0, 40))}</span>
-          <span class="cust-history-writer">${escapeHtmlCust(h.writer) || ""}</span>
-        </a>
-      `).join("");
-    } catch (e) {
-      const historyEl = document.getElementById("custDetailHistory");
-      if (historyEl) historyEl.innerHTML = `<div style="color:var(--red);font-size:0.8rem;">불러오기 실패: ${escapeHtmlCust(e.message)}</div>`;
+      const attachmentSlots = new Map();
+      for (const entry of history) {
+        const card = document.createElement('article');
+        card.className = 'cust-consultation';
+        card.innerHTML = `
+          <div class="cust-consultation-meta">${escapeHtmlCust(formatDate(entry.date))} · ${escapeHtmlCust(entry.writer || '')}</div>
+          <strong class="cust-consultation-title">${escapeHtmlCust(entry.title || '(제목 없음)')}</strong>
+          <div class="cust-consultation-content">${escapeHtmlCust(entry.content || '(내용 없음)')}</div>
+          <div class="cust-consultation-attachments"></div>
+          <div class="cust-consultation-actions">
+            <button type="button" class="btn consult-edit">상담 수정</button>
+            <a class="btn" href="${DIARY_APP_URL}?customerId=${encodeURIComponent(customerId)}" target="_blank" rel="noopener noreferrer">업무일지에서 보기 · 메모 추가</a>
+          </div>`;
+        attachmentSlots.set(entry.id, card.querySelector('.cust-consultation-attachments'));
+        const editButton = card.querySelector('.consult-edit');
+        editButton.onclick = () => {
+          if (card.querySelector('form')) return;
+          editButton.hidden = true;
+          const form = document.createElement('form');
+          form.className = 'cust-consultation-editor';
+          form.innerHTML = `<label>상담 제목<input name="title" type="text"></label>
+            <label>상담 내용<textarea name="content" rows="8" required></textarea></label>
+            <p class="cust-history-help">저장하면 원본 업무일지에도 반영됩니다.</p>
+            <p class="consult-error" role="alert"></p>
+            <div class="cust-consultation-actions"><button type="submit" class="btn btn-primary">상담 저장</button><button type="button" class="btn consult-cancel">취소</button></div>`;
+          form.elements.title.value = entry.title || '';
+          form.elements.content.value = entry.content || '';
+          form.querySelector('.consult-cancel').onclick = () => { form.remove(); editButton.hidden = false; };
+          form.onsubmit = async event => {
+            event.preventDefault();
+            const content = form.elements.content.value.trim();
+            if (!content) { form.querySelector('.consult-error').textContent = '상담 내용을 입력해 주세요.'; return; }
+            const buttons = form.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+            form.querySelector('.consult-error').textContent = '';
+            try {
+              const saved = await updateCustomerDiaryEntry(customerId, entry, {title: form.elements.title.value.trim(), content});
+              Object.assign(entry, saved);
+              card.querySelector('.cust-consultation-title').textContent = saved.title || '(제목 없음)';
+              card.querySelector('.cust-consultation-content').textContent = saved.content;
+              form.remove(); editButton.hidden = false;
+              showToast('상담 기록을 저장했습니다. 업무일지에도 반영됩니다.');
+              loadCustomers();
+            } catch(error) {
+              form.querySelector('.consult-error').textContent = error.message;
+            } finally { buttons.forEach(b => b.disabled = false); }
+          };
+          card.appendChild(form);
+          form.elements.content.focus();
+        };
+        container.appendChild(card);
+      }
+      try {
+        const attachments = await getCustomerDiaryAttachments(history.map(h => h.id));
+        if (!current()) return;
+        for (const row of attachments) {
+          const slot = attachmentSlots.get(row.work_diary_id);
+          if (!slot) continue;
+          const button = document.createElement('button');
+          button.type = 'button'; button.className = 'btn cust-attachment';
+          button.textContent = (String(row.mime_type || '').startsWith('image/') ? '사진 보기: ' : '파일 열기: ') + (row.original_name || '첨부파일');
+          button.onclick = async () => {
+            const popup = window.open('about:blank', '_blank');
+            if (popup) popup.opener = null;
+            button.disabled = true;
+            try {
+              const url = await getCustomerAttachmentUrl(row);
+              if (popup) popup.location.replace(url);
+              else showToast('팝업이 차단되었습니다. 팝업을 허용하고 다시 눌러 주세요.');
+            } catch(error) { if (popup) popup.close(); showToast(error.message); }
+            finally { button.disabled = false; }
+          };
+          slot.appendChild(button);
+        }
+      } catch(error) {
+        if (current()) {
+          const warning = document.createElement('p');
+          warning.className = 'consult-error'; warning.textContent = error.message + ' 상담 기록은 정상 표시됩니다.';
+          container.appendChild(warning);
+        }
+      }
+    } catch(error) {
+      if (current()) container.textContent = '상담 기록 불러오기 실패: ' + error.message;
     }
   }
 
@@ -1241,6 +1324,7 @@ if (tab === "done")       renderDoneList();
     document.getElementById("ce_region").value  = c.desired_region || "";
     document.getElementById("ce_memo").value    = c.memo    || "";
     document.getElementById("customerEditModal").style.display = "flex";
+    renderCustomerHistory(document.getElementById("custEditHistory"), id);
   }
   document.getElementById("customerEditSaveBtn").addEventListener("click", async () => {
     if (!editingCustomerId) return;

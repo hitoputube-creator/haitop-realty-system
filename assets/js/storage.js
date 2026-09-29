@@ -991,11 +991,11 @@ function normalizeCustomerPhone(phone) {
 
 // haitop-realestate-diary와 같은 Supabase 프로젝트를 공유하는 work_diary 테이블에서
 // 업무일지 이력을 읽는다(고객페이지 "업무일지 이력"/최근업무·최근상담일용). 이 앱은
-// work_diary를 저장하지 않고 조회만 한다.
+// 상담 수정은 동일한 work_diary 원본 행의 제목/본문만 갱신한다.
 async function getCustomerDiaryHistory(customerId) {
   const res = await fetchWithTimeout(
     SUPABASE_URL + "/rest/v1/work_diary?customer_id=eq." + encodeURIComponent(customerId) +
-      "&link_key=neq.__daily_schedule__&select=id,date,title,content,writer,created_at&order=date.desc,created_at.desc",
+      "&or=(link_key.is.null,link_key.neq.__daily_schedule__)&select=id,date,title,content,writer,created_at,updated_at&order=date.desc,created_at.desc",
     { headers }
   );
   if (!res.ok) throw new Error("업무일지 이력 조회 실패");
@@ -1009,7 +1009,7 @@ async function getLatestDiaryActivityForCustomers(customerIds) {
   const inList = ids.map(id => encodeURIComponent(id)).join(",");
   const res = await fetchWithTimeout(
     SUPABASE_URL + "/rest/v1/work_diary?customer_id=in.(" + inList + ")" +
-      "&link_key=neq.__daily_schedule__&select=customer_id,date,title,content,created_at&order=date.desc,created_at.desc",
+      "&or=(link_key.is.null,link_key.neq.__daily_schedule__)&select=customer_id,date,title,content,created_at&order=date.desc,created_at.desc",
     { headers }
   );
   if (!res.ok) return {};
@@ -1065,4 +1065,41 @@ async function saveBuildingUnits(localId, name, units) {
     body
   });
   if (!res.ok) throw new Error("호실 저장 실패: " + await res.text());
+}
+
+// 고객 화면과 업무일지는 같은 원본을 사용한다. 다른 필드는 덮어쓰지 않는다.
+async function updateCustomerDiaryEntry(customerId, original, changes) {
+  const params = new URLSearchParams({
+    id: 'eq.' + original.id, customer_id: 'eq.' + customerId,
+    updated_at: original.updated_at ? 'eq.' + original.updated_at : 'is.null',
+    content: original.content == null ? 'is.null' : 'eq.' + original.content,
+    title: original.title == null ? 'is.null' : 'eq.' + original.title,
+    select: 'id,title,content,updated_at'
+  });
+  const res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/work_diary?' + params, {
+    method: 'PATCH', headers: { ...headers, Prefer: 'return=representation' },
+    body: JSON.stringify({ title: changes.title, content: changes.content, updated_at: new Date().toISOString() })
+  });
+  if (!res.ok) throw new Error('상담 저장 실패. 로그인과 수정 권한을 확인해 주세요.');
+  const rows = await res.json();
+  if (rows.length !== 1) throw new Error('다른 화면에서 변경됐거나 수정할 수 없는 기록입니다. 입력 내용을 복사한 뒤 다시 열어 주세요.');
+  return rows[0];
+}
+async function getCustomerDiaryAttachments(diaryIds) {
+  if (!diaryIds.length) return [];
+  const params = new URLSearchParams({
+    work_diary_id: 'in.(' + diaryIds.join(',') + ')',
+    select: 'id,work_diary_id,storage_bucket,storage_path,original_name,mime_type',
+    order: 'created_at.asc'
+  });
+  const res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/crm_attachments?' + params, { headers });
+  if (!res.ok) throw new Error('첨부자료를 불러오지 못했습니다.');
+  return res.json();
+}
+async function getCustomerAttachmentUrl(row) {
+  if (!row.storage_path) throw new Error('첨부파일 경로가 없습니다.');
+  const { data, error } = await hitopAuthClient.storage
+    .from(row.storage_bucket || 'crm-attachments').createSignedUrl(row.storage_path, 120);
+  if (error || !data?.signedUrl) throw new Error('첨부파일을 열 수 없습니다. 로그인과 파일 권한을 확인해 주세요.');
+  return data.signedUrl;
 }
