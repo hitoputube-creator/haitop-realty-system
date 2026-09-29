@@ -166,7 +166,7 @@
     <div class="section-head-row">
       <div class="section-title">🏢 건물 기본 정보</div>
       <div class="overview-actions">
-        <button class="btn" id="registerFillBtn" onclick="fillFromBuildingRegister()">🏢 건축물대장 채우기</button>
+        <button class="btn" id="registerFillBtn" title="건축물대장 항목의 기존 값을 교체합니다. 조회되지 않으면 빈칸으로 둡니다." onclick="fillFromBuildingRegister()">🏢 건축물대장 채우기</button>
         <button class="btn" id="editToggleBtn" onclick="toggleEditMode()">✏️ 수정</button>
       </div>
     </div>
@@ -328,7 +328,7 @@ function formatRegisterArea(value) {
   return `${pyeong.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}평 (${squareMeters.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}㎡)`;
 }
 
-function fillRegisterMemo(raw, candidates, overwriteLabels = []) {
+function fillRegisterMemo(raw, candidates) {
   const marker = raw.indexOf(MEMO_SEP);
   const basic = (marker < 0 ? raw : raw.slice(0, marker)).trimEnd();
   const suffix = marker < 0 ? '' : raw.slice(marker);
@@ -336,14 +336,13 @@ function fillRegisterMemo(raw, candidates, overwriteLabels = []) {
   const filled = [];
 
   Object.entries(candidates).forEach(([label, value]) => {
-    if (!value) return;
     const index = lines.findIndex(line => {
       const colon = line.indexOf(':');
       return colon >= 0 && line.slice(0, colon).trim() === label;
     });
     if (index >= 0) {
       const current = lines[index].slice(lines[index].indexOf(':') + 1).trim();
-      if (current === value || (current && !overwriteLabels.includes(label))) return;
+      if (current === value) return;
       lines[index] = `${label}: ${value}`;
     } else {
       lines.push(`${label}: ${value}`);
@@ -377,30 +376,16 @@ async function fillFromBuildingRegister() {
       '구조': info.structure || '',
       '규모': info.floor_info || ''
     };
-    const previousLand = (parseMemo(buildingData.memo || '').fields['토지면적'] || '').trim();
-    if (/외\s*\d+\s*필지/.test(address) && previousLand && candidates['토지면적']) {
-      const oldNumber = previousLand.match(/[\d,]+(?:\.\d+)?/);
-      const oldPyeong = oldNumber ? Number(oldNumber[0].replace(/,/g, '')) : NaN;
-      const newPyeong = Number(info.land_area_m2) / 3.305785;
-      if (!Number.isFinite(oldPyeong) || Math.abs(oldPyeong - newPyeong) > 0.02) {
-        const applyLand = confirm(
-          '여러 필지 주소입니다. 대표 지번으로 조회된 건축물대장 대지면적이 기존 값과 다릅니다.\n' +
-          '기존: ' + previousLand + '\n조회: ' + candidates['토지면적'] +
-          '\n대장 원본에서 필지 포함 여부를 확인한 뒤 적용하세요. 토지면적을 바꿀까요?'
-        );
-        if (!applyLand) delete candidates['토지면적'];
-      }
-    }
-    const result = fillRegisterMemo(buildingData.memo || '', candidates, ['토지면적', '건축면적']);
+    const result = fillRegisterMemo(buildingData.memo || '', candidates);
     if (!result.filled.length) {
-      showToast('건축물대장에서 새로 반영할 값이 없습니다.', 4000);
+      showToast('이미 건축물대장 값과 같습니다.', 4000);
       return;
     }
     stage = '저장';
     await updateDriveResource(buildingId, { memo: result.memo });
     buildingData.memo = result.memo;
     renderReadOnlyViews();
-    showToast('✅ ' + result.filled.join('·') + ' 항목을 채웠습니다.', 4500);
+    showToast('✅ ' + result.filled.join('·') + ' 항목을 건축물대장 값으로 교체했습니다.', 4500);
   } catch (error) {
     showToast('❌ 건축물대장 ' + stage + ' 실패: ' + error.message, 5000);
   } finally {
