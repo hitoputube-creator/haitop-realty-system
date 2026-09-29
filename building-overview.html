@@ -22,6 +22,8 @@
       gap: 12px; margin-bottom: 20px;
     }
     .section-head-row .section-title { margin-bottom: 0; }
+    .overview-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+    .overview-actions .btn:disabled { opacity:.55; cursor:wait; }
 
     /* ── 상단 요약 카드 3칸 ── */
     .summary-grid {
@@ -110,6 +112,8 @@
     /* ── 모바일 반응형 ── */
     @media (max-width: 720px) {
       .summary-grid { grid-template-columns: 1fr; }
+      .section-head-row { align-items:flex-start; }
+      .overview-actions { justify-content:flex-end; }
       .summary-value { white-space: normal; }
       .info-table { grid-template-columns: minmax(88px,120px) 1fr; }
       .info-table > :nth-last-child(-n+4) { border-bottom: 1px solid var(--border); }
@@ -161,7 +165,10 @@
   <div class="card" style="margin-bottom:20px;">
     <div class="section-head-row">
       <div class="section-title">🏢 건물 기본 정보</div>
-      <button class="btn" id="editToggleBtn" onclick="toggleEditMode()">✏️ 수정</button>
+      <div class="overview-actions">
+        <button class="btn" id="registerFillBtn" onclick="fillFromBuildingRegister()">🏢 건축물대장 빈칸 채우기</button>
+        <button class="btn" id="editToggleBtn" onclick="toggleEditMode()">✏️ 수정</button>
+      </div>
     </div>
     <div class="info-table" id="infoTable"></div>
   </div>
@@ -308,6 +315,75 @@ function populateForm(memo) {
   document.getElementById('ov_extra').value = extra;
 }
 
+// ── 건축물대장 값으로 비어 있는 개요 항목 채우기 ──
+function formatRegisterArea(value) {
+  const squareMeters = Number(value);
+  if (!Number.isFinite(squareMeters) || squareMeters <= 0) return '';
+  const pyeong = squareMeters / 3.305785;
+  return `${pyeong.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}평 (${squareMeters.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}㎡)`;
+}
+
+function fillMissingMemo(raw, candidates) {
+  const marker = raw.indexOf(MEMO_SEP);
+  const basic = (marker < 0 ? raw : raw.slice(0, marker)).trimEnd();
+  const suffix = marker < 0 ? '' : raw.slice(marker);
+  const lines = basic ? basic.split('\n') : [];
+  const filled = [];
+
+  Object.entries(candidates).forEach(([label, value]) => {
+    if (!value) return;
+    const index = lines.findIndex(line => {
+      const colon = line.indexOf(':');
+      return colon >= 0 && line.slice(0, colon).trim() === label;
+    });
+    if (index >= 0) {
+      if (lines[index].slice(lines[index].indexOf(':') + 1).trim()) return;
+      lines[index] = `${label}: ${value}`;
+    } else {
+      lines.push(`${label}: ${value}`);
+    }
+    filled.push(label);
+  });
+
+  return { memo: lines.join('\n') + (suffix ? '\n' + suffix : ''), filled };
+}
+
+async function fillFromBuildingRegister() {
+  if (!buildingData || document.getElementById('editFormCard').style.display !== 'none') return;
+  const address = (parseMemo(buildingData.memo || '').fields['주소'] || '').trim();
+  if (!address) { showToast('주소를 먼저 입력해 주세요.'); return; }
+
+  const button = document.getElementById('registerFillBtn');
+  button.disabled = true;
+  button.textContent = '건축물대장 조회 중…';
+  try {
+    const info = await lookupBuildingRegister(address);
+    const date = String(info.use_apr_day || '');
+    const candidates = {
+      '토지면적': formatRegisterArea(info.land_area_m2),
+      '연면적': formatRegisterArea(info.total_area_m2),
+      '주차대수': info.parking_count == null ? '' : `${Number(info.parking_count).toLocaleString('ko-KR')}대`,
+      '사용승인일': /^\d{8}$/.test(date) ? `${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6)}` : date,
+      '구조': info.structure || '',
+      '규모': info.floor_info || ''
+    };
+    const result = fillMissingMemo(buildingData.memo || '', candidates);
+    if (!result.filled.length) {
+      showToast('조회된 값 중 채울 수 있는 빈 항목이 없습니다.', 4000);
+      return;
+    }
+    await updateDriveResource(buildingId, { memo: result.memo });
+    buildingData.memo = result.memo;
+    renderReadOnlyViews();
+    showToast('✅ ' + result.filled.join('·') + ' 항목을 채웠습니다.', 4500);
+  } catch (error) {
+    showToast('❌ 건축물대장 조회 실패: ' + error.message, 5000);
+  } finally {
+    button.disabled = false;
+    button.textContent = '🏢 건축물대장 빈칸 채우기';
+  }
+}
+
 // ── 읽기전용 뷰 렌더링 ──
 function renderReadOnlyViews() {
   const parsed = parseMemo(buildingData ? buildingData.memo || '' : '');
@@ -344,6 +420,7 @@ function toggleEditMode() {
   if (opening) populateForm(buildingData ? buildingData.memo || '' : '');
   formCard.style.display = opening ? '' : 'none';
   document.getElementById('editToggleBtn').textContent = opening ? '✕ 수정 취소' : '✏️ 수정';
+  document.getElementById('registerFillBtn').disabled = opening;
   if (opening) formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
