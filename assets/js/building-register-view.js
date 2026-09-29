@@ -25,17 +25,14 @@
       .br-actions button:disabled { opacity:.5; cursor:wait; }
       .br-error { color:#ff9d9d !important; }
       .br-result { margin-top:16px; border-top:1px solid #41516a; padding-top:12px; }
-      .br-result table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:.86rem; }
+      .br-result table { width:100%; border-collapse:collapse; font-size:.86rem; }
       .br-result tr { border-bottom:1px solid #32445d; }
-      .br-result tr:last-child { border-bottom:0; }
-      .br-result th, .br-result td { padding:9px 7px; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
-      .br-result th { width:22%; color:#b9c5d8; font-weight:500; }
-      .br-result td { width:28%; color:#f8f3e6; font-weight:650; }
-      .br-result td:nth-child(2) { border-right:1px solid #32445d; }
+      .br-result tr:nth-child(even) { background:rgba(255,255,255,.025); }
+      .br-result th, .br-result td { padding:9px 12px; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+      .br-result th { width:34%; color:#b9c5d8; font-weight:500; }
+      .br-result td { color:#f8f3e6; font-weight:650; }
       @media(max-width:600px) {
-        .br-result tr { display:grid; grid-template-columns:minmax(100px,38%) minmax(0,1fr); }
-        .br-result th, .br-result td { width:auto; padding:8px 5px; }
-        .br-result td:nth-child(2) { border-right:0; }
+        .br-result th, .br-result td { padding:8px 6px; }
       }
     `;
     document.head.appendChild(style);
@@ -72,7 +69,12 @@
       try {
         const dong = address.match(/(?:^|\s)(\d+)\s*동(?:\s|,|$)/);
         const info = await lookupBuildingRegister(address, { hoNm: room, dongNm: dong ? dong[1] : '' });
-        const area = value => value == null || value === '' ? '조회되지 않음' : `${Number(value).toLocaleString('ko-KR')}㎡`;
+        const area = value => {
+          if (value == null || value === '') return '조회되지 않음';
+          const squareMeters = Number(value);
+          if (!Number.isFinite(squareMeters)) return '조회되지 않음';
+          return `${squareMeters.toLocaleString('ko-KR')}㎡ (${(squareMeters / 3.305785).toLocaleString('ko-KR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}평)`;
+        };
         const date = value => /^\d{8}$/.test(String(value || ''))
           ? `${String(value).slice(0,4)}.${String(value).slice(4,6)}.${String(value).slice(6)}` : (value || '조회되지 않음');
         const fields = [
@@ -95,16 +97,14 @@
         ];
         const details = dialog.querySelector('#brDetails tbody');
         details.replaceChildren();
-        for (let index = 0; index < fields.length; index += 2) {
+        for (const [label, value] of fields) {
           const row = document.createElement('tr');
-          fields.slice(index, index + 2).forEach(([label, value]) => {
-            const heading = document.createElement('th');
-            heading.scope = 'row';
-            heading.textContent = label;
-            const cell = document.createElement('td');
-            cell.textContent = value;
-            row.append(heading, cell);
-          });
+          const heading = document.createElement('th');
+          heading.scope = 'row';
+          heading.textContent = label;
+          const cell = document.createElement('td');
+          cell.textContent = value;
+          row.append(heading, cell);
           details.appendChild(row);
         }
         dialog.querySelector('#brWarning').textContent = info.unit_area_warning
