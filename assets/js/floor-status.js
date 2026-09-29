@@ -16,6 +16,7 @@
   let detailEditing = false;
   let editing = false;
   let zoom = 1;
+  const squareMetersPerPyeong = 3.30579;
   const changes = new Map();
 
   function message(text) { $('statusMessage').textContent = text; }
@@ -107,6 +108,13 @@
     return Number.isFinite(n) ? n.toLocaleString('ko-KR') + '만 원' : '—';
   }
 
+  function displayArea(pyeong) {
+    if (pyeong === null || pyeong === undefined || pyeong === '') return '—';
+    const value = Number(pyeong);
+    if (!Number.isFinite(value)) return '—';
+    return `${(value * squareMetersPerPyeong).toLocaleString('ko-KR', { minimumFractionDigits:2, maximumFractionDigits:2 })}㎡ (${value.toLocaleString('ko-KR', { minimumFractionDigits:2, maximumFractionDigits:2 })}평)`;
+  }
+
   function renderPins() {
     const layer = $('planPins');
     layer.replaceChildren();
@@ -166,7 +174,7 @@
     $('roomDetail').appendChild(line);
   }
 
-  const editableFields = ['현업종', '공실여부', '소유주', '연락처', '현_보증금', '현_월세'];
+  const editableFields = ['현업종', '공실여부', '소유주', '연락처', '현_보증금', '현_월세', '전용_평', '분양_평'];
   function editableSnapshot(unit) {
     return editableFields.map(key => unit[key] ?? null);
   }
@@ -193,6 +201,30 @@
     form.appendChild(wrapper);
   }
 
+  function editArea(form, label, name, value) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'status-area-field';
+    const title = document.createElement('span');
+    title.textContent = label;
+    const pair = document.createElement('div');
+    pair.className = 'status-area-pair';
+    const meters = document.createElement('input');
+    meters.type = 'number'; meters.min = '0'; meters.step = '0.01';
+    meters.name = name + '_m2'; meters.placeholder = '㎡'; meters.setAttribute('aria-label', label + ' 제곱미터');
+    const pyeong = document.createElement('input');
+    pyeong.type = 'number'; pyeong.min = '0'; pyeong.step = '0.01';
+    pyeong.name = name; pyeong.placeholder = '평'; pyeong.setAttribute('aria-label', label + ' 평');
+    if (value !== null && value !== undefined && value !== '') {
+      pyeong.value = value;
+      meters.value = (Number(value) * squareMetersPerPyeong).toFixed(2);
+    }
+    meters.addEventListener('input', () => { pyeong.value = meters.value === '' ? '' : (Number(meters.value) / squareMetersPerPyeong).toFixed(2); });
+    pyeong.addEventListener('input', () => { meters.value = pyeong.value === '' ? '' : (Number(pyeong.value) * squareMetersPerPyeong).toFixed(2); });
+    pair.append(meters, pyeong);
+    wrapper.append(title, pair);
+    form.appendChild(wrapper);
+  }
+
   function renderEditForm(unit) {
     const box = $('roomDetail');
     const form = document.createElement('form');
@@ -203,6 +235,8 @@
     editField(form, '연락처', '연락처', unit.연락처);
     editField(form, '현재 보증금 (만원)', '현_보증금', unit.현_보증금);
     editField(form, '현재 월세 (만원)', '현_월세', unit.현_월세);
+    editArea(form, '전용면적', '전용_평', unit.전용_평);
+    editArea(form, '분양면적', '분양_평', unit.분양_평);
     const actions = document.createElement('div');
     actions.className = 'status-edit-actions';
     const save = document.createElement('button');
@@ -227,8 +261,12 @@
       const value = String(data[key] || '').trim();
       if (!value) return null;
       const number = Number(value);
-      if (!Number.isFinite(number) || number < 0) throw new Error('보증금과 월세는 0 이상의 숫자로 입력해 주세요.');
+      if (!Number.isFinite(number) || number < 0) throw new Error('금액과 면적은 0 이상의 숫자로 입력해 주세요.');
       return number;
+    };
+    const area = key => {
+      const number = amount(key);
+      return number === null ? null : Math.round(number * 100) / 100;
     };
     let values;
     try {
@@ -238,7 +276,9 @@
         소유주: data.소유주.trim() || null,
         연락처: data.연락처.trim() || null,
         현_보증금: amount('현_보증금'),
-        현_월세: amount('현_월세')
+        현_월세: amount('현_월세'),
+        전용_평: area('전용_평'),
+        분양_평: area('분양_평')
       };
     } catch (error) { message(error.message); return; }
     saveButton.disabled = true;
@@ -283,6 +323,8 @@
     appendDetail('상태', statusOf(unit));
     appendDetail('소유주', unit.소유주 || '—');
     appendDetail('연락처', unit.연락처 || '—');
+    appendDetail('전용면적', displayArea(unit.전용_평));
+    appendDetail('분양면적', displayArea(unit.분양_평));
     appendDetail('보증금', displayPrice(unit.현_보증금, unit.보증금));
     appendDetail('월세', displayPrice(unit.현_월세, unit.월차임));
     const actions = document.createElement('div');
