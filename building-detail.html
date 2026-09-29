@@ -228,8 +228,8 @@
       font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08);
       background: rgba(0,0,0,0.15);
     }
-    .units-tbl .current-rent-heading { text-align: center; color: var(--gold); }
-    .units-tbl .current-rent-heading small { display: block; color: var(--muted); font-weight: 400; }
+    .unit-current-price { display: inline-flex; align-items: center; gap: 6px; color: var(--gold); font-weight: 700; }
+    .unit-current-tag { color: var(--gold); border: 1px solid rgba(212,175,55,0.5); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; }
     .units-tbl td {
       padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
       color: rgba(255,255,255,0.88); vertical-align: middle;
@@ -488,17 +488,14 @@
       <table class="units-tbl">
         <thead>
           <tr>
-            <th rowspan="2" scope="col">호수</th>
-            <th rowspan="2" scope="col">업종</th>
-            <th rowspan="2" scope="col">소유주</th>
-            <th rowspan="2" scope="col">연락처</th>
-            <th colspan="2" scope="colgroup" class="current-rent-heading">현재 임차가격<small>미입력 시 기존 가격</small></th>
-            <th rowspan="2" scope="col">상태</th>
-            <th rowspan="2" scope="col">매물</th>
-          </tr>
-          <tr>
+            <th>호수</th>
+            <th>업종</th>
+            <th>소유주</th>
+            <th>연락처</th>
             <th>보증금(만)</th>
             <th>월차임(만)</th>
+            <th>상태</th>
+            <th>매물</th>
           </tr>
         </thead>
         <tbody id="unitsTbody"></tbody>
@@ -1027,7 +1024,11 @@ async function deleteBFile(id) {
     const price = effectiveUnitPrice(current, original);
     if (price === null || price === undefined || price === "") return "-";
     const amount = Number(price);
-    return Number.isFinite(amount) ? amount.toLocaleString("ko-KR") : "-";
+    if (!Number.isFinite(amount)) return "-";
+    const text = amount.toLocaleString("ko-KR");
+    return price === current && current !== null && current !== undefined && current !== ""
+      ? `<span class="unit-current-price" title="현재 임차가격">${text}<small class="unit-current-tag">현재</small></span>`
+      : text;
   }
 
   // 호수 -> 층 번호 문자열: 101->1, 201->2, 1001->10, B101->B1
