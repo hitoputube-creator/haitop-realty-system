@@ -143,6 +143,8 @@
     box.appendChild(title);
     appendDetail('업종', businessOf(unit));
     appendDetail('상태', statusOf(unit));
+    appendDetail('소유주', unit.소유주 || '—');
+    appendDetail('연락처', unit.연락처 || '—');
     appendDetail('보증금', displayPrice(unit.현_보증금, unit.보증금));
     appendDetail('월세', displayPrice(unit.현_월세, unit.월차임));
     const button = document.createElement('button');
