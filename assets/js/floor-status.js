@@ -16,6 +16,8 @@
   let detailEditing = false;
   let editing = false;
   let zoom = 1;
+  let pinch = null;
+  let suppressClickUntil = 0;
   const squareMetersPerPyeong = 3.30579;
   const changes = new Map();
 
@@ -385,12 +387,60 @@
     message(sameFloorUnits().length ? `${key}층 호실 ${sameFloorUnits().length}개` : '이 층에 등록된 호실이 없습니다.');
   }
 
-  function changeZoom(delta) {
-    zoom = Math.max(.5, Math.min(2.5, zoom + delta));
+  function setZoom(value) {
+    zoom = Math.max(.5, Math.min(2.5, value));
     $('planStage').style.width = Math.round(zoom * 100) + '%';
     $('planStage').style.minWidth = '0';
     $('zoomLabel').textContent = Math.round(zoom * 100) + '%';
   }
+
+  function changeZoom(delta) { setZoom(zoom + delta); }
+
+  function touchDistance(first, second) {
+    return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+  }
+
+  const planScroll = $('planScroll');
+  planScroll.addEventListener('touchstart', event => {
+    if (event.touches.length !== 2) return;
+    const [first, second] = event.touches;
+    const stage = $('planStage').getBoundingClientRect();
+    const distance = touchDistance(first, second);
+    if (!stage.width || !stage.height || !distance) return;
+    const centerX = (first.clientX + second.clientX) / 2;
+    const centerY = (first.clientY + second.clientY) / 2;
+    pinch = {
+      distance, zoom,
+      x: (centerX - stage.left) / stage.width,
+      y: (centerY - stage.top) / stage.height
+    };
+    suppressClickUntil = Date.now() + 500;
+    event.preventDefault();
+  }, { passive:false });
+  planScroll.addEventListener('touchmove', event => {
+    if (!pinch || event.touches.length !== 2) return;
+    event.preventDefault();
+    const [first, second] = event.touches;
+    setZoom(pinch.zoom * touchDistance(first, second) / pinch.distance);
+    const bounds = planScroll.getBoundingClientRect();
+    const centerX = (first.clientX + second.clientX) / 2;
+    const centerY = (first.clientY + second.clientY) / 2;
+    const stage = $('planStage');
+    planScroll.scrollLeft = pinch.x * stage.offsetWidth - (centerX - bounds.left);
+    planScroll.scrollTop = pinch.y * stage.offsetHeight - (centerY - bounds.top);
+    suppressClickUntil = Date.now() + 500;
+  }, { passive:false });
+  function endPinch(event) {
+    if (event.touches.length < 2) pinch = null;
+  }
+  planScroll.addEventListener('touchend', endPinch);
+  planScroll.addEventListener('touchcancel', endPinch);
+  planScroll.addEventListener('gesturestart', event => event.preventDefault());
+  $('planStage').addEventListener('click', event => {
+    if (Date.now() >= suppressClickUntil) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
 
   async function savePositions() {
     if (!changes.size) { message('저장할 위치 변경이 없습니다.'); return; }
@@ -472,7 +522,7 @@
       image.alt = `${buildingName} ${floor.floor_number} 평면도`;
       image.onerror = () => message('평면도 이미지를 열지 못했습니다. 이미지 링크를 확인해 주세요.');
       image.src = floor.cloudinary_url;
-      changeZoom(-.25);
+      setZoom(window.matchMedia('(max-width:900px)').matches ? 1 : .75);
       const requestedKey = params.get('floor');
       setFloor(requestedKey && keys.includes(requestedKey) ? requestedKey : keys[0]);
     } catch (error) { message('불러오기 실패: ' + error.message); }
