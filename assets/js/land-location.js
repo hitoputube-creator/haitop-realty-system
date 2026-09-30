@@ -100,7 +100,6 @@
       if (view === 'third') {
         if (!b.third) return;
         $('hotspots').appendChild(hotspot(b,b.third[1]/1893*100,b.third[2]/1312*100,false));
-        $('hotspots').appendChild(hotspot(b,b.third[3]/1893*100,b.third[4]/1312*100,true));
       } else $('hotspots').appendChild(hotspot(b,b.overall[0],b.overall[1],false));
     });
     $('blockCount').textContent = visible.length + '개 블럭';
