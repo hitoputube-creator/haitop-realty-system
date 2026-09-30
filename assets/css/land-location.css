@@ -11,3 +11,25 @@
 #mapViewport,#detailDrawing{touch-action:pan-x pan-y;overscroll-behavior:contain}#detailDrawing img{-webkit-user-drag:none;user-select:none}
 
 .parcel-value-pair{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px;border:1px solid var(--line2);border-radius:8px}.parcel-value-pair input{font-variant-numeric:tabular-nums}@media(max-width:480px){.parcel-value-pair{gap:8px;padding:8px}.parcel-value-pair label{font-size:.78rem}}
+
+/* Compact parcel editor and consistent footer controls. */
+#parcelEditor{margin-top:12px;padding-top:12px}
+#parcelFormTitle{margin:0 0 3px;font-size:1rem;color:var(--gold-soft)}
+#parcelFormSubtitle{margin:0 0 8px;font-size:.78rem}
+#parcelSourceDetail{margin:6px 0 10px;font-size:.78rem;line-height:1.4}
+.parcel-fields{gap:8px 12px}
+.parcel-fields label{gap:3px;font-size:.8rem}
+.parcel-manager input,.parcel-manager select{min-height:32px;height:32px;padding:5px 8px;border-radius:4px}
+.parcel-manager textarea{min-height:54px;padding:6px 8px;border-radius:4px;resize:vertical}
+.parcel-value-pair{gap:12px;padding:0;border:0;border-radius:0}
+.parcel-manager input[readonly]{opacity:1;background:transparent;border-color:transparent;border-bottom-color:var(--line2);color:var(--gold-soft)}
+.land-location-page .detail-actions{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:8px;margin-top:12px}
+.land-location-page .detail-actions .btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:34px;padding:6px 12px;font-size:.8rem;line-height:1.3;border:1px solid var(--border-slate);border-radius:5px;background:var(--panel2);color:var(--text-main);text-decoration:none}
+.land-location-page .detail-actions .btn-primary{background:var(--gold);border-color:var(--gold);color:#071625}
+.land-location-page .detail-actions a.btn:visited{color:var(--text-main)}
+.land-location-page .detail-actions a.btn-primary:visited{color:#071625}
+.land-location-page .detail-actions .btn:hover{border-color:var(--gold)}
+.land-location-page .detail-actions .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#parcelDelete{margin-left:auto;color:#ffb3b3;background:transparent}
+.block-footer-actions{padding-top:12px;border-top:1px solid var(--line2)}
+@media(max-width:480px){.parcel-value-pair{padding:0;gap:8px}.parcel-fields{gap:7px 8px}.land-location-page .block-footer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.block-footer-actions #sourceDrawingLink{grid-column:1/-1}.land-location-page .detail-actions .btn{min-height:36px}}
