@@ -6,6 +6,22 @@
   let current = null, rows = [], cells = [], selected = null, stage = null, overlay = null, generation = 0, placing = false, busy = false;
   let sourceMeta = null;
   const fields = ['address','landType','building','area','supplyPrice','auctionPrice','salePrice','owner','contact','note'];
+  const priceFields = ['supplyPrice','auctionPrice','salePrice'];
+  function money(value) { return value == null || value === '' ? '' : Math.round(Number(value)).toLocaleString('ko-KR'); }
+  function readWon(value) { const digits = value.replace(/,/g, '').trim(); return digits === '' ? null : Number(digits); }
+  function formatPriceInput(input) {
+    const before = input.value, cursor = input.selectionStart ?? before.length;
+    const digitsBefore = before.slice(0, cursor).replace(/\D/g, '').length;
+    const digits = before.replace(/\D/g, '');
+    input.value = digits ? money(Number(digits)) : '';
+    let position = 0, count = 0;
+    while (position < input.value.length && count < digitsBefore) {
+      if (/\d/.test(input.value[position])) count++;
+      position++;
+    }
+    input.setSelectionRange(position, position);
+    updateArea();
+  }
   function status(message) { $('parcelStatus').textContent = message; }
   async function request(query, options) {
     const {data, error} = await hitopAuthClient.auth.getSession();
@@ -43,7 +59,7 @@
     const values = {...{landType: current.types?.[0] || 'unknown',building:'unknown'},...row.data};
     const detail=$('parcelSourceDetail'); detail.hidden=!row.source;
     if(row.source) detail.textContent='2021년 9월 원본 · '+row.source.status+'\n건폐율 '+row.source.coverage+'% 이하 · 용적률 '+row.source.floorRatio+'% 이하 · '+row.source.floors+'층 이하'+(row.source.unitPriceWon?' · 단가 '+row.source.unitPriceWon.toLocaleString('ko-KR')+'원/㎡':'')+'\n원본 PDF '+row.sourcePage+'페이지';
-    fields.forEach(name => { $('parcel-' + name).value = values[name] ?? ''; });
+    fields.forEach(name => { $('parcel-' + name).value = priceFields.includes(name) ? money(values[name] == null ? null : Number(values[name]) * 10000) : values[name] ?? ''; });
     updateArea();
     updateParcelLabel();
     $('parcelEditor').hidden = false; $('parcelDelete').hidden = !row.id;
@@ -82,13 +98,17 @@
     $('parcelListEmpty').hidden = !!count;
   }
   function updateArea() {
-    const value = $('parcel-area').value;
-    $('parcelAreaPyeong').textContent = value && Number.isFinite(Number(value)) ? (Number(value) / 3.305785).toFixed(2) + '평' : '';
+    const area = Number($('parcel-area').value), pyeong = area / 3.305785;
+    $('parcelAreaPyeong').value = area > 0 && Number.isFinite(area) ? pyeong.toLocaleString('ko-KR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '';
+    priceFields.forEach(name => {
+      const won = readWon($('parcel-' + name).value);
+      $('parcel-' + name + 'PerPyeong').value = won != null && Number.isFinite(won) && area > 0 ? money(won / pyeong) : '';
+    });
   }
   function appendSourceRow(row){
     const tr=document.createElement('tr');
     const area=row.data.area;const price=row.source?.supplyPriceWon;
-    const values=[parcelLabel(row),row.data.address||'원본 미기재',area==null?'미기재':Number(area).toLocaleString('ko-KR')+'㎡ / '+(Number(area)/3.305785).toFixed(2)+'평',price==null?'추후공급 예정':(price/10000).toLocaleString('ko-KR')+'만원'];
+    const values=[parcelLabel(row),row.data.address||'원본 미기재',area==null?'미기재':Number(area).toLocaleString('ko-KR')+'㎡ / '+(Number(area)/3.305785).toFixed(2)+'평',price==null?'추후공급 예정':money(price)+'원'];
     values.forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td);});
     const td=document.createElement('td');const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent=row.id?'자료 수정':'자료 보기·등록';btn.addEventListener('click',()=>show(row));td.append(btn);tr.append(td);$('parcelSourceBody').append(tr);
   }
@@ -133,7 +153,7 @@
     const run=generation,blockId=current.id;
     const subblock=$('parcelSubblock').value.trim(),parcel=$('parcelNumber').value.trim();
     if(!subblock||!parcel){status('소블럭과 필지번호를 입력해주세요.');return;}
-    const data={};fields.forEach(name=>{const value=$('parcel-'+name).value.trim();data[name]=['area','supplyPrice','auctionPrice','salePrice'].includes(name)?(value===''?null:Number(value)):value;});
+    const data={};fields.forEach(name=>{const value=$('parcel-'+name).value.trim();data[name]=priceFields.includes(name)?(value===''?null:readWon(value)/10000):name==='area'?(value===''?null:Number(value)):value;});
     const body={block_id:blockId,subblock,parcel,x:selected.x,y:selected.y,data,updated_at:new Date().toISOString()};
     busy=true;$('parcelSave').disabled=true;status('저장 중입니다.');
     try{
@@ -153,6 +173,7 @@
   $('parcelAdd').addEventListener('click',()=>{if(busy)return;placing=!placing;$('parcelAdd').setAttribute('aria-pressed',String(placing));status(placing?'도면에서 등록할 필지 위치를 눌러주세요.':'위치 지정을 취소했습니다.');});
   $('parcelSubblockFilter').addEventListener('change',draw);
   ['parcelSubblock','parcelNumber'].forEach(id=>$(id).addEventListener('input',updateParcelLabel));
+  priceFields.forEach(name=>$('parcel-'+name).addEventListener('input',event=>formatPriceInput(event.target)));
   $('parcel-area').addEventListener('input',updateArea);
   ['parcelBuildingFilter','parcelTypeFilter'].forEach(id=>$(id).addEventListener('change',draw));
   window.HitopLandParcels={open,close(){generation++;current=null;rows=[];cells=[];sourceMeta=null;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelManager').hidden=true;$('parcelEditor').hidden=true;}};
