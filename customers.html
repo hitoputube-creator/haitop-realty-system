@@ -32,6 +32,7 @@
     .customer-navigation button{min-height:44px;font-size:.9rem}
     a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
     @media(max-width:640px){.customer-navigation{width:100%;margin:12px 0 0}.customer-navigation .return-main{flex:1;justify-content:center}}
+    @media(min-width:641px){.cust-table-head,.cust-row{grid-template-columns:1.15fr 1.2fr 1.35fr .9fr minmax(210px,1.35fr)}}
   </style>
 </head>
 <body>
@@ -121,7 +122,7 @@
       </div>
       <div id="customerTableWrap" class="cust-table-wrap">
         <div class="cust-table-head">
-          <span>고객명</span><span>연락처</span><span>예산</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
+          <span>고객명</span><span>연락처</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
         </div>
         <div id="customerContainer"></div>
       </div>
@@ -296,7 +297,6 @@
       row.innerHTML = `
         <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}</span>
         <span class="cust-cell" data-label="연락처">${c.phone ? `<a class="cust-phone-link" href="tel:${escapeHtmlCust(c.phone)}" onclick="event.stopPropagation()">📞 ${escapeHtmlCust(c.phone)}</a>` : "—"}</span>
-        <span class="cust-cell" data-label="예산">${escapeHtmlCust(c.desired_price) || "—"}</span>
         <span class="cust-cell" data-label="최근업무">${escapeHtmlCust(lastWork)}</span>
         <span class="cust-cell" data-label="최근상담일">${lastDate}</span>
         <span class="cust-cell cust-cell-actions" data-label="관리">
