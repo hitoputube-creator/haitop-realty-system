@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>하이탑부동산 | 전체 고객관리</title>
+  <link rel="stylesheet" href="assets/css/style.css?v=20260929-customer-history-edit">
+  <script src="assets/js/storage.js?v=20260929-customer-history"></script>
+  <script src="assets/js/admin-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <style>
+    /* ── 고객 목록: 관리 버튼 4칸 세그먼트 색상 (상세·수정·삭제·일지) ── */
+    .cust-act-detail { background:transparent; color:var(--blue); }
+    .cust-act-detail:hover { background:rgba(95,159,216,0.18); }
+    .cust-act-edit { background:transparent; color:var(--gold); }
+    .cust-act-edit:hover { background:rgba(216,184,74,0.18); }
+    .cust-act-delete { background:transparent; color:var(--red); }
+    .cust-act-delete:hover { background:rgba(224,82,82,0.18); }
+    .cust-act-diary { background:transparent; color:#2dd4bf; }
+    .cust-act-diary:hover { background:rgba(45,212,191,0.18); }
+    /* ── 고객 목록: 연락처를 박스 없는 텍스트로 표시 ── */
+    .cust-phone-link { display:inline-flex; align-items:center; gap:5px; color:var(--text-main); text-decoration:none; background:none; border:none; padding:0; }
+    .cust-phone-link:hover { color:var(--gold-soft); text-decoration:underline; }
+
+    .customer-page-heading{margin:22px 0 18px}
+    .customer-page-heading h1{font-size:1.5rem;margin:0;color:var(--text-main)}
+    .customer-page-heading p{font-size:1rem;margin:6px 0 0;color:var(--text-muted)}
+    .customer-navigation{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto}
+    .customer-navigation a{text-decoration:none;display:inline-flex;align-items:center;min-height:44px;font-size:.95rem}
+    .customer-navigation .return-main{background:var(--gold);color:var(--bg-main);font-weight:700}
+    .customer-navigation button{min-height:44px;font-size:.9rem}
+    a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+    @media(max-width:640px){.customer-navigation{width:100%;margin:12px 0 0}.customer-navigation .return-main{flex:1;justify-content:center}}
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <div class="logo-icon" aria-hidden="true"></div>
+    <div class="logo-text"><div class="logo-main">하이탑부동산 고객관리</div><div class="logo-sub">고객 정보 · 상담 기록</div></div>
+    <nav class="customer-navigation" aria-label="고객관리 이동">
+      <a class="btn return-main" href="property-main.html">매물관리 메인으로</a>
+      <button class="btn btn-ghost" type="button" onclick="hitopAdminLogout()">로그아웃</button>
+    </nav>
+  </header>
+  <div class="header-line"></div>
+  <main>
+    <div class="customer-page-heading"><h1>전체 고객관리</h1><p>고객 정보와 업무일지 상담 기록을 확인하세요.</p></div>
+  <!-- ===== 고객관리 탭 ===== -->
+  <div id="tabCustomer">
+
+    <!-- ⚡ 빠른 고객등록 (기본 숨김 · '+ 고객 등록' 버튼으로 열고 닫음) -->
+    <div class="quick-card quick-card-compact" id="customerQuickCard" style="display:none;">
+      <div class="quick-card-head">
+        <div>
+          <div class="quick-title">👥 빠른 고객등록</div>
+          <div class="quick-sub">상담 직후 고객 정보를 빠르게 기록하세요</div>
+        </div>
+      </div>
+      <div class="cust-form-grid">
+        <div class="field">
+          <label>이름</label>
+          <input id="c_name" type="text" placeholder="고객 이름" />
+        </div>
+        <div class="field">
+          <label>연락처</label>
+          <input id="c_contact" type="tel" placeholder="010-0000-0000" />
+        </div>
+        <div class="field">
+          <label>구분</label>
+          <select id="c_role">
+            <option value="">미정</option>
+            <option value="매수">매수</option>
+            <option value="임차">임차</option>
+            <option value="매도">매도</option>
+            <option value="임대">임대</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>찾는 매물유형</label>
+          <select id="c_type">
+            <option value="">미정</option>
+            <option value="공장창고">공장창고</option>
+            <option value="상가사무실">상가사무실</option>
+            <option value="토지">토지</option>
+            <option value="주거용">주거용</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>예산</label>
+          <input id="c_budget" type="text" placeholder="예) 5억 이하, 월세 200 이하" />
+        </div>
+        <div class="field">
+          <label>관심지역</label>
+          <input id="c_region" type="text" placeholder="예) 운정역 근처" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label>고객 기본 메모 (요구사항)</label>
+        <textarea id="c_memo" rows="2" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:44px;box-sizing:border-box;"></textarea>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;">
+        <button class="btn btn-ghost" id="customerCancelBtn">취소</button>
+        <button class="btn btn-primary" id="customerSaveBtn">💾 고객 저장</button>
+      </div>
+    </div>
+
+    <!-- 고객 목록 -->
+    <section class="card">
+      <div class="card-title" style="flex-wrap:wrap;row-gap:10px;">
+        <span>고객 목록 <span id="customerCountBadge" style="font-size:0.95rem;color:var(--text-muted);"></span></span>
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:220px;max-width:440px;">
+          <div class="field" style="margin:0;flex:1;min-width:0;">
+            <input id="customerSearchInput" type="text" placeholder="🔍 이름, 연락처, 메모 검색..." />
+          </div>
+          <button class="btn btn-primary" id="customerAddToggleBtn" style="white-space:nowrap;flex-shrink:0;">+ 고객 등록</button>
+        </div>
+      </div>
+      <div id="customerTableWrap" class="cust-table-wrap">
+        <div class="cust-table-head">
+          <span>고객명</span><span>연락처</span><span>예산</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
+        </div>
+        <div id="customerContainer"></div>
+      </div>
+      <div id="customerEmpty" style="display:none;font-size:1rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+        등록된 고객이 없습니다.
+      </div>
+      <div id="customerPagination" class="pagination"></div>
+    </section>
+
+  </div>
+
+  <!-- 고객 상세 모달 -->
+  <div id="customerDetailModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:480px;">
+      <div class="modal-title" id="custDetailTitle">고객 상세</div>
+      <div id="custDetailBody"></div>
+      <div class="modal-btns">
+        <button class="btn" onclick="document.getElementById('customerDetailModal').style.display='none'">닫기</button>
+      </div>
+    </div>
+  </div>
+
+
+  </main>
+</div>
+<!-- ✏️ 고객 수정 모달 -->
+<div id="customerEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-title">✏️ 고객 수정</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>이름</label>
+        <input id="ce_name" type="text" placeholder="고객 이름" />
+      </div>
+      <div class="field">
+        <label>연락처</label>
+        <input id="ce_contact" type="tel" placeholder="010-0000-0000" />
+      </div>
+      <div class="field">
+        <label>구분</label>
+        <select id="ce_role">
+          <option value="">미정</option>
+          <option value="매수">매수</option>
+          <option value="임차">임차</option>
+          <option value="매도">매도</option>
+          <option value="임대">임대</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>찾는 매물유형</label>
+        <select id="ce_type">
+          <option value="">미정</option>
+          <option value="공장창고">공장창고</option>
+          <option value="상가사무실">상가사무실</option>
+          <option value="토지">토지</option>
+          <option value="주거용">주거용</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>예산</label>
+        <input id="ce_budget" type="text" placeholder="예) 5억 이하, 월세 200 이하" />
+      </div>
+      <div class="field">
+        <label>관심지역</label>
+        <input id="ce_region" type="text" placeholder="예) 운정역 근처" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>고객 기본 메모 (요구사항)</label>
+      <textarea id="ce_memo" rows="6" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
+    </div>
+    <div class="cust-detail-section-title">상담 기록 · 업무일지</div>
+    <p class="cust-history-help">기본 메모와 별도로 저장된 상담입니다. 각 기록의 ‘상담 수정’에서 변경하고 저장하세요.</p>
+    <div id="custEditHistory" class="cust-history-list"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('customerEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="customerEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="toast" role="status"></div>
+<script>
+  function showToast(msg, duration = 2000) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), duration);
+  }
+  function formatDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.getFullYear() + "." + String(d.getMonth()+1).padStart(2,"0") + "." + String(d.getDate()).padStart(2,"0");
+  }
+  // ===== 공통 페이지네이션 헬퍼 =====
+  function _makePagination(elId, total, perPage, curPage, cb) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.innerHTML = "";
+    const totalPages = Math.ceil(total / perPage);
+    if (totalPages <= 1) return;
+    const prev = document.createElement("button");
+    prev.className = "page-btn" + (curPage === 1 ? " disabled" : "");
+    prev.textContent = "‹ 이전";
+    prev.onclick = () => { if (curPage > 1) cb(curPage - 1); };
+    el.appendChild(prev);
+    const info = document.createElement("span");
+    info.className = "page-info";
+    info.textContent = `${curPage} / ${totalPages}`;
+    el.appendChild(info);
+    const next = document.createElement("button");
+    next.className = "page-btn" + (curPage === totalPages ? " disabled" : "");
+    next.textContent = "다음 ›";
+    next.onclick = () => { if (curPage < totalPages) cb(curPage + 1); };
+    el.appendChild(next);
+  }
+
+
+  // ===== 고객관리 =====
+  let allCustomers = [];
+  let customerPage = 1;
+  const CUST_PER_PAGE = 10;
+  let customerSearch = "";
+
+  // 레거시 매물유형 코드(shop/officetel/...)와 새 한글 값(상가/사무실 등)을 모두 그대로 보여준다.
+  const LEGACY_TYPE_LABEL = { shop:"상가/사무실", officetel:"오피스텔", land:"토지", factory:"공장/창고", bizcenter:"지식산업센터" };
+  function getCustomerTypeLabel(type) {
+    if (!type) return "—";
+    return LEGACY_TYPE_LABEL[type] || type;
+  }
+
+  let customerDiaryActivity = {}; // { customerId: {date, title, content} }
+
+  function escapeHtmlCust(v) {
+    return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function renderCustomers() {
+    const container = document.getElementById("customerContainer");
+    const empty = document.getElementById("customerEmpty");
+    const badge = document.getElementById("customerCountBadge");
+    container.innerHTML = "";
+
+    let filtered = allCustomers.filter(c => c.status !== "계약완료");
+    if (customerSearch) {
+      const kw = customerSearch.toLowerCase();
+      filtered = filtered.filter(c =>
+        [c.name, c.phone, c.memo, c.desired_price, c.desired_region, c.customer_role].join(" ").toLowerCase().includes(kw)
+      );
+    }
+
+    badge.textContent = filtered.length ? `(${filtered.length}명)` : "";
+
+    if (!filtered.length) {
+      empty.style.display = "block";
+      document.getElementById("customerPagination").innerHTML = "";
+      return;
+    }
+    empty.style.display = "none";
+
+    const custStart = (customerPage - 1) * CUST_PER_PAGE;
+    const custPageItems = filtered.slice(custStart, custStart + CUST_PER_PAGE);
+    custPageItems.forEach(c => {
+      const row = document.createElement("div");
+      row.className = "cust-row";
+      const activity = customerDiaryActivity[c.id];
+      const lastWork = activity ? (activity.title || (activity.content || "").slice(0, 24)) : "—";
+      const lastDate = activity && activity.date ? formatDate(activity.date) : "—";
+
+      row.innerHTML = `
+        <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}</span>
+        <span class="cust-cell" data-label="연락처">${c.phone ? `<a class="cust-phone-link" href="tel:${escapeHtmlCust(c.phone)}" onclick="event.stopPropagation()">📞 ${escapeHtmlCust(c.phone)}</a>` : "—"}</span>
+        <span class="cust-cell" data-label="예산">${escapeHtmlCust(c.desired_price) || "—"}</span>
+        <span class="cust-cell" data-label="최근업무">${escapeHtmlCust(lastWork)}</span>
+        <span class="cust-cell" data-label="최근상담일">${lastDate}</span>
+        <span class="cust-cell cust-cell-actions" data-label="관리">
+          <button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
+          <button class="btn cust-act-edit" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">수정</button>
+          <button class="btn cust-act-delete" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
+          <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">일지</button>
+        </span>
+      `;
+      container.appendChild(row);
+    });
+    _makePagination("customerPagination", filtered.length, CUST_PER_PAGE, customerPage, (p) => { customerPage = p; renderCustomers(); });
+  }
+
+  const DIARY_APP_URL = "https://haitop-realestate-diary.vercel.app/";
+
+  function openCustomerDiary(id) {
+    window.open(DIARY_APP_URL + "?customerId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");
+  }
+
+  async function openCustomerDetail(id) {
+    const c = allCustomers.find(x => x.id === id) || await getCustomerById(id);
+    if (!c) { showToast("고객 정보를 찾을 수 없습니다"); return; }
+    document.getElementById("custDetailTitle").textContent = `👤 ${c.name || "(이름 미입력)"}`;
+    const body = document.getElementById("custDetailBody");
+    body.innerHTML = `
+      <div class="cust-detail-grid">
+        <div><span>연락처</span><strong>${escapeHtmlCust(c.phone) || "—"}</strong></div>
+        <div><span>구분</span><strong>${escapeHtmlCust(c.customer_role) || "—"}</strong></div>
+        <div><span>찾는매물</span><strong>${escapeHtmlCust(getCustomerTypeLabel(c.property_category))}</strong></div>
+        <div><span>예산</span><strong>${escapeHtmlCust(c.desired_price) || "—"}</strong></div>
+        <div><span>관심지역</span><strong>${escapeHtmlCust(c.desired_region) || "—"}</strong></div>
+        <div><span>상태</span><strong>${escapeHtmlCust(c.status) || "—"}</strong></div>
+      </div>
+      ${c.memo ? `<div class="cust-detail-memo">📝 ${escapeHtmlCust(c.memo)}</div>` : ""}
+      <div class="cust-detail-section-title">업무일지 이력</div>
+      <div id="custDetailHistory" class="cust-history-list"><div class="loading" style="padding:14px;"><span class="spinner"></span>불러오는 중...</div></div>
+    `;
+    document.getElementById("customerDetailModal").style.display = "flex";
+    await renderCustomerHistory(document.getElementById('custDetailHistory'), id);
+  }
+
+  async function renderCustomerHistory(container, customerId) {
+    const request = Symbol();
+    container._historyRequest = request;
+    container.innerHTML = '<div class="loading">상담 기록을 불러오는 중...</div>';
+    const current = () => container.isConnected && container._historyRequest === request;
+    try {
+      const history = await getCustomerDiaryHistory(customerId);
+      if (!current()) return;
+      container.replaceChildren();
+      if (!history.length) {
+        container.textContent = '연결된 상담 기록이 없습니다.';
+        return;
+      }
+      const attachmentSlots = new Map();
+      for (const entry of history) {
+        const card = document.createElement('article');
+        card.className = 'cust-consultation';
+        card.innerHTML = `
+          <div class="cust-consultation-meta">${escapeHtmlCust(formatDate(entry.date))} · ${escapeHtmlCust(entry.writer || '')}</div>
+          <strong class="cust-consultation-title">${escapeHtmlCust(entry.title || '(제목 없음)')}</strong>
+          <div class="cust-consultation-content">${escapeHtmlCust(entry.content || '(내용 없음)')}</div>
+          <div class="cust-consultation-attachments"></div>
+          <div class="cust-consultation-actions">
+            <button type="button" class="btn consult-edit">상담 수정</button>
+            <a class="btn" href="${DIARY_APP_URL}?customerId=${encodeURIComponent(customerId)}" target="_blank" rel="noopener noreferrer">업무일지에서 보기 · 메모 추가</a>
+          </div>`;
+        attachmentSlots.set(entry.id, card.querySelector('.cust-consultation-attachments'));
+        const editButton = card.querySelector('.consult-edit');
+        editButton.onclick = () => {
+          if (card.querySelector('form')) return;
+          editButton.hidden = true;
+          card.classList.add('is-editing');
+          const form = document.createElement('form');
+          form.className = 'cust-consultation-editor';
+          form.innerHTML = `<label>상담 제목<input name="title" type="text"></label>
+            <label>상담 내용<textarea name="content" rows="8" required></textarea></label>
+            <p class="cust-history-help">저장하면 원본 업무일지에도 반영됩니다.</p>
+            <p class="consult-error" role="alert"></p>
+            <div class="cust-consultation-actions"><button type="submit" class="btn btn-primary">상담 저장</button><button type="button" class="btn consult-cancel">취소</button></div>`;
+          form.elements.title.value = entry.title || '';
+          form.elements.content.value = entry.content || '';
+          form.querySelector('.consult-cancel').onclick = () => { form.remove(); card.classList.remove('is-editing'); editButton.hidden = false; };
+          form.onsubmit = async event => {
+            event.preventDefault();
+            const content = form.elements.content.value.trim();
+            if (!content) { form.querySelector('.consult-error').textContent = '상담 내용을 입력해 주세요.'; return; }
+            const buttons = form.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+            form.querySelector('.consult-error').textContent = '';
+            try {
+              const saved = await updateCustomerDiaryEntry(customerId, entry, {title: form.elements.title.value.trim(), content});
+              Object.assign(entry, saved);
+              card.querySelector('.cust-consultation-title').textContent = saved.title || '(제목 없음)';
+              card.querySelector('.cust-consultation-content').textContent = saved.content;
+              form.remove(); card.classList.remove('is-editing'); editButton.hidden = false;
+              showToast('상담 기록을 저장했습니다. 업무일지에도 반영됩니다.');
+              loadCustomers();
+            } catch(error) {
+              form.querySelector('.consult-error').textContent = error.message;
+            } finally { buttons.forEach(b => b.disabled = false); }
+          };
+          card.appendChild(form);
+          form.elements.content.focus();
+        };
+        container.appendChild(card);
+      }
+      try {
+        const attachments = await getCustomerDiaryAttachments(history.map(h => h.id));
+        if (!current()) return;
+        for (const row of attachments) {
+          const slot = attachmentSlots.get(row.work_diary_id);
+          if (!slot) continue;
+          const button = document.createElement('button');
+          button.type = 'button'; button.className = 'btn cust-attachment';
+          button.textContent = (String(row.mime_type || '').startsWith('image/') ? '사진 보기: ' : '파일 열기: ') + (row.original_name || '첨부파일');
+          button.onclick = async () => {
+            const popup = window.open('about:blank', '_blank');
+            if (popup) popup.opener = null;
+            button.disabled = true;
+            try {
+              const url = await getCustomerAttachmentUrl(row);
+              if (popup) popup.location.replace(url);
+              else showToast('팝업이 차단되었습니다. 팝업을 허용하고 다시 눌러 주세요.');
+            } catch(error) { if (popup) popup.close(); showToast(error.message); }
+            finally { button.disabled = false; }
+          };
+          slot.appendChild(button);
+        }
+      } catch(error) {
+        if (current()) {
+          const warning = document.createElement('p');
+          warning.className = 'consult-error'; warning.textContent = error.message + ' 상담 기록은 정상 표시됩니다.';
+          container.appendChild(warning);
+        }
+      }
+    } catch(error) {
+      if (current()) container.textContent = '상담 기록 불러오기 실패: ' + error.message;
+    }
+  }
+
+  async function handleDeleteCustomer(id) {
+    if (!confirm("고객을 삭제하시겠습니까?")) return;
+    try {
+      await deleteCustomer(id);
+      showToast("🗑 삭제됨");
+      await loadCustomers();
+    } catch(e) {
+      showToast("❌ 오류: " + e.message);
+    }
+  }
+
+  let editingCustomerId = null;
+  function openCustomerEdit(id) {
+    const c = allCustomers.find(x => x.id === id);
+    if (!c) return;
+    editingCustomerId = id;
+    document.getElementById("ce_name").value    = c.name    || "";
+    document.getElementById("ce_contact").value = c.phone   || "";
+    document.getElementById("ce_role").value    = c.customer_role || "";
+    document.getElementById("ce_type").value    = c.property_category || "";
+    document.getElementById("ce_budget").value  = c.desired_price || "";
+    document.getElementById("ce_region").value  = c.desired_region || "";
+    document.getElementById("ce_memo").value    = c.memo    || "";
+    document.getElementById("customerEditModal").style.display = "flex";
+    renderCustomerHistory(document.getElementById("custEditHistory"), id);
+  }
+  document.getElementById("customerEditSaveBtn").addEventListener("click", async () => {
+    if (!editingCustomerId) return;
+    const btn = document.getElementById("customerEditSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+    try {
+      const phone = document.getElementById("ce_contact").value.trim();
+      await updateCustomer(editingCustomerId, {
+        name:              document.getElementById("ce_name").value.trim(),
+        phone:             phone,
+        phone_normalized:  normalizeCustomerPhone(phone),
+        customer_role:     document.getElementById("ce_role").value || null,
+        property_category: document.getElementById("ce_type").value || null,
+        desired_price:     document.getElementById("ce_budget").value.trim() || null,
+        desired_region:    document.getElementById("ce_region").value.trim() || null,
+        memo:              document.getElementById("ce_memo").value.trim()
+      });
+      document.getElementById("customerEditModal").style.display = "none";
+      showToast("✅ 수정 완료!");
+      await loadCustomers();
+    } catch(e) { showToast("❌ 오류: " + e.message); }
+    finally { btn.disabled = false; btn.textContent = "저장"; }
+  });
+
+  // ⚡ 빠른 고객등록 카드 열기/닫기
+  function resetCustomerQuickForm() {
+    ["c_name","c_contact","c_budget","c_region","c_memo"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("c_type").value = "";
+    document.getElementById("c_role").value = "";
+  }
+  function closeCustomerQuickCard() {
+    document.getElementById("customerQuickCard").style.display = "none";
+    document.getElementById("customerAddToggleBtn").textContent = "+ 고객 등록";
+  }
+  document.getElementById("customerAddToggleBtn").addEventListener("click", () => {
+    const card = document.getElementById("customerQuickCard");
+    const willOpen = card.style.display === "none";
+    card.style.display = willOpen ? "" : "none";
+    document.getElementById("customerAddToggleBtn").textContent = willOpen ? "✕ 닫기" : "+ 고객 등록";
+    if (willOpen) document.getElementById("c_name").focus();
+  });
+  document.getElementById("customerCancelBtn").addEventListener("click", () => {
+    resetCustomerQuickForm();
+    closeCustomerQuickCard();
+  });
+
+  document.getElementById("customerSaveBtn").addEventListener("click", async () => {
+    const name    = document.getElementById("c_name").value.trim();
+    const phone   = document.getElementById("c_contact").value.trim();
+    const role    = document.getElementById("c_role").value;
+    const type    = document.getElementById("c_type").value;
+    const budget  = document.getElementById("c_budget").value.trim();
+    const region  = document.getElementById("c_region").value.trim();
+    const memo    = document.getElementById("c_memo").value.trim();
+
+    if (!name && !phone) {
+      showToast("이름 또는 연락처 중 하나는 입력해주세요");
+      return;
+    }
+
+    const btn = document.getElementById("customerSaveBtn");
+    btn.disabled = true; btn.textContent = "저장 중...";
+
+    try {
+      // 같은 연락처의 고객이 이미 있으면 새로 만들지 않고 그 고객을 그대로 쓴다
+      // (haitop-realestate-diary의 resolveOrCreateCustomer와 동일한 dedup 기준: phone_normalized).
+      const digits = normalizeCustomerPhone(phone);
+      let existing = null;
+      if (digits) existing = allCustomers.find(c => c.phone_normalized === digits);
+      if (existing) {
+        showToast(`이미 등록된 고객입니다: ${existing.name || existing.phone} (기존 정보 유지)`);
+      } else {
+        await addCustomer({
+          customer_code: generateCustomerCode(),
+          name, phone, phone_normalized: digits,
+          customer_role: role || null,
+          property_category: type || null,
+          desired_price: budget || null,
+          desired_region: region || null,
+          memo,
+          status: "신규"
+        });
+        showToast("✅ 고객 저장완료!");
+      }
+      resetCustomerQuickForm();
+      closeCustomerQuickCard();
+      await loadCustomers();
+    } catch(e) {
+      showToast("❌ 저장 실패: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "💾 고객 저장";
+    }
+  });
+
+  document.getElementById("customerSearchInput").addEventListener("input", (e) => {
+    customerSearch = e.target.value.trim();
+    customerPage = 1;
+    renderCustomers();
+  });
+
+  async function loadCustomers() {
+    const container = document.getElementById("customerContainer");
+    container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
+    try {
+      allCustomers = await getCustomers();
+      renderCustomers();
+      // 최근업무/최근상담일은 work_diary 조회가 필요해 약간 늦게 채워진다 - 목록은 먼저 보여준다.
+      const ids = allCustomers.filter(c => c.status !== "계약완료").map(c => c.id);
+      customerDiaryActivity = await getLatestDiaryActivityForCustomers(ids);
+      renderCustomers();
+    } catch(e) {
+      container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
+    }
+  }
+
+  // 고객 탭이 기본 진입 화면이므로 페이지 로드 시 미리 불러온다
+  loadCustomers().then(() => {
+    // 업무일지의 "고객보기" 버튼 등에서 ?tab=customer&customerId=...로 들어오면 상세를 바로 연다
+    const qp = new URLSearchParams(location.search);
+    const wantCustomerId = qp.get("customerId");
+    if (wantCustomerId) {
+      openCustomerDetail(wantCustomerId);
+      const url = new URL(location.href);
+      url.searchParams.delete("customerId");
+      url.searchParams.delete("tab");
+      history.replaceState({}, "", url.toString());
+    }
+  });
+
+
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
+    ["customerDetailModal","customerEditModal"].forEach(id => document.getElementById(id).style.display = "none");
+  });
+</script>
+</body>
+</html>
