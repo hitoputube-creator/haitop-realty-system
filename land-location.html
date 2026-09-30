@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-6">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-8">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -77,6 +77,16 @@
         <button class="btn" id="drawingZoomFit" type="button">전체 맞춤</button>
       </div>
       <div id="detailDrawing" hidden></div>
+<section id="parcelManager" class="parcel-manager" hidden>
+<h2>필지별 세부자료</h2><p id="parcelHelp"></p><p id="parcelStatus" role="status" aria-live="polite"></p>
+<div class="filter-bar"><button class="btn" id="parcelAdd" type="button" aria-pressed="false">필지 위치 지정·등록</button><label>건물 구분 <select id="parcelBuildingFilter"><option value="all">전체</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option><option value="unknown">미확인</option></select></label><label>택지 유형 <select id="parcelTypeFilter"><option value="all">전체</option><option value="single">단독택지</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label></div>
+<p id="parcelCount"></p><div id="parcelList" class="block-buttons"></div><p id="parcelListEmpty" hidden>표시할 필지가 없습니다. 위치를 지정해 등록할 수 있습니다.</p>
+<section id="parcelEditor" hidden><h3 id="parcelFormTitle"></h3><form id="parcelForm"><div class="parcel-fields">
+<label>소블럭 번호<input id="parcelSubblock" required maxlength="30" placeholder="예: 1"></label><label>필지번호<input id="parcelNumber" required maxlength="30" placeholder="예: 8"></label>
+<label>택지 유형<select id="parcel-landType"><option value="single">단독택지</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label>
+<label>건물 유무<select id="parcel-building"><option value="unknown">미확인</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option></select></label>
+<label>소재지·지번<input id="parcel-address" type="text" maxlength="200"></label><label>토지면적 (㎡)<input id="parcel-area" type="number" min="0" step="any"></label><label>공급금액 (만원)<input id="parcel-supplyPrice" type="number" min="0" step="any"></label><label>낙찰가격 (만원)<input id="parcel-auctionPrice" type="number" min="0" step="any"></label><label>매매금액 (만원)<input id="parcel-salePrice" type="number" min="0" step="any"></label><label>소유주<input id="parcel-owner" type="text" maxlength="200"></label><label>연락처<input id="parcel-contact" type="tel" maxlength="200"></label><label class="parcel-note">비고<textarea id="parcel-note" rows="4" maxlength="10000"></textarea></label></div><p id="parcelAreaPyeong"></p><div class="detail-actions"><button class="btn btn-primary" id="parcelSave" type="submit">세부자료 저장</button><button class="btn" id="parcelClose" type="button">닫기</button><button class="btn" id="parcelDelete" type="button" hidden>등록 자료 삭제</button></div></form></section>
+</section>
       <p id="detailDrawingError" role="alert" hidden>상세 도면을 불러오지 못했습니다. 아래 원본 전체 도면을 열어 확인해주세요.</p>
       <div class="drawing-empty" id="drawingEmpty"><span aria-hidden="true">▧</span><h2>상세 도면 등록 예정</h2><p>이 블럭의 상세 도면을 연결하면 개별 필지를 선택할 수 있습니다.</p></div>
       <p id="detailNote" hidden>이 블럭은 운정신도시 전체 위치도에 표시되어 있습니다. 운정3지구 전용 위치도에는 표시가 없습니다.</p>
@@ -84,6 +94,7 @@
     </div>
   </section>
 </main>
-<script src="assets/js/land-location.js?v=20260930-7"></script>
+<script src="assets/js/land-parcels.js?v=20260930-8"></script>
+<script src="assets/js/land-location.js?v=20260930-8"></script>
 </body>
 </html>

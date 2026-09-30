@@ -29,7 +29,7 @@
     overall: [x / 1920 * 100, y / 1293 * 100],
     third: group === 'third' ? thirdByNumber.get(number) : null,
     types: group === 'third' ? (thirdTypes[number] || []) : [],
-    drawing: group === 'third' && number !== 1 ? 'assets/images/land/blocks/third-C' + number + '.png' : null
+    drawing: group === 'third' && number !== 1 ? 'assets/images/land/blocks/third-C' + number + (number === 18 ? '.svg' : '.png') : null
   })));
   const byId = new Map(blocks.map(block => [block.id,block]));
   const $ = id => document.getElementById(id);
@@ -96,13 +96,16 @@
           $('detailDrawingError').hidden = false;
         });
         $('detailDrawing').appendChild(drawing);
+        window.HitopLandParcels?.open(block, drawing);
       }
+      if (!block.drawing) window.HitopLandParcels?.open(block, null);
       $('detailDrawingError').hidden = true;
       $('drawingZoomLabel').textContent = '100%';
       document.title = '하이탑부동산 | ' + groups[block.group].label + ' ' + block.name;
       $('detailTitle').focus();
       return;
     }
+    window.HitopLandParcels?.close();
     document.title = '하이탑부동산 | 택지 위치도';
     const nextImage = 'assets/images/land/unjeong-base-20260930.jpg';
     if (image.getAttribute('src') !== nextImage) {
