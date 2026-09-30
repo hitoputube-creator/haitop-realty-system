@@ -260,7 +260,9 @@
     const left = container.scrollLeft, top = container.scrollTop;
     drawingFitted = false;
     drawingZoom = Math.max(minZoom,Math.min(maxZoom,next));
-    drawing.style.width = drawingZoom * 100 + '%';
+    const target = drawing.closest('.parcel-stage') || drawing;
+    target.style.width = drawingZoom * 100 + '%';
+    if(target !== drawing) drawing.style.width = '100%';
     container.scrollLeft = (left + x) * drawingZoom / old - x;
     container.scrollTop = (top + y) * drawingZoom / old - y;
     $('drawingZoomLabel').textContent = Math.round(drawingZoom * 100) + '%';
