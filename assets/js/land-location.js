@@ -312,8 +312,47 @@
       if (Date.now() < suppressClickUntil) { e.preventDefault(); e.stopPropagation(); }
     },true);
   }
+  function bindMouseNavigation(container,getZoom,setScale) {
+    container.addEventListener('wheel',e => {
+      e.preventDefault();
+      const direction = e.deltaY < 0 ? 1 : -1;
+      setScale(nextZoomStep(getZoom(),direction),e.clientX,e.clientY);
+    },{passive:false});
+
+    let drag = null;
+    function endDrag() {
+      if (!drag) return;
+      if (drag.moved) suppressClickUntil = Date.now() + 250;
+      drag = null;
+      container.classList.remove('mouse-panning');
+    }
+    container.addEventListener('mousedown',e => {
+      if (e.button !== 0) return;
+      drag = {
+        x:e.clientX,
+        y:e.clientY,
+        left:container.scrollLeft,
+        top:container.scrollTop,
+        moved:false
+      };
+    });
+    window.addEventListener('mousemove',e => {
+      if (!drag) return;
+      const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+      if (!drag.moved && Math.hypot(dx,dy) < 4) return;
+      drag.moved=true;
+      container.classList.add('mouse-panning');
+      e.preventDefault();
+      container.scrollLeft=drag.left-dx;
+      container.scrollTop=drag.top-dy;
+    });
+    window.addEventListener('mouseup',endDrag);
+    window.addEventListener('blur',endDrag);
+  }
   bindTouchZoom(viewport,()=>zoom,setZoom);
   bindTouchZoom($('detailDrawing'),()=>drawingZoom,setDrawingZoom);
+  bindMouseNavigation(viewport,()=>zoom,setZoom);
+  bindMouseNavigation($('detailDrawing'),()=>drawingZoom,setDrawingZoom);
   window.addEventListener('popstate',() => render(readState()));
   render(readState()); applyZoom();
 })();
