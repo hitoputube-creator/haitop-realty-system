@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하이탑부동산 | 택지 위치도</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-1">
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/admin-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+</head>
+<body>
+<main class="page land-location-page">
+  <header class="header">
+    <div class="logo-icon" aria-hidden="true"></div>
+    <div class="logo-text"><div class="logo-main">하이탑부동산 택지 위치도</div><div class="logo-sub">위치에서 블럭을 찾아보세요</div></div>
+    <nav class="main-nav" aria-label="페이지 이동">
+      <a class="nav-link active" href="land-resources.html">택지자료 목록으로</a>
+      <a class="nav-link" href="property-main.html?category=land">매물관리 메인으로</a>
+      <button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button>
+    </nav>
+  </header>
+  <div class="header-line"></div>
+  <section id="overview">
+    <div class="location-intro"><h1>택지 위치에서 찾기</h1><p>지도에 표시된 블럭 번호를 누르거나, 아래 블럭 목록에서 선택하세요.</p></div>
+    <div class="map-controls">
+      <div class="view-tabs" role="group" aria-label="위치도 선택">
+        <button class="btn" type="button" data-view="all" aria-pressed="true">운정신도시 전체</button>
+        <button class="btn" type="button" data-view="third" aria-pressed="false">운정3지구</button>
+      </div>
+      <div class="zoom-controls" role="group" aria-label="위치도 확대 축소">
+        <button class="btn" id="zoomOut" type="button" aria-label="위치도 축소">−</button>
+        <output id="zoomLabel" aria-live="polite">100%</output>
+        <button class="btn" id="zoomIn" type="button" aria-label="위치도 확대">＋</button>
+        <button class="btn" id="zoomFit" type="button">전체 맞춤</button>
+      </div>
+    </div>
+    <div class="filter-bar" id="groupFilters" role="group" aria-label="택지 구분">
+      <button class="btn" type="button" data-group="all" aria-pressed="true">전체 블럭</button>
+      <button class="btn" type="button" data-group="second-shop" aria-pressed="false"><span class="legend-dot shop"></span>운정2지구 상가점포택지</button>
+      <button class="btn" type="button" data-group="second-multi" aria-pressed="false"><span class="legend-dot multi"></span>운정2지구 다가구택지</button>
+      <button class="btn" type="button" data-group="third" aria-pressed="false"><span class="legend-dot third"></span>운정3지구 택지</button>
+    </div>
+    <p class="map-help" id="mapHelp">확대한 위치도는 스크롤하거나 손가락으로 밀어서 이동할 수 있습니다. 두 손가락으로 확대·축소할 수 있습니다.</p>
+    <div class="map-viewport" id="mapViewport" tabindex="0" aria-label="택지 위치도, 방향키로 이동">
+      <div class="map-stage" id="mapStage">
+        <img id="mapImage" src="assets/images/land/unjeong-all.jpg" width="2048" height="1380" alt="운정신도시 전체 택지블럭 위치도" draggable="false">
+        <div class="map-hotspots" id="hotspots"></div>
+      </div>
+    </div>
+    <p id="mapError" role="alert" hidden>위치도를 불러오지 못했습니다. 새로고침하거나 아래 블럭 목록을 이용해주세요.</p>
+    <p class="source-note">제공해주신 원본 안내도를 사용합니다. 블럭 구분은 원본 표기를 따릅니다.</p>
+    <section class="card block-list-card" aria-labelledby="blockListTitle">
+      <div class="block-list-heading"><h2 id="blockListTitle">블럭 목록</h2><span id="blockCount"></span></div>
+      <p id="thirdMapNote" hidden>운정3지구 전용 위치도에는 C19 표시가 없어, C19 선택 시 전체 위치도를 기준으로 확인합니다.</p>
+      <div id="blockList"></div>
+    </section>
+  </section>
+  <section id="blockDetail" hidden aria-labelledby="detailTitle">
+    <button id="backToMap" class="btn" type="button">← 위치도로 돌아가기</button>
+    <div class="card block-detail-card">
+      <p class="detail-eyebrow" id="detailGroup"></p><h1 id="detailTitle" tabindex="-1"></h1>
+      <div id="detailDrawing" hidden></div>
+      <div class="drawing-empty" id="drawingEmpty"><span aria-hidden="true">▧</span><h2>상세 도면 등록 예정</h2><p>이 블럭의 상세 도면을 연결하면 개별 필지를 선택할 수 있습니다.</p></div>
+      <p id="detailNote" hidden>이 블럭은 운정신도시 전체 위치도에 표시되어 있습니다. 운정3지구 전용 위치도에는 표시가 없습니다.</p>
+      <div class="detail-actions"><a class="btn btn-primary" href="land-resources.html">택지자료 목록 열기</a><button class="btn" id="detailBack" type="button">다른 블럭 선택</button></div>
+    </div>
+  </section>
+</main>
+<script src="assets/js/land-location.js?v=20260930-1"></script>
+</body>
+</html>
