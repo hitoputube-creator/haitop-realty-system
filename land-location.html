@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-1">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-4">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -45,8 +45,8 @@
     </div>
     <div class="filter-bar" id="thirdTypeFilters" role="group" aria-label="운정3지구 택지 유형" hidden>
       <button class="btn" type="button" data-land-type="all" aria-pressed="true">전체</button>
-      <button class="btn" type="button" data-land-type="multi" aria-pressed="false"><span class="legend-dot multi"></span>다가구</button>
-      <button class="btn" type="button" data-land-type="shop" aria-pressed="false"><span class="legend-dot shop"></span>상가점포</button>
+      <button class="btn" type="button" data-land-type="single" aria-pressed="false"><span class="legend-dot single-land"></span>단독택지</button>
+      <button class="btn" type="button" data-land-type="shop" aria-pressed="false"><span class="legend-dot shop-land"></span>상가점포</button>
       <button class="btn" type="button" data-land-type="unknown" aria-pressed="false">미분류</button>
     </div>
     <p class="type-notice" id="typeNotice" role="status" hidden></p>
@@ -70,13 +70,20 @@
     <div class="card block-detail-card">
       <p class="detail-eyebrow" id="detailGroup"></p><h1 id="detailTitle" tabindex="-1"></h1>
       <p class="detail-eyebrow" id="detailType" hidden></p>
+      <div class="zoom-controls drawing-controls" id="drawingControls" role="group" aria-label="상세 도면 확대 축소" hidden>
+        <button class="btn" id="drawingZoomOut" type="button" aria-label="상세 도면 축소">−</button>
+        <output id="drawingZoomLabel" aria-live="polite">100%</output>
+        <button class="btn" id="drawingZoomIn" type="button" aria-label="상세 도면 확대">＋</button>
+        <button class="btn" id="drawingZoomFit" type="button">전체 맞춤</button>
+      </div>
       <div id="detailDrawing" hidden></div>
+      <p id="detailDrawingError" role="alert" hidden>상세 도면을 불러오지 못했습니다. 아래 원본 전체 도면을 열어 확인해주세요.</p>
       <div class="drawing-empty" id="drawingEmpty"><span aria-hidden="true">▧</span><h2>상세 도면 등록 예정</h2><p>이 블럭의 상세 도면을 연결하면 개별 필지를 선택할 수 있습니다.</p></div>
       <p id="detailNote" hidden>이 블럭은 운정신도시 전체 위치도에 표시되어 있습니다. 운정3지구 전용 위치도에는 표시가 없습니다.</p>
-      <div class="detail-actions"><a class="btn btn-primary" href="land-resources.html">택지자료 목록 열기</a><button class="btn" id="detailBack" type="button">다른 블럭 선택</button></div>
+      <div class="detail-actions"><a class="btn btn-primary" href="land-resources.html">택지자료 목록 열기</a><button class="btn" id="detailBack" type="button">다른 블럭 선택</button><a class="btn" id="sourceDrawingLink" href="assets/images/land/unjeong-3-parcels.jpg" target="_blank" rel="noopener noreferrer" hidden>원본 전체 도면 보기</a></div>
     </div>
   </section>
 </main>
-<script src="assets/js/land-location.js?v=20260930-3"></script>
+<script src="assets/js/land-location.js?v=20260930-4"></script>
 </body>
 </html>

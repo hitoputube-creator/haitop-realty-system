@@ -25,14 +25,19 @@
   ];
   const thirdByNumber = new Map(third.map(row => [row[0], row]));
   // Fill only from verified block/parcel material. A mixed block can contain both types.
-  const thirdTypes = {};
-  const typeLabels = { multi: '다가구', shop: '상가점포', unknown: '미분류' };
+  const thirdTypes = {
+    1: ['shop'], 2: ['shop'], 3: ['shop'], 4: ['shop'], 10: ['shop'], 19: ['shop'],
+    5: ['single'], 6: ['single'], 7: ['single'], 8: ['single'], 9: ['single'],
+    11: ['single'], 12: ['single'], 13: ['single'], 14: ['single'], 15: ['single'],
+    16: ['single'], 17: ['single'], 18: ['single']
+  };
+  const typeLabels = { single: '단독택지', shop: '상가점포', unknown: '미분류' };
   const blocks = Object.entries(overall).flatMap(([group, entries]) => entries.map(([number,x,y]) => ({
     id: group + '-C' + number, group, number, name: 'C' + number,
     overall: [x / 1920 * 100, y / 1293 * 100],
     third: group === 'third' ? thirdByNumber.get(number) : null,
     types: group === 'third' ? (thirdTypes[number] || []) : [],
-    drawing: null
+    drawing: group === 'third' && number !== 1 ? 'assets/images/land/blocks/third-C' + number + '.png' : null
   })));
   const byId = new Map(blocks.map(block => [block.id,block]));
   const $ = id => document.getElementById(id);
@@ -40,6 +45,7 @@
   const stage = $('mapStage');
   const image = $('mapImage');
   let view = 'all', group = 'all', landType = 'all', zoom = 1, pinch = null, suppressClickUntil = 0;
+  let drawingZoom = 1;
   function readState() {
     const p = new URLSearchParams(location.search);
     view = p.get('view') === 'third' ? 'third' : 'all';
@@ -60,6 +66,7 @@
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'map-hotspot ' + groups[block.group].color + (view === 'third' ? (label ? ' label-hotspot' : ' site-hotspot') : '');
+    if (block.group === 'third' && block.types.length === 1) button.classList.add('land-type-' + block.types[0]);
     button.style.left = x + '%'; button.style.top = y + '%';
     button.textContent = block.name;
     button.dataset.block = block.id;
@@ -85,12 +92,20 @@
       $('detailNote').hidden = !(block.group === 'third' && !block.third);
       $('detailDrawing').replaceChildren();
       $('detailDrawing').hidden = !block.drawing;
+      $('drawingControls').hidden = !block.drawing;
+      $('sourceDrawingLink').hidden = block.group !== 'third';
       $('drawingEmpty').hidden = !!block.drawing;
       if (block.drawing) {
         const drawing = document.createElement('img');
         drawing.src = block.drawing; drawing.alt = groups[block.group].label + ' ' + block.name + ' 상세 도면';
+        drawing.style.width = '100%'; drawingZoom = 1;
+        drawing.addEventListener('error',() => {
+          $('detailDrawingError').hidden = false;
+        });
         $('detailDrawing').appendChild(drawing);
       }
+      $('detailDrawingError').hidden = true;
+      $('drawingZoomLabel').textContent = '100%';
       document.title = '하이탑부동산 | ' + groups[block.group].label + ' ' + block.name;
       $('detailTitle').focus();
       return;
@@ -109,7 +124,7 @@
     const visible = groupBlocks.filter(b => !showTypeFilters || landType === 'all' || (landType === 'unknown' ? !b.types.length : b.types.includes(landType)));
     const unknownCount = groupBlocks.filter(b => b.group === 'third' && !b.types.length).length;
     $('typeNotice').hidden = !showTypeFilters || !unknownCount;
-    $('typeNotice').textContent = '유형 확인이 필요한 블럭 ' + unknownCount + '개가 있습니다. 현재 자료에는 다가구·상가점포 구분이 없어 임의로 분류하지 않았습니다.' + (landType !== 'all' && landType !== 'unknown' ? ' 구분된 블럭이 없으면 전체 또는 미분류에서 확인해주세요.' : '');
+    $('typeNotice').textContent = '유형 확인이 필요한 블럭 ' + unknownCount + '개가 있습니다. 상세 자료로 확인 후 분류합니다.';
     $('hotspots').replaceChildren();
     visible.forEach(b => {
       if (view === 'third') {
@@ -131,6 +146,7 @@
       entries.forEach(b => {
         const button = document.createElement('button'); button.type = 'button'; button.className = 'block-button';
         button.dataset.block = b.id;
+        if (b.group === 'third' && b.types.length === 1) button.classList.add('land-type-' + b.types[0]);
         button.append(b.name);
         const status = document.createElement('small'); status.textContent = b.drawing ? '상세 도면 보기' : '도면 등록 예정';
         if (b.group === 'third') {
@@ -146,7 +162,7 @@
     });
     if (!visible.length) {
       const empty = document.createElement('p');
-      empty.textContent = '이 유형으로 확인·분류된 블럭이 아직 없습니다. 전체 또는 미분류를 선택해주세요.';
+      empty.textContent = '이 유형에 해당하는 블럭이 없습니다. 전체를 선택해주세요.';
       $('blockList').appendChild(empty);
     }
   }
@@ -180,6 +196,16 @@
   $('zoomIn').addEventListener('click',() => setZoom(zoom + .5));
   $('zoomOut').addEventListener('click',() => setZoom(zoom - .5));
   $('zoomFit').addEventListener('click',() => { setZoom(1); viewport.scrollTo(0,0); });
+  function setDrawingZoom(next) {
+    const drawing = $('detailDrawing').firstElementChild;
+    if (!drawing) return;
+    drawingZoom = Math.max(1,Math.min(4,next));
+    drawing.style.width = drawingZoom * 100 + '%';
+    $('drawingZoomLabel').textContent = Math.round(drawingZoom * 100) + '%';
+  }
+  $('drawingZoomIn').addEventListener('click',() => setDrawingZoom(drawingZoom + .5));
+  $('drawingZoomOut').addEventListener('click',() => setDrawingZoom(drawingZoom - .5));
+  $('drawingZoomFit').addEventListener('click',() => { setDrawingZoom(1); $('detailDrawing').scrollTo(0,0); });
   image.addEventListener('error',() => { $('mapError').hidden = false; });
   image.addEventListener('load',() => { $('mapError').hidden = true; });
   function touchDistance(t) { return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
