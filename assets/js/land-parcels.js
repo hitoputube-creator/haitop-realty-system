@@ -24,7 +24,7 @@
   }
   function addMapLabel(row) {
     const area=Number(row.data.area), parts=[];
-    if(views.area && Number.isFinite(area) && area>0) parts.push((area/3.305785).toFixed(1)+'평');
+    if(views.area && Number.isFinite(area) && area>0) parts.push(views.area==='sqm'?area.toLocaleString('ko-KR',{maximumFractionDigits:1})+'㎡':(area/3.305785).toFixed(1)+'평');
     if(!parts.length && !(views.contact && hasOwnerContact(row)))return;
     let x=Number(row.x)/100,y=Number(row.y)/100;
     if(row.points?.length){x=row.points.reduce((n,p)=>n+p[0],0)/row.points.length/318;y=row.points.reduce((n,p)=>n+p[1],0)/row.points.length/385;}
@@ -196,7 +196,15 @@
       draw();status(results[0].status==='rejected'?'원본 도면·목록은 확인할 수 있습니다. '+(results[0].reason.message||'저장 자료를 불러오지 못했습니다.'):results[1].status==='rejected'?results[1].reason.message:'필지를 선택해 세부자료를 확인하세요.');
     } catch(error) { if(run===generation)status(error.message || '도면의 필지 위치를 불러오지 못했습니다.'); }
   }
-  Object.keys(views).forEach(name=>{const id='parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
+  function setAreaView(mode){
+    views.area = views.area === mode ? false : mode;
+    $('parcelAreaPyeongToggle').setAttribute('aria-pressed',String(views.area==='pyeong'));
+    $('parcelAreaSqmToggle').setAttribute('aria-pressed',String(views.area==='sqm'));
+    if(overlay&&current)draw();
+  }
+  $('parcelAreaPyeongToggle').addEventListener('click',()=>setAreaView('pyeong'));
+  $('parcelAreaSqmToggle').addEventListener('click',()=>setAreaView('sqm'));
+  ['building','contact'].forEach(name=>{const id='parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
   $('parcelForm').addEventListener('submit',async event=>{
     event.preventDefault(); if(busy || !selected)return;
     const run=generation,blockId=current.id;
