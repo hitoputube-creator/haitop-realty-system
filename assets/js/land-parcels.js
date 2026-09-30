@@ -73,7 +73,7 @@
     image.replaceWith(stage);image.style.width='100%';stage.append(image);
     overlay=document.createElementNS(ns,'svg');overlay.setAttribute('viewBox','0 0 1 1');overlay.setAttribute('preserveAspectRatio','none');overlay.classList.add('parcel-overlay');stage.append(overlay);
     $('parcelBuildingFilter').value='all';$('parcelTypeFilter').value='all';$('parcelAdd').setAttribute('aria-pressed','false');
-    $('parcelHelp').textContent=block.id==='third-C18'?'원본을 따라 다시 그린 참고도입니다. 필지를 누르면 세부자료가 열립니다. 번호는 소블럭-필지번호 순서입니다.':'필지 등록을 누른 뒤 도면의 해당 필지 위치를 눌러 자료를 입력하세요.';
+    $('parcelHelp').textContent=block.id==='third-C18'?'원본 도면의 해상도를 높인 이미지입니다. 필지를 누르면 세부자료가 열립니다. 번호는 소블럭-필지번호 순서입니다.':'필지 등록을 누른 뒤 도면의 해당 필지 위치를 눌러 자료를 입력하세요.';
     stage.addEventListener('click',event=>{
       if(!placing || busy) return;
       const rect=image.getBoundingClientRect();
@@ -119,3 +119,4 @@
   ['parcelBuildingFilter','parcelTypeFilter'].forEach(id=>$(id).addEventListener('change',draw));
   window.HitopLandParcels={open,close(){generation++;current=null;$('parcelManager').hidden=true;$('parcelEditor').hidden=true;}};
 })();
+

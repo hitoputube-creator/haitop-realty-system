@@ -29,7 +29,7 @@
     overall: [x / 1920 * 100, y / 1293 * 100],
     third: group === 'third' ? thirdByNumber.get(number) : null,
     types: group === 'third' ? (thirdTypes[number] || []) : [],
-    drawing: group === 'third' && number !== 1 ? 'assets/images/land/blocks/third-C' + number + (number === 18 ? '.svg' : '.png') : null
+    drawing: group === 'third' && number !== 1 ? 'assets/images/land/blocks/third-C' + number + '-hires.webp' : null
   })));
   const byId = new Map(blocks.map(block => [block.id,block]));
   const $ = id => document.getElementById(id);
