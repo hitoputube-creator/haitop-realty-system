@@ -39,8 +39,13 @@
   let view = 'all', group = 'all', landType = 'all', zoom = 1, pinch = null, suppressClickUntil = 0;
   let drawingZoom = 1;
   let mapFitted = true, drawingFitted = true;
-  const minZoom = .05;
+  const minZoom = .1;
   const maxZoom = 10;
+  function nextZoomStep(current, direction) {
+    const units = current * 10;
+    const next = direction > 0 ? Math.floor(units + 1e-7) + 1 : Math.ceil(units - 1e-7) - 1;
+    return Math.max(minZoom, Math.min(maxZoom, next / 10));
+  }
   function fittedZoom(container, img) {
     const top = Math.max(0, container.getBoundingClientRect().top);
     container.style.height = Math.max(120, Math.min(window.innerHeight * .7, window.innerHeight - top - 24)) + 'px';
@@ -218,8 +223,8 @@
   }));
   $('backToMap').addEventListener('click',() => { navigate(null); viewport.focus({preventScroll:true}); });
   $('detailBack').addEventListener('click',() => { navigate(null); viewport.focus({preventScroll:true}); });
-  $('zoomIn').addEventListener('click',() => setZoom(zoom + (zoom < 1 ? .1 : .5)));
-  $('zoomOut').addEventListener('click',() => setZoom(zoom - (zoom <= 1 ? .1 : .5)));
+  $('zoomIn').addEventListener('click',() => setZoom(nextZoomStep(zoom, 1)));
+  $('zoomOut').addEventListener('click',() => setZoom(nextZoomStep(zoom, -1)));
   $('zoomFit').addEventListener('click',fitMap);
   function setDrawingZoom(next) {
     const drawing = $('detailDrawing').firstElementChild;
@@ -231,8 +236,8 @@
     $('drawingZoomOut').disabled = drawingZoom <= minZoom;
     $('drawingZoomIn').disabled = drawingZoom >= maxZoom;
   }
-  $('drawingZoomIn').addEventListener('click',() => setDrawingZoom(drawingZoom + (drawingZoom < 1 ? .1 : .5)));
-  $('drawingZoomOut').addEventListener('click',() => setDrawingZoom(drawingZoom - (drawingZoom <= 1 ? .1 : .5)));
+  $('drawingZoomIn').addEventListener('click',() => setDrawingZoom(nextZoomStep(drawingZoom, 1)));
+  $('drawingZoomOut').addEventListener('click',() => setDrawingZoom(nextZoomStep(drawingZoom, -1)));
   $('drawingZoomFit').addEventListener('click',fitDrawing);
   image.addEventListener('error',() => { $('mapError').hidden = false; });
   image.addEventListener('load',() => { $('mapError').hidden = true; if (mapFitted) fitMap(); });
