@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const ns = 'http://www.w3.org/2000/svg';
   let current = null, rows = [], cells = [], selected = null, stage = null, overlay = null, generation = 0, placing = false, busy = false;
-  let sourceMeta = null, buildingVectorOverlay = null, buildingVectorCandidates = [], recordsLoaded = false;
+  let sourceMeta = null, buildingVectorOverlay = null, buildingVectorCandidates = [], buildingVectorUrl = null, buildingVectorViewBox = null, recordsLoaded = false;
   const views = {area:false, building:false, contact:false};
   const contactStates = {
     contact: {label:'연락처 있음', symbol:'●'},
@@ -45,50 +45,58 @@
     return r>=180 && g>=165 && b<=190 && r>g-25 && g>b+20;
   }
   function setupBuildingVectorOverlay(svgText) {
-    buildingVectorOverlay=null;buildingVectorCandidates=[];
+    if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}
+    buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;
     if(!svgText||!stage||!overlay)return;
-    try{
-      const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
-      const parsed=doc.documentElement;
-      if(!parsed||parsed.nodeName.toLowerCase()!=='svg')return;
-      const svg=document.importNode(parsed,true);
-      svg.classList.add('parcel-building-vector-overlay');
-      svg.setAttribute('aria-hidden','true');
-      svg.setAttribute('preserveAspectRatio','none');
-      svg.removeAttribute('width');svg.removeAttribute('height');
-      svg.style.visibility='hidden';
-      stage.insertBefore(svg,overlay);
-      const shapes=[...svg.querySelectorAll('path,polygon,rect')];
-      buildingVectorCandidates=shapes.filter(shape=>isParcelYellow(getComputedStyle(shape).fill));
-      svg.style.visibility='';
-      buildingVectorOverlay=svg;
-    }catch(_){buildingVectorOverlay=null;buildingVectorCandidates=[];}
+    const object=document.createElement('object');
+    object.className='parcel-building-vector-overlay';
+    object.type='image/svg+xml';
+    object.setAttribute('aria-hidden','true');
+    object.tabIndex=-1;
+    buildingVectorUrl=URL.createObjectURL(new Blob([svgText],{type:'image/svg+xml'}));
+    object.data=buildingVectorUrl;
+    stage.insertBefore(object,overlay);
+    buildingVectorOverlay=object;
+    object.addEventListener('load',()=>{
+      if(buildingVectorOverlay!==object)return;
+      try{
+        const doc=object.contentDocument,root=doc?.documentElement;
+        if(!doc||!root)return;
+        const style=doc.createElementNS(ns,'style');
+        style.textContent='svg *{opacity:0!important;pointer-events:none!important}.parcel-building-vector-highlight{opacity:1!important;fill:#2563eb99!important;stroke:#1d4ed8!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}';
+        root.insertBefore(style,root.firstChild);
+        const vb=root.viewBox?.baseVal;
+        if(vb&&vb.width&&vb.height)buildingVectorViewBox={x:vb.x,y:vb.y,width:vb.width,height:vb.height};
+        const win=doc.defaultView;
+        buildingVectorCandidates=[...root.querySelectorAll('path,polygon,rect')].filter(shape=>isParcelYellow(win.getComputedStyle(shape).fill));
+        draw();
+      }catch(_){buildingVectorCandidates=[];buildingVectorViewBox=null;}
+    },{once:true});
   }
-  function shapeContainsClientPoint(shape,clientX,clientY) {
+  function shapeContainsParcelPoint(shape,pctX,pctY) {
     try{
-      if(typeof shape.isPointInFill!=='function')return false;
-      const matrix=shape.getScreenCTM();
-      if(!matrix)return false;
-      const point=new DOMPoint(clientX,clientY).matrixTransform(matrix.inverse());
-      return shape.isPointInFill(point);
+      if(typeof shape.isPointInFill!=='function'||!buildingVectorViewBox)return false;
+      const root=shape.ownerSVGElement,matrix=shape.getCTM();
+      if(!root||!matrix)return false;
+      const point=root.createSVGPoint();
+      point.x=buildingVectorViewBox.x+pctX/100*buildingVectorViewBox.width;
+      point.y=buildingVectorViewBox.y+pctY/100*buildingVectorViewBox.height;
+      return shape.isPointInFill(point.matrixTransform(matrix.inverse()));
     }catch(_){return false;}
   }
   function updateVectorBuildingHighlights(ordered) {
-    if(!buildingVectorOverlay)return;
+    if(!buildingVectorOverlay||!buildingVectorCandidates.length)return;
     buildingVectorCandidates.forEach(shape=>shape.classList.remove('parcel-building-vector-highlight'));
     if(!views.building)return;
-    const rect=buildingVectorOverlay.getBoundingClientRect();
-    if(!rect.width||!rect.height)return;
     ordered.filter(row=>buildingState(row)==='building').forEach(row=>{
       const x=Number(row.x),y=Number(row.y);
       if(!Number.isFinite(x)||!Number.isFinite(y))return;
-      const clientX=rect.left+x/100*rect.width,clientY=rect.top+y/100*rect.height;
-      const hits=buildingVectorCandidates.filter(shape=>shapeContainsClientPoint(shape,clientX,clientY));
+      const hits=buildingVectorCandidates.filter(shape=>shapeContainsParcelPoint(shape,x,y));
       if(!hits.length)return;
       let best=hits[0],bestArea=Infinity;
       hits.forEach(shape=>{
         try{
-          const box=shape.getBoundingClientRect(),area=box.width*box.height;
+          const box=shape.getBBox(),area=box.width*box.height;
           if(area>0&&area<bestArea){best=shape;bestArea=area;}
         }catch(_){}
       });
@@ -217,7 +225,7 @@
     const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent=row.id?'자료 수정':'자료 보기·등록';btn.addEventListener('click',()=>show(row));td.append(badge,btn);tr.append(td);$('parcelSourceBody').append(tr);
   }
   async function open(block, image) {
-    const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; buildingVectorOverlay=null; buildingVectorCandidates=[]; selected=null; placing=false; recordsLoaded=false;
+    const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
     $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
     closeEditor(); $('parcelManager').hidden=!image;
@@ -297,5 +305,5 @@
   priceFields.forEach(name=>$('parcel-'+name).addEventListener('input',event=>formatPriceInput(event.target)));
   $('parcel-area').addEventListener('input',updateArea);
   ['parcelBuildingFilter','parcelTypeFilter','parcelContactFilter'].forEach(id=>$(id).addEventListener('change',draw));
-  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;buildingVectorOverlay=null;buildingVectorCandidates=[];recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
+  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
 })();
