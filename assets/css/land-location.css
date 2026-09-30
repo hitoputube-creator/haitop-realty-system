@@ -33,3 +33,8 @@
 #parcelDelete{margin-left:auto;color:#ffb3b3;background:transparent}
 .block-footer-actions{padding-top:12px;border-top:1px solid var(--line2)}
 @media(max-width:480px){.parcel-value-pair{padding:0;gap:8px}.parcel-fields{gap:7px 8px}.land-location-page .block-footer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.block-footer-actions #sourceDrawingLink{grid-column:1/-1}.land-location-page .detail-actions .btn{min-height:36px}}
+
+/* Parcel views share the drawing coordinate system and never intercept clicks. */
+.parcel-view-controls{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.parcel-view-controls .btn{min-height:34px;font-size:.8rem;padding:6px 10px}
+.parcel-map-label{font-size:.008px;font-weight:700;fill:#102238;stroke:#fff;stroke-width:.0016px;paint-order:stroke fill;pointer-events:none}
+.parcel-shape.parcel-building-building{fill:#2563eb55;stroke:#2563eb}.parcel-shape.parcel-building-vacant{fill:#16803c55;stroke:#16803c}.parcel-shape.parcel-building-unknown{fill:#64748b44;stroke:#64748b}.parcel-shape.selected{stroke:#a67200;stroke-width:.003}.parcel-shape:hover,.parcel-shape:focus{stroke:#a67200;stroke-width:.003}
