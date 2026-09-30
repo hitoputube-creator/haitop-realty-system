@@ -54,7 +54,12 @@
     input.setSelectionRange(position, position);
     updateArea();
   }
-  function status(message) { $('parcelStatus').textContent = message; }
+  function status(message) { $('parcelStatus').textContent = message; $('parcelModalStatus').textContent = message; }
+  function closeEditor() {
+    const editor = $('parcelEditor');
+    if (editor.open) editor.close();
+    editor.hidden = true;
+  }
   async function request(query, options) {
     const {data, error} = await hitopAuthClient.auth.getSession();
     if (error || !data.session) throw new Error('로그인 상태를 확인해주세요.');
@@ -97,7 +102,8 @@
     updateArea();
     updateParcelLabel();
     $('parcelEditor').hidden = false; $('parcelDelete').hidden = !row.id;
-    $('parcelEditor').scrollIntoView({behavior:'smooth',block:'start'});
+    if (!$('parcelEditor').open) $('parcelEditor').showModal();
+    $('parcelEditor').scrollTop = 0;
     draw();
     status(row.id ? '등록된 자료입니다. 수정 후 저장할 수 있습니다.' : '등록된 세부자료가 없습니다. 내용을 입력하고 저장해주세요.');
   }
@@ -152,7 +158,7 @@
     const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; selected=null; placing=false; recordsLoaded=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
     $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
-    $('parcelManager').hidden=!image; $('parcelEditor').hidden=true;
+    closeEditor(); $('parcelManager').hidden=!image;
     if (!image) return;
     stage=document.createElement('div');stage.className='parcel-stage';stage.style.width='100%';
     image.replaceWith(stage);image.style.width='100%';stage.append(image);
@@ -206,14 +212,20 @@
   $('parcelDelete').addEventListener('click',async()=>{
     if(busy||!selected?.id||!confirm('이 필지의 등록 자료를 삭제할까요? 도면의 필지는 남습니다.'))return;
     const run=generation,id=selected.id;busy=true;
-    try{await request('?id=eq.'+encodeURIComponent(id),{method:'DELETE'});if(run!==generation)return;rows=rows.filter(row=>row.id!==id);$('parcelEditor').hidden=true;draw();status('등록 자료를 삭제했습니다.');}catch(error){status(error.message);}finally{busy=false;}
+    try{await request('?id=eq.'+encodeURIComponent(id),{method:'DELETE'});if(run!==generation)return;rows=rows.filter(row=>row.id!==id);closeEditor();draw();status('등록 자료를 삭제했습니다.');}catch(error){status(error.message);}finally{busy=false;}
   });
-  $('parcelClose').addEventListener('click',()=>{$('parcelEditor').hidden=true;});
+  ['parcelClose','parcelModalClose'].forEach(id=>$(id).addEventListener('click',closeEditor));
+  $('parcelEditor').addEventListener('close',()=>{if (!$('parcelEditor').open) $('parcelEditor').hidden=true;});
+  $('parcelEditor').addEventListener('click',event=>{
+    if (event.target !== $('parcelEditor')) return;
+    const rect = $('parcelEditor').getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeEditor();
+  });
   $('parcelAdd').addEventListener('click',()=>{if(busy)return;placing=!placing;$('parcelAdd').setAttribute('aria-pressed',String(placing));status(placing?'도면에서 등록할 필지 위치를 눌러주세요.':'위치 지정을 취소했습니다.');});
   $('parcelSubblockFilter').addEventListener('change',draw);
   ['parcelSubblock','parcelNumber'].forEach(id=>$(id).addEventListener('input',updateParcelLabel));
   priceFields.forEach(name=>$('parcel-'+name).addEventListener('input',event=>formatPriceInput(event.target)));
   $('parcel-area').addEventListener('input',updateArea);
   ['parcelBuildingFilter','parcelTypeFilter','parcelContactFilter'].forEach(id=>$(id).addEventListener('change',draw));
-  window.HitopLandParcels={open,close(){generation++;current=null;overlay=null;$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelManager').hidden=true;$('parcelEditor').hidden=true;}};
+  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
 })();

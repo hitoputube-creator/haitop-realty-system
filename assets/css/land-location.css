@@ -41,3 +41,12 @@
 
 .parcel-contact-marker{font-size:.012px;stroke-width:.002px}.parcel-contact-marker.parcel-contact-contact{fill:#137a42}.parcel-contact-marker.parcel-contact-registered{fill:#a66b00}.parcel-contact-marker.parcel-contact-missing{fill:#526071}.parcel-contact-marker.parcel-contact-unknown{fill:#6d36a0}
 .parcel-contact-badge{display:inline-block;margin-right:10px;font-size:.75rem}.parcel-contact-badge.parcel-contact-contact{color:#8debbb}.parcel-contact-badge.parcel-contact-registered{color:#f4d27b}.parcel-contact-badge.parcel-contact-missing{color:var(--text-muted)}.parcel-contact-badge.parcel-contact-unknown{color:#dbb7ff}
+
+/* Parcel details open above the drawing without moving the underlying page. */
+#parcelEditor{width:min(760px,calc(100% - 28px));max-width:none;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);margin:auto;padding:18px;border:1px solid var(--border-slate);border-radius:12px;background:var(--panel2);color:var(--text-main);box-shadow:0 20px 80px #0008;overflow-y:auto;overscroll-behavior:contain}
+#parcelEditor::backdrop{background:rgba(2,8,17,.72)}
+.parcel-modal-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px}
+#parcelEditor .parcel-modal-close{flex:0 0 auto;min-height:32px;width:32px;padding:0;border:1px solid var(--border-slate);border-radius:5px;background:transparent;color:var(--text-main);font-size:1.4rem;line-height:1;cursor:pointer}
+#parcelFormTitle:focus{outline:none}
+#parcelModalStatus{margin:6px 0 10px;color:var(--gold-soft);font-size:.78rem;line-height:1.4}
+@media(max-width:480px){#parcelEditor{width:calc(100% - 20px);max-height:calc(100dvh - 20px);padding:12px}.parcel-modal-heading{gap:8px}}
