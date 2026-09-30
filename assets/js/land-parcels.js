@@ -99,7 +99,10 @@
     if (!['building','vacant'].includes(values.building)) values.building = '';
     const detail=$('parcelSourceDetail'); detail.hidden=!row.source;
     if(row.source) detail.textContent='2021년 9월 원본 · '+row.source.status+'\n건폐율 '+row.source.coverage+'% 이하 · 용적률 '+row.source.floorRatio+'% 이하 · '+row.source.floors+'층 이하'+(row.source.unitPriceWon?' · 단가 '+row.source.unitPriceWon.toLocaleString('ko-KR')+'원/㎡':'')+'\n원본 PDF '+row.sourcePage+'페이지';
-    fields.forEach(name => { $('parcel-' + name).value = priceFields.includes(name) ? money(values[name] == null ? null : Number(values[name]) * 10000) : values[name] ?? ''; });
+    fields.forEach(name => {
+      if (name === 'building') $('parcel-building').checked = values.building === 'building';
+      else $('parcel-' + name).value = priceFields.includes(name) ? money(values[name] == null ? null : Number(values[name]) * 10000) : values[name] ?? '';
+    });
     updateArea();
     updateParcelLabel();
     $('parcelEditor').hidden = false; $('parcelDelete').hidden = !row.id;
@@ -199,7 +202,7 @@
     const run=generation,blockId=current.id;
     const subblock=$('parcelSubblock').value.trim(),parcel=$('parcelNumber').value.trim();
     if(!subblock||!parcel){status('소블럭과 필지번호를 입력해주세요.');return;}
-    const data={};fields.forEach(name=>{const value=$('parcel-'+name).value.trim();data[name]=priceFields.includes(name)?(value===''?null:readWon(value)/10000):name==='area'?(value===''?null:Number(value)):value;});
+    const data={};fields.forEach(name=>{const value=name==='building'?($('parcel-building').checked?'building':'vacant'):$('parcel-'+name).value.trim();data[name]=priceFields.includes(name)?(value===''?null:readWon(value)/10000):name==='area'?(value===''?null:Number(value)):value;});
     const body={block_id:blockId,subblock,parcel,x:selected.x,y:selected.y,data,updated_at:new Date().toISOString()};
     busy=true;$('parcelSave').disabled=true;status('저장 중입니다.');
     try{
