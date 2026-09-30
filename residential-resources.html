@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>하이탑부동산 | 상가 자료관리</title>
+  <title>하이탑부동산 | 주거 자료관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <style>
@@ -17,9 +17,9 @@
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
-  <script src="assets/js/nav.js"></script>
+
 </head>
-<body data-nav-active="tools" data-resource-scope="commercial">
+<body data-resource-scope="residential">
 
 <div class="page">
 
@@ -27,10 +27,10 @@
   <header class="header">
     <div class="logo-icon"></div>
     <div class="logo-text">
-      <div class="logo-main" id="resourceRoomTitle">하이탑부동산 상가 자료관리</div>
-      <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+      <div class="logo-main">하이탑부동산 주거 자료관리</div>
+      <div class="logo-sub">오피스텔 · 힐스테이트더운정 자료</div>
     </div>
-    <nav class="main-nav" id="mainNav"></nav>
+    <nav class="main-nav"><a class="nav-link active" href="property-main.html?category=home">매물관리 메인으로</a><button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button></nav>
   </header>
   <div class="header-line"></div>
 
@@ -38,8 +38,7 @@
   <div style="margin:16px 0 10px;">
     <button class="btn btn-primary" id="driveRegisterToggleBtn">📁 자료 등록</button>
     <button class="btn btn-ghost" id="driveCategoryAddBtn">+ 카테고리 추가</button>
-    <a class="btn floor-status-entry" href="property-main.html?category=shop">매물관리 메인으로</a>
-    <a class="btn floor-status-entry" href="floor-status-overview.html">🏢 층별 현황 보기</a>
+
   </div>
 
   <!-- ===== 자료 등록 ===== -->
@@ -163,10 +162,6 @@
 </script>
 
 <script>
-  if (new URLSearchParams(location.search).get('scope') === 'all') {
-    document.title = '하이탑부동산 | 전체 자료관리';
-    document.getElementById('resourceRoomTitle').textContent = '하이탑부동산 전체 자료관리';
-  }
   (function () {
     var toggleBtn = document.getElementById("driveRegisterToggleBtn");
     var card = document.getElementById("driveRegisterCard");

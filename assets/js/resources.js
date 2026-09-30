@@ -1,6 +1,18 @@
 // ===== 자료관리 페이지 상태 =====
 let allDriveResources = [];
 let allListings = [];
+let allDriveCategories = [];
+function escapeCategory(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function visibleDriveCategories() { return allDriveCategories.filter(c => driveResourceScope === 'all' || c.room === driveResourceScope); }
+async function ensureCategoryInRoom(name, room = driveResourceScope === 'residential' ? 'residential' : 'commercial') {
+  if (!allDriveCategories.some(c => c.name === name)) {
+    await createDriveCategory(name, room);
+    allDriveCategories = await getDriveCategories();
+  }
+}
+const driveResourceScope = HitopResourceRooms.pageScope(document.body, location.search);
+function visibleDriveResources() { return HitopResourceRooms.visible(allDriveResources, driveResourceScope); }
+function openDriveBuilding(page, id) { location.href = HitopResourceRooms.detailUrl(page, id, driveResourceScope); }
 let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
 
 // ===== 공통 유틸 =====
@@ -55,6 +67,7 @@ async function loadDriveResources() {
   const container = document.getElementById("driveContent");
   container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
   try {
+    allDriveCategories = await getDriveCategories();
     allDriveResources = await getDriveResources();
     renderDriveTab();
     updateDriveCategorySelect();
@@ -65,9 +78,9 @@ async function loadDriveResources() {
 
 function updateDriveCategorySelect() {
   const select = document.getElementById("drive_cat_select");
-  const categories = [...new Set(allDriveResources.map(r => r.category).filter(Boolean))];
+  const categories = visibleDriveCategories().map(c => c.name);
   select.innerHTML = `<option value="">-- 직접 입력 --</option>` +
-    categories.map(c => `<option value="${c}">${c}</option>`).join("");
+    categories.map(c => `<option value="${escapeCategory(c)}">${escapeCategory(c)}</option>`).join("");
 }
 
 document.getElementById("drive_cat_select").addEventListener("change", (e) => {
@@ -88,6 +101,7 @@ document.getElementById("driveSaveBtn").addEventListener("click", async () => {
       document.getElementById("drive_memo_basic_reg").value,
       document.getElementById("drive_memo_extra_reg").value
     );
+    await ensureCategoryInRoom(category);
     await addDriveResource({ category, name, url, memo });
     document.getElementById("drive_category").value = "";
     document.getElementById("drive_name").value = "";
@@ -148,8 +162,8 @@ function _buildDriveItemsHtml(items, cat) {
         ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}
       </div>
       <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
-        <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="location.href='building-detail.html?id=${item.id}'">📁 열기</button>
-        <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="location.href='building-overview.html?id=${item.id}'">📝 개요</button>
+        <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="openDriveBuilding('building-detail.html','${item.id}')">📁 열기</button>
+        <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveBuilding('building-overview.html','${item.id}')">📝 개요</button>
         ${item.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="window.open('${item.url.replace(/'/g,"%27")}','_blank')">🔗 드라이브</button>` : ''}
         <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveLinkModal('${item.id}')">🔗 매물연결</button>
         <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
@@ -161,17 +175,19 @@ function _buildDriveItemsHtml(items, cat) {
 
 function renderDriveTab() {
   const container = document.getElementById("driveContent");
-  if (!allDriveResources.length) {
+  const visibleResources = visibleDriveResources();
+  const categories = visibleDriveCategories().map(c => c.name);
+  if (!categories.length) {
     container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 자료가 없습니다. 위 폼에서 추가해주세요.</div>`;
     return;
   }
 
-  const grouped = {};
-  allDriveResources.forEach(r => {
+  const grouped = Object.fromEntries(categories.map(c => [c, []]));
+  visibleResources.forEach(r => {
     if (!grouped[r.category]) grouped[r.category] = [];
     grouped[r.category].push(r);
   });
-  const categories = Object.keys(grouped);
+
 
   // 기본: 첫 번째 카테고리 선택
   if (!activeDriveCat || !grouped[activeDriveCat]) activeDriveCat = categories[0];
@@ -187,7 +203,7 @@ function renderDriveTab() {
         color:${isActive?'var(--gold)':'var(--text-muted)'};
         border-color:${isActive?'rgba(212,175,55,0.5)':'rgba(255,255,255,0.1)'};
         transition:all 0.15s;overflow:hidden;text-overflow:ellipsis;">
-        ${isActive?'▲':'▼'} 📂 ${c}
+        ${isActive?'▲':'▼'} 📂 ${escapeCategory(c)}
         <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>
       </button>
       <button data-cat-edit-idx="${i}" title="폴더명 수정" style="
@@ -202,7 +218,7 @@ function renderDriveTab() {
   const items = sortedByCatOrder(cat, grouped[cat]);
   const sectionHtml = `
     <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
-      <div class="listing-grid">${_buildDriveItemsHtml(items, cat)}</div>
+      <div class="listing-grid">${items.length ? _buildDriveItemsHtml(items, cat) : '<div class="loading">등록된 자료가 없습니다. 자료 등록 버튼으로 추가해주세요.</div>'}</div>
     </div>`;
 
   container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
@@ -326,6 +342,7 @@ document.getElementById("driveEditSaveBtn").addEventListener("click", async () =
   if (!category || !name) { showToast("카테고리와 건물명을 입력해주세요"); return; }
   btn.disabled = true; btn.textContent = "저장 중...";
   try {
+    await ensureCategoryInRoom(category);
     await updateDriveResource(editingDriveId, {
       category,
       name,
@@ -341,49 +358,50 @@ document.getElementById("driveEditSaveBtn").addEventListener("click", async () =
   }
 });
 
-// ── 카테고리 폴더명 일괄 변경 ──
+// ===== 카테고리 추가 / 이름 수정 =====
 let editingCategoryOld = null;
-function openDriveCategoryEditModal(oldCategory) {
+function openDriveCategoryEditModal(oldCategory = null) {
   editingCategoryOld = oldCategory;
-  document.getElementById("drive_cat_edit_name").value = oldCategory;
+  document.getElementById("driveCategoryModalTitle").textContent = oldCategory ? "📂 카테고리 이름 수정" : "📂 카테고리 추가";
+  document.getElementById("drive_cat_edit_name").value = oldCategory || "";
+  document.getElementById("drive_cat_add_room_field").style.display = !oldCategory && driveResourceScope === 'all' ? "" : "none";
+  document.getElementById("drive_cat_add_room").value = driveResourceScope === 'residential' ? 'residential' : 'commercial';
   document.getElementById("driveCategoryEditModal").style.display = "flex";
+  document.getElementById("drive_cat_edit_name").focus();
 }
-
+document.getElementById("driveCategoryAddBtn").addEventListener("click", () => openDriveCategoryEditModal());
 document.getElementById("driveCategoryEditSaveBtn").addEventListener("click", async () => {
-  if (!editingCategoryOld) return;
   const btn = document.getElementById("driveCategoryEditSaveBtn");
   const newCategory = document.getElementById("drive_cat_edit_name").value.trim();
-
   if (!newCategory) { showToast("카테고리명을 입력해주세요"); return; }
   if (newCategory === editingCategoryOld) {
-    document.getElementById("driveCategoryEditModal").style.display = "none";
-    return;
+    document.getElementById("driveCategoryEditModal").style.display = "none"; return;
   }
-  const existingCategories = [...new Set(allDriveResources.map(r => r.category).filter(Boolean))];
-  if (existingCategories.includes(newCategory)) {
-    showToast("❌ 이미 존재하는 카테고리명입니다");
-    return;
-  }
-  if (!confirm("이 카테고리의 기존 자료들도 모두 새 폴더명으로 이동됩니다. 계속할까요?")) return;
-
-  const targetItems = allDriveResources.filter(r => r.category === editingCategoryOld);
+  if (allDriveCategories.some(c => c.name === newCategory)) { showToast("이미 존재하는 카테고리명입니다"); return; }
+  const oldCategory = editingCategoryOld;
   btn.disabled = true; btn.textContent = "저장 중...";
   try {
-    await Promise.all(targetItems.map(item => updateDriveResource(item.id, { category: newCategory })));
+    if (oldCategory) {
+      const category = allDriveCategories.find(c => c.name === oldCategory);
+      if (!category) throw new Error("카테고리를 찾을 수 없습니다. 새로고침해주세요");
+      await renameDriveCategory(category, newCategory);
+      const order = getDriveOrder();
+      if (order[oldCategory]) { order[newCategory] = order[oldCategory]; delete order[oldCategory]; try { saveDriveOrder(order); } catch (_) {} }
+    } else {
+      await createDriveCategory(newCategory, document.getElementById("drive_cat_add_room").value);
+    }
     document.getElementById("driveCategoryEditModal").style.display = "none";
     activeDriveCat = newCategory;
-    showToast("✅ 카테고리명이 변경되었습니다");
+    showToast(oldCategory ? "✅ 카테고리명이 변경되었습니다" : "✅ 카테고리가 추가되었습니다");
     await loadDriveResources();
-  } catch(e) {
-    showToast("❌ 변경 실패: " + e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = "저장";
-  }
+  } catch(e) { showToast("❌ 저장 실패: " + e.message); }
+  finally { btn.disabled = false; btn.textContent = "저장"; }
 });
 
 // ===== 초기화 =====
 async function initResourcesPage() {
   try {
+    allDriveCategories = await getDriveCategories();
     const [listings, resources] = await Promise.all([getListings(), getDriveResources()]);
     allListings = listings;
     allDriveResources = resources;

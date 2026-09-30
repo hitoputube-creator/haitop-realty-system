@@ -618,6 +618,7 @@
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
+<script src="assets/js/resource-rooms.js?v=20260930-resource-rooms"></script>
 <script src="assets/js/building-register-view.js?v=20260929-compact-table"></script>
 <script>
 /* ═══════════════════════════════════════════
@@ -641,6 +642,7 @@ const OV_FIELDS = [
 
 const params     = new URLSearchParams(location.search);
 const buildingId = params.get('id');
+let resourceScope = HitopResourceRooms.readDetailScope(location.search);
 let buildingAddress = '';
 
 /* ── 유틸 ── */
@@ -706,8 +708,8 @@ async function cloudinaryUpload(file, folder = 'haitop') {
 }
 
 /* ── 이동 ── */
-function goBack()    { window.location.href = 'resources.html'; }
-function goOverview(){ window.location.href = `building-overview.html?id=${buildingId}`; }
+function goBack() { window.location.href = HitopResourceRooms.roomUrl(resourceScope); }
+function goOverview(){ window.location.href = HitopResourceRooms.detailUrl('building-overview.html', buildingId, resourceScope); }
 
 /* ── 라이트박스 (확대/축소/드래그 포함) ── */
 const LB_MIN_SCALE = 1, LB_MAX_SCALE = 5, LB_STEP = 0.5;
@@ -823,6 +825,10 @@ async function init() {
     const resources = await getDriveResources();
     const building  = resources.find(r => r.id === buildingId);
     if (building) {
+      if (!resourceScope) {
+      await getDriveCategories();
+      resourceScope = HitopResourceRooms.isResidential(building) ? 'residential' : 'commercial';
+    }
       document.getElementById('buildingName').textContent = building.name;
       document.title = `하이탑부동산 | ${building.name}`;
       buildingAddress = parseMemoFields(building.memo || '').주소 || '';

@@ -242,6 +242,7 @@
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
+<script src="assets/js/resource-rooms.js?v=20260930-resource-rooms"></script>
 <script>
 const MEMO_SEP      = '---추가메모---';
 const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토지면적','건축면적','연면적','관리사무소','규모'];
@@ -264,6 +265,7 @@ const INFO_TABLE_ROWS = [
 
 const params     = new URLSearchParams(location.search);
 const buildingId = params.get('id');
+let resourceScope = HitopResourceRooms.readDetailScope(location.search);
 let buildingData = null;
 let memoFields   = {};
 let memoExtra    = '';
@@ -274,8 +276,8 @@ function showToast(msg, dur = 2500) {
   setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function goBack()   { window.location.href = 'resources.html'; }
-function goDetail() { window.location.href = `building-detail.html?id=${buildingId}`; }
+function goBack() { window.location.href = HitopResourceRooms.roomUrl(resourceScope); }
+function goDetail() { window.location.href = HitopResourceRooms.detailUrl('building-detail.html', buildingId, resourceScope); }
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -455,6 +457,10 @@ async function init() {
     buildingData = resources.find(r => r.id === buildingId);
     if (!buildingData) { alert('건물을 찾을 수 없습니다.'); goBack(); return; }
 
+    if (!resourceScope) {
+      await getDriveCategories();
+      resourceScope = HitopResourceRooms.isResidential(buildingData) ? 'residential' : 'commercial';
+    }
     document.getElementById('buildingName').textContent = buildingData.name;
     document.title = `하이탑부동산 | ${buildingData.name} 개요`;
 
