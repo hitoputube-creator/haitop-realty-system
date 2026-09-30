@@ -38,7 +38,30 @@
   const image = $('mapImage');
   let view = 'all', group = 'all', landType = 'all', zoom = 1, pinch = null, suppressClickUntil = 0;
   let drawingZoom = 1;
+  let mapFitted = true, drawingFitted = true;
+  const minZoom = .05;
   const maxZoom = 10;
+  function fittedZoom(container, img) {
+    const top = Math.max(0, container.getBoundingClientRect().top);
+    container.style.height = Math.max(120, Math.min(window.innerHeight * .7, window.innerHeight - top - 24)) + 'px';
+    const width = img.naturalWidth || img.width;
+    const height = img.naturalHeight || img.height;
+    if (!width || !height || !container.clientWidth) return 1;
+    return Math.min(1, container.clientHeight / (container.clientWidth * height / width));
+  }
+  function fitMap() {
+    mapFitted = true;
+    zoom = Math.max(minZoom, fittedZoom(viewport, image));
+    applyZoom(); viewport.scrollTo(0,0);
+  }
+  function fitDrawing() {
+    const container = $('detailDrawing');
+    const drawing = container.querySelector('img');
+    if (!drawing || !drawing.complete || !drawing.naturalWidth) return;
+    setDrawingZoom(fittedZoom(container, drawing));
+    drawingFitted = true;
+    container.scrollTo(0,0);
+  }
   function readState() {
     const p = new URLSearchParams(location.search);
     view = p.get('view') === 'third' ? 'third' : 'all';
@@ -91,16 +114,20 @@
       if (block.drawing) {
         const drawing = document.createElement('img');
         drawing.src = block.drawing; drawing.alt = groups[block.group].label + ' ' + block.name + ' 상세 도면';
-        drawing.style.width = '100%'; drawingZoom = 1;
+        drawing.style.width = '100%'; drawingZoom = 1; drawingFitted = true;
+        drawing.addEventListener('load',() => {
+          if ($('detailDrawing').contains(drawing) && drawingFitted) fitDrawing();
+        });
         drawing.addEventListener('error',() => {
           $('detailDrawingError').hidden = false;
         });
         $('detailDrawing').appendChild(drawing);
         window.HitopLandParcels?.open(block, drawing);
+        if (drawing.complete && drawing.naturalWidth) fitDrawing();
       }
       if (!block.drawing) window.HitopLandParcels?.open(block, null);
       $('detailDrawingError').hidden = true;
-      $('drawingZoomLabel').textContent = '100%';
+      $('drawingZoomLabel').textContent = Math.round(drawingZoom * 100) + '%';
       document.title = '하이탑부동산 | ' + groups[block.group].label + ' ' + block.name;
       $('detailTitle').focus();
       return;
@@ -113,7 +140,7 @@
       image.src = nextImage;
       image.width = 2048;
       image.height = 1380;
-      zoom = 1; applyZoom(); viewport.scrollTo(0,0);
+      mapFitted = true;
     }
     image.alt = view === 'third' ? '운정3지구 C블럭 위치도' : '운정신도시 전체 택지블럭 위치도';
     const groupBlocks = blocks.filter(b => group === 'all' || b.group === group);
@@ -161,11 +188,12 @@
       empty.textContent = '이 유형에 해당하는 블럭이 없습니다. 전체를 선택해주세요.';
       $('blockList').appendChild(empty);
     }
+    if (mapFitted) fitMap();
   }
   function applyZoom() {
     stage.style.width = zoom * 100 + '%';
     $('zoomLabel').textContent = Math.round(zoom * 100) + '%';
-    $('zoomOut').disabled = zoom <= 1;
+    $('zoomOut').disabled = zoom <= minZoom;
     $('zoomIn').disabled = zoom >= maxZoom;
   }
   function setZoom(next,cx,cy) {
@@ -173,7 +201,8 @@
     const x = cx === undefined ? viewport.clientWidth / 2 : cx - rect.left;
     const y = cy === undefined ? viewport.clientHeight / 2 : cy - rect.top;
     const old = zoom;
-    zoom = Math.max(1,Math.min(maxZoom,next));
+    mapFitted = false;
+    zoom = Math.max(minZoom,Math.min(maxZoom,next));
     const left = (viewport.scrollLeft + x) * zoom / old - x;
     const top = (viewport.scrollTop + y) * zoom / old - y;
     applyZoom(); viewport.scrollLeft = left; viewport.scrollTop = top;
@@ -189,21 +218,28 @@
   }));
   $('backToMap').addEventListener('click',() => { navigate(null); viewport.focus({preventScroll:true}); });
   $('detailBack').addEventListener('click',() => { navigate(null); viewport.focus({preventScroll:true}); });
-  $('zoomIn').addEventListener('click',() => setZoom(zoom + .5));
-  $('zoomOut').addEventListener('click',() => setZoom(zoom - .5));
-  $('zoomFit').addEventListener('click',() => { setZoom(1); viewport.scrollTo(0,0); });
+  $('zoomIn').addEventListener('click',() => setZoom(zoom + (zoom < 1 ? .1 : .5)));
+  $('zoomOut').addEventListener('click',() => setZoom(zoom - (zoom <= 1 ? .1 : .5)));
+  $('zoomFit').addEventListener('click',fitMap);
   function setDrawingZoom(next) {
     const drawing = $('detailDrawing').firstElementChild;
     if (!drawing) return;
-    drawingZoom = Math.max(1,Math.min(maxZoom,next));
+    drawingFitted = false;
+    drawingZoom = Math.max(minZoom,Math.min(maxZoom,next));
     drawing.style.width = drawingZoom * 100 + '%';
     $('drawingZoomLabel').textContent = Math.round(drawingZoom * 100) + '%';
+    $('drawingZoomOut').disabled = drawingZoom <= minZoom;
+    $('drawingZoomIn').disabled = drawingZoom >= maxZoom;
   }
-  $('drawingZoomIn').addEventListener('click',() => setDrawingZoom(drawingZoom + .5));
-  $('drawingZoomOut').addEventListener('click',() => setDrawingZoom(drawingZoom - .5));
-  $('drawingZoomFit').addEventListener('click',() => { setDrawingZoom(1); $('detailDrawing').scrollTo(0,0); });
+  $('drawingZoomIn').addEventListener('click',() => setDrawingZoom(drawingZoom + (drawingZoom < 1 ? .1 : .5)));
+  $('drawingZoomOut').addEventListener('click',() => setDrawingZoom(drawingZoom - (drawingZoom <= 1 ? .1 : .5)));
+  $('drawingZoomFit').addEventListener('click',fitDrawing);
   image.addEventListener('error',() => { $('mapError').hidden = false; });
-  image.addEventListener('load',() => { $('mapError').hidden = true; });
+  image.addEventListener('load',() => { $('mapError').hidden = true; if (mapFitted) fitMap(); });
+  window.addEventListener('resize',() => {
+    if (!$('overview').hidden && mapFitted) fitMap();
+    if (!$('blockDetail').hidden && drawingFitted) fitDrawing();
+  });
   function touchDistance(t) { return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
   viewport.addEventListener('touchstart',e => {
     if(e.touches.length !== 2) return;
