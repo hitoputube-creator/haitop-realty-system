@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const ns = 'http://www.w3.org/2000/svg';
   let current = null, rows = [], cells = [], selected = null, stage = null, overlay = null, generation = 0, placing = false, busy = false;
-  let sourceMeta = null, recordsLoaded = false;
+  let sourceMeta = null, buildingVectorOverlay = null, buildingVectorCandidates = [], recordsLoaded = false;
   const views = {area:false, building:false, contact:false};
   const contactStates = {
     contact: {label:'연락처 있음', symbol:'●'},
@@ -18,7 +18,7 @@
   function contactState(row) { return hasContact(row) ? 'contact' : !recordsLoaded ? 'unknown' : row.id ? 'registered' : 'missing'; }
   function viewLegend() {
     const parts=[];
-    if(views.building) parts.push('건물 있음: 파랑 · 건물 없음: 초록 · 미입력: 회색');
+    if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
     if(views.contact) parts.push('● 소유주와 연락처가 모두 있는 필지' + (!recordsLoaded ? ' · 저장 자료를 불러오지 못했습니다' : ''));
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
@@ -37,6 +37,63 @@
       text.setAttribute('x',x);text.setAttribute('y',y + (parts.length ? .011 : 0));text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');
       text.classList.add('parcel-map-label','parcel-contact-marker','parcel-contact-contact');text.textContent='●';overlay.append(text);
     }
+  }
+  function isParcelYellow(fill) {
+    const match=String(fill||'').match(/rgba?\\((\\d+)[, ]+(\\d+)[, ]+(\\d+)/i);
+    if(!match)return false;
+    const r=Number(match[1]),g=Number(match[2]),b=Number(match[3]);
+    return r>=180 && g>=165 && b<=190 && r>g-25 && g>b+20;
+  }
+  function setupBuildingVectorOverlay(svgText) {
+    buildingVectorOverlay=null;buildingVectorCandidates=[];
+    if(!svgText||!stage||!overlay)return;
+    try{
+      const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
+      const parsed=doc.documentElement;
+      if(!parsed||parsed.nodeName.toLowerCase()!=='svg')return;
+      const svg=document.importNode(parsed,true);
+      svg.classList.add('parcel-building-vector-overlay');
+      svg.setAttribute('aria-hidden','true');
+      svg.setAttribute('preserveAspectRatio','none');
+      svg.removeAttribute('width');svg.removeAttribute('height');
+      svg.style.visibility='hidden';
+      stage.insertBefore(svg,overlay);
+      const shapes=[...svg.querySelectorAll('path,polygon,rect')];
+      buildingVectorCandidates=shapes.filter(shape=>isParcelYellow(getComputedStyle(shape).fill));
+      svg.style.visibility='';
+      buildingVectorOverlay=svg;
+    }catch(_){buildingVectorOverlay=null;buildingVectorCandidates=[];}
+  }
+  function shapeContainsClientPoint(shape,clientX,clientY) {
+    try{
+      if(typeof shape.isPointInFill!=='function')return false;
+      const matrix=shape.getScreenCTM();
+      if(!matrix)return false;
+      const point=new DOMPoint(clientX,clientY).matrixTransform(matrix.inverse());
+      return shape.isPointInFill(point);
+    }catch(_){return false;}
+  }
+  function updateVectorBuildingHighlights(ordered) {
+    if(!buildingVectorOverlay)return;
+    buildingVectorCandidates.forEach(shape=>shape.classList.remove('parcel-building-vector-highlight'));
+    if(!views.building)return;
+    const rect=buildingVectorOverlay.getBoundingClientRect();
+    if(!rect.width||!rect.height)return;
+    ordered.filter(row=>buildingState(row)==='building').forEach(row=>{
+      const x=Number(row.x),y=Number(row.y);
+      if(!Number.isFinite(x)||!Number.isFinite(y))return;
+      const clientX=rect.left+x/100*rect.width,clientY=rect.top+y/100*rect.height;
+      const hits=buildingVectorCandidates.filter(shape=>shapeContainsClientPoint(shape,clientX,clientY));
+      if(!hits.length)return;
+      let best=hits[0],bestArea=Infinity;
+      hits.forEach(shape=>{
+        try{
+          const box=shape.getBoundingClientRect(),area=box.width*box.height;
+          if(area>0&&area<bestArea){best=shape;bestArea=area;}
+        }catch(_){}
+      });
+      best.classList.add('parcel-building-vector-highlight');
+    });
   }
   const fields = ['address','landType','building','area','supplyPrice','auctionPrice','salePrice','owner','contact','note'];
   const priceFields = ['supplyPrice','auctionPrice','salePrice'];
@@ -127,7 +184,7 @@
       const shape = document.createElementNS(ns,row.points ? 'polygon' : 'circle');
       if (row.points) shape.setAttribute('points',row.points.map(p => p[0]/318 + ',' + p[1]/385).join(' '));
       else {shape.setAttribute('cx',row.x/100);shape.setAttribute('cy',row.y/100);shape.setAttribute('r',row.sourceCell?'.006':'.015');}
-      shape.classList.add('parcel-shape'); if(views.building) shape.classList.add('parcel-building-'+buildingState(row));
+      shape.classList.add('parcel-shape'); if(views.building && buildingState(row)==='building' && row.points) shape.classList.add('parcel-building-building');
       const registration = contactStates[contactState(row)].label;
       shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료 · ' + registration);
       const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + ' · ' + registration;shape.append(title);
@@ -138,6 +195,7 @@
       button.textContent=parcelLabel(row);
       const note=document.createElement('small');note.textContent=registration;button.append(note);button.addEventListener('click',()=>show(row));$('parcelList').append(button);
     });
+    updateVectorBuildingHighlights(ordered);
     if(sourceMeta)$('parcelSourceSummary').textContent='원본 토지목록 '+cells.length+'개 · 현재 표시 '+count+'개';
     $('parcelCount').textContent = (recordsLoaded ? '자료 등록 ' + rows.length + '개' : '등록 상태 확인 불가') + ' · 현재 표시 ' + count + '개';
     $('parcelListEmpty').hidden = !!count;
@@ -159,7 +217,7 @@
     const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent=row.id?'자료 수정':'자료 보기·등록';btn.addEventListener('click',()=>show(row));td.append(badge,btn);tr.append(td);$('parcelSourceBody').append(tr);
   }
   async function open(block, image) {
-    const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; selected=null; placing=false; recordsLoaded=false;
+    const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; buildingVectorOverlay=null; buildingVectorCandidates=[]; selected=null; placing=false; recordsLoaded=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
     $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
     closeEditor(); $('parcelManager').hidden=!image;
@@ -181,7 +239,7 @@
     try {
       const results = await Promise.allSettled([
         request('?block_id=eq.'+encodeURIComponent(block.id)+'&order=subblock.asc,parcel.asc'),
-        block.id==='third-C1' ? window.HitopLandBlockSource.load(block.id).then(row=>row.source_data) :
+        block.id==='third-C1' ? window.HitopLandBlockSource.load(block.id) :
         block.id==='third-C18' ? fetch('assets/images/land/blocks/third-C18-parcels.json').then(r=>{if(!r.ok)throw Error('필지 위치를 불러오지 못했습니다.');return r.json();}) : Promise.resolve([])
       ]);
       if(run!==generation)return;
@@ -189,7 +247,7 @@
       recordsLoaded=results[0].status==='fulfilled';$('parcelContactFilter').disabled=!recordsLoaded;
       if(results[1].status==='fulfilled'){
         if(block.id==='third-C1'){
-          sourceMeta=results[1].value;cells=sourceMeta.parcels;$('parcelSourceSection').hidden=false;
+          sourceMeta=results[1].value.source_data;cells=sourceMeta.parcels;setupBuildingVectorOverlay(results[1].value.diagram_svg);$('parcelSourceSection').hidden=false;
           $('parcelSubblockFilter').replaceChildren(new Option('C1 전체','all'),...sourceMeta.subblocks.map(g=>new Option('C1-'+g.number,String(g.number))));
         }else cells=results[1].value;
       }
@@ -239,5 +297,5 @@
   priceFields.forEach(name=>$('parcel-'+name).addEventListener('input',event=>formatPriceInput(event.target)));
   $('parcel-area').addEventListener('input',updateArea);
   ['parcelBuildingFilter','parcelTypeFilter','parcelContactFilter'].forEach(id=>$(id).addEventListener('change',draw));
-  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
+  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;buildingVectorOverlay=null;buildingVectorCandidates=[];recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
 })();
