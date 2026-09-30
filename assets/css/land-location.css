@@ -35,6 +35,9 @@
 @media(max-width:480px){.parcel-value-pair{padding:0;gap:8px}.parcel-fields{gap:7px 8px}.land-location-page .block-footer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.block-footer-actions #sourceDrawingLink{grid-column:1/-1}.land-location-page .detail-actions .btn{min-height:36px}}
 
 /* Parcel views share the drawing coordinate system and never intercept clicks. */
-.parcel-view-controls{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.parcel-view-controls .btn{min-height:34px;font-size:.8rem;padding:6px 10px}
+.parcel-view-controls{display:flex;flex-wrap:nowrap;gap:6px;margin:8px 0;overflow-x:auto}.parcel-view-controls .btn{flex:0 0 auto;white-space:nowrap}.parcel-view-controls .btn{min-height:34px;font-size:.8rem;padding:6px 10px}
 .parcel-map-label{font-size:.008px;font-weight:700;fill:#102238;stroke:#fff;stroke-width:.0016px;paint-order:stroke fill;pointer-events:none}
 .parcel-shape.parcel-building-building{fill:#2563eb55;stroke:#2563eb}.parcel-shape.parcel-building-vacant{fill:#16803c55;stroke:#16803c}.parcel-shape.parcel-building-unknown{fill:#64748b44;stroke:#64748b}.parcel-shape.selected{stroke:#a67200;stroke-width:.003}.parcel-shape:hover,.parcel-shape:focus{stroke:#a67200;stroke-width:.003}
+
+.parcel-contact-marker{font-size:.012px;stroke-width:.002px}.parcel-contact-marker.parcel-contact-contact{fill:#137a42}.parcel-contact-marker.parcel-contact-registered{fill:#a66b00}.parcel-contact-marker.parcel-contact-missing{fill:#526071}.parcel-contact-marker.parcel-contact-unknown{fill:#6d36a0}
+.parcel-contact-badge{display:inline-block;margin-right:10px;font-size:.75rem}.parcel-contact-badge.parcel-contact-contact{color:#8debbb}.parcel-contact-badge.parcel-contact-registered{color:#f4d27b}.parcel-contact-badge.parcel-contact-missing{color:var(--text-muted)}.parcel-contact-badge.parcel-contact-unknown{color:#dbb7ff}

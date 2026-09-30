@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-parcel-views-1">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-parcel-status-2">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -76,12 +76,12 @@
         <button class="btn" id="drawingZoomIn" type="button" aria-label="상세 도면 확대">＋</button>
         <button class="btn" id="drawingZoomFit" type="button">전체 맞춤</button>
       </div>
-      <div class="parcel-view-controls" id="parcelViewControls" role="group" aria-label="필지 표시" hidden><button class="btn" id="parcelAreaToggle" type="button" aria-pressed="false">면적 보기</button><button class="btn" id="parcelBuildingToggle" type="button" aria-pressed="false">건물 유무 보기</button><button class="btn" id="parcelContactToggle" type="button" aria-pressed="false">연락처 유무 보기</button></div><p id="parcelViewLegend" class="map-help" hidden></p>
+      <div class="parcel-view-controls" id="parcelViewControls" role="group" aria-label="필지 표시" hidden><button class="btn" id="parcelAreaToggle" type="button" aria-pressed="false">면적 보기</button><button class="btn" id="parcelBuildingToggle" type="button" aria-pressed="false">건물 유무 보기</button><button class="btn" id="parcelContactToggle" type="button" aria-pressed="false">연락처·자료 보기</button></div><p id="parcelViewLegend" class="map-help" hidden></p>
       <p class="map-help">두 손가락으로 최대 2,000%까지 확대·축소하고, 한 손가락으로 밀어서 이동할 수 있습니다.</p>
       <div id="detailDrawing" hidden></div>
 <section id="parcelManager" class="parcel-manager" hidden>
 <h2>필지별 세부자료</h2><p id="parcelHelp"></p><p id="parcelStatus" role="status" aria-live="polite"></p>
-<div class="filter-bar"><button class="btn" id="parcelAdd" type="button" aria-pressed="false">필지 위치 지정·등록</button><label>건물 구분 <select id="parcelBuildingFilter"><option value="all">전체</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option><option value="unknown">미확인</option></select></label><label>택지 유형 <select id="parcelTypeFilter"><option value="all">전체</option><option value="single">주거전용</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label></div>
+<div class="filter-bar"><button class="btn" id="parcelAdd" type="button" aria-pressed="false">필지 위치 지정·등록</button><label>건물 구분 <select id="parcelBuildingFilter"><option value="all">전체</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option><option value="unknown">미확인</option></select></label><label>택지 유형 <select id="parcelTypeFilter"><option value="all">전체</option><option value="single">주거전용</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label><label>자료 상태 <select id="parcelContactFilter"><option value="all">전체</option><option value="contact">연락처 있음</option><option value="registered">자료 있음 · 연락처 없음</option><option value="missing">자료 미등록</option></select></label></div>
 <section id="parcelSourceSection" hidden>
 <p class="source-note">LH 공급안내 원본 · 2021년 9월 기준. 예정지번과 당시 공급예정금액이며, 현재 지번·매매가와 별도로 확인해주세요.</p>
 <label class="source-group-filter">소블럭 선택 <select id="parcelSubblockFilter"><option value="all">C1 전체</option></select></label>
@@ -102,7 +102,7 @@
   </section>
 </main>
 <script src="assets/js/land-block-source.js?v=20260930-touch-1"></script>
-<script src="assets/js/land-parcels.js?v=20260930-parcel-views-1"></script>
-<script src="assets/js/land-location.js?v=20260930-parcel-views-1"></script>
+<script src="assets/js/land-parcels.js?v=20260930-parcel-status-2"></script>
+<script src="assets/js/land-location.js?v=20260930-parcel-status-2"></script>
 </body>
 </html>
