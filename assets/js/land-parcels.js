@@ -5,6 +5,25 @@
   const ns = 'http://www.w3.org/2000/svg';
   let current = null, rows = [], cells = [], selected = null, stage = null, overlay = null, generation = 0, placing = false, busy = false;
   let sourceMeta = null;
+  const views = {area:false, building:false, contact:false};
+  function buildingState(row) { return ['building','vacant'].includes(row.data.building) ? row.data.building : 'unknown'; }
+  function hasContact(row) { return /\d{7,}/.test(String(row.data.contact || '').replace(/\D/g,'')); }
+  function viewLegend() {
+    const parts=[];
+    if(views.building) parts.push('건물 있음: 파랑 · 토지만 있음: 초록 · 미확인: 회색');
+    if(views.contact) parts.push('연락처 등록: ● · 연락처 없음: ○');
+    $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
+  }
+  function addMapLabel(row) {
+    const area=Number(row.data.area), parts=[];
+    if(views.area && Number.isFinite(area) && area>0) parts.push((area/3.305785).toFixed(1)+'평');
+    if(views.contact) parts.push(hasContact(row)?'●':'○');
+    if(!parts.length)return;
+    let x=Number(row.x)/100,y=Number(row.y)/100;
+    if(row.points?.length){x=row.points.reduce((n,p)=>n+p[0],0)/row.points.length/318;y=row.points.reduce((n,p)=>n+p[1],0)/row.points.length/385;}
+    if(!Number.isFinite(x)||!Number.isFinite(y))return;
+    const text=document.createElementNS(ns,'text');text.setAttribute('x',x);text.setAttribute('y',y);text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');text.classList.add('parcel-map-label');text.textContent=parts.join(' ');overlay.append(text);
+  }
   const fields = ['address','landType','building','area','supplyPrice','auctionPrice','salePrice','owner','contact','note'];
   const priceFields = ['supplyPrice','auctionPrice','salePrice'];
   function money(value) { return value == null || value === '' ? '' : Math.round(Number(value)).toLocaleString('ko-KR'); }
@@ -46,7 +65,7 @@
     $('parcelFormSubtitle').textContent = label ? subblock + '소블럭 ' + parcel + '필지' : '소블럭 번호와 필지번호를 입력해주세요.';
   }
   function matches(row) {
-    return (!sourceMeta || $('parcelSubblockFilter').value === 'all' || row.subblock === $('parcelSubblockFilter').value) && ($('parcelBuildingFilter').value === 'all' || row.data.building === $('parcelBuildingFilter').value) &&
+    return (!sourceMeta || $('parcelSubblockFilter').value === 'all' || row.subblock === $('parcelSubblockFilter').value) && ($('parcelBuildingFilter').value === 'all' || buildingState(row) === $('parcelBuildingFilter').value) &&
       ($('parcelTypeFilter').value === 'all' || row.data.landType === $('parcelTypeFilter').value);
   }
   function show(row) {
@@ -68,7 +87,7 @@
     status(row.id ? '등록된 자료입니다. 수정 후 저장할 수 있습니다.' : '등록된 세부자료가 없습니다. 내용을 입력하고 저장해주세요.');
   }
   function draw() {
-    overlay.replaceChildren(); $('parcelList').replaceChildren();
+    overlay.replaceChildren(); $('parcelList').replaceChildren(); viewLegend();
     const combined = new Map(cells.map(cell => [key(cell),{...cell,data:{...cell.data}}]));
     rows.forEach(row => {const base=combined.get(key(row));combined.set(key(row), {...base,...row,data:{...base?.data,...row.data}});});
     $('parcelSourceBody').replaceChildren();$('parcelList').hidden=!!sourceMeta;
@@ -83,15 +102,15 @@
       const shape = document.createElementNS(ns,row.points ? 'polygon' : 'circle');
       if (row.points) shape.setAttribute('points',row.points.map(p => p[0]/318 + ',' + p[1]/385).join(' '));
       else {shape.setAttribute('cx',row.x/100);shape.setAttribute('cy',row.y/100);shape.setAttribute('r',row.sourceCell?'.006':'.015');}
-      shape.classList.add('parcel-shape');if(selected&&key(selected)===key(row))shape.classList.add('selected'); if (row.id) shape.classList.add('registered');
+      shape.classList.add('parcel-shape'); if(views.building) shape.classList.add('parcel-building-'+buildingState(row));if(selected&&key(selected)===key(row))shape.classList.add('selected'); if (row.id) shape.classList.add('registered');
       shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료');
       const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + (row.id?' 등록됨':' 미등록');shape.append(title);
       shape.addEventListener('click',event=>{event.stopPropagation();show(row);});
-      shape.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row);}});overlay.append(shape);
+      shape.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row);}});overlay.append(shape); addMapLabel(row);
       if(sourceMeta){appendSourceRow(row);return;}
       const button=document.createElement('button');button.type='button';button.className='block-button';
       button.textContent=parcelLabel(row);
-      const note=document.createElement('small');note.textContent=row.id?'자료 보기':'미등록';button.append(note);button.addEventListener('click',()=>show(row));$('parcelList').append(button);
+      const note=document.createElement('small');note.textContent=(row.id?'자료 보기':'미등록')+(views.contact?(hasContact(row)?' · 연락처 등록':' · 연락처 없음'):'');button.append(note);button.addEventListener('click',()=>show(row));$('parcelList').append(button);
     });
     if(sourceMeta)$('parcelSourceSummary').textContent='원본 토지목록 '+cells.length+'개 · 현재 표시 '+count+'개';
     $('parcelCount').textContent = '자료 등록 ' + rows.length + '개 · 현재 표시 ' + count + '개';
@@ -115,6 +134,7 @@
   async function open(block, image) {
     const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; selected=null; placing=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
+    $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
     $('parcelManager').hidden=!image; $('parcelEditor').hidden=true;
     if (!image) return;
     stage=document.createElement('div');stage.className='parcel-stage';stage.style.width='100%';
@@ -148,6 +168,7 @@
       draw();status(results[0].status==='rejected'?'원본 도면·목록은 확인할 수 있습니다. '+(results[0].reason.message||'저장 자료를 불러오지 못했습니다.'):results[1].status==='rejected'?results[1].reason.message:'필지를 선택해 세부자료를 확인하세요.');
     } catch(error) { if(run===generation)status(error.message || '도면의 필지 위치를 불러오지 못했습니다.'); }
   }
+  Object.keys(views).forEach(name=>{const id='parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
   $('parcelForm').addEventListener('submit',async event=>{
     event.preventDefault(); if(busy || !selected)return;
     const run=generation,blockId=current.id;
@@ -176,6 +197,6 @@
   priceFields.forEach(name=>$('parcel-'+name).addEventListener('input',event=>formatPriceInput(event.target)));
   $('parcel-area').addEventListener('input',updateArea);
   ['parcelBuildingFilter','parcelTypeFilter'].forEach(id=>$(id).addEventListener('change',draw));
-  window.HitopLandParcels={open,close(){generation++;current=null;rows=[];cells=[];sourceMeta=null;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelManager').hidden=true;$('parcelEditor').hidden=true;}};
+  window.HitopLandParcels={open,close(){generation++;current=null;overlay=null;$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelManager').hidden=true;$('parcelEditor').hidden=true;}};
 })();
 
