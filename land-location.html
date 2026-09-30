@@ -86,7 +86,8 @@
 <label class="source-group-filter">소블럭 선택 <select id="parcelSubblockFilter"><option value="all">C1 전체</option></select></label>
 <p id="parcelSourceSummary"></p><div class="parcel-table-scroll"><table class="parcel-source-table"><thead><tr><th>필지</th><th>예정지번</th><th>면적 ㎡ / 평</th><th>공급예정금액</th><th>자료</th></tr></thead><tbody id="parcelSourceBody"></tbody></table></div></section>
 <p id="parcelCount"></p><div id="parcelList" class="block-buttons"></div><p id="parcelListEmpty" hidden>표시할 필지가 없습니다. 위치를 지정해 등록할 수 있습니다.</p>
-<section id="parcelEditor" hidden><h3 id="parcelFormTitle"></h3><p id="parcelSourceDetail" hidden></p><form id="parcelForm"><div class="parcel-fields">
+<section id="parcelEditor" hidden><h3 id="parcelFormTitle"></h3><p id="parcelFormSubtitle"></p><p id="parcelSourceDetail" hidden></p><form id="parcelForm"><div class="parcel-fields">
+<label>상세 블럭번호<input id="parcelFullNumber" readonly placeholder="예: C1-22-2"></label>
 <label>소블럭 번호<input id="parcelSubblock" required maxlength="30" placeholder="예: 1"></label><label>필지번호<input id="parcelNumber" required maxlength="30" placeholder="예: 8"></label>
 <label>택지 유형<select id="parcel-landType"><option value="single">단독택지</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label>
 <label>건물 유무<select id="parcel-building"><option value="unknown">미확인</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option></select></label>
@@ -100,7 +101,7 @@
   </section>
 </main>
 <script src="assets/js/land-block-source.js?v=20260930-touch-1"></script>
-<script src="assets/js/land-parcels.js?v=20260930-touch-1"></script>
+<script src="assets/js/land-parcels.js?v=20260930-parcel-number-1"></script>
 <script src="assets/js/land-location.js?v=20260930-touch-1"></script>
 </body>
 </html>
