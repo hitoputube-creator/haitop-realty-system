@@ -36,11 +36,11 @@
   const viewport = $('mapViewport');
   const stage = $('mapStage');
   const image = $('mapImage');
-  let view = 'all', group = 'all', landType = 'all', zoom = 1, pinch = null, suppressClickUntil = 0;
+  let view = 'all', group = 'all', landType = 'all', zoom = 1, suppressClickUntil = 0;
   let drawingZoom = 1;
   let mapFitted = true, drawingFitted = true;
   const minZoom = .1;
-  const maxZoom = 10;
+  const maxZoom = 20;
   function nextZoomStep(current, direction) {
     const units = current * 10;
     const next = direction > 0 ? Math.floor(units + 1e-7) + 1 : Math.ceil(units - 1e-7) - 1;
@@ -249,12 +249,20 @@
   $('zoomIn').addEventListener('click',() => setZoom(nextZoomStep(zoom, 1)));
   $('zoomOut').addEventListener('click',() => setZoom(nextZoomStep(zoom, -1)));
   $('zoomFit').addEventListener('click',fitMap);
-  function setDrawingZoom(next) {
-    const drawing = $('detailDrawing').firstElementChild;
+  function setDrawingZoom(next,cx,cy) {
+    const container = $('detailDrawing');
+    const drawing = container.firstElementChild;
     if (!drawing) return;
+    const rect = container.getBoundingClientRect();
+    const x = cx === undefined ? container.clientWidth / 2 : cx - rect.left;
+    const y = cy === undefined ? container.clientHeight / 2 : cy - rect.top;
+    const old = drawingZoom;
+    const left = container.scrollLeft, top = container.scrollTop;
     drawingFitted = false;
     drawingZoom = Math.max(minZoom,Math.min(maxZoom,next));
     drawing.style.width = drawingZoom * 100 + '%';
+    container.scrollLeft = (left + x) * drawingZoom / old - x;
+    container.scrollTop = (top + y) * drawingZoom / old - y;
     $('drawingZoomLabel').textContent = Math.round(drawingZoom * 100) + '%';
     $('drawingZoomOut').disabled = drawingZoom <= minZoom;
     $('drawingZoomIn').disabled = drawingZoom >= maxZoom;
@@ -269,21 +277,41 @@
     if (!$('blockDetail').hidden && drawingFitted) fitDrawing();
   });
   function touchDistance(t) { return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
-  viewport.addEventListener('touchstart',e => {
-    if(e.touches.length !== 2) return;
-    e.preventDefault();
-    pinch = { distance: touchDistance(e.touches), zoom };
-    suppressClickUntil = Date.now() + 600;
-  },{passive:false});
-  viewport.addEventListener('touchmove',e => {
-    if(e.touches.length !== 2 || !pinch) return;
-    e.preventDefault(); suppressClickUntil = Date.now() + 600;
-    setZoom(pinch.zoom * touchDistance(e.touches) / Math.max(1,pinch.distance),
-      (e.touches[0].clientX+e.touches[1].clientX)/2,(e.touches[0].clientY+e.touches[1].clientY)/2);
-  },{passive:false});
-  function endPinch(e) { if(e.touches.length<2) pinch=null; }
-  viewport.addEventListener('touchend',endPinch);
-  viewport.addEventListener('touchcancel',endPinch);
+  function bindTouchZoom(container,getZoom,setScale) {
+    let pinch = null;
+    function startPinch(e) {
+      if (e.touches.length !== 2) return;
+      e.preventDefault();
+      const rect = container.getBoundingClientRect();
+      pinch = {distance:touchDistance(e.touches),zoom:getZoom(),
+        x:container.scrollLeft+(e.touches[0].clientX+e.touches[1].clientX)/2-rect.left,
+        y:container.scrollTop+(e.touches[0].clientY+e.touches[1].clientY)/2-rect.top};
+      suppressClickUntil = Date.now() + 600;
+    }
+    container.addEventListener('touchstart',startPinch,{passive:false});
+    container.addEventListener('touchmove',e => {
+      if (e.touches.length !== 2 || !pinch) return;
+      e.preventDefault(); suppressClickUntil = Date.now() + 600;
+      const rect = container.getBoundingClientRect();
+      const cx = (e.touches[0].clientX+e.touches[1].clientX)/2;
+      const cy = (e.touches[0].clientY+e.touches[1].clientY)/2;
+      setScale(pinch.zoom*touchDistance(e.touches)/Math.max(1,pinch.distance),cx,cy);
+      const ratio = getZoom()/pinch.zoom;
+      container.scrollLeft = pinch.x*ratio-(cx-rect.left);
+      container.scrollTop = pinch.y*ratio-(cy-rect.top);
+    },{passive:false});
+    function endPinch(e) {
+      if (pinch) suppressClickUntil = Date.now() + 600;
+      if (e.touches.length < 2) pinch = null;
+    }
+    container.addEventListener('touchend',endPinch);
+    container.addEventListener('touchcancel',endPinch);
+    container.addEventListener('click',e => {
+      if (Date.now() < suppressClickUntil) { e.preventDefault(); e.stopPropagation(); }
+    },true);
+  }
+  bindTouchZoom(viewport,()=>zoom,setZoom);
+  bindTouchZoom($('detailDrawing'),()=>drawingZoom,setDrawingZoom);
   window.addEventListener('popstate',() => render(readState()));
   render(readState()); applyZoom();
 })();
