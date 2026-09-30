@@ -12,18 +12,10 @@
   const overall = {
     'second-shop': [[1,1406,420],[2,1315,545],[3,1114,1110],[5,1076,877],[6,1525,427],[9,1186,961],[14,1105,640],[17,1156,785],[18,1118,827],[19,1098,508]],
     'second-multi': [[4,1203,693],[7,1234,495],[8,1227,573],[10,1094,1012],[11,994,1118],[13,1155,566],[15,1082,692],[16,1118,718]],
-    third: [[1,1465,377],[2,1060,100],[3,818,766],[4,910,1089],[5,796,1210],[6,592,1148],[7,512,1120],[8,548,1076],[9,630,897],[10,484,897],[11,354,818],[12,294,785],[13,379,703],[14,655,566],[15,676,427],[16,616,384],[17,599,493],[18,829,386],[19,818,825]]
+    third: [[1,1450,390],[2,1070,107],[3,789,765],[4,923,1070],[5,785,1200],[6,593,1138],[7,528,1100],[8,531,1060],[9,606,886],[10,463,890],[11,359,830],[12,306,795],[13,388,704],[14,638,593],[15,658,427],[16,628,403],[17,599,486],[18,816,381],[19,790,821]]
   };
-  // number, actual block centre x/y, printed callout centre x/y on the 1893×1312 map
-  const third = [
-    [1,1222,378,1128,344],[2,869,110,946,124],[3,593,731,522,729],
-    [4,658,1090,783,1065],[5,593,1162,674,1171],[6,402,1096,407,1156],
-    [7,327,1079,266,1083],[8,357,1048,257,1019],[9,449,858,423,799],
-    [10,287,862,277,803],[11,168,788,148,884],[12,120,776,53,768],
-    [13,211,688,123,682],[14,465,530,545,541],[15,468,412,558,413],
-    [16,443,377,375,364],[17,404,477,312,451],[18,619,377,544,353]
-  ];
-  const thirdByNumber = new Map(third.map(row => [row[0], row]));
+  // Both views use the supplied base map; the third-district view filters the same coordinates.
+  const thirdByNumber = new Map(overall.third.map(row => [row[0], row]));
   // Fill only from verified block/parcel material. A mixed block can contain both types.
   const thirdTypes = {
     1: ['shop'], 2: ['shop'], 3: ['shop'], 4: ['shop'], 10: ['shop'], 19: ['shop'],
@@ -81,7 +73,6 @@
     document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.view === view)));
     document.querySelectorAll('[data-group]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.group === group)));
     $('groupFilters').hidden = view === 'third';
-    $('mapCalloutCover').hidden = view !== 'third';
     const showTypeFilters = view === 'third' || group === 'third';
     $('thirdTypeFilters').hidden = !showTypeFilters;
     document.querySelectorAll('[data-land-type]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.landType === landType)));
@@ -112,15 +103,15 @@
       return;
     }
     document.title = '하이탑부동산 | 택지 위치도';
-    const nextImage = 'assets/images/land/' + (view === 'third' ? 'unjeong-3.jpg' : 'unjeong-all.jpg');
+    const nextImage = 'assets/images/land/unjeong-base-20260930.jpg';
     if (image.getAttribute('src') !== nextImage) {
       $('mapError').hidden = true;
       image.src = nextImage;
       image.width = 2048;
-      image.height = view === 'third' ? 1419 : 1380;
-      image.alt = view === 'third' ? '운정3지구 C블럭 위치도' : '운정신도시 전체 택지블럭 위치도';
+      image.height = 1380;
       zoom = 1; applyZoom(); viewport.scrollTo(0,0);
     }
+    image.alt = view === 'third' ? '운정3지구 C블럭 위치도' : '운정신도시 전체 택지블럭 위치도';
     const groupBlocks = blocks.filter(b => group === 'all' || b.group === group);
     const visible = groupBlocks.filter(b => !showTypeFilters || landType === 'all' || (landType === 'unknown' ? !b.types.length : b.types.includes(landType)));
     const unknownCount = groupBlocks.filter(b => b.group === 'third' && !b.types.length).length;
@@ -130,7 +121,7 @@
     visible.forEach(b => {
       if (view === 'third') {
         if (!b.third) return;
-        $('hotspots').appendChild(hotspot(b,b.third[1]/1893*100,b.third[2]/1312*100,false));
+        $('hotspots').appendChild(hotspot(b,b.overall[0],b.overall[1],false));
       } else $('hotspots').appendChild(hotspot(b,b.overall[0],b.overall[1],false));
     });
     $('blockCount').textContent = visible.length + '개 블럭';

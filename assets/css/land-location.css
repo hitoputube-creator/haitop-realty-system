@@ -2,4 +2,4 @@
 /* Land types follow the supplied parcel sheet; Unjeong 2 map categories keep their original colors. */
 .single-land{background:#eb7926}.shop-land{background:#689f3d}.map-hotspot.land-type-single{background:#df6e20}.map-hotspot.land-type-shop{background:#5d9134}.block-button.land-type-single{border-left:4px solid #eb7926}.block-button.land-type-shop{border-left:4px solid #689f3d}.type-notice{font-size:.82rem;color:var(--text-muted);line-height:1.6}.drawing-controls{margin:18px 0 10px}#detailDrawing{max-height:75vh;overflow:auto;background:white;border-radius:10px;border:1px solid var(--line2)}#detailDrawing img{max-width:none}#detailDrawingError{color:var(--red);font-size:.85rem}
 /* The cover scales with the source map; circular click targets stay above it. */
-.map-stage .map-callout-cover{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}.map-hotspots{z-index:2}
+.map-hotspots{z-index:2}
