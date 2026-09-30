@@ -20,6 +20,15 @@
     return response.status === 204 ? [] : response.json();
   }
   function key(row) { return row.subblock + '-' + row.parcel; }
+  function parcelLabel(row) { return [current.name, row.subblock, row.parcel].filter(Boolean).join('-'); }
+  function updateParcelLabel() {
+    if (!current) return;
+    const subblock = $('parcelSubblock').value.trim(), parcel = $('parcelNumber').value.trim();
+    const label = subblock && parcel ? parcelLabel({subblock, parcel}) : '';
+    $('parcelFullNumber').value = label;
+    $('parcelFormTitle').textContent = label || current.name + ' · 새 필지 등록';
+    $('parcelFormSubtitle').textContent = label ? subblock + '소블럭 ' + parcel + '필지' : '소블럭 번호와 필지번호를 입력해주세요.';
+  }
   function matches(row) {
     return (!sourceMeta || $('parcelSubblockFilter').value === 'all' || row.subblock === $('parcelSubblockFilter').value) && ($('parcelBuildingFilter').value === 'all' || row.data.building === $('parcelBuildingFilter').value) &&
       ($('parcelTypeFilter').value === 'all' || row.data.landType === $('parcelTypeFilter').value);
@@ -36,7 +45,7 @@
     if(row.source) detail.textContent='2021년 9월 원본 · '+row.source.status+'\n건폐율 '+row.source.coverage+'% 이하 · 용적률 '+row.source.floorRatio+'% 이하 · '+row.source.floors+'층 이하'+(row.source.unitPriceWon?' · 단가 '+row.source.unitPriceWon.toLocaleString('ko-KR')+'원/㎡':'')+'\n원본 PDF '+row.sourcePage+'페이지';
     fields.forEach(name => { $('parcel-' + name).value = values[name] ?? ''; });
     updateArea();
-    $('parcelFormTitle').textContent = current.name + ' · ' + (row.subblock ? row.subblock + '소블럭 ' + row.parcel + '필지' : '새 필지 등록');
+    updateParcelLabel();
     $('parcelEditor').hidden = false; $('parcelDelete').hidden = !row.id;
     $('parcelEditor').scrollIntoView({behavior:'smooth',block:'start'});
     draw();
@@ -59,13 +68,13 @@
       if (row.points) shape.setAttribute('points',row.points.map(p => p[0]/318 + ',' + p[1]/385).join(' '));
       else {shape.setAttribute('cx',row.x/100);shape.setAttribute('cy',row.y/100);shape.setAttribute('r',row.sourceCell?'.006':'.015');}
       shape.classList.add('parcel-shape');if(selected&&key(selected)===key(row))shape.classList.add('selected'); if (row.id) shape.classList.add('registered');
-      shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',row.subblock + '소블럭 ' + row.parcel + '필지 자료');
-      const title=document.createElementNS(ns,'title');title.textContent=row.subblock + '-' + row.parcel + (row.id?' 등록됨':' 미등록');shape.append(title);
+      shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료');
+      const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + (row.id?' 등록됨':' 미등록');shape.append(title);
       shape.addEventListener('click',event=>{event.stopPropagation();show(row);});
       shape.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row);}});overlay.append(shape);
       if(sourceMeta){appendSourceRow(row);return;}
       const button=document.createElement('button');button.type='button';button.className='block-button';
-      button.textContent=row.subblock + '-' + row.parcel;
+      button.textContent=parcelLabel(row);
       const note=document.createElement('small');note.textContent=row.id?'자료 보기':'미등록';button.append(note);button.addEventListener('click',()=>show(row));$('parcelList').append(button);
     });
     if(sourceMeta)$('parcelSourceSummary').textContent='원본 토지목록 '+cells.length+'개 · 현재 표시 '+count+'개';
@@ -79,7 +88,7 @@
   function appendSourceRow(row){
     const tr=document.createElement('tr');
     const area=row.data.area;const price=row.source?.supplyPriceWon;
-    const values=[current.name+'-'+row.subblock+'-'+row.parcel,row.data.address||'원본 미기재',area==null?'미기재':Number(area).toLocaleString('ko-KR')+'㎡ / '+(Number(area)/3.305785).toFixed(2)+'평',price==null?'추후공급 예정':(price/10000).toLocaleString('ko-KR')+'만원'];
+    const values=[parcelLabel(row),row.data.address||'원본 미기재',area==null?'미기재':Number(area).toLocaleString('ko-KR')+'㎡ / '+(Number(area)/3.305785).toFixed(2)+'평',price==null?'추후공급 예정':(price/10000).toLocaleString('ko-KR')+'만원'];
     values.forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td);});
     const td=document.createElement('td');const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent=row.id?'자료 수정':'자료 보기·등록';btn.addEventListener('click',()=>show(row));td.append(btn);tr.append(td);$('parcelSourceBody').append(tr);
   }
@@ -132,7 +141,7 @@
       if(!result[0])throw Error('저장 결과를 확인하지 못했습니다.');
       if(run!==generation)return;
       const index=rows.findIndex(row=>row.id===result[0].id);if(index<0)rows.push(result[0]);else rows[index]=result[0];
-      selected={...selected,...result[0]};$('parcelDelete').hidden=false;draw();status('저장되었습니다. 다른 기기에서도 같은 자료를 확인할 수 있습니다.');
+      selected={...selected,...result[0]};updateParcelLabel();$('parcelDelete').hidden=false;draw();status('저장되었습니다. 다른 기기에서도 같은 자료를 확인할 수 있습니다.');
     }catch(error){if(run===generation)status(error.message);}finally{busy=false;$('parcelSave').disabled=false;}
   });
   $('parcelDelete').addEventListener('click',async()=>{
@@ -143,6 +152,7 @@
   $('parcelClose').addEventListener('click',()=>{$('parcelEditor').hidden=true;});
   $('parcelAdd').addEventListener('click',()=>{if(busy)return;placing=!placing;$('parcelAdd').setAttribute('aria-pressed',String(placing));status(placing?'도면에서 등록할 필지 위치를 눌러주세요.':'위치 지정을 취소했습니다.');});
   $('parcelSubblockFilter').addEventListener('change',draw);
+  ['parcelSubblock','parcelNumber'].forEach(id=>$(id).addEventListener('input',updateParcelLabel));
   $('parcel-area').addEventListener('input',updateArea);
   ['parcelBuildingFilter','parcelTypeFilter'].forEach(id=>$(id).addEventListener('change',draw));
   window.HitopLandParcels={open,close(){generation++;current=null;rows=[];cells=[];sourceMeta=null;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelManager').hidden=true;$('parcelEditor').hidden=true;}};
