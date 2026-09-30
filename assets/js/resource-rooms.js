@@ -46,7 +46,7 @@ async function resourceCategoryRequest(query, method = 'GET', body) {
   return response.json();
 }
 async function getDriveCategories() {
-  const categories = await resourceCategoryRequest('?order=created_at.asc,name.asc');
+  const categories = await resourceCategoryRequest('?order=sort_order.asc,created_at.asc,name.asc');
   HitopResourceRooms.setCategories(categories);
   return categories;
 }
@@ -57,4 +57,15 @@ async function renameDriveCategory(category, name) {
   const rows = await resourceCategoryRequest('?id=eq.' + encodeURIComponent(category.id) + '&name=eq.' + encodeURIComponent(category.name), 'PATCH', {name});
   if (!rows.length) throw new Error('다른 화면에서 카테고리가 변경되었습니다. 새로고침 후 다시 시도해주세요');
   return rows[0];
+}
+
+async function saveDriveCategoryOrder(categoryIds, scope) {
+  const {data, error} = await hitopAuthClient.auth.getSession();
+  if (error || !data.session) throw new Error('로그인 후 이용해주세요');
+  hitopApplyAuthHeader(data.session);
+  const response = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/rpc/reorder_drive_categories', {
+    method: 'POST', headers,
+    body: JSON.stringify({category_ids: categoryIds, resource_scope: scope})
+  });
+  if (!response.ok) throw new Error('카테고리가 변경되었거나 순서를 저장하지 못했습니다. 새로고침 후 다시 시도해주세요.');
 }

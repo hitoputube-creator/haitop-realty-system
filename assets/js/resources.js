@@ -177,6 +177,97 @@ function _buildDriveItemsHtml(items, cat) {
   }).join("");
 }
 
+
+let categoryOrderSaving = false;
+async function moveDriveCategory(fromId, toId) {
+  if (categoryOrderSaving || fromId === toId) return;
+  const categories = visibleDriveCategories();
+  const from = categories.findIndex(c => c.id === fromId);
+  const to = categories.findIndex(c => c.id === toId);
+  if (from < 0 || to < 0) return;
+  const reordered = categories.slice();
+  reordered.splice(to, 0, reordered.splice(from, 1)[0]);
+  const previous = allDriveCategories;
+  const slots = categories.map(c => Number(c.sort_order));
+  const positions = new Map(reordered.map((c, i) => [c.id, slots[i]]));
+  allDriveCategories = allDriveCategories.map(c => positions.has(c.id) ? {...c, sort_order: positions.get(c.id)} : c)
+    .sort((a, b) => Number(a.sort_order) - Number(b.sort_order));
+  categoryOrderSaving = true;
+  renderDriveTab(); updateDriveCategorySelect();
+  try {
+    await saveDriveCategoryOrder(reordered.map(c => c.id), driveResourceScope);
+    showToast("✅ 카테고리 순서가 저장되었습니다");
+  } catch (error) {
+    allDriveCategories = previous;
+    renderDriveTab(); updateDriveCategorySelect();
+    showToast("❌ " + error.message, 4000);
+  } finally { categoryOrderSaving = false; }
+}
+function bindDriveCategoryDrag(container) {
+  const rows = [...container.querySelectorAll("[data-category-id]")];
+  let sourceId = null, targetId = null;
+  function clearDrag() {
+    rows.forEach(row => row.classList.remove("drive-cat-dragging", "drive-cat-drop-target"));
+  }
+  function markTarget(row) {
+    rows.forEach(r => r.classList.remove("drive-cat-drop-target"));
+    targetId = row && row.dataset.categoryId !== sourceId ? row.dataset.categoryId : null;
+    if (targetId) row.classList.add("drive-cat-drop-target");
+  }
+  rows.forEach(row => {
+    const id = row.dataset.categoryId;
+    row.addEventListener("dragstart", event => {
+      if (categoryOrderSaving || event.target.closest("[data-cat-edit-idx]")) { event.preventDefault(); return; }
+      sourceId = id; targetId = null;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", id);
+      row.classList.add("drive-cat-dragging");
+    });
+    row.addEventListener("dragover", event => {
+      if (!sourceId) return;
+      event.preventDefault(); event.dataTransfer.dropEffect = "move"; markTarget(row);
+    });
+    row.addEventListener("drop", event => {
+      if (!sourceId) return;
+      event.preventDefault();
+      const from = sourceId; sourceId = null; targetId = null; clearDrag();
+      moveDriveCategory(from, id);
+    });
+    row.addEventListener("dragend", () => { sourceId = null; targetId = null; clearDrag(); });
+    const grip = row.querySelector("[data-category-grip]");
+    grip.addEventListener("keydown", event => {
+      const offset = {ArrowLeft:-1, ArrowRight:1, ArrowUp:-2, ArrowDown:2}[event.key];
+      if (!offset) return;
+      event.preventDefault();
+      const index = rows.findIndex(r => r.dataset.categoryId === id);
+      const target = rows[index + offset];
+      if (target) moveDriveCategory(id, target.dataset.categoryId).then(() => {
+        const moved = [...container.querySelectorAll("[data-category-id]")].find(r => r.dataset.categoryId === id);
+        if (moved) moved.querySelector("[data-category-grip]").focus();
+      });
+    });
+    grip.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" || categoryOrderSaving) return;
+      event.preventDefault(); sourceId = id; targetId = null;
+      grip.setPointerCapture(event.pointerId); row.classList.add("drive-cat-dragging");
+    });
+    grip.addEventListener("pointermove", event => {
+      if (sourceId !== id || event.pointerType === "mouse") return;
+      const hit = document.elementFromPoint(event.clientX, event.clientY);
+      const target = hit && hit.closest("[data-category-id]");
+      markTarget(rows.includes(target) ? target : null);
+    });
+    grip.addEventListener("pointerup", event => {
+      if (sourceId !== id || event.pointerType === "mouse") return;
+      const from = sourceId, to = targetId;
+      sourceId = null; targetId = null; clearDrag();
+      if (grip.hasPointerCapture(event.pointerId)) grip.releasePointerCapture(event.pointerId);
+      if (to) moveDriveCategory(from, to);
+    });
+    grip.addEventListener("pointercancel", () => { sourceId = null; targetId = null; clearDrag(); });
+  });
+}
+
 function renderDriveTab() {
   const container = document.getElementById("driveContent");
   const visibleResources = visibleDriveResources();
@@ -199,7 +290,8 @@ function renderDriveTab() {
   // 카테고리 버튼 (index로 식별 — 한글 따옴표 문제 완전 회피)
   const catGridHtml = categories.map((c, i) => {
     const isActive = c === activeDriveCat;
-    return `<div style="display:flex;gap:4px;">
+    return `<div class="drive-category-row" data-category-id="${visibleDriveCategories()[i].id}" draggable="true" style="display:flex;gap:4px;">
+      <button type="button" class="drive-category-grip" data-category-grip aria-label="${escapeCategory(c)} 순서 변경: 끌기 또는 방향키" title="끌어서 순서 변경 · 방향키로 이동">⠿</button>
       <button data-cidx="${i}" style="
         flex:1;min-width:0;padding:10px 14px;font-size:0.85rem;font-weight:${isActive?'700':'500'};
         text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
@@ -226,12 +318,14 @@ function renderDriveTab() {
     </div>`;
 
   container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
+    <div class="drive-category-order-hint">⠿ 손잡이를 끌어서 카테고리 순서를 바꿀 수 있습니다.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
       ${catGridHtml}
     </div>
     ${sectionHtml}
   </div>`;
 
+  bindDriveCategoryDrag(container);
   // innerHTML 완료 후 버튼 이벤트 바인딩
   container.querySelectorAll("[data-cidx]").forEach(btn => {
     btn.addEventListener("click", () => {
