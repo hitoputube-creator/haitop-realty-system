@@ -74,6 +74,7 @@
         tabs.forEach(tab => { const active = tab.dataset.category === key; tab.setAttribute('aria-selected', String(active)); tab.tabIndex = active ? 0 : -1; if (active && focus) tab.focus(); });
         get('categoryPanel').setAttribute('aria-labelledby', 'tab-' + key);
         get('categoryTitle').textContent = category.label;
+        get('listingLink').href = 'properties.html?mainCategory=' + encodeURIComponent(key);
         get('listingTitle').textContent = category.title;
         get('listingDescription').textContent = category.description;
         get('resourceTitle').textContent = category.resource;

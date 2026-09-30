@@ -12,6 +12,9 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/nav.js"></script>
   <style>
+    .property-main-return { display:flex; margin:16px 0; }
+    .property-main-return a { text-decoration:none; }
+    @media (max-width:480px) { .property-main-return a { width:100%; text-align:center; } }
     /* 목록보기 테이블: 세부 스타일은 assets/css/style.css에서 관리 */
     /* 선택매물보기 테이블 */
     #selectedViewTableWrap { overflow-x: auto; }
@@ -115,6 +118,24 @@
     <nav class="main-nav" id="mainNav"></nav>
   </header>
   <div class="header-line"></div>
+  <nav class="property-main-return no-print" aria-label="매물관리 복귀">
+    <a class="btn btn-primary" id="propertyMainReturn" href="property-main.html">← 매물관리 메인으로</a>
+  </nav>
+  <script>
+    (function () {
+      const keys = ['all', 'shop', 'land', 'home', 'factory', 'other'];
+      let category = new URLSearchParams(location.search).get('mainCategory');
+      if (!keys.includes(category)) {
+        try {
+          const state = JSON.parse(sessionStorage.getItem('hitop_properties_filter_state') || '{}') || {};
+          const majorToCategory = {'':'all', '상가사무실':'shop', '토지':'land', '주거용':'home', '공장창고':'factory', '건물빌딩':'other'};
+          category = majorToCategory[state.currentMajor];
+        } catch (_) {}
+      }
+      if (!keys.includes(category)) category = 'all';
+      document.getElementById('propertyMainReturn').href = 'property-main.html?category=' + category;
+    })();
+  </script>
 
   <!-- ===== 매물관리 ===== -->
   <div id="tabProperty">
