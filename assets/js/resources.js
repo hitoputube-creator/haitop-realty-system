@@ -4,7 +4,7 @@ let allListings = [];
 let allDriveCategories = [];
 function escapeCategory(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function visibleDriveCategories() { return allDriveCategories.filter(c => driveResourceScope === 'all' || c.room === driveResourceScope); }
-async function ensureCategoryInRoom(name, room = driveResourceScope === 'residential' ? 'residential' : 'commercial') {
+async function ensureCategoryInRoom(name, room = driveResourceScope === 'all' ? 'commercial' : driveResourceScope) {
   if (!allDriveCategories.some(c => c.name === name)) {
     await createDriveCategory(name, room);
     allDriveCategories = await getDriveCategories();
@@ -12,7 +12,11 @@ async function ensureCategoryInRoom(name, room = driveResourceScope === 'residen
 }
 const driveResourceScope = HitopResourceRooms.pageScope(document.body, location.search);
 function visibleDriveResources() { return HitopResourceRooms.visible(allDriveResources, driveResourceScope); }
-function openDriveBuilding(page, id) { location.href = HitopResourceRooms.detailUrl(page, id, driveResourceScope); }
+function openDriveBuilding(page, id) {
+  const resource = allDriveResources.find(r => r.id === id);
+  if (HitopResourceRooms.resourceRoom(resource) === 'land') page = 'land-resource.html';
+  location.href = HitopResourceRooms.detailUrl(page, id, driveResourceScope);
+}
 let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
 
 // ===== 공통 유틸 =====
@@ -94,7 +98,7 @@ document.getElementById("driveSaveBtn").addEventListener("click", async () => {
   const name = document.getElementById("drive_name").value.trim();
   const url = document.getElementById("drive_url").value.trim();
   if (!category) { showToast("카테고리를 입력해주세요"); return; }
-  if (!name) { showToast("건물명을 입력해주세요"); return; }
+  if (!name) { showToast(driveResourceScope === "land" ? "자료명을 입력해주세요" : "건물명을 입력해주세요"); return; }
   btn.disabled = true; btn.textContent = "저장 중...";
   try {
     const memo = joinMemo(
@@ -245,7 +249,7 @@ function renderDriveTab() {
 
 // ── 등록 폼 개요 메모 템플릿 ──
 const MEMO_SEP = "---추가메모---";
-const MEMO_TEMPLATE = "주소: \n주차대수: \n사용승인일: \n구조: 지하  층 ~ 지상  층\n토지면적:  평\n연면적:  평\n관리사무소: ";
+const MEMO_TEMPLATE = driveResourceScope === "land" ? "블럭: \n필지·번지: \n건물 유무: \n면적(㎡/평): \n공급금액: \n낙찰가격: \n매매금액: \n소유주: \n연락처: " : "주소: \n주차대수: \n사용승인일: \n구조: 지하  층 ~ 지상  층\n토지면적:  평\n연면적:  평\n관리사무소: ";
 
 function splitMemo(raw) {
   if (!raw) return { basic: "", extra: "" };
@@ -339,7 +343,7 @@ document.getElementById("driveEditSaveBtn").addEventListener("click", async () =
   const btn = document.getElementById("driveEditSaveBtn");
   const category = document.getElementById("drive_edit_category").value.trim();
   const name = document.getElementById("drive_edit_name").value.trim();
-  if (!category || !name) { showToast("카테고리와 건물명을 입력해주세요"); return; }
+  if (!category || !name) { showToast("카테고리와 자료명을 입력해주세요"); return; }
   btn.disabled = true; btn.textContent = "저장 중...";
   try {
     await ensureCategoryInRoom(category);
@@ -365,7 +369,7 @@ function openDriveCategoryEditModal(oldCategory = null) {
   document.getElementById("driveCategoryModalTitle").textContent = oldCategory ? "📂 카테고리 이름 수정" : "📂 카테고리 추가";
   document.getElementById("drive_cat_edit_name").value = oldCategory || "";
   document.getElementById("drive_cat_add_room_field").style.display = !oldCategory && driveResourceScope === 'all' ? "" : "none";
-  document.getElementById("drive_cat_add_room").value = driveResourceScope === 'residential' ? 'residential' : 'commercial';
+  document.getElementById("drive_cat_add_room").value = driveResourceScope === 'all' ? 'commercial' : driveResourceScope;
   document.getElementById("driveCategoryEditModal").style.display = "flex";
   document.getElementById("drive_cat_edit_name").focus();
 }

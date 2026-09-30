@@ -242,7 +242,7 @@
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
-<script src="assets/js/resource-rooms.js?v=20260930-resource-rooms"></script>
+<script src="assets/js/resource-rooms.js?v=20260930-land-resources"></script>
 <script>
 const MEMO_SEP      = '---추가메모---';
 const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토지면적','건축면적','연면적','관리사무소','규모'];
@@ -459,7 +459,7 @@ async function init() {
 
     if (!resourceScope) {
       await getDriveCategories();
-      resourceScope = HitopResourceRooms.isResidential(buildingData) ? 'residential' : 'commercial';
+      resourceScope = HitopResourceRooms.resourceRoom(buildingData);
     }
     document.getElementById('buildingName').textContent = buildingData.name;
     document.title = `하이탑부동산 | ${buildingData.name} 개요`;

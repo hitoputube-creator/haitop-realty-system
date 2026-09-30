@@ -618,7 +618,7 @@
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
-<script src="assets/js/resource-rooms.js?v=20260930-resource-rooms"></script>
+<script src="assets/js/resource-rooms.js?v=20260930-land-resources"></script>
 <script src="assets/js/building-register-view.js?v=20260929-compact-table"></script>
 <script>
 /* ═══════════════════════════════════════════
@@ -827,7 +827,7 @@ async function init() {
     if (building) {
       if (!resourceScope) {
       await getDriveCategories();
-      resourceScope = HitopResourceRooms.isResidential(building) ? 'residential' : 'commercial';
+      resourceScope = HitopResourceRooms.resourceRoom(building);
     }
       document.getElementById('buildingName').textContent = building.name;
       document.title = `하이탑부동산 | ${building.name}`;

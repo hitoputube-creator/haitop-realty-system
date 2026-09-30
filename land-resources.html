@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>하이탑부동산 | 상가 자료관리</title>
+  <title>하이탑부동산 | 택지 자료관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <style>
@@ -17,9 +17,9 @@
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
-  <script src="assets/js/nav.js"></script>
+
 </head>
-<body data-nav-active="tools" data-resource-scope="commercial">
+<body data-resource-scope="land">
 
 <div class="page">
 
@@ -27,10 +27,10 @@
   <header class="header">
     <div class="logo-icon"></div>
     <div class="logo-text">
-      <div class="logo-main" id="resourceRoomTitle">하이탑부동산 상가 자료관리</div>
-      <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+      <div class="logo-main">하이탑부동산 택지 자료관리</div>
+      <div class="logo-sub">점포택지 · 주거전용 택지 자료</div>
     </div>
-    <nav class="main-nav" id="mainNav"></nav>
+    <nav class="main-nav"><a class="nav-link active" href="property-main.html?category=land">매물관리 메인으로</a><button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button></nav>
   </header>
   <div class="header-line"></div>
 
@@ -38,14 +38,13 @@
   <div style="margin:16px 0 10px;">
     <button class="btn btn-primary" id="driveRegisterToggleBtn">📁 자료 등록</button>
     <button class="btn btn-ghost" id="driveCategoryAddBtn">+ 카테고리 추가</button>
-    <a class="btn floor-status-entry" href="property-main.html?category=shop">매물관리 메인으로</a>
-    <a class="btn floor-status-entry" href="floor-status-overview.html">🏢 층별 현황 보기</a>
+
   </div>
 
   <!-- ===== 자료 등록 ===== -->
   <div class="quick-card" id="driveRegisterCard" style="display:none;">
     <div class="quick-title">📁 자료 등록</div>
-    <div class="quick-sub">카테고리와 건물명, 구글 드라이브 링크를 입력하세요</div>
+    <div class="quick-sub">카테고리와 블럭·필지명, 자료 링크를 입력하세요</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
       <div class="field">
         <label>카테고리</label>
@@ -55,8 +54,8 @@
         <input id="drive_category" type="text" placeholder="카테고리 직접 입력 또는 위에서 선택" style="margin-top:6px;" />
       </div>
       <div class="field">
-        <label>건물명</label>
-        <input id="drive_name" type="text" placeholder="예) 명품3차" />
+        <label>자료명 · 블럭·필지명</label>
+        <input id="drive_name" type="text" placeholder="예) 운정3지구 11블럭 01번 필지" />
       </div>
     </div>
     <div class="field" style="margin-bottom:10px;">
@@ -64,7 +63,7 @@
       <input id="drive_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
     </div>
     <div class="field" style="margin-bottom:10px;">
-      <label>건물 개요 메모 — 기본 정보 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <label>택지 기본 정보 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
       <textarea id="drive_memo_basic_reg" rows="8" style="width:100%;resize:vertical;min-height:200px;box-sizing:border-box;font-family:inherit;"></textarea>
     </div>
     <div class="field" style="margin-bottom:12px;">
@@ -86,11 +85,11 @@
     <div class="form-grid-2" style="margin-bottom:10px;">
       <div class="field">
         <label>카테고리</label>
-        <input id="drive_edit_category" type="text" placeholder="예) 운정역 상가" />
+        <input id="drive_edit_category" type="text" placeholder="예) 점포택지" />
       </div>
       <div class="field">
-        <label>건물명</label>
-        <input id="drive_edit_name" type="text" placeholder="예) 명품3차" />
+        <label>자료명 · 블럭·필지명</label>
+        <input id="drive_edit_name" type="text" placeholder="예) 운정3지구 11블럭 01번 필지" />
       </div>
     </div>
     <div class="field" style="margin-bottom:14px;">
@@ -163,10 +162,6 @@
 </script>
 
 <script>
-  if (new URLSearchParams(location.search).get('scope') === 'all') {
-    document.title = '하이탑부동산 | 전체 자료관리';
-    document.getElementById('resourceRoomTitle').textContent = '하이탑부동산 전체 자료관리';
-  }
   (function () {
     var toggleBtn = document.getElementById("driveRegisterToggleBtn");
     var card = document.getElementById("driveRegisterCard");

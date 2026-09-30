@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>하이탑부동산 | 택지 자료 상세</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/storage.js"></script>
+<script src="assets/js/admin-guard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/auth.js"></script>
+<style>.land-fields{max-width:760px;margin:24px auto}.land-fields .field{margin-bottom:16px}.land-fields textarea{width:100%;min-height:280px;resize:vertical;box-sizing:border-box}.land-actions{display:flex;gap:10px;flex-wrap:wrap}[hidden]{display:none!important}</style>
+</head>
+<body><div class="page">
+<header class="header"><div class="logo-icon"></div><div class="logo-text"><div class="logo-main">하이탑부동산 택지 자료</div><div class="logo-sub" id="landTitle">택지 자료 상세</div></div><nav class="main-nav"><a class="nav-link" id="backLink" href="land-resources.html">← 자료실로 복귀</a><a class="nav-link" href="property-main.html?category=land">매물관리 메인</a></nav></header>
+<div class="header-line"></div>
+<p id="status" role="status">자료를 불러오는 중...</p>
+<form class="quick-card land-fields" id="landForm" hidden>
+<div class="form-grid-2"><div class="field"><label for="category">카테고리</label><select id="category" required></select></div><div class="field"><label for="name">자료명 · 블럭·필지명</label><input id="name" required></div></div>
+<div class="field"><label for="url">자료 링크</label><input id="url" type="url" placeholder="https://..."></div>
+<div class="field"><label for="memo">택지 기본 정보 · 메모</label><textarea id="memo" placeholder="블럭·필지, 건물 유무, 면적, 공급금액, 낙찰가격, 매매금액, 소유주, 연락처 등을 입력하세요"></textarea></div>
+<div class="land-actions"><button class="btn btn-primary" id="saveBtn" type="submit">저장</button><a class="btn btn-ghost" id="documentLink" target="_blank" rel="noopener noreferrer" hidden>자료 링크 열기</a><a class="btn btn-ghost" id="cancelLink" href="land-resources.html">자료실로 복귀</a></div>
+</form></div>
+<script src="assets/js/resource-rooms.js?v=20260930-land-resources"></script>
+<script>
+(function(){
+'use strict';
+const get = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const resourceId = params.get('id');
+const scope = HitopResourceRooms.readDetailScope(location.search) === 'all' ? 'all' : 'land';
+const back = HitopResourceRooms.roomUrl(scope);
+get('backLink').href = back; get('cancelLink').href = back;
+let resource = null;
+function updateDocumentLink(value){
+  const link = get('documentLink');
+  try {
+    const url = new URL(value);
+    link.hidden = !['http:', 'https:'].includes(url.protocol);
+    link.href = link.hidden ? '' : url.href;
+  } catch (_) { link.hidden = true; link.removeAttribute('href'); }
+}
+async function init(){
+  try {
+    if (!resourceId) throw new Error('자료 ID가 없습니다. 자료실에서 다시 열어주세요.');
+    const categories = await getDriveCategories();
+    resource = (await getDriveResources()).find(r => String(r.id) === resourceId);
+    if (!resource || HitopResourceRooms.resourceRoom(resource) !== 'land') throw new Error('택지 자료를 찾을 수 없습니다.');
+    categories.filter(c => c.room === 'land').forEach(c => {
+      const option = document.createElement('option'); option.value = c.name; option.textContent = c.name; get('category').appendChild(option);
+    });
+    get('category').value = resource.category;
+    get('name').value = resource.name || '';
+    get('url').value = resource.url || '';
+    get('memo').value = resource.memo || '';
+    get('landTitle').textContent = resource.name || '택지 자료 상세';
+    updateDocumentLink(resource.url);
+    get('landForm').hidden = false; get('status').textContent = '';
+  } catch(error) { get('status').textContent = error.message; }
+}
+get('landForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!resource) return;
+  const name = get('name').value.trim(), category = get('category').value;
+  if (!name || !category) { get('status').textContent = '카테고리와 자료명을 입력해주세요.'; return; }
+  get('saveBtn').disabled = true; get('status').textContent = '저장 중...';
+  try {
+    const categories = await getDriveCategories();
+    if (!categories.some(c => c.name === category && c.room === 'land')) throw new Error('카테고리가 변경되었습니다. 새로고침 후 다시 저장해주세요.');
+    const url = get('url').value.trim();
+    await updateDriveResource(resource.id, {name, category, url, memo: get('memo').value.trim() || null});
+    get('landTitle').textContent = name; updateDocumentLink(url); get('status').textContent = '저장되었습니다.';
+  } catch(error) { get('status').textContent = '저장 실패: ' + error.message; }
+  finally { get('saveBtn').disabled = false; }
+});
+init();
+})();
+</script></body></html>

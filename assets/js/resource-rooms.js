@@ -3,32 +3,33 @@
   const residentialCategories = new Set(['오피스텔', '힐스테이트더운정']);
   let categoryRooms = new Map();
   function setCategories(categories) { categoryRooms = new Map(categories.map(c => [c.name, c.room])); }
-  function isResidential(resource) {
+  function resourceRoom(resource) {
     const name = String(resource && resource.category || '');
-    if (categoryRooms.has(name)) return categoryRooms.get(name) === 'residential';
-    return residentialCategories.has(String(resource && resource.category || '').replace(/\s+/g, ''));
+    if (categoryRooms.has(name)) return categoryRooms.get(name);
+    return residentialCategories.has(name.replace(/\s+/g, '')) ? 'residential' : 'commercial';
   }
+  function isResidential(resource) { return resourceRoom(resource) === 'residential'; }
   function pageScope(body, search) {
-    if (body.dataset.resourceScope === 'residential') return 'residential';
+    if (['residential', 'land'].includes(body.dataset.resourceScope)) return body.dataset.resourceScope;
     return new URLSearchParams(search).get('scope') === 'all' ? 'all' : 'commercial';
   }
   function visible(resources, scope) {
     if (scope === 'all') return resources;
-    return resources.filter(resource => isResidential(resource) === (scope === 'residential'));
+    return resources.filter(resource => resourceRoom(resource) === scope);
   }
   function readDetailScope(search) {
     const value = new URLSearchParams(search).get('resourceScope');
-    return ['residential', 'commercial', 'all'].includes(value) ? value : null;
+    return ['residential', 'commercial', 'land', 'all'].includes(value) ? value : null;
   }
   function roomUrl(scope) {
-    return scope === 'residential' ? 'residential-resources.html' : scope === 'all' ? 'resources.html?scope=all' : 'resources.html';
+    return scope === 'land' ? 'land-resources.html' : scope === 'residential' ? 'residential-resources.html' : scope === 'all' ? 'resources.html?scope=all' : 'resources.html';
   }
   function detailUrl(page, id, scope) {
     const params = new URLSearchParams({id: String(id)});
     if (scope) params.set('resourceScope', scope);
     return page + '?' + params.toString();
   }
-  window.HitopResourceRooms = {setCategories, isResidential, pageScope, visible, readDetailScope, roomUrl, detailUrl};
+  window.HitopResourceRooms = {setCategories, resourceRoom, isResidential, pageScope, visible, readDetailScope, roomUrl, detailUrl};
 })();
 async function resourceCategoryRequest(query, method = 'GET', body) {
   const {data, error} = await hitopAuthClient.auth.getSession();
