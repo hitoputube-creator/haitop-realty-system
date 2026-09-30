@@ -24,10 +24,14 @@
     [16,443,377,375,364],[17,404,477,312,451],[18,619,377,544,353]
   ];
   const thirdByNumber = new Map(third.map(row => [row[0], row]));
+  // Fill only from verified block/parcel material. A mixed block can contain both types.
+  const thirdTypes = {};
+  const typeLabels = { multi: '다가구', shop: '상가점포', unknown: '미분류' };
   const blocks = Object.entries(overall).flatMap(([group, entries]) => entries.map(([number,x,y]) => ({
     id: group + '-C' + number, group, number, name: 'C' + number,
     overall: [x / 1920 * 100, y / 1293 * 100],
     third: group === 'third' ? thirdByNumber.get(number) : null,
+    types: group === 'third' ? (thirdTypes[number] || []) : [],
     drawing: null
   })));
   const byId = new Map(blocks.map(block => [block.id,block]));
@@ -35,17 +39,19 @@
   const viewport = $('mapViewport');
   const stage = $('mapStage');
   const image = $('mapImage');
-  let view = 'all', group = 'all', zoom = 1, pinch = null, suppressClickUntil = 0;
+  let view = 'all', group = 'all', landType = 'all', zoom = 1, pinch = null, suppressClickUntil = 0;
   function readState() {
     const p = new URLSearchParams(location.search);
     view = p.get('view') === 'third' ? 'third' : 'all';
     group = view === 'third' ? 'third' : (groups[p.get('group')] ? p.get('group') : 'all');
+    landType = (view === 'third' || group === 'third') && typeLabels[p.get('landType')] ? p.get('landType') : 'all';
     return byId.get(p.get('block')) || null;
   }
   function navigate(block, replace) {
     const url = new URL(location.href);
     url.searchParams.set('view',view);
     if (group === 'all') url.searchParams.delete('group'); else url.searchParams.set('group',group);
+    if (landType === 'all') url.searchParams.delete('landType'); else url.searchParams.set('landType',landType);
     if (block) url.searchParams.set('block',block.id); else url.searchParams.delete('block');
     history[replace ? 'replaceState' : 'pushState']({},'',url);
     render(block);
@@ -68,9 +74,14 @@
     document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.view === view)));
     document.querySelectorAll('[data-group]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.group === group)));
     $('groupFilters').hidden = view === 'third';
+    const showTypeFilters = view === 'third' || group === 'third';
+    $('thirdTypeFilters').hidden = !showTypeFilters;
+    document.querySelectorAll('[data-land-type]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.landType === landType)));
     if (block) {
       $('detailGroup').textContent = groups[block.group].label;
       $('detailTitle').textContent = block.name + ' 블럭';
+      $('detailType').hidden = block.group !== 'third';
+      $('detailType').textContent = '택지 구분: ' + (block.types.length ? block.types.map(type => typeLabels[type]).join(' · ') + (block.types.length > 1 ? ' (혼합 블럭 · 필지별 확인)' : '') : '미분류 · 상세 자료로 확인 필요');
       $('detailNote').hidden = !(block.group === 'third' && !block.third);
       $('detailDrawing').replaceChildren();
       $('detailDrawing').hidden = !block.drawing;
@@ -94,7 +105,11 @@
       image.alt = view === 'third' ? '운정3지구 C블럭 위치도' : '운정신도시 전체 택지블럭 위치도';
       zoom = 1; applyZoom(); viewport.scrollTo(0,0);
     }
-    const visible = blocks.filter(b => group === 'all' || b.group === group);
+    const groupBlocks = blocks.filter(b => group === 'all' || b.group === group);
+    const visible = groupBlocks.filter(b => !showTypeFilters || landType === 'all' || (landType === 'unknown' ? !b.types.length : b.types.includes(landType)));
+    const unknownCount = groupBlocks.filter(b => b.group === 'third' && !b.types.length).length;
+    $('typeNotice').hidden = !showTypeFilters || !unknownCount;
+    $('typeNotice').textContent = '유형 확인이 필요한 블럭 ' + unknownCount + '개가 있습니다. 현재 자료에는 다가구·상가점포 구분이 없어 임의로 분류하지 않았습니다.' + (landType !== 'all' && landType !== 'unknown' ? ' 구분된 블럭이 없으면 전체 또는 미분류에서 확인해주세요.' : '');
     $('hotspots').replaceChildren();
     visible.forEach(b => {
       if (view === 'third') {
@@ -118,12 +133,22 @@
         button.dataset.block = b.id;
         button.append(b.name);
         const status = document.createElement('small'); status.textContent = b.drawing ? '상세 도면 보기' : '도면 등록 예정';
+        if (b.group === 'third') {
+          const type = document.createElement('small');
+          type.textContent = b.types.length ? b.types.map(t => typeLabels[t]).join(' · ') : '유형 미분류';
+          button.appendChild(type);
+        }
         button.appendChild(status);
         button.setAttribute('aria-label',meta.label + ' ' + b.name + ' 상세 보기');
         button.addEventListener('click',() => navigate(b)); buttons.appendChild(button);
       });
       section.appendChild(buttons); $('blockList').appendChild(section);
     });
+    if (!visible.length) {
+      const empty = document.createElement('p');
+      empty.textContent = '이 유형으로 확인·분류된 블럭이 아직 없습니다. 전체 또는 미분류를 선택해주세요.';
+      $('blockList').appendChild(empty);
+    }
   }
   function applyZoom() {
     stage.style.width = zoom * 100 + '%';
@@ -142,10 +167,13 @@
     applyZoom(); viewport.scrollLeft = left; viewport.scrollTop = top;
   }
   document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click',() => {
-    view = button.dataset.view; group = view === 'third' ? 'third' : 'all'; navigate(null);
+    view = button.dataset.view; group = view === 'third' ? 'third' : 'all'; landType = 'all'; navigate(null);
   }));
   document.querySelectorAll('[data-group]').forEach(button => button.addEventListener('click',() => {
-    group = button.dataset.group; navigate(null);
+    group = button.dataset.group; landType = 'all'; navigate(null);
+  }));
+  document.querySelectorAll('[data-land-type]').forEach(button => button.addEventListener('click',() => {
+    landType = button.dataset.landType; navigate(null);
   }));
   $('backToMap').addEventListener('click',() => { navigate(null); viewport.focus({preventScroll:true}); });
   $('detailBack').addEventListener('click',() => { navigate(null); viewport.focus({preventScroll:true}); });

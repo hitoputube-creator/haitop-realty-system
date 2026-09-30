@@ -43,6 +43,13 @@
       <button class="btn" type="button" data-group="second-multi" aria-pressed="false"><span class="legend-dot multi"></span>운정2지구 다가구택지</button>
       <button class="btn" type="button" data-group="third" aria-pressed="false"><span class="legend-dot third"></span>운정3지구 택지</button>
     </div>
+    <div class="filter-bar" id="thirdTypeFilters" role="group" aria-label="운정3지구 택지 유형" hidden>
+      <button class="btn" type="button" data-land-type="all" aria-pressed="true">전체</button>
+      <button class="btn" type="button" data-land-type="multi" aria-pressed="false"><span class="legend-dot multi"></span>다가구</button>
+      <button class="btn" type="button" data-land-type="shop" aria-pressed="false"><span class="legend-dot shop"></span>상가점포</button>
+      <button class="btn" type="button" data-land-type="unknown" aria-pressed="false">미분류</button>
+    </div>
+    <p class="type-notice" id="typeNotice" role="status" hidden></p>
     <p class="map-help" id="mapHelp">확대한 위치도는 스크롤하거나 손가락으로 밀어서 이동할 수 있습니다. 두 손가락으로 확대·축소할 수 있습니다.</p>
     <div class="map-viewport" id="mapViewport" tabindex="0" aria-label="택지 위치도, 방향키로 이동">
       <div class="map-stage" id="mapStage">
@@ -62,6 +69,7 @@
     <button id="backToMap" class="btn" type="button">← 위치도로 돌아가기</button>
     <div class="card block-detail-card">
       <p class="detail-eyebrow" id="detailGroup"></p><h1 id="detailTitle" tabindex="-1"></h1>
+      <p class="detail-eyebrow" id="detailType" hidden></p>
       <div id="detailDrawing" hidden></div>
       <div class="drawing-empty" id="drawingEmpty"><span aria-hidden="true">▧</span><h2>상세 도면 등록 예정</h2><p>이 블럭의 상세 도면을 연결하면 개별 필지를 선택할 수 있습니다.</p></div>
       <p id="detailNote" hidden>이 블럭은 운정신도시 전체 위치도에 표시되어 있습니다. 운정3지구 전용 위치도에는 표시가 없습니다.</p>
@@ -69,6 +77,6 @@
     </div>
   </section>
 </main>
-<script src="assets/js/land-location.js?v=20260930-2"></script>
+<script src="assets/js/land-location.js?v=20260930-3"></script>
 </body>
 </html>
