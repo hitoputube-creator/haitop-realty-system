@@ -23,7 +23,7 @@
     11: ['single'], 12: ['single'], 13: ['single'], 14: ['single'], 15: ['single'],
     16: ['single'], 17: ['single'], 18: ['single']
   };
-  const typeLabels = { single: '단독택지', shop: '상가점포', unknown: '미분류' };
+  const typeLabels = { single: '주거전용', shop: '상가점포', unknown: '미분류' };
   const blocks = Object.entries(overall).flatMap(([group, entries]) => entries.map(([number,x,y]) => ({
     id: group + '-C' + number, group, number, name: 'C' + number,
     overall: [x / 1920 * 100, y / 1293 * 100],
