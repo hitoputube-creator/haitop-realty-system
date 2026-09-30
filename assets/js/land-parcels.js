@@ -84,24 +84,45 @@
       return shape.isPointInFill(point.matrixTransform(matrix.inverse()));
     }catch(_){return false;}
   }
-  function updateVectorBuildingHighlights(ordered) {
-    if(!buildingVectorOverlay||!buildingVectorCandidates.length)return;
-    buildingVectorCandidates.forEach(shape=>shape.classList.remove('parcel-building-vector-highlight'));
-    if(!views.building)return;
-    ordered.filter(row=>buildingState(row)==='building').forEach(row=>{
-      const x=Number(row.x),y=Number(row.y);
-      if(!Number.isFinite(x)||!Number.isFinite(y))return;
-      const hits=buildingVectorCandidates.filter(shape=>shapeContainsParcelPoint(shape,x,y));
-      if(!hits.length)return;
-      let best=hits[0],bestArea=Infinity;
-      hits.forEach(shape=>{
-        try{
-          const box=shape.getBBox(),area=box.width*box.height;
-          if(area>0&&area<bestArea){best=shape;bestArea=area;}
-        }catch(_){}
-      });
-      best.classList.add('parcel-building-vector-highlight');
+  function findVectorParcelShape(row) {
+    const x=Number(row.x),y=Number(row.y);
+    if(!Number.isFinite(x)||!Number.isFinite(y))return null;
+    const hits=buildingVectorCandidates.filter(shape=>shapeContainsParcelPoint(shape,x,y));
+    if(!hits.length)return null;
+    let best=hits[0],bestArea=Infinity;
+    hits.forEach(shape=>{
+      try{
+        const box=shape.getBBox(),area=box.width*box.height;
+        if(area>0&&area<bestArea){best=shape;bestArea=area;}
+      }catch(_){}
     });
+    return best;
+  }
+  function appendVectorParcelHitAreas(ordered) {
+    if(!buildingVectorOverlay||!buildingVectorCandidates.length||!buildingVectorViewBox)return;
+    const layer=document.createElementNS(ns,'svg');
+    layer.setAttribute('x','0');layer.setAttribute('y','0');layer.setAttribute('width','1');layer.setAttribute('height','1');
+    layer.setAttribute('viewBox',[buildingVectorViewBox.x,buildingVectorViewBox.y,buildingVectorViewBox.width,buildingVectorViewBox.height].join(' '));
+    layer.setAttribute('preserveAspectRatio','none');layer.classList.add('parcel-vector-hit-layer');
+    ordered.forEach(row=>{
+      if(!matches(row))return;
+      const sourceShape=findVectorParcelShape(row);
+      if(!sourceShape)return;
+      const clone=document.importNode(sourceShape,true);
+      const matrix=sourceShape.getCTM();
+      clone.removeAttribute('id');clone.removeAttribute('class');clone.removeAttribute('style');clone.removeAttribute('fill');clone.removeAttribute('stroke');
+      clone.removeAttribute('clip-path');clone.removeAttribute('filter');clone.removeAttribute('mask');clone.removeAttribute('transform');
+      if(matrix)clone.setAttribute('transform',`matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})`);
+      clone.classList.add('parcel-vector-hit');
+      if(views.building&&buildingState(row)==='building')clone.classList.add('parcel-vector-building-highlight');
+      const registration=contactStates[contactState(row)].label;
+      clone.setAttribute('role','button');clone.setAttribute('tabindex','0');
+      clone.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+registration);
+      clone.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(row);});
+      clone.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row);}});
+      layer.append(clone);
+    });
+    overlay.append(layer);
   }
   const fields = ['address','landType','building','area','supplyPrice','auctionPrice','salePrice','owner','contact','note'];
   const priceFields = ['supplyPrice','auctionPrice','salePrice'];
@@ -179,7 +200,19 @@
   function draw() {
     overlay.replaceChildren(); $('parcelList').replaceChildren(); viewLegend();
     const combined = new Map(cells.map(cell => [key(cell),{...cell,data:{...cell.data}}]));
-    rows.forEach(row => {const base=combined.get(key(row));combined.set(key(row), {...base,...row,data:{...base?.data,...row.data}});});
+    rows.forEach(row => {
+      const base=combined.get(key(row));
+      const merged={...base,...row,data:{...base?.data,...row.data}};
+      if(base){
+        if(row.x==null||row.x===''||!Number.isFinite(Number(row.x)))merged.x=base.x;
+        if(row.y==null||row.y===''||!Number.isFinite(Number(row.y)))merged.y=base.y;
+        if(!Array.isArray(row.points)||!row.points.length)merged.points=base.points;
+        if(row.sourceCell==null)merged.sourceCell=base.sourceCell;
+        if(row.source==null)merged.source=base.source;
+        if(row.sourcePage==null)merged.sourcePage=base.sourcePage;
+      }
+      combined.set(key(row),merged);
+    });
     $('parcelSourceBody').replaceChildren();$('parcelList').hidden=!!sourceMeta;
     if(sourceMeta) sourceMeta.subblocks.forEach(group=>{
       const shape=document.createElementNS(ns,'circle');shape.setAttribute('cx',group.x/100);shape.setAttribute('cy',group.y/100);shape.setAttribute('r','.01');shape.classList.add('source-subblock');shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label','C1-'+group.number+' 토지목록 보기');
@@ -189,21 +222,25 @@
     let count = 0;
     ordered.forEach(row => {
       if (!matches(row)) return; count++;
-      const shape = document.createElementNS(ns,row.points ? 'polygon' : 'circle');
-      if (row.points) shape.setAttribute('points',row.points.map(p => p[0]/318 + ',' + p[1]/385).join(' '));
-      else {shape.setAttribute('cx',row.x/100);shape.setAttribute('cy',row.y/100);shape.setAttribute('r',row.sourceCell?'.006':'.015');}
-      shape.classList.add('parcel-shape'); if(views.building && buildingState(row)==='building' && row.points) shape.classList.add('parcel-building-building');
-      const registration = contactStates[contactState(row)].label;
-      shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료 · ' + registration);
-      const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + ' · ' + registration;shape.append(title);
-      shape.addEventListener('click',event=>{event.stopPropagation();show(row);});
-      shape.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row);}});overlay.append(shape); addMapLabel(row);
+      const useVectorHit=!!(sourceMeta&&buildingVectorCandidates.length);
+      if(!useVectorHit){
+        const shape = document.createElementNS(ns,row.points ? 'polygon' : 'circle');
+        if (row.points) shape.setAttribute('points',row.points.map(p => p[0]/318 + ',' + p[1]/385).join(' '));
+        else {shape.setAttribute('cx',Number(row.x)/100);shape.setAttribute('cy',Number(row.y)/100);shape.setAttribute('r',row.sourceCell?'.006':'.015');}
+        shape.classList.add('parcel-shape'); if(views.building && buildingState(row)==='building' && row.points) shape.classList.add('parcel-building-building');
+        const registration = contactStates[contactState(row)].label;
+        shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료 · ' + registration);
+        const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + ' · ' + registration;shape.append(title);
+        shape.addEventListener('click',event=>{event.stopPropagation();show(row);});
+        shape.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row);}});overlay.append(shape);
+      }
+      addMapLabel(row);
       if(sourceMeta){appendSourceRow(row);return;}
       const button=document.createElement('button');button.type='button';button.className='block-button';
       button.textContent=parcelLabel(row);
       const note=document.createElement('small');note.textContent=registration;button.append(note);button.addEventListener('click',()=>show(row));$('parcelList').append(button);
     });
-    updateVectorBuildingHighlights(ordered);
+    appendVectorParcelHitAreas(ordered);
     if(sourceMeta)$('parcelSourceSummary').textContent='원본 토지목록 '+cells.length+'개 · 현재 표시 '+count+'개';
     $('parcelCount').textContent = (recordsLoaded ? '자료 등록 ' + rows.length + '개' : '등록 상태 확인 불가') + ' · 현재 표시 ' + count + '개';
     $('parcelListEmpty').hidden = !!count;
