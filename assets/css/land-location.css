@@ -37,7 +37,10 @@
 /* Parcel views share the drawing coordinate system and never intercept clicks. */
 .parcel-view-controls{display:flex;flex-wrap:nowrap;gap:6px;margin:8px 0;overflow-x:auto}.parcel-view-controls .btn{flex:0 0 auto;white-space:nowrap}.parcel-view-controls .btn{min-height:34px;font-size:.8rem;padding:6px 10px}
 .parcel-map-label{font-size:.008px;font-weight:700;fill:#102238;stroke:#fff;stroke-width:.0016px;paint-order:stroke fill;pointer-events:none}
-.parcel-shape.parcel-building-building{fill:#2563eb55;stroke:#2563eb}.parcel-shape.parcel-building-vacant{fill:#16803c55;stroke:#16803c}.parcel-shape.parcel-building-unknown{fill:#64748b44;stroke:#64748b}
+.parcel-shape.parcel-building-building{fill:#2563eb70;stroke:#1d4ed8;stroke-width:.003}
+.parcel-building-vector-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.parcel-building-vector-overlay *{opacity:0!important;pointer-events:none!important}
+.parcel-building-vector-overlay .parcel-building-vector-highlight{opacity:1!important;fill:#2563eb99!important;stroke:#1d4ed8!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
 
 .parcel-contact-marker{font-size:.012px;stroke-width:.002px}.parcel-contact-marker.parcel-contact-contact{fill:#137a42}.parcel-contact-marker.parcel-contact-registered{fill:#a66b00}.parcel-contact-marker.parcel-contact-missing{fill:#526071}.parcel-contact-marker.parcel-contact-unknown{fill:#6d36a0}
 .parcel-contact-badge{display:inline-block;margin-right:10px;font-size:.75rem}.parcel-contact-badge.parcel-contact-contact{color:#8debbb}.parcel-contact-badge.parcel-contact-registered{color:#f4d27b}.parcel-contact-badge.parcel-contact-missing{color:var(--text-muted)}.parcel-contact-badge.parcel-contact-unknown{color:#dbb7ff}
