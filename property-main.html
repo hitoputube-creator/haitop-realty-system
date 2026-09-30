@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>하이탑부동산 | 매물관리 메인</title>
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/admin-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:var(--bg,#071625);color:var(--txt,#f5f8fb);font-family:Pretendard,system-ui,sans-serif;font-size:16px;line-height:1.6}
+    a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:3px solid #e7ca70;outline-offset:4px}
+    .page{max-width:1200px;margin:auto;padding:0 32px 48px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0;border-bottom:1px solid var(--line,#294057)}
+    .brand{display:flex;align-items:center;gap:12px}.brand-mark{display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--gold,#d8b84a);border-radius:10px;color:var(--gold,#d8b84a);font-size:24px;font-weight:800}.brand-name{font-size:18px;font-weight:750}.brand-sub{font-size:14px;color:var(--sub,#b4c2d2)}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap}.top-actions a{border:1px solid var(--line,#294057);border-radius:8px;padding:8px 14px;font-size:14px}.top-actions a:hover{background:var(--panel2,#15283d)}
+    .heading{margin:32px 0 24px}.eyebrow{color:var(--gold,#d8b84a);font-size:14px;font-weight:650;margin:0 0 5px}h1{font-size:30px;margin:0;letter-spacing:-.025em}.heading p:last-child{color:var(--sub,#b4c2d2);margin:7px 0 0}
+    .categories{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:28px}.category{border:1px solid var(--line2,#35516c);border-radius:10px;background:var(--panel,#101f32);color:var(--sub,#b4c2d2);padding:16px 8px;font-weight:650;white-space:nowrap}.category:hover{background:var(--panel2,#15283d);color:var(--txt,#f5f8fb)}.category[aria-selected="true"]{background:var(--gold,#d8b84a);color:#071625;border-color:var(--gold,#d8b84a)}
+    .panel-heading{display:flex;align-items:center;gap:12px;margin-bottom:16px}h2{font-size:21px;margin:0}.panel-rule{flex:1;height:1px;background:var(--line,#294057)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.entry{background:var(--panel,#101f32);border:1px solid var(--line,#294057);border-radius:14px;padding:28px;display:flex;flex-direction:column;min-height:280px}.entry-label{font-size:14px;font-weight:650;color:var(--gold,#d8b84a);margin:0 0 14px}.entry h3{font-size:24px;line-height:1.35;margin:0 0 12px;letter-spacing:-.02em}.entry p{margin:0 0 20px;color:var(--sub,#b4c2d2)}.entry-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto}.action{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 18px;border:1px solid var(--line2,#35516c);border-radius:8px;background:var(--panel2,#15283d);font-weight:650}.action:hover{background:var(--card2,#1b324c)}.action.primary{background:var(--gold,#d8b84a);border-color:var(--gold,#d8b84a);color:#071625}.action.primary:hover{background:#e7ca70}.entry .note{font-size:14px;margin:16px 0 0;color:var(--sub,#b4c2d2)}
+    .secondary-links{margin-top:24px;display:flex;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--sub,#b4c2d2)}.secondary-links a{text-decoration:underline;text-underline-offset:4px}.status{color:var(--sub,#b4c2d2);margin-top:16px;font-size:14px}.status:empty{display:none}[hidden]{display:none!important}
+    @media(max-width:760px){.page{padding:0 20px 32px}.topbar{align-items:flex-start;flex-direction:column;padding:20px 0}.categories{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.category{padding:13px 5px}.grid{grid-template-columns:1fr}.entry{padding:24px;min-height:240px}.heading{margin-top:24px}h1{font-size:27px}}
+    @media(max-width:380px){.page{padding-left:14px;padding-right:14px}.category{font-size:14px}.entry-actions{flex-direction:column}.action{width:100%}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">H</span><div><div class="brand-name">하이탑부동산</div><div class="brand-sub">매물·자료 관리</div></div></div>
+      <nav class="top-actions" aria-label="주요 페이지"><a href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html">업무센터</a><a href="index.html">기존 통합관리</a></nav>
+    </header>
+    <main>
+      <div class="heading"><p class="eyebrow">PROPERTY MANAGEMENT</p><h1>매물관리</h1><p>종류를 선택해 매물과 관련 자료를 확인하세요.</p></div>
+      <div class="categories" role="tablist" aria-label="매물 종류">
+        <button class="category" id="tab-all" type="button" role="tab" aria-selected="true" aria-controls="categoryPanel" tabindex="0" data-category="all">전체매물</button>
+        <button class="category" id="tab-shop" type="button" role="tab" aria-selected="false" aria-controls="categoryPanel" tabindex="-1" data-category="shop">상가</button>
+        <button class="category" id="tab-land" type="button" role="tab" aria-selected="false" aria-controls="categoryPanel" tabindex="-1" data-category="land">택지</button>
+        <button class="category" id="tab-home" type="button" role="tab" aria-selected="false" aria-controls="categoryPanel" tabindex="-1" data-category="home">주거</button>
+        <button class="category" id="tab-factory" type="button" role="tab" aria-selected="false" aria-controls="categoryPanel" tabindex="-1" data-category="factory">공장·창고</button>
+        <button class="category" id="tab-other" type="button" role="tab" aria-selected="false" aria-controls="categoryPanel" tabindex="-1" data-category="other">기타</button>
+      </div>
+      <section id="categoryPanel" role="tabpanel" aria-labelledby="tab-all" tabindex="0">
+        <div class="panel-heading"><h2 id="categoryTitle">전체매물</h2><span class="panel-rule" aria-hidden="true"></span></div>
+        <div class="grid">
+          <article class="entry"><div class="entry-label">매물목록</div><h3 id="listingTitle">전체 매물 보기</h3><p id="listingDescription">등록된 모든 매물을 검색하고 매매·임대 현황을 확인합니다.</p><div class="entry-actions"><a class="action primary" id="listingLink" href="properties.html">매물목록 열기</a><a class="action" href="register.html">새 매물 등록</a></div><p class="note" id="listingNote" hidden></p></article>
+          <article class="entry"><div class="entry-label">자료관리</div><h3 id="resourceTitle">전체 자료 보기</h3><p id="resourceDescription">등록된 건물 자료와 관련 문서를 확인합니다.</p><div class="entry-actions"><a class="action" id="resourceLink" href="resources.html">자료관리 열기</a><a class="action" id="floorLink" href="floor-status-overview.html">건물별 층 현황</a></div><p class="note" id="resourceNote" hidden></p></article>
+        </div>
+        <p class="status" id="navigationStatus" role="status"></p>
+      </section>
+      <nav class="secondary-links" aria-label="기존 화면 바로가기"><a href="properties.html">기존 매물관리</a><a href="resources.html">기존 자료관리</a></nav>
+      <noscript><p>종류별 선택에는 자바스크립트가 필요합니다. 아래 기존 매물관리·자료관리 링크를 이용하세요.</p></noscript>
+    </main>
+  </div>
+  <script>
+    (function () {
+      'use strict';
+      const categories = {
+        all: {label:'전체매물', major:'', title:'전체 매물 보기', description:'등록된 모든 매물을 검색하고 매매·임대 현황을 확인합니다.', resource:'전체 자료 보기', resourceDescription:'등록된 건물 자료와 관련 문서를 확인합니다.', floors:true},
+        shop: {label:'상가', major:'상가사무실', title:'상가·사무실 매물', description:'상가와 사무실의 매매·임대 매물을 확인합니다.', resource:'상가·건물 자료', resourceDescription:'건물 개요와 관련 자료를 확인하고, 층별 평면도와 호실별 입점 현황을 열어봅니다.', floors:true},
+        land: {label:'택지', major:'토지', title:'택지·토지 매물', description:'기존 토지 매물목록에서 택지와 토지의 매매 현황을 확인합니다.', resource:'택지 자료', resourceDescription:'현재 등록된 관련 자료는 기존 자료관리에서 확인할 수 있습니다.', resourceNote:'점포택지·주거전용 구분과 블럭·필지별 전용 자료화면은 아직 연결되지 않았습니다.'},
+        home: {label:'주거', major:'주거용', title:'주거 매물', description:'아파트·오피스텔·주택의 매매·전세·월세 매물을 확인합니다.', resource:'주거 자료', resourceDescription:'단지·건물 관련 자료는 기존 자료관리에서 확인할 수 있습니다.', resourceNote:'현재는 전체 자료관리로 연결됩니다.'},
+        factory: {label:'공장·창고', major:'공장창고', title:'공장·창고 매물', description:'공장과 창고의 매매·임대 매물을 확인합니다.', resource:'공장·창고 자료', resourceDescription:'건물·부지 관련 자료는 기존 자료관리에서 확인할 수 있습니다.', resourceNote:'현재는 전체 자료관리로 연결됩니다.'},
+        other: {label:'기타', major:'건물빌딩', title:'기타 매물', description:'기존 건물·빌딩 매물목록을 확인합니다.', listingNote:'현재 기타는 기존 분류인 건물·빌딩 매물로 연결됩니다.', resource:'기타 자료', resourceDescription:'그 밖의 관련 자료는 기존 자료관리에서 확인할 수 있습니다.', resourceNote:'현재는 전체 자료관리로 연결됩니다.'}
+      };
+      const tabs = Array.from(document.querySelectorAll('[data-category]'));
+      const get = id => document.getElementById(id);
+      let selected = 'all';
+      function setNote(id, text) { get(id).textContent = text || ''; get(id).hidden = !text; }
+      function selectCategory(key, focus) {
+        if (!Object.prototype.hasOwnProperty.call(categories, key)) key = 'all';
+        selected = key;
+        const category = categories[key];
+        tabs.forEach(tab => { const active = tab.dataset.category === key; tab.setAttribute('aria-selected', String(active)); tab.tabIndex = active ? 0 : -1; if (active && focus) tab.focus(); });
+        get('categoryPanel').setAttribute('aria-labelledby', 'tab-' + key);
+        get('categoryTitle').textContent = category.label;
+        get('listingTitle').textContent = category.title;
+        get('listingDescription').textContent = category.description;
+        get('resourceTitle').textContent = category.resource;
+        get('resourceDescription').textContent = category.resourceDescription;
+        get('floorLink').hidden = !category.floors;
+        setNote('listingNote', category.listingNote);
+        setNote('resourceNote', category.resourceNote);
+        get('navigationStatus').textContent = '';
+      }
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => selectCategory(tab.dataset.category, false));
+        tab.addEventListener('keydown', event => {
+          let next;
+          if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+          if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+          if (event.key === 'Home') next = 0;
+          if (event.key === 'End') next = tabs.length - 1;
+          if (next !== undefined) { event.preventDefault(); selectCategory(tabs[next].dataset.category, true); }
+        });
+      });
+      get('listingLink').addEventListener('click', event => {
+        // Existing list restores this session key; no changes to the list or its records.
+        const state = {searchKeyword:'', currentMajor:categories[selected].major, currentSub:'', currentTag:'', currentDealFilter:'', includeCompleted:false, currentSort:'newest', viewMode:'card', scrollY:0};
+        try {
+          sessionStorage.setItem('hitop_properties_filter_state', JSON.stringify(state));
+          // A new tab has a separate session, so use this tab to preserve the selection.
+          event.preventDefault();
+          location.assign(get('listingLink').href);
+        } catch (error) {
+          event.preventDefault();
+          get('navigationStatus').textContent = '종류 선택을 전달할 수 없습니다. 아래 기존 매물관리 링크를 열어 유형별 필터를 선택해 주세요.';
+        }
+      });
+      selectCategory('all', false);
+    })();
+  </script>
+</body>
+</html>
