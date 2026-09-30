@@ -81,6 +81,7 @@
     document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.view === view)));
     document.querySelectorAll('[data-group]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.group === group)));
     $('groupFilters').hidden = view === 'third';
+    $('mapCalloutCover').hidden = view !== 'third';
     const showTypeFilters = view === 'third' || group === 'third';
     $('thirdTypeFilters').hidden = !showTypeFilters;
     document.querySelectorAll('[data-land-type]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.landType === landType)));

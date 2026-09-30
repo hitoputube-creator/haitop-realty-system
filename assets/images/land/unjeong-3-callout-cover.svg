@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1893" height="1312" viewBox="0 0 1893 1312">
+  <!-- Cover only the original printed rectangular C labels and their callout arrows.
+       The source map and independently clickable circular markers remain unchanged. -->
+  <g fill="#fff" stroke="#fff" stroke-width="5" stroke-linejoin="round">
+    <g id="callout-C1"><rect x="1087" y="317" width="79" height="54" rx="7"/><path d="M1165 339 L1183 346 L1165 354 Z"/></g>
+    <g id="callout-C2"><rect x="907" y="99" width="78" height="54" rx="7"/><path d="M908 115 L890 122 L908 130 Z"/></g>
+    <g id="callout-C3"><rect x="481" y="704" width="79" height="53" rx="7"/><path d="M558 722 L578 731 L558 739 Z"/></g>
+    <g id="callout-C4"><rect x="752" y="1039" width="79" height="53" rx="7"/><path d="M754 1056 L735 1065 L754 1073 Z"/></g>
+    <g id="callout-C5"><rect x="636" y="1143" width="79" height="54" rx="7"/><path d="M638 1160 L619 1169 L638 1177 Z"/></g>
+    <g id="callout-C6"><rect x="368" y="1129" width="79" height="53" rx="7"/><path d="M382 1131 L395 1110 L409 1131 Z"/></g>
+    <g id="callout-C7"><rect x="221" y="1056" width="79" height="54" rx="7"/><path d="M298 1078 L318 1087 L298 1094 Z"/></g>
+    <g id="callout-C8"><rect x="213" y="994" width="79" height="53" rx="7"/><path d="M290 1015 L310 1024 L290 1032 Z"/></g>
+    <g id="callout-C9"><rect x="383" y="771" width="79" height="54" rx="7"/><path d="M429 822 L438 842 L447 822 Z"/></g>
+    <g id="callout-C10"><rect x="237" y="778" width="80" height="53" rx="7"/><path d="M272 829 L291 853 L301 829 Z"/></g>
+    <g id="callout-C11"><rect x="108" y="858" width="79" height="54" rx="7"/><path d="M123 861 L131 841 L139 861 Z"/></g>
+    <g id="callout-C12"><rect x="12" y="742" width="79" height="54" rx="7"/><path d="M89 764 L107 772 L89 780 Z"/></g>
+    <g id="callout-C13"><rect x="82" y="657" width="79" height="54" rx="7"/><path d="M159 678 L177 686 L159 694 Z"/></g>
+    <g id="callout-C14"><rect x="506" y="517" width="78" height="54" rx="7"/><path d="M508 534 L489 542 L508 551 Z"/></g>
+    <g id="callout-C15"><rect x="522" y="388" width="78" height="54" rx="7"/><path d="M524 404 L504 413 L524 422 Z"/></g>
+    <g id="callout-C16"><rect x="336" y="338" width="79" height="54" rx="7"/><path d="M413 357 L432 368 L413 375 Z"/></g>
+    <g id="callout-C17"><rect x="273" y="425" width="79" height="54" rx="7"/><path d="M350 445 L368 454 L350 462 Z"/></g>
+    <g id="callout-C18"><rect x="504" y="329" width="78" height="53" rx="7"/><path d="M580 347 L600 357 L580 365 Z"/></g>
+  </g>
+</svg>
