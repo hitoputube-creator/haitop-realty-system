@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-10">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-c1-private-1">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -80,8 +80,12 @@
 <section id="parcelManager" class="parcel-manager" hidden>
 <h2>필지별 세부자료</h2><p id="parcelHelp"></p><p id="parcelStatus" role="status" aria-live="polite"></p>
 <div class="filter-bar"><button class="btn" id="parcelAdd" type="button" aria-pressed="false">필지 위치 지정·등록</button><label>건물 구분 <select id="parcelBuildingFilter"><option value="all">전체</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option><option value="unknown">미확인</option></select></label><label>택지 유형 <select id="parcelTypeFilter"><option value="all">전체</option><option value="single">단독택지</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label></div>
+<section id="parcelSourceSection" hidden>
+<p class="source-note">LH 공급안내 원본 · 2021년 9월 기준. 예정지번과 당시 공급예정금액이며, 현재 지번·매매가와 별도로 확인해주세요.</p>
+<label class="source-group-filter">소블럭 선택 <select id="parcelSubblockFilter"><option value="all">C1 전체</option></select></label>
+<p id="parcelSourceSummary"></p><div class="parcel-table-scroll"><table class="parcel-source-table"><thead><tr><th>필지</th><th>예정지번</th><th>면적 ㎡ / 평</th><th>공급예정금액</th><th>자료</th></tr></thead><tbody id="parcelSourceBody"></tbody></table></div></section>
 <p id="parcelCount"></p><div id="parcelList" class="block-buttons"></div><p id="parcelListEmpty" hidden>표시할 필지가 없습니다. 위치를 지정해 등록할 수 있습니다.</p>
-<section id="parcelEditor" hidden><h3 id="parcelFormTitle"></h3><form id="parcelForm"><div class="parcel-fields">
+<section id="parcelEditor" hidden><h3 id="parcelFormTitle"></h3><p id="parcelSourceDetail" hidden></p><form id="parcelForm"><div class="parcel-fields">
 <label>소블럭 번호<input id="parcelSubblock" required maxlength="30" placeholder="예: 1"></label><label>필지번호<input id="parcelNumber" required maxlength="30" placeholder="예: 8"></label>
 <label>택지 유형<select id="parcel-landType"><option value="single">단독택지</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label>
 <label>건물 유무<select id="parcel-building"><option value="unknown">미확인</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option></select></label>
@@ -94,7 +98,8 @@
     </div>
   </section>
 </main>
-<script src="assets/js/land-parcels.js?v=20260930-10"></script>
-<script src="assets/js/land-location.js?v=20260930-11"></script>
+<script src="assets/js/land-block-source.js?v=20260930-c1-private-1"></script>
+<script src="assets/js/land-parcels.js?v=20260930-c1-private-1"></script>
+<script src="assets/js/land-location.js?v=20260930-c1-private-1"></script>
 </body>
 </html>

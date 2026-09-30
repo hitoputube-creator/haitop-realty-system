@@ -29,7 +29,7 @@
     overall: [x / 1920 * 100, y / 1293 * 100],
     third: group === 'third' ? thirdByNumber.get(number) : null,
     types: group === 'third' ? (thirdTypes[number] || []) : [],
-    drawing: group === 'third' && number !== 1 ? 'assets/images/land/blocks/third-C' + number + '-hires.webp' : null
+    drawing: group === 'third' ? (number === 1 ? 'private:C1' : 'assets/images/land/blocks/third-C' + number + '-hires.webp') : null
   })));
   const byId = new Map(blocks.map(block => [block.id,block]));
   const $ = id => document.getElementById(id);
@@ -96,7 +96,16 @@
     button.addEventListener('click',() => { if (Date.now() >= suppressClickUntil) navigate(block); });
     return button;
   }
+  let privateDrawingUrl = null;
+  function clearPrivateDrawing() {
+    if (privateDrawingUrl) URL.revokeObjectURL(privateDrawingUrl);
+    privateDrawingUrl = null;
+  }
+  hitopAuthClient.auth.onAuthStateChange(event => {
+    if (event === 'SIGNED_OUT') { clearPrivateDrawing(); $('detailDrawing').replaceChildren(); $('sourceDrawingLink').removeAttribute('href'); window.HitopLandParcels?.close(); }
+  });
   function render(block) {
+    clearPrivateDrawing();
     $('overview').hidden = !!block;
     $('blockDetail').hidden = !block;
     document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.view === view)));
@@ -114,11 +123,12 @@
       $('detailDrawing').replaceChildren();
       $('detailDrawing').hidden = !block.drawing;
       $('drawingControls').hidden = !block.drawing;
-      $('sourceDrawingLink').hidden = block.group !== 'third';
+      $('sourceDrawingLink').hidden = block.group !== 'third' || block.id === 'third-C1';
+      $('sourceDrawingLink').href = 'assets/images/land/unjeong-3-parcels-hires.webp';
       $('drawingEmpty').hidden = !!block.drawing;
       if (block.drawing) {
         const drawing = document.createElement('img');
-        drawing.src = block.drawing; drawing.alt = groups[block.group].label + ' ' + block.name + ' 상세 도면';
+        if (block.id !== 'third-C1') drawing.src = block.drawing; drawing.alt = groups[block.group].label + ' ' + block.name + ' 상세 도면';
         drawing.style.width = '100%'; drawingZoom = 1; drawingFitted = true;
         drawing.addEventListener('load',() => {
           if ($('detailDrawing').contains(drawing) && drawingFitted) fitDrawing();
@@ -128,6 +138,19 @@
         });
         $('detailDrawing').appendChild(drawing);
         window.HitopLandParcels?.open(block, drawing);
+        if (block.id === 'third-C1') {
+          window.HitopLandBlockSource.load(block.id).then(row => {
+            if (!$('detailDrawing').contains(drawing)) return;
+            privateDrawingUrl = URL.createObjectURL(new Blob([row.diagram_svg],{type:'image/svg+xml'}));
+            drawing.src = privateDrawingUrl;
+            $('sourceDrawingLink').href = privateDrawingUrl;
+            $('sourceDrawingLink').hidden = false;
+          }).catch(error => {
+            if (!$('detailDrawing').contains(drawing)) return;
+            $('detailDrawingError').textContent = error.message;
+            $('detailDrawingError').hidden = false;
+          });
+        }
         if (drawing.complete && drawing.naturalWidth) fitDrawing();
       }
       if (!block.drawing) window.HitopLandParcels?.open(block, null);
