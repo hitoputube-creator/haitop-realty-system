@@ -17,7 +17,7 @@
   function contactState(row) { return hasContact(row) ? 'contact' : !recordsLoaded ? 'unknown' : row.id ? 'registered' : 'missing'; }
   function viewLegend() {
     const parts=[];
-    if(views.building) parts.push('건물 있음: 파랑 · 토지만 있음: 초록 · 미확인: 회색');
+    if(views.building) parts.push('건물 있음: 파랑 · 건물 없음: 초록 · 미입력: 회색');
     if(views.contact) parts.push('● 연락처 있음 · ○ 자료 있음/연락처 없음 · × 자료 미등록' + (!recordsLoaded ? ' · ? 등록 상태 확인 불가' : ''));
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
@@ -89,7 +89,8 @@
     $('parcelForm').reset();
     $('parcelSubblock').value = row.subblock || ''; $('parcelNumber').value = row.parcel || '';
     $('parcelSubblock').readOnly = !!(row.points || row.sourceCell); $('parcelNumber').readOnly = !!(row.points || row.sourceCell);
-    const values = {...{landType: current.types?.[0] || 'unknown',building:'unknown'},...row.data};
+    const values = {...{landType: current.types?.[0] || 'unknown',building:''},...row.data};
+    if (!['building','vacant'].includes(values.building)) values.building = '';
     const detail=$('parcelSourceDetail'); detail.hidden=!row.source;
     if(row.source) detail.textContent='2021년 9월 원본 · '+row.source.status+'\n건폐율 '+row.source.coverage+'% 이하 · 용적률 '+row.source.floorRatio+'% 이하 · '+row.source.floors+'층 이하'+(row.source.unitPriceWon?' · 단가 '+row.source.unitPriceWon.toLocaleString('ko-KR')+'원/㎡':'')+'\n원본 PDF '+row.sourcePage+'페이지';
     fields.forEach(name => { $('parcel-' + name).value = priceFields.includes(name) ? money(values[name] == null ? null : Number(values[name]) * 10000) : values[name] ?? ''; });

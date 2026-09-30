@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-parcel-status-2">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20260930-building-choice-1">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -81,7 +81,7 @@
       <div id="detailDrawing" hidden></div>
 <section id="parcelManager" class="parcel-manager" hidden>
 <h2>필지별 세부자료</h2><p id="parcelHelp"></p><p id="parcelStatus" role="status" aria-live="polite"></p>
-<div class="filter-bar"><button class="btn" id="parcelAdd" type="button" aria-pressed="false">필지 위치 지정·등록</button><label>건물 구분 <select id="parcelBuildingFilter"><option value="all">전체</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option><option value="unknown">미확인</option></select></label><label>택지 유형 <select id="parcelTypeFilter"><option value="all">전체</option><option value="single">주거전용</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label><label>자료 상태 <select id="parcelContactFilter"><option value="all">전체</option><option value="contact">연락처 있음</option><option value="registered">자료 있음 · 연락처 없음</option><option value="missing">자료 미등록</option></select></label></div>
+<div class="filter-bar"><button class="btn" id="parcelAdd" type="button" aria-pressed="false">필지 위치 지정·등록</button><label>건물 구분 <select id="parcelBuildingFilter"><option value="all">전체</option><option value="building">건물 있음</option><option value="vacant">건물 없음</option></select></label><label>택지 유형 <select id="parcelTypeFilter"><option value="all">전체</option><option value="single">주거전용</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label><label>자료 상태 <select id="parcelContactFilter"><option value="all">전체</option><option value="contact">연락처 있음</option><option value="registered">자료 있음 · 연락처 없음</option><option value="missing">자료 미등록</option></select></label></div>
 <section id="parcelSourceSection" hidden>
 <p class="source-note">LH 공급안내 원본 · 2021년 9월 기준. 예정지번과 당시 공급예정금액이며, 현재 지번·매매가와 별도로 확인해주세요.</p>
 <label class="source-group-filter">소블럭 선택 <select id="parcelSubblockFilter"><option value="all">C1 전체</option></select></label>
@@ -91,7 +91,7 @@
 <label>상세 블럭번호<input id="parcelFullNumber" readonly placeholder="예: C1-22-2"></label>
 <label>소블럭 번호<input id="parcelSubblock" required maxlength="30" placeholder="예: 1"></label><label>필지번호<input id="parcelNumber" required maxlength="30" placeholder="예: 8"></label>
 <label>택지 유형<select id="parcel-landType"><option value="single">주거전용</option><option value="shop">상가점포</option><option value="unknown">미확인</option></select></label>
-<label>건물 유무<select id="parcel-building"><option value="unknown">미확인</option><option value="vacant">토지만 있음</option><option value="building">건물 있음</option></select></label>
+<label>건물 유무<select id="parcel-building"><option value="" disabled hidden selected>선택해주세요</option><option value="building">건물 있음</option><option value="vacant">건물 없음</option></select></label>
 <label>소재지·지번<input id="parcel-address" type="text" maxlength="200"></label><div class="parcel-value-pair"><label>토지면적 (㎡)<input id="parcel-area" type="number" min="0" step="any"></label><label>토지면적 (평)<input id="parcelAreaPyeong" readonly placeholder="자동 계산"></label></div><div class="parcel-value-pair"><label>공급금액 (원)<input id="parcel-supplyPrice" type="text" inputmode="numeric" pattern="[0-9,]*" maxlength="20" placeholder="예: 300,000,000"></label><label>공급금액 평당가 (원/평)<input id="parcel-supplyPricePerPyeong" readonly placeholder="자동 계산"></label></div><div class="parcel-value-pair"><label>낙찰가격 (원)<input id="parcel-auctionPrice" type="text" inputmode="numeric" pattern="[0-9,]*" maxlength="20" placeholder="예: 300,000,000"></label><label>낙찰가격 평당가 (원/평)<input id="parcel-auctionPricePerPyeong" readonly placeholder="자동 계산"></label></div><div class="parcel-value-pair"><label>매매금액 (원)<input id="parcel-salePrice" type="text" inputmode="numeric" pattern="[0-9,]*" maxlength="20" placeholder="예: 300,000,000"></label><label>매매금액 평당가 (원/평)<input id="parcel-salePricePerPyeong" readonly placeholder="자동 계산"></label></div><label>소유주<input id="parcel-owner" type="text" maxlength="200"></label><label>연락처<input id="parcel-contact" type="tel" maxlength="200"></label><label class="parcel-note">비고<textarea id="parcel-note" rows="2" maxlength="10000"></textarea></label></div><div class="detail-actions"><button class="btn btn-primary" id="parcelSave" type="submit">세부자료 저장</button><button class="btn" id="parcelClose" type="button">닫기</button><button class="btn" id="parcelDelete" type="button" hidden>등록 자료 삭제</button></div></form></section>
 </section>
       <p id="detailDrawingError" role="alert" hidden>상세 도면을 불러오지 못했습니다. 아래 원본 전체 도면을 열어 확인해주세요.</p>
@@ -102,7 +102,7 @@
   </section>
 </main>
 <script src="assets/js/land-block-source.js?v=20260930-touch-1"></script>
-<script src="assets/js/land-parcels.js?v=20260930-parcel-status-2"></script>
-<script src="assets/js/land-location.js?v=20260930-parcel-status-2"></script>
+<script src="assets/js/land-parcels.js?v=20260930-building-choice-1"></script>
+<script src="assets/js/land-location.js?v=20260930-building-choice-1"></script>
 </body>
 </html>
