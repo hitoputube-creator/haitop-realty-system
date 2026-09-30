@@ -38,6 +38,7 @@
   const image = $('mapImage');
   let view = 'all', group = 'all', landType = 'all', zoom = 1, pinch = null, suppressClickUntil = 0;
   let drawingZoom = 1;
+  const maxZoom = 10;
   function readState() {
     const p = new URLSearchParams(location.search);
     view = p.get('view') === 'third' ? 'third' : 'all';
@@ -162,14 +163,14 @@
     stage.style.width = zoom * 100 + '%';
     $('zoomLabel').textContent = Math.round(zoom * 100) + '%';
     $('zoomOut').disabled = zoom <= 1;
-    $('zoomIn').disabled = zoom >= 4;
+    $('zoomIn').disabled = zoom >= maxZoom;
   }
   function setZoom(next,cx,cy) {
     const rect = viewport.getBoundingClientRect();
     const x = cx === undefined ? viewport.clientWidth / 2 : cx - rect.left;
     const y = cy === undefined ? viewport.clientHeight / 2 : cy - rect.top;
     const old = zoom;
-    zoom = Math.max(1,Math.min(4,next));
+    zoom = Math.max(1,Math.min(maxZoom,next));
     const left = (viewport.scrollLeft + x) * zoom / old - x;
     const top = (viewport.scrollTop + y) * zoom / old - y;
     applyZoom(); viewport.scrollLeft = left; viewport.scrollTop = top;
@@ -191,7 +192,7 @@
   function setDrawingZoom(next) {
     const drawing = $('detailDrawing').firstElementChild;
     if (!drawing) return;
-    drawingZoom = Math.max(1,Math.min(4,next));
+    drawingZoom = Math.max(1,Math.min(maxZoom,next));
     drawing.style.width = drawingZoom * 100 + '%';
     $('drawingZoomLabel').textContent = Math.round(drawingZoom * 100) + '%';
   }
