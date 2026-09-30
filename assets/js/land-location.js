@@ -313,12 +313,6 @@
     },true);
   }
   function bindMouseNavigation(container,getZoom,setScale) {
-    container.addEventListener('wheel',e => {
-      e.preventDefault();
-      const direction = e.deltaY < 0 ? 1 : -1;
-      setScale(nextZoomStep(getZoom(),direction),e.clientX,e.clientY);
-    },{passive:false});
-
     let drag = null;
     function endDrag() {
       if (!drag) return;
@@ -353,6 +347,17 @@
   bindTouchZoom($('detailDrawing'),()=>drawingZoom,setDrawingZoom);
   bindMouseNavigation(viewport,()=>zoom,setZoom);
   bindMouseNavigation($('detailDrawing'),()=>drawingZoom,setDrawingZoom);
+
+  document.addEventListener('wheel',e => {
+    const mapTarget = e.target.closest && e.target.closest('#mapViewport');
+    const drawingTarget = e.target.closest && e.target.closest('#detailDrawing');
+    if (!mapTarget && !drawingTarget) return;
+    e.preventDefault();
+    const direction = e.deltaY < 0 ? 1 : -1;
+    if (mapTarget) setZoom(nextZoomStep(zoom,direction),e.clientX,e.clientY);
+    else setDrawingZoom(nextZoomStep(drawingZoom,direction),e.clientX,e.clientY);
+  },{passive:false,capture:true});
+
   window.addEventListener('popstate',() => render(readState()));
   render(readState()); applyZoom();
 })();
