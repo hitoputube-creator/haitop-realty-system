@@ -58,3 +58,9 @@
 
 #parcelFormTitle{font-size:1.65rem;font-weight:800;line-height:1.2;letter-spacing:-.025em;margin:0;color:var(--gold-soft)}
 @media(max-width:480px){#parcelFormTitle{font-size:1.45rem}}
+
+@media(hover:hover) and (pointer:fine){
+  #mapViewport,#detailDrawing{cursor:grab}
+  #mapViewport.mouse-panning,#detailDrawing.mouse-panning{cursor:grabbing}
+  #mapViewport.mouse-panning *,#detailDrawing.mouse-panning *{cursor:grabbing!important;user-select:none!important}
+}
