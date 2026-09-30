@@ -39,9 +39,9 @@
     }
   }
   function isParcelYellow(fill) {
-    const match=String(fill||'').match(/rgba?\\((\\d+)[, ]+(\\d+)[, ]+(\\d+)/i);
-    if(!match)return false;
-    const r=Number(match[1]),g=Number(match[2]),b=Number(match[3]);
+    const nums=String(fill||'').match(/\d+(?:\.\d+)?/g);
+    if(!nums||nums.length<3)return false;
+    const r=Number(nums[0]),g=Number(nums[1]),b=Number(nums[2]);
     return r>=180 && g>=165 && b<=190 && r>g-25 && g>b+20;
   }
   function setupBuildingVectorOverlay(svgText) {
