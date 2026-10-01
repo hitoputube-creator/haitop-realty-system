@@ -19,23 +19,19 @@
   function viewLegend() {
     const parts=[];
     if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
-    if(views.contact) parts.push('● 연락처가 저장된 필지' + (!recordsLoaded ? ' · 저장 자료를 불러오지 못했습니다' : ''));
+    if(views.contact) parts.push('연락처 있음: 초록색 필지' + (!recordsLoaded ? ' · 저장 자료를 불러오지 못했습니다' : ''));
+    if(views.building&&views.contact)parts.push('건물과 연락처 모두 있음: 보라색');
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
   function addMapLabel(row) {
     const area=Number(row.data.area), parts=[];
     if(views.area && Number.isFinite(area) && area>0) parts.push(views.area==='sqm'?area.toLocaleString('ko-KR',{maximumFractionDigits:1})+'㎡':(area/3.305785).toFixed(1)+'평');
-    if(!parts.length && !(views.contact && hasContact(row)))return;
+    if(!parts.length)return;
     let x=Number(row.x)/100,y=Number(row.y)/100;
     if(row.points?.length){x=row.points.reduce((n,p)=>n+p[0],0)/row.points.length/318;y=row.points.reduce((n,p)=>n+p[1],0)/row.points.length/385;}
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     if(parts.length){
       const text=document.createElementNS(ns,'text');text.setAttribute('x',x);text.setAttribute('y',y);text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');text.classList.add('parcel-map-label');text.textContent=parts.join(' ');overlay.append(text);
-    }
-    if(views.contact && hasContact(row)){
-      const text=document.createElementNS(ns,'text');
-      text.setAttribute('x',x);text.setAttribute('y',y + (parts.length ? .011 : 0));text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');
-      text.classList.add('parcel-map-label','parcel-contact-marker','parcel-contact-contact');text.textContent='●';overlay.append(text);
     }
   }
   function isParcelYellow(fill) {
@@ -197,6 +193,7 @@
         const shape=document.createElementNS(ns,'path');
         shape.setAttribute('d',d);shape.classList.add('parcel-vector-hit');
         if(views.building&&buildingState(row)==='building')shape.classList.add('parcel-vector-building-highlight');
+        if(views.contact&&hasContact(row))shape.classList.add('parcel-vector-contact-highlight');
         shape.setAttribute('role','button');shape.setAttribute('tabindex','0');
         shape.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+contactStates[contactState(row)].label);
         shape.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(row);});
@@ -224,6 +221,7 @@
       if(matrix)clone.setAttribute('transform',`matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})`);
       clone.classList.add('parcel-vector-hit');
       if(views.building&&parcelRows.length===1&&buildingState(row)==='building')clone.classList.add('parcel-vector-building-highlight');
+      if(views.contact&&parcelRows.length===1&&hasContact(row))clone.classList.add('parcel-vector-contact-highlight');
       const registration=contactStates[contactState(row)].label;
       clone.setAttribute('role','button');clone.setAttribute('tabindex','0');
       clone.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+registration);
@@ -348,6 +346,7 @@
         if (row.points) shape.setAttribute('points',row.points.map(p => p[0]/318 + ',' + p[1]/385).join(' '));
         else {shape.setAttribute('cx',Number(row.x)/100);shape.setAttribute('cy',Number(row.y)/100);shape.setAttribute('r',row.sourceCell?'.006':'.015');}
         shape.classList.add('parcel-shape'); if(views.building && buildingState(row)==='building' && row.points) shape.classList.add('parcel-building-building');
+        if(views.contact&&hasContact(row)&&row.points)shape.classList.add('parcel-contact-highlight');
         const registration = contactStates[contactState(row)].label;
         shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료 · ' + registration);
         const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + ' · ' + registration;shape.append(title);
