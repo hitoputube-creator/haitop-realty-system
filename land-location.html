@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20261001-filter-hierarchy-1">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20261001-detail-toolbar-1">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -78,13 +78,16 @@
     <div class="card block-detail-card">
       <p class="detail-eyebrow" id="detailGroup"></p><h1 id="detailTitle" tabindex="-1"></h1>
       <p class="detail-eyebrow" id="detailType" hidden></p>
-      <div class="zoom-controls drawing-controls" id="drawingControls" role="group" aria-label="상세 도면 확대 축소" hidden>
+      <div class="drawing-toolbar">
+        <div class="parcel-view-controls" id="parcelViewControls" role="group" aria-label="필지 표시" hidden><button class="btn" id="parcelAreaPyeongToggle" type="button" aria-pressed="false">면적 (평)</button><button class="btn" id="parcelAreaSqmToggle" type="button" aria-pressed="false">면적 (㎡)</button><button class="btn" id="parcelBuildingToggle" type="button" aria-pressed="false">건물 유무</button><button class="btn" id="parcelContactToggle" type="button" aria-pressed="false">연락처</button><button class="btn" id="parcelLhToggle" type="button" aria-pressed="false">LH 공고중</button></div>
+        <div class="zoom-controls drawing-controls" id="drawingControls" role="group" aria-label="상세 도면 확대 축소" hidden>
         <button class="btn" id="drawingZoomOut" type="button" aria-label="상세 도면 축소">−</button>
         <output id="drawingZoomLabel" aria-live="polite">100%</output>
         <button class="btn" id="drawingZoomIn" type="button" aria-label="상세 도면 확대">＋</button>
         <button class="btn" id="drawingZoomFit" type="button">전체 맞춤</button>
       </div>
-      <div class="parcel-view-controls" id="parcelViewControls" role="group" aria-label="필지 표시" hidden><button class="btn" id="parcelAreaPyeongToggle" type="button" aria-pressed="false">평 면적 보기</button><button class="btn" id="parcelAreaSqmToggle" type="button" aria-pressed="false">㎡ 면적 보기</button><button class="btn" id="parcelBuildingToggle" type="button" aria-pressed="false">건물 유무 보기</button><button class="btn" id="parcelContactToggle" type="button" aria-pressed="false">연락처 보기</button><button class="btn" id="parcelLhToggle" type="button" aria-pressed="false">LH 공고중 보기</button></div><p id="parcelViewLegend" class="map-help" hidden></p>
+      </div>
+      <p id="parcelViewLegend" class="map-help" hidden></p>
       <p class="map-help">PC에서는 마우스 휠로 최대 2,000%까지 확대·축소하고 드래그해서 이동할 수 있습니다. 모바일에서는 두 손가락으로 확대·축소하고 밀어서 이동할 수 있습니다.</p>
       <div id="detailDrawing" hidden></div>
 <section id="parcelManager" class="parcel-manager" hidden>
