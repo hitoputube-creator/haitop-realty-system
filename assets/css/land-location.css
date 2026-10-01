@@ -182,3 +182,9 @@
 #parcelEditor .parcel-fields,#parcelEditor .parcel-value-pair{grid-template-columns:minmax(0,1fr)}
 #parcelEditor .parcel-fields label{grid-template-columns:104px minmax(0,1fr)}
 }
+
+.parcel-building-details {margin:16px 0;padding:14px 0;border-top:1px solid var(--border);}
+.parcel-building-details[hidden] {display:none;}
+.parcel-building-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.parcel-building-heading h4 {margin:0;font-size:15px;color:var(--gold-soft);}
+#parcelBuildingChecked {margin:6px 0 12px;}
