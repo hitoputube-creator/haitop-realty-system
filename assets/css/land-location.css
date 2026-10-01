@@ -188,3 +188,36 @@
 .parcel-building-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
 .parcel-building-heading h4 {margin:0;font-size:15px;color:var(--gold-soft);}
 #parcelBuildingChecked {margin:6px 0 12px;}
+
+
+/* Compact one-line price labels and dated parcel records. */
+#parcelEditor .parcel-fields label.parcel-price-label{grid-template-columns:136px minmax(0,1fr)}
+#parcelEditor .parcel-price-label .parcel-field-label{white-space:nowrap}
+.parcel-notes{margin-top:18px;padding-top:14px;border-top:1px solid var(--border-slate)}
+.parcel-notes h4{margin:0 0 10px;color:var(--gold-soft);font-size:15px}
+.parcel-note-compose-label{display:block;margin-bottom:6px;font-size:12px;color:var(--text-muted)}
+#parcelNoteText{width:100%;font-size:14px}
+.parcel-note-compose-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
+.parcel-photo-input{position:relative;overflow:hidden;cursor:pointer}
+.parcel-photo-input input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;min-height:0;padding:0}
+.parcel-photo-input:focus-within{outline:2px solid var(--gold-soft);outline-offset:2px}
+.parcel-note-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.parcel-note-file{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--panel);border:1px solid var(--border-slate);border-radius:5px;font-size:12px;max-width:100%}
+.parcel-note-file span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.parcel-note-file button{border:0;background:transparent;color:var(--text-main);font-size:18px;cursor:pointer}
+#parcelNoteStatus{color:var(--gold-soft);margin:8px 0}
+#parcelNotesList h5{font-size:13px;color:var(--gold-soft);margin:14px 0 8px}
+.parcel-note-entry{border-bottom:1px solid var(--border-slate);padding:10px 0}
+.parcel-note-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--text-muted);font-size:12px}
+.parcel-note-meta>div{display:flex;gap:6px;flex-shrink:0}
+.parcel-note-meta .btn{min-height:28px;padding:3px 8px;font-size:12px}
+#parcelEditor .parcel-note-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;color:var(--text-main);margin:8px 0}
+.parcel-note-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:8px}
+.parcel-note-photo{height:100px;overflow:hidden;padding:0;border:1px solid var(--border-slate);border-radius:6px;background:var(--panel);color:var(--text-muted);cursor:pointer}
+.parcel-note-photo img{display:block;width:100%;height:100%;object-fit:cover}
+#parcelNotesMore{margin-top:12px}
+#parcelPhotoViewer{padding:12px;width:min(1000px,calc(100% - 28px));max-height:calc(100dvh - 28px);background:var(--panel2);border:1px solid var(--border-slate);border-radius:10px;overflow:auto}
+#parcelPhotoViewer::backdrop{background:#000c}
+#parcelPhotoClose{display:block;margin:0 0 8px auto}
+#parcelPhotoImage{display:block;max-width:100%;max-height:calc(100dvh - 100px);object-fit:contain;margin:auto}
+@media(max-width:600px){#parcelEditor .parcel-fields label.parcel-price-label{grid-template-columns:128px minmax(0,1fr)}.parcel-note-meta{align-items:flex-start}.parcel-note-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}.parcel-note-photo{height:85px}}
