@@ -73,10 +73,16 @@
       }catch(_){buildingVectorCandidates=[];buildingVectorViewBox=null;}
     },{once:true});
   }
+  // Keep parcel geometry in the original SVG viewBox, excluding its viewport scale.
+  // getCTM() includes the object's rendered size, which changes with map zoom.
+  function parcelShapeMatrix(shape) {
+    const root=shape.ownerSVGElement,rootMatrix=root?.getCTM(),shapeMatrix=shape.getCTM();
+    return rootMatrix&&shapeMatrix ? rootMatrix.inverse().multiply(shapeMatrix) : null;
+  }
   function shapeContainsParcelPoint(shape,pctX,pctY) {
     try{
       if(typeof shape.isPointInFill!=='function'||!buildingVectorViewBox)return false;
-      const root=shape.ownerSVGElement,matrix=shape.getCTM();
+      const root=shape.ownerSVGElement,matrix=parcelShapeMatrix(shape);
       if(!root||!matrix)return false;
       const point=root.createSVGPoint();
       point.x=buildingVectorViewBox.x+pctX/100*buildingVectorViewBox.width;
@@ -104,21 +110,40 @@
     layer.setAttribute('x','0');layer.setAttribute('y','0');layer.setAttribute('width','1');layer.setAttribute('height','1');
     layer.setAttribute('viewBox',[buildingVectorViewBox.x,buildingVectorViewBox.y,buildingVectorViewBox.width,buildingVectorViewBox.height].join(' '));
     layer.setAttribute('preserveAspectRatio','none');layer.classList.add('parcel-vector-hit-layer');
+    // The PDF often fills a whole subblock with one path. Do not stack an
+    // identical click target for every parcel: the last one would win everywhere.
+    const groups=new Map();
     ordered.forEach(row=>{
       if(!matches(row))return;
       const sourceShape=findVectorParcelShape(row);
       if(!sourceShape)return;
+      if(!groups.has(sourceShape))groups.set(sourceShape,[]);
+      groups.get(sourceShape).push(row);
+    });
+    groups.forEach((parcelRows,sourceShape)=>{
+      const row=parcelRows[0];
       const clone=document.importNode(sourceShape,true);
-      const matrix=sourceShape.getCTM();
+      const matrix=parcelShapeMatrix(sourceShape);
       clone.removeAttribute('id');clone.removeAttribute('class');clone.removeAttribute('style');clone.removeAttribute('fill');clone.removeAttribute('stroke');
       clone.removeAttribute('clip-path');clone.removeAttribute('filter');clone.removeAttribute('mask');clone.removeAttribute('transform');
       if(matrix)clone.setAttribute('transform',`matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})`);
       clone.classList.add('parcel-vector-hit');
-      if(views.building&&buildingState(row)==='building')clone.classList.add('parcel-vector-building-highlight');
+      if(views.building&&parcelRows.some(item=>buildingState(item)==='building'))clone.classList.add('parcel-vector-building-highlight');
       const registration=contactStates[contactState(row)].label;
       clone.setAttribute('role','button');clone.setAttribute('tabindex','0');
       clone.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+registration);
-      clone.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(row);});
+      clone.addEventListener('click',event=>{
+        event.preventDefault();event.stopPropagation();
+        const rect=overlay.getBoundingClientRect();
+        if(!rect.width||!rect.height)return;
+        const x=(event.clientX-rect.left)/rect.width*100,y=(event.clientY-rect.top)/rect.height*100;
+        // Compare in original drawing units, so a wide page does not distort distance.
+        const nearest=parcelRows.reduce((best,item)=>{
+          const distance=item=>Math.hypot((Number(item.x)-x)*buildingVectorViewBox.width,(Number(item.y)-y)*buildingVectorViewBox.height);
+          return distance(item)<distance(best)?item:best;
+        });
+        show(nearest);
+      });
       clone.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row);}});
       layer.append(clone);
     });
