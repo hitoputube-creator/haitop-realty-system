@@ -81,7 +81,7 @@
     const p = new URLSearchParams(location.search);
     view = p.get('view') === 'third' ? 'third' : 'all';
     group = view === 'third' ? 'third' : (groups[p.get('group')] ? p.get('group') : 'all');
-    landType = (view === 'third' || group === 'third') && typeLabels[p.get('landType')] ? p.get('landType') : 'all';
+    landType = (view === 'third' || group === 'third') && ['single','shop'].includes(p.get('landType')) ? p.get('landType') : 'all';
     return byId.get(p.get('block')) || null;
   }
   function navigate(block, replace) {

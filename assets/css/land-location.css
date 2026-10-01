@@ -101,3 +101,31 @@
 #mapStage.lh-leaflet-map .map-hotspot{width:clamp(14px,2.7%,34px);font-size:clamp(8px,1.25cqw,13px)}
 
 .map-clean-mask{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:1;pointer-events:none}
+
+/* Compact overview navigation and horizontally scrollable classifications. */
+#overview .map-controls{margin:18px 0 0;padding-bottom:12px;gap:12px;border-bottom:1px solid var(--line2)}
+#overview .view-tabs{flex-wrap:nowrap;gap:4px;padding:4px;border:1px solid var(--border-slate);border-radius:9px;background:rgba(7,22,37,.35)}
+#overview .map-filter-controls{display:flex;align-items:center;gap:16px;min-width:0;margin:12px 0}
+#overview .map-filter-controls .filter-bar{flex-wrap:nowrap;gap:4px;min-width:0;overflow-x:auto;margin:0;padding:3px 0;scrollbar-width:thin}
+#overview .map-filter-controls .filter-bar .btn{flex:0 0 auto;white-space:nowrap}
+#overview #thirdTypeFilters{padding-left:16px;border-left:1px solid var(--border-slate)}
+#overview .map-controls .btn,#overview .map-filter-controls .btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 12px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text-muted);font-size:.8rem;line-height:1.3;font-weight:500;cursor:pointer}
+#overview .map-controls .btn[aria-pressed=true],#overview .map-filter-controls .btn[aria-pressed=true]{border-color:rgba(216,184,74,.45);background:rgba(216,184,74,.12);color:var(--gold-soft);font-weight:700}
+#overview .map-controls .btn:hover,#overview .map-filter-controls .btn:hover{background:rgba(216,184,74,.08);color:var(--text-main)}
+#overview .map-controls .btn:focus-visible,#overview .map-filter-controls .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#overview .zoom-controls{flex-wrap:nowrap;gap:4px}
+#overview .zoom-controls .btn{border-color:var(--border-slate);color:var(--text-main)}
+#overview .zoom-controls #zoomIn,#overview .zoom-controls #zoomOut{width:34px;padding:0;font-size:1.05rem}
+#overview .zoom-controls .btn:disabled{opacity:.4;cursor:default}
+#overview .legend-dot{width:7px;height:7px;margin-right:6px;flex:0 0 auto}
+#overview .map-help{margin:8px 0 12px;font-size:.78rem}
+@media(max-width:900px){
+  #overview .map-filter-controls{align-items:stretch;flex-direction:column;gap:6px}
+  #overview #thirdTypeFilters{padding-left:0;border-left:0}
+}
+@media(max-width:720px){
+  #overview .view-tabs{width:auto;max-width:100%}
+  #overview .view-tabs .btn{flex:0 0 auto}
+  #overview .map-controls{align-items:center;gap:8px}
+  #overview .map-controls .btn,#overview .map-filter-controls .btn{padding:7px 10px;font-size:.75rem}
+}
