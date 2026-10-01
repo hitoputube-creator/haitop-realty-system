@@ -14,7 +14,7 @@
     'second-multi': [[4,1203,693],[7,1234,495],[8,1227,573],[10,1094,1012],[11,994,1118],[13,1155,566],[15,1082,692],[16,1118,718]],
     third: [[1,1450,390],[2,1070,107],[3,789,765],[4,923,1070],[5,785,1200],[6,593,1138],[7,528,1100],[8,531,1060],[9,606,886],[10,463,890],[11,359,830],[12,306,795],[13,388,704],[14,638,593],[15,658,427],[16,628,403],[17,599,486],[18,816,381],[19,790,821]]
   };
-  // Coordinates refer to the uploaded, unchanged 2048 x 1416 LH leaflet.
+  // Coordinates use the leaflet proportions; the LH original image has 8882 x 6142 pixels.
   const leafletAnchors = {"second-shop-C1":[57.3730469,30.2966102],"second-shop-C2":[52.4902344,39.4067797],"second-shop-C3":[43.6264648,76.7803672],"second-shop-C5":[41.8852539,61.1165254],"second-shop-C6":[62.7475586,30.8403955],"second-shop-C9":[46.0449219,67.3728814],"second-shop-C14":[42.7246094,44.9858757],"second-shop-C17":[45.0683594,54.5903955],"second-shop-C18":[43.2617188,58.5451977],"second-shop-C19":[42.9111328,36.2966102],"second-multi-C4":[46.484375,48.7288136],"second-multi-C7":[50.0488281,37.7824859],"second-multi-C8":[48.7304688,39.4774011],"second-multi-C10":[41.6992188,69.5621469],"second-multi-C11":[38.1044922,77.299435],"second-multi-C13":[45.5527344,40.2295198],"second-multi-C15":[41.015625,48.8700565],"second-multi-C16":[43.359375,52.0480226],"third-C1":[59.4726562,27.259887],"third-C2":[41.8457031,9.8870056],"third-C3":[28.7597656,53.3898305],"third-C4":[35.3515625,73.7288136],"third-C5":[28.6621094,82.6271186],"third-C6":[19.0917969,78.5310734],"third-C7":[16.3574219,76.9067797],"third-C8":[17.2363281,74.2937853],"third-C9":[21.7285156,61.7231638],"third-C10":[14.0625,62.1468927],"third-C11":[8.8378906,56.8502825],"third-C12":[5.9570312,55.720339],"third-C13":[10.1074219,49.8587571],"third-C14":[22.6074219,38.7711864],"third-C15":[22.7050781,30.3672316],"third-C16":[21.3378906,28.8841808],"third-C17":[19.7753906,35.0282486],"third-C18":[29.7851562,27.4011299],"third-C19":[41.6503906,36.2288136]};
   const thirdByNumber = new Map(overall.third.map(row => [row[0], row]));
   // Fill only from verified block/parcel material. A mixed block can contain both types.
@@ -38,8 +38,8 @@
   const stage = $('mapStage');
   const image = $('mapImage');
   function setOverviewMap() {
-    const source='assets/images/land/lh-unjeong-overview-leaflet-2312.jpg';
-    $('overviewMapSource').textContent='LH 파주 분양안내 리플렛 원본 · 운정 전체 위치도';
+    const source='assets/images/land/lh-unjeong-overview-hires-2312.webp';
+    $('overviewMapSource').textContent='LH 고해상도 리플렛 원본 · 운정 전체 위치도';
     $('overviewMapNotice').textContent='전체지도는 리플렛 원본이며, 필지별 LH 공급정보에는 별도의 자료 확인일을 표시합니다.';
     stage.classList.add('lh-leaflet-map');
     if (image.getAttribute('src')===source) return;

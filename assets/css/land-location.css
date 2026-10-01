@@ -99,3 +99,5 @@
 
 /* Keep block buttons small while the LH leaflet is enlarged. */
 #mapStage.lh-leaflet-map .map-hotspot{width:clamp(14px,2.7%,34px);font-size:clamp(8px,1.25cqw,13px)}
+
+.map-clean-mask{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:1;pointer-events:none}

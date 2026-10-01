@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20261001-leaflet-1">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20261001-hires-clean-1">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -54,12 +54,13 @@
     <p id="mapLoading" class="source-note" role="status" hidden>전체지도를 불러오는 중입니다.</p>
     <div class="map-viewport" id="mapViewport" tabindex="0" aria-label="택지 위치도, 방향키로 이동">
       <div class="map-stage" id="mapStage">
-        <img id="mapImage" src="assets/images/land/lh-unjeong-overview-leaflet-2312.jpg" width="2048" height="1416" alt="LH 리플렛 운정 전체 블럭 위치도" draggable="false">
+        <img id="mapImage" src="assets/images/land/lh-unjeong-overview-hires-2312.webp" width="2048" height="1416" alt="LH 리플렛 운정 전체 블럭 위치도" draggable="false">
+        <svg class="map-clean-mask" aria-hidden="true" viewBox="0 0 2048 1416"><rect x="45" y="28" width="385" height="125" fill="#fdfeff"/><rect x="45" y="16" width="385" height="12" fill="#84cbc3"/><rect x="1616" y="185" width="314" height="290" fill="#fdfeff"/><rect x="1580" y="330" width="80" height="16" fill="#fdfeff"/><rect x="1535" y="945" width="478" height="430" fill="#fdfeff"/></svg>
         <div class="map-hotspots" id="hotspots"></div>
       </div>
     </div>
     <p id="mapError" role="alert" hidden>위치도를 불러오지 못했습니다. 새로고침하거나 아래 블럭 목록을 이용해주세요.</p>
-    <p class="source-note" id="overviewMapSource"></p><p class="source-note" id="overviewMapNotice"></p><p><a class="btn" href="assets/images/land/lh-unjeong-overview-leaflet-2312.jpg" target="_blank" rel="noopener noreferrer">전체지도 원본 열기</a></p>
+    <p class="source-note" id="overviewMapSource"></p><p class="source-note" id="overviewMapNotice"></p><p><a class="btn" href="assets/images/land/lh-unjeong-overview-clean.svg" target="_blank" rel="noopener noreferrer">전체지도 크게 열기</a></p>
     <section class="card block-list-card" aria-labelledby="blockListTitle">
       <div class="block-list-heading"><h2 id="blockListTitle">블럭 목록</h2><span id="blockCount"></span></div>
       <p id="thirdMapNote" hidden>같은 LH 리플렛 원본에서 운정3지구 C1~C19 블럭만 표시합니다.</p>
@@ -105,6 +106,6 @@
 <script src="assets/js/land-block-source.js?v=20260930-touch-1"></script>
 <script src="assets/js/land-lh.js?v=20261001-1"></script>
 <script src="assets/js/land-parcels.js?v=20261001-lh-1"></script>
-<script src="assets/js/land-location.js?v=20261001-leaflet-1"></script>
+<script src="assets/js/land-location.js?v=20261001-hires-clean-1"></script>
 </body>
 </html>
