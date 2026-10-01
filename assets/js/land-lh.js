@@ -16,11 +16,11 @@
   function renderDetail(blockId,row) {
     const box=$('parcelLhDetail');box.replaceChildren();const record=find(blockId,row);
     box.append(node('h4','LH 공식정보'));
-    if(!record){box.append(node('p','이번 LH 공고 목록에서 연결되지 않은 필지입니다. 공급상태는 미확인입니다.'));return;}
+    if(!record){box.append(node('p','저장된 LH 공고 자료에서 연결되지 않은 필지입니다. 최신 공급상태는 LH 공식 사이트에서 확인해주세요.'));return;}
     const info=record.detail?.srchLadDetailInfo?.find(d=>String(d.loldNo)===String(record.list.loldNo))||{};
-    box.append(node('p','자료 확인 '+record.checkedAt+' · 공고 '+record.noticeDate,'source-note'));
+    box.append(node('p','저장 자료 확인 '+record.checkedAt+' · 실시간 갱신 아님 · 공고 '+record.noticeDate,'source-note'));
     const grid=node('dl',null,'lh-info-grid');
-    const entries=[['공식 필지번호',record.officialNumber],['현재 소재지·지번',(info.lctAraNm||record.list.lgdnDtlAdr)+' '+record.list.lno],['LH 공급상태',record.supplyStatus+' · '+(info.bzdtSs||record.list.btnNm)],['면적',value(record.list.ar)+'㎡ / '+(record.list.ar/3.305785).toFixed(2)+'평'],['공급용도',record.list.lndUsDsCdNm],['공급예정금액',value(record.list.splXpcAmt)+'원'],['용도지역',value(info.stlPpAraCdNm)],['공고 건폐율·용적률',record.regulations.coverage+'% / '+record.regulations.floorRatio+'%'],['최고층수·허용가구수',record.regulations.floors+'층 / '+record.regulations.households+'가구'],['토지사용가능시기(공고)',record.regulations.landAvailable],['신청일시',date(record.list.acpStDttm?.slice(0,8))+' '+record.list.acpStDttm?.slice(8,10)+':'+record.list.acpStDttm?.slice(10,12)+' ~ '+date(record.list.acpEdDttm?.slice(0,8))+' '+record.list.acpEdDttm?.slice(8,10)+':'+record.list.acpEdDttm?.slice(10,12)],['LH 문의처',value(info.iqyTlno)]];
+    const entries=[['공식 필지번호',record.officialNumber],['현재 소재지·지번',(info.lctAraNm||record.list.lgdnDtlAdr)+' '+record.list.lno],['LH 공급상태(확인일 기준)',record.supplyStatus+' · '+(info.bzdtSs||record.list.btnNm)],['면적',value(record.list.ar)+'㎡ / '+(record.list.ar/3.305785).toFixed(2)+'평'],['공급용도',record.list.lndUsDsCdNm],['공급예정금액',value(record.list.splXpcAmt)+'원'],['용도지역',value(info.stlPpAraCdNm)],['공고 건폐율·용적률',record.regulations.coverage+'% / '+record.regulations.floorRatio+'%'],['최고층수·허용가구수',record.regulations.floors+'층 / '+record.regulations.households+'가구'],['토지사용가능시기(공고)',record.regulations.landAvailable],['신청일시',date(record.list.acpStDttm?.slice(0,8))+' '+record.list.acpStDttm?.slice(8,10)+':'+record.list.acpStDttm?.slice(10,12)+' ~ '+date(record.list.acpEdDttm?.slice(0,8))+' '+record.list.acpEdDttm?.slice(8,10)+':'+record.list.acpEdDttm?.slice(10,12)],['LH 문의처',value(info.iqyTlno)]];
     for(const [label,v]of entries)grid.append(node('dt',label),node('dd',v));box.append(grid);
     const link=node('a','LH 공고·첨부자료 열기','btn');link.href=record.noticeUrl;link.target='_blank';link.rel='noopener noreferrer';box.append(link);
     const details=node('details');details.append(node('summary','LH 상세정보 전체 항목'));
@@ -34,7 +34,7 @@
   function renderMap(records,choose,panel) {
     const mapped=records.filter(r=>r.geometry);
     const links=node('p');
-    for(const [label,href] of [['LH 전체 획지분할도','assets/documents/lh-unjeong3-parcel-plan-20260805.pdf'],['LH 토지 지도','https://apply.lh.or.kr/lhapply/land/main.do?mi=1040']]){
+    for(const [label,href] of [['LH 전체 획지분할도','assets/documents/lh-unjeong3-parcel-plan-20260805.pdf'],['현재 LH 공고 현황 확인 ↗','https://apply.lh.or.kr/lhapply/land/main.do?mi=1040']]){
       const link=node('a',label,'btn');link.href=href;link.target='_blank';link.rel='noopener noreferrer';links.append(link,' ');
     }
     panel.append(links);
@@ -46,12 +46,12 @@
     const left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;
     const pad=Math.max(width,height)*.04,home=[left-pad,top-pad,width+2*pad,height+2*pad];let view=home.slice();
     const update=()=>svg.setAttribute('viewBox',view.join(' '));update();
-    svg.setAttribute('role','group');svg.setAttribute('aria-label','LH 공식 경계로 표시한 공고중 필지 지도');
+    svg.setAttribute('role','group');svg.setAttribute('aria-label','LH 저장 공고 자료의 필지 지도');
     svg.classList.add('lh-official-map');
     for(const record of mapped){
       const path=document.createElementNS(namespace,'path');
       path.setAttribute('d',record.geometry.coordinates.map(polygon=>polygon.map(ring=>'M'+ring.map(p=>project(p).join(',')).join('L')+'Z').join('')).join(''));
-      path.dataset.subblock=record.subblock;path.dataset.parcel=record.parcel;path.setAttribute('fill-rule','evenodd');path.setAttribute('tabindex','0');path.setAttribute('role','button');path.setAttribute('aria-label',record.officialNumber+' LH 공고중');
+      path.dataset.subblock=record.subblock;path.dataset.parcel=record.parcel;path.setAttribute('fill-rule','evenodd');path.setAttribute('tabindex','0');path.setAttribute('role','button');path.setAttribute('aria-label',record.officialNumber+' LH 저장 공고 자료');
       const title=document.createElementNS(namespace,'title');title.textContent=record.officialNumber+' · '+record.list.ar+'㎡';path.append(title);
       path.addEventListener('click',()=>choose(record));path.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(record);}});svg.append(path);
     }
@@ -63,12 +63,12 @@
     svg.addEventListener('pointerdown',e=>{drag={id:e.pointerId,x:e.clientX,y:e.clientY,view:view.slice()};});
     svg.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)<6)return;const rect=svg.getBoundingClientRect(),unit=Math.max(drag.view[2]/rect.width,drag.view[3]/rect.height);view=[drag.view[0]-dx*unit,drag.view[1]-dy*unit,drag.view[2],drag.view[3]];update();if(!svg.hasPointerCapture(e.pointerId))svg.setPointerCapture(e.pointerId);});
     const stop=()=>{drag=null;};svg.addEventListener('pointerup',stop);svg.addEventListener('pointercancel',stop);
-    panel.append(node('p','LH 공고 지도 · 주황색은 공고중 필지입니다. 확대 후 드래그로 이동할 수 있습니다. 계약완료·선착순 상태는 이번 수집 범위에 포함되지 않습니다.','source-note'),tools,svg);
+    panel.append(node('p','LH 저장 공고 자료 지도 · 주황색은 자료 확인일 당시 공고에 포함된 필지입니다. 확대 후 드래그로 이동할 수 있습니다. 계약완료·선착순 상태는 이번 수집 범위에 포함되지 않습니다.','source-note'),tools,svg);
   }
   function renderList(blockId, choose) {
     const panel=$('lhParcelSection');panel.replaceChildren();panel.hidden=false;
     const records=list(blockId).sort((a,b)=>a.officialNumber.localeCompare(b.officialNumber,'ko',{numeric:true}));
-    panel.append(node('h3','LH 단독택지 공고 목록'),node('p','2026-10-01 확인 · 공식 번호로 연결 '+records.length+'필지. 목록에 없는 필지는 공급상태 미확인입니다.','source-note'));
+    panel.append(node('h3','LH 단독택지 공고 자료 · 저장본'),node('p','2026-10-01 확인한 저장본 · 실시간 자동 갱신 아님 · 공식 번호로 연결 '+records.length+'필지. 목록에 없는 필지는 공급상태 미확인입니다.','source-note'));
     if(!records.length)return;
     renderMap(records,choose,panel);
     const scroll=node('div',null,'parcel-table-scroll'),table=node('table',null,'parcel-source-table'),head=node('thead'),tr=node('tr');

@@ -440,7 +440,7 @@
   }
   $('parcelAreaPyeongToggle').addEventListener('click',()=>setAreaView('pyeong'));
   $('parcelAreaSqmToggle').addEventListener('click',()=>setAreaView('sqm'));
-  ['building','contact','lh'].forEach(name=>{const id=name==='lh'?'parcelLhToggle':'parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
+  ['building','contact'].forEach(name=>{const id=name==='lh'?'parcelLhToggle':'parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
   $('parcelForm').addEventListener('submit',async event=>{
     event.preventDefault(); if(busy || !selected)return;
     const run=generation,blockId=current.id;

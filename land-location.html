@@ -79,7 +79,7 @@
       <p class="detail-eyebrow" id="detailGroup"></p><h1 id="detailTitle" tabindex="-1"></h1>
       <p class="detail-eyebrow" id="detailType" hidden></p>
       <div class="drawing-toolbar">
-        <div class="parcel-view-controls" id="parcelViewControls" role="group" aria-label="필지 표시" hidden><button class="btn" id="parcelAreaPyeongToggle" type="button" aria-pressed="false">면적 (평)</button><button class="btn" id="parcelAreaSqmToggle" type="button" aria-pressed="false">면적 (㎡)</button><button class="btn" id="parcelBuildingToggle" type="button" aria-pressed="false">건물 유무</button><button class="btn" id="parcelContactToggle" type="button" aria-pressed="false">연락처</button><button class="btn" id="parcelLhToggle" type="button" aria-pressed="false">LH 공고중</button></div>
+        <div class="parcel-view-controls" id="parcelViewControls" role="group" aria-label="필지 표시" hidden><button class="btn" id="parcelAreaPyeongToggle" type="button" aria-pressed="false">면적 (평)</button><button class="btn" id="parcelAreaSqmToggle" type="button" aria-pressed="false">면적 (㎡)</button><button class="btn" id="parcelBuildingToggle" type="button" aria-pressed="false">건물 유무</button><button class="btn" id="parcelContactToggle" type="button" aria-pressed="false">연락처</button><a class="btn" id="parcelLhToggle" href="https://apply.lh.or.kr/lhapply/land/main.do?mi=1040" target="_blank" rel="noopener noreferrer" title="LH 공식 사이트에서 최신 공고와 공급 현황 확인">현재 LH 공고 현황 확인 ↗</a></div>
         <div class="zoom-controls drawing-controls" id="drawingControls" role="group" aria-label="상세 도면 확대 축소" hidden>
         <button class="btn" id="drawingZoomOut" type="button" aria-label="상세 도면 축소">−</button>
         <output id="drawingZoomLabel" aria-live="polite">100%</output>
@@ -113,8 +113,8 @@
   </section>
 </main>
 <script src="assets/js/land-block-source.js?v=20260930-touch-1"></script>
-<script src="assets/js/land-lh.js?v=20261001-1"></script>
-<script src="assets/js/land-parcels.js?v=20261001-lh-1"></script>
+<script src="assets/js/land-lh.js?v=20261001-live-link-1"></script>
+<script src="assets/js/land-parcels.js?v=20261001-live-link-1"></script>
 <script src="assets/js/land-location.js?v=20261001-filter-hierarchy-1"></script>
 </body>
 </html>
