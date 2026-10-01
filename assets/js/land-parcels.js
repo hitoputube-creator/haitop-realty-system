@@ -19,6 +19,7 @@
   function hasContact(row) { return /\d{7,}/.test(String(row.data.contact || '').replace(/\D/g,'')); }
   function contactState(row) { return hasContact(row) ? 'contact' : !recordsLoaded ? 'unknown' : row.id ? 'registered' : 'missing'; }
   function viewLegend() {
+    $('parcelBuildingSnapshot').textContent=recordsLoaded ? window.HitopParcelBuilding.savedSummary(rows) : '건물 업데이트 현황 · 저장 자료를 불러오지 못했습니다.';
     const parts=[];
     if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
     if(views.contact) parts.push(recordsLoaded ? '연락처 있음: 빨간색 ● · 연락처 없음: ×' : '연락처 확인 불가 · 저장 자료를 불러오지 못했습니다');
@@ -423,6 +424,7 @@
     const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent=row.id?'자료 수정':'자료 보기·등록';btn.addEventListener('click',()=>show(row));td.append(badge,btn);tr.append(td);$('parcelSourceBody').append(tr);
   }
   async function open(block, image) {
+    $('parcelBuildingSnapshot').textContent='건물 업데이트 현황 · 저장 자료를 불러오는 중입니다.';
     const run = ++generation; $('parcelBuildingUpdate').textContent='건물 현황 업데이트'; $('parcelBuildingUpdate').disabled=false; current=block; rows=[]; cells=[]; sourceMeta=null; $('lhParcelSection').hidden=true; parcelVectorRegions=new Map(); if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
     $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
@@ -552,10 +554,10 @@
     if(busy||window.HitopParcelNotes?.busy||!current)return;
     if(!recordsLoaded){status('저장 자료를 불러온 뒤 다시 시도해주세요.');return;}
     closeEditor();selected=null;placing=false;$('parcelAdd').setAttribute('aria-pressed','false');
-    const task={generation,blockId:current.id,cancelled:false};buildingUpdateRun=task;busy=true;
+    const task={generation,blockId:current.id,batchId:crypto.randomUUID(),cancelled:false};buildingUpdateRun=task;busy=true;
     const button=$('parcelBuildingUpdate');button.textContent='업데이트 중지';
     const targets=[...combinedParcels().values()];
-    let found=0,review=0,skipped=0,completed=0,saveErrors=0;
+    let found=0,review=0,skipped=0,completed=0,saveErrors=0,anchor=null;
     try{
       for(const row of targets){
         if(task.cancelled||task.generation!==generation)break;
@@ -563,8 +565,8 @@
         if(!/[가-힣]+(?:동|리)\s+(?:산\s*)?\d+/.test(address)){skipped++;completed++;continue;}
         status('건물 현황 확인 '+(completed+1)+' / '+targets.length+' · '+address);
         let changes;
-        try{changes=await lookupParcelBuilding(address);found++;}
-        catch(error){changes={buildingCheck:{status:'review',address,checkedAt:new Date().toISOString(),source:'건축물대장'}};review++;}
+        try{changes=await lookupParcelBuilding(address);changes.buildingCheck.batchId=task.batchId;changes.buildingCheckAttempt=null;found++;}
+        catch(error){changes={buildingCheckAttempt:{status:'review',address,checkedAt:new Date().toISOString(),source:'건축물대장',batchId:task.batchId}};review++;}
         if(task.cancelled||task.generation!==generation)break;
         // Fetch the latest office record before merging to retain edits from other devices.
         try{
@@ -576,6 +578,7 @@
           const body={block_id:task.blockId,subblock:row.subblock,parcel:row.parcel,x:saved?.x??row.x??0,y:saved?.y??row.y??0,data,updated_at:new Date().toISOString()};
           const result=await request(saved?'?id=eq.'+encodeURIComponent(saved.id):'',{method:saved?'PATCH':'POST',body:JSON.stringify(body)});
           if(!result[0])throw Error('저장 실패');
+          anchor=result[0];
           if(task.generation!==generation)break;
           const index=rows.findIndex(item=>key(item)===key(row));
           if(index<0)rows.push(result[0]);else rows[index]=result[0];
@@ -584,7 +587,21 @@
         completed++;
         if(saveErrors>=3){task.cancelled=true;break;}
       }
-      if(task.generation===generation)status((task.cancelled?'업데이트 중지 · ':'업데이트 완료 · ')+'건물 확인 '+found+'건 · 추가 확인 '+review+'건 · 주소 미확인/변경 '+skipped+'건'+(saveErrors?' · 저장 실패 '+saveErrors+'건':'')+' · '+new Date().toLocaleString('ko-KR'));
+      // Record the block's completion date only after all target writes succeeded.
+      // Keep it in the existing private JSONB record, so every device reads the same date.
+      if(!task.cancelled&&task.generation===generation&&!saveErrors&&anchor){
+        try{
+          const latest=await request('?id=eq.'+encodeURIComponent(anchor.id));
+          if(!latest[0])throw Error('업데이트 기록을 저장할 필지가 없습니다.');
+          if(!task.cancelled&&task.generation===generation){
+            const data={...latest[0].data,buildingSnapshot:{batchId:task.batchId,completedAt:new Date().toISOString(),found,review,skipped,total:targets.length}};
+            const result=await request('?id=eq.'+encodeURIComponent(anchor.id),{method:'PATCH',body:JSON.stringify({data})});
+            if(!result[0])throw Error('업데이트 날짜 저장 실패');
+            if(task.generation===generation){const index=rows.findIndex(item=>item.id===anchor.id);if(index>=0)rows[index]=result[0];draw();}
+          }
+        }catch(error){saveErrors++;}
+      }
+      if(task.generation===generation)status((task.cancelled?'업데이트 중지 · 저장된 일부 결과 유지 · ':saveErrors?'일부 저장 · 업데이트 날짜 갱신 실패 · ':!anchor?'조회 가능한 지번주소가 없어 업데이트 날짜를 유지했습니다. · ':'업데이트 완료 · ')+'건물 확인 '+found+'건 · 추가 확인 '+review+'건 · 주소 미확인/변경 '+skipped+'건'+(saveErrors?' · 저장 실패 '+saveErrors+'건':''));
     }finally{
       buildingUpdateRun=null;busy=false;button.textContent='건물 현황 업데이트';button.disabled=false;
     }
@@ -592,4 +609,3 @@
 
   window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;areaLabelOverlay=null;parcelVectorRegions=new Map();$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
 })();
-

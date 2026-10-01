@@ -17,5 +17,29 @@
     if(/^\d{8}$/.test(date))result.buildingApproval=date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6);
     return result;
   }
-  root.HitopParcelBuilding={fromRegister};
+  function savedSummary(rows) {
+    const valid=value=>value&&Number.isFinite(Date.parse(value));
+    const snapshots=rows.map(row=>row.data?.buildingSnapshot).filter(item=>valid(item?.completedAt));
+    snapshots.sort((a,b)=>Date.parse(b.completedAt)-Date.parse(a.completedAt));
+    const snapshot=snapshots[0];
+    const checks=rows.map(row=>row.data?.buildingCheck).filter(item=>valid(item?.checkedAt));
+    checks.sort((a,b)=>Date.parse(b.checkedAt)-Date.parse(a.checkedAt));
+    const last=snapshot?.completedAt||checks[0]?.checkedAt;
+    if(!last)return '건물 업데이트 현황 · 저장된 업데이트 기록 없음';
+    const date=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(last)).replace(/\s/g,'').replace(/\.$/,'');
+    let text='건물 업데이트 현황 · '+date;
+    if(!snapshot)text+=' · 필지별 저장 기록';
+    else {
+      text+=' · 건물 확인 '+snapshot.found+'건';
+      if(snapshot.review)text+=' · 추가 확인 '+snapshot.review+'건';
+      if(snapshot.skipped)text+=' · 주소 미확인/변경 '+snapshot.skipped+'건';
+    }
+    const pending=rows.some(row=>{
+      const check=row.data?.buildingCheck,attempt=row.data?.buildingCheckAttempt;
+      return [check,attempt].some(item=>item?.batchId&&valid(item.checkedAt)&&(!snapshot||Date.parse(item.checkedAt)>Date.parse(snapshot.completedAt)));
+    });
+    if(pending)text+=' · 최근 업데이트 일부 저장 (전체 완료 전)';
+    return text;
+  }
+  root.HitopParcelBuilding={fromRegister,savedSummary};
 })(typeof window==='undefined'?globalThis:window);
