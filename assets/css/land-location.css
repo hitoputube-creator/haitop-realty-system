@@ -158,3 +158,8 @@
 .parcel-contact-cross{stroke:#5b6472;stroke-width:.0016}
 .parcel-contact-badge.parcel-contact-contact{color:#ff7373}
 .parcel-contact-badge.parcel-contact-registered,.parcel-contact-badge.parcel-contact-missing{color:var(--text-muted)}
+
+/* Area text uses regular HTML glyphs so a wide SVG cannot flatten the font. */
+.parcel-stage{container-type:inline-size}
+.parcel-area-label-overlay{position:absolute;inset:0;z-index:3;pointer-events:none}
+.parcel-area-label{position:absolute;display:block;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;font-family:inherit;font-size:clamp(5px,.65cqw,40px);font-weight:600;font-style:normal;font-stretch:normal;line-height:1.2;letter-spacing:0;color:#102238;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff}

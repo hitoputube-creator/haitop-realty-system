@@ -6,6 +6,7 @@
   let current = null, rows = [], cells = [], selected = null, stage = null, overlay = null, generation = 0, placing = false, busy = false;
   let sourceMeta = null, buildingVectorOverlay = null, buildingVectorCandidates = [], buildingVectorUrl = null, buildingVectorViewBox = null, recordsLoaded = false;
   let parcelVectorRegions = new Map();
+  let areaLabelOverlay = null;
   const views = {area:false, building:false, contact:false, lh:false};
   const contactStates = {
     contact: {label:'연락처 있음', symbol:'●'},
@@ -32,7 +33,11 @@
     if(row.points?.length){x=row.points.reduce((n,p)=>n+p[0],0)/row.points.length/318;y=row.points.reduce((n,p)=>n+p[1],0)/row.points.length/385;}
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     if(parts.length){
-      const text=document.createElementNS(ns,'text');text.setAttribute('x',x);text.setAttribute('y',y);text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');text.classList.add('parcel-map-label');text.textContent=parts.join(' ');overlay.append(text);
+      const label=document.createElement('span');
+      label.className='parcel-area-label';
+      label.style.left=(x*100)+'%';label.style.top=(y*100)+'%';
+      label.textContent=parts.join(' ');
+      areaLabelOverlay?.append(label);
     }
   }
 
@@ -341,7 +346,7 @@
     status(row.id ? '등록된 자료입니다. 수정 후 저장할 수 있습니다.' : '등록된 세부자료가 없습니다. 내용을 입력하고 저장해주세요.');
   }
   function draw() {
-    overlay.replaceChildren(); $('parcelList').replaceChildren(); viewLegend();
+    overlay.replaceChildren(); areaLabelOverlay?.replaceChildren(); $('parcelList').replaceChildren(); viewLegend();
     window.HitopLandLh?.setMapViews(current.id,rows,views);
     const combined = new Map(cells.map(cell => [key(cell),{...cell,data:{...cell.data}}]));
     rows.forEach(row => {
@@ -417,6 +422,7 @@
     stage=document.createElement('div');stage.className='parcel-stage';stage.style.width='100%';
     image.replaceWith(stage);image.style.width='100%';stage.append(image);
     overlay=document.createElementNS(ns,'svg');overlay.setAttribute('viewBox','0 0 1 1');overlay.setAttribute('preserveAspectRatio','none');overlay.classList.add('parcel-overlay');stage.append(overlay);
+    areaLabelOverlay=document.createElement('div');areaLabelOverlay.className='parcel-area-label-overlay';areaLabelOverlay.setAttribute('aria-hidden','true');stage.append(areaLabelOverlay);
     $('parcelBuildingFilter').value='all';$('parcelTypeFilter').value='all';$('parcelContactFilter').value='all';$('parcelContactFilter').disabled=true;$('parcelAdd').setAttribute('aria-pressed','false');
     $('parcelHelp').textContent=block.id==='third-C1'?'PDF 원본 벡터 도면입니다. 파란 소블럭 번호를 누르면 해당 토지목록이 나오고, 개별 필지번호를 누르면 자료가 열립니다.':block.id==='third-C18'?'원본 도면의 해상도를 높인 이미지입니다. 필지를 누르면 세부자료가 열립니다. 번호는 소블럭-필지번호 순서입니다.':'필지 등록을 누른 뒤 도면의 해당 필지 위치를 눌러 자료를 입력하세요.';
     stage.addEventListener('click',event=>{
@@ -490,5 +496,5 @@
   priceFields.forEach(name=>$('parcel-'+name).addEventListener('input',event=>formatPriceInput(event.target)));
   $('parcel-area').addEventListener('input',updateArea);
   ['parcelBuildingFilter','parcelTypeFilter','parcelContactFilter'].forEach(id=>$(id).addEventListener('change',draw));
-  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;parcelVectorRegions=new Map();$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
+  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;areaLabelOverlay=null;parcelVectorRegions=new Map();$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
 })();
