@@ -169,3 +169,16 @@
 /* Keyboard focus follows the parcel boundary instead of a rectangular box. */
 #detailDrawing .parcel-vector-hit:focus-visible{stroke:#a67200!important;stroke-width:1.2!important;vector-effect:non-scaling-stroke}
 #detailDrawing .parcel-shape:focus-visible{stroke:#a67200;stroke-width:.003}
+
+/* Keep field names beside their values with a clear type hierarchy. */
+#parcelEditor .parcel-fields label{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:8px;color:var(--text-muted);font-size:12px;font-weight:500;line-height:1.4}
+#parcelEditor .parcel-field-label{min-width:0}
+#parcelEditor .parcel-fields input,#parcelEditor .parcel-fields select,#parcelEditor .parcel-fields textarea{min-width:0;font-size:14px;font-weight:500;color:var(--text-main);letter-spacing:normal}
+#parcelEditor .parcel-fields input[readonly]{color:var(--gold-soft)}
+#parcelEditor .parcel-fields input::placeholder,#parcelEditor .parcel-fields textarea::placeholder{color:var(--text-muted);font-weight:400}
+#parcelEditor .parcel-fields .parcel-note{align-items:start}
+#parcelEditor .parcel-note .parcel-field-label{padding-top:7px}
+@media(max-width:600px){
+#parcelEditor .parcel-fields,#parcelEditor .parcel-value-pair{grid-template-columns:minmax(0,1fr)}
+#parcelEditor .parcel-fields label{grid-template-columns:104px minmax(0,1fr)}
+}
