@@ -15,25 +15,24 @@
   };
   function buildingState(row) { return ['building','vacant'].includes(row.data.building) ? row.data.building : 'unknown'; }
   function hasContact(row) { return /\d{7,}/.test(String(row.data.contact || '').replace(/\D/g,'')); }
-  function hasOwnerContact(row) { return String(row.data.owner || '').trim() !== '' && hasContact(row); }
   function contactState(row) { return hasContact(row) ? 'contact' : !recordsLoaded ? 'unknown' : row.id ? 'registered' : 'missing'; }
   function viewLegend() {
     const parts=[];
     if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
-    if(views.contact) parts.push('● 소유주와 연락처가 모두 있는 필지' + (!recordsLoaded ? ' · 저장 자료를 불러오지 못했습니다' : ''));
+    if(views.contact) parts.push('● 연락처가 저장된 필지' + (!recordsLoaded ? ' · 저장 자료를 불러오지 못했습니다' : ''));
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
   function addMapLabel(row) {
     const area=Number(row.data.area), parts=[];
     if(views.area && Number.isFinite(area) && area>0) parts.push(views.area==='sqm'?area.toLocaleString('ko-KR',{maximumFractionDigits:1})+'㎡':(area/3.305785).toFixed(1)+'평');
-    if(!parts.length && !(views.contact && hasOwnerContact(row)))return;
+    if(!parts.length && !(views.contact && hasContact(row)))return;
     let x=Number(row.x)/100,y=Number(row.y)/100;
     if(row.points?.length){x=row.points.reduce((n,p)=>n+p[0],0)/row.points.length/318;y=row.points.reduce((n,p)=>n+p[1],0)/row.points.length/385;}
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     if(parts.length){
       const text=document.createElementNS(ns,'text');text.setAttribute('x',x);text.setAttribute('y',y);text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');text.classList.add('parcel-map-label');text.textContent=parts.join(' ');overlay.append(text);
     }
-    if(views.contact && hasOwnerContact(row)){
+    if(views.contact && hasContact(row)){
       const text=document.createElementNS(ns,'text');
       text.setAttribute('x',x);text.setAttribute('y',y + (parts.length ? .011 : 0));text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');
       text.classList.add('parcel-map-label','parcel-contact-marker','parcel-contact-contact');text.textContent='●';overlay.append(text);
