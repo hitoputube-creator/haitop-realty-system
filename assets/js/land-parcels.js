@@ -312,7 +312,7 @@
       if (name === 'building') $('parcel-building').checked = values.building === 'building';
       else $('parcel-' + name).value = priceFields.includes(name) ? money(values[name] == null ? null : Number(values[name]) * 10000) : values[name] ?? '';
     });
-    window.HitopLandLh?.renderDetail(current.id,row);
+    $('parcelLhDetail').hidden = true; $('parcelLhDetail').replaceChildren();
     updateArea();
     updateParcelLabel();
     $('parcelEditor').hidden = false; $('parcelDelete').hidden = !row.id;
@@ -413,8 +413,7 @@
       const results = await Promise.allSettled([
         request('?block_id=eq.'+encodeURIComponent(block.id)+'&order=subblock.asc,parcel.asc'),
         block.id==='third-C1' ? window.HitopLandBlockSource.load(block.id) :
-        block.id==='third-C18' ? fetch('assets/images/land/blocks/third-C18-parcels.json').then(r=>{if(!r.ok)throw Error('필지 위치를 불러오지 못했습니다.');return r.json();}) : Promise.resolve([]),
-        window.HitopLandLh.load()
+        block.id==='third-C18' ? fetch('assets/images/land/blocks/third-C18-parcels.json').then(r=>{if(!r.ok)throw Error('필지 위치를 불러오지 못했습니다.');return r.json();}) : Promise.resolve([])
       ]);
       if(run!==generation)return;
       rows=results[0].status==='fulfilled'?results[0].value:[];
@@ -425,10 +424,7 @@
           $('parcelSubblockFilter').replaceChildren(new Option('C1 전체','all'),...sourceMeta.subblocks.map(g=>new Option('C1-'+g.number,String(g.number))));
         }else cells=results[1].value;
       }
-      if(results[2].status==='fulfilled')window.HitopLandLh.renderList(block.id,official=>{
-        const cell=cells.find(r=>key(r)===key(official));const record=rows.find(r=>key(r)===key(official));
-        show({...cell,...record,subblock:official.subblock,parcel:official.parcel,data:{...(!cell&&!record?{mapPositionUnavailable:true}:{}),...cell?.data,landType:official.landType,...record?.data}});
-      });else{$('lhParcelSection').hidden=false;$('lhParcelSection').textContent='LH 자료를 불러오지 못했습니다. 다시 열어주세요.';}
+      $('lhParcelSection').hidden = true; $('lhParcelSection').replaceChildren();
       draw();status(results[0].status==='rejected'?'원본 도면·목록은 확인할 수 있습니다. '+(results[0].reason.message||'저장 자료를 불러오지 못했습니다.'):results[1].status==='rejected'?results[1].reason.message:'필지를 선택해 세부자료를 확인하세요.');
     } catch(error) { if(run===generation)status(error.message || '도면의 필지 위치를 불러오지 못했습니다.'); }
   }
