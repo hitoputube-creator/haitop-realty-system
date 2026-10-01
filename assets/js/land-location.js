@@ -47,8 +47,8 @@
     return Math.max(minZoom, Math.min(maxZoom, next / 10));
   }
   function fittedZoom(container, img) {
-    const top = Math.max(0, container.getBoundingClientRect().top);
-    container.style.height = Math.max(120, Math.min(window.innerHeight * .7, window.innerHeight - top - 24)) + 'px';
+    // CSS owns a stable viewport height; fitting must not depend on page scroll.
+    container.style.removeProperty('height');
     const width = img.naturalWidth || img.width;
     const height = img.naturalHeight || img.height;
     if (!width || !height || !container.clientWidth) return 1;
