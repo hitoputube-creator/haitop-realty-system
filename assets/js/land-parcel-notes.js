@@ -86,6 +86,7 @@
       const records=await api(filter(target)+'&order=note_date.desc,created_at.desc,id.desc&limit='+pageSize+'&offset='+(more?offset:0));
       if(run!==epoch||!same(target))return;
       notes=more?[...notes,...records]:records;offset=notes.length;hasMore=records.length===pageSize;render();message('');
+      window.dispatchEvent(new CustomEvent('parcel-notes-loaded',{detail:{...target,hasNotes:notes.length>0}}));
     }catch(error){if(run===epoch)message(error.message);}
     finally{if(run===epoch)$('parcelNotesMore').disabled=busy;}
   }
@@ -101,7 +102,7 @@
       if(!result.length)throw Error('다른 기기에서 변경된 기록입니다. 다시 열어 확인해주세요.');
       const error=await cleanup((note.photos||[]).map(photo=>photo.path));
       if(!same(target))return;
-      notes=notes.filter(item=>item.id!==note.id);offset=notes.length;if(editing?.id===note.id)reset();render();message(error?'메모를 삭제했습니다. 사진 파일 정리는 다시 확인해주세요.':'메모와 사진을 삭제했습니다.');
+      notes=notes.filter(item=>item.id!==note.id);offset=notes.length;window.dispatchEvent(new CustomEvent('parcel-notes-loaded',{detail:{...target,hasNotes:notes.length>0}}));if(editing?.id===note.id)reset();render();message(error?'메모를 삭제했습니다. 사진 파일 정리는 다시 확인해주세요.':'메모와 사진을 삭제했습니다.');
     }catch(error){if(same(target))message(error.message);}
     finally{busy=false;controls();if(same(target))render();}
   }
@@ -170,7 +171,16 @@
     }
     return all;
   }
+  async function listParcelsWithNotes(blockId){
+    const result=[];const size=500;
+    for(let offset=0;offset<20000;offset+=size){
+      const page=await api('?block_id=eq.'+encodeURIComponent(blockId)+'&select=subblock,parcel&order=id.asc&limit='+size+'&offset='+offset);
+      result.push(...page);if(page.length<size)return result;
+    }
+    throw Error('메모 등록 상태를 모두 확인하지 못했습니다.');
+  }
   window.HitopParcelNotes={
+    listParcelsWithNotes,
     listForPrint,
     get busy(){return busy;},
     open(c){if(context&&identity(context)===identity(c))return;context=c;epoch++;notes=[];offset=0;hasMore=false;reset();render();load(c);},

@@ -260,3 +260,9 @@
 /* Compact refresh actions beside their dated status. */
 .land-location-page .building-update-status .btn{min-height:28px;padding:3px 9px;font-size:.75rem;line-height:1.3;border:1px solid var(--border-slate);border-radius:5px;background:transparent;color:var(--text-muted);cursor:pointer}
 .land-location-page .building-update-status .btn:hover,.land-location-page .building-update-status .btn:focus-visible{border-color:var(--gold);color:var(--gold-soft)}
+
+/* Management data labels remain legible with ownership and building views. */
+.parcel-data-label{padding:.08em .3em;border-radius:.25em;border:1px solid #64748b;background:#f8fafcf2;text-shadow:none}
+.parcel-data-label.parcel-data-present{border-color:#0369a1;background:#e0f2fef2;color:#075985}
+.parcel-data-label.parcel-data-missing{border-color:#64748b;background:#f1f5f9f2;color:#475569}
+.parcel-data-label.parcel-data-unknown{border-color:#a16207;background:#fef9c3f2;color:#713f12}
