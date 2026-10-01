@@ -100,6 +100,7 @@
     try{
       const result=await api('?id=eq.'+note.id+'&updated_at=eq.'+encodeURIComponent(note.updated_at),{method:'DELETE'});
       if(!result.length)throw Error('다른 기기에서 변경된 기록입니다. 다시 열어 확인해주세요.');
+      window.dispatchEvent(new CustomEvent('parcel-search-invalidate',{detail:target}));
       const error=await cleanup((note.photos||[]).map(photo=>photo.path));
       if(!same(target))return;
       notes=notes.filter(item=>item.id!==note.id);offset=notes.length;window.dispatchEvent(new CustomEvent('parcel-notes-loaded',{detail:{...target,hasNotes:notes.length>0}}));if(editing?.id===note.id)reset();render();message(error?'메모를 삭제했습니다. 사진 파일 정리는 다시 확인해주세요.':'메모와 사진을 삭제했습니다.');
@@ -147,7 +148,7 @@
         if(confirmed){reset();await load(target);message('메모와 사진을 저장했습니다.');}
         else message(error.message+' 입력 내용과 선택한 사진은 유지했습니다.');
       }
-    }finally{busy=false;controls();renderFiles();if(same(target))render();}
+    }finally{if(confirmed)window.dispatchEvent(new CustomEvent('parcel-search-invalidate',{detail:target}));busy=false;controls();renderFiles();if(same(target))render();}
   }
   $('parcelNotePhotos').addEventListener('change',addFiles);
   $('parcelNoteCamera').addEventListener('change',addFiles);
@@ -171,10 +172,10 @@
     }
     return all;
   }
-  async function listParcelsWithNotes(blockId){
+  async function listParcelsWithNotes(blockId,includeBody=false){
     const result=[];const size=500;
     for(let offset=0;offset<20000;offset+=size){
-      const page=await api('?block_id=eq.'+encodeURIComponent(blockId)+'&select=subblock,parcel&order=id.asc&limit='+size+'&offset='+offset);
+      const page=await api('?block_id=eq.'+encodeURIComponent(blockId)+'&select=subblock,parcel'+(includeBody?',body':'')+'&order=id.asc&limit='+size+'&offset='+offset);
       result.push(...page);if(page.length<size)return result;
     }
     throw Error('메모 등록 상태를 모두 확인하지 못했습니다.');

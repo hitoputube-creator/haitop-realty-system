@@ -126,6 +126,7 @@
     clearPrivateDrawing();
     $('overview').hidden = !!block;
     $('blockDetail').hidden = !block;
+    if(!block)window.dispatchEvent(new Event('parcel-search-overview'));
     document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.view === view)));
     const showTypeFilters = true;
     $('thirdTypeFilters').hidden = false;
@@ -393,5 +394,9 @@
     });
   });
   window.addEventListener('popstate',() => render(readState()));
+  window.HitopLandLocation={blocks:blocks.map(b=>({...b,district:groups[b.group].label})),openParcel(blockId,subblock,parcel){
+    const block=byId.get(blockId);if(!block?.drawing)return false;
+    navigate(block);window.HitopLandParcels.focusParcel(blockId,subblock,parcel);return true;
+  }};
   render(readState()); applyZoom();
 })();

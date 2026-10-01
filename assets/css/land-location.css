@@ -266,3 +266,12 @@
 .parcel-data-label.parcel-data-present{border-color:#0369a1;background:#e0f2fef2;color:#075985}
 .parcel-data-label.parcel-data-missing{border-color:#64748b;background:#f1f5f9f2;color:#475569}
 .parcel-data-label.parcel-data-unknown{border-color:#a16207;background:#fef9c3f2;color:#713f12}
+
+.parcel-global-search{padding:12px;margin:12px 0;border:1px solid var(--line2);border-radius:8px;background:var(--panel2)}
+.parcel-search-controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap}.parcel-search-controls label,.parcel-search-field{display:flex;flex-direction:column;gap:5px;font-size:.8rem;color:var(--text-muted)}
+.parcel-search-field{flex:1 1 280px}.parcel-search-controls input,.parcel-search-controls select,.parcel-block-search input{box-sizing:border-box;min-height:36px;padding:7px 9px;border:1px solid var(--border-slate);border-radius:5px;background:var(--panel2);color:var(--text-main);font:inherit;width:100%}
+.parcel-search-controls .btn{min-height:36px;padding:7px 12px;font-size:.8rem;cursor:pointer}.parcel-block-search{margin:10px 0;max-width:560px}
+#allParcelSearchStatus{font-size:.8rem;color:var(--text-muted);margin:10px 0 0}.parcel-search-results{display:grid;gap:6px;max-height:350px;overflow:auto;margin-top:8px}
+.land-location-page .parcel-search-result{display:block;width:100%;text-align:left;min-height:48px;padding:8px 10px;border:1px solid var(--border-slate);border-radius:5px;background:transparent;color:var(--text-main);cursor:pointer}.parcel-search-result strong{display:block;color:var(--gold-soft);font-size:.9rem}.parcel-search-result span{display:block;font-size:.8rem;margin-top:4px;color:var(--text-muted)}
+.parcel-search-result:hover,.parcel-search-result:focus-visible{border-color:var(--gold)}
+@media(max-width:600px){.parcel-search-controls .parcel-search-field{flex-basis:100%}.parcel-search-controls>label:not(.parcel-search-field){flex:1 1 28%}.parcel-global-search{padding:10px}}
