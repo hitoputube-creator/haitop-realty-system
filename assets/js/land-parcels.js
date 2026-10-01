@@ -5,6 +5,7 @@
   const ns = 'http://www.w3.org/2000/svg';
   let current = null, rows = [], cells = [], selected = null, stage = null, overlay = null, generation = 0, placing = false, busy = false;
   let sourceMeta = null, buildingVectorOverlay = null, buildingVectorCandidates = [], buildingVectorUrl = null, buildingVectorViewBox = null, recordsLoaded = false;
+  let parcelVectorRegions = new Map();
   const views = {area:false, building:false, contact:false};
   const contactStates = {
     contact: {label:'연락처 있음', symbol:'●'},
@@ -46,7 +47,7 @@
   }
   function setupBuildingVectorOverlay(svgText) {
     if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}
-    buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;
+    buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;parcelVectorRegions=new Map();
     if(!svgText||!stage||!overlay)return;
     const object=document.createElement('object');
     object.className='parcel-building-vector-overlay';
@@ -57,7 +58,7 @@
     object.data=buildingVectorUrl;
     stage.insertBefore(object,overlay);
     buildingVectorOverlay=object;
-    object.addEventListener('load',()=>{
+    object.addEventListener('load',async()=>{
       if(buildingVectorOverlay!==object)return;
       try{
         const doc=object.contentDocument,root=doc?.documentElement;
@@ -70,6 +71,10 @@
         const win=doc.defaultView;
         buildingVectorCandidates=[...root.querySelectorAll('path,polygon,rect')].filter(shape=>isParcelYellow(win.getComputedStyle(shape).fill));
         draw();
+        const regions=await traceParcelRegions(root,sourceMeta?.parcels||[]);
+        if(buildingVectorOverlay!==object)return;
+        parcelVectorRegions=regions;
+        draw();
       }catch(_){buildingVectorCandidates=[];buildingVectorViewBox=null;}
     },{once:true});
   }
@@ -78,6 +83,82 @@
   function parcelShapeMatrix(shape) {
     const root=shape.ownerSVGElement,rootMatrix=root?.getCTM(),shapeMatrix=shape.getCTM();
     return rootMatrix&&shapeMatrix ? rootMatrix.inverse().multiply(shapeMatrix) : null;
+  }
+  async function traceParcelRegions(root,parcels) {
+    // The PDF fills whole subblocks, but its boundary strokes separate individual
+    // parcels. Trace those enclosed regions; the displayed drawing stays vector.
+    const copy=root.cloneNode(true);
+    copy.querySelectorAll('style').forEach(node=>node.remove());
+    // PDF glyphs are <use> elements. Exclude them from boundary detection so
+    // parcel numbers cannot cut a slit or isolated pocket into the traced area.
+    copy.querySelectorAll('use').forEach(node=>node.remove());
+    copy.querySelectorAll('[stroke-width]').forEach(node=>{
+      const width=Number(node.getAttribute('stroke-width'));
+      if(width>.2)node.setAttribute('stroke-width',String(Math.max(.9,width)));
+    });
+    const vb=root.viewBox.baseVal,scale=3;
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.ceil(vb.width*scale);canvas.height=Math.ceil(vb.height*scale);
+    const url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(copy)],{type:'image/svg+xml'}));
+    const image=new Image();
+    try{image.src=url;await image.decode();}finally{URL.revokeObjectURL(url);}
+    const context=canvas.getContext('2d',{willReadFrequently:true});
+    context.drawImage(image,0,0,canvas.width,canvas.height);
+    const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+    const w=canvas.width,h=canvas.height,labels=new Int32Array(w*h),regions=new Map();
+    const yellow=i=>i>=0&&i<w*h&&pixels[i*4]>=180&&pixels[i*4+1]>=165&&pixels[i*4+2]<=190&&pixels[i*4+1]>pixels[i*4+2]+20&&pixels[i*4+3]>200;
+    let id=0;
+    for(const row of parcels){
+      let seed=-1;const x=Math.round(Number(row.x)/100*w),y=Math.round(Number(row.y)/100*h);
+      for(let r=0;r<30&&seed<0;r++)for(let dy=-r;dy<=r&&seed<0;dy++)for(let dx=-r;dx<=r;dx++){
+        if(x+dx<0||x+dx>=w||y+dy<0||y+dy>=h)continue;
+        const i=(y+dy)*w+x+dx;if(yellow(i)){seed=i;break;}
+      }
+      if(seed<0||labels[seed])continue;
+      id++;const stack=[seed],region=[];labels[seed]=id;
+      while(stack.length){
+        const i=stack.pop();region.push(i);
+        for(const n of [i-1,i+1,i-w,i+w]){
+          if(n<0||n>=labels.length||labels[n]||!yellow(n))continue;
+          if(Math.abs(n-i)===1&&Math.floor(n/w)!==Math.floor(i/w))continue;
+          labels[n]=id;stack.push(n);
+        }
+      }
+      if(region.length<20)continue;
+      const edges=new Map(),stride=w+1;
+      const addEdge=(a,b)=>{if(!edges.has(a))edges.set(a,[]);edges.get(a).push(b);};
+      for(const i of region){
+        const px=i%w,py=Math.floor(i/w),a=py*stride+px;
+        if(py===0||labels[i-w]!==id)addEdge(a,a+1);
+        if(px===w-1||labels[i+1]!==id)addEdge(a+1,a+1+stride);
+        if(py===h-1||labels[i+w]!==id)addEdge(a+1+stride,a+stride);
+        if(px===0||labels[i-1]!==id)addEdge(a+stride,a);
+      }
+      let outer=[],largest=0;
+      while(edges.size){
+        const start=edges.keys().next().value,loop=[];let vertex=start,direction=null;
+        while(edges.has(vertex)){
+          loop.push([vertex%stride,Math.floor(vertex/stride)]);
+          const choices=edges.get(vertex),dir=next=>next-vertex===1?0:next-vertex===stride?1:next-vertex===-1?2:3;
+          if(direction!==null)choices.sort((a,b)=>[1,0,3,2].indexOf((dir(a)-direction+4)%4)-[1,0,3,2].indexOf((dir(b)-direction+4)%4));
+          const next=choices.shift();direction=dir(next);
+          if(!choices.length)edges.delete(vertex);
+          vertex=next;if(vertex===start)break;
+        }
+        if(vertex!==start||loop.length<3)continue;
+        const area=Math.abs(loop.reduce((sum,p,i)=>{const q=loop[(i+1)%loop.length];return sum+p[0]*q[1]-q[0]*p[1];},0));
+        if(area>largest){largest=area;outer=loop;}
+      }
+      if(!outer.length)continue;
+      // Remove redundant points along pixel edges without moving the boundary.
+      const points=outer.filter((p,i)=>{
+        const a=outer[(i+outer.length-1)%outer.length],b=outer[(i+1)%outer.length];
+        return (p[0]-a[0])*(b[1]-p[1])!==(p[1]-a[1])*(b[0]-p[0]);
+      });
+      regions.set(key(row),'M'+points.map(p=>(vb.x+p[0]/w*vb.width).toFixed(3)+','+(vb.y+p[1]/h*vb.height).toFixed(3)).join('L')+'Z');
+    }
+    canvas.width=0;canvas.height=0;
+    return regions;
   }
   function shapeContainsParcelPoint(shape,pctX,pctY) {
     try{
@@ -110,6 +191,21 @@
     layer.setAttribute('x','0');layer.setAttribute('y','0');layer.setAttribute('width','1');layer.setAttribute('height','1');
     layer.setAttribute('viewBox',[buildingVectorViewBox.x,buildingVectorViewBox.y,buildingVectorViewBox.width,buildingVectorViewBox.height].join(' '));
     layer.setAttribute('preserveAspectRatio','none');layer.classList.add('parcel-vector-hit-layer');
+    if(parcelVectorRegions.size){
+      ordered.forEach(row=>{
+        if(!matches(row))return;
+        const d=parcelVectorRegions.get(key(row));if(!d)return;
+        const shape=document.createElementNS(ns,'path');
+        shape.setAttribute('d',d);shape.classList.add('parcel-vector-hit');
+        if(views.building&&buildingState(row)==='building')shape.classList.add('parcel-vector-building-highlight');
+        shape.setAttribute('role','button');shape.setAttribute('tabindex','0');
+        shape.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+contactStates[contactState(row)].label);
+        shape.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(row);});
+        shape.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row);}});
+        layer.append(shape);
+      });
+      overlay.append(layer);return;
+    }
     // The PDF often fills a whole subblock with one path. Do not stack an
     // identical click target for every parcel: the last one would win everywhere.
     const groups=new Map();
@@ -128,7 +224,7 @@
       clone.removeAttribute('clip-path');clone.removeAttribute('filter');clone.removeAttribute('mask');clone.removeAttribute('transform');
       if(matrix)clone.setAttribute('transform',`matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})`);
       clone.classList.add('parcel-vector-hit');
-      if(views.building&&parcelRows.some(item=>buildingState(item)==='building'))clone.classList.add('parcel-vector-building-highlight');
+      if(views.building&&parcelRows.length===1&&buildingState(row)==='building')clone.classList.add('parcel-vector-building-highlight');
       const registration=contactStates[contactState(row)].label;
       clone.setAttribute('role','button');clone.setAttribute('tabindex','0');
       clone.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+registration);
@@ -287,7 +383,7 @@
     const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent=row.id?'자료 수정':'자료 보기·등록';btn.addEventListener('click',()=>show(row));td.append(badge,btn);tr.append(td);$('parcelSourceBody').append(tr);
   }
   async function open(block, image) {
-    const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;
+    const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; parcelVectorRegions=new Map(); if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
     $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
     closeEditor(); $('parcelManager').hidden=!image;
@@ -367,5 +463,5 @@
   priceFields.forEach(name=>$('parcel-'+name).addEventListener('input',event=>formatPriceInput(event.target)));
   $('parcel-area').addEventListener('input',updateArea);
   ['parcelBuildingFilter','parcelTypeFilter','parcelContactFilter'].forEach(id=>$(id).addEventListener('change',draw));
-  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
+  window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;parcelVectorRegions=new Map();$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
 })();
