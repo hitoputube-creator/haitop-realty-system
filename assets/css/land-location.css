@@ -97,5 +97,5 @@
 
 .lh-info-grid dt{color:var(--text-muted)}.lh-detail a.btn,#lhParcelSection a.btn{color:var(--gold-soft);border:1px solid var(--border-slate);border-radius:5px;padding:6px 12px}.parcel-private-heading{margin:16px 0 10px;color:var(--gold-soft)}
 
-/* Keep block buttons small while the LH vector drawing is enlarged. */
-#mapStage.lh-vector-map .map-hotspot{width:clamp(14px,2.7%,34px);font-size:clamp(8px,1.25cqw,13px)}
+/* Keep block buttons small while the LH leaflet is enlarged. */
+#mapStage.lh-leaflet-map .map-hotspot{width:clamp(14px,2.7%,34px);font-size:clamp(8px,1.25cqw,13px)}

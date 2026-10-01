@@ -14,8 +14,8 @@
     'second-multi': [[4,1203,693],[7,1234,495],[8,1227,573],[10,1094,1012],[11,994,1118],[13,1155,566],[15,1082,692],[16,1118,718]],
     third: [[1,1450,390],[2,1070,107],[3,789,765],[4,923,1070],[5,785,1200],[6,593,1138],[7,528,1100],[8,531,1060],[9,606,886],[10,463,890],[11,359,830],[12,306,795],[13,388,704],[14,638,593],[15,658,427],[16,628,403],[17,599,486],[18,816,381],[19,790,821]]
   };
-  // Exact label centers extracted from the latest LH vector PDF; unmatched old blocks stay in the list.
-  const lhAnchors = {"C1":[61.1400281,30.2211997],"C2":[41.9662258,11.6226205],"C3":[28.535496,56.8720294],"C5":[28.2130782,86.6725061],"C8":[16.182851,78.3922173],"C7":[15.4876369,80.6582526],"C6":[18.8730273,82.5537349],"C9":[21.0997273,64.8102713],"C10":[13.4254071,65.4801067],"C11":[7.2893878,60.2354471],"C12":[4.4480779,58.7675154],"C13":[9.2138209,52.2116944],"C15":[22.0097898,33.2710792],"C16":[20.6697395,31.6178745],"C18":[29.7579005,29.9504124],"C4":[35.1249163,78.1926932]};
+  // Coordinates refer to the uploaded, unchanged 2048 x 1416 LH leaflet.
+  const leafletAnchors = {"second-shop-C1":[57.3730469,30.2966102],"second-shop-C2":[52.4902344,39.4067797],"second-shop-C3":[43.6264648,76.7803672],"second-shop-C5":[41.8852539,61.1165254],"second-shop-C6":[62.7475586,30.8403955],"second-shop-C9":[46.0449219,67.3728814],"second-shop-C14":[42.7246094,44.9858757],"second-shop-C17":[45.0683594,54.5903955],"second-shop-C18":[43.2617188,58.5451977],"second-shop-C19":[42.9111328,36.2966102],"second-multi-C4":[46.484375,48.7288136],"second-multi-C7":[50.0488281,37.7824859],"second-multi-C8":[48.7304688,39.4774011],"second-multi-C10":[41.6992188,69.5621469],"second-multi-C11":[38.1044922,77.299435],"second-multi-C13":[45.5527344,40.2295198],"second-multi-C15":[41.015625,48.8700565],"second-multi-C16":[43.359375,52.0480226],"third-C1":[59.4726562,27.259887],"third-C2":[41.8457031,9.8870056],"third-C3":[28.7597656,53.3898305],"third-C4":[35.3515625,73.7288136],"third-C5":[28.6621094,82.6271186],"third-C6":[19.0917969,78.5310734],"third-C7":[16.3574219,76.9067797],"third-C8":[17.2363281,74.2937853],"third-C9":[21.7285156,61.7231638],"third-C10":[14.0625,62.1468927],"third-C11":[8.8378906,56.8502825],"third-C12":[5.9570312,55.720339],"third-C13":[10.1074219,49.8587571],"third-C14":[22.6074219,38.7711864],"third-C15":[22.7050781,30.3672316],"third-C16":[21.3378906,28.8841808],"third-C17":[19.7753906,35.0282486],"third-C18":[29.7851562,27.4011299],"third-C19":[41.6503906,36.2288136]};
   const thirdByNumber = new Map(overall.third.map(row => [row[0], row]));
   // Fill only from verified block/parcel material. A mixed block can contain both types.
   const thirdTypes = {
@@ -37,35 +37,15 @@
   const viewport = $('mapViewport');
   const stage = $('mapStage');
   const image = $('mapImage');
-  let mapMode = null, lhVectorUrl = null, lhVectorPending = null;
-  function loadLhVector() {
-    if (!lhVectorPending) lhVectorPending = fetch('assets/images/land/lh-unjeong3-overview.svg.gz?v=20261001-vector-1')
-      .then(async response => {
-        if (!response.ok) throw Error('LH 원본을 불러오지 못했습니다.');
-        const blob=await response.blob();
-        const signature=new Uint8Array(await blob.slice(0,2).arrayBuffer());
-        const compressed=signature[0]===31 && signature[1]===139;
-        if (compressed && typeof DecompressionStream === 'undefined') throw Error('이 브라우저에서는 아래 LH 원본 PDF 버튼을 이용해주세요.');
-        const source=compressed?await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).text():await blob.text();
-        if (!source.trimStart().startsWith('<svg')) throw Error('LH 원본 도면 형식을 확인하지 못했습니다.');
-        lhVectorUrl = URL.createObjectURL(new Blob([source], {type:'image/svg+xml'}));
-        return lhVectorUrl;
-      }).catch(error => {lhVectorPending=null;throw error;});
-    return lhVectorPending;
+  function setOverviewMap() {
+    const source='assets/images/land/lh-unjeong-overview-leaflet-2312.jpg';
+    $('overviewMapSource').textContent='LH 파주 분양안내 리플렛 원본 · 운정 전체 위치도';
+    $('overviewMapNotice').textContent='전체지도는 리플렛 원본이며, 필지별 LH 공급정보에는 별도의 자료 확인일을 표시합니다.';
+    stage.classList.add('lh-leaflet-map');
+    if (image.getAttribute('src')===source) return;
+    mapFitted=true;$('mapError').hidden=true;$('mapLoading').hidden=true;
+    image.width=2048;image.height=1416;image.hidden=false;image.src=source;
   }
-  function setOverviewMap(legacy) {
-    const mode=legacy?'legacy':'lh';
-    $('overviewMapSource').textContent=legacy?'기존 운정2 안내도 · 기존 자료 위치 표시':'LH 운정3 공고 첨부 원본 · 벡터 도면 · 확대해도 선과 글자 유지';
-    $('overviewMapNotice').textContent=legacy?'운정2 자료는 기존 안내도에서 표시합니다.':'LH 원본에서 확인된 운정3 블럭만 지도에 표시합니다. 기존 운정2 자료와 C14·C17·C19는 아래 목록에서 열 수 있습니다.';
-    if (mapMode===mode && (legacy || lhVectorUrl)) return;
-    mapMode=mode;stage.classList.toggle('lh-vector-map',!legacy);mapFitted=true;$('mapError').hidden=true;
-    image.width=legacy?2048:1191;image.height=legacy?1380:842;
-    if (legacy) {image.hidden=false;$('hotspots').hidden=false;$('mapLoading').hidden=true;image.src='assets/images/land/unjeong-base-20260930.jpg';return;}
-    image.hidden=true;$('hotspots').hidden=true;$('mapLoading').hidden=false;
-    loadLhVector().then(url=>{if(mapMode!=='lh')return;image.src=url;image.hidden=false;$('mapLoading').hidden=true;})
-      .catch(error=>{if(mapMode!=='lh')return;$('mapLoading').hidden=true;$('mapError').textContent=error.message;$('mapError').hidden=false;});
-  }
-  window.addEventListener('pagehide',event=>{if(!event.persisted&&lhVectorUrl)URL.revokeObjectURL(lhVectorUrl);});
   let view = 'all' , group = 'all', landType = 'all', zoom = 1, suppressClickUntil = 0;
   let drawingZoom = 1;
   let mapFitted = true, drawingFitted = true;
@@ -192,9 +172,8 @@
     }
     window.HitopLandParcels?.close();
     document.title = '하이탑부동산 | 택지 위치도';
-    const legacy = view==='all' && (group==='second-shop' || group==='second-multi');
-    setOverviewMap(legacy);
-    image.alt = legacy?'기존 운정2 택지블럭 안내도':'LH 원본 파주운정3 전체 획지분할도';
+    setOverviewMap();
+    image.alt = view==='third'?'LH 리플렛 운정3지구 블럭 위치도':'LH 리플렛 운정 전체 블럭 위치도';
     const groupBlocks = blocks.filter(b => group === 'all' || b.group === group);
     const visible = groupBlocks.filter(b => !showTypeFilters || landType === 'all' || (landType === 'unknown' ? !b.types.length : b.types.includes(landType)));
     const unknownCount = groupBlocks.filter(b => b.group === 'third' && !b.types.length).length;
@@ -203,7 +182,7 @@
     $('hotspots').replaceChildren();
     let mappedCount=0;
     visible.forEach(b => {
-      const point=legacy?b.overall:(b.group==='third'?lhAnchors[b.name]:null);
+      const point=leafletAnchors[b.id];
       if(!point)return;
       $('hotspots').appendChild(hotspot(b,point[0],point[1],false));mappedCount++;
     });
