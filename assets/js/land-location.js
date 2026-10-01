@@ -123,6 +123,11 @@
     $('groupFilters').hidden = view === 'third';
     const showTypeFilters = view === 'third' || group === 'third';
     $('thirdTypeFilters').hidden = !showTypeFilters;
+    $('viewFilterLabel').textContent = view === 'third' ? '운정3지구' : '운정신도시 전체';
+    $('groupFilterLabel').textContent = group === 'all' ? '전체 블럭' : ({'second-shop':'2지구 상가점포','second-multi':'2지구 다가구',third:'3지구 택지'})[group];
+    $('typeFilterLabel').textContent = landType === 'all' ? '전체 유형' : typeLabels[landType];
+    document.querySelectorAll('.map-filter-dropdown').forEach(filter => { filter.open = false; });
+
     document.querySelectorAll('[data-land-type]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.landType === landType)));
     if (block) {
       $('detailGroup').textContent = groups[block.group].label;
@@ -361,6 +366,23 @@
     else setDrawingZoom(nextZoomStep(drawingZoom,direction),e.clientX,e.clientY);
   },{passive:false,capture:true});
 
+  document.querySelectorAll('.map-filter-dropdown').forEach(filter => {
+    filter.addEventListener('toggle',() => {
+      if (!filter.open) return;
+      document.querySelectorAll('.map-filter-dropdown').forEach(other => { if (other !== filter) other.open = false; });
+    });
+  });
+  document.addEventListener('click',event => {
+    document.querySelectorAll('.map-filter-dropdown[open]').forEach(filter => {
+      if (!filter.contains(event.target)) filter.open = false;
+    });
+  });
+  document.addEventListener('keydown',event => {
+    if (event.key !== 'Escape') return;
+    document.querySelectorAll('.map-filter-dropdown[open]').forEach(filter => {
+      filter.open = false; filter.querySelector('summary').focus();
+    });
+  });
   window.addEventListener('popstate',() => render(readState()));
   render(readState()); applyZoom();
 })();

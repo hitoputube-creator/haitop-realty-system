@@ -102,43 +102,31 @@
 
 .map-clean-mask{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:1;pointer-events:none}
 
-/* Compact overview navigation and horizontally scrollable classifications. */
-#overview .map-controls{margin:18px 0 0;padding-bottom:12px;gap:12px;border-bottom:1px solid var(--line2)}
-#overview .view-tabs{flex-wrap:nowrap;gap:4px;padding:4px;border:1px solid var(--border-slate);border-radius:9px;background:rgba(7,22,37,.35)}
-#overview .map-filter-controls{display:flex;align-items:center;gap:16px;min-width:0;margin:12px 0}
-#overview .map-filter-controls .filter-bar{flex-wrap:nowrap;gap:4px;min-width:0;overflow-x:auto;margin:0;padding:3px 0;scrollbar-width:thin}
-#overview .map-filter-controls .filter-bar .btn{flex:0 0 auto;white-space:nowrap}
-#overview #thirdTypeFilters{padding-left:16px;border-left:1px solid var(--border-slate)}
-#overview .map-controls .btn,#overview .map-filter-controls .btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 12px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text-muted);font-size:.8rem;line-height:1.3;font-weight:500;cursor:pointer}
-#overview .map-controls .btn[aria-pressed=true],#overview .map-filter-controls .btn[aria-pressed=true]{border-color:rgba(216,184,74,.45);background:rgba(216,184,74,.12);color:var(--gold-soft);font-weight:700}
-#overview .map-controls .btn:hover,#overview .map-filter-controls .btn:hover{background:rgba(216,184,74,.08);color:var(--text-main)}
-#overview .map-controls .btn:focus-visible,#overview .map-filter-controls .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-#overview .zoom-controls{flex-wrap:nowrap;gap:4px}
-#overview .zoom-controls .btn{border-color:var(--border-slate);color:var(--text-main)}
-#overview .zoom-controls #zoomIn,#overview .zoom-controls #zoomOut{width:34px;padding:0;font-size:1.05rem}
-#overview .zoom-controls .btn:disabled{opacity:.4;cursor:default}
-#overview .legend-dot{width:7px;height:7px;margin-right:6px;flex:0 0 auto}
-#overview .map-help{margin:8px 0 12px;font-size:.78rem}
-@media(max-width:900px){
-  #overview .map-filter-controls{align-items:stretch;flex-direction:column;gap:6px}
-  #overview #thirdTypeFilters{padding-left:0;border-left:0}
-}
-@media(max-width:720px){
-  #overview .view-tabs{width:auto;max-width:100%}
-  #overview .view-tabs .btn{flex:0 0 auto}
-  #overview .map-controls{align-items:center;gap:8px}
-  #overview .map-controls .btn,#overview .map-filter-controls .btn{padding:7px 10px;font-size:.75rem}
-}
 
-/* All map selections remain in one horizontal scroll strip on every screen. */
-#overview .map-controls{flex-wrap:nowrap;align-items:center}
-#overview .map-filter-controls{display:flex;flex-direction:row;flex-wrap:nowrap;flex:1 1 0;gap:12px;min-width:0;margin:0;padding:3px 0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
-#overview .map-filter-controls .view-tabs{flex:0 0 auto;width:auto;max-width:none;padding:0;border:0;border-radius:0;background:transparent}
-#overview .map-filter-controls .filter-bar{flex:0 0 auto;overflow:visible;min-width:max-content;padding:0 0 0 12px;border-left:1px solid var(--border-slate)}
-#overview .map-filter-controls #thirdTypeFilters{padding:0 0 0 12px;border-left:1px solid var(--border-slate)}
-#overview .zoom-controls{flex:0 0 auto}
-@media(max-width:900px){
-  #overview .map-controls{flex-wrap:wrap}
-  #overview .map-filter-controls{flex:1 1 100%;width:100%}
-  #overview .zoom-controls{margin-left:auto}
+/* Dropdown filters open below the toolbar. */
+#overview .map-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:18px 0 12px}
+#overview .map-filter-controls{display:flex;align-items:center;flex-wrap:nowrap;gap:6px;min-width:0;max-width:100%;overflow:visible}
+#overview .map-filter-dropdown{position:relative;min-width:0}
+#overview .map-filter-dropdown summary{display:flex;align-items:center;gap:7px;min-height:38px;box-sizing:border-box;padding:7px 11px;border:1px solid var(--border-slate);border-radius:6px;background:var(--panel2);color:var(--text-main);font-size:.8rem;cursor:pointer;list-style:none;white-space:nowrap}
+#overview .map-filter-dropdown summary::-webkit-details-marker{display:none}
+#overview .map-filter-dropdown[open] summary{border-color:var(--gold);color:var(--gold-soft)}
+#overview .filter-caption{color:var(--text-muted);font-size:.72rem}
+#overview .filter-arrow{margin-left:auto;color:var(--gold-soft)}
+#overview .map-filter-dropdown[open] .filter-arrow{transform:rotate(180deg)}
+#overview .map-filter-menu{position:absolute;top:calc(100% + 5px);left:0;z-index:20;display:flex;flex-direction:column;gap:2px;min-width:100%;width:max-content;max-width:calc(100vw - 40px);padding:5px;box-sizing:border-box;border:1px solid var(--border-slate);border-radius:7px;background:var(--panel2);box-shadow:0 10px 26px #0006}
+#overview .map-filter-menu .btn{display:flex;align-items:center;justify-content:flex-start;min-height:36px;padding:8px 10px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text-main);font:inherit;font-size:.8rem;white-space:nowrap;cursor:pointer}
+#overview .map-filter-menu .btn[aria-pressed=true]{background:rgba(216,184,74,.14);color:var(--gold-soft);font-weight:700}
+#overview .map-filter-menu .btn:hover{background:rgba(216,184,74,.08)}
+#overview .map-filter-dropdown summary:focus-visible,#overview .map-filter-menu .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#overview .zoom-controls{flex-wrap:nowrap;gap:5px;margin-left:auto}
+#overview .zoom-controls .btn{box-sizing:border-box;min-height:34px;padding:7px 10px;border:1px solid var(--border-slate);border-radius:6px;background:var(--panel2);color:var(--text-main);font-size:.8rem;cursor:pointer}
+#overview .zoom-controls #zoomIn,#overview .zoom-controls #zoomOut{width:34px;padding:0;font-size:1.05rem}
+#overview .legend-dot{width:7px;height:7px;margin-right:6px;flex:0 0 auto}
+@media(max-width:720px){
+  #overview .map-filter-controls{flex:1 1 100%;width:100%;gap:5px}
+  #overview .map-filter-dropdown{flex:1 1 0}
+  #overview .map-filter-dropdown summary{flex-wrap:wrap;gap:2px 4px;padding:6px 8px;font-size:.73rem}
+  #overview .filter-caption{flex:1 1 100%;font-size:.65rem}
+  #overview .map-filter-dropdown summary>span[id]{overflow:hidden;text-overflow:ellipsis}
+  #overview #thirdTypeFilters .map-filter-menu{left:auto;right:0}
 }
