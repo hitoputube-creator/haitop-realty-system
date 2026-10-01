@@ -256,3 +256,7 @@
 .parcel-ownership-corporation{background:#ffedd5f2;border-color:#c2410c;color:#7c2d12}
 .parcel-ownership-other{background:#ede9fef2;border-color:#7c3aed;color:#4c1d95}
 #parcelOwnershipDetail{margin:5px 0 8px;font-size:.78rem}
+
+/* Compact refresh actions beside their dated status. */
+.land-location-page .building-update-status .btn{min-height:28px;padding:3px 9px;font-size:.75rem;line-height:1.3;border:1px solid var(--border-slate);border-radius:5px;background:transparent;color:var(--text-muted);cursor:pointer}
+.land-location-page .building-update-status .btn:hover,.land-location-page .building-update-status .btn:focus-visible{border-color:var(--gold);color:var(--gold-soft)}

@@ -430,7 +430,7 @@
   async function open(block, image) {
     $('parcelOwnershipSnapshot').textContent='소유 구분 현황 · 저장 자료를 불러오는 중입니다.';
     $('parcelBuildingSnapshot').textContent='건물 업데이트 현황 · 저장 자료를 불러오는 중입니다.';
-    const run = ++generation; $('parcelBuildingUpdate').textContent='건물 현황 업데이트'; $('parcelBuildingUpdate').disabled=false; current=block; rows=[]; cells=[]; sourceMeta=null; $('lhParcelSection').hidden=true; parcelVectorRegions=new Map(); if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;
+    const run = ++generation; $('parcelBuildingUpdate').textContent='업데이트'; $('parcelBuildingUpdate').disabled=false; current=block; rows=[]; cells=[]; sourceMeta=null; $('lhParcelSection').hidden=true; parcelVectorRegions=new Map(); if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
     $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
     closeEditor(); $('parcelManager').hidden=!image;
@@ -608,7 +608,7 @@
       }
       if(task.generation===generation)status((task.cancelled?'업데이트 중지 · 저장된 일부 결과 유지 · ':saveErrors?'일부 저장 · 업데이트 날짜 갱신 실패 · ':!anchor?'조회 가능한 지번주소가 없어 업데이트 날짜를 유지했습니다. · ':'업데이트 완료 · ')+'건물 확인 '+found+'건 · 추가 확인 '+review+'건 · 주소 미확인/변경 '+skipped+'건'+(saveErrors?' · 저장 실패 '+saveErrors+'건':''));
     }finally{
-      buildingUpdateRun=null;busy=false;button.textContent='건물 현황 업데이트';button.disabled=false;
+      buildingUpdateRun=null;busy=false;button.textContent='업데이트';button.disabled=false;
     }
   });
 
@@ -679,7 +679,7 @@
       }
       if(task.generation===generation)status((dateSaved?'소유 구분 업데이트 완료 · ':task.cancelled?'업데이트 중지 · 기존 완료 날짜 유지 · ':'일부 조회 또는 주소 미확인 · 기존 완료 날짜 유지 · ')+'조회 결과 '+found+'건 · 조회 실패 '+review+'건 · 주소 미확인/변경 '+skipped+'건'+(saveErrors?' · 저장 실패 '+saveErrors+'건':'')+(lastError?' · '+lastError:''));
     }catch(error){if(task.generation===generation)status(error.message);}
-    finally{ownershipUpdateRun=null;busy=false;button.textContent='소유 구분 업데이트';button.disabled=false;}
+    finally{ownershipUpdateRun=null;busy=false;button.textContent='업데이트';button.disabled=false;}
   });
 
   $('parcelPrint').addEventListener('click',async()=>{
