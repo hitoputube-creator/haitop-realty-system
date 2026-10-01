@@ -235,3 +235,16 @@
 .parcel-print-controls input[type=checkbox]{width:16px;height:16px;min-height:16px;margin:0;padding:0;accent-color:var(--gold)}
 .parcel-print-controls select{width:auto;min-width:88px}
 .parcel-print-controls .btn{min-height:34px;padding:6px 10px;font-size:12px}
+
+/* Print options sit beside the parcel title, with a second row on narrow screens. */
+#parcelEditor .parcel-modal-heading{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px}
+#parcelEditor .parcel-modal-heading .parcel-print-controls{margin:0;padding:0;border:0;justify-content:flex-end;gap:6px}
+#parcelEditor .parcel-modal-heading .parcel-print-controls label{font-size:11px;gap:4px}
+#parcelEditor .parcel-modal-heading .parcel-print-controls select{min-width:70px;padding:4px 6px}
+#parcelEditor .parcel-modal-heading .parcel-print-controls .btn{font-size:11px;padding:6px 8px}
+@media(max-width:600px){
+#parcelEditor .parcel-modal-heading{grid-template-columns:minmax(0,1fr) auto}
+#parcelEditor .parcel-modal-heading #parcelFormTitle{grid-column:1;grid-row:1}
+#parcelEditor .parcel-modal-heading .parcel-modal-close{grid-column:2;grid-row:1}
+#parcelEditor .parcel-modal-heading .parcel-print-controls{grid-column:1/-1;grid-row:2;justify-content:flex-start}
+}
