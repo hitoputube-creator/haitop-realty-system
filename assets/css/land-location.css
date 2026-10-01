@@ -74,3 +74,9 @@
 #mapViewport,#detailDrawing{height:78vh;height:78svh;min-height:480px;max-height:none;box-sizing:border-box}
 @media(max-width:720px){#mapViewport,#detailDrawing{height:74vh;height:74svh;min-height:420px}}
 @media(max-width:720px) and (orientation:landscape){#mapViewport,#detailDrawing{min-height:280px}}
+
+/* Contacts color the parcel itself; simultaneous building/contact views use purple. */
+.parcel-vector-hit.parcel-vector-contact-highlight{fill:#16a34a99!important;stroke:#15803d!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-contact-highlight{fill:#16a34a70;stroke:#15803d;stroke-width:.003}
+.parcel-vector-hit.parcel-vector-contact-highlight.parcel-vector-building-highlight{fill:#9333ea99!important;stroke:#7e22ce!important}
+.parcel-shape.parcel-contact-highlight.parcel-building-building{fill:#9333ea70;stroke:#7e22ce}
