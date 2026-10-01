@@ -155,7 +155,23 @@
   $('parcelNotesMore').addEventListener('click',()=>{if(!busy&&context)load(context,true);});
   $('parcelPhotoClose').addEventListener('click',()=>$('parcelPhotoViewer').close());
   $('parcelPhotoViewer').addEventListener('close',()=>{$('parcelPhotoImage').removeAttribute('src');});
+  async function listForPrint(c,includePhotos){
+    let all=[],next=0;
+    for(;;){
+      const page=await api(filter(c)+'&order=note_date.desc,created_at.desc,id.desc&limit='+pageSize+'&offset='+next);
+      all.push(...page);if(page.length<pageSize)break;next+=page.length;
+    }
+    if(includePhotos){
+      for(const note of all){
+        note.photos=await Promise.all((note.photos||[]).map(async photo=>{
+          try{return {...photo,printUrl:await signed(photo)};}catch(_){return {...photo,printUrl:''};}
+        }));
+      }
+    }
+    return all;
+  }
   window.HitopParcelNotes={
+    listForPrint,
     get busy(){return busy;},
     open(c){if(context&&identity(context)===identity(c))return;context=c;epoch++;notes=[];offset=0;hasMore=false;reset();render();load(c);},
     close(){context=null;epoch++;if($('parcelPhotoViewer').open)$('parcelPhotoViewer').close();}

@@ -607,5 +607,40 @@
     }
   });
 
+  $('parcelPrint').addEventListener('click',async()=>{
+    if(busy||window.HitopParcelNotes?.busy||!selected||!current)return;
+    if(!$('parcelSubblock').value.trim()||!$('parcelNumber').value.trim()){status('필지번호를 먼저 입력해주세요.');return;}
+    const run=generation,target=selected,button=$('parcelPrint');
+    const value=name=>$('parcel-'+name).value.trim();
+    const model={
+      mode:$('parcelPrintMode').value,
+      includeLocation:$('parcelPrintLocation').checked,
+      includeMemo:$('parcelPrintMemo').checked,
+      includePhotos:$('parcelPrintPhotos').checked,
+      title:$('parcelFullNumber').value,address:value('address'),
+      landType:{single:'주거전용',shop:'상가점포',unknown:'미확인'}[value('landType')],
+      area:value('area'),prices:{supplyPrice:readWon(value('supplyPrice')),auctionPrice:readWon(value('auctionPrice')),salePrice:readWon(value('salePrice'))},
+      building:{exists:$('parcel-building').checked,confirmedVacant:selected.data.building==='vacant',name:value('buildingName'),purpose:value('buildingPurpose'),floors:value('buildingFloors'),structure:value('buildingStructure'),approval:value('buildingApproval'),footprint:value('buildingFootprint'),totalArea:value('buildingTotalArea'),deposit:readWon(value('buildingDeposit')),rent:readWon(value('buildingRent'))},
+      owner:value('owner'),contact:value('contact'),note:value('note'),
+      sourceText:!$('parcelSourceDetail').hidden?$('parcelSourceDetail').textContent:''
+    };
+    const image=stage?.querySelector('img');
+    if(model.includeLocation&&image?.src){
+      const positioned=!selected.data.mapPositionUnavailable&&selected.x!=null&&selected.y!=null&&selected.x!==''&&selected.y!=='';
+      model.map={src:image.src,width:image.naturalWidth||image.width,height:image.naturalHeight||image.height,x:positioned?selected.x:null,y:positioned?selected.y:null};
+      if(parcelVectorRegions.has(key(selected))&&buildingVectorViewBox){model.map.path=parcelVectorRegions.get(key(selected));model.map.viewBox=buildingVectorViewBox;}
+      else if(selected.points?.length){model.map.path='M'+selected.points.map(point=>point[0]/318*100+','+point[1]/385*100).join('L')+'Z';}
+    }
+    const c={block_id:current.id,subblock:selected.subblock,parcel:selected.parcel};
+    busy=true;button.disabled=true;status('선택한 인쇄 자료를 준비 중입니다.');
+    try{
+      if(model.includeMemo||model.includePhotos)model.notes=await window.HitopParcelNotes.listForPrint(c,model.includePhotos);
+      if(run!==generation||selected!==target)return;
+      await window.HitopParcelPrint.print(model);
+      status('인쇄창에서 인쇄하거나 PDF로 저장할 수 있습니다.');
+    }catch(error){if(run===generation)status('인쇄 자료를 준비하지 못했습니다. '+error.message);}
+    finally{busy=false;button.disabled=false;}
+  });
+
   window.HitopLandParcels={open,close(){generation++;closeEditor();current=null;overlay=null;areaLabelOverlay=null;parcelVectorRegions=new Map();$('parcelViewControls').hidden=true;$('parcelViewLegend').hidden=true;rows=[];cells=[];sourceMeta=null;if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;}buildingVectorOverlay=null;buildingVectorCandidates=[];buildingVectorViewBox=null;recordsLoaded=false;selected=null;$('parcelSourceBody').replaceChildren();$('parcelList').replaceChildren();$('parcelForm').reset();$('parcelSourceDetail').textContent='';$('parcelModalStatus').textContent='';$('parcelManager').hidden=true;}};
 })();

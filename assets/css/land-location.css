@@ -229,3 +229,9 @@
 
 .parcel-note-date-label{display:flex;align-items:center;gap:10px;margin:0 0 10px;color:var(--text-muted);font-size:12px}
 #parcelNoteDate{width:170px;max-width:100%;color-scheme:dark}
+
+.parcel-print-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-slate)}
+.parcel-print-controls label{display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap}
+.parcel-print-controls input[type=checkbox]{width:16px;height:16px;min-height:16px;margin:0;padding:0;accent-color:var(--gold)}
+.parcel-print-controls select{width:auto;min-width:88px}
+.parcel-print-controls .btn{min-height:34px;padding:6px 10px;font-size:12px}
