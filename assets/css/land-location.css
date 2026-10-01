@@ -69,3 +69,8 @@
   #mapViewport.mouse-panning,#detailDrawing.mouse-panning{cursor:grabbing}
   #mapViewport.mouse-panning *,#detailDrawing.mouse-panning *{cursor:grabbing!important;user-select:none!important}
 }
+
+/* Stable large viewing windows; svh avoids mobile toolbar resizing. */
+#mapViewport,#detailDrawing{height:78vh;height:78svh;min-height:480px;max-height:none;box-sizing:border-box}
+@media(max-width:720px){#mapViewport,#detailDrawing{height:74vh;height:74svh;min-height:420px}}
+@media(max-width:720px) and (orientation:landscape){#mapViewport,#detailDrawing{min-height:280px}}
