@@ -248,3 +248,11 @@
 #parcelEditor .parcel-modal-heading .parcel-modal-close{grid-column:2;grid-row:1}
 #parcelEditor .parcel-modal-heading .parcel-print-controls{grid-column:1/-1;grid-row:2;justify-content:flex-start}
 }
+
+
+/* Ownership text badges coexist with building colors and area labels. */
+.parcel-ownership-label{padding:.08em .3em;border-radius:.25em;background:#f8fafce8;text-shadow:none;border:1px solid #64748b;color:#334155}
+.parcel-ownership-person{background:#dcfce7f2;border-color:#15803d;color:#14532d}
+.parcel-ownership-corporation{background:#ffedd5f2;border-color:#c2410c;color:#7c2d12}
+.parcel-ownership-other{background:#ede9fef2;border-color:#7c3aed;color:#4c1d95}
+#parcelOwnershipDetail{margin:5px 0 8px;font-size:.78rem}
