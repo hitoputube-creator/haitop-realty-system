@@ -221,3 +221,8 @@
 #parcelPhotoClose{display:block;margin:0 0 8px auto}
 #parcelPhotoImage{display:block;max-width:100%;max-height:calc(100dvh - 100px);object-fit:contain;margin:auto}
 @media(max-width:600px){#parcelEditor .parcel-fields label.parcel-price-label{grid-template-columns:128px minmax(0,1fr)}.parcel-note-meta{align-items:flex-start}.parcel-note-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}.parcel-note-photo{height:85px}}
+
+/* Keep the manual refresh beside the saved building status date. */
+.building-update-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+.building-update-status .source-note{margin:0;min-width:0;overflow-wrap:anywhere}
+.building-update-status .btn{flex-shrink:0}
