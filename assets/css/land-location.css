@@ -163,3 +163,9 @@
 .parcel-stage{container-type:inline-size}
 .parcel-area-label-overlay{position:absolute;inset:0;z-index:3;pointer-events:none}
 .parcel-area-label{position:absolute;display:block;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;font-family:inherit;font-size:clamp(5px,.65cqw,40px);font-weight:600;font-style:normal;font-stretch:normal;line-height:1.2;letter-spacing:0;color:#102238;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff}
+
+/* SVG parcel clicks do not leave the browser's rectangular focus outline. */
+#detailDrawing svg:focus,#detailDrawing svg :focus{outline:none!important}
+/* Keyboard focus follows the parcel boundary instead of a rectangular box. */
+#detailDrawing .parcel-vector-hit:focus-visible{stroke:#a67200!important;stroke-width:1.2!important;vector-effect:non-scaling-stroke}
+#detailDrawing .parcel-shape:focus-visible{stroke:#a67200;stroke-width:.003}
