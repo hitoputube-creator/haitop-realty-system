@@ -6,7 +6,7 @@
   let current = null, rows = [], cells = [], selected = null, stage = null, overlay = null, generation = 0, placing = false, busy = false;
   let sourceMeta = null, buildingVectorOverlay = null, buildingVectorCandidates = [], buildingVectorUrl = null, buildingVectorViewBox = null, recordsLoaded = false;
   let parcelVectorRegions = new Map();
-  const views = {area:false, building:false, contact:false};
+  const views = {area:false, building:false, contact:false, lh:false};
   const contactStates = {
     contact: {label:'연락처 있음', symbol:'●'},
     registered: {label:'자료 있음 · 연락처 없음', symbol:'○'},
@@ -14,19 +14,21 @@
     unknown: {label:'등록 상태 확인 불가', symbol:'?'}
   };
   function buildingState(row) { return ['building','vacant'].includes(row.data.building) ? row.data.building : 'unknown'; }
+  function hasLh(row) { return !!(current&&window.HitopLandLh?.find(current.id,row)); }
   function hasContact(row) { return /\d{7,}/.test(String(row.data.contact || '').replace(/\D/g,'')); }
   function contactState(row) { return hasContact(row) ? 'contact' : !recordsLoaded ? 'unknown' : row.id ? 'registered' : 'missing'; }
   function viewLegend() {
     const parts=[];
     if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
     if(views.contact) parts.push('연락처 있음: 초록색 필지' + (!recordsLoaded ? ' · 저장 자료를 불러오지 못했습니다' : ''));
+    if(views.lh)parts.push('LH 공고중: 주황색 필지 · 연락처/건물 표시를 함께 켜면 해당 표시색 우선');
     if(views.building&&views.contact)parts.push('건물과 연락처 모두 있음: 보라색');
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
   function addMapLabel(row) {
     const area=Number(row.data.area), parts=[];
     if(views.area && Number.isFinite(area) && area>0) parts.push(views.area==='sqm'?area.toLocaleString('ko-KR',{maximumFractionDigits:1})+'㎡':(area/3.305785).toFixed(1)+'평');
-    if(!parts.length)return;
+    if(row.data.mapPositionUnavailable || !parts.length || (!row.points?.length && (row.x==null || row.y==null)))return;
     let x=Number(row.x)/100,y=Number(row.y)/100;
     if(row.points?.length){x=row.points.reduce((n,p)=>n+p[0],0)/row.points.length/318;y=row.points.reduce((n,p)=>n+p[1],0)/row.points.length/385;}
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
@@ -188,12 +190,13 @@
     layer.setAttribute('preserveAspectRatio','none');layer.classList.add('parcel-vector-hit-layer');
     if(parcelVectorRegions.size){
       ordered.forEach(row=>{
-        if(!matches(row))return;
+        if(!matches(row)||row.data.mapPositionUnavailable)return;
         const d=parcelVectorRegions.get(key(row));if(!d)return;
         const shape=document.createElementNS(ns,'path');
         shape.setAttribute('d',d);shape.classList.add('parcel-vector-hit');
         if(views.building&&buildingState(row)==='building')shape.classList.add('parcel-vector-building-highlight');
         if(views.contact&&hasContact(row))shape.classList.add('parcel-vector-contact-highlight');
+        if(views.lh&&hasLh(row))shape.classList.add('parcel-vector-lh-highlight');
         shape.setAttribute('role','button');shape.setAttribute('tabindex','0');
         shape.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+contactStates[contactState(row)].label);
         shape.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(row);});
@@ -206,7 +209,7 @@
     // identical click target for every parcel: the last one would win everywhere.
     const groups=new Map();
     ordered.forEach(row=>{
-      if(!matches(row))return;
+      if(!matches(row)||row.data.mapPositionUnavailable)return;
       const sourceShape=findVectorParcelShape(row);
       if(!sourceShape)return;
       if(!groups.has(sourceShape))groups.set(sourceShape,[]);
@@ -221,6 +224,7 @@
       if(matrix)clone.setAttribute('transform',`matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})`);
       clone.classList.add('parcel-vector-hit');
       if(views.building&&parcelRows.length===1&&buildingState(row)==='building')clone.classList.add('parcel-vector-building-highlight');
+      if(views.lh&&parcelRows.length===1&&hasLh(row))clone.classList.add('parcel-vector-lh-highlight');
       if(views.contact&&parcelRows.length===1&&hasContact(row))clone.classList.add('parcel-vector-contact-highlight');
       const registration=contactStates[contactState(row)].label;
       clone.setAttribute('role','button');clone.setAttribute('tabindex','0');
@@ -298,8 +302,9 @@
     selected = {...row, data: {...row.data}};
     $('parcelForm').reset();
     $('parcelSubblock').value = row.subblock || ''; $('parcelNumber').value = row.parcel || '';
-    $('parcelSubblock').readOnly = !!(row.points || row.sourceCell); $('parcelNumber').readOnly = !!(row.points || row.sourceCell);
-    const values = {...{landType: current.types?.[0] || 'unknown',building:''},...row.data};
+    $('parcelSubblock').readOnly = !!(row.points || row.sourceCell || hasLh(row)); $('parcelNumber').readOnly = !!(row.points || row.sourceCell || hasLh(row));
+    const official=window.HitopLandLh?.find(current.id,row);
+    const values = {...{landType: current.types?.[0] || 'unknown',building:''},...row.data,...(!row.id&&official?{landType:official.landType}:{})};
     if (!['building','vacant'].includes(values.building)) values.building = '';
     const detail=$('parcelSourceDetail'); detail.hidden=!row.source;
     if(row.source) detail.textContent='2021년 9월 원본 · '+row.source.status+'\n건폐율 '+row.source.coverage+'% 이하 · 용적률 '+row.source.floorRatio+'% 이하 · '+row.source.floors+'층 이하'+(row.source.unitPriceWon?' · 단가 '+row.source.unitPriceWon.toLocaleString('ko-KR')+'원/㎡ · 평당가 '+Math.round(row.source.unitPriceWon*3.305785).toLocaleString('ko-KR')+'원/평':'')+'\n원본 PDF '+row.sourcePage+'페이지';
@@ -307,6 +312,7 @@
       if (name === 'building') $('parcel-building').checked = values.building === 'building';
       else $('parcel-' + name).value = priceFields.includes(name) ? money(values[name] == null ? null : Number(values[name]) * 10000) : values[name] ?? '';
     });
+    window.HitopLandLh?.renderDetail(current.id,row);
     updateArea();
     updateParcelLabel();
     $('parcelEditor').hidden = false; $('parcelDelete').hidden = !row.id;
@@ -317,6 +323,7 @@
   }
   function draw() {
     overlay.replaceChildren(); $('parcelList').replaceChildren(); viewLegend();
+    window.HitopLandLh?.setMapViews(current.id,rows,views);
     const combined = new Map(cells.map(cell => [key(cell),{...cell,data:{...cell.data}}]));
     rows.forEach(row => {
       const base=combined.get(key(row));
@@ -340,14 +347,16 @@
     let count = 0;
     ordered.forEach(row => {
       if (!matches(row)) return; count++;
+      const registration = contactStates[contactState(row)].label;
       const useVectorHit=!!(sourceMeta&&buildingVectorCandidates.length);
-      if(!useVectorHit){
+      const positioned=!row.data.mapPositionUnavailable&&Number.isFinite(Number(row.x))&&Number.isFinite(Number(row.y))&&row.x!=null&&row.y!=null;
+      if(!useVectorHit&&positioned){
         const shape = document.createElementNS(ns,row.points ? 'polygon' : 'circle');
         if (row.points) shape.setAttribute('points',row.points.map(p => p[0]/318 + ',' + p[1]/385).join(' '));
         else {shape.setAttribute('cx',Number(row.x)/100);shape.setAttribute('cy',Number(row.y)/100);shape.setAttribute('r',row.sourceCell?'.006':'.015');}
         shape.classList.add('parcel-shape'); if(views.building && buildingState(row)==='building' && row.points) shape.classList.add('parcel-building-building');
+        if(views.lh&&hasLh(row)&&row.points)shape.classList.add('parcel-lh-highlight');
         if(views.contact&&hasContact(row)&&row.points)shape.classList.add('parcel-contact-highlight');
-        const registration = contactStates[contactState(row)].label;
         shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료 · ' + registration);
         const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + ' · ' + registration;shape.append(title);
         shape.addEventListener('click',event=>{event.stopPropagation();show(row);});
@@ -381,7 +390,7 @@
     const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent=row.id?'자료 수정':'자료 보기·등록';btn.addEventListener('click',()=>show(row));td.append(badge,btn);tr.append(td);$('parcelSourceBody').append(tr);
   }
   async function open(block, image) {
-    const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; parcelVectorRegions=new Map(); if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;
+    const run = ++generation; current=block; rows=[]; cells=[]; sourceMeta=null; $('lhParcelSection').hidden=true; parcelVectorRegions=new Map(); if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
     $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
     closeEditor(); $('parcelManager').hidden=!image;
@@ -404,7 +413,8 @@
       const results = await Promise.allSettled([
         request('?block_id=eq.'+encodeURIComponent(block.id)+'&order=subblock.asc,parcel.asc'),
         block.id==='third-C1' ? window.HitopLandBlockSource.load(block.id) :
-        block.id==='third-C18' ? fetch('assets/images/land/blocks/third-C18-parcels.json').then(r=>{if(!r.ok)throw Error('필지 위치를 불러오지 못했습니다.');return r.json();}) : Promise.resolve([])
+        block.id==='third-C18' ? fetch('assets/images/land/blocks/third-C18-parcels.json').then(r=>{if(!r.ok)throw Error('필지 위치를 불러오지 못했습니다.');return r.json();}) : Promise.resolve([]),
+        window.HitopLandLh.load()
       ]);
       if(run!==generation)return;
       rows=results[0].status==='fulfilled'?results[0].value:[];
@@ -415,6 +425,10 @@
           $('parcelSubblockFilter').replaceChildren(new Option('C1 전체','all'),...sourceMeta.subblocks.map(g=>new Option('C1-'+g.number,String(g.number))));
         }else cells=results[1].value;
       }
+      if(results[2].status==='fulfilled')window.HitopLandLh.renderList(block.id,official=>{
+        const cell=cells.find(r=>key(r)===key(official));const record=rows.find(r=>key(r)===key(official));
+        show({...cell,...record,subblock:official.subblock,parcel:official.parcel,data:{...(!cell&&!record?{mapPositionUnavailable:true}:{}),...cell?.data,landType:official.landType,...record?.data}});
+      });else{$('lhParcelSection').hidden=false;$('lhParcelSection').textContent='LH 자료를 불러오지 못했습니다. 다시 열어주세요.';}
       draw();status(results[0].status==='rejected'?'원본 도면·목록은 확인할 수 있습니다. '+(results[0].reason.message||'저장 자료를 불러오지 못했습니다.'):results[1].status==='rejected'?results[1].reason.message:'필지를 선택해 세부자료를 확인하세요.');
     } catch(error) { if(run===generation)status(error.message || '도면의 필지 위치를 불러오지 못했습니다.'); }
   }
@@ -426,14 +440,14 @@
   }
   $('parcelAreaPyeongToggle').addEventListener('click',()=>setAreaView('pyeong'));
   $('parcelAreaSqmToggle').addEventListener('click',()=>setAreaView('sqm'));
-  ['building','contact'].forEach(name=>{const id='parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
+  ['building','contact','lh'].forEach(name=>{const id=name==='lh'?'parcelLhToggle':'parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
   $('parcelForm').addEventListener('submit',async event=>{
     event.preventDefault(); if(busy || !selected)return;
     const run=generation,blockId=current.id;
     const subblock=$('parcelSubblock').value.trim(),parcel=$('parcelNumber').value.trim();
     if(!subblock||!parcel){status('소블럭과 필지번호를 입력해주세요.');return;}
-    const data={};fields.forEach(name=>{const value=name==='building'?($('parcel-building').checked?'building':'vacant'):$('parcel-'+name).value.trim();data[name]=priceFields.includes(name)?(value===''?null:readWon(value)/10000):name==='area'?(value===''?null:Number(value)):value;});
-    const body={block_id:blockId,subblock,parcel,x:selected.x,y:selected.y,data,updated_at:new Date().toISOString()};
+    const data={...selected.data};fields.forEach(name=>{const value=name==='building'?($('parcel-building').checked?'building':'vacant'):$('parcel-'+name).value.trim();data[name]=priceFields.includes(name)?(value===''?null:readWon(value)/10000):name==='area'?(value===''?null:Number(value)):value;});
+    const body={block_id:blockId,subblock,parcel,x:selected.x??0,y:selected.y??0,data,updated_at:new Date().toISOString()};
     busy=true;$('parcelSave').disabled=true;status('저장 중입니다.');
     try{
       const result=await request(selected.id?'?id=eq.'+encodeURIComponent(selected.id):'',{method:selected.id?'PATCH':'POST',body:JSON.stringify(body)});

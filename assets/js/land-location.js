@@ -20,8 +20,8 @@
   const thirdTypes = {
     1: ['shop'], 2: ['shop'], 3: ['shop'], 4: ['shop'], 10: ['shop'], 19: ['shop'],
     5: ['single'], 6: ['single'], 7: ['single'], 8: ['single'], 9: ['single'],
-    11: ['single'], 12: ['single'], 13: ['single'], 14: ['single'], 15: ['single'],
-    16: ['single'], 17: ['single'], 18: ['single']
+    11: ['single'], 12: ['single','shop'], 13: ['single','shop'], 14: ['single'], 15: ['single'],
+    16: ['single'], 17: ['single'], 18: ['single','shop']
   };
   const typeLabels = { single: '주거전용', shop: '상가점포', unknown: '미분류' };
   const blocks = Object.entries(overall).flatMap(([group, entries]) => entries.map(([number,x,y]) => ({
