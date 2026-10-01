@@ -5,8 +5,8 @@
 (function () {
   'use strict';
   const groups = {
-    'second-shop': { label: '운정2지구 상가점포택지', color: 'shop' },
-    'second-multi': { label: '운정2지구 다가구택지', color: 'multi' },
+    'second-shop': { label: '운정1·2지구 상가점포택지', color: 'shop' },
+    'second-multi': { label: '운정1·2지구 주거전용택지', color: 'multi' },
     third: { label: '운정3지구 택지', color: 'third' }
   };
   const overall = {
@@ -25,11 +25,14 @@
     16: ['single'], 17: ['single'], 18: ['single','shop']
   };
   const typeLabels = { single: '주거전용', shop: '상가점포', unknown: '미분류' };
+  // Household counts must be supplied by verified block material; mixed blocks may list several.
+  const verifiedHouseholds = {};
   const blocks = Object.entries(overall).flatMap(([group, entries]) => entries.map(([number,x,y]) => ({
     id: group + '-C' + number, group, number, name: 'C' + number,
     overall: [x / 1920 * 100, y / 1293 * 100],
     third: group === 'third' ? thirdByNumber.get(number) : null,
-    types: group === 'third' ? (thirdTypes[number] || []) : [],
+    types: group === 'third' ? (thirdTypes[number] || []) : [group === 'second-shop' ? 'shop' : 'single'],
+    households: verifiedHouseholds[group + '-C' + number] || [],
     drawing: group === 'third' ? (number === 1 ? 'private:C1' : 'assets/images/land/blocks/third-C' + number + '-hires.webp') : null
   })));
   const byId = new Map(blocks.map(block => [block.id,block]));
@@ -46,7 +49,7 @@
     mapFitted=true;$('mapError').hidden=true;$('mapLoading').hidden=true;
     image.width=2048;image.height=1416;image.hidden=false;image.src=source;
   }
-  let view = 'all' , group = 'all', landType = 'all', zoom = 1, suppressClickUntil = 0;
+  let view = 'all' , group = 'all', landType = 'all', households = 'all', zoom = 1, suppressClickUntil = 0;
   let drawingZoom = 1;
   let mapFitted = true, drawingFitted = true;
   const minZoom = .1;
@@ -79,9 +82,13 @@
   }
   function readState() {
     const p = new URLSearchParams(location.search);
-    view = p.get('view') === 'third' ? 'third' : 'all';
-    group = view === 'third' ? 'third' : (groups[p.get('group')] ? p.get('group') : 'all');
-    landType = (view === 'third' || group === 'third') && ['single','shop'].includes(p.get('landType')) ? p.get('landType') : 'all';
+    const legacyGroup = p.get('group');
+    view = ['second','third'].includes(p.get('view')) ? p.get('view') : 'all';
+    if (view === 'all' && legacyGroup === 'third') view = 'third';
+    group = view === 'third' ? 'third' : 'all';
+    landType = ['single','shop'].includes(p.get('landType')) ? p.get('landType') :
+      legacyGroup === 'second-shop' ? 'shop' : legacyGroup === 'second-multi' ? 'single' : 'all';
+    households = landType === 'single' && ['1','3','5'].includes(p.get('households')) ? p.get('households') : 'all';
     return byId.get(p.get('block')) || null;
   }
   function navigate(block, replace) {
@@ -89,6 +96,7 @@
     url.searchParams.set('view',view);
     if (group === 'all') url.searchParams.delete('group'); else url.searchParams.set('group',group);
     if (landType === 'all') url.searchParams.delete('landType'); else url.searchParams.set('landType',landType);
+    if (households === 'all') url.searchParams.delete('households'); else url.searchParams.set('households',households);
     if (block) url.searchParams.set('block',block.id); else url.searchParams.delete('block');
     history[replace ? 'replaceState' : 'pushState']({},'',url);
     render(block);
@@ -119,15 +127,14 @@
     $('overview').hidden = !!block;
     $('blockDetail').hidden = !block;
     document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.view === view)));
-    document.querySelectorAll('[data-group]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.group === group)));
-    $('groupFilters').hidden = view === 'third';
-    const showTypeFilters = view === 'third' || group === 'third';
-    $('thirdTypeFilters').hidden = !showTypeFilters;
-    $('viewFilterLabel').textContent = view === 'third' ? '운정3지구' : '운정신도시 전체';
-    $('groupFilterLabel').textContent = group === 'all' ? '전체 블럭' : ({'second-shop':'2지구 상가점포','second-multi':'2지구 다가구',third:'3지구 택지'})[group];
-    $('typeFilterLabel').textContent = landType === 'all' ? '전체 유형' : typeLabels[landType];
+    const showTypeFilters = true;
+    $('thirdTypeFilters').hidden = false;
+    $('householdFilters').hidden = landType !== 'single';
+    $('viewFilterLabel').textContent = {all:'운정신도시 전체',second:'운정1·2지구',third:'운정3지구'}[view];
+    $('typeFilterLabel').textContent = landType === 'all' ? '전체' : typeLabels[landType];
+    $('householdFilterLabel').textContent = households === 'all' ? '전체' : households + '가구';
+    document.querySelectorAll('[data-households]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.households === households)));
     document.querySelectorAll('.map-filter-dropdown').forEach(filter => { filter.open = false; });
-
     document.querySelectorAll('[data-land-type]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.landType === landType)));
     if (block) {
       $('detailGroup').textContent = groups[block.group].label;
@@ -179,11 +186,12 @@
     document.title = '하이탑부동산 | 택지 위치도';
     setOverviewMap();
     image.alt = view==='third'?'LH 리플렛 운정3지구 블럭 위치도':'LH 리플렛 운정 전체 블럭 위치도';
-    const groupBlocks = blocks.filter(b => group === 'all' || b.group === group);
-    const visible = groupBlocks.filter(b => !showTypeFilters || landType === 'all' || (landType === 'unknown' ? !b.types.length : b.types.includes(landType)));
-    const unknownCount = groupBlocks.filter(b => b.group === 'third' && !b.types.length).length;
-    $('typeNotice').hidden = !showTypeFilters || !unknownCount;
-    $('typeNotice').textContent = '유형 확인이 필요한 블럭 ' + unknownCount + '개가 있습니다. 상세 자료로 확인 후 분류합니다.';
+    const groupBlocks = blocks.filter(b => view === 'all' || (view === 'third' ? b.group === 'third' : b.group !== 'third'));
+    const typeBlocks = groupBlocks.filter(b => landType === 'all' || b.types.includes(landType));
+    const visible = typeBlocks.filter(b => households === 'all' || b.households.includes(Number(households)));
+    const unverified = typeBlocks.filter(b => landType === 'single' && !b.households.length).length;
+    $('typeNotice').hidden = households === 'all' || !unverified;
+    $('typeNotice').textContent = '가구수 확인 자료가 없는 블럭 ' + unverified + '개는 가구수별 결과에서 제외됩니다. 가구수 자료 등록 후 조회할 수 있습니다.';
     $('hotspots').replaceChildren();
     let mappedCount=0;
     visible.forEach(b => {
@@ -221,7 +229,7 @@
     });
     if (!visible.length) {
       const empty = document.createElement('p');
-      empty.textContent = '이 유형에 해당하는 블럭이 없습니다. 전체를 선택해주세요.';
+      empty.textContent = households === 'all' ? '선택한 조건에 해당하는 블럭이 없습니다. 전체를 선택해주세요.' : '선택한 가구수로 확인된 블럭이 없습니다. 가구수 전체를 선택해주세요.';
       $('blockList').appendChild(empty);
     }
     if (mapFitted && !image.hidden) fitMap();
@@ -244,13 +252,14 @@
     applyZoom(); viewport.scrollLeft = left; viewport.scrollTop = top;
   }
   document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click',() => {
-    view = button.dataset.view; group = view === 'third' ? 'third' : 'all'; landType = 'all'; navigate(null);
+    view = button.dataset.view; group = view === 'third' ? 'third' : 'all'; navigate(null);
   }));
-  document.querySelectorAll('[data-group]').forEach(button => button.addEventListener('click',() => {
-    group = button.dataset.group; landType = 'all'; navigate(null);
-  }));
+
   document.querySelectorAll('[data-land-type]').forEach(button => button.addEventListener('click',() => {
-    landType = button.dataset.landType; navigate(null);
+    landType = button.dataset.landType; households = 'all'; navigate(null);
+  }));
+  document.querySelectorAll('[data-households]').forEach(button => button.addEventListener('click',() => {
+    households = button.dataset.households; navigate(null);
   }));
   $('backToMap').addEventListener('click',() => { navigate(null); viewport.focus({preventScroll:true}); });
   $('detailBack').addEventListener('click',() => { navigate(null); viewport.focus({preventScroll:true}); });

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20261001-dropdown-1">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20261001-filter-hierarchy-1">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -31,27 +31,23 @@
           <summary aria-label="지도 범위 선택"><span class="filter-caption">지도 범위</span><span id="viewFilterLabel">운정신도시 전체</span><span class="filter-arrow" aria-hidden="true">⌄</span></summary>
           <div class="map-filter-menu" role="group" aria-label="지도 범위">
         <button class="btn" type="button" data-view="all" aria-pressed="true">운정신도시 전체</button>
+        <button class="btn" type="button" data-view="second" aria-pressed="false">운정1·2지구</button>
         <button class="btn" type="button" data-view="third" aria-pressed="false">운정3지구</button>
       </div>
         </details>
-        <details class="map-filter-dropdown" id="groupFilters">
-          <summary aria-label="택지 구분 선택"><span class="filter-caption">택지 구분</span><span id="groupFilterLabel">전체 블럭</span><span class="filter-arrow" aria-hidden="true">⌄</span></summary>
+<details class="map-filter-dropdown" id="thirdTypeFilters">
+          <summary aria-label="택지 구분 선택"><span class="filter-caption">택지 구분</span><span id="typeFilterLabel">전체</span><span class="filter-arrow" aria-hidden="true">⌄</span></summary>
           <div class="map-filter-menu" role="group" aria-label="택지 구분">
-      <button class="btn" type="button" data-group="all" aria-pressed="true">전체 블럭</button>
-      <button class="btn" type="button" data-group="second-shop" aria-pressed="false"><span class="legend-dot shop"></span>2지구 상가점포</button>
-      <button class="btn" type="button" data-group="second-multi" aria-pressed="false"><span class="legend-dot multi"></span>2지구 다가구</button>
-      <button class="btn" type="button" data-group="third" aria-pressed="false"><span class="legend-dot third"></span>3지구 택지</button>
-    </div>
-        </details>
-        <details class="map-filter-dropdown" id="thirdTypeFilters" hidden>
-          <summary aria-label="택지 유형 선택"><span class="filter-caption">택지 유형</span><span id="typeFilterLabel">전체 유형</span><span class="filter-arrow" aria-hidden="true">⌄</span></summary>
-          <div class="map-filter-menu" role="group" aria-label="택지 유형">
       <button class="btn" type="button" data-land-type="all" aria-pressed="true">전체</button>
       <button class="btn" type="button" data-land-type="single" aria-pressed="false"><span class="legend-dot single-land"></span>주거전용</button>
       <button class="btn" type="button" data-land-type="shop" aria-pressed="false"><span class="legend-dot shop-land"></span>상가점포</button>
     </div>
         </details>
-      </div>
+      <details class="map-filter-dropdown" id="householdFilters" hidden>
+<summary aria-label="가구수 선택"><span class="filter-caption">가구수</span><span id="householdFilterLabel">전체</span><span class="filter-arrow" aria-hidden="true">⌄</span></summary>
+<div class="map-filter-menu" role="group" aria-label="주거전용 가구수"><button class="btn" type="button" data-households="all" aria-pressed="true">전체</button><button class="btn" type="button" data-households="1" aria-pressed="false">1가구</button><button class="btn" type="button" data-households="3" aria-pressed="false">3가구</button><button class="btn" type="button" data-households="5" aria-pressed="false">5가구</button></div>
+</details>
+</div>
       <div class="zoom-controls" role="group" aria-label="위치도 확대 축소">
         <button class="btn" id="zoomOut" type="button" aria-label="위치도 축소">−</button>
         <output id="zoomLabel" aria-live="polite">100%</output>
@@ -116,6 +112,6 @@
 <script src="assets/js/land-block-source.js?v=20260930-touch-1"></script>
 <script src="assets/js/land-lh.js?v=20261001-1"></script>
 <script src="assets/js/land-parcels.js?v=20261001-lh-1"></script>
-<script src="assets/js/land-location.js?v=20261001-dropdown-1"></script>
+<script src="assets/js/land-location.js?v=20261001-filter-hierarchy-1"></script>
 </body>
 </html>
