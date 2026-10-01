@@ -14,7 +14,8 @@
     'second-multi': [[4,1203,693],[7,1234,495],[8,1227,573],[10,1094,1012],[11,994,1118],[13,1155,566],[15,1082,692],[16,1118,718]],
     third: [[1,1450,390],[2,1070,107],[3,789,765],[4,923,1070],[5,785,1200],[6,593,1138],[7,528,1100],[8,531,1060],[9,606,886],[10,463,890],[11,359,830],[12,306,795],[13,388,704],[14,638,593],[15,658,427],[16,628,403],[17,599,486],[18,816,381],[19,790,821]]
   };
-  // Both views use the supplied base map; the third-district view filters the same coordinates.
+  // Exact label centers extracted from the latest LH vector PDF; unmatched old blocks stay in the list.
+  const lhAnchors = {"C1":[61.1400281,30.2211997],"C2":[41.9662258,11.6226205],"C3":[28.535496,56.8720294],"C5":[28.2130782,86.6725061],"C8":[16.182851,78.3922173],"C7":[15.4876369,80.6582526],"C6":[18.8730273,82.5537349],"C9":[21.0997273,64.8102713],"C10":[13.4254071,65.4801067],"C11":[7.2893878,60.2354471],"C12":[4.4480779,58.7675154],"C13":[9.2138209,52.2116944],"C15":[22.0097898,33.2710792],"C16":[20.6697395,31.6178745],"C18":[29.7579005,29.9504124],"C4":[35.1249163,78.1926932]};
   const thirdByNumber = new Map(overall.third.map(row => [row[0], row]));
   // Fill only from verified block/parcel material. A mixed block can contain both types.
   const thirdTypes = {
@@ -36,7 +37,36 @@
   const viewport = $('mapViewport');
   const stage = $('mapStage');
   const image = $('mapImage');
-  let view = 'all', group = 'all', landType = 'all', zoom = 1, suppressClickUntil = 0;
+  let mapMode = null, lhVectorUrl = null, lhVectorPending = null;
+  function loadLhVector() {
+    if (!lhVectorPending) lhVectorPending = fetch('assets/images/land/lh-unjeong3-overview.svg.gz?v=20261001-vector-1')
+      .then(async response => {
+        if (!response.ok) throw Error('LH 원본을 불러오지 못했습니다.');
+        const blob=await response.blob();
+        const signature=new Uint8Array(await blob.slice(0,2).arrayBuffer());
+        const compressed=signature[0]===31 && signature[1]===139;
+        if (compressed && typeof DecompressionStream === 'undefined') throw Error('이 브라우저에서는 아래 LH 원본 PDF 버튼을 이용해주세요.');
+        const source=compressed?await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).text():await blob.text();
+        if (!source.trimStart().startsWith('<svg')) throw Error('LH 원본 도면 형식을 확인하지 못했습니다.');
+        lhVectorUrl = URL.createObjectURL(new Blob([source], {type:'image/svg+xml'}));
+        return lhVectorUrl;
+      }).catch(error => {lhVectorPending=null;throw error;});
+    return lhVectorPending;
+  }
+  function setOverviewMap(legacy) {
+    const mode=legacy?'legacy':'lh';
+    $('overviewMapSource').textContent=legacy?'기존 운정2 안내도 · 기존 자료 위치 표시':'LH 운정3 공고 첨부 원본 · 벡터 도면 · 확대해도 선과 글자 유지';
+    $('overviewMapNotice').textContent=legacy?'운정2 자료는 기존 안내도에서 표시합니다.':'LH 원본에서 확인된 운정3 블럭만 지도에 표시합니다. 기존 운정2 자료와 C14·C17·C19는 아래 목록에서 열 수 있습니다.';
+    if (mapMode===mode && (legacy || lhVectorUrl)) return;
+    mapMode=mode;stage.classList.toggle('lh-vector-map',!legacy);mapFitted=true;$('mapError').hidden=true;
+    image.width=legacy?2048:1191;image.height=legacy?1380:842;
+    if (legacy) {image.hidden=false;$('hotspots').hidden=false;$('mapLoading').hidden=true;image.src='assets/images/land/unjeong-base-20260930.jpg';return;}
+    image.hidden=true;$('hotspots').hidden=true;$('mapLoading').hidden=false;
+    loadLhVector().then(url=>{if(mapMode!=='lh')return;image.src=url;image.hidden=false;$('mapLoading').hidden=true;})
+      .catch(error=>{if(mapMode!=='lh')return;$('mapLoading').hidden=true;$('mapError').textContent=error.message;$('mapError').hidden=false;});
+  }
+  window.addEventListener('pagehide',event=>{if(!event.persisted&&lhVectorUrl)URL.revokeObjectURL(lhVectorUrl);});
+  let view = 'all' , group = 'all', landType = 'all', zoom = 1, suppressClickUntil = 0;
   let drawingZoom = 1;
   let mapFitted = true, drawingFitted = true;
   const minZoom = .1;
@@ -162,28 +192,22 @@
     }
     window.HitopLandParcels?.close();
     document.title = '하이탑부동산 | 택지 위치도';
-    const nextImage = 'assets/images/land/unjeong-base-20260930.jpg';
-    if (image.getAttribute('src') !== nextImage) {
-      $('mapError').hidden = true;
-      image.src = nextImage;
-      image.width = 2048;
-      image.height = 1380;
-      mapFitted = true;
-    }
-    image.alt = view === 'third' ? '운정3지구 C블럭 위치도' : '운정신도시 전체 택지블럭 위치도';
+    const legacy = view==='all' && (group==='second-shop' || group==='second-multi');
+    setOverviewMap(legacy);
+    image.alt = legacy?'기존 운정2 택지블럭 안내도':'LH 원본 파주운정3 전체 획지분할도';
     const groupBlocks = blocks.filter(b => group === 'all' || b.group === group);
     const visible = groupBlocks.filter(b => !showTypeFilters || landType === 'all' || (landType === 'unknown' ? !b.types.length : b.types.includes(landType)));
     const unknownCount = groupBlocks.filter(b => b.group === 'third' && !b.types.length).length;
     $('typeNotice').hidden = !showTypeFilters || !unknownCount;
     $('typeNotice').textContent = '유형 확인이 필요한 블럭 ' + unknownCount + '개가 있습니다. 상세 자료로 확인 후 분류합니다.';
     $('hotspots').replaceChildren();
+    let mappedCount=0;
     visible.forEach(b => {
-      if (view === 'third') {
-        if (!b.third) return;
-        $('hotspots').appendChild(hotspot(b,b.overall[0],b.overall[1],false));
-      } else $('hotspots').appendChild(hotspot(b,b.overall[0],b.overall[1],false));
+      const point=legacy?b.overall:(b.group==='third'?lhAnchors[b.name]:null);
+      if(!point)return;
+      $('hotspots').appendChild(hotspot(b,point[0],point[1],false));mappedCount++;
     });
-    $('blockCount').textContent = visible.length + '개 블럭';
+    $('blockCount').textContent = '목록 '+visible.length+'개 · 지도 '+mappedCount+'개';
     $('thirdMapNote').hidden = view !== 'third';
     $('blockList').replaceChildren();
     Object.entries(groups).forEach(([key, meta]) => {
@@ -216,7 +240,7 @@
       empty.textContent = '이 유형에 해당하는 블럭이 없습니다. 전체를 선택해주세요.';
       $('blockList').appendChild(empty);
     }
-    if (mapFitted) fitMap();
+    if (mapFitted && !image.hidden) fitMap();
   }
   function applyZoom() {
     stage.style.width = zoom * 100 + '%';
@@ -273,7 +297,7 @@
   $('drawingZoomOut').addEventListener('click',() => setDrawingZoom(nextZoomStep(drawingZoom, -1)));
   $('drawingZoomFit').addEventListener('click',fitDrawing);
   image.addEventListener('error',() => { $('mapError').hidden = false; });
-  image.addEventListener('load',() => { $('mapError').hidden = true; if (mapFitted) fitMap(); });
+  image.addEventListener('load',() => { $('hotspots').hidden=false; $('mapError').hidden = true; if (mapFitted) fitMap(); });
   window.addEventListener('resize',() => {
     if (!$('overview').hidden && mapFitted) fitMap();
     if (!$('blockDetail').hidden && drawingFitted) fitDrawing();
