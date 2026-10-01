@@ -9,7 +9,7 @@
   const views = {area:false, building:false, contact:false, lh:false};
   const contactStates = {
     contact: {label:'연락처 있음', symbol:'●'},
-    registered: {label:'자료 있음 · 연락처 없음', symbol:'○'},
+    registered: {label:'자료 있음 · 연락처 없음', symbol:'×'},
     missing: {label:'자료 미등록', symbol:'×'},
     unknown: {label:'등록 상태 확인 불가', symbol:'?'}
   };
@@ -20,9 +20,8 @@
   function viewLegend() {
     const parts=[];
     if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
-    if(views.contact) parts.push('연락처 있음: 초록색 필지' + (!recordsLoaded ? ' · 저장 자료를 불러오지 못했습니다' : ''));
+    if(views.contact) parts.push(recordsLoaded ? '연락처 있음: 빨간색 ● · 연락처 없음: ×' : '연락처 확인 불가 · 저장 자료를 불러오지 못했습니다');
     if(views.lh)parts.push('LH 공고중: 주황색 필지 · 연락처/건물 표시를 함께 켜면 해당 표시색 우선');
-    if(views.building&&views.contact)parts.push('건물과 연락처 모두 있음: 보라색');
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
   function addMapLabel(row) {
@@ -34,6 +33,28 @@
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     if(parts.length){
       const text=document.createElementNS(ns,'text');text.setAttribute('x',x);text.setAttribute('y',y);text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');text.classList.add('parcel-map-label');text.textContent=parts.join(' ');overlay.append(text);
+    }
+  }
+
+  function addContactMarker(row) {
+    if (!views.contact || !recordsLoaded || row.data.mapPositionUnavailable) return;
+    let x = Number(row.x) / 100, y = Number(row.y) / 100;
+    if (row.points?.length) {
+      x = row.points.reduce((sum,point) => sum + point[0],0) / row.points.length / 318;
+      y = row.points.reduce((sum,point) => sum + point[1],0) / row.points.length / 385;
+    } else if (row.x == null || row.y == null || row.x === '' || row.y === '') return;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    if (hasContact(row)) {
+      const dot = document.createElementNS(ns,'circle');
+      dot.setAttribute('cx',x); dot.setAttribute('cy',y); dot.setAttribute('r','.0055');
+      dot.classList.add('parcel-contact-dot'); dot.setAttribute('aria-hidden','true'); overlay.append(dot);
+    } else {
+      const d = 'M'+(x-.0035)+','+(y-.0035)+'L'+(x+.0035)+','+(y+.0035)+'M'+(x+.0035)+','+(y-.0035)+'L'+(x-.0035)+','+(y+.0035);
+      for (const className of ['parcel-contact-cross-outline','parcel-contact-cross']) {
+        const cross = document.createElementNS(ns,'path');
+        cross.setAttribute('d',d); cross.classList.add(className);
+        cross.setAttribute('aria-hidden','true'); overlay.append(cross);
+      }
     }
   }
   function isParcelYellow(fill) {
@@ -195,7 +216,6 @@
         const shape=document.createElementNS(ns,'path');
         shape.setAttribute('d',d);shape.classList.add('parcel-vector-hit');
         if(views.building&&buildingState(row)==='building')shape.classList.add('parcel-vector-building-highlight');
-        if(views.contact&&hasContact(row))shape.classList.add('parcel-vector-contact-highlight');
         if(views.lh&&hasLh(row))shape.classList.add('parcel-vector-lh-highlight');
         shape.setAttribute('role','button');shape.setAttribute('tabindex','0');
         shape.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+contactStates[contactState(row)].label);
@@ -225,7 +245,6 @@
       clone.classList.add('parcel-vector-hit');
       if(views.building&&parcelRows.length===1&&buildingState(row)==='building')clone.classList.add('parcel-vector-building-highlight');
       if(views.lh&&parcelRows.length===1&&hasLh(row))clone.classList.add('parcel-vector-lh-highlight');
-      if(views.contact&&parcelRows.length===1&&hasContact(row))clone.classList.add('parcel-vector-contact-highlight');
       const registration=contactStates[contactState(row)].label;
       clone.setAttribute('role','button');clone.setAttribute('tabindex','0');
       clone.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+registration);
@@ -356,7 +375,6 @@
         else {shape.setAttribute('cx',Number(row.x)/100);shape.setAttribute('cy',Number(row.y)/100);shape.setAttribute('r',row.sourceCell?'.006':'.015');}
         shape.classList.add('parcel-shape'); if(views.building && buildingState(row)==='building' && row.points) shape.classList.add('parcel-building-building');
         if(views.lh&&hasLh(row)&&row.points)shape.classList.add('parcel-lh-highlight');
-        if(views.contact&&hasContact(row)&&row.points)shape.classList.add('parcel-contact-highlight');
         shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료 · ' + registration);
         const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + ' · ' + registration;shape.append(title);
         shape.addEventListener('click',event=>{event.stopPropagation();show(row);});
@@ -369,6 +387,7 @@
       const note=document.createElement('small');note.textContent=registration;button.append(note);button.addEventListener('click',()=>show(row));$('parcelList').append(button);
     });
     appendVectorParcelHitAreas(ordered);
+    ordered.filter(matches).forEach(addContactMarker);
     if(sourceMeta)$('parcelSourceSummary').textContent='원본 토지목록 '+cells.length+'개 · 현재 표시 '+count+'개';
     $('parcelCount').textContent = (recordsLoaded ? '자료 등록 ' + rows.length + '개' : '등록 상태 확인 불가') + ' · 현재 표시 ' + count + '개';
     $('parcelListEmpty').hidden = !!count;

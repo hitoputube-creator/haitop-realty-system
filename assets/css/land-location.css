@@ -150,3 +150,11 @@
   #blockDetail .drawing-controls{margin-left:auto}
   #blockDetail .drawing-toolbar .btn{font-size:.75rem;padding:7px 9px}
 }
+
+/* Contact availability uses symbols; parcel fills remain available for buildings. */
+.parcel-contact-dot{fill:#dc2626;stroke:#fff;stroke-width:.0014;pointer-events:none}
+.parcel-contact-cross-outline,.parcel-contact-cross{fill:none;stroke-linecap:round;pointer-events:none}
+.parcel-contact-cross-outline{stroke:#fff;stroke-width:.0034}
+.parcel-contact-cross{stroke:#5b6472;stroke-width:.0016}
+.parcel-contact-badge.parcel-contact-contact{color:#ff7373}
+.parcel-contact-badge.parcel-contact-registered,.parcel-contact-badge.parcel-contact-missing{color:var(--text-muted)}
