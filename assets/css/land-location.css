@@ -171,7 +171,7 @@
 #detailDrawing .parcel-shape:focus-visible{stroke:#a67200;stroke-width:.003}
 
 /* Keep field names beside their values with a clear type hierarchy. */
-#parcelEditor .parcel-fields label{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:8px;color:var(--text-muted);font-size:12px;font-weight:500;line-height:1.4}
+#parcelEditor .parcel-fields label{display:grid;grid-template-columns:136px minmax(0,1fr);align-items:center;gap:8px;color:var(--text-muted);font-size:12px;font-weight:500;line-height:1.4}
 #parcelEditor .parcel-field-label{min-width:0}
 #parcelEditor .parcel-fields input,#parcelEditor .parcel-fields select,#parcelEditor .parcel-fields textarea{min-width:0;font-size:14px;font-weight:500;color:var(--text-main);letter-spacing:normal}
 #parcelEditor .parcel-fields input[readonly]{color:var(--gold-soft)}
@@ -180,7 +180,7 @@
 #parcelEditor .parcel-note .parcel-field-label{padding-top:7px}
 @media(max-width:600px){
 #parcelEditor .parcel-fields,#parcelEditor .parcel-value-pair{grid-template-columns:minmax(0,1fr)}
-#parcelEditor .parcel-fields label{grid-template-columns:104px minmax(0,1fr)}
+#parcelEditor .parcel-fields label{grid-template-columns:128px minmax(0,1fr)}
 }
 
 .parcel-building-details {margin:16px 0;padding:14px 0;border-top:1px solid var(--border);}
@@ -226,3 +226,6 @@
 .building-update-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
 .building-update-status .source-note{margin:0;min-width:0;overflow-wrap:anywhere}
 .building-update-status .btn{flex-shrink:0}
+
+.parcel-note-date-label{display:flex;align-items:center;gap:10px;margin:0 0 10px;color:var(--text-muted);font-size:12px}
+#parcelNoteDate{width:170px;max-width:100%;color-scheme:dark}

@@ -4,6 +4,8 @@
   let context=null, epoch=0, notes=[], files=[], editing=null, removed=new Set(), busy=false, offset=0, hasMore=false;
   const date=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'});
   const time=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false});
+  function today(){return date.format(new Date()).replace(/\s/g,'').replace(/\.$/,'').replace(/\./g,'-');}
+  function recordDate(note){return /^\d{4}-\d{2}-\d{2}$/.test(note.note_date||'')?note.note_date:date.format(new Date(note.created_at)).replace(/\s/g,'').replace(/\.$/,'').replace(/\./g,'-');}
   function message(text){$('parcelNoteStatus').textContent=text;}
   function same(target){return context===target;}
   function identity(c){return [c.block_id,c.subblock,c.parcel].join('/');}
@@ -19,11 +21,11 @@
   }
   function storage(){return hitopAuthClient.storage.from(bucket);}
   function controls(){
-    ['parcelNoteSave','parcelNotePhotos','parcelNoteCamera','parcelNoteText','parcelNoteCancel','parcelNotesMore'].forEach(id=>$(id).disabled=busy);
+    ['parcelNoteSave','parcelNotePhotos','parcelNoteCamera','parcelNoteText','parcelNoteDate','parcelNoteCancel','parcelNotesMore'].forEach(id=>$(id).disabled=busy);
     $('parcelNoteSave').textContent=busy?'저장 중…':editing?'메모 수정 저장':'추가 메모 저장';
     $('parcelNoteCancel').hidden=!editing;
   }
-  function reset(){files=[];editing=null;removed=new Set();$('parcelNoteText').value='';$('parcelNotePhotos').value='';$('parcelNoteCamera').value='';renderFiles();controls();}
+  function reset(){files=[];editing=null;removed=new Set();$('parcelNoteText').value='';$('parcelNoteDate').value=today();$('parcelNotePhotos').value='';$('parcelNoteCamera').value='';renderFiles();controls();}
   function renderFiles(){
     const container=$('parcelNoteFiles');container.replaceChildren();
     const add=(name,action)=>{const item=document.createElement('span');item.className='parcel-note-file';const text=document.createElement('span');text.textContent=name;const button=document.createElement('button');button.type='button';button.textContent='×';button.setAttribute('aria-label',name+' 첨부 제외');button.disabled=busy;button.onclick=action;item.append(text,button);container.append(item);};
@@ -57,11 +59,11 @@
     const list=$('parcelNotesList');list.replaceChildren();let previous='';
     const run=epoch;
     for(const note of notes){
-      const created=new Date(note.created_at),day=date.format(created);
+      const created=new Date(note.created_at),day=recordDate(note).replace(/-/g,'.');
       if(day!==previous){const heading=document.createElement('h5');heading.textContent=day;list.append(heading);previous=day;}
       const article=document.createElement('article');article.className='parcel-note-entry';
       const meta=document.createElement('div');meta.className='parcel-note-meta';
-      const stamp=document.createElement('span');stamp.textContent=time.format(created)+(note.updated_at!==note.created_at?' · 수정 '+date.format(new Date(note.updated_at))+' '+time.format(new Date(note.updated_at)):'');
+      const stamp=document.createElement('span');stamp.textContent='저장 '+date.format(created)+' '+time.format(created)+(note.updated_at!==note.created_at?' · 수정 '+date.format(new Date(note.updated_at))+' '+time.format(new Date(note.updated_at)):'');
       const actions=document.createElement('div');
       for(const [label,action]of [['수정',()=>edit(note)],['삭제',()=>deleteNote(note)]]){
         const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=label;button.disabled=busy;button.onclick=action;actions.append(button);
@@ -81,14 +83,14 @@
   async function load(target,more=false){
     const run=epoch;message('기록을 불러오는 중입니다.');$('parcelNotesMore').disabled=true;
     try{
-      const records=await api(filter(target)+'&order=created_at.desc,id.desc&limit='+pageSize+'&offset='+(more?offset:0));
+      const records=await api(filter(target)+'&order=note_date.desc,created_at.desc,id.desc&limit='+pageSize+'&offset='+(more?offset:0));
       if(run!==epoch||!same(target))return;
       notes=more?[...notes,...records]:records;offset=notes.length;hasMore=records.length===pageSize;render();message('');
     }catch(error){if(run===epoch)message(error.message);}
     finally{if(run===epoch)$('parcelNotesMore').disabled=busy;}
   }
   function edit(note){
-    if(busy)return;reset();editing=note;$('parcelNoteText').value=note.body;renderFiles();controls();message('기록 내용을 수정한 뒤 저장해주세요.');$('parcelNoteText').focus();
+    if(busy)return;reset();editing=note;$('parcelNoteText').value=note.body;$('parcelNoteDate').value=recordDate(note);renderFiles();controls();message('기록 내용을 수정한 뒤 저장해주세요.');$('parcelNoteText').focus();
   }
   async function cleanup(paths){if(!paths.length)return;const {error}=await storage().remove(paths);return error;}
   async function deleteNote(note){
@@ -106,6 +108,8 @@
   async function save(){
     if(busy||!context)return;
     if(!context.subblock||!context.parcel||$('parcelSubblock').value.trim()!==context.subblock||$('parcelNumber').value.trim()!==context.parcel){message('필지번호를 확인하고 세부자료를 먼저 저장해주세요.');return;}
+    const noteDate=$('parcelNoteDate').value;
+    if(!noteDate||!$('parcelNoteDate').checkValidity()){message('기록 날짜를 선택해주세요.');$('parcelNoteDate').focus();return;}
     const target=context,original=editing,body=$('parcelNoteText').value.trim(),picked=files.slice(),keep=(original?.photos||[]).filter(photo=>!removed.has(photo.path)),id=original?.id||crypto.randomUUID();
     if(!body&&!picked.length&&!keep.length){message('메모 내용이나 사진을 추가해주세요.');return;}
     const uploaded=[];let confirmed=false,submitted=false;
@@ -118,7 +122,7 @@
         if(error)throw Error('사진 업로드에 실패했습니다. 다시 시도해주세요.');
         uploaded.push({path,name:file.name});
       }
-      const payload={body,photos:[...keep,...uploaded],...(original?{updated_at:new Date().toISOString()}:{id,block_id:target.block_id,subblock:target.subblock,parcel:target.parcel})};
+      const payload={body,note_date:noteDate,photos:[...keep,...uploaded],...(original?{updated_at:new Date().toISOString()}:{id,block_id:target.block_id,subblock:target.subblock,parcel:target.parcel})};
       submitted=true;
       const result=await api(original?'?id=eq.'+id+'&updated_at=eq.'+encodeURIComponent(original.updated_at):'',{method:original?'PATCH':'POST',body:JSON.stringify(payload)});
       if(!result.length)throw Error('다른 기기에서 변경된 기록입니다. 다시 열어 확인해주세요.');
@@ -132,7 +136,7 @@
         if(submitted){
           try{
             const result=await api('?id=eq.'+id);const saved=result[0];
-            confirmed=!!saved&&saved.body===body&&uploaded.every(photo=>(saved.photos||[]).some(item=>item.path===photo.path));
+            confirmed=!!saved&&saved.body===body&&saved.note_date===noteDate&&uploaded.every(photo=>(saved.photos||[]).some(item=>item.path===photo.path));
             safe=!saved||uploaded.every(photo=>!(saved.photos||[]).some(item=>item.path===photo.path));
           }catch(_){safe=false;}
         }
