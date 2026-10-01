@@ -2,9 +2,8 @@
   'use strict';
   const $=id=>document.getElementById(id),core=window.HitopParcelSearch;
   let cache=null,pending=null,epoch=0,searchRun=0,timer=null,filtered=[],shown=0,everSearched=false;
-  const filters=['allParcelBuildingFilter','allParcelOwnershipFilter','allParcelDataFilter'];
   const blockMap=new Map(window.HitopLandLocation.blocks.map(b=>[b.id,b]));
-  function active(){return $('allParcelSearchInput').value.trim()||filters.some(id=>$(id).value!=='all');}
+  function active(){return $('allParcelSearchInput').value.trim();}
   async function session(){const {data,error}=await hitopAuthClient.auth.getSession();if(error||!data.session)throw Error('로그인 후 필지자료를 검색해주세요.');return data.session.access_token;}
   async function readPages(table,select,token){
     const all=[];for(let offset=0;offset<50000;offset+=500){
@@ -51,21 +50,19 @@
   }
   async function search(force=false){
     const run=++searchRun;
-    if(!force&&!active()){filtered=[];shown=0;$('allParcelSearchResults').replaceChildren();$('allParcelSearchMore').hidden=true;$('allParcelSearchStatus').textContent='검색어를 입력하거나 조건을 선택하세요.';return;}
+    if(!active()){filtered=[];shown=0;$('allParcelSearchResults').replaceChildren();$('allParcelSearchMore').hidden=true;$('allParcelSearchStatus').textContent='검색어를 입력하세요.';return;}
     everSearched=true;$('allParcelSearchStatus').textContent='전체 필지 검색자료를 불러오는 중입니다.';$('allParcelSearchResults').replaceChildren();$('allParcelSearchMore').hidden=true;
     try{
       const index=await loadIndex();if(run!==searchRun)return;
-      const q=$('allParcelSearchInput').value,building=$('allParcelBuildingFilter').value,ownership=$('allParcelOwnershipFilter').value,data=$('allParcelDataFilter').value;
-      filtered=index.rows.map(row=>({row,block:blockMap.get(row.block_id),state:dataState(row,index)})).filter(({row,block,state})=>core.matches(row,block,q,index.noteText.get(core.key(row)))&&(building==='all'||row.data?.building===building)&&(ownership==='all'||window.HitopParcelOwnership.state(row)===ownership)&&(data==='all'||state===data)).sort((a,b)=>core.label(a.row,a.block).localeCompare(core.label(b.row,b.block),'ko',{numeric:true}));
-      shown=0;appendResults();$('allParcelSearchStatus').textContent='검색 결과 '+filtered.length+'필지 · 등록된 필지목록과 관리자료 기준'+(index.errors.length?' · '+index.errors.join('·')+'를 불러오지 못해 일부 자료만 검색했습니다.':filtered.length?'':' · 조건에 맞는 필지가 없습니다.');
+      const q=$('allParcelSearchInput').value;
+      filtered=index.rows.map(row=>({row,block:blockMap.get(row.block_id),state:dataState(row,index)})).filter(({row,block,state})=>core.matches(row,block,q,index.noteText.get(core.key(row)))).sort((a,b)=>core.label(a.row,a.block).localeCompare(core.label(b.row,b.block),'ko',{numeric:true}));
+      shown=0;appendResults();$('allParcelSearchStatus').textContent='검색 결과 '+filtered.length+'필지 · 등록된 필지목록과 관리자료 기준'+(index.errors.length?' · '+index.errors.join('·')+'를 불러오지 못해 일부 자료만 검색했습니다.':filtered.length?'':' · 검색어에 맞는 필지가 없습니다.');
     }catch(error){if(run===searchRun)$('allParcelSearchStatus').textContent=error.message;}
   }
   $('allParcelSearchForm').addEventListener('submit',e=>{e.preventDefault();clearTimeout(timer);search(true);});
   $('allParcelSearchInput').addEventListener('input',()=>{clearTimeout(timer);++searchRun;timer=setTimeout(()=>search(),250);});
-  filters.forEach(id=>$(id).addEventListener('change',()=>search(true)));
   $('allParcelSearchMore').addEventListener('click',appendResults);
-  $('allParcelSearchClear').addEventListener('click',()=>{clearTimeout(timer);++searchRun;everSearched=false;$('allParcelSearchInput').value='';filters.forEach(id=>$(id).value='all');search();});
   window.addEventListener('parcel-search-invalidate',()=>{epoch++;cache=null;pending=null;});
   window.addEventListener('parcel-search-overview',()=>{if(everSearched)search(true);});
-  hitopAuthClient.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT'){epoch++;searchRun++;clearTimeout(timer);cache=null;pending=null;filtered=[];shown=0;$('allParcelSearchResults').replaceChildren();$('allParcelSearchMore').hidden=true;$('allParcelSearchInput').value='';filters.forEach(id=>$(id).value='all');$('allParcelSearchStatus').textContent='로그인 후 필지자료를 검색해주세요.';}});
+  hitopAuthClient.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT'){epoch++;searchRun++;clearTimeout(timer);cache=null;pending=null;filtered=[];shown=0;$('allParcelSearchResults').replaceChildren();$('allParcelSearchMore').hidden=true;$('allParcelSearchInput').value='';$('allParcelSearchStatus').textContent='로그인 후 필지자료를 검색해주세요.';}});
 })();
