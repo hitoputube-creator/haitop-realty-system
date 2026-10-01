@@ -129,3 +129,16 @@
   #overview .map-controls{align-items:center;gap:8px}
   #overview .map-controls .btn,#overview .map-filter-controls .btn{padding:7px 10px;font-size:.75rem}
 }
+
+/* All map selections remain in one horizontal scroll strip on every screen. */
+#overview .map-controls{flex-wrap:nowrap;align-items:center}
+#overview .map-filter-controls{display:flex;flex-direction:row;flex-wrap:nowrap;flex:1 1 0;gap:12px;min-width:0;margin:0;padding:3px 0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+#overview .map-filter-controls .view-tabs{flex:0 0 auto;width:auto;max-width:none;padding:0;border:0;border-radius:0;background:transparent}
+#overview .map-filter-controls .filter-bar{flex:0 0 auto;overflow:visible;min-width:max-content;padding:0 0 0 12px;border-left:1px solid var(--border-slate)}
+#overview .map-filter-controls #thirdTypeFilters{padding:0 0 0 12px;border-left:1px solid var(--border-slate)}
+#overview .zoom-controls{flex:0 0 auto}
+@media(max-width:900px){
+  #overview .map-controls{flex-wrap:wrap}
+  #overview .map-filter-controls{flex:1 1 100%;width:100%}
+  #overview .zoom-controls{margin-left:auto}
+}
