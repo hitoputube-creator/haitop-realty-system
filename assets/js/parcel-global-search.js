@@ -19,17 +19,15 @@
       const results=await Promise.allSettled([
         readPages('land_parcels','id,block_id,subblock,parcel,x,y,data',token),
         readPages('land_block_sources','block_id,source_data',token),
-        readPages('land_parcel_notes','block_id,subblock,parcel,body',token),
-        fetch('assets/images/land/blocks/third-C18-parcels.json').then(r=>{if(!r.ok)throw Error('필지목록 조회 실패');return r.json();})
+        readPages('land_parcel_notes','block_id,subblock,parcel,body',token)
       ]);
       if(run!==epoch)throw Error('자료가 변경되었습니다. 다시 검색해주세요.');
       const saved=results[0].status==='fulfilled'?results[0].value:[],sources=[];
       if(results[1].status==='fulfilled')results[1].value.forEach(b=>(b.source_data?.parcels||[]).forEach(r=>sources.push({...r,block_id:b.block_id,data:{...r.data}})));
-      if(results[3].status==='fulfilled')results[3].value.forEach(r=>sources.push({...r,block_id:'third-C18',data:{...r.data}}));
       const noteText=new Map(),noteKeys=new Set();
       if(results[2].status==='fulfilled')results[2].value.forEach(n=>{const k=core.key(n);noteKeys.add(k);noteText.set(k,(noteText.get(k)||'')+' '+(n.body||''));});
       const errors=results.map((r,i)=>r.status==='rejected'?['관리자료','원본 필지목록','메모자료','C18 필지목록'][i]:null).filter(Boolean);
-      const index={token,rows:core.merge(saved,sources),noteText,noteKeys,recordsLoaded:results[0].status==='fulfilled',sourcesLoaded:results[1].status==='fulfilled'&&results[3].status==='fulfilled',notesLoaded:results[2].status==='fulfilled',errors};
+      const index={token,rows:core.merge(saved,sources),noteText,noteKeys,recordsLoaded:results[0].status==='fulfilled',sourcesLoaded:results[1].status==='fulfilled',notesLoaded:results[2].status==='fulfilled',errors};
       // Recheck the active session before retaining private search data.
       if(run!==epoch||await session()!==token)throw Error('로그인 상태가 변경되었습니다. 다시 검색해주세요.');
       cache=index;return index;
@@ -66,3 +64,4 @@
   window.addEventListener('parcel-search-overview',()=>{if(everSearched)search(true);});
   hitopAuthClient.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT'){epoch++;searchRun++;clearTimeout(timer);cache=null;pending=null;filtered=[];shown=0;$('allParcelSearchResults').replaceChildren();$('allParcelSearchMore').hidden=true;$('allParcelSearchInput').value='';$('allParcelSearchStatus').textContent='로그인 후 필지자료를 검색해주세요.';}});
 })();
+

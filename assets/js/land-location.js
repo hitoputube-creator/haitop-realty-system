@@ -33,7 +33,7 @@
     third: group === 'third' ? thirdByNumber.get(number) : null,
     types: group === 'third' ? (thirdTypes[number] || []) : [group === 'second-shop' ? 'shop' : 'single'],
     households: verifiedHouseholds[group + '-C' + number] || [],
-    drawing: group === 'third' ? (number === 1 ? 'private:C1' : 'assets/images/land/blocks/third-C' + number + '-hires.webp') : null
+    drawing: group === 'third' ? (window.HitopLandBlockSource.has('third-C' + number) ? 'private:C' + number : 'assets/images/land/blocks/third-C' + number + '-hires.webp') : null
   })));
   const byId = new Map(blocks.map(block => [block.id,block]));
   const $ = id => document.getElementById(id);
@@ -146,12 +146,12 @@
       $('detailDrawing').replaceChildren();
       $('detailDrawing').hidden = !block.drawing;
       $('drawingControls').hidden = !block.drawing;
-      $('sourceDrawingLink').hidden = block.group !== 'third' || block.id === 'third-C1';
+      $('sourceDrawingLink').hidden = block.group !== 'third' || window.HitopLandBlockSource.has(block.id);
       $('sourceDrawingLink').href = 'assets/images/land/unjeong-3-parcels-hires.webp';
       $('drawingEmpty').hidden = !!block.drawing;
       if (block.drawing) {
         const drawing = document.createElement('img');
-        if (block.id !== 'third-C1') drawing.src = block.drawing; drawing.alt = groups[block.group].label + ' ' + block.name + ' 상세 도면';
+        if (!window.HitopLandBlockSource.has(block.id)) drawing.src = block.drawing; drawing.alt = groups[block.group].label + ' ' + block.name + ' 상세 도면';
         drawing.style.width = '100%'; drawingZoom = 1; drawingFitted = true;
         drawing.addEventListener('load',() => {
           if ($('detailDrawing').contains(drawing) && drawingFitted) fitDrawing();
@@ -161,7 +161,7 @@
         });
         $('detailDrawing').appendChild(drawing);
         window.HitopLandParcels?.open(block, drawing);
-        if (block.id === 'third-C1') {
+        if (window.HitopLandBlockSource.has(block.id)) {
           window.HitopLandBlockSource.load(block.id).then(row => {
             if (!$('detailDrawing').contains(drawing)) return;
             privateDrawingUrl = URL.createObjectURL(new Blob([row.diagram_svg],{type:'image/svg+xml'}));
@@ -400,3 +400,4 @@
   }};
   render(readState()); applyZoom();
 })();
+
