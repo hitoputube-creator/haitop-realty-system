@@ -273,3 +273,14 @@
 .land-location-page .parcel-search-result{display:block;width:100%;text-align:left;min-height:48px;padding:8px 10px;border:1px solid var(--border-slate);border-radius:5px;background:transparent;color:var(--text-main);cursor:pointer}.parcel-search-result strong{display:block;color:var(--gold-soft);font-size:.9rem}.parcel-search-result span{display:block;font-size:.8rem;margin-top:4px;color:var(--text-muted)}
 .parcel-search-result:hover,.parcel-search-result:focus-visible{border-color:var(--gold)}
 @media(max-width:600px){.parcel-search-controls .parcel-search-field{flex-basis:100%}.parcel-search-controls>label:not(.parcel-search-field){flex:1 1 28%}.parcel-global-search{padding:10px}}
+
+/* Search sits beside the block title and above map actions. */
+.block-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:12px}
+.block-heading h1{margin-bottom:12px}.block-search-panel{flex:0 1 440px;min-width:240px;margin-left:auto}
+.block-search-panel .parcel-search-controls{flex-wrap:nowrap;align-items:flex-end}
+.block-search-panel .parcel-search-field{flex:1 1 auto;min-width:0}
+.block-search-panel .btn{flex:none;background:var(--gold);border-color:var(--gold);color:#071625}
+.block-search-panel #parcelStatus{margin:6px 0 0;font-size:.75rem;line-height:1.4}
+.block-search-panel #parcelStatus:empty{display:none}
+.parcel-manager .filter-bar[hidden]{display:none}
+@media(max-width:640px){.block-heading{flex-direction:column;align-items:stretch;gap:8px}.block-search-panel{flex:auto;width:100%;min-width:0}.block-heading h1{margin-bottom:6px}}

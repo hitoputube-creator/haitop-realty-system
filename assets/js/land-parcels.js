@@ -529,6 +529,7 @@
   });
   $('parcelAdd').addEventListener('click',()=>{if(busy)return;placing=!placing;$('parcelAdd').setAttribute('aria-pressed',String(placing));status(placing?'도면에서 등록할 필지 위치를 눌러주세요.':'위치 지정을 취소했습니다.');});
   $('parcelSearchInput').addEventListener('input',()=>{if(overlay&&current)draw();});
+  $('parcelSearchForm').addEventListener('submit',event=>{event.preventDefault();if(!overlay||!current)return;['parcelSubblockFilter','parcelBuildingFilter','parcelTypeFilter','parcelContactFilter','parcelDataFilter'].forEach(id=>$(id).value='all');draw();status('검색 결과 · '+$('parcelCount').textContent);});
   $('parcelSubblockFilter').addEventListener('change',draw);
   ['parcelSubblock','parcelNumber'].forEach(id=>$(id).addEventListener('input',updateParcelLabel));
   priceFields.forEach(name=>$('parcel-'+name).addEventListener('input',event=>formatPriceInput(event.target)));
