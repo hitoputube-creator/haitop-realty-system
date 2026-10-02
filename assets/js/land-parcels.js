@@ -27,7 +27,7 @@
     $('parcelOwnershipSnapshot').textContent=recordsLoaded ? window.HitopParcelOwnership.savedSummary(rows) : '소유 구분 현황 · 저장 자료를 불러오지 못했습니다.';
     const parts=[];
     if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
-    if(views.data) parts.push('기본자료 없는 필지만 X · 지번·면적·분양가 등 기준');
+    if(views.data) parts.push('공급금액·토지면적이 모두 없는 필지만 X · 지번 제외');
     if(views.ownership) parts.push('소유 구분: 개인 / 법인 / 기타 / 미확인 · 저장된 자료 기준');
     if(views.contact) parts.push(recordsLoaded ? '소유주·연락처 자료 있음: 빨간색 ● · 자료 없음: ×' : '연락처 확인 불가 · 저장 자료를 불러오지 못했습니다');
     if(views.lh)parts.push('LH 공고중: 주황색 필지 · 연락처/건물 표시를 함께 켜면 해당 표시색 우선');
