@@ -29,14 +29,14 @@
       const noteText=new Map(),noteKeys=new Set();
       if(results[2].status==='fulfilled')results[2].value.forEach(n=>{const k=core.key(n);noteKeys.add(k);noteText.set(k,(noteText.get(k)||'')+' '+(n.body||''));});
       const errors=results.map((r,i)=>r.status==='rejected'?['관리자료','원본 필지목록','메모자료','C18 필지목록'][i]:null).filter(Boolean);
-      const index={token,rows:core.merge(saved,sources),noteText,noteKeys,recordsLoaded:results[0].status==='fulfilled',notesLoaded:results[2].status==='fulfilled',errors};
+      const index={token,rows:core.merge(saved,sources),noteText,noteKeys,recordsLoaded:results[0].status==='fulfilled',sourcesLoaded:results[1].status==='fulfilled'&&results[3].status==='fulfilled',notesLoaded:results[2].status==='fulfilled',errors};
       // Recheck the active session before retaining private search data.
       if(run!==epoch||await session()!==token)throw Error('로그인 상태가 변경되었습니다. 다시 검색해주세요.');
       cache=index;return index;
     })().finally(()=>{if(pending?.promise===promise)pending=null;});
     pending={token,promise};return promise;
   }
-  function dataState(row,index){return window.HitopParcelDataStatus.state(row,{recordsLoaded:index.recordsLoaded,notesLoaded:index.notesLoaded,hasNotes:index.noteKeys.has(core.key(row))});}
+  function dataState(row,index){return window.HitopParcelDataStatus.state(row,{recordsLoaded:index.recordsLoaded,sourcesLoaded:index.sourcesLoaded});}
   function appendResults(){
     const part=filtered.slice(shown,shown+50);shown+=part.length;
     part.forEach(({row,block,state})=>{
