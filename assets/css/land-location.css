@@ -288,4 +288,4 @@
 .block-search-panel #parcelStatus{margin:6px 0 0;font-size:.75rem;line-height:1.4}
 .block-search-panel #parcelStatus:empty{display:none}
 .parcel-manager .filter-bar[hidden]{display:none}
-@media(max-width:640px){.block-heading{flex-direction:column;align-items:stretch;gap:8px}.block-search-panel{flex:auto;width:100%;min-width:0}.block-heading h1{margin-bottom:6px}}
+@media(max-width:640px){.block-heading{flex-direction:column;align-items:stretch;gap:8px}.block-heading>div:first-child{flex:auto;width:100%}.block-search-panel{flex:auto;width:100%;min-width:0}.block-heading h1{margin-bottom:6px}}
