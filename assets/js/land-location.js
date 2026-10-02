@@ -37,6 +37,43 @@
   })));
   const byId = new Map(blocks.map(block => [block.id,block]));
   const $ = id => document.getElementById(id);
+  const blockNavigation = document.createElement('div');
+  blockNavigation.className = 'block-navigation';
+  blockNavigation.setAttribute('role', 'group');
+  blockNavigation.setAttribute('aria-label', '지구와 블럭 이동');
+  blockNavigation.innerHTML = '<label for="detailDistrictSelect"><span>지구 선택</span><select id="detailDistrictSelect"><option value="third">운정3지구 택지</option><option value="second">운정1·2지구 택지</option></select></label><label for="detailBlockSelect"><span>블럭 선택</span><select id="detailBlockSelect"></select></label>';
+  $('detailTitle').after(blockNavigation);
+  const districtSelect = $('detailDistrictSelect');
+  const blockSelect = $('detailBlockSelect');
+  function districtOf(block) { return block.group === 'third' ? 'third' : 'second'; }
+  function districtBlocks(district) {
+    return blocks.filter(block => districtOf(block) === district).sort((a, b) => a.number - b.number);
+  }
+  function syncBlockNavigation(block) {
+    const district = districtOf(block);
+    districtSelect.value = district;
+    blockSelect.replaceChildren();
+    districtBlocks(district).forEach(candidate => {
+      const option = document.createElement('option');
+      option.value = candidate.id;
+      option.textContent = candidate.name + ' 블럭';
+      blockSelect.appendChild(option);
+    });
+    blockSelect.value = block.id;
+  }
+  function moveToBlock(block) {
+    if (!block) return;
+    view = districtOf(block);
+    group = view === 'third' ? 'third' : 'all';
+    landType = 'all'; households = 'all';
+    navigate(block);
+  }
+  districtSelect.addEventListener('change', () => {
+    const current = byId.get(blockSelect.value);
+    const candidates = districtBlocks(districtSelect.value);
+    moveToBlock(candidates.find(block => block.number === current?.number) || candidates[0]);
+  });
+  blockSelect.addEventListener('change', () => moveToBlock(byId.get(blockSelect.value)));
   const viewport = $('mapViewport');
   const stage = $('mapStage');
   const image = $('mapImage');
@@ -140,6 +177,7 @@
     if (block) {
       $('detailGroup').textContent = groups[block.group].label;
       $('detailTitle').textContent = block.name + ' 블럭';
+      syncBlockNavigation(block);
       $('detailType').hidden = block.group !== 'third';
       $('detailType').textContent = '택지 구분: ' + (block.types.length ? block.types.map(type => typeLabels[type]).join(' · ') + (block.types.length > 1 ? ' (혼합 블럭 · 필지별 확인)' : '') : '미분류 · 상세 자료로 확인 필요');
       $('detailNote').hidden = !(block.group === 'third' && !block.third);
