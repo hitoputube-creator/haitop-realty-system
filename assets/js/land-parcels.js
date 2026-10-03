@@ -10,7 +10,7 @@
   let noteParcelKeys=new Set(),noteKnownKeys=new Set(),notesLoaded=false,noteSearchTexts=new Map(),pendingSearchParcel=null;
   const views = {area:false, building:false, contact:false, ownership:false, households:false, data:false, lh:false};
   function householdsOf(row){const n=Number(row?.data?.households??row?.source?.households);return Number.isInteger(n)&&n>0?n:null;}
-  (function(){const t=document.getElementById('detailTitle')?.closest('.block-title-row');if(t&&!document.getElementById('detailRules')){const p=document.createElement('p');p.id='detailRules';p.className='source-note block-rules';p.hidden=true;t.after(p);}})();
+  (function(){const t=document.getElementById('detailTitle')?.closest('.block-title-row');if(t&&!document.getElementById('detailRules')){const p=document.createElement('p');p.id='detailRules';p.className='source-note block-rules';p.hidden=true;t.append(p);}})();
   const contactStates = {
     contact: {label:'소유주·연락처 자료 있음', symbol:'O'},
     registered: {label:'소유주·연락처 자료 없음', symbol:'X'},
