@@ -344,5 +344,79 @@
 .parcel-unsold-label{color:#475569;font-weight:700;font-size:.62rem}
 .parcel-unsold-check{display:flex;align-items:center;gap:8px}
 
-#parcelEditor .parcel-live-check{grid-column:1/-1;display:grid;gap:6px;margin:2px 0 4px}#parcelEditor .parcel-live-actions{display:flex;flex-wrap:wrap;gap:8px}#parcelEditor .parcel-live-actions .btn{display:inline-flex;align-items:center;min-height:36px;padding:6px 12px;font-size:.82rem;text-decoration:none;cursor:pointer}#parcelEditor .parcel-live-actions .btn.is-disabled{opacity:.45;cursor:not-allowed}#parcelRegisterResult{margin:0;min-height:1.2em}
-#parcelEditor .parcel-live-actions .btn{background:#f4f1e8;color:#1b2430;border:1px solid transparent;font-weight:600}#parcelEditor .parcel-live-actions .btn:hover{filter:brightness(.95)}#parcelEditor .parcel-live-actions .btn.is-disabled{background:#f4f1e8;color:#1b2430}
+/* ===== 필지 세부정보 편집창: 섹션형 레이아웃 (v20261003-editor-pro-1) ===== */
+#parcelEditor{width:min(800px,calc(100% - 28px));padding:0;border-radius:14px;background:var(--panel2)}
+#parcelEditor .pe-head{position:sticky;top:0;z-index:5;padding:16px 22px 12px;background:var(--panel);border-bottom:1px solid var(--border-slate)}
+#parcelEditor .pe-head .parcel-modal-heading{margin:0}
+#parcelFormTitle{font-size:1.5rem}
+#parcelEditor .pe-subline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;flex-wrap:wrap}
+#parcelFormSubtitle{margin:0;color:var(--text-muted);font-size:.86rem}
+#parcelEditor .parcel-building-check{margin:0;min-height:32px;padding:3px 12px 3px 10px;border:1px solid var(--border-slate);border-radius:999px;font-size:.82rem;color:var(--text-main);background:rgba(255,255,255,.03)}
+#parcelEditor .parcel-building-check:has(input:checked){border-color:var(--gold);background:rgba(216,184,74,.12);color:var(--gold-soft)}
+#parcelEditor .pe-body{padding:8px 22px 22px}
+#parcelEditor .pe-body>.source-note{margin:8px 0 0}
+#parcelModalStatus{margin:8px 0 0;min-height:0}
+#parcelModalStatus:empty{display:none}
+#parcelEditor .pe-section{margin:0;padding:18px 0 4px;border-top:1px solid var(--border-slate)}
+#parcelEditor form>.pe-section:first-child{border-top:0;padding-top:12px}
+#parcelEditor .pe-title,#parcelEditor .parcel-building-heading h4{margin:0 0 12px;font-size:.95rem;font-weight:700;color:var(--gold-soft);letter-spacing:0}
+#parcelEditor .parcel-fields{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 14px}
+#parcelEditor .parcel-fields>label{grid-column:span 3}
+#parcelEditor .parcel-fields>label[data-span="2"]{grid-column:span 2}
+#parcelEditor .parcel-fields>label[data-span="6"]{grid-column:1/-1}
+#parcelEditor .parcel-fields>.parcel-value-pair{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;padding:0;border:0}
+#parcelEditor .parcel-fields label,#parcelEditor .pe-address>label{display:flex;flex-direction:column;align-items:stretch;gap:5px;font-size:.78rem;font-weight:600;color:var(--text-muted);grid-template-columns:none}
+#parcelEditor .parcel-fields label .parcel-field-label,#parcelEditor .pe-address>label .parcel-field-label{padding:0;white-space:normal}
+#parcelEditor .parcel-fields input,#parcelEditor .parcel-fields select,#parcelEditor .parcel-fields textarea,#parcelEditor .pe-address input{box-sizing:border-box;width:100%;min-height:40px;padding:8px 11px;border:1px solid var(--border-slate);border-radius:8px;background:var(--bg);color:var(--text-main);font-size:.92rem;font-weight:500}
+#parcelEditor .parcel-fields textarea{min-height:76px;resize:vertical;line-height:1.5}
+#parcelEditor .parcel-fields input:focus-visible,#parcelEditor .parcel-fields select:focus-visible,#parcelEditor .parcel-fields textarea:focus-visible,#parcelEditor .pe-address input:focus-visible{outline:2px solid rgba(216,184,74,.45);outline-offset:0;border-color:var(--gold)}
+#parcelEditor .parcel-fields input[readonly]{background:transparent;border-style:dashed;color:var(--gold-soft)}
+#parcelEditor .parcel-fields input[type=checkbox]{width:18px;min-height:18px;height:18px;padding:0;accent-color:var(--gold)}
+#parcelEditor .parcel-fields .parcel-unsold-check{flex-direction:row;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border-slate);border-radius:8px;background:rgba(255,255,255,.03);font-weight:500;cursor:pointer}
+#parcelEditor .parcel-fields .parcel-unsold-check .parcel-field-label{display:inline;font-size:.82rem;color:var(--text-main)}
+#parcelEditor .parcel-fields .parcel-unsold-check:has(input:checked){border-color:#f87171;background:rgba(248,113,113,.1)}
+#parcelEditor .parcel-fields .parcel-note .parcel-field-label{padding-top:0}
+/* 소재지 + 현황 확인 도구 */
+#parcelEditor .pe-address{display:grid;gap:10px}
+#parcelEditor .parcel-live-check{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0;padding:10px 12px;border:1px solid rgba(216,184,74,.32);border-radius:10px;background:rgba(216,184,74,.05)}
+#parcelEditor .parcel-live-actions{display:flex;flex-wrap:wrap;gap:8px}
+#parcelEditor .parcel-live-actions .btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:34px;padding:0 13px;border:1px solid var(--border-slate);border-radius:8px;background:rgba(255,255,255,.05);color:var(--text-main);font-size:.8rem;font-weight:600;text-decoration:none;cursor:pointer;filter:none}
+#parcelEditor .parcel-live-actions .btn:visited{color:var(--text-main)}
+#parcelEditor .parcel-live-actions .btn:hover{border-color:var(--gold);color:var(--gold-soft);filter:none}
+#parcelEditor .parcel-live-actions #parcelRegisterCheck{border-color:var(--gold);background:rgba(216,184,74,.14);color:var(--gold-soft)}
+#parcelEditor .parcel-live-actions .btn.is-disabled{background:rgba(255,255,255,.03);color:var(--text-muted);opacity:.45;cursor:not-allowed}
+#parcelEditor #parcelRegisterResult{flex:1 1 220px;margin:0;font-size:.8rem;line-height:1.5;color:var(--text-main)}
+#parcelEditor #parcelRegisterResult:empty{display:none}
+/* 건물 정보 */
+#parcelEditor .parcel-building-details{margin:0;padding:18px 0 4px;border-top:1px solid var(--border-slate)}
+#parcelEditor .parcel-building-heading{margin-bottom:6px}
+#parcelEditor .parcel-building-heading .btn{min-height:34px;padding:0 13px;border-radius:8px;border:1px solid var(--border-slate);background:rgba(255,255,255,.05);color:var(--text-main);font-size:.8rem;font-weight:600}
+#parcelEditor .parcel-building-heading .btn:hover{border-color:var(--gold);color:var(--gold-soft)}
+#parcelBuildingChecked{margin:0 0 12px}
+#parcelBuildingChecked:empty{display:none}
+/* 하단 고정 저장 줄 */
+#parcelEditor .pe-actions{position:sticky;bottom:0;z-index:4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:20px -22px 0;padding:12px 22px;background:var(--panel);border-top:1px solid var(--border-slate)}
+#parcelEditor .pe-actions .btn{min-height:40px;padding:0 18px;border-radius:8px;font-weight:600}
+#parcelEditor .pe-actions .btn-primary{min-width:140px}
+#parcelEditor .pe-actions #parcelDelete{margin-left:auto;color:#f87171;border-color:rgba(248,113,113,.5);background:transparent}
+#parcelEditor .pe-actions #parcelDelete:hover{background:rgba(248,113,113,.12);border-color:#f87171}
+/* 메모·사진 */
+#parcelEditor .parcel-notes{margin-top:26px;padding-top:18px}
+#parcelEditor .parcel-notes h4{font-size:.95rem;margin:0 0 12px}
+@media(max-width:600px){
+#parcelEditor{width:calc(100% - 16px);max-height:calc(100dvh - 16px)}
+#parcelEditor .pe-head{padding:12px 14px 10px}
+#parcelEditor .pe-body{padding:6px 14px 18px}
+#parcelEditor .parcel-fields{gap:10px}
+#parcelEditor .parcel-fields>label[data-span="3"]{grid-column:1/-1}
+#parcelEditor .parcel-fields>.parcel-value-pair{gap:10px}
+#parcelEditor .pe-actions{margin:16px -14px 0;padding:10px 14px}
+#parcelEditor .pe-actions .btn-primary{flex:1 1 auto}
+#parcelEditor .parcel-live-actions .btn{flex:1 1 auto}
+}
+#parcelLhDetail:empty,#parcelEditor .pe-body>.source-note:empty{display:none}
+#parcelEditor .pe-actions .btn:not(.btn-primary),#parcelEditor .parcel-print-controls .btn{border:1px solid var(--border-slate);background:rgba(255,255,255,.05);color:var(--text-main)}
+#parcelEditor .pe-actions .btn:not(.btn-primary):hover,#parcelEditor .parcel-print-controls .btn:hover{border-color:var(--gold);color:var(--gold-soft)}
+#parcelEditor .pe-actions #parcelDelete{color:#f87171;border-color:rgba(248,113,113,.5);background:transparent}
+#parcelEditor .parcel-modal-close{background:transparent}
+@media(max-width:600px){#parcelEditor .pe-head{position:static}}
