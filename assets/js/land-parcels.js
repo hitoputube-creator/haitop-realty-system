@@ -707,11 +707,13 @@
     busy=true;button.disabled=true;button.textContent='확인 중';
     let filled=0,same=0,different=0,noLh=0,errors=0;
     try{
-      await window.HitopLandLh.load();
+      const lhResponse=await fetch('assets/data/lh-unjeong-detached.json?v=20261001-1');
+      if(!lhResponse.ok)throw Error('LH 공고 자료를 불러오지 못했습니다.');
+      const lhRecords=new Map(((await lhResponse.json()).records||[]).filter(item=>item.blockId===blockId).map(item=>[String(item.subblock)+'-'+String(item.parcel),item]));
       closeEditor();selected=null;
       for(const row of [...combinedParcels().values()]){
         if(run!==generation)break;
-        const record=window.HitopLandLh.find(blockId,row),lno=String(record?.list?.lno||'').trim(),dong=String(record?.list?.lgdnDtlAdr||'').trim().split(/\s+/).pop();
+        const record=lhRecords.get(String(row.subblock)+'-'+String(row.parcel)),lno=String(record?.list?.lno||'').trim(),dong=String(record?.list?.lgdnDtlAdr||'').trim().split(/\s+/).pop();
         if(!record||!/^\d+(?:-\d+)?$/.test(lno)||!/(?:동|리)$/.test(dong)){noLh++;continue;}
         const address=dong+' '+lno,shown=String(row.data.address||'').trim();
         if(shown===address){same++;continue;}
