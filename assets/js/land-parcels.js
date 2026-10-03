@@ -34,7 +34,7 @@
     if(views.ownership) parts.push('소유 구분: 개인 / 법인 / 기타 · 저장된 자료 기준');
     if(views.contact) parts.push(recordsLoaded ? '소유주 자료 있음: 초록색 필지 · 자료 없음: X · 건물 있음과 겹치면 보라색' : '연락처 확인 불가 · 저장 자료를 불러오지 못했습니다');
     if(views.households) parts.push('허용가구수: 필지 안 숫자와 색으로 구분(1·2·3·4·5가구 이하) · 값이 없는 필지는 표시 없음');
-    if(views.unsold) parts.push('미분양: 회색 빗금 필지 · 아직 공급 전이라 면적·공급가 없음');
+    if(views.unsold) parts.push('미분양: 빨간색 필지 · 아직 공급 전이라 면적·공급가 없음');
     if(views.lh)parts.push('LH 공고중: 주황색 필지 · 연락처/건물 표시를 함께 켜면 해당 표시색 우선');
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
@@ -44,8 +44,7 @@
     if(views.ownership && window.HitopParcelOwnership.state(row)!=='unknown') parts.push(window.HitopParcelOwnership.label(row));
     const hhValue=views.households?householdsOf(row):null;
     if(hhValue) parts.push(hhValue+'가구');
-    const unsoldRow=isUnsold(row);
-    if(unsoldRow) parts.push('미분양');
+    const unsoldRow=false;
     const missingData=views.data&&dataState(row)==='missing';
     if(row.data.mapPositionUnavailable || (!parts.length&&!missingData) || (!row.points?.length && (row.x==null || row.y==null)))return;
     let x=Number(row.x)/100,y=Number(row.y)/100;

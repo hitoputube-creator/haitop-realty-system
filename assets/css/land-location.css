@@ -339,7 +339,7 @@
 .info-fold[open]>summary{margin-bottom:8px}
 
 /* 미분양 */
-.parcel-vector-hit.parcel-vector-unsold{fill:#94a3b8aa!important;stroke:#475569!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
-.parcel-shape.parcel-unsold{fill:#94a3b8aa!important;stroke:#475569!important}
+.parcel-vector-hit.parcel-vector-unsold{fill:#dc2626b3!important;stroke:#991b1b!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-unsold{fill:#dc2626b3!important;stroke:#991b1b!important}
 .parcel-unsold-label{color:#475569;font-weight:700;font-size:.62rem}
 .parcel-unsold-check{display:flex;align-items:center;gap:8px}
