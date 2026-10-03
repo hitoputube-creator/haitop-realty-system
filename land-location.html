@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20261003-block-navigation-1">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20261003-block-navigation-2">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -79,10 +79,9 @@
     </section>
   </section>
   <section id="blockDetail" hidden aria-labelledby="detailTitle">
-    <button id="backToMap" class="btn" type="button">← 위치도로 돌아가기</button>
     <div class="card block-detail-card">
       <div class="block-heading"><div><p class="detail-eyebrow" id="detailGroup"></p><h1 id="detailTitle" tabindex="-1"></h1>
-      <p class="detail-eyebrow" id="detailType" hidden></p></div>
+      <p class="detail-eyebrow" id="detailType" hidden></p><button id="backToMap" class="btn" type="button">← 위치도로 돌아가기</button></div>
       <div class="block-search-panel"><form id="parcelSearchForm" class="parcel-search-controls" role="search"><label class="parcel-search-field"><span>현재 블럭 필지 검색</span><input id="parcelSearchInput" type="search" maxlength="200" placeholder="검색어를 입력하세요"></label><button class="btn" type="submit">검색</button></form><p id="parcelStatus" role="status" aria-live="polite"></p></div></div>
       <div class="drawing-toolbar">
         <div class="parcel-view-controls" id="parcelViewControls" role="group" aria-label="필지 표시" hidden><button class="btn" id="parcelAreaPyeongToggle" type="button" aria-pressed="false">면적 (평)</button><button class="btn" id="parcelAreaSqmToggle" type="button" aria-pressed="false">면적 (㎡)</button><button class="btn" id="parcelBuildingToggle" type="button" aria-pressed="false">건물 유무</button><button class="btn" id="parcelOwnershipToggle" type="button" aria-pressed="false">소유 구분</button><button class="btn" id="parcelDataToggle" type="button" aria-pressed="false">자료 유무</button><button class="btn" id="parcelContactToggle" type="button" aria-pressed="false">소유주</button><a class="btn" id="parcelLhToggle" href="https://apply.lh.or.kr/lhapply/land/main.do?mi=1040" target="_blank" rel="noopener noreferrer" title="LH 공식 사이트에서 최신 공고와 공급 현황 확인">현재 LH 현황 확인 ↗</a></div>
@@ -142,7 +141,7 @@
 <script src="assets/js/land-parcel-notes.js?v=20261002-source-blocks-1"></script>
 <script src="assets/js/parcel-print.js?v=20261002-print-location-1"></script>
 <script src="assets/js/land-parcels.js?v=20261002-source-blocks-1"></script>
-<script src="assets/js/land-location.js?v=20261003-block-navigation-1"></script>
+<script src="assets/js/land-location.js?v=20261003-block-navigation-2"></script>
 <script src="assets/js/parcel-global-search.js?v=20261002-source-blocks-1"></script>
 </body>
 </html>
