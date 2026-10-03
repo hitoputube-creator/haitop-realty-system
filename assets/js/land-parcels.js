@@ -10,9 +10,9 @@
   let noteParcelKeys=new Set(),noteKnownKeys=new Set(),notesLoaded=false,noteSearchTexts=new Map(),pendingSearchParcel=null;
   const views = {area:false, building:false, contact:false, ownership:false, data:false, lh:false};
   const contactStates = {
-    contact: {label:'소유주·연락처 자료 있음', symbol:'●'},
-    registered: {label:'소유주·연락처 자료 없음', symbol:'×'},
-    missing: {label:'소유주·연락처 자료 없음', symbol:'×'},
+    contact: {label:'소유주·연락처 자료 있음', symbol:'O'},
+    registered: {label:'소유주·연락처 자료 없음', symbol:'X'},
+    missing: {label:'소유주·연락처 자료 없음', symbol:'X'},
     unknown: {label:'등록 상태 확인 불가', symbol:'?'}
   };
   function dataState(row){return window.HitopParcelDataStatus.state(row,{recordsLoaded,sourcesLoaded});}
@@ -28,15 +28,15 @@
     const parts=[];
     if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
     if(views.data) parts.push('공급금액·토지면적이 모두 없는 필지만 X · 지번 제외');
-    if(views.ownership) parts.push('소유 구분: 개인 / 법인 / 기타 / 미확인 · 저장된 자료 기준');
-    if(views.contact) parts.push(recordsLoaded ? '소유주·연락처 자료 있음: 빨간색 ● · 자료 없음: ×' : '연락처 확인 불가 · 저장 자료를 불러오지 못했습니다');
+    if(views.ownership) parts.push('소유 구분: 개인 / 법인 / 기타 · 저장된 자료 기준');
+    if(views.contact) parts.push(recordsLoaded ? '소유주 자료 있음: O · 자료 없음: X' : '연락처 확인 불가 · 저장 자료를 불러오지 못했습니다');
     if(views.lh)parts.push('LH 공고중: 주황색 필지 · 연락처/건물 표시를 함께 켜면 해당 표시색 우선');
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
   function addMapLabel(row) {
     const area=Number(row.data.area), parts=[];
     if(views.area && Number.isFinite(area) && area>0) parts.push(views.area==='sqm'?area.toLocaleString('ko-KR',{maximumFractionDigits:1})+'㎡':(area/3.305785).toFixed(1)+'평');
-    if(views.ownership) parts.push(window.HitopParcelOwnership.label(row));
+    if(views.ownership && window.HitopParcelOwnership.state(row)!=='unknown') parts.push(window.HitopParcelOwnership.label(row));
     const missingData=views.data&&dataState(row)==='missing';
     if(row.data.mapPositionUnavailable || (!parts.length&&!missingData) || (!row.points?.length && (row.x==null || row.y==null)))return;
     let x=Number(row.x)/100,y=Number(row.y)/100;
@@ -65,9 +65,11 @@
     } else if (row.x == null || row.y == null || row.x === '' || row.y === '') return;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     if (hasOwnerData(row)) {
-      const dot = document.createElementNS(ns,'circle');
-      dot.setAttribute('cx',x); dot.setAttribute('cy',y); dot.setAttribute('r','.0055');
-      dot.classList.add('parcel-contact-dot'); dot.setAttribute('aria-hidden','true'); overlay.append(dot);
+      for (const className of ['parcel-contact-ring-outline','parcel-contact-ring']) {
+        const ring = document.createElementNS(ns,'circle');
+        ring.setAttribute('cx',x); ring.setAttribute('cy',y); ring.setAttribute('r','.0055');
+        ring.classList.add(className); ring.setAttribute('aria-hidden','true'); overlay.append(ring);
+      }
     } else {
       const d = 'M'+(x-.0035)+','+(y-.0035)+'L'+(x+.0035)+','+(y+.0035)+'M'+(x+.0035)+','+(y-.0035)+'L'+(x-.0035)+','+(y+.0035);
       for (const className of ['parcel-contact-cross-outline','parcel-contact-cross']) {
