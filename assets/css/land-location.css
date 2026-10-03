@@ -456,3 +456,12 @@
 #parcelEditor .parcel-value-pair>label{grid-column:span 3}
 @media(max-width:700px){#parcelEditor .parcel-value-pair>label{grid-column:span 6}}
 #parcelEditor #parcelNoteText{min-height:64px;height:64px;resize:vertical}
+/* ===== v3: 버튼은 페이지 칩 버튼과 같은 간결한 스타일 ===== */
+#parcelEditor .parcel-live-actions .btn,#parcelEditor .parcel-live-actions #parcelRegisterCheck,#parcelEditor .parcel-building-heading .btn,#parcelEditor .pe-actions .btn:not(.btn-primary),#parcelEditor .parcel-print-controls .btn,#parcelEditor .parcel-photo-input,#parcelEditor .parcel-note-compose-actions .btn:not(.btn-primary){background:var(--panel2);border:1px solid var(--border-slate);border-radius:6px;color:var(--text-main);font-weight:500;font-size:.82rem;min-height:34px;padding:0 12px;box-shadow:none}
+#parcelEditor .parcel-live-actions .btn:hover,#parcelEditor .parcel-building-heading .btn:hover,#parcelEditor .pe-actions .btn:not(.btn-primary):hover,#parcelEditor .parcel-print-controls .btn:hover,#parcelEditor .parcel-photo-input:hover{background:var(--panel2);border-color:var(--gold);color:var(--gold-soft)}
+#parcelEditor .parcel-live-actions .btn.is-disabled{opacity:.4;color:var(--text-muted)}
+#parcelEditor .pe-actions #parcelDelete{margin-left:auto;background:transparent;color:var(--text-muted);border-color:var(--border-slate)}
+#parcelEditor .pe-actions #parcelDelete:hover{color:#f87171;border-color:#f87171;background:transparent}
+#parcelEditor .pe-actions .btn-primary{min-height:34px;border-radius:6px;font-weight:600;font-size:.82rem;min-width:0;padding:0 16px}
+#parcelEditor .parcel-modal-close{background:var(--panel2);border-radius:6px}
+#parcelEditor .parcel-building-check{border-radius:6px;background:var(--panel2)}
