@@ -597,6 +597,18 @@
       const link=$(id);if(!link)return;
       link.href=has?url:'#';link.setAttribute('aria-disabled',String(!has));link.classList.toggle('is-disabled',!has);
     });
+    updateRoadAddress(address,has);
+  }
+  // 지번 아래에 도로명 새주소를 보여줍니다(화면 표시만, 저장하지 않음).
+  let roadRun=0,roadTimer=null;
+  function updateRoadAddress(address,has){
+    const el=$('parcelRoadAddress');if(!el)return;
+    const run=++roadRun;clearTimeout(roadTimer);el.hidden=true;el.textContent='';
+    const helper=window.HitopRoadAddress;if(!helper||!has)return;
+    const show=road=>{if(run!==roadRun)return;el.textContent='새주소 · '+(road||'아직 부여되지 않았거나 찾지 못했습니다.');el.hidden=false;};
+    const cached=helper.peek(address);
+    if(cached!==undefined){show(cached);return;}
+    roadTimer=setTimeout(()=>helper.lookup(address).then(show),400);
   }
   function registerSummary(result,prior){
     const check=result.buildingCheck;let text='대장상 건물 있음';
@@ -720,6 +732,7 @@
   }
   let kakaoServices=null;
   function loadKakaoServices(){
+    if(window.HitopRoadAddress?.loadServices)return window.HitopRoadAddress.loadServices();
     if(window.kakao?.maps?.services)return Promise.resolve();
     if(kakaoServices)return kakaoServices;
     const key=String(window.HITOP_KAKAO_JS_KEY||'').trim();

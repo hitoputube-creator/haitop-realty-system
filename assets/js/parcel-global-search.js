@@ -40,8 +40,12 @@
     part.forEach(({row,block,state})=>{
       const button=document.createElement('button');button.type='button';button.className='parcel-search-result';
       const title=document.createElement('strong');title.textContent=(block?.district?block.district+' · ':'')+core.label(row,block);
-      const info=document.createElement('span');info.textContent=(row.data?.address||'지번주소 미등록')+' · '+window.HitopParcelDataStatus.labels[state]+(Number(row.data?.area)>0?' · '+Number(row.data.area).toLocaleString('ko-KR')+'㎡':'');
-      button.append(title,info);if(!block?.drawing)info.textContent+=' · 상세 도면 미등록';
+      const info=document.createElement('span');
+      const addr=String(row.data?.address||'').trim(),tail=' · '+window.HitopParcelDataStatus.labels[state]+(Number(row.data?.area)>0?' · '+Number(row.data.area).toLocaleString('ko-KR')+'㎡':'')+(block?.drawing?'':' · 상세 도면 미등록');
+      const showInfo=road=>{info.textContent=(addr?window.HitopRoadAddress?.format(addr,road)||addr:'지번주소 미등록')+tail;};
+      showInfo(window.HitopRoadAddress?.peek(addr));
+      if(addr&&window.HitopRoadAddress&&window.HitopRoadAddress.peek(addr)===undefined)window.HitopRoadAddress.lookup(addr).then(road=>{if(road)showInfo(road);});
+      button.append(title,info);
       button.addEventListener('click',()=>{if(!window.HitopLandLocation.openParcel(row.block_id,row.subblock,row.parcel))$('allParcelSearchStatus').textContent='이 블럭은 상세 도면이 아직 연결되지 않았습니다.';});
       $('allParcelSearchResults').append(button);
     });$('allParcelSearchMore').hidden=shown>=filtered.length;

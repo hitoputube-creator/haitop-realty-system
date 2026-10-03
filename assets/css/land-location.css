@@ -476,3 +476,5 @@
 #parcelEditor #parcelNoteText{min-height:140px;height:140px}
 @media(max-width:700px){#parcelEditor .parcel-fields>label[data-span="6"]{grid-column:span 6}}
 #parcelEditor .parcel-photo-input{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+
+#parcelEditor .pe-address>.parcel-road-address{grid-column:1/-1;margin:0;color:var(--gold-soft);font-size:.82rem}

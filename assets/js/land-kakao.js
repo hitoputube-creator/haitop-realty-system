@@ -162,6 +162,7 @@
     span.className = 'row' + (cls ? ' ' + cls : '');
     span.textContent = text;
     parent.appendChild(span);
+    return span;
   }
 
   function openInfo(it) {
@@ -170,7 +171,16 @@
     var title = document.createElement('b');
     title.textContent = blockName(it.row.block_id) + '-' + it.row.subblock + '-' + it.row.parcel;
     root.appendChild(title);
-    line(root, it.address);
+    var addressLine = line(root, it.address);
+    if (window.HitopRoadAddress) {
+      var cachedRoad = window.HitopRoadAddress.peek(it.address);
+      if (cachedRoad) addressLine.textContent = window.HitopRoadAddress.format(it.address, cachedRoad);
+      else if (cachedRoad === undefined) {
+        window.HitopRoadAddress.lookup(it.address).then(function (road) {
+          if (road) addressLine.textContent = window.HitopRoadAddress.format(it.address, road);
+        });
+      }
+    }
     line(root, (it.type === 'shop' ? '상가점포' : '주거전용') + ' · ' + stateLabel(it.state));
     var area = Number(data.area), won = it.row.source && it.row.source.supplyPriceWon;
     if (area > 0 || won) {
