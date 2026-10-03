@@ -7,6 +7,8 @@
 .kakao-notice code{background:rgba(255,255,255,.08);padding:1px 6px;border-radius:4px}
 .kakao-controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;margin:12px 0 6px}
 .kakao-control-group{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+#kakaoPinFilters{display:contents}
+#kakaoPinFilters[hidden]{display:none}
 .kakao-control-group label{display:grid;gap:3px;font-size:.78rem;color:var(--text-muted,#9fb0c7)}
 .kakao-control-group select,.kakao-control-group input{min-height:34px;font-size:.85rem}
 .kakao-control-group .btn[aria-pressed="true"]{border-color:var(--gold-soft,#e6c36a);color:var(--gold-soft,#e6c36a)}

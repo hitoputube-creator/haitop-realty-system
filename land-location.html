@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 택지 위치도</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-location.css?v=20261003-editor-pro-4">
+  <link rel="stylesheet" href="assets/css/land-location.css?v=20261003-kakao-btn-1">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -17,7 +17,7 @@
     <div class="logo-icon" aria-hidden="true"></div>
     <div class="logo-text"><div class="logo-main">하이탑부동산 택지 위치도</div><div class="logo-sub">위치에서 블럭을 찾아보세요</div></div>
     <nav class="main-nav" aria-label="페이지 이동">
-      <a class="nav-link" href="land-kakao.html">실제 지도 보기(시범)</a><a class="nav-link active" href="land-resources.html">택지자료 목록으로</a>
+      <a class="nav-link active" href="land-resources.html">택지자료 목록으로</a>
       <a class="nav-link" href="property-main.html?category=land">매물관리 메인으로</a>
       <button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button>
     </nav>
@@ -84,6 +84,7 @@
       <div class="block-search-panel"><form id="parcelSearchForm" class="parcel-search-controls" role="search"><label class="parcel-search-field"><span>현재 블럭 필지 검색</span><input id="parcelSearchInput" type="search" maxlength="200" placeholder="검색어를 입력하세요"></label><button class="btn" type="submit">검색</button></form><p id="parcelStatus" role="status" aria-live="polite"></p></div></div>
       <div class="drawing-toolbar">
         <div class="parcel-view-controls" id="parcelViewControls" role="group" aria-label="필지 표시" hidden><button class="btn" id="parcelAreaPyeongToggle" type="button" aria-pressed="false">면적 (평)</button><button class="btn" id="parcelAreaSqmToggle" type="button" aria-pressed="false">면적 (㎡)</button><button class="btn" id="parcelBuildingToggle" type="button" aria-pressed="false">건물 유무</button><button class="btn" id="parcelOwnershipToggle" type="button" aria-pressed="false">소유 구분</button><button class="btn" id="parcelHouseholdsToggle" type="button" aria-pressed="false">허용가구수</button><button class="btn" id="parcelUnsoldToggle" type="button" aria-pressed="false">미분양</button><button class="btn" id="parcelDataToggle" type="button" aria-pressed="false">자료 유무</button><button class="btn" id="parcelContactToggle" type="button" aria-pressed="false">소유주</button><a class="btn" id="parcelLhToggle" href="https://apply.lh.or.kr/lhapply/land/main.do?mi=1040" target="_blank" rel="noopener noreferrer" title="LH 공식 사이트에서 최신 공고와 공급 현황 확인">현재 LH 현황 확인 ↗</a></div>
+        <a class="btn" id="kakaoMapLink" href="land-kakao.html?view=third" title="카카오 실제 지도에서 이 택지지구 전체를 봅니다">실제 지도 보기</a>
         <div class="zoom-controls drawing-controls" id="drawingControls" role="group" aria-label="상세 도면 확대 축소" hidden>
         <button class="btn" id="drawingZoomOut" type="button" aria-label="상세 도면 축소">−</button>
         <output id="drawingZoomLabel" aria-live="polite">100%</output>
@@ -150,7 +151,7 @@
 <script src="assets/js/parcel-print.js?v=20261002-print-location-1"></script>
 <script src="assets/js/land-parcels.js?v=20261003-address-update-3"></script>
 <script src="assets/js/unjeong-map.js?v=20261003-shared-map-1"></script>
-<script src="assets/js/land-location.js?v=20261003-linked-parcel-1"></script>
+<script src="assets/js/land-location.js?v=20261003-kakao-btn-1"></script>
 <script src="assets/js/parcel-global-search.js?v=20261002-source-blocks-1"></script>
 </body>
 </html>

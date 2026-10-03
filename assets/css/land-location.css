@@ -133,8 +133,8 @@
 
 /* Consistent, compact controls above the parcel drawing. */
 #blockDetail .drawing-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 8px;padding:10px 0;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2)}
-#blockDetail .drawing-toolbar:not(:has(#drawingControls:not([hidden]))):not(:has(#parcelViewControls:not([hidden]))){display:none}
-#blockDetail .parcel-view-controls{flex:1 1 auto;min-width:0;display:flex;flex-wrap:nowrap;align-items:center;gap:5px;margin:0;padding:3px 0;overflow-x:auto;scrollbar-width:thin}
+#blockDetail #kakaoMapLink{margin-right:auto;text-decoration:none}
+#blockDetail .parcel-view-controls{flex:0 1 auto;min-width:0;display:flex;flex-wrap:nowrap;align-items:center;gap:5px;margin:0;padding:3px 0;overflow-x:auto;scrollbar-width:thin}
 #blockDetail .drawing-controls{flex:0 0 auto;display:flex;flex-wrap:nowrap;gap:5px;margin:0}
 #blockDetail .drawing-toolbar .btn,#blockDetail #backToMap{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:34px;padding:7px 11px;border:1px solid var(--border-slate);border-radius:6px;background:rgba(7,22,37,.35);color:var(--text-muted);font:inherit;font-size:.8rem;line-height:1.3;white-space:nowrap;cursor:pointer}
 #blockDetail .drawing-toolbar .btn[aria-pressed=true]{border-color:var(--gold);background:rgba(216,184,74,.14);color:var(--gold-soft);font-weight:700}

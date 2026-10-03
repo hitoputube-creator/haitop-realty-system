@@ -1,4 +1,5 @@
-/* 운정3지구 카카오맵 시범 화면
+/* 택지지구별 카카오맵 화면 (?view=third 운정3지구 / ?view=second 운정1·2지구)
+ * - 처음에는 해당 택지지구 전체가 한눈에 보이는 위치로 열립니다. 필지 핀은 [필지 핀 켜기]를 눌렀을 때만 표시합니다.
  * - land_parcels(Supabase)의 지번주소를 카카오 지오코딩으로 위경도로 바꿔 실제 지도 위에 표시합니다.
  * - 변환 결과는 이 브라우저(localStorage)에 저장해 다음 방문부터 바로 표시합니다. DB는 수정하지 않습니다.
  * - 건물 상태는 기존 택지 위치도에서 저장한 값(건물 있음/없음 확인/미확인)과 건축물대장 확인 기록을 그대로 읽습니다.
@@ -8,6 +9,17 @@
   var $ = function (id) { return document.getElementById(id); };
   var CACHE_KEY = 'hitop-kakao-geo-v1';
   var ADDRESS_PATTERN = /[가-힣]+(?:동|리)\s+(?:산\s*)?\d+/;
+  var BLOCK_PREFIX = /^(third|second-shop|second-multi)-/;
+  // 지구별 첫 화면. bounds는 LH 택지 경계 자료(lh-unjeong-detached.json)의 실제 좌표 범위에 여백을 더한 값입니다.
+  // bounds가 없는 지구는 anchors(대표 주소)를 카카오로 찾아 그 범위에 맞춥니다. 모두 실패하면 center/level로 엽니다.
+  var DISTRICTS = {
+    third: { label: '운정3지구', prefix: 'third-', bounds: [[37.7035, 126.6970], [37.7415, 126.7600]], center: [37.7226, 126.7281], level: 7 },
+    second: { label: '운정1·2지구', prefix: 'second-', bounds: null, center: [37.7230, 126.7500], level: 6,
+      anchors: ['와동동 1426-1', '와동동 1498', '야당동', '목동동'] }
+  };
+  var district = new URLSearchParams(location.search).get('view') === 'second' ? 'second' : 'third';
+  var cfg = DISTRICTS[district];
+  var pinsOn = false, pinsLoaded = false, pinsLoading = false;
   var statusEl = $('kakaoStatus');
   var map = null, geocoder = null, infoWindow = null;
   var items = [];          // {row, address, lat, lng, state, type, registered, overlay}
@@ -18,6 +30,7 @@
   var roadviewClickOn = false, walker = null, walkerArrow = null;
 
   function setStatus(text) { statusEl.textContent = text; }
+  function blockName(blockId) { return String(blockId).replace(BLOCK_PREFIX, ''); }
 
   function loadCache() {
     try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; }
@@ -38,7 +51,7 @@
     var token = session.data.session.access_token;
     var rows = [], offset = 0, page = 1000;
     for (;;) {
-      var url = SUPABASE_URL + '/rest/v1/land_parcels?select=id,block_id,subblock,parcel,data&block_id=like.third-*&order=block_id,subblock,parcel&limit=' + page + '&offset=' + offset;
+      var url = SUPABASE_URL + '/rest/v1/land_parcels?select=id,block_id,subblock,parcel,data&block_id=like.' + cfg.prefix + '*&order=block_id,subblock,parcel&limit=' + page + '&offset=' + offset;
       var res = await fetchWithTimeout(url, { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + token } }, 30000);
       if (!res.ok) throw new Error('필지 자료를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
       var part = await res.json();
@@ -55,7 +68,7 @@
       var session = await hitopAuthClient.auth.getSession();
       var token = session.data && session.data.session && session.data.session.access_token;
       if (!token) return [];
-      var res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/land_block_sources?select=block_id,parcels:source_data->parcels&block_id=like.third-*', { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + token } }, 40000);
+      var res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/land_block_sources?select=block_id,parcels:source_data->parcels&block_id=like.' + cfg.prefix + '*', { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + token } }, 40000);
       if (!res.ok) return [];
       return await res.json();
     } catch (e) { return []; }
@@ -155,7 +168,7 @@
     var data = it.data, root = document.createElement('div');
     root.className = 'kk-info';
     var title = document.createElement('b');
-    title.textContent = it.row.block_id.replace('third-', '') + '-' + it.row.subblock + '-' + it.row.parcel;
+    title.textContent = blockName(it.row.block_id) + '-' + it.row.subblock + '-' + it.row.parcel;
     root.appendChild(title);
     line(root, it.address);
     line(root, (it.type === 'shop' ? '상가점포' : '주거전용') + ' · ' + stateLabel(it.state));
@@ -200,7 +213,7 @@
   // ---------- 화면 안 로드뷰 ----------
   function openRoadview(it) {
     openRoadviewAt(new kakao.maps.LatLng(it.lat, it.lng), {
-      title: it.row.block_id.replace('third-', '') + '-' + it.row.subblock + '-' + it.row.parcel + ' · ' + it.address,
+      title: blockName(it.row.block_id) + '-' + it.row.subblock + '-' + it.row.parcel + ' · ' + it.address,
       faceTarget: true
     });
   }
@@ -324,11 +337,12 @@
 
   function fillBlockFilter() {
     var select = $('kakaoBlockFilter');
+    select.options[0].textContent = cfg.label + ' 전체';
     var ids = Array.from(new Set(items.map(function (it) { return it.row.block_id; })));
     ids.sort(function (a, b) { return a.localeCompare(b, 'en', { numeric: true }); });
     ids.forEach(function (id) {
       var option = document.createElement('option');
-      option.value = id; option.textContent = id.replace('third-', '') + ' 블럭';
+      option.value = id; option.textContent = blockName(id) + ' 블럭';
       select.appendChild(option);
     });
   }
@@ -362,6 +376,8 @@
     var timer = null;
     $('kakaoSearch').addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { render(true); }, 300); });
     $('kakaoFit').addEventListener('click', function () { render(true); });
+    $('kakaoDistrictFit').addEventListener('click', function () { infoWindow.close(); applyDistrictView(); });
+    $('kakaoPinToggle').addEventListener('click', function () { setPins(!pinsOn); });
     $('kakaoRetry').addEventListener('click', async function () {
       $('kakaoRetry').disabled = true;
       await resolveAll(true);
@@ -371,24 +387,108 @@
     });
   }
 
+  // ---------- 택지지구 전체 보기 ----------
+  function boundsFromPoints(points) {
+    var b = new kakao.maps.LatLngBounds();
+    points.forEach(function (p) { b.extend(new kakao.maps.LatLng(p[0], p[1])); });
+    return b;
+  }
+
+  async function applyDistrictView() {
+    var points = null;
+    if (cfg.bounds) {
+      points = cfg.bounds;
+    } else if (cfg.anchors) {
+      var found = [];
+      for (var i = 0; i < cfg.anchors.length; i++) {
+        var key = normalizeAddress(cfg.anchors[i]), hit = geoCache[key];
+        if (hit === undefined) {
+          var result = await geocode(cfg.anchors[i]);
+          if (result) { hit = [result.lat, result.lng]; geoCache[key] = hit; }
+          else if (result === null) { geoCache[key] = 0; }
+        }
+        if (Array.isArray(hit)) found.push(hit);
+      }
+      saveCache();
+      if (found.length) points = found;
+    }
+    if (!points) {
+      map.setCenter(new kakao.maps.LatLng(cfg.center[0], cfg.center[1]));
+      map.setLevel(cfg.level);
+      return;
+    }
+    map.setBounds(boundsFromPoints(points), 40, 40, 40, 40);
+    if (map.getLevel() < cfg.level) map.setLevel(cfg.level); // 대표 주소가 한 곳뿐이어도 지구 주변이 보이게 너무 확대되지 않도록
+  }
+
+  // ---------- 필지 핀 켜기/끄기 ----------
+  async function loadPins() {
+    pinsLoading = true;
+    setStatus('택지 필지 자료를 불러오는 중입니다.');
+    try {
+      var rows = await loadParcels();
+      var extra = sourceRows(await loadSourceParcels(), rows);
+      sourceNoAddress = extra.noAddress || 0;
+      items = buildItems(rows.concat(extra));
+      fillBlockFilter();
+      await resolveAll(false);
+      pinsLoaded = true;
+    } finally {
+      pinsLoading = false;
+    }
+  }
+
+  async function setPins(on) {
+    if (pinsLoading) return;
+    var button = $('kakaoPinToggle');
+    pinsOn = on;
+    button.setAttribute('aria-pressed', String(on));
+    button.textContent = on ? '필지 핀 끄기' : '필지 핀 켜기';
+    $('kakaoPinFilters').hidden = !on;
+    $('kakaoLegend').hidden = !on;
+    infoWindow.close();
+    if (!on) {
+      activeOverlays.forEach(function (o) { o.setMap(null); });
+      activeOverlays.clear();
+      setStatus(cfg.label + ' 전체를 보고 있습니다. [필지 핀 켜기]를 누르면 등록된 필지가 표시됩니다.');
+      return;
+    }
+    button.disabled = true;
+    try {
+      if (!pinsLoaded) await loadPins();
+      if (pinsOn) render(false);
+    } catch (error) {
+      pinsOn = false;
+      button.setAttribute('aria-pressed', 'false');
+      button.textContent = '필지 핀 켜기';
+      $('kakaoPinFilters').hidden = true;
+      $('kakaoLegend').hidden = true;
+      setStatus(error && error.message ? error.message : '필지 핀을 불러오지 못했습니다.');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   // ---------- 시작 ----------
+  function applyDistrictTexts() {
+    document.title = '하이탑부동산 | 실제 지도 보기 (' + cfg.label + ')';
+    var sub = document.querySelector('.logo-sub');
+    if (sub) sub.textContent = cfg.label + ' · 카카오맵';
+    var back = $('kakaoBackLink');
+    if (back) back.href = 'land-location.html?view=' + district;
+  }
+
   async function start() {
+    applyDistrictTexts();
     $('kakaoMap').hidden = false;
     $('kakaoControls').hidden = false;
-    $('kakaoLegend').hidden = false;
-    map = new kakao.maps.Map($('kakaoMap'), { center: new kakao.maps.LatLng(37.7195, 126.7420), level: 6 });
+    map = new kakao.maps.Map($('kakaoMap'), { center: new kakao.maps.LatLng(cfg.center[0], cfg.center[1]), level: cfg.level });
     geocoder = new kakao.maps.services.Geocoder();
     infoWindow = new kakao.maps.InfoWindow({ removable: true, zIndex: 10 });
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-    setStatus('택지 필지 자료를 불러오는 중입니다.');
-    var rows = await loadParcels();
-    var extra = sourceRows(await loadSourceParcels(), rows);
-    sourceNoAddress = extra.noAddress || 0;
-    items = buildItems(rows.concat(extra));
-    fillBlockFilter();
     bindControls();
-    await resolveAll(false);
-    render(true);
+    await applyDistrictView();
+    setStatus(cfg.label + ' 전체를 보고 있습니다. [필지 핀 켜기]를 누르면 등록된 필지가 표시됩니다.');
   }
 
   function loadSdk(key) {
