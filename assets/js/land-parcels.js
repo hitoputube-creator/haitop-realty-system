@@ -6,6 +6,7 @@
   let current = null, rows = [], cells = [], selected = null, stage = null, overlay = null, generation = 0, placing = false, busy = false;
   let sourceMeta = null, buildingVectorOverlay = null, buildingVectorCandidates = [], buildingVectorUrl = null, buildingVectorViewBox = null, recordsLoaded = false, sourcesLoaded = false;
   let parcelVectorRegions = new Map();
+  let parcelSplitKeys = new Set();
   let areaLabelOverlay = null;
   let noteParcelKeys=new Set(),noteKnownKeys=new Set(),notesLoaded=false,noteSearchTexts=new Map(),pendingSearchParcel=null;
   const views = {area:false, building:false, contact:false, ownership:false, households:false, unsold:false, data:false, lh:false};
@@ -145,9 +146,11 @@
     const context=canvas.getContext('2d',{willReadFrequently:true});
     context.drawImage(image,0,0,canvas.width,canvas.height);
     const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
-    const w=canvas.width,h=canvas.height,labels=new Int32Array(w*h),regions=new Map();
+    const w=canvas.width,h=canvas.height,labels=new Int32Array(w*h),regions=new Map();parcelSplitKeys=new Set();const splitKeys=parcelSplitKeys;
     const yellow=i=>i>=0&&i<w*h&&pixels[i*4]>=180&&pixels[i*4+1]>=165&&pixels[i*4+2]<=190&&pixels[i*4+1]>pixels[i*4+2]+20&&pixels[i*4+3]>200;
     let id=0;
+    const components=new Map();
+    // 1단계: 노란 영역을 선(경계)으로 막힌 덩어리 단위로 찾고, 덩어리마다 그 안에 번호가 있는 필지를 모읍니다.
     for(const row of parcels){
       if(row.data?.mapPositionUnavailable||row.x==null||row.y==null)continue;
       let seed=-1;const x=Math.round(Number(row.x)/100*w),y=Math.round(Number(row.y)/100*h);
@@ -155,7 +158,8 @@
         if(x+dx<0||x+dx>=w||y+dy<0||y+dy>=h)continue;
         const i=(y+dy)*w+x+dx;if(yellow(i)){seed=i;break;}
       }
-      if(seed<0||labels[seed])continue;
+      if(seed<0)continue;
+      if(labels[seed]){components.get(labels[seed]).rows.push({row,x,y});continue;}
       id++;const stack=[seed],region=[];labels[seed]=id;
       while(stack.length){
         const i=stack.pop();region.push(i);
@@ -165,15 +169,18 @@
           labels[n]=id;stack.push(n);
         }
       }
-      if(region.length<20)continue;
+      components.set(id,{region,rows:[{row,x,y}]});
+    }
+    const traceOutline=(region,regionId)=>{
+      if(region.length<20)return null;
       const edges=new Map(),stride=w+1;
       const addEdge=(a,b)=>{if(!edges.has(a))edges.set(a,[]);edges.get(a).push(b);};
       for(const i of region){
         const px=i%w,py=Math.floor(i/w),a=py*stride+px;
-        if(py===0||labels[i-w]!==id)addEdge(a,a+1);
-        if(px===w-1||labels[i+1]!==id)addEdge(a+1,a+1+stride);
-        if(py===h-1||labels[i+w]!==id)addEdge(a+1+stride,a+stride);
-        if(px===0||labels[i-1]!==id)addEdge(a+stride,a);
+        if(py===0||labels[i-w]!==regionId)addEdge(a,a+1);
+        if(px===w-1||labels[i+1]!==regionId)addEdge(a+1,a+1+stride);
+        if(py===h-1||labels[i+w]!==regionId)addEdge(a+1+stride,a+stride);
+        if(px===0||labels[i-1]!==regionId)addEdge(a+stride,a);
       }
       let outer=[],largest=0;
       while(edges.size){
@@ -190,13 +197,31 @@
         const area=Math.abs(loop.reduce((sum,p,i)=>{const q=loop[(i+1)%loop.length];return sum+p[0]*q[1]-q[0]*p[1];},0));
         if(area>largest){largest=area;outer=loop;}
       }
-      if(!outer.length)continue;
+      if(!outer.length)return null;
       // Remove redundant points along pixel edges without moving the boundary.
       const points=outer.filter((p,i)=>{
         const a=outer[(i+outer.length-1)%outer.length],b=outer[(i+1)%outer.length];
         return (p[0]-a[0])*(b[1]-p[1])!==(p[1]-a[1])*(b[0]-p[0]);
       });
-      regions.set(key(row),'M'+points.map(p=>(vb.x+p[0]/w*vb.width).toFixed(3)+','+(vb.y+p[1]/h*vb.height).toFixed(3)).join('L')+'Z');
+      return 'M'+points.map(p=>(vb.x+p[0]/w*vb.width).toFixed(3)+','+(vb.y+p[1]/h*vb.height).toFixed(3)).join('L')+'Z';
+    };
+    // 2단계: 덩어리 안에 필지가 하나면 그대로, 선이 빠져 여러 필지가 한 덩어리가 된 곳은
+    // 각 필지 번호 위치에서 가까운 쪽으로 나누어 필지별 영역을 만듭니다.
+    for(const [componentId,component] of components){
+      if(component.rows.length===1){
+        const d=traceOutline(component.region,componentId);if(d)regions.set(key(component.rows[0].row),d);
+        continue;
+      }
+      const seeds=[];const seen=new Set();
+      component.rows.forEach(item=>{const k=key(item.row);if(!seen.has(k)){seen.add(k);seeds.push(item);}});
+      const parts=seeds.map(()=>[]),ids=seeds.map(()=>++id);
+      for(const i of component.region){
+        const px=i%w,py=Math.floor(i/w);let best=0,bestDistance=Infinity;
+        for(let s=0;s<seeds.length;s++){const dx=px-seeds[s].x,dy=py-seeds[s].y,distance=dx*dx+dy*dy;if(distance<bestDistance){bestDistance=distance;best=s;}}
+        parts[best].push(i);
+      }
+      parts.forEach((part,s)=>{for(const i of part)labels[i]=ids[s];});
+      seeds.forEach((item,s)=>{const d=traceOutline(parts[s],ids[s]);if(d){regions.set(key(item.row),d);splitKeys.add(key(item.row));}});
     }
     canvas.width=0;canvas.height=0;
     return regions;
@@ -237,7 +262,7 @@
         if(!matches(row)||row.data.mapPositionUnavailable)return;
         const d=parcelVectorRegions.get(key(row));if(!d)return;
         const shape=document.createElementNS(ns,'path');
-        shape.setAttribute('d',d);shape.classList.add('parcel-vector-hit');
+        shape.setAttribute('d',d);shape.classList.add('parcel-vector-hit');if(parcelSplitKeys.has(key(row)))shape.classList.add('parcel-vector-split');
         if(views.contact&&recordsLoaded&&hasOwnerData(row))shape.classList.add('parcel-vector-contact-highlight');
         if(views.building&&buildingState(row)==='building')shape.classList.add('parcel-vector-building-highlight');
         if(views.lh&&hasLh(row))shape.classList.add('parcel-vector-lh-highlight');

@@ -41,6 +41,8 @@
 .parcel-building-vector-overlay{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;pointer-events:none;opacity:0;z-index:0}
 .parcel-vector-hit-layer{overflow:visible;pointer-events:none}
 .parcel-vector-hit{fill:transparent!important;stroke:transparent!important;pointer-events:all;cursor:pointer}
+/* 원본 도면에 필지 칸막이 선이 없어 번호 위치로 나눈 필지는 가는 선으로 구분 표시 */
+.parcel-vector-hit.parcel-vector-split{stroke:rgba(70,70,70,.55)!important;stroke-width:.7!important;vector-effect:non-scaling-stroke}
 .parcel-vector-hit:hover,.parcel-vector-hit:focus-visible{stroke:#a67200!important;stroke-width:1.2!important;vector-effect:non-scaling-stroke;outline:none}
 .parcel-vector-hit.parcel-vector-building-highlight{fill:#2563eb99!important;stroke:#1d4ed8!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
 
