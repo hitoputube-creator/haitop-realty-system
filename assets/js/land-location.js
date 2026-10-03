@@ -79,7 +79,7 @@
   const stage = $('mapStage');
   const image = $('mapImage');
   function setOverviewMap() {
-    const source='assets/images/land/lh-unjeong-overview-clean.svg?v=20261003-callout-clean-1';
+    const source='assets/images/land/lh-unjeong-overview-hires-2312.webp?v=20261003-callout-fix-2';
     $('overviewMapSource').textContent='LH 고해상도 리플렛 원본 · 운정 전체 위치도';
     $('overviewMapNotice').textContent='전체지도는 리플렛 원본이며, 필지별 LH 공급정보에는 별도의 자료 확인일을 표시합니다.';
     stage.classList.add('lh-leaflet-map');
