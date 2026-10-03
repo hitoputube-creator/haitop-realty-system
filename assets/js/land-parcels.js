@@ -147,7 +147,7 @@
     context.drawImage(image,0,0,canvas.width,canvas.height);
     const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
     const w=canvas.width,h=canvas.height,labels=new Int32Array(w*h),regions=new Map();parcelSplitKeys=new Set();const splitKeys=parcelSplitKeys;
-    const yellow=i=>i>=0&&i<w*h&&pixels[i*4]>=180&&pixels[i*4+1]>=165&&pixels[i*4+2]<=190&&pixels[i*4+1]>pixels[i*4+2]+20&&pixels[i*4+3]>200;
+    const yellow=i=>i>=0&&i<w*h&&pixels[i*4]>=180&&pixels[i*4+1]>=165&&pixels[i*4+2]<=190&&pixels[i*4+1]>pixels[i*4+2]+20&&pixels[i*4]>=pixels[i*4+1]-12&&pixels[i*4+3]>200;
     let id=0;
     const components=new Map();
     // 1단계: 노란 영역을 선(경계)으로 막힌 덩어리 단위로 찾고, 덩어리마다 그 안에 번호가 있는 필지를 모읍니다.
@@ -171,7 +171,18 @@
       }
       components.set(id,{region,rows:[{row,x,y}]});
     }
-    const traceOutline=(region,regionId)=>{
+    // 픽셀 계단 모양 윤곽을 곧게 펴 줍니다(나눈 필지의 구분선이 톱니처럼 보이지 않게).
+    const simplifyLoop=(pts,eps)=>{
+      if(pts.length<8)return pts;
+      const dist=(p,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);return len?Math.abs(dy*(p[0]-a[0])-dx*(p[1]-a[1]))/len:Math.hypot(p[0]-a[0],p[1]-a[1]);};
+      const keep=new Set([0]);let far=0,farD=-1;
+      pts.forEach((p,i)=>{const d=Math.hypot(p[0]-pts[0][0],p[1]-pts[0][1]);if(d>farD){farD=d;far=i;}});keep.add(far);
+      const run=(from,to)=>{const chain=[];for(let i=from;i!==to;i=(i+1)%pts.length)chain.push(i);chain.push(to);const stack=[[0,chain.length-1]];
+        while(stack.length){const [lo,hi]=stack.pop();let idx=-1,max=eps;for(let k=lo+1;k<hi;k++){const d=dist(pts[chain[k]],pts[chain[lo]],pts[chain[hi]]);if(d>max){max=d;idx=k;}}if(idx>0){keep.add(chain[idx]);stack.push([lo,idx],[idx,hi]);}}};
+      run(0,far);run(far,0);
+      return pts.filter((p,i)=>keep.has(i));
+    };
+    const traceOutline=(region,regionId,smooth)=>{
       if(region.length<20)return null;
       const edges=new Map(),stride=w+1;
       const addEdge=(a,b)=>{if(!edges.has(a))edges.set(a,[]);edges.get(a).push(b);};
@@ -203,7 +214,8 @@
         const a=outer[(i+outer.length-1)%outer.length],b=outer[(i+1)%outer.length];
         return (p[0]-a[0])*(b[1]-p[1])!==(p[1]-a[1])*(b[0]-p[0]);
       });
-      return 'M'+points.map(p=>(vb.x+p[0]/w*vb.width).toFixed(3)+','+(vb.y+p[1]/h*vb.height).toFixed(3)).join('L')+'Z';
+      const finalPoints=smooth?simplifyLoop(points,2.5):points;
+      return 'M'+finalPoints.map(p=>(vb.x+p[0]/w*vb.width).toFixed(3)+','+(vb.y+p[1]/h*vb.height).toFixed(3)).join('L')+'Z';
     };
     // 2단계: 덩어리 안에 필지가 하나면 그대로, 선이 빠져 여러 필지가 한 덩어리가 된 곳은
     // 각 필지 번호 위치에서 가까운 쪽으로 나누어 필지별 영역을 만듭니다.
@@ -221,7 +233,7 @@
         parts[best].push(i);
       }
       parts.forEach((part,s)=>{for(const i of part)labels[i]=ids[s];});
-      seeds.forEach((item,s)=>{const d=traceOutline(parts[s],ids[s]);if(d){regions.set(key(item.row),d);splitKeys.add(key(item.row));}});
+      seeds.forEach((item,s)=>{const d=traceOutline(parts[s],ids[s],true);if(d){regions.set(key(item.row),d);splitKeys.add(key(item.row));}});
     }
     canvas.width=0;canvas.height=0;
     return regions;
