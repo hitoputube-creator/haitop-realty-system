@@ -465,3 +465,14 @@
 #parcelEditor .pe-actions .btn-primary{min-height:34px;border-radius:6px;font-weight:600;font-size:.82rem;min-width:0;padding:0 16px}
 #parcelEditor .parcel-modal-close{background:var(--panel2);border-radius:6px}
 #parcelEditor .parcel-building-check{border-radius:6px;background:var(--panel2)}
+/* v4: 소유주·연락처 반반, 비고 전체폭, 메모 영역 확대 */
+#parcelEditor .parcel-fields>label[data-span="6"]{grid-column:span 6}
+#parcelEditor .parcel-fields>label[data-span="12"]{grid-column:1/-1}
+#parcelEditor .parcel-fields textarea#parcel-note{min-height:96px;height:96px}
+#parcelEditor .parcel-notes{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px}
+#parcelEditor .parcel-notes>*{grid-column:1/-1}
+#parcelEditor .parcel-notes>h4{grid-column:1;grid-row:1}
+#parcelEditor .parcel-notes>.parcel-note-date-label{grid-column:2;grid-row:1;margin:0 0 12px}
+#parcelEditor #parcelNoteText{min-height:140px;height:140px}
+@media(max-width:700px){#parcelEditor .parcel-fields>label[data-span="6"]{grid-column:span 6}}
+#parcelEditor .parcel-photo-input{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
