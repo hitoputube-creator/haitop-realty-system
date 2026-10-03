@@ -699,6 +699,49 @@
     }
   });
 
+  // LH 공고에 지번이 부여된 필지의 소재지·지번을 채웁니다. 이미 입력된 실제 주소는 바꾸지 않습니다.
+  $('parcelAddressUpdate').addEventListener('click',async()=>{
+    if(busy||window.HitopParcelNotes?.busy||!current)return;
+    if(!recordsLoaded){status('저장 자료를 불러온 뒤 다시 시도해주세요.');return;}
+    const button=$('parcelAddressUpdate'),blockId=current.id,run=generation,realAddress=a=>/^[가-힣]+(?:동|리)\s*\d+(?:-[1-9]\d*)?$/.test(String(a||'').trim());
+    busy=true;button.disabled=true;button.textContent='확인 중';
+    let filled=0,same=0,different=0,noLh=0,errors=0;
+    try{
+      await window.HitopLandLh.load();
+      closeEditor();selected=null;
+      for(const row of [...combinedParcels().values()]){
+        if(run!==generation)break;
+        const record=window.HitopLandLh.find(blockId,row),lno=String(record?.list?.lno||'').trim(),dong=String(record?.list?.lgdnDtlAdr||'').trim().split(/\s+/).pop();
+        if(!record||!/^\d+(?:-\d+)?$/.test(lno)||!/(?:동|리)$/.test(dong)){noLh++;continue;}
+        const address=dong+' '+lno,shown=String(row.data.address||'').trim();
+        if(shown===address){same++;continue;}
+        if(realAddress(shown)){different++;continue;}
+        status('소재지 지번 채우는 중 · '+key(row)+' → '+address);
+        try{
+          const latest=await request('?block_id=eq.'+encodeURIComponent(blockId)+'&subblock=eq.'+encodeURIComponent(row.subblock)+'&parcel=eq.'+encodeURIComponent(row.parcel));
+          if(run!==generation)break;
+          const saved=latest[0],base={...row.data,...saved?.data},current_=String(base.address||'').trim();
+          if(realAddress(current_)){current_===address?same++:different++;continue;}
+          const body={block_id:blockId,subblock:row.subblock,parcel:row.parcel,x:saved?.x??row.x??0,y:saved?.y??row.y??0,data:{...base,address},updated_at:new Date().toISOString()};
+          const result=await request(saved?'?id=eq.'+encodeURIComponent(saved.id):'',{method:saved?'PATCH':'POST',body:JSON.stringify(body)});
+          if(!result[0])throw Error('저장 실패');
+          const index=rows.findIndex(item=>key(item)===key(row));
+          if(index<0)rows.push(result[0]);else rows[index]=result[0];
+          filled++;
+        }catch(error){errors++;if(errors>=3)break;}
+      }
+      {
+        if(run===generation)draw();
+        const text='소재지 지번 업데이트 · 새로 채움 '+filled+'건 · 이미 같음 '+same+'건'+(different?' · 기존 주소가 달라 그대로 둠 '+different+'건':'')+' · LH 지번 아직 없음 '+noLh+'건'+(errors?' · 저장 실패 '+errors+'건':'');
+        $('parcelAddressSnapshot').textContent=text;if(run===generation)status(text);
+      }
+    }catch(error){status('소재지 지번 업데이트에 실패했습니다. '+(error&&error.message?error.message:''));}
+    finally{
+      window.dispatchEvent(new CustomEvent('parcel-search-invalidate',{detail:{block_id:blockId}}));
+      busy=false;button.disabled=false;button.textContent='업데이트';
+    }
+  });
+
   let ownershipUpdateRun=null;
   async function lookupParcelOwnership(address,probe=false){
     const {data,error}=await hitopAuthClient.auth.getSession();
