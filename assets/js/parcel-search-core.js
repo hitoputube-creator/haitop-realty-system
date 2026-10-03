@@ -18,6 +18,7 @@
     // Stored price inputs use 만원; also match the displayed 원 amounts and comma-separated values.
     ['supplyPrice','auctionPrice','salePrice','buildingDeposit','buildingRent'].forEach(k=>{if(Number(d[k])>0)fields.push(String(Math.round(Number(d[k])*10000)));});
     ['area','buildingFootprint','buildingTotalArea'].forEach(k=>{if(Number(d[k])>0){const p=Number(d[k])/3.305785;fields.push(Number(d[k])+'㎡',p.toFixed(1)+'평',p.toFixed(2)+'평');}});
+    if((d.unsold!=null?d.unsold:row.source?.unsold)===true&&!(Number(d.area)>0&&Number(d.supplyPrice)>0))fields.push('미분양 공급전');
     const haystack=fields.map(normalize).join(' ');return terms.every(term=>haystack.includes(term));
   }
   function merge(saved,sources){

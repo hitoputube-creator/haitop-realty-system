@@ -337,3 +337,9 @@
 .info-fold>summary{cursor:pointer;display:inline-block;font-size:.8rem;color:var(--muted,#9fb3c8);padding:4px 10px;border:1px solid rgba(255,255,255,.18);border-radius:999px;list-style:none}
 .info-fold>summary::-webkit-details-marker{display:none}
 .info-fold[open]>summary{margin-bottom:8px}
+
+/* 미분양 */
+.parcel-vector-hit.parcel-vector-unsold{fill:#94a3b8aa!important;stroke:#475569!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-unsold{fill:#94a3b8aa!important;stroke:#475569!important}
+.parcel-unsold-label{color:#475569;font-weight:700;font-size:.62rem}
+.parcel-unsold-check{display:flex;align-items:center;gap:8px}
