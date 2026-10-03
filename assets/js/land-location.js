@@ -177,7 +177,7 @@
     document.querySelectorAll('[data-land-type]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.landType === landType)));
     if (block) {
       $('detailGroup').textContent = groups[block.group].label;
-      $('detailTitle').textContent = block.name + ' 블럭';
+      $('detailTitle').textContent = block.name + ' 블럭' + (block.group === 'third' && [3, 4].includes(block.number) ? ' (이주자택지)' : '');
       syncBlockNavigation(block);
       $('detailType').hidden = block.group !== 'third';
       $('detailType').textContent = '택지 구분: ' + (block.types.length ? block.types.map(type => typeLabels[type]).join(' · ') + (block.types.length > 1 ? ' (혼합 블럭 · 필지별 확인)' : '') : '미분류 · 상세 자료로 확인 필요');
