@@ -133,6 +133,8 @@
     // PDF glyphs are <use> elements. Exclude them from boundary detection so
     // parcel numbers cannot cut a slit or isolated pocket into the traced area.
     copy.querySelectorAll('use').forEach(node=>node.remove());
+    // 글자(<text>)로 만든 도면도 같은 이유로 경계 판정에서 뺍니다.
+    copy.querySelectorAll('text').forEach(node=>node.remove());
     copy.querySelectorAll('[stroke-width]').forEach(node=>{
       const width=Number(node.getAttribute('stroke-width'));
       if(width>.2)node.setAttribute('stroke-width',String(Math.max(.9,width)));
