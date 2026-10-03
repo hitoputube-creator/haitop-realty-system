@@ -345,3 +345,4 @@
 .parcel-unsold-check{display:flex;align-items:center;gap:8px}
 
 #parcelEditor .parcel-live-check{grid-column:1/-1;display:grid;gap:6px;margin:2px 0 4px}#parcelEditor .parcel-live-actions{display:flex;flex-wrap:wrap;gap:8px}#parcelEditor .parcel-live-actions .btn{display:inline-flex;align-items:center;min-height:36px;padding:6px 12px;font-size:.82rem;text-decoration:none;cursor:pointer}#parcelEditor .parcel-live-actions .btn.is-disabled{opacity:.45;cursor:not-allowed}#parcelRegisterResult{margin:0;min-height:1.2em}
+#parcelEditor .parcel-live-actions .btn{background:#f4f1e8;color:#1b2430;border:1px solid transparent;font-weight:600}#parcelEditor .parcel-live-actions .btn:hover{filter:brightness(.95)}#parcelEditor .parcel-live-actions .btn.is-disabled{background:#f4f1e8;color:#1b2430}
