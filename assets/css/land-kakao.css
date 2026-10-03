@@ -43,3 +43,11 @@
 .kakao-hint{margin:2px 0 6px}
 .kk-info button.kk-link{background:none;border:0;padding:0;font:inherit;color:#1d4ed8;text-decoration:underline;cursor:pointer}
 @media(max-width:640px){.kakao-roadview-view{height:320px}}
+
+/* 로드뷰 패널 버튼/링크: 어두운 배경에서도 읽히게 같은 모양으로 */
+.kakao-roadview-actions .btn{background:#f4f1e8;color:#1b2430;border:1px solid transparent;font-weight:600}
+.kakao-roadview-actions .btn:hover{filter:brightness(.95)}
+/* 지도 위 로드뷰 현재 위치 */
+.kk-walker{position:relative;width:22px;height:22px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(220,38,38,.28);border:2px solid #dc2626;box-sizing:border-box;box-shadow:0 0 0 2px #fff}
+.kk-walker::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#dc2626}
+.kk-walker i{position:absolute;left:50%;top:50%;width:0;height:0;margin:-20px 0 0 -6px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:12px solid #dc2626;transform-origin:6px 20px;pointer-events:none}

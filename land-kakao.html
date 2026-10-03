@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 실제 지도 보기 (운정3지구 시범)</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261003-kakao-2">
+  <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261003-kakao-3">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -68,7 +68,7 @@
   </section>
 
   <p id="kakaoStatus" class="kakao-status" role="status" aria-live="polite">불러오는 중입니다.</p>
-  <p id="kakaoHint" class="kakao-status kakao-hint" hidden>지도를 확대하면 로드뷰가 있는 도로가 파란 선으로 보입니다. 점을 누르고 "로드뷰 보기"를 누르면 아래에 로드뷰가 열립니다.</p>
+  <p id="kakaoHint" class="kakao-status kakao-hint" hidden>지도를 확대하면 로드뷰가 있는 도로가 파란 선으로 보입니다. 지도의 아무 곳이나 누르면 그 위치의 로드뷰가 아래에 열리고, 로드뷰에서 이동하면 지도의 빨간 표시가 따라 움직입니다.</p>
   <div id="kakaoMap" class="kakao-map" aria-label="카카오 지도" hidden></div>
   <section id="kakaoRoadviewPanel" class="kakao-roadview" aria-label="로드뷰" hidden>
     <div class="kakao-roadview-head">
@@ -90,6 +90,6 @@
   </p>
 </main>
 <script src="assets/js/kakao-config.js"></script>
-<script src="assets/js/land-kakao.js?v=20261003-kakao-2"></script>
+<script src="assets/js/land-kakao.js?v=20261003-kakao-3"></script>
 </body>
 </html>
