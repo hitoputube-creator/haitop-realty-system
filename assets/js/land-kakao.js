@@ -13,6 +13,7 @@
   var items = [];          // {row, address, lat, lng, state, type, registered, overlay}
   var geoCache = loadCache();
   var activeOverlays = new Set();
+  var roadview = null, roadviewClient = null, roadviewTarget = null, roadviewRun = 0;
 
   function setStatus(text) { statusEl.textContent = text; }
 
@@ -138,9 +139,14 @@
     }
     var links = document.createElement('div');
     links.className = 'links';
-    [['로드뷰', 'https://map.kakao.com/link/roadview/' + it.lat + ',' + it.lng],
-     ['카카오맵', 'https://map.kakao.com/link/map/' + encodeURIComponent(it.address) + ',' + it.lat + ',' + it.lng],
-     ['관리 화면', 'land-location.html?view=all&block=' + encodeURIComponent(it.row.block_id)]
+    var rvButton = document.createElement('button');
+    rvButton.type = 'button'; rvButton.className = 'kk-link'; rvButton.textContent = '로드뷰 보기';
+    rvButton.addEventListener('click', function () { openRoadview(it); });
+    links.appendChild(rvButton);
+    var detailUrl = 'land-location.html?view=all&block=' + encodeURIComponent(it.row.block_id) +
+      '&subblock=' + encodeURIComponent(it.row.subblock) + '&parcel=' + encodeURIComponent(it.row.parcel);
+    [['카카오맵', 'https://map.kakao.com/link/map/' + encodeURIComponent(it.address) + ',' + it.lat + ',' + it.lng],
+     ['상세 입력', detailUrl]
     ].forEach(function (pair) {
       var a = document.createElement('a');
       a.href = pair[1]; a.target = '_blank'; a.rel = 'noopener'; a.textContent = pair[0];
@@ -150,6 +156,47 @@
     infoWindow.setContent(root);
     infoWindow.setPosition(new kakao.maps.LatLng(it.lat, it.lng));
     infoWindow.open(map);
+  }
+
+  // ---------- 화면 안 로드뷰 ----------
+  function openRoadview(it) {
+    var panel = $('kakaoRoadviewPanel'), view = $('kakaoRoadview'), note = $('kakaoRoadviewNote');
+    var run = ++roadviewRun;
+    panel.hidden = false;
+    $('kakaoRoadviewTitle').textContent = '로드뷰 · ' + it.row.block_id.replace('third-', '') + '-' + it.row.subblock + '-' + it.row.parcel + ' · ' + it.address;
+    $('kakaoRoadviewExternal').href = 'https://map.kakao.com/link/roadview/' + it.lat + ',' + it.lng;
+    note.textContent = '로드뷰를 찾는 중입니다.';
+    view.classList.remove('is-empty');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    var position = new kakao.maps.LatLng(it.lat, it.lng);
+    roadviewTarget = position;
+    if (!roadview) {
+      roadview = new kakao.maps.Roadview(view);
+      roadviewClient = new kakao.maps.RoadviewClient();
+      kakao.maps.event.addListener(roadview, 'init', function () {
+        // 로드뷰가 열리면 해당 필지 쪽을 바라보게 맞춥니다.
+        try {
+          var projection = roadview.getProjection();
+          if (projection && roadviewTarget) roadview.setViewpoint(projection.viewpointFromCoords(roadviewTarget, 2));
+        } catch (e) { /* 방향 맞춤에 실패해도 로드뷰는 그대로 사용 가능 */ }
+      });
+    }
+    roadviewClient.getNearestPanoId(position, 50, function (panoId) {
+      if (run !== roadviewRun) return; // 그 사이 다른 필지를 눌렀거나 닫은 경우
+      if (panoId === null || panoId === undefined) {
+        view.classList.add('is-empty');
+        note.textContent = '이 필지 50m 안에는 로드뷰 사진이 없습니다. 신규 개발지역은 아직 촬영 전이거나 오래된 사진일 수 있어요. 위성지도와 건축물대장으로 확인해주세요.';
+        return;
+      }
+      roadview.setPanoId(panoId, position);
+      note.textContent = '로드뷰는 카카오가 촬영한 시점의 사진입니다. 촬영 이후 새로 지어진 건물은 보이지 않을 수 있어요.';
+    });
+  }
+
+  function closeRoadview() {
+    roadviewRun++;
+    $('kakaoRoadviewPanel').hidden = true;
+    $('kakaoRoadviewNote').textContent = '';
   }
 
   function passes(it) {
@@ -212,8 +259,10 @@
         var on = btn.getAttribute('aria-pressed') !== 'true', id = overlayTypes[btn.dataset.overlay];
         if (on) map.addOverlayMapTypeId(id); else map.removeOverlayMapTypeId(id);
         btn.setAttribute('aria-pressed', String(on));
+        if (btn.dataset.overlay === 'roadview') $('kakaoHint').hidden = !on;
       });
     });
+    $('kakaoRoadviewClose').addEventListener('click', closeRoadview);
     ['kakaoTypeFilter', 'kakaoBuildingFilter', 'kakaoBlockFilter'].forEach(function (id) {
       $(id).addEventListener('change', function () { infoWindow.close(); render(true); });
     });

@@ -438,5 +438,17 @@
     navigate(block);window.HitopLandParcels.focusParcel(blockId,subblock,parcel);return true;
   }};
   render(readState()); applyZoom();
+  // 실제 지도(land-kakao.html)에서 넘어온 경우: ?block=..&subblock=..&parcel=.. 이면 해당 필지 입력창을 연다.
+  // 필지 자료가 다 불러와진 뒤 열리도록 land-parcels.js가 예약해 둔다.
+  {
+    const link = new URLSearchParams(location.search);
+    const linkedBlock = link.get('block'), linkedSub = link.get('subblock'), linkedParcel = link.get('parcel');
+    if (linkedBlock && linkedSub && linkedParcel && byId.get(linkedBlock)?.drawing) {
+      window.HitopLandParcels?.focusParcel(linkedBlock, linkedSub, linkedParcel);
+      const clean = new URL(location.href);
+      clean.searchParams.delete('subblock'); clean.searchParams.delete('parcel');
+      history.replaceState({}, '', clean);
+    }
+  }
 })();
 

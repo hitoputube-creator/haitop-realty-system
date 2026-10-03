@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>하이탑부동산 | 실제 지도 보기 (운정3지구 시범)</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261003-kakao-1">
+  <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261003-kakao-2">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -45,7 +45,7 @@
       <button class="btn" type="button" data-maptype="road" aria-pressed="true">일반</button>
       <button class="btn" type="button" data-maptype="sky" aria-pressed="false">위성</button>
       <button class="btn" type="button" data-overlay="district" aria-pressed="false">지적도</button>
-      <button class="btn" type="button" data-overlay="roadview" aria-pressed="false">로드뷰 구간</button>
+      <button class="btn" type="button" data-overlay="roadview" aria-pressed="false" title="로드뷰 사진이 있는 도로를 파란 선으로 표시합니다">로드뷰 가능 도로(파란선)</button>
     </div>
     <div class="kakao-control-group">
       <label>택지 구분
@@ -68,7 +68,19 @@
   </section>
 
   <p id="kakaoStatus" class="kakao-status" role="status" aria-live="polite">불러오는 중입니다.</p>
+  <p id="kakaoHint" class="kakao-status kakao-hint" hidden>지도를 확대하면 로드뷰가 있는 도로가 파란 선으로 보입니다. 점을 누르고 "로드뷰 보기"를 누르면 아래에 로드뷰가 열립니다.</p>
   <div id="kakaoMap" class="kakao-map" aria-label="카카오 지도" hidden></div>
+  <section id="kakaoRoadviewPanel" class="kakao-roadview" aria-label="로드뷰" hidden>
+    <div class="kakao-roadview-head">
+      <b id="kakaoRoadviewTitle"></b>
+      <span class="kakao-roadview-actions">
+        <a class="btn" id="kakaoRoadviewExternal" href="#" target="_blank" rel="noopener">카카오맵에서 크게 보기</a>
+        <button class="btn" id="kakaoRoadviewClose" type="button">로드뷰 닫기</button>
+      </span>
+    </div>
+    <div id="kakaoRoadview" class="kakao-roadview-view"></div>
+    <p id="kakaoRoadviewNote" class="kakao-status" role="status" aria-live="polite"></p>
+  </section>
   <p class="kakao-legend" id="kakaoLegend" hidden>
     <span><i class="dot dot-building"></i>건물 있음</span>
     <span><i class="dot dot-vacant"></i>건물 없음 확인</span>
@@ -78,6 +90,6 @@
   </p>
 </main>
 <script src="assets/js/kakao-config.js"></script>
-<script src="assets/js/land-kakao.js?v=20261003-kakao-1"></script>
+<script src="assets/js/land-kakao.js?v=20261003-kakao-2"></script>
 </body>
 </html>
