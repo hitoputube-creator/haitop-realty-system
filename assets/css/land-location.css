@@ -477,10 +477,13 @@
 @media(max-width:700px){#parcelEditor .parcel-fields>label[data-span="6"]{grid-column:span 6}}
 #parcelEditor .parcel-photo-input{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
 
-#parcelEditor .pe-address>.parcel-road-address{grid-column:1/-1;margin:0;color:var(--gold-soft);font-size:.82rem}
+#parcelEditor .pe-address>.parcel-road-address{grid-column:1/-1;grid-row:2;margin:0;color:var(--gold-soft);font-size:.82rem}
 /* 세부자료 창: 숫자 칸 오른쪽에 단위(㎡·평·원·원/평)를 붙여 보여줍니다. 저장되는 값은 숫자 그대로입니다. */
 #parcelEditor .unit-field{position:relative;display:block;width:100%}
 #parcelEditor .parcel-fields .unit-field input{padding-right:3.2em;text-align:right}
 #parcelEditor .parcel-fields .unit-field[data-unit="원/평"] input{padding-right:4.6em}
 #parcelEditor .unit-field::after{content:attr(data-unit);position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.82rem;font-weight:600;pointer-events:none}
 #parcelEditor .unit-field:has(input:placeholder-shown)::after{display:none}
+
+/* 소재지 입력칸과 확인 버튼은 한 줄 유지, 새주소 안내는 그 아래 줄 */
+@media(min-width:701px){#parcelEditor .pe-address>label{grid-column:1;grid-row:1}#parcelEditor .pe-address .parcel-live-actions{grid-column:2;grid-row:1}#parcelEditor #parcelRegisterResult{grid-row:3}}
