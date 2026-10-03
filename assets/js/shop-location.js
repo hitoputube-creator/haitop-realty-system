@@ -165,6 +165,7 @@
 
   $('mapStage').addEventListener('click', async e => {
     if (!pinEditing || e.target.closest('.bpin')) return;
+    if (Date.now() < suppressClickUntil) return;
     if (!pinTarget) { say('위치를 지정할 건물을 먼저 고르세요.'); return; }
     const r = $('mapStage').getBoundingClientRect();
     const x = Math.round((e.clientX - r.left) / r.width * 10000) / 100;
@@ -187,12 +188,69 @@
   });
 
   function setZoom(v) {
-    zoom = Math.max(.5, Math.min(3, v));
+    zoom = Math.max(.3, Math.min(12, v));
     $('mapStage').style.width = Math.round(zoom * 100) + '%';
     $('zoomLabel').textContent = Math.round(zoom * 100) + '%';
   }
-  $('zoomIn').addEventListener('click', () => setZoom(zoom + .25));
-  $('zoomOut').addEventListener('click', () => setZoom(zoom - .25));
+  // 마우스 위치(또는 두 손가락 중심)를 기준으로 확대·축소한다.
+  function zoomAt(next, clientX, clientY) {
+    const scroller = $('mapScroll'), stage = $('mapStage');
+    const rect = stage.getBoundingClientRect(), box = scroller.getBoundingClientRect();
+    const fx = rect.width ? (clientX - rect.left) / rect.width : 0;
+    const fy = rect.height ? (clientY - rect.top) / rect.height : 0;
+    setZoom(next);
+    scroller.scrollLeft = fx * stage.offsetWidth - (clientX - box.left);
+    scroller.scrollTop = fy * stage.offsetHeight - (clientY - box.top);
+  }
+  function zoomCenter(factor) {
+    const box = $('mapScroll').getBoundingClientRect();
+    zoomAt(zoom * factor, box.left + box.width / 2, box.top + box.height / 2);
+  }
+  $('zoomIn').addEventListener('click', () => zoomCenter(1.25));
+  $('zoomOut').addEventListener('click', () => zoomCenter(1 / 1.25));
+
+  const scroller = $('mapScroll');
+  let suppressClickUntil = 0;
+  scroller.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoomAt(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX, e.clientY);
+  }, { passive:false });
+
+  // 마우스 드래그로 지도 이동
+  let drag = null;
+  scroller.addEventListener('mousedown', e => {
+    if (e.button !== 0 || e.target.closest('.bpin')) return;
+    drag = { x:e.clientX, y:e.clientY, left:scroller.scrollLeft, top:scroller.scrollTop, moved:false };
+  });
+  window.addEventListener('mousemove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+    drag.moved = true;
+    scroller.scrollLeft = drag.left - dx;
+    scroller.scrollTop = drag.top - dy;
+  });
+  window.addEventListener('mouseup', () => {
+    if (drag && drag.moved) suppressClickUntil = Date.now() + 250;
+    drag = null;
+  });
+
+  // 모바일 두 손가락 확대·축소
+  let pinch = null;
+  const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  scroller.addEventListener('touchstart', e => {
+    if (e.touches.length !== 2) return;
+    pinch = { d:dist(e.touches[0], e.touches[1]), zoom };
+    suppressClickUntil = Date.now() + 500;
+  }, { passive:true });
+  scroller.addEventListener('touchmove', e => {
+    if (!pinch || e.touches.length !== 2) return;
+    e.preventDefault();
+    const [a, b] = e.touches;
+    zoomAt(pinch.zoom * dist(a, b) / pinch.d, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+    suppressClickUntil = Date.now() + 500;
+  }, { passive:false });
+  scroller.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = null; });
 
   // ----- 검색 -----
   function fillSelect(sel, values) {

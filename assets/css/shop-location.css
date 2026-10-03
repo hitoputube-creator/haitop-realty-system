@@ -26,7 +26,7 @@ select, input, textarea { border:1px solid #536989; border-radius:7px; padding:8
 .map-stage { position:relative; width:100%; line-height:0; }
 .map-stage.editing { cursor:crosshair; }
 .map-stage img { width:100%; height:auto; display:block; user-select:none; -webkit-user-drag:none; }
-.map-scroll { background:#fff; overscroll-behavior:contain; }
+.map-scroll { cursor:grab; background:#fff; overscroll-behavior:contain; }
 .map-clean-mask { position:absolute; inset:0; display:block; width:100%; height:100%; z-index:1; pointer-events:none; }
 .map-pins { position:absolute; inset:0; pointer-events:none; z-index:2; }
 .bpin { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; border:2px solid currentColor; border-radius:8px; padding:3px 6px;
