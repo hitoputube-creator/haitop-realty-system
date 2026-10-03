@@ -590,8 +590,11 @@
   });
   ['parcelClose','parcelModalClose'].forEach(id=>$(id).addEventListener('click',closeEditor));
   $('parcelEditor').addEventListener('close',()=>{if (!$('parcelEditor').open) { $('parcelEditor').hidden=true; window.HitopParcelNotes?.close(); }});
+  let editorDownOnBackdrop = false;
+  $('parcelEditor').addEventListener('pointerdown',event=>{ editorDownOnBackdrop = event.target === $('parcelEditor'); });
   $('parcelEditor').addEventListener('click',event=>{
-    if (event.target !== $('parcelEditor')) return;
+    const downOnBackdrop = editorDownOnBackdrop; editorDownOnBackdrop = false;
+    if (event.target !== $('parcelEditor') || !downOnBackdrop) return;
     const rect = $('parcelEditor').getBoundingClientRect();
     if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeEditor();
   });
