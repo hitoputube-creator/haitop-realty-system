@@ -14,23 +14,39 @@ const tag = (xml: string, name: string) => {
   const raw = xml.match(new RegExp('<' + name + '(?:\\s[^>]*)?>([\\s\\S]*?)</' + name + '>'))?.[1] || '';
   return raw.replace(/^<!\[CDATA\[|\]\]>$/g, '').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
 };
+const snippet = (text: string) => {
+  let out = String(text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
+  for (const k of [key, key && encodeURIComponent(key)]) if (k) out = out.split(k).join('***');
+  return out || '응답 내용 없음';
+};
 async function api(service: string, op: string, params: Record<string, string>) {
-  if (!key) throw new Error('공공데이터 인증키 연결이 필요합니다. 단지 목록·기본 정보 서비스 활용신청 후 KAPT_API_KEY를 등록해주세요.');
+  if (!key) throw new Error('[인증키 없음] 서버에 KAPT_API_KEY 또는 BUILDING_REGISTER_API_KEY 값이 등록되어 있지 않습니다.');
   let rawKey = key;
   try { rawKey = decodeURIComponent(key); } catch { /* raw decoding key */ }
   const url = new URL('https://apis.data.go.kr/1613000/' + service + '/' + op);
   url.searchParams.set('serviceKey', rawKey);
   url.searchParams.set('_type', 'json');
   for (const [k,v] of Object.entries(params)) url.searchParams.set(k,v);
-  const res = await fetch(url, {signal:AbortSignal.timeout(15000)});
-  const body = await res.text();
-  if (/SERVICE_ACCESS_DENIED|SERVICE_KEY_IS_NOT_REGISTERED|PERMISSION_DENIED|<returnReasonCode>(20|30)</.test(body) || [401,403].includes(res.status)) {
-    throw new Error('공공데이터포털에서 공동주택 단지 목록·기본 정보 서비스의 활용신청 승인을 확인해주세요.');
+  let res: Response, body: string;
+  try {
+    res = await fetch(url, {signal:AbortSignal.timeout(15000)});
+    body = await res.text();
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e);
+    console.error('[apartments]', service + '/' + op, 'fetch failed:', e instanceof Error ? e.name : '', reason);
+    throw new Error('[공공데이터 서버 연결 실패] ' + service + ' · ' + (e instanceof Error && e.name === 'TimeoutError' ? '15초 안에 응답이 없습니다.' : reason));
   }
-  if (!res.ok) throw new Error('공공데이터 조회가 지연되고 있습니다. 잠시 후 다시 시도해주세요.');
+  if (/SERVICE_ACCESS_DENIED|SERVICE_KEY_IS_NOT_REGISTERED|PERMISSION_DENIED|<returnReasonCode>(20|30)</.test(body) || [401,403].includes(res.status)) {
+    console.error('[apartments]', service + '/' + op, 'access denied', res.status, snippet(body));
+    throw new Error('[서비스 승인/인증키 문제] ' + service + ' · HTTP ' + res.status + ' · 공공데이터포털에서 활용신청 승인 상태와 인증키를 확인해주세요. (' + snippet(body) + ')');
+  }
+  if (!res.ok) {
+    console.error('[apartments]', service + '/' + op, 'http', res.status, snippet(body));
+    throw new Error('[공공데이터 서버 응답 오류] ' + service + ' · HTTP ' + res.status + ' · ' + snippet(body));
+  }
   if (body.trim().startsWith('<')) {
     const code = tag(body,'resultCode') || tag(body,'returnReasonCode');
-    if (code && !['00','0','000'].includes(code)) throw new Error('공공데이터 조회 오류 (' + code + '). 인증키·활용신청 상태를 확인해주세요.');
+    if (code && !['00','0','000'].includes(code)) throw new Error('[공공데이터 오류코드 ' + code + '] ' + service + ' · ' + (tag(body,'resultMsg') || tag(body,'returnAuthMsg') || '인증키·활용신청 상태를 확인해주세요.'));
     const items = Array.from(body.matchAll(/<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/g), m => {
       const row: Record<string,string> = {};
       for (const field of ['kaptCode','kaptName','kaptAddr','doroJuso','bjdCode','kaptdaCnt','kaptUsedate','useYn']) row[field] = tag(m[1],field);
@@ -39,9 +55,9 @@ async function api(service: string, op: string, params: Record<string, string>) 
     return {items, total:Number(tag(body,'totalCount') || items.length)};
   }
   let data;
-  try { data = JSON.parse(body); } catch { throw new Error('공공데이터 응답을 읽지 못했습니다.'); }
+  try { data = JSON.parse(body); } catch { throw new Error('[응답 형식 오류] ' + service + ' · ' + snippet(body)); }
   const header = data?.response?.header || data?.header;
-  if (header?.resultCode !== undefined && !['00','0','000'].includes(String(header.resultCode))) throw new Error('공공데이터 조회 오류 (' + header.resultCode + '). 인증키·활용신청 상태를 확인해주세요.');
+  if (header?.resultCode !== undefined && !['00','0','000'].includes(String(header.resultCode))) throw new Error('[공공데이터 오류코드 ' + header.resultCode + '] ' + service + ' · ' + String(header.resultMsg || '인증키·활용신청 상태를 확인해주세요.'));
   const content = data?.response?.body || data?.body || data;
   const value = content?.items?.item ?? content?.items ?? content?.item ?? [];
   const items = Array.isArray(value) ? value : value && typeof value === 'object' ? [value] : [];
@@ -81,7 +97,8 @@ Deno.serve(async req => {
     }
     return reply({error:'조회 작업을 확인해주세요.'},400);
   } catch (err) {
-    const message = err instanceof Error && err.name !== 'TimeoutError' && !/fetch|network/i.test(err.message) ? err.message : '조회 연결이 지연되고 있습니다. 기존 정보를 유지하고 잠시 후 다시 시도해주세요.';
+    console.error('[apartments] request failed:', err instanceof Error ? err.name + ': ' + err.message : err);
+    const message = err instanceof Error && err.message ? err.message : '알 수 없는 오류가 발생했습니다.';
     return reply({error:message},502);
   }
 });

@@ -373,6 +373,8 @@
     updateArea();
     updateBuildingSection();
     updateParcelLabel();
+    $('parcelRegisterResult').textContent=row.data?.buildingCheck?.status==='found'?'최근 대장 확인 '+new Date(row.data.buildingCheck.checkedAt).toLocaleDateString('ko-KR')+' · 대장상 건물 있음'+(row.data.buildingPurpose?' · 주용도 '+row.data.buildingPurpose:'')+(row.data.buildingApproval?' · 사용승인 '+row.data.buildingApproval:''):'';
+    updateLiveLinks();
     $('parcelEditor').hidden = false; $('parcelDelete').hidden = !row.id;
     if (!$('parcelEditor').open) $('parcelEditor').showModal();
     $('parcelEditor').scrollTop = 0;
@@ -588,21 +590,55 @@
   }
   $('parcel-building').addEventListener('change',updateBuildingSection);
   ['buildingFootprint','buildingTotalArea'].forEach(name=>$('parcel-'+name).addEventListener('input',updateBuildingSection));
-  $('parcelBuildingLookup').addEventListener('click',async()=>{
+  function mapQuery(address){const text=String(address||'').trim();return /파주/.test(text)?text:'파주시 '+text;}
+  function updateLiveLinks(){
+    const address=$('parcel-address').value.trim(),has=/[가-힣]+(?:동|리)\s+(?:산\s*)?\d+/.test(address),query=encodeURIComponent(mapQuery(address));
+    [['parcelKakaoLink','https://map.kakao.com/link/search/'+query],['parcelSatelliteLink','https://www.google.com/maps?q='+query+'&t=k']].forEach(([id,url])=>{
+      const link=$(id);if(!link)return;
+      link.href=has?url:'#';link.setAttribute('aria-disabled',String(!has));link.classList.toggle('is-disabled',!has);
+    });
+  }
+  function registerSummary(result,prior){
+    const check=result.buildingCheck;let text='대장상 건물 있음';
+    if(check.multiple)text+=' · 한 지번에 대장 여러 건';
+    else{
+      if(result.buildingPurpose)text+=' · 주용도 '+result.buildingPurpose;
+      if(result.buildingApproval)text+=' · 사용승인 '+result.buildingApproval;
+      if(result.buildingFloors)text+=' · '+result.buildingFloors;
+    }
+    if(prior==='vacant')text+=' · 주의: 저장된 "건물 없음 확인"과 다릅니다. 현장 확인 후 저장하세요.';
+    return text;
+  }
+  async function runRegisterCheck(button){
     if(busy||!selected)return;
-    const run=generation,target=selected,address=$('parcel-address').value.trim(),button=$('parcelBuildingLookup');
-    busy=true;button.disabled=true;$('parcelSave').disabled=true;status('건축물대장을 조회 중입니다.');
+    const run=generation,target=selected,address=$('parcel-address').value.trim(),prior=target.data?.building,result=$('parcelRegisterResult');
+    busy=true;button.disabled=true;$('parcelSave').disabled=true;status('건축물대장을 조회 중입니다.');result.textContent='건축물대장을 조회 중입니다.';
     try{
-      const result=await lookupParcelBuilding(address);
+      const found=await lookupParcelBuilding(address);
       if(run!==generation||selected!==target||!$('parcelEditor').open)return;
-      if($('parcel-address').value.trim()!==address){status('주소가 변경되었습니다. 다시 조회해주세요.');return;}
-      selected.data.buildingCheck=result.buildingCheck;
-      Object.entries(result).forEach(([name,value])=>{if(buildingFields.includes(name))$('parcel-'+name).value=value;});
+      if($('parcel-address').value.trim()!==address){status('주소가 변경되었습니다. 다시 조회해주세요.');result.textContent='';return;}
+      selected.data.buildingCheck=found.buildingCheck;
+      Object.entries(found).forEach(([name,value])=>{if(buildingFields.includes(name))$('parcel-'+name).value=value;});
       $('parcel-building').checked=true;updateBuildingSection();
-      status(result.buildingCheck.multiple?'건물은 확인했습니다. 대장이 여러 건이므로 건물 세부내용은 원본과 대조해 입력해주세요. 저장 버튼을 눌러 반영하세요.':'건물 정보를 채웠습니다. 세부자료 저장을 눌러 반영하세요.');
-    }catch(error){if(run===generation&&selected===target)status(error.message);}
+      result.textContent=registerSummary(found,prior);
+      status(found.buildingCheck.multiple?'건물은 확인했습니다. 대장이 여러 건이므로 건물 세부내용은 원본과 대조해 입력해주세요. 저장 버튼을 눌러 반영하세요.':'건물 정보를 채웠습니다. 세부자료 저장을 눌러 반영하세요.');
+    }catch(error){
+      if(run===generation&&selected===target){
+        status(error.message);
+        let text=error.message;
+        if(/미조회/.test(error.message)){
+          text='대장에서 건물이 조회되지 않았습니다. 공터이거나, 신축·공사 중이라 대장에 아직 없을 수 있어 위성지도·로드뷰로 함께 확인하세요.';
+          if(prior==='building')text+=' 주의: 현재 "건물 있음"으로 저장되어 있습니다.';
+        }
+        result.textContent=text;
+      }
+    }
     finally{busy=false;button.disabled=false;$('parcelSave').disabled=false;}
-  });
+  }
+  $('parcelBuildingLookup').addEventListener('click',()=>runRegisterCheck($('parcelBuildingLookup')));
+  $('parcelRegisterCheck').addEventListener('click',()=>runRegisterCheck($('parcelRegisterCheck')));
+  $('parcel-address').addEventListener('input',updateLiveLinks);
+  ['parcelKakaoLink','parcelSatelliteLink'].forEach(id=>$(id).addEventListener('click',event=>{if($(id).getAttribute('aria-disabled')==='true'){event.preventDefault();status('실제 지번주소를 먼저 입력해주세요.');}}));
   let buildingUpdateRun=null;
   $('parcelBuildingUpdate').addEventListener('click',async()=>{
     if(buildingUpdateRun){buildingUpdateRun.cancelled=true;return;}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하이탑부동산 | 실제 지도 보기 (운정3지구 시범)</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261003-kakao-1">
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/admin-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+</head>
+<body>
+<main class="page land-kakao-page">
+  <header class="header">
+    <div class="logo-icon" aria-hidden="true"></div>
+    <div class="logo-text"><div class="logo-main">하이탑부동산 실제 지도 보기</div><div class="logo-sub">운정3지구 시범 · 카카오맵</div></div>
+    <nav class="main-nav" aria-label="페이지 이동">
+      <a class="nav-link" href="land-location.html">택지 위치도로</a>
+      <a class="nav-link" href="land-resources.html">택지자료 목록으로</a>
+      <a class="nav-link" href="property-main.html?category=land">매물관리 메인으로</a>
+      <button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button>
+    </nav>
+  </header>
+  <div class="header-line"></div>
+
+  <section class="kakao-intro">
+    <h1>최신 지도로 보는 택지 현황</h1>
+    <p>등록된 지번주소를 카카오 지도 위 위치로 바꿔 표시합니다. 위성·지적도·로드뷰로 건물이 지어졌는지 확인하세요. 파란 점은 건물 있음, 회색은 건물 없음 확인, 주황은 아직 확인 전입니다.</p>
+  </section>
+
+  <section id="kakaoSetupNotice" class="kakao-notice" hidden>
+    <h2>카카오맵 키 설정이 필요합니다</h2>
+    <ol>
+      <li>developers.kakao.com에서 앱을 만들고 <b>JavaScript 키</b>를 복사합니다.</li>
+      <li>[플랫폼 &gt; Web]에 <b>https://hitoputube-creator.github.io</b> 를 등록합니다.</li>
+      <li><code>assets/js/kakao-config.js</code> 의 따옴표 안에 키를 붙여넣고 저장합니다.</li>
+    </ol>
+    <p>키 설정 전에는 지도가 표시되지 않습니다. 기존 택지 위치도는 그대로 사용할 수 있습니다.</p>
+  </section>
+
+  <section id="kakaoControls" class="kakao-controls" hidden>
+    <div class="kakao-control-group" role="group" aria-label="지도 종류">
+      <button class="btn" type="button" data-maptype="road" aria-pressed="true">일반</button>
+      <button class="btn" type="button" data-maptype="sky" aria-pressed="false">위성</button>
+      <button class="btn" type="button" data-overlay="district" aria-pressed="false">지적도</button>
+      <button class="btn" type="button" data-overlay="roadview" aria-pressed="false">로드뷰 구간</button>
+    </div>
+    <div class="kakao-control-group">
+      <label>택지 구분
+        <select id="kakaoTypeFilter"><option value="all">전체</option><option value="single">주거전용</option><option value="shop">상가점포</option></select>
+      </label>
+      <label>건물 상태
+        <select id="kakaoBuildingFilter"><option value="all">전체</option><option value="building">건물 있음</option><option value="vacant">건물 없음 확인</option><option value="unknown">확인 전</option></select>
+      </label>
+      <label>블럭
+        <select id="kakaoBlockFilter"><option value="all">운정3지구 전체</option></select>
+      </label>
+      <label class="kakao-search">주소 검색
+        <input id="kakaoSearch" type="search" maxlength="100" placeholder="예: 와동동 1677">
+      </label>
+    </div>
+    <div class="kakao-control-group">
+      <button class="btn" id="kakaoFit" type="button">표시된 필지에 맞춤</button>
+      <button class="btn" id="kakaoRetry" type="button" hidden>위치 못 찾은 필지 다시 시도</button>
+    </div>
+  </section>
+
+  <p id="kakaoStatus" class="kakao-status" role="status" aria-live="polite">불러오는 중입니다.</p>
+  <div id="kakaoMap" class="kakao-map" aria-label="카카오 지도" hidden></div>
+  <p class="kakao-legend" id="kakaoLegend" hidden>
+    <span><i class="dot dot-building"></i>건물 있음</span>
+    <span><i class="dot dot-vacant"></i>건물 없음 확인</span>
+    <span><i class="dot dot-unknown"></i>확인 전</span>
+    <span><i class="dot dot-shop"></i>사각형은 상가점포</span>
+    <span><i class="check-mark">✓</i>건축물대장 확인</span>
+  </p>
+</main>
+<script src="assets/js/kakao-config.js"></script>
+<script src="assets/js/land-kakao.js?v=20261003-kakao-1"></script>
+</body>
+</html>
