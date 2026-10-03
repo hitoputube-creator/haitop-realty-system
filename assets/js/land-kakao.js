@@ -14,6 +14,7 @@
   var geoCache = loadCache();
   var activeOverlays = new Set();
   var roadview = null, roadviewClient = null, roadviewTarget = null, roadviewRun = 0;
+  var sourceNoAddress = 0;
   var roadviewClickOn = false, walker = null, walkerArrow = null;
 
   function setStatus(text) { statusEl.textContent = text; }
@@ -46,6 +47,35 @@
       offset += page;
     }
     return rows;
+  }
+
+  // 원본 자료(공급금액·면적·지번주소): 편집창이 채워 주는 값과 같은 출처입니다. 읽기만 합니다.
+  async function loadSourceParcels() {
+    try {
+      var session = await hitopAuthClient.auth.getSession();
+      var token = session.data && session.data.session && session.data.session.access_token;
+      if (!token) return [];
+      var res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/land_block_sources?select=block_id,parcels:source_data->parcels&block_id=like.third-*', { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + token } }, 40000);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (e) { return []; }
+  }
+
+  // 저장된 필지에 없는 원본 필지 중 지번주소(예: 와동동 1698-3)가 있는 것만 지도용 행으로 만듭니다.
+  function sourceRows(blocks, savedRows) {
+    var saved = new Set(savedRows.map(function (r) { return r.block_id + '|' + r.subblock + '|' + r.parcel; }));
+    var out = [], noAddress = 0;
+    blocks.forEach(function (b) {
+      (b.parcels || []).forEach(function (p) {
+        if (saved.has(b.block_id + '|' + p.subblock + '|' + p.parcel)) return;
+        var data = Object.assign({}, p.data || {});
+        data.address = String(data.address || '').replace(/-0$/, '').trim();
+        if (!ADDRESS_PATTERN.test(data.address)) { noAddress++; return; }
+        out.push({ id: null, block_id: b.block_id, subblock: String(p.subblock), parcel: String(p.parcel), data: data, fromSource: true, source: p.source || {} });
+      });
+    });
+    out.noAddress = noAddress;
+    return out;
   }
 
   function buildItems(rows) {
@@ -108,7 +138,7 @@
 
   function pinContent(it) {
     var el = document.createElement('div');
-    el.className = 'kk-pin ' + it.state + (it.type === 'shop' ? ' shop' : '') + (it.registered ? ' registered' : '');
+    el.className = 'kk-pin ' + it.state + (it.type === 'shop' ? ' shop' : '') + (it.registered ? ' registered' : '') + (it.row.fromSource ? ' source' : '');
     el.title = it.address;
     el.addEventListener('click', function () { openInfo(it); });
     return el;
@@ -129,6 +159,14 @@
     root.appendChild(title);
     line(root, it.address);
     line(root, (it.type === 'shop' ? '상가점포' : '주거전용') + ' · ' + stateLabel(it.state));
+    var area = Number(data.area), won = it.row.source && it.row.source.supplyPriceWon;
+    if (area > 0 || won) {
+      var facts = [];
+      if (area > 0) facts.push(area.toLocaleString('ko-KR') + '㎡ (' + (area / 3.305785).toFixed(1) + '평)');
+      if (won) facts.push('공급 ' + Math.round(won / 10000).toLocaleString('ko-KR') + '만원');
+      line(root, facts.join(' · '));
+    }
+    if (it.row.fromSource) line(root, '원본 자료만 있음 · 아직 저장 안 함');
     if (it.registered) {
       var info = ['대장상 건물 있음'];
       if (data.buildingPurpose) info.push('주용도 ' + data.buildingPurpose);
@@ -275,7 +313,9 @@
     var withAddress = items.filter(function (it) { return it.hasAddress; }).length;
     var placed = items.filter(function (it) { return it.lat !== null; }).length;
     var missing = withAddress - placed, noAddress = items.length - withAddress;
-    var text = '필지 ' + items.length + '건 중 ' + shown + '건 표시';
+    var savedCount = items.filter(function (it) { return !it.row.fromSource; }).length;
+    var text = '필지 ' + items.length + '건 중 ' + shown + '건 표시 (저장된 자료 ' + savedCount + ' + 원본 자료만 있는 필지 ' + (items.length - savedCount) + ')';
+    if (sourceNoAddress) text += ' · 원본 자료 중 지번주소가 없는 ' + sourceNoAddress + '건은 표시 불가';
     if (noAddress) text += ' · 지번주소 없음 ' + noAddress + '건';
     if (missing) text += ' · 지도에서 위치를 못 찾음 ' + missing + '건';
     setStatus(text);
@@ -342,7 +382,9 @@
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
     setStatus('택지 필지 자료를 불러오는 중입니다.');
     var rows = await loadParcels();
-    items = buildItems(rows);
+    var extra = sourceRows(await loadSourceParcels(), rows);
+    sourceNoAddress = extra.noAddress || 0;
+    items = buildItems(rows.concat(extra));
     fillBlockFilter();
     bindControls();
     await resolveAll(false);

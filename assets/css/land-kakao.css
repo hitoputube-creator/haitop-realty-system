@@ -51,3 +51,5 @@
 .kk-walker{position:relative;width:22px;height:22px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(220,38,38,.28);border:2px solid #dc2626;box-sizing:border-box;box-shadow:0 0 0 2px #fff}
 .kk-walker::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#dc2626}
 .kk-walker i{position:absolute;left:50%;top:50%;width:0;height:0;margin:-20px 0 0 -6px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:12px solid #dc2626;transform-origin:6px 20px;pointer-events:none}
+.kk-pin.source{box-shadow:0 0 0 1px rgba(0,0,0,.45);opacity:.8;background-image:none}.kk-pin.source.unknown{background:rgba(245,158,11,.38);border-color:#f59e0b}.kk-pin.source.building{background:rgba(37,99,235,.38);border-color:#2563eb}.kk-pin.source.vacant{background:rgba(139,149,165,.38);border-color:#8b95a5}
+.dot-source{background:rgba(245,158,11,.38);border-color:#f59e0b}
