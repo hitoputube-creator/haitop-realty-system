@@ -757,6 +757,16 @@
       });
     });
   }
+  function pointOfAddress(geocoder,address){
+    return new Promise(resolve=>{
+      const timer=setTimeout(()=>resolve(null),8000);
+      geocoder.addressSearch('파주시 '+address,(result,state)=>{
+        clearTimeout(timer);
+        if(state===window.kakao.maps.services.Status.OK&&result[0]){const lng=Number(result[0].x),lat=Number(result[0].y);resolve(Number.isFinite(lng)&&Number.isFinite(lat)?{lng,lat}:null);}
+        else resolve(null);
+      });
+    });
+  }
   async function mapLimit(items,limit,work){
     const out=new Array(items.length);let next=0;
     await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{while(next<items.length){const i=next++;out[i]=await work(items[i],i);}}));
@@ -787,13 +797,17 @@
       if(!lhResponse.ok)throw Error('LH 공고 자료를 불러오지 못했습니다.');
       const lhRecords=new Map(((await lhResponse.json()).records||[]).filter(item=>item.blockId===blockId).map(item=>[String(item.subblock)+'-'+String(item.parcel),item]));
       closeEditor();selected=null;
-      const unresolved=[],controls=[];
+      const unresolved=[],controls=[],manual=[];let manualUsed=0;
       for(const row of [...combinedParcels().values()]){
         if(run!==generation)break;
         const record=lhRecords.get(String(row.subblock)+'-'+String(row.parcel)),lno=String(record?.list?.lno||'').trim(),dong=String(record?.list?.lgdnDtlAdr||'').trim().split(/\s+/).pop();
         const shown=String(row.data.address||'').trim(),x=Number(row.x),y=Number(row.y);
         if(!record||!/^\d+(?:-\d+)?$/.test(lno)||!/(?:동|리)$/.test(dong)){
-          noLh++;if(!REAL_ADDRESS.test(shown)&&Number.isFinite(x)&&Number.isFinite(y)&&row.x!=null&&row.y!=null&&!row.data?.mapPositionUnavailable)unresolved.push({row,x,y});
+          noLh++;
+          const hasPosition=Number.isFinite(x)&&Number.isFinite(y)&&row.x!=null&&row.y!=null;
+          if(!REAL_ADDRESS.test(shown)&&hasPosition&&!row.data?.mapPositionUnavailable)unresolved.push({row,x,y});
+          // 직접 입력한 지번(위치 추정으로 채운 것은 제외)은 위치 추정의 기준점으로 씁니다.
+          else if(REAL_ADDRESS.test(shown)&&hasPosition&&row.data?.addressSource!=='위치 추정(카카오 지적)'){const m=shown.match(/^([가-힣]+(?:동|리))\s*(.+)$/);if(m)manual.push({x,y,dong:m[1],address:m[1]+' '+m[2]});}
           continue;
         }
         const address=dong+' '+lno,ring=record.geometry?.coordinates?.[0]?.[0];
@@ -805,7 +819,16 @@
       }
       // ---- 2단계: LH 공고에 없는 필지의 지번을 위치로 추정 ----
       if(run===generation&&errors<3&&unresolved.length){
-        if(controls.length<5){notice='LH 지번이 있는 필지가 '+controls.length+'곳뿐이라 위치 추정은 하지 않았습니다(5곳 이상 필요).';}
+        if(manual.length){
+          try{
+            status('직접 입력한 지번 '+manual.length+'곳의 위치 확인 중');
+            await loadKakaoServices();
+            const geo=new kakao.maps.services.Geocoder();
+            const points=await mapLimit(manual,4,item=>pointOfAddress(geo,item.address));
+            points.forEach((point,i)=>{if(point){controls.push({...manual[i],lng:point.lng,lat:point.lat});manualUsed++;}});
+          }catch(error){/* 기준점을 만들지 못하면 아래 안내로 이어집니다 */}
+        }
+        if(controls.length<5){notice='기준이 되는 지번이 '+controls.length+'곳뿐이라 위치 추정은 하지 않았습니다(LH 지번 또는 직접 입력한 지번이 5곳 이상 필요).';}
         else{
           try{
             status('지번 위치 추정 준비 중 · 카카오 지도 불러오는 중');
@@ -839,7 +862,7 @@
       }
       {
         if(run===generation)draw();
-        const text='소재지 지번 업데이트 · LH 지번으로 채움 '+filled+'건'+(estimated||verify?' · 위치 추정으로 채움 '+estimated+'건':'')+(verify?' (LH 기준 검증 '+verify.ok+'/'+verify.total+' 일치)':'')+' · 이미 같음 '+same+'건'+(different?' · 기존 주소가 달라 그대로 둠 '+different+'건':'')+(review.length?' · 확인 필요(저장 안 함) '+review.length+'건: '+review.slice(0,12).join(', ')+(review.length>12?' 외':''):'')+(!verify&&!notice?' · LH 지번 아직 없음 '+noLh+'건':'')+(errors?' · 저장 실패 '+errors+'건':'')+(notice?' · '+notice:'');
+        const text='소재지 지번 업데이트 · LH 지번으로 채움 '+filled+'건'+(estimated||verify?' · 위치 추정으로 채움 '+estimated+'건':'')+(verify?' (기준 지번 검증 '+verify.ok+'/'+verify.total+' 일치)':'')+(manualUsed?' · 직접 입력 지번 '+manualUsed+'곳을 기준으로 사용':'')+' · 이미 같음 '+same+'건'+(different?' · 기존 주소가 달라 그대로 둠 '+different+'건':'')+(review.length?' · 확인 필요(저장 안 함) '+review.length+'건: '+review.slice(0,12).join(', ')+(review.length>12?' 외':''):'')+(!verify&&!notice?' · LH 지번 아직 없음 '+noLh+'건':'')+(errors?' · 저장 실패 '+errors+'건':'')+(notice?' · '+notice:'');
         $('parcelAddressSnapshot').textContent=text;if(run===generation)status(text);
       }
     }catch(error){status('소재지 지번 업데이트에 실패했습니다. '+(error&&error.message?error.message:''));}
