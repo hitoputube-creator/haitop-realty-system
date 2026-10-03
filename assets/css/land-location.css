@@ -420,3 +420,39 @@
 #parcelEditor .pe-actions #parcelDelete{color:#f87171;border-color:rgba(248,113,113,.5);background:transparent}
 #parcelEditor .parcel-modal-close{background:transparent}
 @media(max-width:600px){#parcelEditor .pe-head{position:static}}
+/* ===== v2: 더 간단하고 낮은 편집창 ===== */
+#parcelEditor .parcel-fields{grid-template-columns:repeat(12,minmax(0,1fr));gap:10px 12px}
+#parcelEditor .parcel-fields>label{grid-column:span 3}
+#parcelEditor .parcel-fields>label[data-span="2"]{grid-column:span 2}
+#parcelEditor .parcel-fields>label[data-span="4"]{grid-column:span 4}
+#parcelEditor .parcel-fields>label[data-span="3"]{grid-column:span 3}
+#parcelEditor .parcel-fields>label[data-span="6"]{grid-column:1/-1}
+#parcelEditor .parcel-fields>.parcel-value-pair{display:contents}
+#parcelEditor .pe-section{padding:12px 0 0;border-top:0}
+#parcelEditor form>.pe-section:first-child{padding-top:8px}
+#parcelEditor .pe-section:not(.parcel-building-details)>.pe-title{display:none}
+#parcelEditor .parcel-building-details{margin-top:14px;padding-top:12px;border-top:1px solid var(--border-slate)}
+#parcelEditor .pe-title,#parcelEditor .parcel-building-heading h4{margin:0 0 8px}
+#parcelEditor .parcel-fields label,#parcelEditor .pe-address>label{gap:4px;font-size:.74rem}
+#parcelEditor .parcel-fields input,#parcelEditor .parcel-fields select,#parcelEditor .parcel-fields textarea,#parcelEditor .pe-address input{min-height:36px;padding:6px 10px;font-size:.88rem}
+#parcelEditor .parcel-fields textarea{min-height:36px;height:36px;resize:vertical}
+#parcelEditor .parcel-fields .parcel-unsold-check{align-self:end;min-height:36px;box-sizing:border-box;padding:0 10px;gap:8px;white-space:nowrap}
+#parcelEditor .parcel-fields .parcel-unsold-check .parcel-field-label{font-size:.85rem}
+#parcelEditor .pe-address{grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:6px 10px}
+#parcelEditor .parcel-live-check{display:contents}
+#parcelEditor .parcel-live-actions{flex-wrap:nowrap}
+#parcelEditor .parcel-live-actions .btn{min-height:36px;padding:0 11px;white-space:nowrap}
+#parcelEditor #parcelRegisterResult{grid-column:1/-1;padding:0;flex:none}
+#parcelEditor .pe-actions{margin-top:14px}
+#parcelEditor .pe-actions .btn{min-height:38px}
+#parcelEditor .parcel-notes{margin-top:18px}
+@media(max-width:700px){
+#parcelEditor .parcel-fields>label,#parcelEditor .parcel-fields>label[data-span]{grid-column:span 6}
+#parcelEditor .parcel-fields>label[data-span="6"]{grid-column:1/-1}
+#parcelEditor .pe-address{grid-template-columns:1fr}
+#parcelEditor .parcel-live-actions{flex-wrap:wrap}
+#parcelEditor .parcel-fields>label.parcel-note{grid-column:1/-1}
+}
+#parcelEditor .parcel-value-pair>label{grid-column:span 3}
+@media(max-width:700px){#parcelEditor .parcel-value-pair>label{grid-column:span 6}}
+#parcelEditor #parcelNoteText{min-height:64px;height:64px;resize:vertical}
