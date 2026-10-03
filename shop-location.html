@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하이탑부동산 | 상가 위치도</title>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="assets/css/shop-location.css?v=20261003-1">
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/admin-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+</head>
+<body>
+<main class="shop-page">
+  <header class="shop-header">
+    <div>
+      <h1>하이탑부동산 상가 위치도</h1>
+      <p>건물을 누르거나 조건으로 호실을 찾아보세요 (내부용)</p>
+    </div>
+    <nav class="shop-nav" aria-label="페이지 이동">
+      <a class="shop-btn" href="resources.html">상가 자료관리</a>
+      <a class="shop-btn" href="floor-status-overview.html">층별 현황</a>
+      <a class="shop-btn" href="property-main.html?category=shop">매물관리 메인</a>
+      <button type="button" class="shop-btn" onclick="hitopAdminLogout()">로그아웃</button>
+    </nav>
+  </header>
+
+  <p id="shopMessage" class="shop-message" role="status">불러오는 중...</p>
+
+  <section class="shop-card" aria-labelledby="mapTitle">
+    <div class="shop-card-head">
+      <h2 id="mapTitle">위치도</h2>
+      <div class="shop-tools">
+        <span class="shop-legend"><b class="dot vacant"></b>공실 있음 <b class="dot full"></b>공실 없음 <b class="dot none"></b>호실 미등록</span>
+        <button type="button" class="shop-btn" id="zoomOut" aria-label="축소">−</button>
+        <output id="zoomLabel">100%</output>
+        <button type="button" class="shop-btn" id="zoomIn" aria-label="확대">＋</button>
+        <button type="button" class="shop-btn" id="pinEditToggle">건물 위치 설정</button>
+      </div>
+    </div>
+    <p id="pinHelp" class="shop-help" hidden></p>
+    <div class="map-scroll" id="mapScroll">
+      <div class="map-stage" id="mapStage">
+        <img id="mapImage" src="assets/images/land/lh-unjeong-overview-hires-2312.webp" alt="운정신도시 위치도" draggable="false">
+        <div class="map-pins" id="mapPins"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="shop-card" aria-labelledby="filterTitle">
+    <div class="shop-card-head">
+      <h2 id="filterTitle">호실 검색</h2>
+      <div class="shop-tools">
+        <select id="savedFilters" aria-label="저장한 조건"><option value="">저장한 조건 불러오기</option></select>
+        <button type="button" class="shop-btn" id="saveFilter">현재 조건 저장</button>
+        <button type="button" class="shop-btn" id="deleteFilter">저장 조건 삭제</button>
+        <button type="button" class="shop-btn" id="resetFilter">초기화</button>
+      </div>
+    </div>
+    <form id="filterForm" class="filter-grid" autocomplete="off">
+      <label>건물·호실·소유주<input type="search" name="q" placeholder="검색어"></label>
+      <label>건물<select name="building"><option value="">전체</option></select></label>
+      <label>층<select name="floor"><option value="">전체</option></select></label>
+      <label>상태<select name="status"><option value="">전체</option><option>공실</option><option>임차중</option><option>매매가능</option><option>계약진행</option></select></label>
+      <label>업종<select name="biz"><option value="">전체</option></select></label>
+      <label>보증금 (만원)<span class="pair"><input type="number" name="depMin" min="0" placeholder="최소"><input type="number" name="depMax" min="0" placeholder="최대"></span></label>
+      <label>월세 (만원)<span class="pair"><input type="number" name="rentMin" min="0" placeholder="최소"><input type="number" name="rentMax" min="0" placeholder="최대"></span></label>
+      <label>분양가 (만원)<span class="pair"><input type="number" name="priceMin" min="0" placeholder="최소"><input type="number" name="priceMax" min="0" placeholder="최대"></span></label>
+      <label>전용면적
+        <span class="pair three"><input type="number" name="areaMin" min="0" step="any" placeholder="최소"><input type="number" name="areaMax" min="0" step="any" placeholder="최대">
+        <select name="areaUnit" aria-label="면적 단위"><option value="py">평</option><option value="m2">㎡</option></select></span></label>
+    </form>
+    <p id="resultCount" class="shop-help" role="status"></p>
+    <div class="table-scroll">
+      <table class="result-table">
+        <thead><tr><th>건물</th><th>호실</th><th>상태</th><th>업종</th><th>전용면적</th><th>분양가</th><th>보증금/월세</th><th>확인일</th></tr></thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<dialog id="unitDialog" class="unit-dialog" aria-labelledby="unitTitle">
+  <div class="dialog-head"><h2 id="unitTitle"></h2><button type="button" class="shop-btn" id="unitClose" aria-label="닫기">×</button></div>
+  <p id="unitMessage" class="shop-message" role="status"></p>
+  <form id="unitForm" class="unit-form">
+    <label>상태<select name="공실여부"><option>공실</option><option>임차중</option><option>매매가능</option><option>계약진행</option></select></label>
+    <label>업종<input name="현업종" list="bizList" placeholder="목록에서 고르거나 직접 입력"></label>
+    <label>소유주<input name="소유주"></label>
+    <label>연락처<input name="연락처" type="tel"></label>
+    <label>보증금 (만원)<input name="현_보증금" type="number" min="0" step="1"></label>
+    <label>월세 (만원)<input name="현_월세" type="number" min="0" step="1"></label>
+    <label>분양가 (만원)<input name="분양가" type="number" min="0" step="1"></label>
+    <div class="area-field"><span>전용면적 (㎡ ↔ 평 자동 계산)</span><span class="pair"><input name="전용_m2" type="number" min="0" step="any" placeholder="㎡"><input name="전용_평" type="number" min="0" step="any" placeholder="평"></span></div>
+    <div class="area-field"><span>분양면적 (㎡ ↔ 평 자동 계산)</span><span class="pair"><input name="분양_m2" type="number" min="0" step="any" placeholder="㎡"><input name="분양_평" type="number" min="0" step="any" placeholder="평"></span></div>
+    <label class="wide">도면 링크 (구글 드라이브 등)<input name="도면링크" type="url" placeholder="https://"></label>
+    <label class="wide">메모<textarea name="메모" rows="3"></textarea></label>
+    <p class="wide shop-help" id="unitChecked"></p>
+    <div class="wide dialog-actions">
+      <button type="submit" class="shop-btn primary" id="unitSave">저장</button>
+      <a class="shop-btn" id="unitFloorLink" href="#" hidden>층별 평면도 보기</a>
+      <a class="shop-btn" id="unitPlanLink" href="#" target="_blank" rel="noopener noreferrer" hidden>도면 열기</a>
+    </div>
+  </form>
+  <datalist id="bizList"></datalist>
+</dialog>
+<script src="assets/js/shop-location.js?v=20261003-1"></script>
+</body>
+</html>
