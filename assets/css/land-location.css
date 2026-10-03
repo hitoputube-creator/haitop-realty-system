@@ -299,3 +299,8 @@
 .block-heading .block-title-row h1{margin:0}
 .block-title-row #detailType{margin:0;font-size:.82rem;line-height:1.5}
 @media(max-width:640px){.block-title-row{margin-bottom:6px;gap:6px 12px}}
+
+/* Owner data: open O ring for present, X for absent. */
+.parcel-contact-ring-outline,.parcel-contact-ring{fill:none;pointer-events:none}
+.parcel-contact-ring-outline{stroke:#fff;stroke-width:.0034}
+.parcel-contact-ring{stroke:#dc2626;stroke-width:.0016}
