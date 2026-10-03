@@ -293,3 +293,9 @@
 /* Return to the overview beside district and block selection. */
 #blockDetail .block-navigation #backToMap{min-height:44px;margin:0;padding:9px 11px}
 @media(max-width:640px){.block-navigation{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}#blockDetail .block-navigation #backToMap{grid-column:1 / -1;justify-self:start}}
+
+/* Keep land type beside the current block title. */
+.block-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;margin-bottom:12px}
+.block-heading .block-title-row h1{margin:0}
+.block-title-row #detailType{margin:0;font-size:.82rem;line-height:1.5}
+@media(max-width:640px){.block-title-row{margin-bottom:6px;gap:6px 12px}}
