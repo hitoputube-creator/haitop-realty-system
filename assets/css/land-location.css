@@ -304,3 +304,22 @@
 .parcel-contact-ring-outline,.parcel-contact-ring{fill:none;pointer-events:none}
 .parcel-contact-ring-outline{stroke:#fff;stroke-width:.0034}
 .parcel-contact-ring{stroke:#dc2626;stroke-width:.0016}
+
+/* 허용가구수 구분: 색 + 숫자 라벨 */
+.block-rules{margin:.35rem 0 .6rem;font-weight:600}
+.parcel-vector-hit.parcel-vector-hh-1{fill:#38bdf899!important;stroke:#0369a1!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-1{fill:#38bdf880;stroke:#0369a1;stroke-width:.003}
+.parcel-hh-label.parcel-hh-text-1{border-color:#0369a1}
+.parcel-vector-hit.parcel-vector-hh-2{fill:#4ade8099!important;stroke:#15803d!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-2{fill:#4ade8080;stroke:#15803d;stroke-width:.003}
+.parcel-hh-label.parcel-hh-text-2{border-color:#15803d}
+.parcel-vector-hit.parcel-vector-hh-3{fill:#facc1599!important;stroke:#a16207!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-3{fill:#facc1580;stroke:#a16207;stroke-width:.003}
+.parcel-hh-label.parcel-hh-text-3{border-color:#a16207}
+.parcel-vector-hit.parcel-vector-hh-4{fill:#fb923c99!important;stroke:#c2410c!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-4{fill:#fb923c80;stroke:#c2410c;stroke-width:.003}
+.parcel-hh-label.parcel-hh-text-4{border-color:#c2410c}
+.parcel-vector-hit.parcel-vector-hh-5{fill:#f8717199!important;stroke:#b91c1c!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-5{fill:#f8717180;stroke:#b91c1c;stroke-width:.003}
+.parcel-hh-label.parcel-hh-text-5{border-color:#b91c1c}
+.parcel-hh-label{padding:.08em .3em;border-radius:.25em;background:#f8fafce8;text-shadow:none;border:1px solid #64748b;color:#1f2937}

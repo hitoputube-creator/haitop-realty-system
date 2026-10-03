@@ -8,7 +8,9 @@
   let parcelVectorRegions = new Map();
   let areaLabelOverlay = null;
   let noteParcelKeys=new Set(),noteKnownKeys=new Set(),notesLoaded=false,noteSearchTexts=new Map(),pendingSearchParcel=null;
-  const views = {area:false, building:false, contact:false, ownership:false, data:false, lh:false};
+  const views = {area:false, building:false, contact:false, ownership:false, households:false, data:false, lh:false};
+  function householdsOf(row){const n=Number(row?.data?.households??row?.source?.households);return Number.isInteger(n)&&n>0?n:null;}
+  (function(){const t=document.getElementById('detailTitle')?.closest('.block-title-row');if(t&&!document.getElementById('detailRules')){const p=document.createElement('p');p.id='detailRules';p.className='source-note block-rules';p.hidden=true;t.after(p);}})();
   const contactStates = {
     contact: {label:'소유주·연락처 자료 있음', symbol:'O'},
     registered: {label:'소유주·연락처 자료 없음', symbol:'X'},
@@ -30,6 +32,7 @@
     if(views.data) parts.push('공급금액·토지면적이 모두 없는 필지만 X · 지번 제외');
     if(views.ownership) parts.push('소유 구분: 개인 / 법인 / 기타 · 저장된 자료 기준');
     if(views.contact) parts.push(recordsLoaded ? '소유주 자료 있음: 초록색 필지 · 자료 없음: X · 건물 있음과 겹치면 보라색' : '연락처 확인 불가 · 저장 자료를 불러오지 못했습니다');
+    if(views.households) parts.push('허용가구수: 필지 안 숫자와 색으로 구분(1·2·3·4·5가구 이하) · 값이 없는 필지는 표시 없음');
     if(views.lh)parts.push('LH 공고중: 주황색 필지 · 연락처/건물 표시를 함께 켜면 해당 표시색 우선');
     $('parcelViewLegend').textContent=parts.join(' / ');$('parcelViewLegend').hidden=!parts.length;
   }
@@ -37,6 +40,8 @@
     const area=Number(row.data.area), parts=[];
     if(views.area && Number.isFinite(area) && area>0) parts.push(views.area==='sqm'?area.toLocaleString('ko-KR',{maximumFractionDigits:1})+'㎡':(area/3.305785).toFixed(1)+'평');
     if(views.ownership && window.HitopParcelOwnership.state(row)!=='unknown') parts.push(window.HitopParcelOwnership.label(row));
+    const hhValue=views.households?householdsOf(row):null;
+    if(hhValue) parts.push(hhValue+'가구');
     const missingData=views.data&&dataState(row)==='missing';
     if(row.data.mapPositionUnavailable || (!parts.length&&!missingData) || (!row.points?.length && (row.x==null || row.y==null)))return;
     let x=Number(row.x)/100,y=Number(row.y)/100;
@@ -44,7 +49,7 @@
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     if(parts.length){
       const label=document.createElement('span');
-      label.className='parcel-area-label'+(views.ownership?' parcel-ownership-label parcel-ownership-'+window.HitopParcelOwnership.state(row):'');
+      label.className='parcel-area-label'+(views.ownership?' parcel-ownership-label parcel-ownership-'+window.HitopParcelOwnership.state(row):'')+(hhValue?' parcel-hh-label parcel-hh-text-'+hhValue:'');
       label.style.left=(x*100)+'%';label.style.top=(y*100)+'%';
       label.textContent=parts.join(' ');
       areaLabelOverlay?.append(label);
@@ -233,6 +238,7 @@
         if(views.contact&&recordsLoaded&&hasOwnerData(row))shape.classList.add('parcel-vector-contact-highlight');
         if(views.building&&buildingState(row)==='building')shape.classList.add('parcel-vector-building-highlight');
         if(views.lh&&hasLh(row))shape.classList.add('parcel-vector-lh-highlight');
+        if(views.households&&householdsOf(row))shape.classList.add('parcel-vector-hh-'+householdsOf(row));
         shape.setAttribute('role','button');shape.setAttribute('tabindex','0');
         shape.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+contactStates[contactState(row)].label);
         shape.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(row);});
@@ -262,6 +268,7 @@
       if(views.contact&&recordsLoaded&&parcelRows.length===1&&hasOwnerData(row))clone.classList.add('parcel-vector-contact-highlight');
       if(views.building&&parcelRows.length===1&&buildingState(row)==='building')clone.classList.add('parcel-vector-building-highlight');
       if(views.lh&&parcelRows.length===1&&hasLh(row))clone.classList.add('parcel-vector-lh-highlight');
+      if(views.households&&parcelRows.length===1&&householdsOf(row))clone.classList.add('parcel-vector-hh-'+householdsOf(row));
       const registration=contactStates[contactState(row)].label;
       clone.setAttribute('role','button');clone.setAttribute('tabindex','0');
       clone.setAttribute('aria-label',parcelLabel(row)+' 필지 자료 · '+registration);
@@ -283,8 +290,8 @@
     overlay.append(layer);
   }
   const buildingFields = ['buildingName','buildingPurpose','buildingFloors','buildingFootprint','buildingTotalArea','buildingApproval','buildingStructure','buildingDeposit','buildingRent'];
-  const numericFields = ['area','buildingFootprint','buildingTotalArea'];
-  const fields = [...buildingFields,'address','landType','building','area','supplyPrice','auctionPrice','salePrice','owner','contact','note'];
+  const numericFields = ['area','households','buildingFootprint','buildingTotalArea'];
+  const fields = [...buildingFields,'address','landType','households','building','area','supplyPrice','auctionPrice','salePrice','owner','contact','note'];
   const priceFields = ['supplyPrice','auctionPrice','salePrice','buildingDeposit','buildingRent'];
   function money(value) { return value == null || value === '' ? '' : Math.round(Number(value)).toLocaleString('ko-KR'); }
   function readWon(value) { const digits = value.replace(/,/g, '').trim(); return digits === '' ? null : Number(digits); }
@@ -345,10 +352,12 @@
     $('parcelSubblock').value = row.subblock || ''; $('parcelNumber').value = row.parcel || '';
     $('parcelSubblock').readOnly = !!(row.points || row.sourceCell || hasLh(row)); $('parcelNumber').readOnly = !!(row.points || row.sourceCell || hasLh(row));
     const official=window.HitopLandLh?.find(current.id,row);
-    const values = {...{landType: current.types?.[0] || 'unknown',building:''},...row.data,...(!row.id&&official?{landType:official.landType}:{})};
+    const values = {...{landType: current.types?.find(type=>type!=='unknown') || 'single',building:''},...row.data,...(!row.id&&official?{landType:official.landType}:{})};
+    if(!['single','shop'].includes(values.landType)) values.landType = current.types?.find(type=>type!=='unknown') || 'single';
+    if(values.households==null||values.households==='') values.households = row.source?.households ?? '';
     if (!['building','vacant'].includes(values.building)) values.building = '';
     const detail=$('parcelSourceDetail'); detail.hidden=!row.source;
-    if(row.source) detail.textContent=(row.source.date||sourceMeta?.sourceDate||'기준일 미기재')+' 원본 · '+row.source.status+'\n건폐율 '+row.source.coverage+'% 이하 · 용적률 '+row.source.floorRatio+'% 이하 · '+row.source.floors+'층 이하'+(row.source.households?' · '+row.source.households+'가구 이하':'')+(row.source.unitPriceWon?' · 단가 '+row.source.unitPriceWon.toLocaleString('ko-KR')+'원/㎡ · 평당가 '+Math.round(row.source.unitPriceWon*3.305785).toLocaleString('ko-KR')+'원/평':'')+(row.source.reviewNote?'\n확인사항: '+row.source.reviewNote:'');
+    if(row.source) detail.textContent=(row.source.date||sourceMeta?.sourceDate||'기준일 미기재')+' 원본'+(row.source.kind?'('+row.source.kind+')':'')+' · '+row.source.status+'\n건폐율 '+row.source.coverage+'% 이하 · 용적률 '+row.source.floorRatio+'% 이하 · '+row.source.floors+'층 이하'+(row.source.households?' · '+row.source.households+'가구 이하':'')+(row.source.unitPriceWon?' · 단가 '+row.source.unitPriceWon.toLocaleString('ko-KR')+'원/㎡ · 평당가 '+Math.round(row.source.unitPriceWon*3.305785).toLocaleString('ko-KR')+'원/평':'')+(row.source.reviewNote?'\n확인사항: '+row.source.reviewNote:'');
     fields.forEach(name => {
       if (name === 'building') $('parcel-building').checked = values.building === 'building';
       else $('parcel-' + name).value = priceFields.includes(name) ? money(values[name] == null ? null : Number(values[name]) * 10000) : values[name] ?? '';
@@ -383,8 +392,19 @@
     });
     return combined;
   }
+  function renderRules() {
+    const el=$('detailRules'); if(!el||!current)return;
+    const list=[...combinedParcels().values()].filter(row=>row.source&&row.source.coverage!=null&&row.source.floorRatio!=null);
+    if(!list.length){el.hidden=true;el.textContent='';return;}
+    const tally=new Map();
+    list.forEach(row=>{const s=row.source,k=[s.coverage,s.floorRatio,s.floors,s.households??''].join('|');tally.set(k,(tally.get(k)||0)+1);});
+    const text=k=>{const [c,f,fl,hh]=k.split('|');return '건폐율 '+c+'% 이하 · 용적률 '+f+'% 이하 · '+fl+'층 이하'+(hh?' · 허용 '+hh+'가구 이하':'');};
+    const sorted=[...tally.entries()].sort((a,b)=>b[1]-a[1]);
+    el.textContent=sorted.length===1?text(sorted[0][0]):'⚠ 필지별로 다른 값이 있습니다 · '+sorted.map(([k,n])=>text(k)+' ('+n+'필지)').join(' / ');
+    el.hidden=false;
+  }
   function draw() {
-    overlay.replaceChildren(); areaLabelOverlay?.replaceChildren(); $('parcelList').replaceChildren(); viewLegend();
+    overlay.replaceChildren(); areaLabelOverlay?.replaceChildren(); $('parcelList').replaceChildren(); viewLegend(); renderRules();
     window.HitopLandLh?.setMapViews(current.id,rows,views);
     const combined = combinedParcels();
     $('parcelSourceBody').replaceChildren();$('parcelList').hidden=!!sourceMeta;
@@ -406,6 +426,7 @@
         shape.classList.add('parcel-shape'); if(views.building && buildingState(row)==='building' && row.points) shape.classList.add('parcel-building-building');
         if(views.contact&&recordsLoaded&&hasOwnerData(row)&&row.points)shape.classList.add('parcel-contact-highlight');
         if(views.lh&&hasLh(row)&&row.points)shape.classList.add('parcel-lh-highlight');
+        if(views.households&&householdsOf(row)&&row.points)shape.classList.add('parcel-hh-'+householdsOf(row));
         shape.setAttribute('role','button');shape.setAttribute('tabindex','0');shape.setAttribute('aria-label',parcelLabel(row) + ' 필지 자료 · ' + registration);
         const title=document.createElementNS(ns,'title');title.textContent=parcelLabel(row) + ' · ' + registration;shape.append(title);
         shape.addEventListener('click',event=>{event.stopPropagation();show(row);});
@@ -445,7 +466,7 @@
     $('parcelDataFilter').value='all';$('parcelDataFilter').disabled=true;
     $('parcelOwnershipSnapshot').textContent='소유 구분 현황 · 저장 자료를 불러오는 중입니다.';
     $('parcelBuildingSnapshot').textContent='건물 업데이트 현황 · 저장 자료를 불러오는 중입니다.';
-    const run = ++generation; $('parcelBuildingUpdate').textContent='업데이트'; $('parcelBuildingUpdate').disabled=false; current=block; rows=[]; cells=[]; sourceMeta=null; $('lhParcelSection').hidden=true; parcelVectorRegions=new Map(); if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;sourcesLoaded=false;
+    const run = ++generation; $('parcelBuildingUpdate').textContent='업데이트'; $('parcelBuildingUpdate').disabled=false; current=block; rows=[]; cells=[]; sourceMeta=null; $('lhParcelSection').hidden=true;{const r=$('detailRules');if(r){r.hidden=true;r.textContent='';}} parcelVectorRegions=new Map(); if(buildingVectorUrl){URL.revokeObjectURL(buildingVectorUrl);buildingVectorUrl=null;} buildingVectorOverlay=null; buildingVectorCandidates=[]; buildingVectorViewBox=null; selected=null; placing=false; recordsLoaded=false;sourcesLoaded=false;
     $('parcelSourceSection').hidden=true;$('parcelSourceDetail').hidden=true;$('parcelList').hidden=false;
     $('parcelViewControls').hidden=!image; $('parcelViewLegend').hidden=!image;
     closeEditor(); $('parcelManager').hidden=!image;
@@ -496,7 +517,7 @@
   }
   $('parcelAreaPyeongToggle').addEventListener('click',()=>setAreaView('pyeong'));
   $('parcelAreaSqmToggle').addEventListener('click',()=>setAreaView('sqm'));
-  ['building','contact','ownership','data'].forEach(name=>{const id=name==='lh'?'parcelLhToggle':'parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
+  ['building','contact','ownership','households','data'].forEach(name=>{const id=name==='lh'?'parcelLhToggle':'parcel'+name[0].toUpperCase()+name.slice(1)+'Toggle';$(id).addEventListener('click',()=>{views[name]=!views[name];$(id).setAttribute('aria-pressed',String(views[name]));if(overlay&&current)draw();});});
   $('parcelForm').addEventListener('submit',async event=>{
     event.preventDefault(); if(busy || window.HitopParcelNotes?.busy || !selected)return;
     const run=generation,blockId=current.id;
@@ -716,7 +737,7 @@
       includeMemo:$('parcelPrintMemo').checked,
       includePhotos:$('parcelPrintPhotos').checked,
       title:$('parcelFullNumber').value,address:value('address'),
-      landType:{single:'주거전용',shop:'상가점포',unknown:'미확인'}[value('landType')],
+      landType:{single:'주거전용',shop:'상가점포'}[value('landType')]||'',
       area:value('area'),prices:{supplyPrice:readWon(value('supplyPrice')),auctionPrice:readWon(value('auctionPrice')),salePrice:readWon(value('salePrice'))},
       building:{exists:$('parcel-building').checked,confirmedVacant:selected.data.building==='vacant',name:value('buildingName'),purpose:value('buildingPurpose'),floors:value('buildingFloors'),structure:value('buildingStructure'),approval:value('buildingApproval'),footprint:value('buildingFootprint'),totalArea:value('buildingTotalArea'),deposit:readWon(value('buildingDeposit')),rent:readWon(value('buildingRent'))},
       owner:value('owner'),contact:value('contact'),note:value('note'),
