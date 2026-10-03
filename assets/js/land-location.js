@@ -42,7 +42,7 @@
   blockNavigation.setAttribute('role', 'group');
   blockNavigation.setAttribute('aria-label', '지구와 블럭 이동');
   blockNavigation.innerHTML = '<label for="detailDistrictSelect"><span>지구 선택</span><select id="detailDistrictSelect"><option value="third">운정3지구 택지</option><option value="second">운정1·2지구 택지</option></select></label><label for="detailBlockSelect"><span>블럭 선택</span><select id="detailBlockSelect"></select></label>';
-  $('detailTitle').after(blockNavigation);
+  $('detailTitle').closest('.block-title-row').after(blockNavigation);
   blockNavigation.append($('backToMap'));
   const districtSelect = $('detailDistrictSelect');
   const blockSelect = $('detailBlockSelect');
