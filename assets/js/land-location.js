@@ -336,75 +336,98 @@
     if (!$('overview').hidden && mapFitted) fitMap();
     if (!$('blockDetail').hidden && drawingFitted) fitDrawing();
   });
-  function touchDistance(t) { return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
-  function bindTouchZoom(container,getZoom,setScale) {
-    let pinch = null;
-    function startPinch(e) {
-      if (e.touches.length !== 2) return;
-      e.preventDefault();
+  // 마우스 드래그·터치 한 손가락 이동·두 손가락 확대/축소를 포인터 이벤트 하나로 처리한다.
+  // 브라우저 기본 동작(이미지 끌기, 글자 선택, 터치 스크롤)이 끼어들지 않도록 CSS에서 touch-action:none을 건다.
+  function bindPanZoom(container,getZoom,setScale) {
+    const pointers = new Map();
+    let pan = null, pinch = null;
+    const MOVE_THRESHOLD = 4;
+    function pointerList() { return Array.from(pointers.values()); }
+    function startPan(p) {
+      pan = {x:p.x,y:p.y,left:container.scrollLeft,top:container.scrollTop,moved:false};
+    }
+    function startPinch() {
+      const [a,b] = pointerList();
       const rect = container.getBoundingClientRect();
-      pinch = {distance:touchDistance(e.touches),zoom:getZoom(),
-        x:container.scrollLeft+(e.touches[0].clientX+e.touches[1].clientX)/2-rect.left,
-        y:container.scrollTop+(e.touches[0].clientY+e.touches[1].clientY)/2-rect.top};
+      pinch = {
+        distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),
+        zoom:getZoom(),
+        x:container.scrollLeft+(a.x+b.x)/2-rect.left,
+        y:container.scrollTop+(a.y+b.y)/2-rect.top
+      };
+      pan = null;
       suppressClickUntil = Date.now() + 600;
     }
-    container.addEventListener('touchstart',startPinch,{passive:false});
-    container.addEventListener('touchmove',e => {
-      if (e.touches.length !== 2 || !pinch) return;
-      e.preventDefault(); suppressClickUntil = Date.now() + 600;
-      const rect = container.getBoundingClientRect();
-      const cx = (e.touches[0].clientX+e.touches[1].clientX)/2;
-      const cy = (e.touches[0].clientY+e.touches[1].clientY)/2;
-      setScale(pinch.zoom*touchDistance(e.touches)/Math.max(1,pinch.distance),cx,cy);
-      const ratio = getZoom()/pinch.zoom;
-      container.scrollLeft = pinch.x*ratio-(cx-rect.left);
-      container.scrollTop = pinch.y*ratio-(cy-rect.top);
-    },{passive:false});
-    function endPinch(e) {
-      if (pinch) suppressClickUntil = Date.now() + 600;
-      if (e.touches.length < 2) pinch = null;
+    function capture(id) {
+      try { container.setPointerCapture(id); } catch (err) { /* 캡처 실패해도 이동은 계속된다 */ }
     }
-    container.addEventListener('touchend',endPinch);
-    container.addEventListener('touchcancel',endPinch);
+    container.addEventListener('pointerdown',e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if (pointers.size === 1) { pinch = null; startPan(pointers.get(e.pointerId)); }
+      else if (pointers.size === 2) {
+        Array.from(pointers.keys()).forEach(capture);
+        startPinch();
+      }
+    });
+    container.addEventListener('pointermove',e => {
+      const p = pointers.get(e.pointerId);
+      if (!p) return;
+      p.x = e.clientX; p.y = e.clientY;
+      if (pinch && pointers.size >= 2) {
+        e.preventDefault();
+        const [a,b] = pointerList();
+        const rect = container.getBoundingClientRect();
+        const cx = (a.x+b.x)/2, cy = (a.y+b.y)/2;
+        setScale(pinch.zoom*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance,cx,cy);
+        const ratio = getZoom()/pinch.zoom;
+        container.scrollLeft = pinch.x*ratio-(cx-rect.left);
+        container.scrollTop = pinch.y*ratio-(cy-rect.top);
+        suppressClickUntil = Date.now() + 600;
+        return;
+      }
+      if (!pan || pointers.size !== 1) return;
+      const dx = e.clientX-pan.x, dy = e.clientY-pan.y;
+      if (!pan.moved) {
+        if (Math.hypot(dx,dy) < MOVE_THRESHOLD) return;
+        pan.moved = true;
+        capture(e.pointerId);
+        container.classList.add('mouse-panning');
+      }
+      e.preventDefault();
+      container.scrollLeft = pan.left-dx;
+      container.scrollTop = pan.top-dy;
+    });
+    function release(e) {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.delete(e.pointerId);
+      try { container.releasePointerCapture(e.pointerId); } catch (err) { /* 이미 해제됨 */ }
+      if (pinch) {
+        suppressClickUntil = Date.now() + 600;
+        if (pointers.size < 2) pinch = null;
+        // 두 손가락 중 하나만 떼면 남은 손가락으로 바로 이어서 이동한다.
+        if (pointers.size === 1) startPan(pointerList()[0]);
+        if (pointers.size === 0) { pan = null; container.classList.remove('mouse-panning'); }
+        return;
+      }
+      if (pan && pan.moved) suppressClickUntil = Date.now() + 250;
+      if (pointers.size === 0) { pan = null; container.classList.remove('mouse-panning'); }
+    }
+    container.addEventListener('pointerup',release);
+    container.addEventListener('pointercancel',release);
+    container.addEventListener('lostpointercapture',release);
+    // 이미지·글자가 브라우저 기본 끌기로 따라오지 않게 막는다.
+    container.addEventListener('dragstart',e => e.preventDefault());
+    // 끌었다가 놓은 직후의 클릭(블럭 선택)은 무시한다. 그냥 누른 클릭은 그대로 동작한다.
     container.addEventListener('click',e => {
       if (Date.now() < suppressClickUntil) { e.preventDefault(); e.stopPropagation(); }
     },true);
-  }
-  function bindMouseNavigation(container,getZoom,setScale) {
-    let drag = null;
-    function endDrag() {
-      if (!drag) return;
-      if (drag.moved) suppressClickUntil = Date.now() + 250;
-      drag = null;
-      container.classList.remove('mouse-panning');
-    }
-    container.addEventListener('mousedown',e => {
-      if (e.button !== 0) return;
-      drag = {
-        x:e.clientX,
-        y:e.clientY,
-        left:container.scrollLeft,
-        top:container.scrollTop,
-        moved:false
-      };
+    window.addEventListener('blur',() => {
+      pointers.clear(); pan = null; pinch = null; container.classList.remove('mouse-panning');
     });
-    window.addEventListener('mousemove',e => {
-      if (!drag) return;
-      const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
-      if (!drag.moved && Math.hypot(dx,dy) < 4) return;
-      drag.moved=true;
-      container.classList.add('mouse-panning');
-      e.preventDefault();
-      container.scrollLeft=drag.left-dx;
-      container.scrollTop=drag.top-dy;
-    });
-    window.addEventListener('mouseup',endDrag);
-    window.addEventListener('blur',endDrag);
   }
-  bindTouchZoom(viewport,()=>zoom,setZoom);
-  bindTouchZoom($('detailDrawing'),()=>drawingZoom,setDrawingZoom);
-  bindMouseNavigation(viewport,()=>zoom,setZoom);
-  bindMouseNavigation($('detailDrawing'),()=>drawingZoom,setDrawingZoom);
+  bindPanZoom(viewport,()=>zoom,setZoom);
+  bindPanZoom($('detailDrawing'),()=>drawingZoom,setDrawingZoom);
 
   document.addEventListener('wheel',e => {
     const mapTarget = e.target.closest && e.target.closest('#mapViewport');
