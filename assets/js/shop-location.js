@@ -57,7 +57,7 @@
     ]);
     if (!recordsRes.ok) throw new Error('건물 호실 조회 실패');
     const records = await recordsRes.json();
-    const shops = resources.filter(r => r.category === '상가');
+    const shops = resources.filter(r => /상가/.test(String(r.category || '')));
     buildings = shops.map(r => {
       const rec = records.find(x => x.local_id === r.id) || records.find(x => x.name === r.name) || null;
       const line = String(r.memo || '').split('\n').find(l => /^주소\s*:/.test(l));

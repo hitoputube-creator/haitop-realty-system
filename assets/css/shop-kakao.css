@@ -1,0 +1,28 @@
+/* 상가 카카오맵 화면 (shop-kakao.html). 기본 모양은 land-kakao.css를 그대로 쓰고 상가용만 덧붙입니다. */
+.dot-shop-vacant{background:#e5484d}.dot-shop-full{background:#2563eb}.dot-shop-none{background:#8a97ab}
+
+/* 지도 위 건물 표시 */
+.shop-pin{position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,.55))}
+.shop-pin-body{display:flex;flex-direction:column;align-items:center;gap:1px;max-width:130px;padding:4px 8px;border:2px solid #fff;border-radius:8px;color:#fff;line-height:1.25;text-align:center;box-sizing:border-box}
+.shop-pin-body strong{display:block;max-width:116px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.shop-pin-body span{display:block;font-size:11px;white-space:nowrap}
+.shop-pin::after{content:"";width:0;height:0;margin-top:-1px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #fff}
+.shop-pin.vacant .shop-pin-body{background:#e5484d}
+.shop-pin.full .shop-pin-body{background:#2563eb}
+.shop-pin.none .shop-pin-body{background:#6b7686}
+.shop-pin.selected{z-index:5}
+.shop-pin.selected .shop-pin-body{outline:3px solid #e5bf35}
+
+/* 건물 목록 */
+.shop-kakao-list{margin:18px 0 28px}
+.shop-kakao-list h2{font-size:1rem;margin:0 0 10px;color:var(--gold-soft,#e6c36a)}
+.shop-kakao-list h2 span{font-size:.8rem;color:var(--text-muted,#9fb0c7);font-weight:400;margin-left:6px}
+.shop-kakao-buttons{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.shop-kakao-buttons button{display:block;width:100%;text-align:left;padding:9px 11px;border:1px solid rgba(255,255,255,.16);border-left-width:4px;border-radius:8px;background:rgba(255,255,255,.04);color:var(--text-main,#e8eef7);font:inherit;font-size:.85rem;cursor:pointer;min-height:48px}
+.shop-kakao-buttons button small{display:block;margin-top:2px;color:var(--text-muted,#9fb0c7);font-size:.72rem}
+.shop-kakao-buttons button.vacant{border-left-color:#e5484d}
+.shop-kakao-buttons button.full{border-left-color:#2563eb}
+.shop-kakao-buttons button.none{border-left-color:#8a97ab}
+.shop-kakao-buttons button.unplaced{opacity:.6}
+.shop-kakao-buttons button:hover,.shop-kakao-buttons button:focus-visible{border-color:var(--gold-soft,#e6c36a)}
+@media(max-width:720px){.shop-kakao-buttons{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.shop-pin-body{max-width:110px}}

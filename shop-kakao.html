@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하이탑부동산 | 상가 실제 지도 보기</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261003-kakao-5">
+  <link rel="stylesheet" href="assets/css/shop-kakao.css?v=20261004-shop-kakao-1">
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/admin-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
+</head>
+<body>
+<main class="page land-kakao-page shop-kakao-page">
+  <header class="header">
+    <div class="logo-icon" aria-hidden="true"></div>
+    <div class="logo-text"><div class="logo-main">하이탑부동산 상가 지도</div><div class="logo-sub">카카오맵</div></div>
+    <nav class="main-nav" aria-label="페이지 이동">
+      <a class="nav-link" href="shop-location.html">상가 위치도(이미지)</a>
+      <a class="nav-link" href="resources.html">상가 자료관리</a>
+      <a class="nav-link" href="floor-status-overview.html">층별 현황</a>
+      <a class="nav-link" href="property-main.html?category=shop">매물관리 메인으로</a>
+      <button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button>
+    </nav>
+  </header>
+  <div class="header-line"></div>
+
+  <section class="kakao-intro">
+    <h1>최신 지도로 보는 상가 현황</h1>
+    <p>상가 자료관리에 등록한 건물의 주소를 카카오 지도 위에 자동으로 표시합니다. 건물을 누르면 공실 현황과 함께 건물 상세·층별 현황으로 바로 이동할 수 있습니다.</p>
+  </section>
+
+  <section id="kakaoSetupNotice" class="kakao-notice" hidden>
+    <h2>카카오맵 키 설정이 필요합니다</h2>
+    <p>assets/js/kakao-config.js 에 카카오 JavaScript 키를 넣으면 지도가 표시됩니다.</p>
+  </section>
+
+  <section id="kakaoControls" class="kakao-controls" hidden>
+    <div class="kakao-control-group" role="group" aria-label="지도 종류">
+      <button class="btn" type="button" data-maptype="road" aria-pressed="true">일반</button>
+      <button class="btn" type="button" data-maptype="sky" aria-pressed="false">위성</button>
+      <button class="btn" type="button" data-overlay="district" aria-pressed="false">지적도</button>
+    </div>
+    <div class="kakao-control-group">
+      <label>공실 보기
+        <select id="shopVacancyFilter">
+          <option value="all">전체</option>
+          <option value="vacant">공실 있음</option>
+          <option value="full">공실 없음</option>
+          <option value="none">호실 미등록</option>
+        </select>
+      </label>
+      <label class="kakao-search">건물명·주소 검색
+        <input id="shopSearch" type="search" maxlength="100" placeholder="예: 더운정퍼스트, 와동동 1460">
+      </label>
+    </div>
+    <div class="kakao-control-group">
+      <button class="btn" id="shopFit" type="button">표시된 건물에 맞춤</button>
+      <button class="btn" id="shopRetry" type="button" hidden>위치 못 찾은 건물 다시 시도</button>
+    </div>
+  </section>
+
+  <p id="kakaoStatus" class="kakao-status" role="status" aria-live="polite">불러오는 중입니다.</p>
+  <div id="kakaoMap" class="kakao-map" aria-label="카카오 지도" hidden></div>
+
+  <p class="kakao-legend" id="shopLegend" hidden>
+    <span><i class="dot dot-shop-vacant"></i>공실 있음</span>
+    <span><i class="dot dot-shop-full"></i>공실 없음</span>
+    <span><i class="dot dot-shop-none"></i>호실 미등록</span>
+  </p>
+
+  <section class="shop-kakao-list" id="shopListSection" hidden>
+    <h2>건물 목록 <span id="shopListCount"></span></h2>
+    <div id="shopList" class="shop-kakao-buttons"></div>
+    <p id="shopUnplaced" class="kakao-status" hidden></p>
+  </section>
+</main>
+<script src="assets/js/kakao-config.js"></script>
+<script src="assets/js/shop-kakao.js?v=20261004-shop-kakao-1"></script>
+</body>
+</html>
