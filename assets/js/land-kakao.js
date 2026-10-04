@@ -214,6 +214,7 @@
       a.href = pair[1]; a.target = '_blank'; a.rel = 'noopener'; a.textContent = pair[0];
       links.appendChild(a);
     });
+    window.HitopNaverLinks.append(links, it.address, '', {lat:it.lat,lng:it.lng});
     root.appendChild(links);
     infoWindow.setContent(root);
     infoWindow.setPosition(new kakao.maps.LatLng(it.lat, it.lng));

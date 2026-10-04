@@ -639,6 +639,9 @@
       const link=$(id);if(!link)return;
       link.href=has?url:'#';link.setAttribute('aria-disabled',String(!has));link.classList.toggle('is-disabled',!has);
     });
+    const naver=window.HitopNaverLinks.urls(address);
+    window.HitopNaverLinks.updateLink($('parcelNaverRealEstateLink'),naver&&naver.realEstate);
+    window.HitopNaverLinks.updateLink($('parcelNaverMapLink'),naver&&naver.map);
     updateRoadAddress(address,has);
   }
   // 지번 아래에 도로명 새주소를 보여줍니다(화면 표시만, 저장하지 않음).

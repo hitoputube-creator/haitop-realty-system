@@ -40,6 +40,10 @@
     }
     .info-cell-value.empty { color: rgba(255,255,255,0.22); font-weight: 400; }
 
+    .building-location-links{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}
+    .building-location-links .btn{display:inline-flex;align-items:center;min-height:36px;font-size:.875rem;text-decoration:none}
+    .building-location-links .is-disabled{opacity:.45;cursor:default}
+
     /* ── 업로드 폼 ── */
     .upload-row {
       display: grid; gap: 8px; align-items: center; margin-bottom: 10px;
@@ -432,6 +436,7 @@
     <div class="info-grid" id="infoGrid">
       <div class="info-cell"><div class="info-cell-label">불러오는 중…</div></div>
     </div>
+    <div class="building-location-links" id="buildingLocationLinks" aria-label="네이버에서 위치와 매물 보기"></div>
     <div style="display:flex;justify-content:flex-end;">
       <button class="btn" style="font-size:0.82rem;" onclick="goOverview()">📝 개요 상세보기</button>
     </div>
@@ -619,6 +624,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
+<script src="assets/js/naver-links.js?v=20261004-1"></script>
 <script src="assets/js/building-register-view.js?v=20260929-compact-table"></script>
 <script>
 /* ═══════════════════════════════════════════
@@ -862,6 +868,15 @@ function renderInfoGrid(memo) {
     </div>`;
   }).join('');
   document.getElementById('infoGrid').innerHTML = html;
+  const links = document.getElementById('buildingLocationLinks');
+  links.replaceChildren();
+  window.HitopNaverLinks.append(links, fields.주소 || '', 'btn');
+  if (!window.HitopNaverLinks.urls(fields.주소)) {
+    const hint = document.createElement('span');
+    hint.textContent = '개요 상세보기에서 주소를 먼저 입력해 주세요.';
+    hint.style.cssText = 'font-size:.875rem;color:var(--text-muted);align-self:center';
+    links.appendChild(hint);
+  }
 }
 
 /* ══════════════════════════════════════════

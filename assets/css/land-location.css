@@ -489,3 +489,8 @@
 
 /* 소재지 입력칸과 확인 버튼은 한 줄 유지, 새주소 안내는 그 아래 줄 */
 @media(min-width:701px){#parcelEditor .pe-address>label{grid-column:1;grid-row:1}#parcelEditor .pe-address .parcel-live-actions{grid-column:2;grid-row:1}#parcelEditor #parcelRegisterResult{grid-row:3}}
+
+/* 보기 버튼이 늘어나도 주소 입력칸과 겹치지 않도록 줄바꿈 */
+#parcelEditor .pe-address{grid-template-columns:minmax(0,1fr)}
+#parcelEditor .parcel-live-actions{flex-wrap:wrap;grid-column:1/-1;grid-row:auto}
+@media(min-width:701px){#parcelEditor .pe-address .parcel-live-actions{grid-column:1/-1;grid-row:3}#parcelEditor #parcelRegisterResult{grid-row:4}}

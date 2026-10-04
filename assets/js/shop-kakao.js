@@ -308,6 +308,7 @@
       a.target = '_blank'; a.rel = 'noopener'; a.textContent = '카카오맵';
       links.appendChild(a);
     }
+    window.HitopNaverLinks.append(links, it.query || it.address, '', {lat:it.lat,lng:it.lng});
     root.appendChild(links);
     if (noMap || it.lat === null) {
       line('지도에서 위치를 찾지 못했습니다. 자료관리에서 주소를 "와동동 1460"처럼 지번으로 확인해 주세요.');
