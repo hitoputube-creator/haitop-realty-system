@@ -6,7 +6,7 @@
   <title>하이탑부동산 | 상가 실제 지도 보기</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261003-kakao-5">
-  <link rel="stylesheet" href="assets/css/shop-kakao.css?v=20261004-shop-kakao-1">
+  <link rel="stylesheet" href="assets/css/shop-kakao.css?v=20261004-shop-kakao-2">
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/admin-guard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -60,7 +60,12 @@
       <button class="btn" id="shopFit" type="button">표시된 건물에 맞춤</button>
       <button class="btn" id="shopRetry" type="button" hidden>위치 못 찾은 건물 다시 시도</button>
     </div>
+    <div class="kakao-control-group">
+      <button class="btn" id="shopEditToggle" type="button" aria-pressed="false">핀 위치 수정</button>
+      <button class="btn" id="shopEditReset" type="button" hidden>자동 위치로 되돌리기</button>
+    </div>
   </section>
+  <p id="shopEditHelp" class="kakao-status shop-edit-help" hidden>핀 위치 수정 중: ① 지도의 핀이나 아래 목록에서 건물을 고르고 ② 지도에서 건물이 있는 정확한 자리를 누르면 저장됩니다. 핀의 뾰족한 끝이 누른 자리에 놓입니다.</p>
 
   <p id="kakaoStatus" class="kakao-status" role="status" aria-live="polite">불러오는 중입니다.</p>
   <div id="kakaoMap" class="kakao-map" aria-label="카카오 지도" hidden></div>
@@ -78,6 +83,6 @@
   </section>
 </main>
 <script src="assets/js/kakao-config.js"></script>
-<script src="assets/js/shop-kakao.js?v=20261004-shop-kakao-1"></script>
+<script src="assets/js/shop-kakao.js?v=20261004-shop-kakao-2"></script>
 </body>
 </html>

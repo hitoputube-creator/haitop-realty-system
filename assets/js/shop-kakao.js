@@ -16,6 +16,9 @@
   var geoCache = loadCache();
   var activeOverlays = new Set();
   var selectedId = '';
+  var saved = {};                 // 직접 옮겨 저장한 위치: 건물 id -> [lat, lng]
+  var geoAvailable = true;        // 위치 저장용 표(shop_building_geo)를 쓸 수 있는지
+  var editing = false;            // 핀 위치 수정 모드
 
   function setStatus(text) { statusEl.textContent = text; }
   function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; } }
@@ -84,10 +87,11 @@
     });
     await Promise.all(workers);
     saveCache();
-    // 같은 지번에 건물이 둘 이상이면 겹치지 않게 살짝 옆으로 벌려 표시합니다.
+    // 같은 지번에 건물이 둘 이상이면 겹치지 않게 살짝 옆으로 벌려 표시합니다. 직접 옮겨 저장한 위치는 그대로 씁니다.
     var used = {};
     items.forEach(function (it) {
-      it.lat = null; it.lng = null; it.overlay = null; it.el = null;
+      it.lat = null; it.lng = null; it.overlay = null; it.el = null; it.manual = false;
+      if (saved[it.id]) { it.lat = saved[it.id][0]; it.lng = saved[it.id][1]; it.manual = true; return; }
       if (!it.query) return;
       var hit = geoCache[normalizeAddress(it.query)];
       if (!Array.isArray(hit)) return;
@@ -95,6 +99,101 @@
       it.lat = hit[0];
       it.lng = hit[1] + (n - 1) * 0.00018;
     });
+  }
+
+  // ---------- 핀 위치 직접 수정 (shop_building_geo) ----------
+  async function loadSaved() {
+    try {
+      var res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/shop_building_geo?select=building_id,lat,lng', { headers: headers });
+      if (!res.ok) { geoAvailable = false; return; }
+      (await res.json()).forEach(function (row) {
+        if (Number.isFinite(Number(row.lat)) && Number.isFinite(Number(row.lng))) saved[row.building_id] = [Number(row.lat), Number(row.lng)];
+      });
+    } catch (e) { geoAvailable = false; }
+  }
+
+  async function savePosition(it, lat, lng) {
+    var res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/shop_building_geo?on_conflict=building_id', {
+      method: 'POST',
+      headers: Object.assign({}, headers, { Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify({ building_id: it.id, lat: lat, lng: lng, updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error('위치를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    saved[it.id] = [lat, lng];
+  }
+
+  async function deletePosition(it) {
+    var res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/shop_building_geo?building_id=eq.' + encodeURIComponent(it.id), {
+      method: 'DELETE', headers: headers
+    });
+    if (!res.ok) throw new Error('자동 위치로 되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    delete saved[it.id];
+  }
+
+  function selectedItem() { return items.find(function (x) { return x.id === selectedId; }) || null; }
+
+  function updateEditUi() {
+    var it = selectedItem();
+    $('shopEditToggle').setAttribute('aria-pressed', String(editing));
+    $('shopEditToggle').textContent = editing ? '핀 위치 수정 끝내기' : '핀 위치 수정';
+    $('shopEditHelp').hidden = !editing;
+    $('shopEditReset').hidden = !(editing && it && it.manual);
+    $('kakaoMap').classList.toggle('shop-editing', editing);
+  }
+
+  function selectForEdit(it) {
+    var previous = selectedItem();
+    if (previous && previous.el) previous.el.classList.remove('selected');
+    selectedId = it.id;
+    if (it.el) it.el.classList.add('selected');
+    infoWindow.close();
+    updateEditUi();
+    setStatus('수정할 건물: ' + it.name + ' — 지도에서 건물이 있는 정확한 자리를 눌러 주세요. (핀의 뾰족한 끝이 그 자리에 놓입니다)');
+  }
+
+  async function placeSelected(latLng) {
+    var it = selectedItem();
+    if (!editing || !it) return;
+    try {
+      await savePosition(it, latLng.getLat(), latLng.getLng());
+      it.lat = latLng.getLat(); it.lng = latLng.getLng(); it.manual = true;
+      it.overlay = null; it.el = null;
+      render(false);
+      var again = selectedItem();
+      if (again && again.el) again.el.classList.add('selected');
+      updateEditUi();
+      setStatus(it.name + ' 위치를 저장했습니다. 다른 건물을 고르거나 [핀 위치 수정 끝내기]를 눌러 주세요.');
+    } catch (error) {
+      setStatus(error && error.message ? error.message : '위치를 저장하지 못했습니다.');
+    }
+  }
+
+  async function resetSelected() {
+    var it = selectedItem();
+    if (!it || !it.manual) return;
+    $('shopEditReset').disabled = true;
+    try {
+      await deletePosition(it);
+      await resolveAll(false);
+      render(false);
+      var again = selectedItem();
+      if (again && again.el) again.el.classList.add('selected');
+      updateEditUi();
+      setStatus(it.name + ' 위치를 주소 기준 자동 위치로 되돌렸습니다.');
+    } catch (error) {
+      setStatus(error && error.message ? error.message : '되돌리지 못했습니다.');
+    } finally {
+      $('shopEditReset').disabled = false;
+    }
+  }
+
+  function toggleEditing() {
+    if (!geoAvailable) { setStatus('위치 저장용 표를 사용할 수 없어 핀을 옮길 수 없습니다.'); return; }
+    editing = !editing;
+    infoWindow.close();
+    updateEditUi();
+    if (editing) setStatus('핀 위치 수정 모드입니다. 지도의 핀이나 아래 목록에서 건물을 고른 뒤, 지도에서 정확한 자리를 눌러 주세요.');
+    else render(false);
   }
 
   // ---------- 지도 표시 ----------
@@ -110,7 +209,7 @@
     body.append(name, sub);
     el.appendChild(body);
     el.title = it.name + ' · ' + it.address;
-    el.addEventListener('click', function () { openInfo(it); });
+    el.addEventListener('click', function () { if (editing) selectForEdit(it); else openInfo(it); });
     it.el = el;
     return el;
   }
@@ -160,9 +259,15 @@
       button.className = it.state + (it.lat === null ? ' unplaced' : '');
       button.append(it.name);
       var small = document.createElement('small');
-      small.textContent = stateText(it) + (it.lat === null ? ' · 지도 위치 없음' : '');
+      small.textContent = stateText(it) + (it.lat === null ? ' · 지도 위치 없음' : it.manual ? ' · 위치 직접 지정' : '');
       button.appendChild(small);
       button.addEventListener('click', function () {
+        if (editing) {
+          if (it.lat !== null) { map.setLevel(3); map.setCenter(new kakao.maps.LatLng(it.lat, it.lng)); }
+          selectForEdit(it);
+          $('kakaoMap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
         if (it.lat === null) { openInfo(it, true); return; }
         map.setLevel(3);
         map.setCenter(new kakao.maps.LatLng(it.lat, it.lng));
@@ -233,6 +338,9 @@
     var timer = null;
     $('shopSearch').addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { render(true); }, 300); });
     $('shopFit').addEventListener('click', function () { render(true); });
+    $('shopEditToggle').addEventListener('click', toggleEditing);
+    $('shopEditReset').addEventListener('click', resetSelected);
+    kakao.maps.event.addListener(map, 'click', function (mouseEvent) { placeSelected(mouseEvent.latLng); });
     $('shopRetry').addEventListener('click', async function () {
       $('shopRetry').disabled = true;
       await resolveAll(true);
@@ -269,6 +377,7 @@
       bindControls();
       if (!items.length) { setStatus('등록된 상가 건물이 없습니다. 상가 자료관리에서 건물을 먼저 등록해 주세요.'); return; }
       setStatus('건물 위치를 찾는 중입니다.');
+      await loadSaved();
       await resolveAll(false);
       render(true);
     } catch (error) {

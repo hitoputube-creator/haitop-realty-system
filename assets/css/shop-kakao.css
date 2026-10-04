@@ -26,3 +26,8 @@
 .shop-kakao-buttons button.unplaced{opacity:.6}
 .shop-kakao-buttons button:hover,.shop-kakao-buttons button:focus-visible{border-color:var(--gold-soft,#e6c36a)}
 @media(max-width:720px){.shop-kakao-buttons{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.shop-pin-body{max-width:110px}}
+
+/* 핀 위치 수정 모드 */
+.shop-kakao-page .kakao-map.shop-editing{outline:3px solid #e5bf35;outline-offset:-3px}
+.shop-edit-help{color:var(--gold-soft,#e6c36a)!important}
+.shop-kakao-page .kakao-control-group .btn[aria-pressed="true"]#shopEditToggle{background:rgba(229,191,53,.16)}
