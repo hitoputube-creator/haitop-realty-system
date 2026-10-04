@@ -494,6 +494,7 @@
     $('kakaoMap').hidden = false;
     $('kakaoControls').hidden = false;
     map = new kakao.maps.Map($('kakaoMap'), { center: new kakao.maps.LatLng(cfg.center[0], cfg.center[1]), level: cfg.level });
+    window.HitopNaverLinks.bindMapView($('kakaoNaverListings'), map, 'land');
     geocoder = new kakao.maps.services.Geocoder();
     infoWindow = new kakao.maps.InfoWindow({ removable: true, zIndex: 10 });
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);

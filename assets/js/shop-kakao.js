@@ -368,6 +368,7 @@
       $('kakaoMap').hidden = false;
       $('kakaoControls').hidden = false;
       map = new kakao.maps.Map($('kakaoMap'), { center: new kakao.maps.LatLng(DEFAULT_CENTER[0], DEFAULT_CENTER[1]), level: DEFAULT_LEVEL });
+    window.HitopNaverLinks.bindMapView($('kakaoNaverListings'), map, 'shop');
       geocoder = new kakao.maps.services.Geocoder();
       infoWindow = new kakao.maps.InfoWindow({ removable: true, zIndex: 10 });
       map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
