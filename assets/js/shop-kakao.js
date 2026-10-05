@@ -199,13 +199,25 @@
   // ---------- 지도 표시 ----------
   function stateText(it) { return !it.total ? '호실 미등록' : '공실 ' + it.vacant + '/' + it.total; }
 
+  function unitListUrl(it) {
+    return 'building-detail.html?id=' + encodeURIComponent(it.id) + '#unitStatus';
+  }
+
   function pinContent(it) {
     var el = document.createElement('div');
     el.className = 'shop-pin ' + it.state + (selectedId === it.id ? ' selected' : '');
     var body = document.createElement('div');
     body.className = 'shop-pin-body';
     var name = document.createElement('strong'); name.textContent = it.name;
-    var sub = document.createElement('span'); sub.textContent = stateText(it);
+    var sub = document.createElement('a'); sub.textContent = stateText(it);
+    sub.className = 'shop-pin-units';
+    sub.href = unitListUrl(it);
+    sub.title = it.name + ' 층별 호실 리스트 보기';
+    sub.setAttribute('aria-label', it.name + ' ' + stateText(it) + ' · 층별 리스트 보기');
+    sub.addEventListener('click', function (event) {
+      event.stopPropagation();
+      if (editing) { event.preventDefault(); selectForEdit(it); }
+    });
     body.append(name, sub);
     el.appendChild(body);
     el.title = it.name + ' · ' + it.address;
@@ -300,6 +312,7 @@
     var id = encodeURIComponent(it.id);
     link('건물 상세', 'building-detail.html?id=' + id);
     link('개요', 'building-overview.html?id=' + id);
+    link('층별 리스트', unitListUrl(it));
     var first = it.floors[0];
     link('층별 현황', 'floor-status.html?' + new URLSearchParams(first ? { id: it.id, floorId: first.id, floor: String(first.floor_number || '') } : { id: it.id }).toString());
     if (it.lat !== null) {
