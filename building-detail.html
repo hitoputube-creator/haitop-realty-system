@@ -481,7 +481,7 @@
   </div>
 
   <!-- ===== 호실 현황 ===== -->
-  <div class="card">
+  <div class="card" id="unitStatus" style="scroll-margin-top:20px;">
     <div class="unit-sec-head">
       <h3>🏬 호실 현황</h3>
       <button class="btn-unit-add" id="btnAddUnit">+ 호실 추가</button>
@@ -1259,6 +1259,7 @@ async function deleteBFile(id) {
       units = [];
     }
     renderAll();
+    if (location.hash === '#unitStatus') $('unitStatus').scrollIntoView({ block: 'start' });
   }
 
   // init() 완료 후 외부에서 호출
