@@ -31,3 +31,8 @@
 .shop-kakao-page .kakao-map.shop-editing{outline:3px solid #e5bf35;outline-offset:-3px}
 .shop-edit-help{color:var(--gold-soft,#e6c36a)!important}
 .shop-kakao-page .kakao-control-group .btn[aria-pressed="true"]#shopEditToggle{background:rgba(229,191,53,.16)}
+
+/* 공실/전체 호실 숫자에서 층별 리스트 바로 열기 */
+.shop-pin-body .shop-pin-units{display:block;padding:2px 4px;border:1px solid rgba(255,255,255,.65);border-radius:4px;color:#fff;background:rgba(0,0,0,.12);font:inherit;font-size:11px;line-height:1.25;white-space:nowrap;text-decoration:none;cursor:pointer}
+.shop-pin-body .shop-pin-units:hover{background:rgba(0,0,0,.28);text-decoration:underline}
+.shop-pin-body .shop-pin-units:focus-visible{outline:2px solid #e5bf35;outline-offset:2px}
