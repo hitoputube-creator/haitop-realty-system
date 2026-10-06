@@ -1011,6 +1011,8 @@
       if (!hasRent && !hasDeposit && hasSale) autoDealtType = "매매";
       else if (hasDeposit || hasRent)         autoDealtType = "월세";
 
+      if (unit && ["매매", "전세", "월세"].includes(unit.거래구분)) autoDealtType = unit.거래구분;
+
       // 7) 상세설명 자동작성
       const descParts = [];
       if (bldgName)    descParts.push(`■ 건물명: ${bldgName}`);
@@ -1029,9 +1031,11 @@
       if (unit && unit.비고)   descParts.push(`■ 비고: ${unit.비고}`);
 
       // 8) 폼 입력
-      cat1El.value = "상가사무실";
+      const isResidentialUnit = qp.get("resourceScope") === "residential" || !!(unit && unit.아파트명);
+      const unitCategory = isResidentialUnit ? "아파트" : "상가";
+      cat1El.value = isResidentialUnit ? "주거용" : "상가사무실";
       renderCat2();
-      cat2El.value = "상가";
+      cat2El.value = unitCategory;
       updateDynamicSections();
 
       document.getElementById("dealType").value = autoDealtType;
@@ -1046,7 +1050,7 @@
       if (detailAddr)  document.getElementById("privateDetailAddress").value = detailAddr;
 
       // 제목: 건물명 + 호실 + 상가 (최대 20자)
-      const titleVal = [bldgName, hoStr, "상가"].filter(Boolean).join(" ").slice(0, 20);
+      const titleVal = [bldgName, hoStr, unitCategory].filter(Boolean).join(" ").slice(0, 20);
       if (titleVal)    document.getElementById("title").value = titleVal;
 
       if (deposit) { document.getElementById("deposit").value      = deposit;  syncRegisterPricePreview("deposit"); }

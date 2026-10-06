@@ -374,6 +374,8 @@
     }
     .umfield textarea { resize: vertical; min-height: 66px; }
     .umfield select option { background: #0D1728; }
+    .unit-memo-entry { padding:10px 0; border-top:1px solid rgba(255,255,255,.12); line-height:1.6; overflow-wrap:anywhere; }
+    .unit-memo-entry time { display:block; font-size:.74rem; color:var(--muted); margin-bottom:4px; }
     .unit-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
 
     /* 소형 버튼 */
@@ -508,7 +510,7 @@
   <!-- ===== 호실 현황 ===== -->
   <div class="card" id="unitStatus" style="scroll-margin-top:20px;">
     <div class="unit-sec-head">
-      <h3>🏬 호실 현황</h3>
+      <h3 id="unitStatusTitle">🏬 호실 현황</h3>
       <button class="btn-unit-add" id="btnAddUnit">+ 호실 추가</button>
     </div>
 
@@ -539,7 +541,7 @@
     <!-- 테이블 -->
     <div class="units-wrap">
       <table class="units-tbl">
-        <thead>
+        <thead id="unitsTableHead">
           <tr>
             <th>호수</th>
             <th>업종</th>
@@ -565,8 +567,41 @@
       <button class="unit-modal-close" id="umClose">✕</button>
       <div class="unit-modal-title" id="umTitle">호실 추가</div>
 
+      <div id="residentialUnitFields" hidden>
+        <div class="um-section sale"><div class="um-section-title">🏠 기본정보</div><div class="umgrid">
+          <div class="umfield full"><label>아파트명</label><input id="ru_아파트명" readonly /></div>
+          <div class="umfield"><label>동 *</label><input id="ru_동" placeholder="예: 1101" /></div>
+          <div class="umfield"><label>호수 *</label><input id="ru_호수" placeholder="예: 101" /></div>
+          <div class="umfield"><label>접수일자</label><input id="ru_접수일자" type="date" /></div>
+          <div class="umfield"><label>평형</label><input id="ru_평형" placeholder="예: 24평" /></div>
+          <div class="umfield full"><label>타입</label><input id="ru_타입" list="residentialUnitTypes" placeholder="예: 55A/AS" /><datalist id="residentialUnitTypes"></datalist></div>
+          <div class="umfield area-dual full"><label>분양면적(공급면적)</label><div class="area-row"><input id="ru_분양_평" type="number" min="0" step="0.01" placeholder="평" aria-label="분양면적 평" /><span class="area-arrow">↔</span><input id="ru_분양_m2" type="number" min="0" step="0.0001" placeholder="㎡" aria-label="분양면적 제곱미터" /><span class="area-unit">㎡</span></div></div>
+          <div class="umfield area-dual full"><label>전용면적</label><div class="area-row"><input id="ru_전용_평" type="number" min="0" step="0.01" placeholder="평" aria-label="전용면적 평" /><span class="area-arrow">↔</span><input id="ru_전용_m2" type="number" min="0" step="0.0001" placeholder="㎡" aria-label="전용면적 제곱미터" /><span class="area-unit">㎡</span></div></div>
+        </div></div>
+        <div class="um-section current"><div class="um-section-title">💰 거래·가격</div><div class="umgrid">
+          <div class="umfield full"><label>매매·임대 구분</label><select id="ru_거래구분"><option value="">미정</option><option>매매</option><option>전세</option><option>월세</option><option>임대</option><option>매매·임대</option></select></div>
+          <div class="umfield full"><label>매매가 (만원)</label><input id="ru_매매가" type="number" min="0" placeholder="예: 50000" /><span class="amt-hint" id="h_ru_매매가"></span></div>
+          <div class="umfield"><label>임대 보증금·전세가 (만원)</label><input id="ru_보증금" type="number" min="0" placeholder="예: 30000" /><span class="amt-hint" id="h_ru_보증금"></span></div>
+          <div class="umfield"><label>월세 (만원)</label><input id="ru_월세" type="number" min="0" placeholder="예: 100" /><span class="amt-hint" id="h_ru_월세"></span></div>
+        </div></div>
+        <div class="um-section current"><div class="um-section-title">👤 소유자 정보</div><div class="umgrid">
+          <div class="umfield"><label>소유자 이름</label><input id="ru_소유자" /></div>
+          <div class="umfield"><label>소유자 번호</label><input id="ru_연락처" type="tel" placeholder="010-0000-0000" /></div>
+          <div class="umfield full"><label>소유자 통신사</label><input id="ru_통신사" list="ownerCarrierOptions" placeholder="선택하거나 직접 입력" /><datalist id="ownerCarrierOptions"><option value="SKT"></option><option value="KT"></option><option value="LG U+"></option><option value="알뜰폰"></option><option value="미확인"></option></datalist></div>
+        </div></div>
+        <div class="um-section sale"><div class="um-section-title">📅 세입자·계약</div><div class="umgrid">
+          <div class="umfield full"><label>세입자 현황</label><select id="ru_세입자현황"><option>미확인</option><option>자가거주</option><option value="임차중">세입자 거주</option><option>공실</option></select></div>
+          <div class="umfield"><label>세입자 계약 시작일</label><input id="ru_계약시작" type="date" /></div>
+          <div class="umfield"><label>세입자 계약 종료일</label><input id="ru_계약종료" type="date" /></div>
+        </div></div>
+        <div class="um-section current"><div class="um-section-title">📝 옵션·비고</div><div class="umgrid">
+          <div class="umfield full"><label>옵션내역</label><textarea id="ru_옵션" placeholder="시스템에어컨, 붙박이장 등"></textarea></div>
+          <div class="umfield full"><label>비고</label><textarea id="ru_비고" placeholder="매물 특이사항"></textarea></div>
+        </div></div>
+      </div>
+
       <!-- 분양 당시 -->
-      <div class="um-section sale">
+      <div class="um-section sale" id="commercialUnitSale">
         <div class="um-section-title">📋 분양 당시</div>
         <div class="umgrid">
           <div class="umfield"><label>호수 *</label><input id="u_호수" placeholder="예: 101, 202" /></div>
@@ -597,7 +632,7 @@
       </div>
 
       <!-- 현재 현황 -->
-      <div class="um-section current">
+      <div class="um-section current" id="commercialUnitCurrent">
         <div class="um-section-title">📊 현재 현황</div>
         <div class="umgrid">
           <div class="umfield">
@@ -618,6 +653,12 @@
           <div class="umfield full"><label>비고</label><textarea id="u_비고" placeholder="특이사항 등 자유 입력"></textarea></div>
         </div>
       </div>
+
+      <div class="um-section current" id="unitAdditionalNotes"><div class="um-section-title">💬 추가메모</div><div class="umgrid">
+        <div class="umfield full"><label>새 메모</label><textarea id="u_추가메모" placeholder="상담 내용이나 변경사항을 추가하세요. 기존 메모에 날짜별로 누적됩니다."></textarea></div>
+        <div class="umfield full"><button type="button" class="btn-unit-ghost" id="umAddMemo">메모 추가·저장</button><p style="font-size:.74rem;color:var(--muted);margin-top:7px;">현재 입력내용과 메모를 함께 저장합니다.</p></div>
+        <div class="umfield full" id="unitMemoHistory" aria-live="polite"></div>
+      </div></div>
 
       <div class="unit-modal-actions">
         <button class="btn-unit-ghost" id="umRegistry" type="button" style="display:none;">건축물대장정보 확인</button>
@@ -645,7 +686,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20260929-floor-order"></script>
+<script src="assets/js/storage.js?v=20261006-unit-memos"></script>
 <script src="assets/js/admin-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
@@ -1288,6 +1329,88 @@ async function deleteBFile(id) {
   let filterFloor = "전체";
   let bName       = "";
 
+  const residentialUnitMode = () => resourceScope === 'residential';
+  let unitPlans = [];
+  const todayInKorea = () => new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Seoul'});
+  function roomParts(u) {
+    const combined = String(u.호수 || '').trim();
+    const match = combined.match(/^(.+?)동\s*(.+?)(?:호)?$/);
+    return {dong:String(u.동 || (match && match[1]) || '').replace(/동$/, '').trim(), room:String(u.호 || (match && match[2]) || combined).replace(/호$/, '').trim()};
+  }
+  function unitGroup(u) { return residentialUnitMode() ? (roomParts(u).dong || '미입력') : floorOf(u.호수); }
+  function unitMemos(u) {
+    if (Array.isArray(u.추가메모)) return u.추가메모;
+    return u.추가메모 ? [{text:String(u.추가메모),created_at:u.updated_at || null}] : [];
+  }
+  function renderMemoHistory(u) {
+    const notes = unitMemos(u);
+    $('unitMemoHistory').innerHTML = notes.length ? [...notes].reverse().map(note => {
+      const date = new Date(note.created_at);
+      const label = note.created_at && !Number.isNaN(date.getTime()) ? date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}) : '이전 메모';
+      return `<div class="unit-memo-entry"><time>${esc(label)}</time>${esc(note.text || '').replace(/\n/g,'<br>')}</div>`;
+    }).join('') : '<p style="color:var(--muted);font-size:.8rem;">추가메모가 없습니다.</p>';
+  }
+  function ownerPhone(value) {
+    let digits = String(value || '').replace(/\D/g,'');
+    if (digits.startsWith('82') && /^(?:\+82|82)/.test(String(value))) digits = '0' + digits.slice(2);
+    if (digits.startsWith('02') && [9,10].includes(digits.length)) return digits.slice(0,2)+'-'+digits.slice(2,-4)+'-'+digits.slice(-4);
+    if ([10,11].includes(digits.length)) return digits.slice(0,3)+'-'+digits.slice(3,-4)+'-'+digits.slice(-4);
+    return String(value || '').trim();
+  }
+  function fillUnitPlanAreas() {
+    const type = $('ru_타입').value.trim();
+    const plan = unitPlans.find(p => p.floor_number === type);
+    if (!plan) return;
+    for (const [prefix, area] of [['분양',plan.supply_area_m2],['전용',plan.exclusive_area_m2]]) {
+      if (area != null) {
+        $('ru_'+prefix+'_m2').value = Number(area);
+        $('ru_'+prefix+'_평').value = (Number(area)/(400/121)).toFixed(2);
+      }
+    }
+    if (plan.supply_area_m2 != null) $('ru_평형').value = (Number(plan.supply_area_m2)/(400/121)).toFixed(2)+'평';
+  }
+  function openResidentialFields(u, isNew) {
+    const parts = roomParts(u);
+    const fields = {아파트명:bName,동:parts.dong,호수:parts.room,접수일자:u.접수일자 || (isNew ? todayInKorea() : ''),평형:u.평형,타입:u.타입,거래구분:u.거래구분,
+      매매가:u.현_매매가격,보증금:effectiveUnitPrice(u.현_보증금,u.보증금),월세:effectiveUnitPrice(u.현_월세,u.월차임),소유자:u.소유주,연락처:u.연락처,통신사:u.소유자통신사,
+      세입자현황:u.세입자현황 || (u.공실여부 === '공실' ? '공실' : u.공실여부 === '임차중' ? '임차중' : '미확인'),계약시작:u.세입자계약시작일,계약종료:u.세입자계약종료일,옵션:u.옵션내역,비고:u.비고};
+    Object.entries(fields).forEach(([key,value]) => { $('ru_'+key).value = value ?? ''; });
+    for (const prefix of ['분양','전용']) {
+      const m2 = u[prefix+'_m2'] ?? (u[prefix+'_평'] != null ? Number(u[prefix+'_평'])*(400/121) : null);
+      $('ru_'+prefix+'_m2').value = m2 == null ? '' : Math.round(m2*10000)/10000;
+      $('ru_'+prefix+'_평').value = m2 == null ? '' : (m2/(400/121)).toFixed(2);
+    }
+    if (!$('ru_세입자현황').value) $('ru_세입자현황').value = '미확인';
+    ['매매가','보증금','월세'].forEach(k => {$('h_ru_'+k).textContent = toKorAmt($('ru_'+k).value);});
+  }
+  function residentialUnitChanges(original) {
+    const value = key => $('ru_'+key).value.trim();
+    const dong = value('동').replace(/동$/,''), room = value('호수').replace(/호$/,'');
+    if (!dong || !room) throw new Error('동과 호수를 입력하세요.');
+    if (value('계약시작') && value('계약종료') && value('계약시작') > value('계약종료')) throw new Error('계약 종료일은 시작일 이후여야 합니다.');
+    const number = key => {const raw = value(key); if (!raw) return null; const n = Number(raw); if (!Number.isFinite(n) || n < 0) throw new Error('면적과 가격은 0 이상의 숫자로 입력하세요.'); return n;};
+    const supply = number('분양_m2'), exclusive = number('전용_m2');
+    if (supply != null && exclusive != null && supply < exclusive) throw new Error('분양면적은 전용면적 이상이어야 합니다.');
+    const label = `${dong}동 ${room}호`;
+    if (units.some((u,i) => i !== editIdx && roomParts(u).dong === dong && roomParts(u).room === room)) throw new Error('같은 동·호수가 이미 등록되어 있습니다.');
+    const tenant = value('세입자현황');
+    return {...original,아파트명:bName,동:dong,호:room,호수:label,층:floorOf(room),접수일자:value('접수일자') || null,평형:value('평형') || null,타입:value('타입') || null,
+      분양_m2:supply,전용_m2:exclusive,분양_평:supply == null ? null : supply/(400/121),전용_평:exclusive == null ? null : exclusive/(400/121),거래구분:value('거래구분') || null,
+      현_매매가격:number('매매가'),현_보증금:number('보증금'),현_월세:number('월세'),소유주:value('소유자') || null,연락처:ownerPhone(value('연락처')) || null,소유자통신사:value('통신사') || null,
+      세입자현황:tenant,공실여부:tenant === '공실' ? '공실' : tenant === '임차중' ? '임차중' : tenant,세입자계약시작일:value('계약시작') || null,세입자계약종료일:value('계약종료') || null,
+      옵션내역:value('옵션') || null,비고:value('비고') || null,updated_at:new Date().toISOString()};
+  }
+  function renderResidentialTable(filtered) {
+    $('unitsTableHead').innerHTML = '<tr><th>동·호수</th><th>평형·타입</th><th>거래구분</th><th>매매가(만)</th><th>보증금 / 월세(만)</th><th>소유자·연락처</th><th>세입자현황</th><th>접수일자</th><th>관리</th></tr>';
+    $('unitsTbody').innerHTML = filtered.map(u => {
+      const ri = units.indexOf(u), notes = unitMemos(u);
+      const sale = u.현_매매가격 == null ? '-' : Number(u.현_매매가격).toLocaleString('ko-KR');
+      const tenant = u.세입자현황 || u.공실여부 || '미확인';
+      return `<tr><td><strong>${esc(u.호수 || '-')}</strong>${notes.length ? '<br><small>메모 '+notes.length+'건</small>' : ''}</td><td>${esc(u.평형 || '-')}<br>${esc(u.타입 || '')}</td><td>${esc(u.거래구분 || '-')}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions"><button class="btn-unit-edit" data-ri="${ri}">수정·메모</button>${u.listing_id ? `<a class="btn-listing-view" href="detail.html?id=${encodeURIComponent(u.listing_id)}">매물보기</a>` : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`}</td></tr>`;
+    }).join('');
+  }
+
+
   function fmt(n) {
     const v = Number(n);
     return (v && isFinite(v)) ? v.toLocaleString("ko-KR") : "-";
@@ -1325,7 +1448,7 @@ async function deleteBFile(id) {
 
   function floorLabel(f) {
     if (f === "전체") return "전체";
-    return f + "층";
+    return residentialUnitMode() ? (f === "미입력" ? "동 미입력" : f + "동") : f + "층";
   }
 
   // 건물명 읽기 (DOM 갱신 대기)
@@ -1346,12 +1469,20 @@ async function deleteBFile(id) {
     const p = new URLSearchParams();
     if (typeof buildingId !== "undefined" && buildingId) p.set("buildingId", buildingId);
     if (u.호수) p.set("roomNo", u.호수);
+    if (residentialUnitMode()) p.set("resourceScope", "residential");
     return "register.html?" + p.toString();
   }
 
   // 초기 로드 (init() 완료 후 호출)
   async function loadUnits() {
     bName = await getBuildingName();
+    if (residentialUnitMode()) {
+      $('unitStatusTitle').textContent = '🏠 세대별 자료';
+      $('btnAddUnit').textContent = '+ 세대 추가';
+      $('unitsEmpty').textContent = '등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.';
+      try { unitPlans = await getBuildingFloors(buildingId); } catch (_) { unitPlans = []; }
+      $('residentialUnitTypes').innerHTML = unitPlans.map(p => `<option value="${esc(p.floor_number)}"></option>`).join('');
+    }
     console.log("[호실현황] ── loadUnits 시작 ──");
     console.log("[호실현황] URL buildingId:", typeof buildingId !== "undefined" ? buildingId : "(없음)");
     console.log("[호실현황] #buildingName DOM:", ($("buildingName")||{}).textContent);
@@ -1389,7 +1520,7 @@ async function deleteBFile(id) {
   function renderSummary() {
     const occ  = units.filter(u => u.공실여부 === "임차중").length;
     const vac  = units.filter(u => u.공실여부 === "공실").length;
-    const sale = units.filter(u => u.공실여부 === "매매가능").length;
+    const sale = units.filter(u => residentialUnitMode() ? String(u.거래구분 || "").includes("매매") : u.공실여부 === "매매가능").length;
     const rev  = units.reduce((s, u) => s + (Number(effectiveUnitPrice(u.현_월세, u.월차임)) || 0), 0);
     $("sumOccupied").textContent = occ;
     $("sumVacant").textContent   = vac;
@@ -1401,7 +1532,7 @@ async function deleteBFile(id) {
     const seen = {};
     const floors = [];
     units.forEach(u => {
-      const f = floorOf(u.호수);
+      const f = unitGroup(u);
       if (f && !seen[f]) { seen[f] = true; floors.push(f); }
     });
     floors.sort((a, b) => {
@@ -1412,7 +1543,7 @@ async function deleteBFile(id) {
 
     const tabs = ["전체"].concat(floors);
     $("unitFloorTabs").innerHTML = tabs.map(f =>
-      `<button class="ftab${f === filterFloor ? " active" : ""}" data-floor="${f}">${floorLabel(f)}</button>`
+      `<button class="ftab${f === filterFloor ? " active" : ""}" data-floor="${esc(f)}">${esc(floorLabel(f))}</button>`
     ).join("");
 
     $("unitFloorTabs").querySelectorAll(".ftab").forEach(btn => {
@@ -1426,14 +1557,15 @@ async function deleteBFile(id) {
   function renderTable() {
     const filtered = filterFloor === "전체"
       ? units
-      : units.filter(u => floorOf(u.호수) === filterFloor);
+      : units.filter(u => unitGroup(u) === filterFloor);
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
     const listed = filtered.filter(u => String(u.listing_id || '').trim()).length;
-    $("unitCounts").textContent = `${floorLabel(filterFloor)} · 등록 호실 ${filtered.length}개 · 공실등록 ${filtered.filter(u => u.공실여부 === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
+    $("unitCounts").textContent = `${floorLabel(filterFloor)} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => u.공실여부 === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
     const tbody = $("unitsTbody");
     const empty = $("unitsEmpty");
 
+    if (residentialUnitMode()) $('unitsTableHead').innerHTML = '<tr><th>동·호수</th><th>평형·타입</th><th>거래구분</th><th>매매가(만)</th><th>보증금 / 월세(만)</th><th>소유자·연락처</th><th>세입자현황</th><th>접수일자</th><th>관리</th></tr>';
     if (!filtered.length) {
       tbody.innerHTML = "";
       empty.style.display = "";
@@ -1441,7 +1573,8 @@ async function deleteBFile(id) {
     }
     empty.style.display = "none";
 
-    tbody.innerHTML = filtered.map(u => {
+    if (residentialUnitMode()) renderResidentialTable(filtered);
+    else tbody.innerHTML = filtered.map(u => {
       const ri     = units.indexOf(u);
       const status = u.공실여부 || "공실";
       const bc     = status === "임차중" ? "임차중" : status === "공실" ? "공실" : "매매가능";
@@ -1482,6 +1615,15 @@ async function deleteBFile(id) {
     $("umDelete").style.display = isNew ? "none" : "";
     $("umRegistry").style.display = isNew ? "none" : "";
     const u = isNew ? {} : units[idx];
+    $('residentialUnitFields').hidden = !residentialUnitMode();
+    $('commercialUnitSale').hidden = residentialUnitMode();
+    $('commercialUnitCurrent').hidden = residentialUnitMode();
+    if (residentialUnitMode()) {
+      $('umTitle').textContent = isNew ? '세대 추가' : '세대 수정';
+      openResidentialFields(u, isNew);
+    }
+    $('u_추가메모').value = '';
+    renderMemoHistory(u);
 
     // 분양 당시
     $("u_호수").value     = u.호수      || "";
@@ -1512,7 +1654,7 @@ async function deleteBFile(id) {
 
     refreshHints(u);
     $("unitModal").classList.add("open");
-    $("u_호수").focus();
+    $(residentialUnitMode() ? "ru_동" : "u_호수").focus();
   }
 
   function closeModal() {
@@ -1520,11 +1662,12 @@ async function deleteBFile(id) {
     editIdx = -1;
   }
 
-  async function saveUnit() {
+  async function saveUnit(options = {}) {
+    if ($("umSave").disabled) return;
     const 호수 = $("u_호수").value.trim();
-    if (!호수) { if (typeof showToast === "function") showToast("호수를 입력하세요."); return; }
+    if (!residentialUnitMode() && !호수) { if (typeof showToast === "function") showToast("호수를 입력하세요."); return; }
 
-    const unit = {
+    let unit = {
       ...(editIdx >= 0 ? units[editIdx] : {}),
       호수,
       공실여부:    $("u_공실여부").value,
@@ -1546,23 +1689,35 @@ async function deleteBFile(id) {
       updated_at:  new Date().toISOString()
     };
 
+    const original = editIdx >= 0 ? units[editIdx] : {};
+    if (residentialUnitMode()) {
+      try { unit = residentialUnitChanges(original); }
+      catch (e) { showToast(e.message); return; }
+    }
+    const newMemo = $('u_추가메모').value.trim();
+    unit.추가메모 = [...unitMemos(original)];
+    if (newMemo) unit.추가메모.push({id:crypto.randomUUID(),text:newMemo,created_at:new Date().toISOString()});
+    const wasNew = editIdx < 0;
+    const savedIndex = wasNew ? units.length : editIdx;
     const next = [...units];
-    if (editIdx < 0) next.push(unit); else next[editIdx] = unit;
+    if (wasNew) next.push(unit); else next[editIdx] = unit;
 
     $("umSave").disabled = true;
+    $("umAddMemo").disabled = true;
     $("umSave").textContent = "저장 중...";
     try {
       await saveBuildingUnits(bName, bName, next);
       units = next;
-      closeModal();
       renderAll();
-      if (typeof showToast === "function")
-        showToast(editIdx < 0 ? "호실이 추가되었습니다." : "수정 완료되었습니다.");
+      if (options.keepOpen) { openModal(savedIndex); $('u_추가메모').focus(); }
+      else closeModal();
+      if (typeof showToast === "function") showToast(newMemo ? '추가메모가 저장되었습니다.' : wasNew ? '자료가 추가되었습니다.' : '수정 완료되었습니다.');
     } catch(e) {
       if (typeof showToast === "function") showToast("저장 실패: " + e.message);
       console.error("[호실현황] 저장 실패:", e);
     } finally {
       $("umSave").disabled = false;
+      $("umAddMemo").disabled = false;
       $("umSave").textContent = "저장";
     }
   }
@@ -1659,6 +1814,15 @@ async function deleteBFile(id) {
     });
   }
 
+  $('ru_타입').addEventListener('change', fillUnitPlanAreas);
+  $('ru_연락처').addEventListener('blur', () => {$('ru_연락처').value = ownerPhone($('ru_연락처').value);});
+  ['매매가','보증금','월세'].forEach(k => $('ru_'+k).addEventListener('input', () => {$('h_ru_'+k).textContent = toKorAmt($('ru_'+k).value);}));
+  bindAreaPair('ru_분양_평','ru_분양_m2');
+  bindAreaPair('ru_전용_평','ru_전용_m2');
+  $('umAddMemo').addEventListener('click', () => {
+    if (!$('u_추가메모').value.trim()) { showToast('추가메모를 입력하세요.'); return; }
+    saveUnit({keepOpen:true});
+  });
   $("btnAddUnit").addEventListener("click", () => openModal(-1));
   $("umSave").addEventListener("click", saveUnit);
   $("umDelete").addEventListener("click", deleteUnit);
