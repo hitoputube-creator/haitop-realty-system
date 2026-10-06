@@ -33,10 +33,10 @@
   function blockName(blockId) { return String(blockId).replace(BLOCK_PREFIX, ''); }
 
   function loadCache() {
-    try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; }
+    try { return JSON.parse(OfficeStorage.local.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; }
   }
   function saveCache() {
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(geoCache)); } catch (e) { /* 저장 공간이 없어도 화면은 동작 */ }
+    try { OfficeStorage.local.setItem(CACHE_KEY, JSON.stringify(geoCache)); } catch (e) { /* 저장 공간이 없어도 화면은 동작 */ }
   }
 
   function normalizeAddress(text) {

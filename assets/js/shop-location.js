@@ -388,8 +388,8 @@
   $('resetFilter').addEventListener('click', () => { $('filterForm').reset(); applyFilters(); });
 
   // ----- 저장한 조건 (이 기기에만 저장) -----
-  function readSaved() { try { return JSON.parse(localStorage.getItem(FILTER_KEY) || '{}'); } catch (e) { return {}; } }
-  function writeSaved(obj) { try { localStorage.setItem(FILTER_KEY, JSON.stringify(obj)); } catch (e) { say('이 브라우저에서는 조건을 저장할 수 없습니다.'); } }
+  function readSaved() { try { return JSON.parse(OfficeStorage.local.getItem(FILTER_KEY) || '{}'); } catch (e) { return {}; } }
+  function writeSaved(obj) { try { OfficeStorage.local.setItem(FILTER_KEY, JSON.stringify(obj)); } catch (e) { say('이 브라우저에서는 조건을 저장할 수 없습니다.'); } }
   function renderSavedFilters() {
     const sel = $('savedFilters');
     const first = sel.options[0];

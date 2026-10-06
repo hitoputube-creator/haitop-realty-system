@@ -6,10 +6,10 @@
   <title>하이탑부동산 | 매물관리 메인</title>
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-  <script src="assets/js/storage.js"></script>
-  <script src="assets/js/admin-guard.js"></script>
+  <script src="assets/js/storage.js?v=20261006-office-login"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
   <style>
     *{box-sizing:border-box}body{margin:0;background:var(--bg,#071625);color:var(--txt,#f5f8fb);font-family:Pretendard,system-ui,sans-serif;font-size:16px;line-height:1.6}
     a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:3px solid #e7ca70;outline-offset:4px}
@@ -106,7 +106,7 @@
         // Existing list restores this session key; no changes to the list or its records.
         const state = {searchKeyword:'', currentMajor:categories[selected].major, currentSub:'', currentTag:'', currentDealFilter:'', includeCompleted:false, currentSort:'newest', viewMode:'card', scrollY:0};
         try {
-          sessionStorage.setItem('hitop_properties_filter_state', JSON.stringify(state));
+          OfficeStorage.session.setItem('hitop_properties_filter_state', JSON.stringify(state));
           // A new tab has a separate session, so use this tab to preserve the selection.
           event.preventDefault();
           location.assign(get('listingLink').href);

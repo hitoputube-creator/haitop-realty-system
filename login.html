@@ -2,25 +2,31 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>관리자 로그인 - 하이탑부동산</title>
+  <title>매물관리 로그인</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" as="style" crossorigin
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
   <link rel="stylesheet" href="assets/css/tokens.css" />
-  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/storage.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body style="margin:0;background:radial-gradient(circle at top, var(--panel2) 0, var(--bg) 45%, var(--bg2) 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;color:var(--txt);">
   <div style="width:100%;max-width:320px;">
     <div style="text-align:center;margin-bottom:36px;">
       <div style="width:56px;height:56px;background:linear-gradient(135deg,#d8b84a,#f0c040);border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;border:1px solid rgba(216,184,74,0.45);">🏢</div>
-      <div style="font-size:1.4rem;font-weight:800;color:var(--gold);letter-spacing:0.5px;">HITOP 부동산</div>
+      <div id="officeBrand" style="font-size:1.4rem;font-weight:800;color:var(--gold);letter-spacing:0.5px;">HITOP 부동산</div>
       <div style="font-size:0.8rem;color:var(--muted);margin-top:4px;">관리자 로그인</div>
     </div>
     <div id="resetSuccessBanner" style="display:none;font-size:0.82rem;color:var(--gold);text-align:center;background:var(--gold2);border:1px solid rgba(216,184,74,0.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
       비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.
     </div>
 
+    <label for="officeSelect" style="display:block;margin-bottom:8px;">로그인할 부동산</label>
+    <select id="officeSelect" style="width:100%;padding:12px;border-radius:10px;background:var(--panel);color:var(--txt);border:1px solid var(--line);margin-bottom:14px;">
+      <option value="hitop">하이탑부동산</option>
+      <option value="ktop">케이탑부동산</option>
+    </select>
+    <p id="officeNotice" style="font-size:0.8rem;color:var(--sub);line-height:1.5;margin-bottom:16px;"></p>
     <input id="loginEmail" type="email" placeholder="이메일" autocomplete="username"
       style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);outline:none;margin-bottom:10px;" />
 
@@ -46,9 +52,22 @@
     (function () {
       // 재설정 링크로 사용할 고정 주소 — Supabase 프로젝트의 Auth 리다이렉트 허용 목록에도
       // 이 주소가 등록되어 있어야 실제로 reset-password.html로 이동한다.
-      const RESET_REDIRECT_URL = "https://hitoputube-creator.github.io/haitop-realty-system/reset-password.html";
+      const RESET_REDIRECT_URL = OfficeConfig.urlFor("reset-password.html");
 
       const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      const officeSelect = document.getElementById("officeSelect");
+      officeSelect.value = OfficeConfig.id;
+      document.getElementById("officeBrand").textContent = OfficeConfig.brand + " 부동산";
+      document.getElementById("officeNotice").textContent = OfficeConfig.id === "ktop"
+        ? "케이탑 계정으로 로그인합니다. 고객과 소유주·연락처는 케이탑에서 별도로 관리합니다."
+        : "하이탑 계정으로 로그인합니다.";
+      document.title = "매물관리 로그인 - " + OfficeConfig.label;
+      officeSelect.addEventListener("change", function () {
+        const target = new URL(location.href);
+        target.searchParams.set("office", officeSelect.value);
+        target.searchParams.delete("reset");
+        location.replace(target.href);
+      });
       const emailEl = document.getElementById("loginEmail");
       const pwEl = document.getElementById("loginPassword");
       const errEl = document.getElementById("loginError");
@@ -67,34 +86,46 @@
 
       // redirect 파라미터는 같은 사이트 안의 파일명(+쿼리)만 허용한다 (오픈 리다이렉트 방지).
       function getRedirectTarget() {
-        const params = new URLSearchParams(location.search);
-        const raw = params.get("redirect") || "";
-        if (!raw || raw.indexOf("login.html") === 0 || /^https?:\/\//i.test(raw) || raw.indexOf("//") === 0) {
-          return "index.html";
-        }
-        return raw;
+        const raw = new URLSearchParams(location.search).get("redirect") || (OfficeConfig.id === "ktop" ? "properties.html" : "index.html");
+        try {
+          const target = new URL(OfficeConfig.urlFor(raw));
+          if (!target.pathname.endsWith(".html") || /\/(login|reset-password)\.html$/.test(target.pathname)) throw new Error();
+          return target.href;
+        } catch (_) { return OfficeConfig.urlFor("properties.html"); }
       }
 
       async function tryLogin() {
+        if (btnEl.disabled) return;
         errEl.textContent = "";
         const email = emailEl.value.trim();
         const password = pwEl.value;
-        if (!email || !password) {
-          errEl.textContent = "이메일과 비밀번호를 입력하세요.";
-          return;
-        }
+        if (!email || !password) { errEl.textContent = "이메일과 비밀번호를 입력하세요."; return; }
         btnEl.disabled = true;
+        officeSelect.disabled = true;
         btnEl.textContent = "로그인 중...";
-        const { error } = await authClient.auth.signInWithPassword({ email, password });
-        btnEl.disabled = false;
-        btnEl.textContent = "로그인";
-        if (error) {
-          errEl.textContent = "로그인 실패: 이메일 또는 비밀번호를 확인하세요.";
+        try {
+          const { error } = await authClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          const { data, error: userError } = await authClient.auth.getUser();
+          if (userError || !data.user) throw userError || new Error();
+          if (OfficeConfig.id === "ktop") {
+            const { data: members, error: memberError } = await authClient.from("office_members").select("email").eq("email", data.user.email.toLowerCase());
+            if (memberError || !members || !members.length) {
+              await authClient.auth.signOut();
+              errEl.textContent = "케이탑 매물관리 사용 권한이 없습니다. 관리자에게 문의하세요.";
+              return;
+            }
+          }
+          location.replace(getRedirectTarget());
+        } catch (_) {
+          errEl.textContent = "로그인에 실패했습니다. 선택한 부동산의 이메일·비밀번호와 인터넷 연결을 확인하세요.";
           pwEl.value = "";
           pwEl.focus();
-          return;
+        } finally {
+          btnEl.disabled = false;
+          officeSelect.disabled = false;
+          btnEl.textContent = "로그인";
         }
-        location.replace(getRedirectTarget());
       }
 
       function showForgotPanel() {
@@ -139,11 +170,8 @@
       backToLoginEl.addEventListener("click", showLoginPanel);
       sendResetBtnEl.addEventListener("click", sendResetEmail);
 
-      // 이미 유효한 세션이 있으면 로그인 화면을 보여주지 않고 바로 이동한다.
-      authClient.auth.getSession().then(function (res) {
-        if (res.data.session) location.replace(getRedirectTarget());
-      });
-
+      // 기존 하이탑 세션이 있어도 부동산을 선택할 수 있도록 로그인 화면을 유지한다.
+      if (OfficeConfig.id === "ktop") emailEl.value = "ktop2027@gmail.com";
       emailEl.focus();
     })();
   </script>

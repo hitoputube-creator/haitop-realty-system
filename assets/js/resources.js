@@ -125,10 +125,10 @@ document.getElementById("driveSaveBtn").addEventListener("click", async () => {
 
 // ── 자료보기 순서 localStorage 헬퍼 ──────────────────────────
 function getDriveOrder() {
-  try { return JSON.parse(localStorage.getItem('drive_order') || '{}'); } catch { return {}; }
+  try { return JSON.parse(OfficeStorage.local.getItem('drive_order') || '{}'); } catch { return {}; }
 }
 function saveDriveOrder(obj) {
-  localStorage.setItem('drive_order', JSON.stringify(obj));
+  OfficeStorage.local.setItem('drive_order', JSON.stringify(obj));
 }
 // 카테고리별 items 배열을 localStorage 순서에 맞게 정렬
 function sortedByCatOrder(cat, items) {

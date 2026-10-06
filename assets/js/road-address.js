@@ -15,10 +15,10 @@
   var servicesPromise = null;
 
   function loadCache() {
-    try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; }
+    try { return JSON.parse(OfficeStorage.local.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; }
   }
   function saveCache() {
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch (e) { /* 저장 공간이 없어도 화면은 동작 */ }
+    try { OfficeStorage.local.setItem(CACHE_KEY, JSON.stringify(cache)); } catch (e) { /* 저장 공간이 없어도 화면은 동작 */ }
   }
 
   // "동패동 2132-0"처럼 끝이 -0인 지번은 본번만 남겨 검색합니다.

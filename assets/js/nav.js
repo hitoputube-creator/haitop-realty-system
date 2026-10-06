@@ -22,7 +22,7 @@ function hitopLogout() {
   if (typeof hitopAdminLogout === "function") {
     hitopAdminLogout();
   } else {
-    location.replace("login.html");
+    location.replace(OfficeConfig.urlFor("login.html"));
   }
 }
 
@@ -51,11 +51,13 @@ function renderMainNav() {
   const toolsActiveCls = "nav-link" + (active === "tools" ? " active" : "");
 
   mount.innerHTML = `
+    <span class="nav-link">${OfficeConfig.label}</span>
     ${linksHtml}
     <div class="nav-dropdown" id="toolsDropdown">
       <button type="button" class="${toolsActiveCls}" id="toolsDropdownBtn">업무도구 <span class="nav-caret">▾</span></button>
       <div class="nav-dropdown-menu" id="toolsDropdownMenu">${toolsHtml}</div>
     </div>
+    <a class="nav-link" href="${OfficeConfig.urlFor('login.html')}">부동산 선택</a>
     <button type="button" class="nav-logout-btn" onclick="hitopLogout()">로그아웃</button>
   `;
 

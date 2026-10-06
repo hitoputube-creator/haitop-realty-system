@@ -4,10 +4,10 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>부동산 매물 제안서 — 하이탑부동산</title>
-<script src="assets/js/storage.js?v=20260817-proposal-fields"></script>
-<script src="assets/js/admin-guard.js"></script>
+<script src="assets/js/storage.js?v=20261006-office-login"></script>
+<script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="assets/js/auth.js"></script>
+<script src="assets/js/auth.js?v=20261006-office-login"></script>
 <style>
 /* ══════════════════════════════ 변수 */
 :root {
@@ -704,7 +704,7 @@ input[type=file].hidden-file { display:none; }
   /* ── localStorage 오버레이 로드 ── */
   let extra = {};
   try {
-    const raw = localStorage.getItem(LS_EXTRA(id));
+    const raw = OfficeStorage.local.getItem(LS_EXTRA(id));
     if (raw) extra = JSON.parse(raw);
   } catch(e) { extra = {}; }
 
@@ -1008,7 +1008,7 @@ input[type=file].hidden-file { display:none; }
   function loadPhotos() {
     let hasSavedPhotos = false;
     try {
-      const raw = localStorage.getItem(LS_PHOTOS(id));
+      const raw = OfficeStorage.local.getItem(LS_PHOTOS(id));
       if (raw) {
         photos = JSON.parse(raw);
         hasSavedPhotos = true;
@@ -1026,7 +1026,7 @@ input[type=file].hidden-file { display:none; }
   function savePhotos() {
     /* URL/path 메타데이터만 저장하므로 용량 문제 없음 */
     try {
-      localStorage.setItem(LS_PHOTOS(id), JSON.stringify(photos));
+      OfficeStorage.local.setItem(LS_PHOTOS(id), JSON.stringify(photos));
     } catch(e) {
       console.warn('사진 메타데이터 저장 실패:', e.message);
     }
@@ -1314,7 +1314,7 @@ input[type=file].hidden-file { display:none; }
     Object.keys(newExtra).forEach(k => newExtra[k] === undefined && delete newExtra[k]);
 
     try {
-      localStorage.setItem(LS_EXTRA(id), JSON.stringify(newExtra));
+      OfficeStorage.local.setItem(LS_EXTRA(id), JSON.stringify(newExtra));
       extra = newExtra;
       renderAll();
       st.className = 'ok';

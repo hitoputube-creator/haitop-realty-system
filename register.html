@@ -5,11 +5,11 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20260817-description-emoji" />
-  <script src="assets/js/storage.js?v=20260817-description-emoji"></script>
-  <script src="assets/js/admin-guard.js"></script>
+  <script src="assets/js/storage.js?v=20261006-office-login"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/nav.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+  <script src="assets/js/nav.js?v=20261006-office-login"></script>
 </head>
 <body data-nav-active="properties">
 <div class="page">
@@ -1134,11 +1134,11 @@
       return;
     }
 
-    const raw = sessionStorage.getItem("hitop_detail_prefill");
+    const raw = OfficeStorage.session.getItem("hitop_detail_prefill");
     if (!raw) return;
     try {
       const p = JSON.parse(raw);
-      sessionStorage.removeItem("hitop_detail_prefill"); // 한 번만 사용
+      OfficeStorage.session.removeItem("hitop_detail_prefill"); // 한 번만 사용
 
       // 매물유형 선택 (cat1이 없으면 생략)
       const typeMap = {

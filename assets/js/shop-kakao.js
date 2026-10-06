@@ -26,8 +26,8 @@
   var editing = false;            // 핀 위치 수정 모드
 
   function setStatus(text) { statusEl.textContent = text; }
-  function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; } }
-  function saveCache() { try { localStorage.setItem(CACHE_KEY, JSON.stringify(geoCache)); } catch (e) { /* 저장 공간이 없어도 화면은 동작 */ } }
+  function loadCache() { try { return JSON.parse(OfficeStorage.local.getItem(CACHE_KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function saveCache() { try { OfficeStorage.local.setItem(CACHE_KEY, JSON.stringify(geoCache)); } catch (e) { /* 저장 공간이 없어도 화면은 동작 */ } }
   function normalizeAddress(text) {
     var value = String(text || '').replace(/\s+/g, ' ').trim();
     return /파주/.test(value) ? value : '파주시 ' + value;

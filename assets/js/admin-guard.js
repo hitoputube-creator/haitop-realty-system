@@ -21,7 +21,7 @@
                       searchParams.has("error") || searchParams.has("error_code");
 
   if (isRecoveryLink || hasAuthError) {
-    location.replace("reset-password.html" + location.search + location.hash);
+    location.replace(OfficeConfig.urlFor("reset-password.html" + location.search + location.hash));
     return;
   }
 
@@ -31,6 +31,6 @@
   try { hasSession = !!localStorage.getItem(sessionKey); } catch (e) {}
   if (!hasSession) {
     var next = encodeURIComponent(location.pathname.split("/").pop() + location.search);
-    location.replace("login.html?redirect=" + next);
+    location.replace(OfficeConfig.urlFor("login.html?redirect=" + next));
   }
 })();

@@ -19,7 +19,7 @@ function convertToDetail(id) {
     quick_location: item.quick_location || item.address || "",
     source_id:      item.id
   };
-  sessionStorage.setItem("hitop_detail_prefill", JSON.stringify(prefill));
+  OfficeStorage.session.setItem("hitop_detail_prefill", JSON.stringify(prefill));
   location.href = "register.html";
 }
 
@@ -1049,7 +1049,7 @@ function cmCopy() {
     customerPhone:  params.get('customerPhone') || params.get('contact') || '',
     photos:         params.get('photos') || ''
   };
-  sessionStorage.setItem('hitop_detail_prefill', JSON.stringify(prefill));
+  OfficeStorage.session.setItem('hitop_detail_prefill', JSON.stringify(prefill));
   location.replace('register.html');
 })();
 
@@ -1058,7 +1058,7 @@ const FILTER_STATE_KEY = "hitop_properties_filter_state";
 
 function saveFilterState() {
   try {
-    sessionStorage.setItem(FILTER_STATE_KEY, JSON.stringify({
+    OfficeStorage.session.setItem(FILTER_STATE_KEY, JSON.stringify({
       searchKeyword, currentMajor, currentSub, currentTag, currentDealFilter,
       includeCompleted, currentSort, viewMode,
       scrollY: window.scrollY
@@ -1070,7 +1070,7 @@ let _restoredScrollY = null;
 
 function restoreFilterState() {
   let saved = null;
-  try { saved = JSON.parse(sessionStorage.getItem(FILTER_STATE_KEY) || "null"); } catch (e) { saved = null; }
+  try { saved = JSON.parse(OfficeStorage.session.getItem(FILTER_STATE_KEY) || "null"); } catch (e) { saved = null; }
   if (saved) {
     searchKeyword = saved.searchKeyword || "";
     document.getElementById("searchInput").value = searchKeyword;

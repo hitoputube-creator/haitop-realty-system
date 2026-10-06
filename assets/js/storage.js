@@ -1,18 +1,56 @@
+// 부동산 선택은 탭별로 유지한다. 프로젝트와 입력 임시저장은 서로 분리한다.
+const OfficeConfig = (() => {
+  const offices = {
+    hitop: { label: '하이탑부동산', brand: 'HITOP', url: 'https://xaxbkdnrzsghsabkdvzj.supabase.co', key: 'sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd' },
+    ktop: { label: '케이탑부동산', brand: 'KTOP', url: 'https://enefadyhmhfphtochlku.supabase.co', key: 'sb_publishable__8Ru0l0wfQo8e5Ljq1ZQ7Q_LYtCAP-p' }
+  };
+  const requested = new URLSearchParams(location.search).get('office');
+  let saved;
+  try { saved = sessionStorage.getItem('realty_selected_office'); } catch (_) {}
+  const id = Object.hasOwn(offices, requested) ? requested : Object.hasOwn(offices, saved) ? saved : 'hitop';
+  try { sessionStorage.setItem('realty_selected_office', id); } catch (_) {}
+  const root = new URL('./', location.href);
+  function url(path) {
+    const target = new URL(path, root);
+    if (target.origin !== root.origin || !target.pathname.startsWith(root.pathname)) throw new Error('잘못된 이동 주소입니다.');
+    target.searchParams.set('office', id);
+    return target.href;
+  }
+  const current = new URL(location.href);
+  current.searchParams.set('office', id);
+  history.replaceState(null, '', current.href);
+  return Object.freeze({ id, ...offices[id], urlFor: url });
+})();
+
+const OfficeStorage = {
+  key(key) { return OfficeConfig.id === 'hitop' ? key : 'ktop:' + key; },
+  local: {
+    getItem(key) { return localStorage.getItem(OfficeStorage.key(key)); },
+    setItem(key, value) { localStorage.setItem(OfficeStorage.key(key), value); },
+    removeItem(key) { localStorage.removeItem(OfficeStorage.key(key)); }
+  },
+  session: {
+    getItem(key) { return sessionStorage.getItem(OfficeStorage.key(key)); },
+    setItem(key, value) { sessionStorage.setItem(OfficeStorage.key(key), value); },
+    removeItem(key) { sessionStorage.removeItem(OfficeStorage.key(key)); }
+  }
+};
+
 // ===== localStorage 유틸 (buildings.js 호환) =====
 const StorageUtil = {
   getArray(key) {
-    try { return JSON.parse(localStorage.getItem(key) || '[]') || []; } catch(e) { return []; }
+    try { return JSON.parse(OfficeStorage.local.getItem(key) || '[]') || []; } catch(e) { return []; }
   },
   setArray(key, arr) {
-    try { localStorage.setItem(key, JSON.stringify(arr)); } catch(e) {}
+    try { OfficeStorage.local.setItem(key, JSON.stringify(arr)); } catch(e) {}
   },
   uid(prefix) {
     return (prefix ? prefix + '_' : '') + Date.now().toString(36) + Math.random().toString(36).slice(2);
   }
 };
 
-const SUPABASE_URL = "https://xaxbkdnrzsghsabkdvzj.supabase.co";
-const SUPABASE_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd";
+const SUPABASE_URL = OfficeConfig.url;
+const SUPABASE_KEY = OfficeConfig.key;
 const LISTING_IMAGES_BUCKET = "listing-images";
 const MAX_LISTING_IMAGES = 5;
 
@@ -324,6 +362,7 @@ const headers = {
 };
 
 async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+  if (String(url).startsWith(SUPABASE_URL + '/') && window.hitopAuthReady && !await window.hitopAuthReady) throw new Error('로그인이 필요합니다.');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
@@ -589,6 +628,7 @@ async function linkDiaryEntryToListing(diaryId, listingId) {
 }
 
 async function uploadListingImage(file, listingId) {
+  if (OfficeConfig.id === "ktop") throw new Error("케이탑 매물 첨부파일 저장은 아직 연결 준비 중입니다.");
   if (!file) throw new Error("No file selected.");
   const isImage = file.type ? file.type.startsWith("image/") : isListingImageFile(file.name);
   const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
@@ -1128,3 +1168,40 @@ async function getCustomerAttachmentUrl(row) {
   if (error || !data?.signedUrl) throw new Error('첨부파일을 열 수 없습니다. 로그인과 파일 권한을 확인해 주세요.');
   return data.signedUrl;
 }
+
+// 같은 관리앱의 새 탭·페이지 이동에도 선택한 부동산을 명시한다.
+function officeDecorateLinks(root) {
+  root.querySelectorAll('a[href]').forEach(link => {
+    try {
+      const target = new URL(link.getAttribute('href'), location.href);
+      const appRoot = new URL('./', location.href);
+      if (target.origin === appRoot.origin && target.pathname.startsWith(appRoot.pathname) && target.pathname.endsWith('.html')) {
+        link.href = OfficeConfig.urlFor(target.href);
+      }
+    } catch (_) {}
+  });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  officeDecorateLinks(document);
+  new MutationObserver(records => {
+    for (const record of records) for (const node of record.addedNodes) {
+      if (node.nodeType === 1) {
+        if (node.matches('a[href]')) officeDecorateLinks(node.parentNode);
+        else officeDecorateLinks(node);
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+});
+// 별도 업무앱은 아직 케이탑 연결이 없으므로 하이탑 고객화면을 열지 않는다.
+document.addEventListener('click', event => {
+  if (OfficeConfig.id !== 'ktop') return;
+  const link = event.target.closest('a[href]');
+  if (!link) return;
+  const target = new URL(link.href);
+  if (target.hostname === 'haitop-realestate-diary.vercel.app' ||
+      (target.hostname === 'hitoputube-creator.github.io' && /^\/(hitop-ai-workcenter|hitop-property-platform|Commercial-Property-Quote)\//.test(target.pathname))) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    alert('이 업무앱의 케이탑 연결은 아직 준비 중입니다.');
+  }
+}, true);
