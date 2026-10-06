@@ -28,6 +28,12 @@
     return /파주/.test(value) ? value : '파주시 ' + value;
   }
 
+
+  function hasOwnerContact(unit) {
+    return Boolean(String(unit.소유주 || '').trim() && String(unit.연락처 || '').trim());
+  }
+  function hasListing(unit) { return Boolean(String(unit.listing_id || '').trim()); }
+
   // ---------- 데이터 불러오기 (기존 상가 위치도와 같은 출처) ----------
   async function loadBuildings() {
     var session = await hitopAuthClient.auth.getSession();
@@ -48,10 +54,10 @@
       var address = line ? line.replace(/^주소\s*:/, '').trim() : '';
       var match = address.match(ADDRESS_PATTERN);
       var units = rec && Array.isArray(rec.units) ? rec.units : [];
-      var vacant = units.filter(function (u) { return (u.공실여부 || '공실') === '공실'; }).length;
+      var vacant = units.filter(function (u) { return u.공실여부 === '공실'; }).length;
       return {
         id: r.id, name: r.name, address: address, query: match ? match[0] : '',
-        total: units.length, vacant: vacant,
+        total: units.length, vacant: vacant, contacts: units.filter(hasOwnerContact).length, listed: units.filter(hasListing).length,
         state: !units.length ? 'none' : vacant ? 'vacant' : 'full',
         floors: floors.filter(function (f) { return f.building_id === r.id; }),
         lat: null, lng: null, overlay: null, el: null
@@ -199,6 +205,8 @@
   // ---------- 지도 표시 ----------
   function stateText(it) { return !it.total ? '호실 미등록' : '공실 ' + it.vacant + '/' + it.total; }
 
+  function countsText(it) { return '공실등록 ' + it.vacant + ' · 연락처 확보 ' + it.contacts + ' · 매물등록 ' + it.listed; }
+
   function unitListUrl(it) {
     return 'building-detail.html?id=' + encodeURIComponent(it.id) + '#unitStatus';
   }
@@ -218,7 +226,11 @@
       event.stopPropagation();
       if (editing) { event.preventDefault(); selectForEdit(it); }
     });
-    body.append(name, sub);
+    var counts = document.createElement('a'); counts.className = 'shop-pin-counts';
+    counts.textContent = '연락처 ' + it.contacts + ' · 매물 ' + it.listed;
+    counts.href = unitListUrl(it); counts.title = '소유주·연락처 모두 입력된 호실 / 매물 연결된 호실';
+    counts.addEventListener('click', function (event) { event.stopPropagation(); if (editing) { event.preventDefault(); selectForEdit(it); } });
+    body.append(name, sub, counts);
     el.appendChild(body);
     el.title = it.name + ' · ' + it.address;
     el.addEventListener('click', function () { if (editing) selectForEdit(it); else openInfo(it); });
@@ -271,8 +283,9 @@
       button.className = it.state + (it.lat === null ? ' unplaced' : '');
       button.append(it.name);
       var small = document.createElement('small');
-      small.textContent = stateText(it) + (it.lat === null ? ' · 지도 위치 없음' : it.manual ? ' · 위치 직접 지정' : '');
+      small.textContent = countsText(it) + (it.lat === null ? ' · 지도 위치 없음' : it.manual ? ' · 위치 직접 지정' : '');
       button.appendChild(small);
+      var total = document.createElement('small'); total.textContent = '등록 호실 ' + it.total + '개'; button.appendChild(total);
       button.addEventListener('click', function () {
         if (editing) {
           if (it.lat !== null) { map.setLevel(3); map.setCenter(new kakao.maps.LatLng(it.lat, it.lng)); }
@@ -305,6 +318,7 @@
     function line(text) { var s = document.createElement('span'); s.className = 'row'; s.textContent = text; root.appendChild(s); }
     line(it.address || '주소 없음');
     line(it.total ? '호실 ' + it.total + '개 · 공실 ' + it.vacant + '개' : '호실이 아직 등록되지 않았습니다.');
+    line(countsText(it));
     var links = document.createElement('div'); links.className = 'links';
     function link(label, href) {
       var a = document.createElement('a'); a.href = href; a.textContent = label; links.appendChild(a);

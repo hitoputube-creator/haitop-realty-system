@@ -507,6 +507,7 @@
       </div>
     </div>
 
+    <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.7;"></p>
     <!-- 층 필터 탭 -->
     <div class="floor-tabs" id="unitFloorTabs"></div>
 
@@ -1313,6 +1314,9 @@ async function deleteBFile(id) {
       ? units
       : units.filter(u => floorOf(u.호수) === filterFloor);
 
+    const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
+    const listed = filtered.filter(u => String(u.listing_id || '').trim()).length;
+    $("unitCounts").textContent = `${floorLabel(filterFloor)} · 등록 호실 ${filtered.length}개 · 공실등록 ${filtered.filter(u => u.공실여부 === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
     const tbody = $("unitsTbody");
     const empty = $("unitsEmpty");
 
@@ -1330,7 +1334,7 @@ async function deleteBFile(id) {
       return `<tr>
         <td><strong>${u.호수 || "-"}</strong></td>
         <td>${u.현업종 || "-"}</td>
-        <td>${u.소유주 || "-"}</td>
+        <td>${u.소유주 || "-"}${String(u.소유주 || "").trim() && String(u.연락처 || "").trim() ? ' <span class="sbadge 임차중">연락처 확보</span>' : ""}</td>
         <td>${u.연락처 || "-"}</td>
         <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
@@ -1338,7 +1342,7 @@ async function deleteBFile(id) {
         <td class="tbl-actions">
           <button class="btn-unit-edit" data-ri="${ri}">수정</button>
           ${u.listing_id
-            ? `<a class="btn-listing-view" href="detail.html?id=${u.listing_id}">매물보기</a>`
+            ? `<span class="sbadge 임차중">매물등록</span> <a class="btn-listing-view" href="detail.html?id=${u.listing_id}">매물보기</a>`
               + `<a class="btn-listing-home" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html?id=${u.listing_id}" target="_blank">홈페이지</a>`
             : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`
           }

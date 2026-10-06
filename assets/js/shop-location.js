@@ -35,6 +35,12 @@
     if (n === null) return '—';
     return `${(n * PY).toFixed(2)}㎡ (${n.toFixed(2)}평)`;
   }
+
+  function hasOwnerContact(unit) {
+    return Boolean(String(unit.소유주 || '').trim() && String(unit.연락처 || '').trim());
+  }
+  function hasListing(unit) { return Boolean(String(unit.listing_id || '').trim()); }
+
   function status(u) { return u.공실여부 || '공실'; }
   function deposit(u) { return num(u.현_보증금 ?? u.보증금); }
   function rent(u) { return num(u.현_월세 ?? u.월차임); }
@@ -103,7 +109,7 @@
       const p = pins[b.id];
       if (!p) return;
       const mine = rows.filter(r => r.b.id === b.id);
-      const vacant = mine.filter(r => status(r.u) === '공실').length;
+      const vacant = mine.filter(r => r.u.공실여부 === '공실').length;
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'bpin ' + (!mine.length ? 'none' : vacant ? 'vacant' : '') + (selectedBuilding === b.id ? ' selected' : '');
@@ -112,7 +118,7 @@
       const name = document.createElement('strong');
       name.textContent = b.name;
       const sub = document.createElement('span');
-      sub.textContent = mine.length ? `공실 ${vacant}/${mine.length}` : '호실 미등록';
+      sub.textContent = mine.length ? `공실 ${vacant}/${mine.length} · 연락처 ${mine.filter(r => hasOwnerContact(r.u)).length} · 매물 ${mine.filter(r => hasListing(r.u)).length}` : '호실 미등록';
       btn.append(name, sub);
       btn.addEventListener('click', e => { e.stopPropagation(); chooseBuilding(b.id); });
       layer.appendChild(btn);
@@ -322,7 +328,7 @@
   function renderResults(list) {
     const body = $('resultBody');
     body.replaceChildren();
-    $('resultCount').textContent = `조건에 맞는 호실 ${list.length}개 (전체 ${rows.length}개)`;
+    $('resultCount').textContent = `조건에 맞는 호실 ${list.length}개 (전체 ${rows.length}개) · 공실등록 ${list.filter(r => r.u.공실여부 === "공실").length} · 연락처 확보 ${list.filter(r => hasOwnerContact(r.u)).length} · 매물등록 ${list.filter(r => hasListing(r.u)).length}`;
     list.slice(0, 500).forEach(r => {
       const u = r.u;
       const tr = document.createElement('tr');
@@ -333,6 +339,9 @@
       tag.className = 'tag ' + (STATUS_CLASS[status(u)] || '');
       tag.textContent = status(u);
       st.appendChild(tag);
+      cell(tr, hasOwnerContact(u) ? '확보' : '미등록');
+      const listingCell = cell(tr, hasListing(u) ? '' : '미등록');
+      if (hasListing(u)) { const link = document.createElement('a'); link.textContent = '매물보기'; link.href = 'detail.html?id=' + encodeURIComponent(u.listing_id); link.addEventListener('click', event => event.stopPropagation()); listingCell.appendChild(link); }
       cell(tr, u.현업종 || (status(u) === '공실' ? '공실' : '미입력'));
       cell(tr, area(u.전용_평));
       cell(tr, won(u.분양가));
@@ -346,7 +355,7 @@
     if (!list.length) {
       const tr = document.createElement('tr');
       const td = cell(tr, '조건에 맞는 호실이 없습니다.');
-      td.colSpan = 8;
+      td.colSpan = 10;
       body.appendChild(tr);
     }
   }

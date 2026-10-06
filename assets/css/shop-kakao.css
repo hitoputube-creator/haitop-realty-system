@@ -36,3 +36,5 @@
 .shop-pin-body .shop-pin-units{display:block;padding:2px 4px;border:1px solid rgba(255,255,255,.65);border-radius:4px;color:#fff;background:rgba(0,0,0,.12);font:inherit;font-size:11px;line-height:1.25;white-space:nowrap;text-decoration:none;cursor:pointer}
 .shop-pin-body .shop-pin-units:hover{background:rgba(0,0,0,.28);text-decoration:underline}
 .shop-pin-body .shop-pin-units:focus-visible{outline:2px solid #e5bf35;outline-offset:2px}
+
+.shop-pin-body .shop-pin-counts{font-size:10px;color:#fff;white-space:nowrap;text-decoration:none;padding:2px 0}.shop-pin-counts:hover{text-decoration:underline}.shop-kakao-buttons{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}.shop-kakao-buttons small{line-height:1.6}
