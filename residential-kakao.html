@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>하이탑부동산 | 상가 실제 지도 보기</title>
+  <title>하이탑부동산 | 주거 실제 지도 보기</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261004-naver-2">
   <link rel="stylesheet" href="assets/css/shop-kakao.css?v=20261006-residential-maps-1">
@@ -12,25 +12,25 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
 </head>
-<body data-resource-scope="commercial">
+<body data-resource-scope="residential">
 <main class="page land-kakao-page shop-kakao-page">
   <header class="header">
     <div class="logo-icon" aria-hidden="true"></div>
-    <div class="logo-text"><div class="logo-main">하이탑부동산 상가 지도</div><div class="logo-sub">카카오맵</div></div>
+    <div class="logo-text"><div class="logo-main">하이탑부동산 주거 지도</div><div class="logo-sub">카카오맵</div></div>
     <nav class="main-nav" aria-label="페이지 이동">
-      <a class="nav-link" href="shop-location.html">상가 위치도(이미지)</a>
+      <a class="nav-link" href="residential-location.html">주거 위치도(이미지)</a>
       <a class="nav-link" href="https://map.naver.com/p/search/%ED%8C%8C%EC%A3%BC%EC%8B%9C%20%EC%9A%B4%EC%A0%95%EC%8B%A0%EB%8F%84%EC%8B%9C" target="_blank" rel="noopener noreferrer">네이버지도</a>
-      <a class="nav-link" href="resources.html">상가 자료관리</a>
-      <a class="nav-link" href="floor-status-overview.html">층별 현황</a>
-      <a class="nav-link" href="property-main.html?category=shop">매물관리 메인으로</a>
+      <a class="nav-link" href="residential-resources.html">주거 자료관리</a>
+      
+      <a class="nav-link" href="property-main.html?category=home">매물관리 메인으로</a>
       <button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button>
     </nav>
   </header>
   <div class="header-line"></div>
 
   <section class="kakao-intro">
-    <h1>최신 지도로 보는 상가 현황</h1>
-    <p>상가 자료관리에 등록한 건물의 주소를 카카오 지도 위에 자동으로 표시합니다. 건물을 누르면 공실 현황과 함께 건물 상세·층별 현황으로 바로 이동할 수 있습니다.</p>
+    <h1>최신 지도로 보는 주거 현황</h1>
+    <p>주거 자료관리에 등록한 건물의 주소를 카카오 지도 위에 자동으로 표시합니다. 건물을 누르면 공실 현황과 함께 건물 상세·층별 현황으로 바로 이동할 수 있습니다.</p>
   </section>
 
   <section id="kakaoSetupNotice" class="kakao-notice" hidden>

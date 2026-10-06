@@ -1,4 +1,4 @@
-/* 상가 카카오맵 화면
+/* 상가·주거 카카오맵 화면
  * - 상가 자료관리에 등록한 건물(카테고리 '상가')의 주소(예: 와동동 1436외1필지)를 카카오 지오코딩으로 위경도로 바꿔 지도에 표시합니다.
  * - 호실 현황(공실 여부)은 기존 상가 위치도와 같은 buildings.units 자료를 읽기만 합니다. DB는 수정하지 않습니다.
  * - 변환한 위치는 이 브라우저(localStorage)에 저장해 다음 방문부터 바로 표시합니다. (택지 지도와 같은 저장소를 공유)
@@ -6,6 +6,11 @@
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
+  var residential = document.body.dataset.resourceScope === 'residential';
+  var scope = residential ? 'residential' : 'commercial';
+  var label = residential ? '주거' : '상가';
+  var prefix = residential ? 'residential' : 'shop';
+  var requestedId = new URLSearchParams(location.search).get('id');
   var CACHE_KEY = 'hitop-kakao-geo-v1';
   var ADDRESS_PATTERN = /[가-힣]+(?:동|리)\s*(?:산\s*)?\d+(?:-\d+)?/;
   var DEFAULT_CENTER = [37.7226, 126.7500], DEFAULT_LEVEL = 5;
@@ -42,13 +47,14 @@
     var results = await Promise.all([
       getDriveResources(),
       getAllBuildingFloors(),
-      fetchWithTimeout(SUPABASE_URL + '/rest/v1/buildings?select=local_id,name,units', { headers: headers })
+      fetchWithTimeout(SUPABASE_URL + '/rest/v1/buildings?select=local_id,name,units', { headers: headers }),
+      getDriveCategories()
     ]);
     var resources = results[0], floors = results[1], recordsRes = results[2];
     if (!recordsRes.ok) throw new Error('건물 호실 자료를 불러오지 못했습니다.');
     var records = await recordsRes.json();
-    // 카테고리 이름은 '운정역 상가', '운정3지구 상가(NT)'처럼 다양하므로 이름에 '상가'가 들어간 것을 모두 포함합니다.
-    return resources.filter(function (r) { return /상가/.test(String(r.category || '')); }).map(function (r) {
+    // 자료실 카테고리를 기준으로 상가·주거를 구분하며, 새 주거 카테고리도 포함합니다.
+    return HitopResourceRooms.visible(resources, scope).filter(function (r) { return residential || /상가/.test(String(r.category || '')); }).map(function (r) {
       var rec = records.find(function (x) { return x.local_id === r.id; }) || records.find(function (x) { return x.name === r.name; }) || null;
       var line = String(r.memo || '').split('\n').find(function (l) { return /^주소\s*:/.test(l); });
       var address = line ? line.replace(/^주소\s*:/, '').trim() : '';
@@ -56,7 +62,7 @@
       var units = rec && Array.isArray(rec.units) ? rec.units : [];
       var vacant = units.filter(function (u) { return u.공실여부 === '공실'; }).length;
       return {
-        id: r.id, name: r.name, address: address, query: match ? match[0] : '',
+        id: r.id, name: r.name, address: address, query: match ? match[0] : /[가-힣]+(?:로|길)\s*\d+/.test(address) ? address : '',
         total: units.length, vacant: vacant, contacts: units.filter(hasOwnerContact).length, listed: units.filter(hasListing).length,
         state: !units.length ? 'none' : vacant ? 'vacant' : 'full',
         floors: floors.filter(function (f) { return f.building_id === r.id; }),
@@ -208,7 +214,7 @@
   function countsText(it) { return '공실등록 ' + it.vacant + ' · 연락처 확보 ' + it.contacts + ' · 매물등록 ' + it.listed; }
 
   function unitListUrl(it) {
-    return 'building-detail.html?id=' + encodeURIComponent(it.id) + '#unitStatus';
+    return HitopResourceRooms.detailUrl('building-detail.html', it.id, scope) + '#unitStatus';
   }
 
   function pinContent(it) {
@@ -266,7 +272,7 @@
     if (fit && shown) map.setBounds(bounds, 60, 60, 60, 60);
     var noAddress = items.filter(function (it) { return !it.query; }).length;
     var missing = items.filter(function (it) { return it.query && it.lat === null; }).length;
-    var text = '상가 건물 ' + items.length + '개 중 ' + shown + '개 표시';
+    var text = label + ' 건물 ' + items.length + '개 중 ' + shown + '개 표시';
     if (noAddress) text += ' · 주소 없음 ' + noAddress + '개';
     if (missing) text += ' · 지도에서 위치를 못 찾음 ' + missing + '개';
     setStatus(text);
@@ -324,8 +330,9 @@
       var a = document.createElement('a'); a.href = href; a.textContent = label; links.appendChild(a);
     }
     var id = encodeURIComponent(it.id);
-    link('건물 상세', 'building-detail.html?id=' + id);
-    link('개요', 'building-overview.html?id=' + id);
+    link('건물 상세', HitopResourceRooms.detailUrl('building-detail.html', it.id, scope));
+    link('위치도', prefix + '-location.html?id=' + id);
+    link('개요', HitopResourceRooms.detailUrl('building-overview.html', it.id, scope));
     link('층별 리스트', unitListUrl(it));
     var first = it.floors[0];
     link('층별 현황', 'floor-status.html?' + new URLSearchParams(first ? { id: it.id, floorId: first.id, floor: String(first.floor_number || '') } : { id: it.id }).toString());
@@ -395,20 +402,22 @@
       $('kakaoMap').hidden = false;
       $('kakaoControls').hidden = false;
       map = new kakao.maps.Map($('kakaoMap'), { center: new kakao.maps.LatLng(DEFAULT_CENTER[0], DEFAULT_CENTER[1]), level: DEFAULT_LEVEL });
-    window.HitopNaverLinks.bindMapView($('kakaoNaverListings'), map, 'shop');
+    window.HitopNaverLinks.bindMapView($('kakaoNaverListings'), map, residential ? 'home' : 'shop');
       geocoder = new kakao.maps.services.Geocoder();
       infoWindow = new kakao.maps.InfoWindow({ removable: true, zIndex: 10 });
       map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-      setStatus('상가 건물 자료를 불러오는 중입니다.');
+      setStatus(label + ' 건물 자료를 불러오는 중입니다.');
       var loaded = await loadBuildings();
       if (!loaded) return;
       items = loaded;
       bindControls();
-      if (!items.length) { setStatus('등록된 상가 건물이 없습니다. 상가 자료관리에서 건물을 먼저 등록해 주세요.'); return; }
+      if (!items.length) { setStatus('등록된 ' + label + ' 건물이 없습니다. ' + label + ' 자료관리에서 건물을 먼저 등록해 주세요.'); return; }
       setStatus('건물 위치를 찾는 중입니다.');
       await loadSaved();
       await resolveAll(false);
       render(true);
+      var requested = items.find(function (it) { return it.id === requestedId; });
+      if (requested) { if (requested.lat !== null) { map.setLevel(3); map.setCenter(new kakao.maps.LatLng(requested.lat, requested.lng)); } openInfo(requested); }
     } catch (error) {
       setStatus(error && error.message ? error.message : '지도를 표시하지 못했습니다.');
     }

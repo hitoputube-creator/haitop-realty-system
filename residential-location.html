@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>하이탑부동산 | 상가 위치도</title>
+  <title>하이탑부동산 | 주거 위치도</title>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <link rel="stylesheet" href="assets/css/shop-location.css?v=20261003-2">
   <script src="assets/js/storage.js"></script>
@@ -11,19 +11,19 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
 </head>
-<body data-resource-scope="commercial">
+<body data-resource-scope="residential">
 <main class="shop-page">
   <header class="shop-header">
     <div>
-      <h1>하이탑부동산 상가 위치도</h1>
+      <h1>하이탑부동산 주거 위치도</h1>
       <p>건물을 누르거나 조건으로 호실을 찾아보세요 (내부용)</p>
     </div>
     <nav class="shop-nav" aria-label="페이지 이동">
-      <a class="shop-btn" href="shop-kakao.html">카카오맵으로 보기</a>
+      <a class="shop-btn" href="residential-kakao.html">카카오맵으로 보기</a>
       <a class="shop-btn" href="https://map.naver.com/p/search/%ED%8C%8C%EC%A3%BC%EC%8B%9C%20%EC%9A%B4%EC%A0%95%EC%8B%A0%EB%8F%84%EC%8B%9C" target="_blank" rel="noopener noreferrer">네이버지도</a>
-      <a class="shop-btn" href="resources.html">상가 자료관리</a>
-      <a class="shop-btn" href="floor-status-overview.html">층별 현황</a>
-      <a class="shop-btn" href="property-main.html?category=shop">매물관리 메인</a>
+      <a class="shop-btn" href="residential-resources.html">주거 자료관리</a>
+      
+      <a class="shop-btn" href="property-main.html?category=home">매물관리 메인</a>
       <button type="button" class="shop-btn" onclick="hitopAdminLogout()">로그아웃</button>
     </nav>
   </header>

@@ -2,10 +2,15 @@
   'use strict';
 
   const $ = id => document.getElementById(id);
+  const residential = document.body.dataset.resourceScope === 'residential';
+  const scope = residential ? 'residential' : 'commercial';
+  const label = residential ? '주거' : '상가';
+  const prefix = residential ? 'residential' : 'shop';
+  const requestedId = new URLSearchParams(location.search).get('id');
   const PY = 3.30579;
   const DEFAULT_BIZ = ['카페', '일반음식점', '주점', '병원·의원', '약국', '학원', '편의점·마트', '미용·뷰티', '부동산', '사무실', '기타'];
   const STATUS_CLASS = { '공실':'vacant', '임차중':'rent', '매매가능':'sale', '계약진행':'contract' };
-  const FILTER_KEY = 'shopLocation.savedFilters.v1';
+  const FILTER_KEY = prefix + 'Location.savedFilters.v1';
 
   let buildings = [];   // { id, name, address, record, floors }
   let rows = [];        // flattened units
@@ -59,11 +64,11 @@
     hitopApplyAuthHeader(data.session);
     const [resources, floors, recordsRes] = await Promise.all([
       getDriveResources(), getAllBuildingFloors(),
-      fetchWithTimeout(SUPABASE_URL + '/rest/v1/buildings?select=local_id,name,units', { headers })
+      fetchWithTimeout(SUPABASE_URL + '/rest/v1/buildings?select=local_id,name,units', { headers }), getDriveCategories()
     ]);
     if (!recordsRes.ok) throw new Error('건물 호실 조회 실패');
     const records = await recordsRes.json();
-    const shops = resources.filter(r => /상가/.test(String(r.category || '')));
+    const shops = HitopResourceRooms.visible(resources, scope).filter(r => residential || /상가/.test(String(r.category || '')));
     buildings = shops.map(r => {
       const rec = records.find(x => x.local_id === r.id) || records.find(x => x.name === r.name) || null;
       const line = String(r.memo || '').split('\n').find(l => /^주소\s*:/.test(l));
@@ -123,6 +128,24 @@
       btn.addEventListener('click', e => { e.stopPropagation(); chooseBuilding(b.id); });
       layer.appendChild(btn);
     });
+  }
+
+
+  function renderBuildingLinks() {
+    const box = $('mapBuildingList'); if (!box) return;
+    box.replaceChildren();
+    buildings.forEach(b => {
+      const card = document.createElement('div'); card.className = 'shop-card';
+      const name = document.createElement('button'); name.type = 'button'; name.className = 'shop-btn'; name.textContent = b.name;
+      name.addEventListener('click', () => chooseBuilding(b.id)); card.appendChild(name);
+      const address = document.createElement('p'); address.className = 'shop-help'; address.textContent = b.address || '주소 미등록'; card.appendChild(address);
+      const links = document.createElement('div'); links.className = 'shop-tools';
+      [['건물 상세', HitopResourceRooms.detailUrl('building-detail.html', b.id, scope)], ['카카오맵', prefix + '-kakao.html?id=' + encodeURIComponent(b.id)]].forEach(([text, href]) => {
+        const a = document.createElement('a'); a.className = 'shop-btn'; a.textContent = text; a.href = href; links.appendChild(a);
+      });
+      HitopNaverLinks.append(links, b.address, 'shop-btn'); card.appendChild(links); box.appendChild(card);
+    });
+    if (!buildings.length) box.textContent = '등록된 건물이 없습니다.';
   }
 
   function chooseBuilding(id) {
@@ -484,10 +507,12 @@
     try {
       if (!(await loadAll())) return;
       setupFilters();
+      if (requestedId && buildings.some(b => b.id === requestedId)) $('filterForm').building.value = requestedId;
+      renderBuildingLinks();
       setZoom(1);
       setPinHelp(); renderPinPicker();
       applyFilters();
-      say(buildings.length ? `상가 건물 ${buildings.length}개 · 호실 ${rows.length}개` : '등록된 상가 건물이 없습니다. 상가 자료관리에서 건물을 먼저 등록해 주세요.');
+      say(buildings.length ? `${label} 건물 ${buildings.length}개 · 호실 ${rows.length}개` : `등록된 ${label} 건물이 없습니다. ${label} 자료관리에서 건물을 먼저 등록해 주세요.`);
     } catch (err) { say('불러오기 실패: ' + err.message); }
   }
   init();

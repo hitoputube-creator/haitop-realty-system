@@ -45,8 +45,8 @@
       var center = map.getCenter(), lat = center.getLat(), lng = center.getLng();
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) { updateLink(link, null); return; }
       var zoom = Math.max(7, Math.min(20, 21 - map.getLevel()));
-      var filter = type === 'land' ? 'DDD' : 'SG:SMS';
-      updateLink(link, 'https://new.land.naver.com/?ms=' + lat + ',' + lng + ',' + zoom + '&a=' + filter);
+      var filter = type === 'home' ? '' : type === 'land' ? 'DDD' : 'SG:SMS';
+      updateLink(link, 'https://new.land.naver.com/?ms=' + lat + ',' + lng + ',' + zoom + (filter ? '&a=' + filter : ''));
     }
     update();
     window.kakao.maps.event.addListener(map, 'idle', update);

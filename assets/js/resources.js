@@ -154,6 +154,14 @@ function moveDriveOrder(id, direction, category) {
   renderDriveTab();
 }
 
+function residentialMapLinks(item) {
+  if (HitopResourceRooms.resourceRoom(item) !== 'residential') return '';
+  const line = String(item.memo || '').split('\n').find(value => /^주소\s*:/.test(value));
+  const address = line ? line.replace(/^주소\s*:/, '').trim() : '';
+  const destinations = window.HitopNaverLinks && HitopNaverLinks.urls(address);
+  const id = encodeURIComponent(item.id);
+  return `<a class="btn btn-ghost" href="residential-location.html?id=${id}">위치도</a><a class="btn btn-ghost" href="residential-kakao.html?id=${id}">카카오맵</a>` + (destinations ? `<a class="btn btn-ghost" href="${escapeCategory(destinations.map)}" target="_blank" rel="noopener noreferrer">네이버지도</a>` : '');
+}
 function _buildDriveItemsHtml(items, cat) {
   return items.map(item => {
     const memoPreview = item.memo ? item.memo.split('\n')[0].substring(0, 60) + (item.memo.split('\n')[0].length > 60 ? '…' : '') : '';
@@ -166,6 +174,7 @@ function _buildDriveItemsHtml(items, cat) {
         ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}
       </div>
       <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+        ${residentialMapLinks(item)}
         <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="openDriveBuilding('building-detail.html','${item.id}')">📁 열기</button>
         <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveBuilding('building-overview.html','${item.id}')">📝 개요</button>
         ${item.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="window.open('${item.url.replace(/'/g,"%27")}','_blank')">🔗 드라이브</button>` : ''}

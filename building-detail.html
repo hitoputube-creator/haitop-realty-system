@@ -625,7 +625,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
-<script src="assets/js/naver-links.js?v=20261004-2"></script>
+<script src="assets/js/naver-links.js?v=20261006-residential-maps-1"></script>
 <script src="assets/js/building-register-view.js?v=20260929-compact-table"></script>
 <script>
 /* ═══════════════════════════════════════════
@@ -871,6 +871,11 @@ function renderInfoGrid(memo) {
   document.getElementById('infoGrid').innerHTML = html;
   const links = document.getElementById('buildingLocationLinks');
   links.replaceChildren();
+  if (resourceScope === 'residential') {
+    [['위치도', 'residential-location.html'], ['카카오맵', 'residential-kakao.html']].forEach(([label, page]) => {
+      const link = document.createElement('a'); link.className = 'btn'; link.textContent = label; link.href = page + '?id=' + encodeURIComponent(buildingId); links.appendChild(link);
+    });
+  }
   window.HitopNaverLinks.append(links, fields.주소 || '', 'btn');
   if (!window.HitopNaverLinks.urls(fields.주소)) {
     const hint = document.createElement('span');
