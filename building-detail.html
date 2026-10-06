@@ -98,7 +98,7 @@
     .floor-thumb {
       width: 100%; aspect-ratio: 4/3;
       object-fit: cover; cursor: pointer;
-      background: rgba(0,0,0,0.4);
+      background: #fff;
       display: block;
       transition: opacity 0.15s;
     }
@@ -180,6 +180,7 @@
     }
     #lightbox.open { display: flex; }
     #lightbox img {
+      background: #fff;
       max-width: 94vw; max-height: 90vh;
       object-fit: contain; border-radius: 8px;
       box-shadow: 0 0 60px rgba(0,0,0,0.8);
@@ -779,6 +780,13 @@ function openLightbox(url, caption) {
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+function openPlanPreview(url, caption, originalPdf) {
+  if (originalPdf && /^https:\/\//i.test(originalPdf) && isPdf(originalPdf)) {
+    window.open(originalPdf, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  openLightbox(url, caption);
+}
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
   lbImg().src = '';
@@ -1003,7 +1011,7 @@ function renderFloors(floors) {
     const previewHtml = image
       ? `<img class="floor-thumb" src="${esc(url)}" alt="${badge}"
            loading="lazy" draggable="false"
-           onclick="openLightbox('${esc(url)}','${badge} — ${name}')">`
+           onclick="openPlanPreview('${esc(url)}','${badge} — ${name}','${esc(f.source_pdf_url || '')}')">`
       : `<div class="floor-pdf" onclick="window.open('${esc(url)}','_blank')">
            <div class="floor-pdf-icon">📄</div>
            <div class="floor-pdf-label">${name}</div>
@@ -1205,7 +1213,7 @@ function renderFiles(files) {
     const previewHtml = isImage(url, f.file_name)
       ? `<img class="floor-thumb" src="${safe}" alt="${name}"
            loading="lazy"
-           onclick="openLightbox('${safe}','${name}')">`
+           onclick="openPlanPreview('${safe}','${name}','${esc(f.drive_link || '')}')">`
       : `<div class="floor-pdf" onclick="window.open('${safe}','_blank')">
            <div class="floor-pdf-icon">📄</div>
            <div class="floor-pdf-label">${name}</div>
