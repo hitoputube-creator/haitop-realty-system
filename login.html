@@ -8,6 +8,7 @@
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
   <link rel="stylesheet" href="assets/css/tokens.css" />
   <script src="assets/js/storage.js?v=20261006-office-login"></script>
+<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body style="margin:0;background:radial-gradient(circle at top, var(--panel2) 0, var(--bg) 45%, var(--bg2) 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;color:var(--txt);">
@@ -57,7 +58,7 @@
       const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       const officeSelect = document.getElementById("officeSelect");
       officeSelect.value = OfficeConfig.id;
-      document.getElementById("officeBrand").textContent = OfficeConfig.brand + " 부동산";
+      document.getElementById("officeBrand").textContent = OfficeConfig.id === "ktop" ? officeManagementTitle : OfficeConfig.brand + " 부동산";
       document.getElementById("officeNotice").textContent = OfficeConfig.id === "ktop"
         ? "케이탑 계정으로 로그인합니다. 고객과 소유주·연락처는 케이탑에서 별도로 관리합니다."
         : "하이탑 계정으로 로그인합니다.";
@@ -84,14 +85,9 @@
         resetBannerEl.style.display = "block";
       }
 
-      // redirect 파라미터는 같은 사이트 안의 파일명(+쿼리)만 허용한다 (오픈 리다이렉트 방지).
+      // 로그인 후에는 항상 카테고리별 매물·자료 관리 메인을 연다.
       function getRedirectTarget() {
-        const raw = new URLSearchParams(location.search).get("redirect") || (OfficeConfig.id === "ktop" ? "properties.html" : "index.html");
-        try {
-          const target = new URL(OfficeConfig.urlFor(raw));
-          if (!target.pathname.endsWith(".html") || /\/(login|reset-password)\.html$/.test(target.pathname)) throw new Error();
-          return target.href;
-        } catch (_) { return OfficeConfig.urlFor("properties.html"); }
+        return OfficeConfig.urlFor("property-main.html?category=all");
       }
 
       async function tryLogin() {

@@ -718,7 +718,7 @@ function downloadExcel() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, _makeSheet(rows), "매물목록");
-  XLSX.writeFile(wb, `하이탑_매물목록_${_xlsxDate()}.xlsx`);
+  XLSX.writeFile(wb, `${officeCompanyName}_매물목록_${_xlsxDate()}.xlsx`);
   showToast(`✅ ${items.length}건 다운로드 완료`);
 }
 
@@ -816,7 +816,7 @@ async function exportAll() {
       "등록일": m.created_at ? new Date(m.created_at).toLocaleDateString("ko-KR") : ""
     }))), "메모장");
 
-    XLSX.writeFile(wb, `하이탑부동산_전체백업_${_xlsxDate()}.xlsx`);
+    XLSX.writeFile(wb, `${officeCompanyName}_전체백업_${_xlsxDate()}.xlsx`);
     showToast("✅ 전체 백업 파일이 저장되었습니다");
   } catch (e) {
     showToast("❌ 백업 실패: " + e.message);
@@ -943,8 +943,8 @@ function cmGenerate() {
   }
 
   const greeting = (coopChk && coopName)
-    ? `안녕하세요. 하이탑부동산(031-949-8969)과\n${coopName}입니다.`
-    : `안녕하세요. 하이탑부동산(031-949-8969)입니다.`;
+    ? `안녕하세요. ${officeCompanyName}${OfficeConfig.id === 'ktop' ? '' : '(031-949-8969)'}과\n${coopName}입니다.`
+    : `안녕하세요. ${officeCompanyName}${OfficeConfig.id === 'ktop' ? '' : '(031-949-8969)'}입니다.`;
 
   const usageText = isBiz ? '업무용(전입신고안됨)' : '주거용(전입신고됨)';
 

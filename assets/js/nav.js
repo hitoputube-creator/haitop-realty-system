@@ -4,7 +4,7 @@
 // 값: "index" | "properties" | "worklog" | "tools"
 const NAV_ITEMS = [
   { key: "index",      label: "통합관리", href: "index.html" },
-  { key: "properties", label: "매물관리", href: "properties.html" },
+  { key: "properties", label: "매물관리", href: "property-main.html?category=all" },
   { key: "worklog",    label: "업무센터", href: "https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html", external: true },
   { key: "homepage",   label: "홈페이지", href: "https://hitoputube-creator.github.io/hitop-property-platform/listings.html", external: true }
 ];
@@ -51,7 +51,6 @@ function renderMainNav() {
   const toolsActiveCls = "nav-link" + (active === "tools" ? " active" : "");
 
   mount.innerHTML = `
-    <span class="nav-link">${OfficeConfig.label}</span>
     ${linksHtml}
     <div class="nav-dropdown" id="toolsDropdown">
       <button type="button" class="${toolsActiveCls}" id="toolsDropdownBtn">업무도구 <span class="nav-caret">▾</span></button>

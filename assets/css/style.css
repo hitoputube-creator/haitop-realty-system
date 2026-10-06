@@ -19,12 +19,13 @@ body {
 /* 헤더 */
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
 }
 .logo-icon {
-  width: 32px; height: 32px;
+  width: 32px; height: 32px; flex: 0 0 32px;
   border-radius: 8px;
   border: 1px solid var(--gold);
   position: relative; overflow: hidden;
@@ -38,7 +39,7 @@ body {
 }
 .logo-icon::before { left: 6px; height: 18px; }
 .logo-icon::after  { left: 16px; height: 24px; }
-.logo-text { display: flex; flex-direction: column; gap: 2px; }
+.logo-text { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
 .logo-main { font-size: 1.1rem; color: var(--gold); font-weight: 600; }
 .logo-sub  { font-size: 0.78rem; color: var(--text-muted); }
 .header-line { border-bottom: 1px solid rgba(216,184,74,0.45); margin: 8px 0 16px; }
@@ -49,7 +50,7 @@ body {
    일반 테두리는 청회색, 현재 페이지·업무도구만 골드로 강조한다.
 ══════════════════════════════════════════ */
 :root { --border-slate: rgba(148,163,184,0.32); }
-.main-nav { margin-left: auto; display: flex; align-items: center; gap: 6px; position: relative; }
+.main-nav { flex: 0 0 100%; width: 100%; margin-left: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; position: relative; }
 .nav-link {
   height: 34px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px;
   border-radius: 8px; border: 1px solid var(--border-slate);

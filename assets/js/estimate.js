@@ -85,7 +85,7 @@
 
       <div class="est-footer">
         <div class="est-logo"></div>
-        <div class="est-footer-text">하이탑부동산 ☎ 031.949.8969</div>
+        <div class="est-footer-text">${officeCompanyName}${OfficeConfig.id === 'ktop' ? '' : ' ☎ 031.949.8969'}</div>
       </div>
     `;
   }

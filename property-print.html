@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>부동산 매물 제안서 — 하이탑부동산</title>
 <script src="assets/js/storage.js?v=20261006-office-login"></script>
+<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
@@ -552,7 +553,7 @@ input[type=file].hidden-file { display:none; }
     </div><!-- /page-body -->
 
     <!-- ⑦ 하단 회사정보 -->
-    <div id="contact-area" style="margin:0 28px 22px; border-radius:10px;">
+    <div id="contact-area" data-hitop-company-details style="margin:0 28px 22px; border-radius:10px;">
       <div class="contact-head">
         <div class="contact-company">하이탑부동산공인중개사사무소</div>
         <div class="contact-phone">T. 031-949-8969</div>
@@ -568,7 +569,7 @@ input[type=file].hidden-file { display:none; }
     </div>
 
     <div class="page-footer">
-      <span>하이탑부동산공인중개사사무소 · 031-949-8969</span>
+      <span data-office-brand data-office-company-footer>하이탑부동산공인중개사사무소 · 031-949-8969</span>
       <span id="footer-date"></span>
     </div>
   </div><!-- /#property-page -->

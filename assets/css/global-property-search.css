@@ -22,3 +22,9 @@
 .header .logo-text:has(#globalPropertySearchToolbar){flex:1;min-width:0}
 @media(max-width:650px){.gps-heading-row{flex-wrap:wrap;gap:8px}.gps-heading-row .heading{flex-basis:100%}.gps-toolbar{margin-left:auto}.gps-toolbar .gps-form{flex-wrap:nowrap}.gps-toolbar .gps-form input{width:190px;flex-basis:auto}.gps-heading-row .logo-main{flex-basis:100%}}
 @media print{.gps-toolbar{display:none}}
+
+/* 제목·검색은 첫 줄, 내비게이션은 다음 줄에 배치한다. */
+.header .gps-heading-row{justify-content:flex-start;flex-wrap:wrap;gap:12px}
+.header .gps-heading-row .logo-main{flex:0 0 auto;white-space:nowrap}
+.header .gps-toolbar{margin-left:auto;max-width:100%}
+@media(max-width:650px){.header .gps-heading-row .logo-main{flex-basis:100%;white-space:normal}.header .gps-toolbar{margin-left:0}.header .gps-toolbar .gps-form input{width:min(210px,calc(100vw - 125px))}}
