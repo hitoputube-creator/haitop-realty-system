@@ -821,11 +821,7 @@ function openLightbox(url, caption) {
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function openPlanPreview(url, caption, originalPdf) {
-  if (originalPdf && /^https:\/\//i.test(originalPdf) && isPdf(originalPdf)) {
-    window.open(originalPdf, '_blank', 'noopener,noreferrer');
-    return;
-  }
+function openPlanPreview(url, caption) {
   openLightbox(url, caption);
 }
 function closeLightbox() {
@@ -1052,7 +1048,7 @@ function renderFloors(floors) {
     const previewHtml = image
       ? `<img class="floor-thumb" src="${esc(url)}" alt="${badge}"
            loading="lazy" draggable="false"
-           onclick="openPlanPreview('${esc(url)}','${badge} — ${name}','${esc(f.source_pdf_url || '')}')">`
+           onclick="openPlanPreview('${esc(url)}','${badge} — ${name}')">`
       : `<div class="floor-pdf" onclick="window.open('${esc(url)}','_blank')">
            <div class="floor-pdf-icon">📄</div>
            <div class="floor-pdf-label">${name}</div>
@@ -1064,7 +1060,7 @@ function renderFloors(floors) {
       ${resourceScope === 'residential' ? renderPlanAreas(f) : ''}
       <div class="floor-card-foot">
         <span class="floor-badge">${badge}</span>
-        ${f.source_pdf_url && /^https:\/\//i.test(f.source_pdf_url) ? `<a class="floor-status-link" href="${esc(f.source_pdf_url)}" target="_blank" rel="noopener noreferrer">원본 PDF 확대</a>` : ''}
+        ${f.source_pdf_url && /^https:\/\//i.test(f.source_pdf_url) ? `<a class="floor-status-link" href="${esc(f.source_pdf_url)}" target="_blank" rel="noopener noreferrer">원본 PDF 보기</a>` : ''}
         ${image && resourceScope !== 'residential' ? `<a class="floor-status-link" href="floor-status.html?id=${encodeURIComponent(buildingId)}&floorId=${encodeURIComponent(f.id)}">현황보기</a>` : ''}
         <button type="button" class="floor-edit-btn" data-floor-id="${esc(f.id)}">수정</button>
         <input type="file" class="floor-replacement" data-floor-id="${esc(f.id)}" accept="image/*,.pdf" aria-label="${badge} 평면도 교체 파일 선택" hidden>
@@ -1254,7 +1250,7 @@ function renderFiles(files) {
     const previewHtml = isImage(url, f.file_name)
       ? `<img class="floor-thumb" src="${safe}" alt="${name}"
            loading="lazy"
-           onclick="openPlanPreview('${safe}','${name}','${esc(f.drive_link || '')}')">`
+           onclick="openPlanPreview('${safe}','${name}')">`
       : `<div class="floor-pdf" onclick="window.open('${safe}','_blank')">
            <div class="floor-pdf-icon">📄</div>
            <div class="floor-pdf-label">${name}</div>
@@ -1266,7 +1262,7 @@ function renderFiles(files) {
       <div class="floor-card-foot">
         <span class="floor-badge" style="color:var(--text);font-weight:500;font-size:0.78rem;"
           title="${name}">${name}</span>
-        ${f.drive_link && /^https:\/\//i.test(f.drive_link) ? `<a class="floor-status-link" href="${esc(f.drive_link)}" target="_blank" rel="noopener noreferrer">${isPdf(f.drive_link) ? '원본 PDF 확대' : '연결자료 보기'}</a>` : ''}
+        ${f.drive_link && /^https:\/\//i.test(f.drive_link) ? `<a class="floor-status-link" href="${esc(f.drive_link)}" target="_blank" rel="noopener noreferrer">${isPdf(f.drive_link) ? '원본 PDF 보기' : '연결자료 보기'}</a>` : ''}
         <button class="btn-icon" title="삭제" onclick="deleteBFile('${f.id}')">🗑</button>
       </div>
     </div>`;
