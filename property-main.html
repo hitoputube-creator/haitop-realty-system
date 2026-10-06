@@ -94,9 +94,10 @@
         get('resourceDescription').textContent = category.resourceDescription;
         get('floorLink').hidden = !category.floors;
         ['locationLink', 'kakaoLink', 'naverMapLink'].forEach(id => { get(id).hidden = key !== 'home' && key !== 'shop'; });
-        const prefix = key === 'home' ? 'residential' : 'shop';
-        get('locationLink').href = prefix + '-location.html';
-        get('kakaoLink').href = prefix + '-kakao.html';
+        get('kakaoLink').hidden = !['home', 'shop', 'land'].includes(key);
+        const prefix = key === 'home' ? 'residential' : key === 'land' ? 'land' : 'shop';
+        get('locationLink').href = OfficeConfig.urlFor(prefix + '-location.html');
+        get('kakaoLink').href = OfficeConfig.urlFor(prefix + '-kakao.html');
         setNote('listingNote', category.listingNote);
         setNote('resourceNote', category.resourceNote);
         get('navigationStatus').textContent = '';
