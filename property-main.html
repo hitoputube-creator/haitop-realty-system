@@ -23,7 +23,7 @@
     @media(max-width:760px){.page{padding:0 20px 32px}.topbar{align-items:flex-start;flex-direction:column;padding:20px 0}.categories{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.category{padding:13px 5px}.grid{grid-template-columns:1fr}.entry{padding:24px;min-height:240px}.heading{margin-top:24px}h1{font-size:27px}}
     @media(max-width:380px){.page{padding-left:14px;padding-right:14px}.category{font-size:14px}.entry-actions{flex-direction:column}.action{width:100%}}
   </style>
-<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-unified-search-1">
+<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-compact-search-2">
 </head>
 <body>
   <div class="page">
@@ -32,7 +32,7 @@
       <nav class="top-actions" aria-label="주요 페이지"><a class="customer-link" href="customers.html">전체 고객관리</a><a href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html">업무센터</a><a href="index.html">기존 통합관리</a></nav>
     </header>
     <main>
-      <div class="heading"><p class="eyebrow">PROPERTY MANAGEMENT</p><h1>매물관리</h1><p>종류를 선택해 매물과 관련 자료를 확인하세요.</p></div>
+      <div class="gps-heading-row"><div class="heading"><p class="eyebrow">PROPERTY MANAGEMENT</p><h1>매물관리</h1></div><div id="globalPropertySearchToolbar" class="gps-toolbar"></div></div>
       <div id="globalPropertySearch"></div>
       <div class="categories" role="tablist" aria-label="매물 종류">
         <button class="category" id="tab-all" type="button" role="tab" aria-selected="true" aria-controls="categoryPanel" tabindex="0" data-category="all">전체매물</button>
@@ -118,7 +118,7 @@
       selectCategory(new URLSearchParams(location.search).get('category') || 'all', false);
     })();
   </script>
-<script src="assets/js/global-property-search-core.js?v=20261006-unified-search-1"></script>
-<script src="assets/js/global-property-search.js?v=20261006-unified-search-1"></script>
+<script src="assets/js/global-property-search-core.js?v=20261006-compact-search-2"></script>
+<script src="assets/js/global-property-search.js?v=20261006-compact-search-2"></script>
 </body>
 </html>

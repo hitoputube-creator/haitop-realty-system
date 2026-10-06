@@ -4,15 +4,14 @@ const mount=document.getElementById('globalPropertySearch');
 if(!mount)return;
 const core=window.HitopGlobalSearchCore;
 function el(tag,cls,value){const n=document.createElement(tag);if(cls)n.className=cls;if(value!=null)n.textContent=value;return n;}
-const section=el('section','gps'),title=el('h2','','고객·소유주 통합검색');
-title.id='gpsTitle';section.setAttribute('aria-labelledby',title.id);
-const help=el('p','gps-help','이름 또는 전화번호로 전체 매물·세대·점포·필지를 검색합니다. 같은 이름은 연락처로 구분해 주세요.');
+const section=el('section','gps');section.hidden=true;section.setAttribute('aria-label','고객·소유주 검색 결과');
+const toolbar=document.getElementById('globalPropertySearchToolbar')||mount;
 const form=el('form','gps-form'),input=el('input'),submit=el('button','','검색'),clear=el('button','gps-clear','초기화');
-input.type='search';input.maxLength=120;input.placeholder='소유주 이름 또는 전화번호';input.setAttribute('aria-label','고객 또는 소유주 이름·전화번호');input.autocomplete='off';
+input.type='search';input.maxLength=120;input.placeholder='이름·전화번호 전체검색';input.setAttribute('aria-label','고객 또는 소유주 이름·전화번호');input.autocomplete='off';
 submit.type='submit';clear.type='button';form.append(input,submit,clear);
 const status=el('p','gps-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
 const summary=el('div','gps-summary'),results=el('div','gps-results'),more=el('button','gps-more','더 보기');more.type='button';more.hidden=true;
-section.append(title,help,form,status,summary,results,more);mount.append(section);
+toolbar.append(form);section.append(status,summary,results,more);mount.append(section);
 let generation=0,matched=[],visible=0,busy=false;
 const sources=[['listings','등록 매물','*'],['buildings','세대·점포 자료','*'],['drive_resources','건물 정보','id,name,category,memo'],['land_parcels','필지 자료','*'],['customers','고객 연락처','id,name,phone,phone_normalized'],['drive_resource_categories','자료 분류','id,name,room']];
 async function readAll(table,select,token){
@@ -47,11 +46,11 @@ function showMore(){
  more.hidden=visible>=matched.length;more.textContent='더 보기 ('+visible+' / '+matched.length+'건)';
 }
 function reset(){
- generation++;busy=false;submit.disabled=false;input.value='';status.textContent='';summary.replaceChildren();results.replaceChildren();matched=[];visible=0;more.hidden=true;input.focus();
+ generation++;busy=false;submit.disabled=false;input.value='';status.textContent='';summary.replaceChildren();results.replaceChildren();matched=[];visible=0;more.hidden=true;section.hidden=true;input.focus();
 }
 clear.addEventListener('click',reset);more.addEventListener('click',showMore);
 form.addEventListener('submit',async event=>{
- event.preventDefault();if(busy)return;
+ event.preventDefault();if(busy)return;section.hidden=false;
  const query=input.value.trim();if(!query){status.textContent='이름 또는 전화번호를 입력해 주세요.';input.focus();return;}
  if(/^[+\d().\s-]+$/.test(query)&&core.phone(query).length<4){status.textContent='전화번호는 4자리 이상 입력해 주세요.';return;}
  const mine=++generation;busy=true;submit.disabled=true;status.textContent='전체 자료를 검색하고 있습니다…';summary.replaceChildren();results.replaceChildren();more.hidden=true;
@@ -66,7 +65,7 @@ form.addEventListener('submit',async event=>{
   summary.append(el('strong','','검색 결과 '+matched.length+'건'));
   const counts=new Map();matched.forEach(e=>counts.set(e.group,(counts.get(e.group)||0)+1));
   counts.forEach((count,group)=>summary.append(el('span','',group+' '+count+'건')));
-  status.textContent=(failed.length?'조회하지 못한 자료: '+failed.join(', ')+'. 결과가 일부일 수 있습니다. 다시 검색해 주세요.':matched.length?'전체 종류에서 검색했습니다. 매물과 자료가 직접 연결된 경우 한 건으로 표시합니다.':'일치하는 소유주 연락처가 없습니다.');
+  status.textContent=(failed.length?'조회하지 못한 자료: '+failed.join(', ')+'. 결과가 일부일 수 있습니다. 다시 검색해 주세요.':matched.length?'':'검색 결과가 없습니다.');
   showMore();
  }catch(error){
   if(mine!==generation)return;
