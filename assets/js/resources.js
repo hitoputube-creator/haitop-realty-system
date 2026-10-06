@@ -171,7 +171,7 @@ function _buildDriveItemsHtml(items, cat) {
     return `
     <div class="listing-card" style="cursor:default;">
       <div style="margin-bottom:10px;">
-        <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
+        <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>${item._shared_reference ? '<span style="font-size:0.72rem;color:var(--text-muted);">공유 기본자료</span>' : ''}
         ${memoPreview ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;line-height:1.4;">📝 ${memoPreview}</div>` : ''}
         ${residentialBasicSummary(item)}
         ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}

@@ -361,12 +361,88 @@ const headers = {
   "Authorization": "Bearer " + SUPABASE_KEY
 };
 
-async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+// 공유 자료는 인증된 읽기 전용 서버에서 기본정보만 받는다.
+// 모든 입력/수정 요청은 선택한 사무소의 Supabase로만 보낸다.
+const SharedReference = (() => {
+  const tables = new Set(['drive_resource_categories','drive_resources','buildings','building_floors','building_files','land_parcels','land_block_sources']);
+  const cache = new Map();
+  async function rows(table) {
+    const entry = cache.get(table);
+    if (entry && Date.now() - entry.time < 30000) return entry.promise;
+    const promise = (async () => {
+      const {data,error} = await hitopAuthClient.auth.getSession();
+      if (error || !data.session) throw new Error('로그인 후 공유자료를 볼 수 있습니다.');
+      const response = await fetch('https://xaxbkdnrzsghsabkdvzj.supabase.co/functions/v1/shared-reference-data?table=' + table, {
+        headers:{apikey:'sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd',Authorization:'Bearer '+data.session.access_token},
+        signal:AbortSignal.timeout(25000)
+      });
+      if (!response.ok) throw new Error('공유 기본자료를 불러오지 못했습니다. 잠시 후 새로고침해주세요.');
+      const result = await response.json();
+      if (!Array.isArray(result)) throw new Error('공유자료 응답 오류');
+      return result;
+    })().catch(error=>{cache.delete(table);throw error;});
+    cache.set(table,{time:Date.now(),promise});return promise;
+  }
+  function key(table,row) {
+    if(table==='buildings')return row.local_id || row.id;
+    if(table==='drive_resource_categories')return row.name;
+    if(table==='land_parcels')return [row.block_id,row.subblock,row.parcel].join('|');
+    return row.id || row.block_id;
+  }
+  function matches(row,params) {
+    for(const [field,expression] of params) {
+      if(['select','order','limit','offset'].includes(field))continue;
+      if(expression.startsWith('eq.')) {if(String(row[field])!==expression.slice(3))return false;}
+      else if(expression.startsWith('in.(')&&expression.endsWith(')')){if(!expression.slice(4,-1).split(',').includes(String(row[field])))return false;}
+      else if(expression==='is.null'){if(row[field]!=null)return false;}
+      else return false;
+    }
+    return true;
+  }
+  async function request(url,options,network) {
+    if(OfficeConfig.id!=='ktop')return network(url,options);
+    const target=new URL(url,location.href);
+    const table=target.origin===SUPABASE_URL && target.pathname.startsWith('/rest/v1/') ? target.pathname.slice(9) : '';
+    if(!tables.has(table))return network(url,options);
+    const method=(options.method||'GET').toUpperCase();
+    if(method==='GET') {
+      const [response,shared]=await Promise.all([network(url,options),rows(table)]);
+      if(!response.ok)return response;
+      const local=await response.json();
+      const merged=new Map(shared.map(row=>[key(table,row),row]));
+      for(const row of local)merged.set(key(table,row),row);
+      let result=Array.from(merged.values()).filter(row=>matches(row,target.searchParams));
+      const order=target.searchParams.get('order');
+      if(order)result.sort((a,b)=>{for(const term of order.split(',')){const [field,dir]=term.split('.');const av=a[field],bv=b[field];if(av==null||bv==null){if(av!==bv)return av==null?1:-1;continue;}const diff=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'ko',{numeric:true});if(diff)return dir==='desc'?-diff:diff;}return 0;});
+      const offset=Number(target.searchParams.get('offset')||0),limit=Number(target.searchParams.get('limit')||result.length);
+      return new Response(JSON.stringify(result.slice(offset,offset+limit)),{status:200,headers:{'Content-Type':'application/json'}});
+    }
+    if(method==='PATCH'||method==='DELETE') {
+      const shared=(await rows(table)).filter(row=>matches(row,target.searchParams));
+      if(shared.length) {
+        const check=await network(url,{headers:options.headers});
+        if(!check.ok)return check;
+        const local=await check.json();
+        const missing=shared.filter(row=>!local.some(r=>key(table,r)===key(table,row)));
+        if(missing.length) {
+          if(method==='DELETE'||!['drive_resources','land_parcels','buildings'].includes(table))throw new Error('공유 원본은 읽기 전용입니다. 케이탑 자료를 별도로 등록해주세요.');
+          const copies=missing.map(({_shared_reference,...row})=>row);
+          const copied=await network(SUPABASE_URL+'/rest/v1/'+table,{method:'POST',headers:{...options.headers,Prefer:'return=minimal'},body:JSON.stringify(copies)});
+          if(!copied.ok)throw new Error('케이탑 자료 저장 준비에 실패했습니다.');
+        }
+      }
+    }
+    return network(url,options);
+  }
+  return {request,matches,key};
+})();
+
+async function fetchWithTimeout(url, options = {}, timeout = 30000) {
   if (String(url).startsWith(SUPABASE_URL + '/') && window.hitopAuthReady && !await window.hitopAuthReady) throw new Error('로그인이 필요합니다.');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
+    const res = await SharedReference.request(url, options, (target, init) => fetch(target, { ...init, signal: controller.signal }));
     return res;
   } catch(e) {
     if (e.name === "AbortError") throw new Error("Server response timed out. Please check your internet connection.");
@@ -1183,6 +1259,12 @@ function officeDecorateLinks(root) {
 }
 document.addEventListener('DOMContentLoaded', () => {
   officeDecorateLinks(document);
+  if (OfficeConfig.id === 'ktop' && /(?:resources|building-detail|building-overview|floor-status|land-resource)\.html$/.test(location.pathname)) {
+    const notice = document.createElement('div');
+    notice.textContent = '하이탑 기본자료 함께 보기 · 소유주·연락처·고객·업무일지는 사무소별로 관리합니다.';
+    notice.style.cssText = 'padding:10px 16px;background:#183b36;color:#d0efe5;font-size:13px;text-align:center';
+    document.body.prepend(notice);
+  }
   new MutationObserver(records => {
     for (const record of records) for (const node of record.addedNodes) {
       if (node.nodeType === 1) {
