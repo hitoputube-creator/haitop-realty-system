@@ -1,3 +1,4 @@
+import DiaryLogoutButton from './DiaryLogoutButton'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import {
@@ -336,7 +337,7 @@ export default function PrivateNotes({ onBack, initialOwner = '케이탑' }) {
       {/* 헤더 */}
       <header className="pn-header">
         <div className="pn-brand">
-          <div className="pn-brand-mark">H</div>
+          <div className="pn-brand-mark">KT</div>
           <div>
             <div className="pn-brand-title">{owner} 개인일지</div>
             <div className="pn-brand-sub">개인 달력 · 메모 작성 · 분류 관리</div>
@@ -372,6 +373,7 @@ export default function PrivateNotes({ onBack, initialOwner = '케이탑' }) {
 
         <div className="pn-header-right">
           <button type="button" className="pn-back-btn" onClick={onBack}>← 업무일지로 돌아가기</button>
+          <DiaryLogoutButton />
         </div>
       </header>
 

@@ -39,7 +39,7 @@
         document.querySelector('.brand-name').textContent = ktop ? 'KTOP부동산 매물관리' : '하이탑부동산';
         document.querySelector('.brand-mark').textContent = ktop ? 'K' : 'H';
         document.title = ktop ? 'KTOP부동산 매물관리' : '하이탑부동산 | 매물관리 메인';
-        if (ktop) { document.getElementById('officeWorkDiaryLink').href = OFFICE_DIARY_URL; document.getElementById('officeWorkDiaryLink').textContent = '케이탑 업무일지'; }
+        if (ktop) { document.getElementById('officeWorkDiaryLink').href = OFFICE_DIARY_URL + '?v=20261006-ui2'; document.getElementById('officeWorkDiaryLink').textContent = '케이탑 업무일지'; }
       })();
     </script>
     <main>
@@ -91,11 +91,10 @@
         get('listingTitle').textContent = category.title;
         get('listingDescription').textContent = category.description;
         get('resourceTitle').textContent = category.resource;
-        get('resourceLink').href = category.resourceHref || 'resources.html?scope=all';
+        get('resourceLink').href = OfficeConfig.urlFor(category.resourceHref || 'resources.html?scope=all');
         get('resourceDescription').textContent = category.resourceDescription;
         get('floorLink').hidden = !category.floors;
-        ['locationLink', 'kakaoLink', 'naverMapLink'].forEach(id => { get(id).hidden = key !== 'home' && key !== 'shop'; });
-        get('kakaoLink').hidden = !['home', 'shop', 'land'].includes(key);
+        ['locationLink', 'kakaoLink', 'naverMapLink'].forEach(id => { get(id).hidden = !['home', 'shop', 'land'].includes(key); });
         const prefix = key === 'home' ? 'residential' : key === 'land' ? 'land' : 'shop';
         get('locationLink').href = OfficeConfig.urlFor(prefix + '-location.html');
         get('kakaoLink').href = OfficeConfig.urlFor(prefix + '-kakao.html');

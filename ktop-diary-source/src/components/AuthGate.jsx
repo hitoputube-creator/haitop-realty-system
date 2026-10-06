@@ -23,6 +23,6 @@ export default function AuthGate({children}) {
     return()=>{alive=false;run++;data.subscription.unsubscribe()}
   },[])
   if(state==='checking')return <div className="auth-overlay"><div className="auth-title">케이탑 업무일지 불러오는 중…</div></div>
-  if(state!=='allowed')return <div className="auth-overlay"><div className="auth-brand"><div className="auth-logo">K</div><div className="auth-title">케이탑 업무일지</div><p>케이탑 계정으로 로그인해주세요.</p><a className="auth-logout-btn" href="../login.html?office=ktop">케이탑 로그인</a></div></div>
-  return <><div className="auth-topbar"><a href="../property-main.html?office=ktop">케이탑 매물관리</a><button type="button" className="auth-logout-btn" onClick={()=>supabase.auth.signOut()}>로그아웃</button></div>{children}</>
+  if(state!=='allowed')return <div className="auth-overlay"><div className="auth-brand"><div className="auth-logo">KT</div><div className="auth-title">케이탑 업무일지</div><p>케이탑 계정으로 로그인해주세요.</p><a className="auth-logout-btn" href="../login.html?office=ktop">케이탑 로그인</a></div></div>
+  return children
 }

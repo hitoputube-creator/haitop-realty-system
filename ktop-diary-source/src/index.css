@@ -98,8 +98,8 @@ select {
   color: var(--color-primary);
 }
 
-/* ===== 업무센터와 동일한 원형 HT 로고 =====
-   WorkDiary.jsx의 기존 H 텍스트는 숨기고 HT만 한 번 표시한다. */
+/* ===== 업무센터와 동일한 원형 KT 로고 =====
+   WorkDiary.jsx의 기존 텍스트는 숨기고 KT만 한 번 표시한다. */
 .wd-brand-mark {
   width: 42px !important;
   height: 42px !important;
@@ -119,7 +119,7 @@ select {
 }
 
 .wd-brand-mark::after {
-  content: 'HT';
+  content: 'KT';
   font-size: 14px !important;
   font-weight: 900;
   letter-spacing: 0 !important;
@@ -141,3 +141,8 @@ select {
   font-weight: 600;
   letter-spacing: 0.35px;
 }
+
+/* 로그아웃도 화면 헤더 안에서 다른 버튼과 함께 배치한다. */
+.diary-logout-btn { flex-shrink: 0; white-space: nowrap; }
+.wd-header > .diary-logout-btn { margin-left: auto; }
+@media (min-width: 1101px) { .wd-header { flex-wrap: wrap; gap: 16px; } }

@@ -1,3 +1,4 @@
+import DiaryLogoutButton from './DiaryLogoutButton'
 import { formatPhone, consultationTags } from '../lib/callDiary'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
@@ -1267,7 +1268,7 @@ export default function WorkDiary({ onOpenDiary, onOpenStorageAdmin, onOpenMemoB
     <div className="wd-app">
       <header className="wd-header">
         <div className="wd-brand">
-          <div className="wd-brand-mark">K</div>
+          <div className="wd-brand-mark">KT</div>
           <div>
             <div className="wd-brand-title">케이탑 업무일지</div>
             <div className="wd-brand-sub">Work Diary</div>
@@ -1304,7 +1305,7 @@ export default function WorkDiary({ onOpenDiary, onOpenStorageAdmin, onOpenMemoB
         >
           케이탑 구글캘린더
         </a>
-      </header>
+      <DiaryLogoutButton /></header>
       {!isSupabaseConfigured && (
         <div className="wd-notice">
           <span aria-hidden="true">!</span>

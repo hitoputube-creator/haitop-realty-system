@@ -1,3 +1,4 @@
+import DiaryLogoutButton from './DiaryLogoutButton'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   fetchBoardNotes,
@@ -263,6 +264,7 @@ export default function MemoBoard({ onBack }) {
         </div>
         <div className="mb-header-right">
           <button type="button" className="mb-back-btn" onClick={onBack}>← 업무일지로 돌아가기</button>
+          <DiaryLogoutButton />
         </div>
       </header>
 
