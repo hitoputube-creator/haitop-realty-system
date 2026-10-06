@@ -4,7 +4,7 @@
 // 값: "index" | "properties" | "worklog" | "tools"
 const NAV_ITEMS = [
   { key: "index",      label: "통합관리", href: "index.html" },
-  { key: "properties", label: "매물관리", href: "property-main.html?category=all" },
+  { key: "properties", label: "매물관리", href: "property-main.html?category=all&ui=20261006-brand2" },
   { key: "worklog",    label: "업무센터", href: "https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html", external: true },
   { key: "homepage",   label: "홈페이지", href: "https://hitoputube-creator.github.io/hitop-property-platform/listings.html", external: true }
 ];

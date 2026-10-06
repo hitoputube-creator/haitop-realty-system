@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>하이탑부동산 | 매물관리 메인</title>
+  <title>매물관리 메인</title>
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <script src="assets/js/storage.js?v=20261006-office-login"></script>
@@ -29,9 +29,18 @@
 <body>
   <div class="page">
     <header class="topbar">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">H</span><div><div class="brand-name">하이탑부동산</div><div class="brand-sub">매물·자료 관리</div></div></div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><div><div class="brand-name">매물관리</div><div class="brand-sub">매물·자료 관리</div></div></div>
       <nav class="top-actions" aria-label="주요 페이지"><a class="customer-link" href="customers.html">전체 고객관리</a><a href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html">업무센터</a><a href="index.html">기존 통합관리</a></nav>
     </header>
+    <script id="initialOfficeBrand">
+      // 첫 화면 상호는 공통 스크립트의 후속 처리와 관계없이 즉시 표시한다.
+      (function () {
+        const ktop = OfficeConfig.id === 'ktop';
+        document.querySelector('.brand-name').textContent = ktop ? 'KTOP부동산 매물관리' : '하이탑부동산';
+        document.querySelector('.brand-mark').textContent = ktop ? 'K' : 'H';
+        document.title = ktop ? 'KTOP부동산 매물관리' : '하이탑부동산 | 매물관리 메인';
+      })();
+    </script>
     <main>
       <div class="gps-heading-row"><div class="heading"><p class="eyebrow">PROPERTY MANAGEMENT</p><h1>매물관리</h1></div><div id="globalPropertySearchToolbar" class="gps-toolbar"></div></div>
       <div id="globalPropertySearch"></div>
