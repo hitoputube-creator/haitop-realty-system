@@ -103,6 +103,7 @@
       .deal-filter-wrap .filter-row { flex-wrap: wrap; }
     }
   </style>
+<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-unified-search-1">
 </head>
 <body data-nav-active="properties">
 
@@ -121,6 +122,7 @@
   <nav class="property-main-return no-print" aria-label="매물관리 복귀">
     <a class="btn btn-primary" id="propertyMainReturn" href="property-main.html">← 매물관리 메인으로</a>
   </nav>
+  <div id="globalPropertySearch" class="no-print"></div>
   <script>
     (function () {
       const keys = ['all', 'shop', 'land', 'home', 'factory', 'other'];
@@ -623,5 +625,7 @@
 
 <script src="assets/js/listings-shared.js"></script>
 <script src="assets/js/properties.js"></script>
+<script src="assets/js/global-property-search-core.js?v=20261006-unified-search-1"></script>
+<script src="assets/js/global-property-search.js?v=20261006-unified-search-1"></script>
 </body>
 </html>
