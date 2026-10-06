@@ -1,0 +1,2433 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { formatPhone, groupCallMemos } from '../lib/callDiary'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { DiaryPhotoStrip, DiaryPhotoUploader, PhotoGalleryModal } from './DiaryPhotos'
+import { DiaryFileUploader, DiaryFileList } from './DiaryFiles'
+import { getAttachmentSignedUrl } from '../lib/attachments'
+import { removeLocalJSON } from '../lib/uiState'
+import CustomerMemoLookupModal from './CustomerMemoLookupModal'
+import {
+  RelationTypeSelect,
+  ListingLinkControl,
+  ContactLinkControl,
+  NewCustomerRelationControl,
+} from './RelationControls'
+import { LISTING_RELATION_TYPES, CUSTOMER_RELATION_TYPES, CONTACT_RELATION_TYPES } from '../lib/relationTypes'
+
+/* ===== 스티커 메타 ===== */
+// eslint-disable-next-line react-refresh/only-export-components
+export const STICKER_META = {
+  '계약': { color: '#C9A84C' },
+  '잔금': { color: '#E74C3C' },
+  '약속': { color: '#3498DB' },
+  '내부': { color: '#27AE60' },
+  '기타': { color: '#95A5A6' },
+}
+
+const STICKER_OPTIONS = [
+  { value: null,   label: '없음' },
+  { value: '계약', label: '계약' },
+  { value: '잔금', label: '잔금' },
+  { value: '약속', label: '약속' },
+]
+
+// register.html이 실제로 memo/title/customerName/customerPhone/photos 쿼리파라미터를
+// 읽어서 폼을 채워준다(register.html의 loadPrefill()). properties.html은 이 값들을
+// 읽지 않으므로 반드시 register.html로 보내야 한다.
+const PROPERTY_REGISTER_URL = 'https://hitoputube-creator.github.io/haitop-realty-system/register.html'
+const CUSTOMER_PAGE_URL = 'https://hitoputube-creator.github.io/haitop-realty-system/index.html'
+const LISTING_DETAIL_URL = 'https://hitoputube-creator.github.io/haitop-realty-system/detail.html'
+const NAVER_AD_URL = 'https://new.rfine.kr/Pos/index_afterLogin_new.php'
+
+/* ===== 헬퍼 ===== */
+const TAG_REGEX = /#[\w가-힣]+/g
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function extractTags(text) {
+  if (!text) return []
+  const matches = text.match(TAG_REGEX) || []
+  // # 제외, 중복 제거
+  return Array.from(new Set(matches.map((t) => t.slice(1))))
+}
+
+function formatTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
+  const ampm = h < 12 ? '오전' : '오후'
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${ampm} ${h12}:${m}`
+}
+
+function formatDateLabel(iso, fullFormat = false) {
+  if (!iso) return ''
+  const d = new Date(iso.includes('T') ? iso : iso + 'T00:00:00')
+  if (Number.isNaN(d.getTime())) return iso
+  if (fullFormat) {
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+  }
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`
+}
+
+function formatMemoSnippet(content, max = 60) {
+  if (!content) return ''
+  return content.length > max ? content.slice(0, max) + '…' : content
+}
+
+/* ===== 상태 배지 ===== */
+const STATUS_META = {
+  normal: { label: '일반', icon: null },
+  important: { label: '중요', icon: '★' },
+  later: { label: '나중에', icon: '◉' },
+  done: { label: '완료', icon: '✓' },
+}
+
+function StatusBadge({ status }) {
+  const meta = STATUS_META[status] || STATUS_META.normal
+  if (status === 'normal') return null // 일반은 배지 숨김
+  return (
+    <span className={`wd-badge ${status}`}>
+      {meta.icon && <span aria-hidden="true">{meta.icon}</span>}
+      {meta.label}
+    </span>
+  )
+}
+
+/* ===== 메모 카드 ===== */
+function MemoCard({ memo, photos, files, onOpenPhotos, onAddPhotos, onAddFiles, onDeleteAttachment, onChangeStatus, onDelete, onUpdateContent, showDate, onLinkKeyClick, onUpdateLinkKey, allLinkKeys, onAddToBoard, isHighlighted, onNavigate, onOpenAddMemoForMemo, onOpenTimelineForMemo, variant = 'full', resetToken = 0, dayContextDate = null }) {
+  const [editing, setEditing] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [draft, setDraft] = useState(memo.content)
+  const [draftName, setDraftName] = useState(memo.customer_name || '')
+  const [draftPhone, setDraftPhone] = useState(memo.customer_phone || '')
+  const [draftTitle, setDraftTitle] = useState(memo.title || '')
+  const [draftRelationType, setDraftRelationType] = useState(memo.relation_type || null)
+  const [draftListingId, setDraftListingId] = useState(memo.listing_id || null)
+  const [draftListingLabel, setDraftListingLabel] = useState('')
+  const [draftContactId, setDraftContactId] = useState(memo.contact_id || null)
+  const [draftContactLabel, setDraftContactLabel] = useState('')
+  const [draftSticker, setDraftSticker] = useState(memo.sticker || null)
+  const [draftScheduleDate, setDraftScheduleDate] = useState(memo.schedule_date || memo.date || '')
+  const [draftDate, setDraftDate] = useState(memo.date || '')
+  const [photoAddOpen, setPhotoAddOpen] = useState(false)
+  const [photoFiles, setPhotoFiles] = useState([])
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoError, setPhotoError] = useState('')
+  const [fileAddOpen, setFileAddOpen] = useState(false)
+  const [diaryFiles, setDiaryFiles] = useState([])
+  const [fileBusy, setFileBusy] = useState(false)
+  const [fileError, setFileError] = useState('')
+  const [compactFilesOpen, setCompactFilesOpen] = useState(false)
+  const [editError, setEditError] = useState('')
+  const [propertySending, setPropertySending] = useState(false)
+  const propertySendingRef = useRef(false)
+  const [boardAdded, setBoardAdded] = useState(false)
+  const taRef = useRef(null)
+  const cardRef = useRef(null)
+  const compactPhotosRef = useRef(null)
+  const compactFilesRef = useRef(null)
+  const compactFilesPanelId = `wd-compact-files-${memo.id}`
+
+  // 연결태그 인라인 편집 상태
+  const [linkEditing, setLinkEditing] = useState(false)
+  const [linkDraft, setLinkDraft] = useState(memo.link_key || '')
+  const [linkSaving, setLinkSaving] = useState(false)
+  const linkInputRef = useRef(null)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLinkDraft(memo.link_key || '')
+  }, [memo.link_key])
+
+  useEffect(() => {
+    if (isHighlighted && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [isHighlighted])
+
+  useEffect(() => {
+    if (linkEditing && linkInputRef.current) {
+      linkInputRef.current.focus()
+      linkInputRef.current.select()
+    }
+  }, [linkEditing])
+
+  async function saveLinkKey() {
+    if (linkSaving) return
+    setLinkSaving(true)
+    try {
+      await onUpdateLinkKey(memo.id, linkDraft.trim())
+      setLinkEditing(false)
+    } finally {
+      setLinkSaving(false)
+    }
+  }
+
+  function autoResize(el) {
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.max(150, el.scrollHeight)}px`
+  }
+
+  useEffect(() => {
+    if (editing && taRef.current) {
+      taRef.current.focus()
+      taRef.current.setSelectionRange(draft.length, draft.length)
+      autoResize(taRef.current)
+    }
+  }, [editing])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft(memo.content)
+    setDraftName(memo.customer_name || '')
+    setDraftPhone(memo.customer_phone || '')
+    setDraftTitle(memo.title || '')
+    setDraftRelationType(memo.relation_type || null)
+    setDraftListingId(memo.listing_id || null)
+    setDraftContactId(memo.contact_id || null)
+    setDraftSticker(memo.sticker || null)
+    setDraftScheduleDate(memo.schedule_date || memo.date || '')
+    setDraftDate(memo.date || '')
+    setLinkDraft(memo.link_key || '')
+  }, [memo.content, memo.customer_name, memo.customer_phone, memo.title, memo.relation_type, memo.listing_id, memo.contact_id, memo.sticker, memo.schedule_date, memo.date, memo.link_key])
+
+  const tags = memo.tags && memo.tags.length ? memo.tags : extractTags(memo.content)
+
+  // 일정일(schedule_date)이 작성일(date)과 다르면, 작성일 화면에서는 배지를 숨기고
+  // 일정일 화면(dayContextDate)에서만 스티커 배지를 보여준다.
+  const scheduleMismatch = Boolean(dayContextDate) && Boolean(memo.schedule_date) && memo.schedule_date !== dayContextDate
+  const stickerMeta = memo.sticker && !scheduleMismatch ? STICKER_META[memo.sticker] : null
+
+  function selectDraftSticker(opt) {
+    const isActive = draftSticker === opt.value
+    const nextValue = isActive && opt.value !== null ? null : opt.value
+    setDraftSticker(nextValue)
+    if (!nextValue) {
+      setDraftScheduleDate('')
+    } else if (!draftScheduleDate) {
+      setDraftScheduleDate(memo.date || '')
+    }
+  }
+
+  const cls = ['wd-card', `status-${memo.status || 'normal'}`, editing && 'editing', isHighlighted && 'wd-card-highlighted']
+    .filter(Boolean)
+    .join(' ')
+
+  function resetEditDraft() {
+    setDraft(memo.content)
+    setDraftName(memo.customer_name || '')
+    setDraftPhone(memo.customer_phone || '')
+    setDraftTitle(memo.title || '')
+    setDraftRelationType(memo.relation_type || null)
+    setDraftListingId(memo.listing_id || null)
+    setDraftListingLabel('')
+    setDraftContactId(memo.contact_id || null)
+    setDraftContactLabel('')
+    setDraftSticker(memo.sticker || null)
+    setDraftScheduleDate(memo.schedule_date || memo.date || '')
+    setDraftDate(memo.date || '')
+    setLinkDraft(memo.link_key || '')
+  }
+
+  function closeAttachmentAddPanels() {
+    setPhotoAddOpen(false)
+    setFileAddOpen(false)
+    setPhotoFiles([])
+    setDiaryFiles([])
+    setPhotoError('')
+    setFileError('')
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEditing(false)
+    setExpanded(false)
+    setPhotoAddOpen(false)
+    setFileAddOpen(false)
+    setCompactFilesOpen(false)
+    setLinkEditing(false)
+    setEditError('')
+    resetEditDraft()
+    setPhotoFiles([])
+    setDiaryFiles([])
+    setPhotoError('')
+    setFileError('')
+  }, [resetToken]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function saveEdit() {
+    const next = draft.trim()
+    if (!next) return
+    setEditError('')
+    const nextName = draftName.trim()
+    const nextPhone = formatPhone(draftPhone)
+    const nextTitle = draftTitle.trim()
+    const nextLinkKey = linkDraft.trim()
+    const nextSticker = draftSticker || null
+    const nextScheduleDate = nextSticker ? (draftScheduleDate || memo.date || null) : null
+    const nextDate = draftDate || memo.date
+    const changed =
+      next !== memo.content ||
+      nextName !== (memo.customer_name || '') ||
+      nextPhone !== (memo.customer_phone || '') ||
+      nextTitle !== (memo.title || '') ||
+      nextLinkKey !== (memo.link_key || '') ||
+      nextSticker !== (memo.sticker || null) ||
+      nextScheduleDate !== (memo.schedule_date || null) ||
+      nextDate !== memo.date ||
+      draftRelationType !== (memo.relation_type || null) ||
+      draftListingId !== (memo.listing_id || null) ||
+      draftContactId !== (memo.contact_id || null)
+    if (!changed) {
+      closeAttachmentAddPanels()
+      setEditing(false)
+      if (variant === 'compact') setExpanded(false)
+      return
+    }
+    try {
+      const saved = await onUpdateContent(memo.id, next, {
+        customer_name: nextName || null,
+        customer_phone: nextPhone || null,
+        title: nextTitle || null,
+        link_key: nextLinkKey || '',
+        relation_type: draftRelationType || null,
+        listing_id: draftListingId || null,
+        contact_id: draftContactId || null,
+        sticker: nextSticker,
+        schedule_date: nextScheduleDate,
+        date: nextDate,
+      })
+      if (saved === false) {
+        setEditError('수정 저장에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
+      closeAttachmentAddPanels()
+      setEditing(false)
+      if (variant === 'compact') setExpanded(false)
+    } catch (err) {
+      setEditError(err.message || String(err))
+    }
+  }
+
+  function openEditForm() {
+    setEditError('')
+    setPhotoAddOpen(false)
+    setFileAddOpen(false)
+    setCompactFilesOpen(false)
+    if (variant === 'compact') setExpanded(true)
+    setEditing(true)
+  }
+
+  function cancelEdit() {
+    resetEditDraft()
+    setEditError('')
+    closeAttachmentAddPanels()
+    setEditing(false)
+    if (variant === 'compact') setExpanded(false)
+  }
+
+  async function handleAddPhotos() {
+    if (!photoFiles.length || photoBusy) return
+    setPhotoBusy(true)
+    setPhotoError('')
+    try {
+      await onAddPhotos?.(memo.id, photoFiles, memo.writer)
+      setPhotoFiles([])
+      setPhotoAddOpen(false)
+    } catch (err) {
+      setPhotoError(err.message || String(err))
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
+
+  async function handleAddFiles() {
+    if (!diaryFiles.length || fileBusy) return
+    setFileBusy(true)
+    setFileError('')
+    try {
+      await onAddFiles?.(memo.id, diaryFiles, memo.writer)
+      setDiaryFiles([])
+      setFileAddOpen(false)
+    } catch (err) {
+      setFileError(err.message || String(err))
+    } finally {
+      setFileBusy(false)
+    }
+  }
+
+  async function sendToPropertyRegister() {
+    if (propertySendingRef.current) return
+    propertySendingRef.current = true
+    setPropertySending(true)
+
+    // 팝업 차단을 피하려고 클릭에 반응해 빈 탭을 먼저 열어두고, 신호가 다 모이면
+    // 그 탭의 주소만 바꾼다 — 현재 업무일지 탭은 화면 그대로 유지된다.
+    const newTab = window.open('', '_blank')
+
+    try {
+      const params = new URLSearchParams()
+      params.set('memo', memo.content || '')
+      if (memo.title) params.set('title', memo.title)
+      if (memo.customer_name) params.set('customerName', memo.customer_name)
+      if (memo.customer_phone) {
+        params.set('customerPhone', memo.customer_phone)
+        params.set('contact', memo.customer_phone)
+      }
+      if (memo.id) params.set('diaryId', String(memo.id))
+
+      // crm-attachments는 비공개 버킷이라 영구 URL이 없다 — 매물등록 사이트로
+      // 넘어가서 확인/등록하는 동안 만료되지 않도록 넉넉한(1시간) signed URL을 발급한다.
+      const candidates = (photos || []).slice(0, 5)
+      const resolved = await Promise.all(
+        candidates.map(async (photo) => {
+          try {
+            const url = await getAttachmentSignedUrl(photo, { expiresIn: 3600 })
+            return { id: photo.id || '', url, name: photo.original_name || '업무일지 사진' }
+          } catch {
+            return null
+          }
+        })
+      )
+      const transferPhotos = resolved.filter(Boolean)
+
+      if (transferPhotos.length > 0) {
+        params.set('photos', JSON.stringify(transferPhotos))
+      }
+
+      const targetUrl = `${PROPERTY_REGISTER_URL}?office=ktop&${params.toString()}`
+      if (newTab) {
+        newTab.location.href = targetUrl
+      } else {
+        // 팝업이 차단됐어도 현재 탭은 건드리지 않고 새 탭으로 다시 시도한다
+        window.open(targetUrl, '_blank', 'noopener,noreferrer')
+      }
+    } finally {
+      window.setTimeout(() => {
+        propertySendingRef.current = false
+        setPropertySending(false)
+      }, 1500)
+    }
+  }
+
+  function openNaverAd() {
+    const newTab = window.open(NAVER_AD_URL, '_blank', 'noopener,noreferrer')
+    if (newTab) newTab.opener = null
+  }
+
+  async function handleAddToBoard() {
+    if (!onAddToBoard || boardAdded) return
+    try {
+      await onAddToBoard(memo)
+      setBoardAdded(true)
+      window.setTimeout(() => setBoardAdded(false), 2500)
+    } catch {
+      // 실패 시 상위(WorkDiary)에서 에러 배너로 안내하므로 여기선 별도 처리 없음
+    }
+  }
+
+  function revealCompactAttachmentList(kind) {
+    setExpanded(true)
+    const targetRef = kind === 'photos' ? compactPhotosRef : compactFilesRef
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      })
+    })
+  }
+
+  function openCompactAttachment(kind, event) {
+    event?.preventDefault()
+    event?.stopPropagation()
+
+    if (kind === 'photos') {
+      if (photos?.length > 0 && onOpenPhotos) {
+        onOpenPhotos(photos, 0)
+      } else {
+        revealCompactAttachmentList('photos')
+      }
+      return
+    }
+
+    setFileError('')
+    setCompactFilesOpen((value) => !value)
+  }
+
+  function keepCompactAttachmentClick(event) {
+    event.stopPropagation()
+  }
+
+  if (variant === 'compact') {
+    return (
+      <article ref={cardRef} className={`${cls} wd-card--compact ${expanded ? 'is-expanded' : ''}`} aria-label="간단 메모">
+        <div className="wd-compact-card-top">
+          <div className="wd-card-meta">
+            <span className="wd-card-time">{formatTime(memo.created_at)}</span>
+            <span className="wd-card-writer">· {memo.writer || '케이탑'}</span>
+          </div>
+          <div className="wd-compact-badges">
+            {stickerMeta && <span className="wd-sticker-badge" style={{ background: stickerMeta.color }}>{memo.sticker}</span>}
+            <StatusBadge status={memo.status || 'normal'} />
+          </div>
+        </div>
+
+        <div className="wd-compact-card-main">
+          <strong className="wd-compact-title">{memo.title || '(제목 미입력)'}</strong>
+          {(memo.customer_name || memo.customer_phone) && (
+            <span className="wd-compact-customer">
+              {memo.customer_name || '미입력'}{memo.customer_phone ? ` · ${formatPhone(memo.customer_phone)}` : ''}
+            </span>
+          )}
+          <span className="wd-compact-content">{memo.content}</span>
+        </div>
+
+        <div className="wd-compact-info">
+          {memo.relation_type && <span className="wd-compact-info-badge">🏷 {memo.relation_type}</span>}
+          {memo.link_key && <span className="wd-compact-info-badge">🔗 {memo.link_key}</span>}
+          {photos?.length > 0 && (
+            <button
+              type="button"
+              className="wd-compact-info-badge wd-compact-info-button wd-compact-info-button--photo"
+              onPointerDown={keepCompactAttachmentClick}
+              onClick={(event) => openCompactAttachment('photos', event)}
+              aria-haspopup="dialog"
+              title={`첨부 사진 ${photos.length}장 보기`}
+            >
+              사진 {photos.length}
+            </button>
+          )}
+          {files?.length > 0 && (
+            <button
+              type="button"
+              className="wd-compact-info-badge wd-compact-info-button wd-compact-info-button--file"
+              onPointerDown={keepCompactAttachmentClick}
+              onClick={(event) => openCompactAttachment('files', event)}
+              aria-expanded={compactFilesOpen}
+              aria-controls={compactFilesPanelId}
+              title={`첨부 파일 ${files.length}개 보기`}
+            >
+              파일 {files.length}
+            </button>
+          )}
+          {memo.customer_id && (
+            <a
+              className="wd-compact-info-badge"
+              href={`${CUSTOMER_PAGE_URL}?office=ktop&tab=customer&customerId=${encodeURIComponent(memo.customer_id)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              👤 고객보기
+            </a>
+          )}
+          {memo.listing_id && (
+            <a
+              className="wd-compact-info-badge"
+              href={`${LISTING_DETAIL_URL}?office=ktop&id=${encodeURIComponent(memo.listing_id)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              🏠 매물보기
+            </a>
+          )}
+        </div>
+
+        {compactFilesOpen && files?.length > 0 && (
+          <div
+            id={compactFilesPanelId}
+            ref={compactFilesRef}
+            className="wd-compact-attachment-panel"
+          >
+            <DiaryFileList files={files} onDelete={onDeleteAttachment} />
+          </div>
+        )}
+
+        <div className="wd-compact-actions">
+          <button
+            type="button"
+            className={`wd-action-btn ${expanded ? 'active' : ''}`}
+            onClick={() => {
+              setExpanded((value) => !value)
+              setCompactFilesOpen(false)
+            }}
+            aria-expanded={expanded}
+          >
+            {expanded ? '접기' : '전체보기'}
+          </button>
+          <button type="button" className="wd-action-btn" onClick={() => onOpenAddMemoForMemo?.(memo)}>메모 추가</button>
+          <button
+            type="button"
+            className="wd-action-btn send-property"
+            onClick={sendToPropertyRegister}
+            disabled={propertySending}
+            aria-label="매물관리 프로그램으로 이동"
+          >
+            <span aria-hidden="true">🏠</span> 매물보내기
+          </button>
+          <button
+            type="button"
+            className={`wd-action-btn wd-board-add-btn ${boardAdded ? 'active' : ''}`}
+            onClick={handleAddToBoard}
+            disabled={boardAdded}
+            aria-label="메모보드에 추가"
+            title="메모보드에 추가"
+          >
+            {boardAdded ? '✓ 추가됨' : '🗒️ 메모보드 추가'}
+          </button>
+          <button
+            type="button"
+            className={`wd-action-btn ${memo.status === 'important' ? 'active' : ''}`}
+            onClick={() => onChangeStatus(memo.id, memo.status === 'important' ? 'normal' : 'important')}
+            aria-pressed={memo.status === 'important'}
+          >
+            ★ {memo.status === 'important' ? '중요 해제' : '중요'}
+          </button>
+          <button
+            type="button"
+            className={`wd-action-btn done ${memo.status === 'done' ? 'active done' : ''}`}
+            onClick={() => onChangeStatus(memo.id, memo.status === 'done' ? 'normal' : 'done')}
+            aria-pressed={memo.status === 'done'}
+          >
+            ✓ {memo.status === 'done' ? '완료 취소' : '완료'}
+          </button>
+          <button
+            type="button"
+            className="wd-action-btn"
+            onClick={openEditForm}
+            aria-label="메모 수정"
+          >
+            수정
+          </button>
+          <button
+            type="button"
+            className="wd-action-btn danger"
+            onClick={() => {
+              if (window.confirm('이 메모를 삭제하시겠어요?')) onDelete(memo.id)
+            }}
+            aria-label="메모 삭제"
+          >
+            삭제
+          </button>
+          <button
+            type="button"
+            className="wd-action-btn naver-ad"
+            onClick={openNaverAd}
+            aria-label="네이버광고 새 탭으로 열기"
+          >
+            <span aria-hidden="true">N</span> 네이버광고
+          </button>
+        </div>
+        {expanded && (
+          <div className="wd-compact-expanded">
+            {editing ? (
+              <>
+                <div className="wd-card-customer-edit">
+                  <input
+                    className="wd-card-customer-input"
+                    placeholder="제목"
+                    value={draftTitle}
+                    onChange={(e) => setDraftTitle(e.target.value)}
+                  />
+                  <input
+                    className="wd-card-customer-input"
+                    placeholder="이름"
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                  />
+                  <input
+                    className="wd-card-customer-input"
+                    placeholder="연락처"
+                    value={draftPhone}
+                    onChange={(e) => setDraftPhone(e.target.value)}
+                  />
+                </div>
+                <div className="wd-link-bar wd-card-relation-edit">
+                  <span className="wd-link-bar-label">관계구분</span>
+                  <div className="rc-row">
+                    <RelationTypeSelect value={draftRelationType} onChange={setDraftRelationType} />
+                    {LISTING_RELATION_TYPES.includes(draftRelationType) && (
+                      <ListingLinkControl
+                        listingId={draftListingId}
+                        listingLabel={draftListingLabel}
+                        onLink={(id, label) => { setDraftListingId(id); setDraftListingLabel(label) }}
+                        onUnlink={() => { setDraftListingId(null); setDraftListingLabel('') }}
+                      />
+                    )}
+                    {CONTACT_RELATION_TYPES.includes(draftRelationType) && (
+                      <ContactLinkControl
+                        category={draftRelationType}
+                        contactId={draftContactId}
+                        contactLabel={draftContactLabel}
+                        onLink={(id, label) => { setDraftContactId(id); setDraftContactLabel(label) }}
+                        onUnlink={() => { setDraftContactId(null); setDraftContactLabel('') }}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="wd-link-bar wd-card-date-edit">
+                  <span className="wd-link-bar-label">작성일</span>
+                  <input
+                    type="date"
+                    className="wd-link-input"
+                    value={draftDate || ''}
+                    onChange={(e) => setDraftDate(e.target.value)}
+                  />
+                </div>
+                <div className="wd-sticker-bar wd-card-sticker-edit">
+                  <span className="wd-sticker-bar-label">스티커</span>
+                  {STICKER_OPTIONS.map((opt) => {
+                    const isActive = draftSticker === opt.value
+                    const meta = opt.value ? STICKER_META[opt.value] : null
+                    return (
+                      <button
+                        key={opt.value ?? 'none'}
+                        type="button"
+                        className={`wd-sticker-btn ${isActive ? 'active' : ''}`}
+                        style={
+                          meta
+                            ? isActive
+                              ? { background: meta.color, borderColor: meta.color, color: '#fff' }
+                              : { borderColor: `${meta.color}88`, color: meta.color }
+                            : {}
+                        }
+                        onClick={() => selectDraftSticker(opt)}
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {draftSticker && (
+                  <div className="wd-link-bar wd-schedule-date-edit">
+                    <span className="wd-link-bar-label">일정일</span>
+                    <input
+                      type="date"
+                      className="wd-link-input"
+                      value={draftScheduleDate || ''}
+                      onChange={(e) => setDraftScheduleDate(e.target.value)}
+                    />
+                  </div>
+                )}
+                <div className="wd-link-bar wd-compact-link-edit">
+                  <span className="wd-link-bar-label">연결태그</span>
+                  <input
+                    list={`wd-compact-link-key-datalist-${memo.id}`}
+                    className="wd-link-input"
+                    placeholder="예: 금릉167-6, 공장손님-김OO"
+                    value={linkDraft}
+                    onChange={(e) => setLinkDraft(e.target.value)}
+                  />
+                  <datalist id={`wd-compact-link-key-datalist-${memo.id}`}>
+                    {(allLinkKeys || []).map((k) => <option key={k} value={k} />)}
+                  </datalist>
+                  {linkDraft && (
+                    <button
+                      type="button"
+                      className="wd-link-clear-btn"
+                      onClick={() => setLinkDraft('')}
+                      aria-label="연결태그 초기화"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                <div className="wd-card-edit-wrap">
+                  <textarea
+                    ref={taRef}
+                    className="wd-card-edit"
+                    value={draft}
+                    onChange={(e) => {
+                      setDraft(e.target.value)
+                      autoResize(e.target)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        cancelEdit()
+                      }
+                      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                        saveEdit()
+                      }
+                    }}
+                  />
+                </div>
+                <div className="wd-compact-edit-actions">
+                  <button
+                    type="button"
+                    className="wd-action-btn"
+                    onClick={() => {
+                      setPhotoAddOpen((value) => !value)
+                      setPhotoError('')
+                    }}
+                    disabled={photoBusy}
+                  >
+                    사진 추가
+                  </button>
+                  <button
+                    type="button"
+                    className="wd-action-btn"
+                    onClick={() => {
+                      setFileAddOpen((value) => !value)
+                      setFileError('')
+                    }}
+                    disabled={fileBusy}
+                  >
+                    파일 추가
+                  </button>
+                </div>
+                {photoAddOpen && (
+                  <div className="wd-card-photo-panel">
+                    <DiaryPhotoUploader
+                      files={photoFiles}
+                      onChange={setPhotoFiles}
+                      disabled={photoBusy}
+                      busy={photoBusy}
+                    />
+                    {photoError && <div className="wd-photo-error" role="alert">{photoError}</div>}
+                    <div className="wd-photo-upload-actions">
+                      <button
+                        type="button"
+                        className="wd-action-btn"
+                        onClick={() => {
+                          setPhotoFiles([])
+                          setPhotoError('')
+                          setPhotoAddOpen(false)
+                        }}
+                        disabled={photoBusy}
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        className="wd-action-btn active"
+                        onClick={handleAddPhotos}
+                        disabled={photoBusy || photoFiles.length === 0}
+                      >
+                        {photoBusy ? '업로드 중...' : '업로드'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {fileAddOpen && (
+                  <div className="wd-card-file-panel">
+                    <DiaryFileUploader
+                      files={diaryFiles}
+                      onChange={setDiaryFiles}
+                      disabled={fileBusy}
+                      busy={fileBusy}
+                    />
+                    {fileError && <div className="wd-photo-error" role="alert">{fileError}</div>}
+                    <div className="wd-photo-upload-actions">
+                      <button
+                        type="button"
+                        className="wd-action-btn"
+                        onClick={() => {
+                          setDiaryFiles([])
+                          setFileError('')
+                          setFileAddOpen(false)
+                        }}
+                        disabled={fileBusy}
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        className="wd-action-btn active"
+                        onClick={handleAddFiles}
+                        disabled={fileBusy || diaryFiles.length === 0}
+                      >
+                        {fileBusy ? '업로드 중...' : '업로드'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="wd-compact-edit-actions">
+                  <button
+                    type="button"
+                    className="wd-action-btn"
+                    onClick={cancelEdit}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    className="wd-action-btn active"
+                    onClick={saveEdit}
+                  >
+                    저장
+                  </button>
+                </div>
+                {editError && <div className="wd-photo-error" role="alert">{editError}</div>}
+              </>
+            ) : (
+              <>
+                <div className="wd-compact-detail-grid">
+                  <div>
+                    <span>제목</span>
+                    <strong>{memo.title || '(제목 미입력)'}</strong>
+                  </div>
+                  <div>
+                    <span>이름</span>
+                    <strong>{memo.customer_name || '미입력'}</strong>
+                  </div>
+                  <div>
+                    <span>연락처</span>
+                    <strong>{formatPhone(memo.customer_phone) || '미입력'}</strong>
+                  </div>
+                  <div>
+                    <span>스티커</span>
+                    <strong>{memo.sticker || '없음'}</strong>
+                  </div>
+                  <div className="wd-compact-detail-wide">
+                    <span>연결태그</span>
+                    <strong>{memo.link_key || '미입력'}</strong>
+                  </div>
+                </div>
+                <div className="wd-compact-full-content">{memo.content}</div>
+                {tags.length > 0 && (
+                  <div className="wd-card-tags">
+                    {tags.map((t) => (
+                      <span key={t} className="wd-tag">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {photos?.length > 0 && (
+                  <div ref={compactPhotosRef}>
+                    <DiaryPhotoStrip photos={photos} onOpen={onOpenPhotos} onDelete={onDeleteAttachment} />
+                  </div>
+                )}
+                {files?.length > 0 && (
+                  <div ref={compactFilesRef}>
+                    <DiaryFileList files={files} onDelete={onDeleteAttachment} />
+                  </div>
+                )}
+                <div className="wd-compact-edit-actions">
+                  <button
+                    type="button"
+                    className="wd-action-btn"
+                    onClick={() => {
+                      setPhotoAddOpen((value) => !value)
+                      setPhotoError('')
+                    }}
+                    disabled={photoBusy}
+                  >
+                    사진 추가
+                  </button>
+                  <button
+                    type="button"
+                    className="wd-action-btn"
+                    onClick={() => {
+                      setFileAddOpen((value) => !value)
+                      setFileError('')
+                    }}
+                    disabled={fileBusy}
+                  >
+                    파일 추가
+                  </button>
+                </div>
+                {photoAddOpen && (
+                  <div className="wd-card-photo-panel">
+                    <DiaryPhotoUploader
+                      files={photoFiles}
+                      onChange={setPhotoFiles}
+                      disabled={photoBusy}
+                      busy={photoBusy}
+                    />
+                    {photoError && <div className="wd-photo-error" role="alert">{photoError}</div>}
+                    <div className="wd-photo-upload-actions">
+                      <button
+                        type="button"
+                        className="wd-action-btn"
+                        onClick={() => {
+                          setPhotoFiles([])
+                          setPhotoError('')
+                          setPhotoAddOpen(false)
+                        }}
+                        disabled={photoBusy}
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        className="wd-action-btn active"
+                        onClick={handleAddPhotos}
+                        disabled={photoBusy || photoFiles.length === 0}
+                      >
+                        {photoBusy ? '업로드 중...' : '업로드'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {fileAddOpen && (
+                  <div className="wd-card-file-panel">
+                    <DiaryFileUploader
+                      files={diaryFiles}
+                      onChange={setDiaryFiles}
+                      disabled={fileBusy}
+                      busy={fileBusy}
+                    />
+                    {fileError && <div className="wd-photo-error" role="alert">{fileError}</div>}
+                    <div className="wd-photo-upload-actions">
+                      <button
+                        type="button"
+                        className="wd-action-btn"
+                        onClick={() => {
+                          setDiaryFiles([])
+                          setFileError('')
+                          setFileAddOpen(false)
+                        }}
+                        disabled={fileBusy}
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        className="wd-action-btn active"
+                        onClick={handleAddFiles}
+                        disabled={fileBusy || diaryFiles.length === 0}
+                      >
+                        {fileBusy ? '업로드 중...' : '업로드'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </article>
+    )
+  }
+
+  return (
+    <article ref={cardRef} className={cls} aria-label="메모">
+      <div className="wd-card-top">
+        <div className="wd-card-meta">
+          <span className="wd-card-time">{formatTime(memo.created_at)}</span>
+          <span className="wd-card-writer" style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>
+            · {memo.writer || '케이탑'}
+          </span>
+          {showDate && <span className="wd-card-date">· {formatDateLabel(memo.date, true)}</span>}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {memo.link_key ? (
+            <>
+              <button
+                type="button"
+                className="wd-link-badge"
+                onClick={(e) => { e.stopPropagation(); onLinkKeyClick && onLinkKeyClick(memo.link_key) }}
+                title={`연결태그 메모 보기: ${memo.link_key}`}
+              >
+                🔗 {memo.link_key}
+              </button>
+              {!editing && (
+                <button
+                  type="button"
+                  className="wd-link-edit-btn"
+                  onClick={() => setLinkEditing(true)}
+                  title="연결태그 수정"
+                >
+                  수정
+                </button>
+              )}
+            </>
+          ) : null}
+          {stickerMeta && (
+            <span
+              className="wd-sticker-badge"
+              style={{ background: stickerMeta.color }}
+            >
+              {memo.sticker}
+            </span>
+          )}
+          <StatusBadge status={memo.status || 'normal'} />
+        </div>
+      </div>
+
+      {!editing ? (
+        <div className="wd-card-customer">
+          <span className="wd-card-title">{memo.title || '(제목 미입력)'}</span>
+          {memo.relation_type && <span className="wd-card-customer-badge">🏷 {memo.relation_type}</span>}
+          <span className="wd-card-customer-badge">👤 {memo.customer_name || '미입력'}</span>
+          <span className="wd-card-customer-badge">📞 {formatPhone(memo.customer_phone) || '미입력'}</span>
+        </div>
+      ) : (
+        <div className="wd-card-customer-edit">
+          <input
+            className="wd-card-customer-input"
+            placeholder="제목"
+            value={draftTitle}
+            onChange={(e) => setDraftTitle(e.target.value)}
+          />
+          <input
+            className="wd-card-customer-input"
+            placeholder="이름"
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+          />
+          <input
+            className="wd-card-customer-input"
+            placeholder="연락처"
+            value={draftPhone}
+            onChange={(e) => setDraftPhone(e.target.value)}
+          />
+        </div>
+      )}
+
+      {editing && (
+        <div className="wd-link-bar wd-card-relation-edit">
+          <span className="wd-link-bar-label">관계구분</span>
+          <div className="rc-row">
+            <RelationTypeSelect value={draftRelationType} onChange={setDraftRelationType} />
+            {LISTING_RELATION_TYPES.includes(draftRelationType) && (
+              <ListingLinkControl
+                listingId={draftListingId}
+                listingLabel={draftListingLabel}
+                onLink={(id, label) => { setDraftListingId(id); setDraftListingLabel(label) }}
+                onUnlink={() => { setDraftListingId(null); setDraftListingLabel('') }}
+              />
+            )}
+            {CONTACT_RELATION_TYPES.includes(draftRelationType) && (
+              <ContactLinkControl
+                category={draftRelationType}
+                contactId={draftContactId}
+                contactLabel={draftContactLabel}
+                onLink={(id, label) => { setDraftContactId(id); setDraftContactLabel(label) }}
+                onUnlink={() => { setDraftContactId(null); setDraftContactLabel('') }}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {editing && (
+        <div className="wd-link-bar wd-card-date-edit">
+          <span className="wd-link-bar-label">작성일</span>
+          <input
+            type="date"
+            className="wd-link-input"
+            value={draftDate || ''}
+            onChange={(e) => setDraftDate(e.target.value)}
+          />
+        </div>
+      )}
+
+      {!editing && (memo.customer_name || memo.customer_phone || memo.customer_id || memo.listing_id) && (
+        <div className="wd-card-customer-tools">
+          {memo.customer_phone && (
+            <a
+              className="wd-card-tool-btn wd-card-call-btn"
+              href={`tel:${memo.customer_phone}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              📞 전화
+            </a>
+          )}
+          {memo.customer_id && (
+            <a
+              className="wd-card-tool-btn"
+              href={`${CUSTOMER_PAGE_URL}?office=ktop&tab=customer&customerId=${encodeURIComponent(memo.customer_id)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              👤 고객보기
+            </a>
+          )}
+          {memo.listing_id && (
+            <a
+              className="wd-card-tool-btn"
+              href={`${LISTING_DETAIL_URL}?office=ktop&id=${encodeURIComponent(memo.listing_id)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              🏠 매물보기
+            </a>
+          )}
+          <button
+            type="button"
+            className="wd-card-tool-btn wd-card-addmemo-btn"
+            onClick={() => onOpenAddMemoForMemo && onOpenAddMemoForMemo(memo)}
+          >
+            ✏️ 메모 추가
+          </button>
+          <button
+            type="button"
+            className="wd-card-tool-btn wd-card-timeline-btn"
+            onClick={() => onOpenTimelineForMemo && onOpenTimelineForMemo(memo)}
+          >
+            📚 전체 메모 보기
+          </button>
+        </div>
+      )}
+
+      {/* 연결태그 인라인 편집 */}
+      {linkEditing && !editing && (
+        <div className="wd-link-inline-editor">
+          <span className="wd-link-inline-label">연결태그</span>
+          <input
+            ref={linkInputRef}
+            list="wd-link-key-datalist-card"
+            className="wd-link-inline-input"
+            placeholder="예: 금승리67-6, 공장손님-김OO"
+            value={linkDraft}
+            onChange={(e) => setLinkDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.preventDefault(); saveLinkKey() }
+              if (e.key === 'Escape') { setLinkDraft(memo.link_key || ''); setLinkEditing(false) }
+            }}
+            disabled={linkSaving}
+          />
+          <datalist id="wd-link-key-datalist-card">
+            {(allLinkKeys || []).map((k) => <option key={k} value={k} />)}
+          </datalist>
+          <button
+            type="button"
+            className="wd-link-inline-save"
+            onClick={saveLinkKey}
+            disabled={linkSaving}
+          >
+            {linkSaving ? '저장 중...' : '저장'}
+          </button>
+          <button
+            type="button"
+            className="wd-link-inline-cancel"
+            onClick={() => { setLinkDraft(memo.link_key || ''); setLinkEditing(false) }}
+            disabled={linkSaving}
+          >
+            취소
+          </button>
+          {/* 내용 수정창이 없을 때는 link 에디터 바 안에 인라인 표시 */}
+          {!editing && (
+            <LinkKeySearchBox
+              currentValue={linkDraft}
+              onSelect={setLinkDraft}
+              disabled={linkSaving}
+              variant="inline"
+            />
+          )}
+        </div>
+      )}
+
+      <div
+        className={`wd-card-content${showDate && onNavigate ? ' wd-card-content--navigable' : ''}`}
+        onClick={showDate && onNavigate && !editing ? () => onNavigate(memo.date, memo.id) : undefined}
+        title={showDate && onNavigate ? '클릭하면 해당 날짜로 이동합니다' : undefined}
+      >
+        {memo.content}
+      </div>
+
+      {editing && (
+        <>
+          <div className="wd-card-edit-wrap">
+            <textarea
+              ref={taRef}
+              className="wd-card-edit"
+              value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value)
+                autoResize(e.target)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  cancelEdit()
+                }
+                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                  saveEdit()
+                }
+              }}
+            />
+          </div>
+          <div className="wd-sticker-bar wd-card-sticker-edit">
+            <span className="wd-sticker-bar-label">스티커</span>
+            {STICKER_OPTIONS.map((opt) => {
+              const isActive = draftSticker === opt.value
+              const meta = opt.value ? STICKER_META[opt.value] : null
+              return (
+                <button
+                  key={opt.value ?? 'none'}
+                  type="button"
+                  className={`wd-sticker-btn ${isActive ? 'active' : ''}`}
+                  style={
+                    meta
+                      ? isActive
+                        ? { background: meta.color, borderColor: meta.color, color: '#fff' }
+                        : { borderColor: `${meta.color}88`, color: meta.color }
+                      : {}
+                  }
+                  onClick={() => selectDraftSticker(opt)}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+          {draftSticker && (
+            <div className="wd-link-bar wd-schedule-date-edit">
+              <span className="wd-link-bar-label">일정일</span>
+              <input
+                type="date"
+                className="wd-link-input"
+                value={draftScheduleDate || ''}
+                onChange={(e) => setDraftScheduleDate(e.target.value)}
+              />
+            </div>
+          )}
+          <details className="wd-card-edit-extra">
+            <summary>연결태그</summary>
+            <div className="wd-card-edit-extra-body">
+              <LinkKeySearchBox
+                currentValue={linkDraft}
+                onSelect={setLinkDraft}
+                disabled={linkSaving}
+                onNavigate={onNavigate}
+              />
+              <div className="wd-link-bar">
+                <span className="wd-link-bar-label">연결태그</span>
+                <input
+                  list={`wd-link-key-datalist-card-edit-${memo.id}`}
+                  className="wd-link-input"
+                  placeholder="예: 금승리67-6, 공장손님-김OO"
+                  value={linkDraft}
+                  onChange={(e) => setLinkDraft(e.target.value)}
+                  disabled={linkSaving}
+                />
+                <datalist id={`wd-link-key-datalist-card-edit-${memo.id}`}>
+                  {(allLinkKeys || []).map((k) => <option key={k} value={k} />)}
+                </datalist>
+                {linkDraft && (
+                  <button
+                    type="button"
+                    className="wd-link-clear-btn"
+                    onClick={() => setLinkDraft('')}
+                    disabled={linkSaving}
+                    aria-label="연결태그 초기화"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          </details>
+        </>
+      )}
+
+      {tags.length > 0 && !editing && (
+        <div className="wd-card-tags">
+          {tags.map((t) => (
+            <span key={t} className="wd-tag">
+              #{t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {!editing && (
+        <DiaryPhotoStrip photos={photos} onOpen={onOpenPhotos} onDelete={onDeleteAttachment} />
+      )}
+      {!editing && <DiaryFileList files={files} onDelete={onDeleteAttachment} />}
+
+      <div className="wd-card-actions">
+        {!editing ? (
+          <>
+            {!memo.link_key && !linkEditing && (
+              <button
+                type="button"
+                className="wd-action-btn wd-link-add-btn"
+                onClick={() => setLinkEditing(true)}
+              >
+                🔗 연결태그 추가
+              </button>
+            )}
+            <button
+              type="button"
+              className="wd-action-btn wd-photo-card-add-btn"
+              onClick={() => {
+                setPhotoAddOpen((value) => !value)
+                setPhotoError('')
+              }}
+              disabled={photoBusy}
+            >
+              사진 추가
+            </button>
+            <button
+              type="button"
+              className="wd-action-btn wd-file-card-add-btn"
+              onClick={() => {
+                setFileAddOpen((value) => !value)
+                setFileError('')
+              }}
+              disabled={fileBusy}
+            >
+              파일 추가
+            </button>
+            <button
+              type="button"
+              className="wd-action-btn send-property"
+              onClick={sendToPropertyRegister}
+              disabled={propertySending}
+              aria-label="매물관리 프로그램으로 이동"
+            >
+              <span aria-hidden="true">🏠</span> 매물보내기
+            </button>
+            <button
+              type="button"
+              className={`wd-action-btn wd-board-add-btn ${boardAdded ? 'active' : ''}`}
+              onClick={handleAddToBoard}
+              disabled={boardAdded}
+              aria-label="메모보드에 추가"
+              title="메모보드에 추가"
+            >
+              {boardAdded ? '✓ 추가됨' : '🗒️ 메모보드 추가'}
+            </button>
+            <button
+              type="button"
+              className={`wd-action-btn ${memo.status === 'important' ? 'active' : ''}`}
+              onClick={() =>
+                onChangeStatus(memo.id, memo.status === 'important' ? 'normal' : 'important')
+              }
+              aria-pressed={memo.status === 'important'}
+            >
+              <span aria-hidden="true">★</span> {memo.status === 'important' ? '중요 해제' : '중요'}
+            </button>
+            <button
+              type="button"
+              className={`wd-action-btn later ${memo.status === 'later' ? 'active later' : ''}`}
+              onClick={() =>
+                onChangeStatus(memo.id, memo.status === 'later' ? 'normal' : 'later')
+              }
+              aria-pressed={memo.status === 'later'}
+            >
+              <span aria-hidden="true">◉</span> 나중에
+            </button>
+            <button
+              type="button"
+              className={`wd-action-btn done ${memo.status === 'done' ? 'active done' : ''}`}
+              onClick={() =>
+                onChangeStatus(memo.id, memo.status === 'done' ? 'normal' : 'done')
+              }
+              aria-pressed={memo.status === 'done'}
+            >
+              <span aria-hidden="true">✓</span> {memo.status === 'done' ? '완료 취소' : '완료'}
+            </button>
+            <span className="wd-action-spacer" />
+            <button
+              type="button"
+              className="wd-action-btn"
+              onClick={openEditForm}
+              aria-label="메모 수정"
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              className="wd-action-btn danger"
+              onClick={() => {
+                if (window.confirm('이 메모를 삭제하시겠어요?')) onDelete(memo.id)
+              }}
+              aria-label="메모 삭제"
+            >
+              삭제
+            </button>
+            <button
+              type="button"
+              className="wd-action-btn naver-ad"
+              onClick={openNaverAd}
+              aria-label="네이버광고 새 탭으로 열기"
+            >
+              <span aria-hidden="true">N</span> 네이버광고
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="wd-action-btn wd-photo-card-add-btn"
+              onClick={() => {
+                setPhotoAddOpen((value) => !value)
+                setPhotoError('')
+              }}
+              disabled={photoBusy}
+            >
+              사진 추가
+            </button>
+            <button
+              type="button"
+              className="wd-action-btn wd-file-card-add-btn"
+              onClick={() => {
+                setFileAddOpen((value) => !value)
+                setFileError('')
+              }}
+              disabled={fileBusy}
+            >
+              파일 추가
+            </button>
+            <span className="wd-action-spacer" />
+            <button
+              type="button"
+              className="wd-action-btn"
+              onClick={cancelEdit}
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              className="wd-action-btn active"
+              onClick={saveEdit}
+            >
+              저장
+            </button>
+          </>
+        )}
+      </div>
+      {editing && editError && <div className="wd-photo-error" role="alert">{editError}</div>}
+
+      {photoAddOpen && (
+        <div className="wd-card-photo-panel">
+          <DiaryPhotoUploader
+            files={photoFiles}
+            onChange={setPhotoFiles}
+            disabled={photoBusy}
+            busy={photoBusy}
+          />
+          {photoError && <div className="wd-photo-error" role="alert">{photoError}</div>}
+          <div className="wd-photo-upload-actions">
+            <button
+              type="button"
+              className="wd-action-btn"
+              onClick={() => {
+                setPhotoFiles([])
+                setPhotoError('')
+                setPhotoAddOpen(false)
+              }}
+              disabled={photoBusy}
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              className="wd-action-btn active"
+              onClick={handleAddPhotos}
+              disabled={photoBusy || photoFiles.length === 0}
+            >
+              {photoBusy ? '업로드 중...' : '업로드'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {fileAddOpen && (
+        <div className="wd-card-file-panel">
+          <DiaryFileUploader
+            files={diaryFiles}
+            onChange={setDiaryFiles}
+            disabled={fileBusy}
+            busy={fileBusy}
+          />
+          {fileError && <div className="wd-photo-error" role="alert">{fileError}</div>}
+          <div className="wd-photo-upload-actions">
+            <button
+              type="button"
+              className="wd-action-btn"
+              onClick={() => {
+                setDiaryFiles([])
+                setFileError('')
+                setFileAddOpen(false)
+              }}
+              disabled={fileBusy}
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              className="wd-action-btn active"
+              onClick={handleAddFiles}
+              disabled={fileBusy || diaryFiles.length === 0}
+            >
+              {fileBusy ? '업로드 중...' : '업로드'}
+            </button>
+          </div>
+        </div>
+      )}
+    </article>
+  )
+}
+
+/* ===== 연결태그 검색박스 ===== */
+// variant: "topright" = textarea 오른쪽 상단 absolute | "inline" = flex 바 내 인라인
+function LinkKeySearchBox({ currentValue, onSelect, disabled, variant = 'topright', onNavigate }) {
+  const [query, setQuery]       = useState('')
+  const [results, setResults]   = useState([])
+  const [searching, setSearching] = useState(false)
+  const [open, setOpen]         = useState(false)
+  const wrapRef  = useRef(null)
+  const timerRef = useRef(null)
+
+  // 바깥 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const doSearch = useCallback(async (q) => {
+    const trimmed = q.trim()
+    if (!trimmed || !isSupabaseConfigured) { setResults([]); setOpen(false); return }
+    setSearching(true)
+    try {
+      const normQ = trimmed.replace(/[\s_]+/g, '')
+      const orParts = [
+        `title.ilike.%${trimmed}%`,
+        `customer_name.ilike.%${trimmed}%`,
+        `customer_phone.ilike.%${trimmed}%`,
+        `content.ilike.%${trimmed}%`,
+        `link_key.ilike.%${trimmed}%`,
+        `writer.ilike.%${trimmed}%`,
+      ]
+      if (normQ && normQ !== trimmed) {
+        orParts.push(
+          `title.ilike.%${normQ}%`,
+          `customer_name.ilike.%${normQ}%`,
+          `customer_phone.ilike.%${normQ}%`,
+          `content.ilike.%${normQ}%`,
+          `link_key.ilike.%${normQ}%`
+        )
+      }
+
+      const { data: diaryRows } = await supabase
+        .from('work_diary')
+        .select('id, title, customer_name, customer_phone, content, link_key, writer, date, created_at')
+        .or(orParts.join(','))
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      const rows = diaryRows || []
+      setResults(rows)
+      setOpen(rows.length > 0)
+    } catch {
+      setResults([])
+    } finally {
+      setSearching(false)
+    }
+  }, [])
+
+  function handleChange(e) {
+    const q = e.target.value
+    setQuery(q)
+    clearTimeout(timerRef.current)
+    if (!q.trim()) { setResults([]); setOpen(false); return }
+    timerRef.current = setTimeout(() => doSearch(q), 280)
+  }
+
+  function appendTag(tag) {
+    const trimTag = tag.trim()
+    if (!trimTag) return
+    const existing = currentValue
+      .split(/[,\s]+/)
+      .map((t) => t.trim())
+      .filter(Boolean)
+    if (existing.includes(trimTag)) return // 중복 방지
+    const next = existing.length ? existing.join(', ') + ', ' + trimTag : trimTag
+    onSelect(next)
+    setQuery('')
+    setResults([])
+    setOpen(false)
+  }
+
+  function handleResultClick(row) {
+    setQuery('')
+    setResults([])
+    setOpen(false)
+    // onNavigate가 있으면 해당 날짜로 이동 + 하이라이트
+    if (onNavigate && row.date) {
+      onNavigate(row.date, row.id)
+    } else {
+      // fallback: 기존 link_key 태그 추가 방식
+      const tag = row.link_key
+        ? row.link_key.trim()
+        : (row.content || '').slice(0, 20).trim()
+      appendTag(tag)
+    }
+  }
+
+  function formatSnippet(content) {
+    if (!content) return ''
+    return content.length > 60 ? content.slice(0, 60) + '…' : content
+  }
+
+  function formatDate(dateStr, isoFallback) {
+    const src = dateStr || isoFallback
+    if (!src) return ''
+    const d = new Date(src.includes('T') ? src : src + 'T00:00:00')
+    if (isNaN(d)) return src
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+  }
+
+  return (
+    <div className={`lks-wrap lks-wrap--${variant}`} ref={wrapRef}>
+      <div className="lks-input-row">
+        <span className="lks-icon">🔍</span>
+        <input
+          className="lks-input"
+          placeholder="연결할 메모·매물·사람 검색"
+          value={query}
+          onChange={handleChange}
+          onFocus={() => results.length > 0 && setOpen(true)}
+          disabled={disabled}
+          autoComplete="off"
+        />
+        {searching && <span className="lks-spinner">…</span>}
+        {query && !searching && (
+          <button
+            type="button"
+            className="lks-clear"
+            onClick={() => { setQuery(''); setResults([]); setOpen(false) }}
+          >✕</button>
+        )}
+      </div>
+
+      {open && results.length > 0 && (
+        <ul className="lks-dropdown" role="listbox">
+          {results.map((row) => (
+            <li
+              key={row.id}
+              className="lks-item"
+              role="option"
+              onMouseDown={(e) => { e.preventDefault(); handleResultClick(row) }}
+            >
+              <div className="lks-item-top">
+                {row.link_key && (
+                  <span className="lks-item-tag">🔗 {row.link_key}</span>
+                )}
+                <span className="lks-item-meta">
+                  {row.writer || '?'} · {formatDate(row.date, row.created_at)}
+                </span>
+              </div>
+              <div className="lks-item-content">{formatSnippet(row.content)}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+/* ── 작성 폼 닫힘/초기화 시 남은 임시값 정리 ── */
+const COMPOSER_DRAFT_KEY = 'wd_composer_draft'
+
+function clearComposerDraft() {
+  removeLocalJSON(COMPOSER_DRAFT_KEY)
+}
+
+/* ===== 입력창 (Composer) ===== */
+function Composer({ onSubmit, onCancel, disabled, allLinkKeys, onNavigate, onOpenTimelineForCustomer, onDirtyChange, defaultDate = '' }) {
+  const [value, setValue] = useState('')
+  const [writer, setWriter] = useState('케이탑')
+  const [sticker, setSticker] = useState(null)
+  const [scheduleDate, setScheduleDate] = useState(defaultDate)
+  const [linkKey, setLinkKey] = useState('')
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [title, setTitle] = useState('')
+  const [pickedCustomerId, setPickedCustomerId] = useState(null)
+  const [pickedCustomerEntries, setPickedCustomerEntries] = useState([])
+  const [lookupOpen, setLookupOpen] = useState(false)
+  const [relationType, setRelationType] = useState(null)
+  const [pickedListingId, setPickedListingId] = useState(null)
+  const [pickedListingLabel, setPickedListingLabel] = useState('')
+  const [pickedContactId, setPickedContactId] = useState(null)
+  const [pickedContactLabel, setPickedContactLabel] = useState('')
+  const [photoFiles, setPhotoFiles] = useState([])
+  const [diaryFiles, setDiaryFiles] = useState([])
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const composerRef = useRef(null)
+
+  function resetComposerDraft() {
+    setValue('')
+    setSticker(null)
+    setScheduleDate(defaultDate)
+    setLinkKey('')
+    setPhotoFiles([])
+    setDiaryFiles([])
+    setName('')
+    setPhone('')
+    setTitle('')
+    setPickedCustomerId(null)
+    setPickedCustomerEntries([])
+    setRelationType(null)
+    setPickedListingId(null)
+    setPickedListingLabel('')
+    setPickedContactId(null)
+    setPickedContactLabel('')
+    setSubmitError('')
+    clearComposerDraft()
+    if (composerRef.current) composerRef.current.style.height = '120px'
+  }
+
+  const composerDirty =
+    Boolean(value.trim()) ||
+    Boolean(title.trim()) ||
+    Boolean(name.trim()) ||
+    Boolean(phone.trim()) ||
+    Boolean(linkKey.trim()) ||
+    Boolean(sticker) ||
+    Boolean(pickedCustomerId) ||
+    Boolean(relationType) ||
+    Boolean(pickedListingId) ||
+    Boolean(pickedContactId) ||
+    writer !== '케이탑' ||
+    photoFiles.length > 0 ||
+    diaryFiles.length > 0
+
+  useEffect(() => {
+    onDirtyChange?.(composerDirty)
+  }, [composerDirty, onDirtyChange])
+
+  useEffect(() => () => {
+    onDirtyChange?.(false)
+  }, [onDirtyChange])
+
+  // 이름/연락처를 직접 고치면 불러온 고객과의 연결이 더 이상 정확하지 않을 수 있으므로 해제한다
+  function handleNameInput(e) {
+    setName(e.target.value)
+    if (pickedCustomerId) {
+      setPickedCustomerId(null)
+      setPickedCustomerEntries([])
+    }
+  }
+  function handlePhoneInput(e) {
+    setPhone(e.target.value)
+    if (pickedCustomerId) {
+      setPickedCustomerId(null)
+      setPickedCustomerEntries([])
+    }
+  }
+  function handleLookupSelect(picked) {
+    // 고객 선택은 customer_id와 실제 customers.name/phone만 입력한다. 기존 메모 제목/본문은 새 메모에 복사하지 않는다.
+    setName(picked.customerName || '')
+    setPhone(picked.customerPhone || '')
+    setPickedCustomerId(picked.customerId || null)
+    setPickedCustomerEntries(picked.recentEntries || [])
+    setLookupOpen(false)
+  }
+
+  function unlinkCustomer() {
+    setPickedCustomerId(null)
+    setName('')
+    setPhone('')
+    setPickedCustomerEntries([])
+  }
+
+  function selectSticker(opt) {
+    const isActive = sticker === opt.value
+    const nextValue = isActive && opt.value !== null ? null : opt.value
+    setSticker(nextValue)
+    if (!nextValue) {
+      setScheduleDate('')
+    } else if (!scheduleDate) {
+      setScheduleDate(defaultDate)
+    }
+  }
+
+  // 최초 마운트 시 저장된 값 기준으로 textarea 높이 복원
+  useEffect(() => {
+    autoResizeComposer(composerRef.current)
+  }, [])
+
+  function autoResizeComposer(el) {
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.max(120, el.scrollHeight)}px`
+  }
+
+  async function handleSubmit() {
+    const trimmed = value.trim()
+    const trimmedName = name.trim()
+    const trimmedPhone = phone.trim()
+    const trimmedTitle = title.trim()
+    if (!trimmed || submitting) return
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const trimmedScheduleDate = sticker ? (scheduleDate || defaultDate || null) : null
+      await onSubmit(trimmed, writer, sticker, linkKey.trim(), photoFiles, trimmedName, trimmedPhone, trimmedTitle, diaryFiles, pickedCustomerId, trimmedScheduleDate, {
+        relationType,
+        listingId: pickedListingId,
+        contactId: pickedContactId,
+      })
+      resetComposerDraft()
+    } catch (err) {
+      setSubmitError(err.message || String(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const previewTags = extractTags(value)
+
+  return (
+    <div className="wd-composer">
+      <div className="wd-composer-layout">
+        <div className="wd-composer-fields">
+          <div className="wd-field-row">
+            <label htmlFor="wd-composer-title">제목</label>
+            <input
+              id="wd-composer-title"
+              className="wd-composer-customer-input"
+              placeholder="제목을 입력하세요"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={disabled || submitting}
+            />
+          </div>
+
+          <div className="wd-field-row">
+            <label htmlFor="wd-composer-name">이름</label>
+            <input
+              id="wd-composer-name"
+              className="wd-composer-customer-input"
+              placeholder="이름을 입력하세요"
+              value={name}
+              onChange={handleNameInput}
+              disabled={disabled || submitting}
+            />
+          </div>
+
+          <div className="wd-field-row">
+            <label htmlFor="wd-composer-phone">연락처</label>
+            <input
+              id="wd-composer-phone"
+              className="wd-composer-customer-input"
+              placeholder="연락처를 입력하세요"
+              value={phone}
+              onChange={handlePhoneInput}
+              disabled={disabled || submitting}
+            />
+          </div>
+
+          <div className="wd-field-row">
+            <label>관계구분</label>
+            <div className="rc-row">
+              <RelationTypeSelect value={relationType} onChange={setRelationType} disabled={disabled || submitting} />
+              {LISTING_RELATION_TYPES.includes(relationType) && (
+                <ListingLinkControl
+                  listingId={pickedListingId}
+                  listingLabel={pickedListingLabel}
+                  onLink={(id, label) => { setPickedListingId(id); setPickedListingLabel(label) }}
+                  onUnlink={() => { setPickedListingId(null); setPickedListingLabel('') }}
+                  disabled={disabled || submitting}
+                />
+              )}
+              {CONTACT_RELATION_TYPES.includes(relationType) && (
+                <ContactLinkControl
+                  category={relationType}
+                  contactId={pickedContactId}
+                  contactLabel={pickedContactLabel}
+                  onLink={(id, label) => { setPickedContactId(id); setPickedContactLabel(label) }}
+                  onUnlink={() => { setPickedContactId(null); setPickedContactLabel('') }}
+                  disabled={disabled || submitting}
+                />
+              )}
+              {CUSTOMER_RELATION_TYPES.includes(relationType) && !pickedCustomerId && (
+                <NewCustomerRelationControl
+                  relationType={relationType}
+                  defaultName={name}
+                  defaultPhone={phone}
+                  defaultMemo={value}
+                  writer={writer}
+                  onCreated={(customer) => {
+                    setPickedCustomerId(customer.id)
+                    setName(customer.name || name)
+                    setPhone(customer.phone || phone)
+                    setPickedCustomerEntries([])
+                  }}
+                  disabled={disabled || submitting}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="wd-field-row wd-field-row--button">
+            <span className="wd-field-label-spacer" aria-hidden="true" />
+            <div className="wd-field-control-stack">
+              <button
+                type="button"
+                className="wd-composer-lookup-btn"
+                onClick={() => setLookupOpen(true)}
+                disabled={disabled || submitting}
+              >
+                기존 고객·메모 불러오기
+              </button>
+              {pickedCustomerId && (
+                <span className="wd-composer-lookup-linked">
+                  고객 연결됨
+                  <button
+                    type="button"
+                    className="wd-composer-lookup-unlink"
+                    onClick={unlinkCustomer}
+                    disabled={disabled || submitting}
+                    aria-label="고객 연결 해제"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {pickedCustomerId && (
+            <div className="wd-customer-history" aria-label="선택 고객 최근 기록">
+              <div className="wd-customer-history-head">
+                <div>
+                  <div className="wd-customer-history-title">최근 고객 기록</div>
+                  <div className="wd-customer-history-sub">
+                    {name || '이름 미입력'}{phone ? ` · ${phone}` : ''}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="wd-customer-history-more"
+                  onClick={() => onOpenTimelineForCustomer?.(pickedCustomerId)}
+                  disabled={disabled || submitting}
+                >
+                  전체 기록 보기
+                </button>
+              </div>
+              {pickedCustomerEntries.length > 0 ? (
+                <div className="wd-customer-history-list">
+                  {pickedCustomerEntries.slice(0, 5).map((entry) => (
+                    <div className="wd-customer-history-item" key={entry.id}>
+                      <span className="wd-customer-history-date">{formatDateLabel(entry.date || entry.created_at, true)}</span>
+                      <span className="wd-customer-history-name">{entry.title || '제목 미입력'}</span>
+                      <span className="wd-customer-history-text">{formatMemoSnippet(entry.content || '')}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="wd-customer-history-empty">표시할 기존 기록이 없습니다.</div>
+              )}
+            </div>
+          )}
+
+          <div className="wd-field-row wd-field-row--stickers">
+            <span className="wd-sticker-bar-label">스티커</span>
+            <div className="wd-sticker-bar wd-sticker-segmented-control" role="radiogroup" aria-label="스티커 선택">
+              {STICKER_OPTIONS.map((opt) => {
+                const isActive = sticker === opt.value
+                const meta = opt.value ? STICKER_META[opt.value] : null
+                return (
+                  <button
+                    key={opt.value ?? 'none'}
+                    type="button"
+                    className={`wd-sticker-btn segment ${isActive ? 'active is-active' : ''}`}
+                    aria-pressed={isActive}
+                    style={
+                      meta
+                        ? { '--sticker-color': meta.color }
+                        : {}
+                    }
+                    onClick={() => selectSticker(opt)}
+                    disabled={disabled || submitting}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {sticker && (
+            <div className="wd-field-row wd-field-row--schedule-date">
+              <label htmlFor="wd-composer-schedule-date">일정일</label>
+              <input
+                id="wd-composer-schedule-date"
+                type="date"
+                className="wd-composer-customer-input"
+                value={scheduleDate || ''}
+                onChange={(e) => setScheduleDate(e.target.value)}
+                disabled={disabled || submitting}
+              />
+            </div>
+          )}
+
+          <div className="wd-field-row wd-field-row--link-search">
+            <span className="wd-field-label-spacer" aria-hidden="true" />
+            <LinkKeySearchBox
+              currentValue={linkKey}
+              onSelect={setLinkKey}
+              disabled={disabled || submitting}
+              onNavigate={onNavigate}
+            />
+          </div>
+
+          <div className="wd-field-row wd-field-row--connection-tag">
+            <label htmlFor="wd-link-key-input">연결태그</label>
+            <div className="wd-link-input-wrap">
+              <input
+                id="wd-link-key-input"
+                list="wd-link-key-datalist"
+                className="wd-link-input"
+                placeholder="예: 금승리67-6, 공장손님-김OO"
+                value={linkKey}
+                onChange={(e) => setLinkKey(e.target.value)}
+                disabled={disabled || submitting}
+              />
+              <datalist id="wd-link-key-datalist">
+                {(allLinkKeys || []).map((k) => (
+                  <option key={k} value={k} />
+                ))}
+              </datalist>
+              {linkKey && (
+                <button
+                  type="button"
+                  className="wd-link-clear-btn"
+                  onClick={() => setLinkKey('')}
+                  disabled={disabled || submitting}
+                  aria-label="연결태그 초기화"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="wd-field-row wd-field-row--attach">
+            <span className="wd-field-label-spacer" aria-hidden="true" />
+            <div className="wd-attach-row attachment-button-group">
+              <DiaryPhotoUploader
+                files={photoFiles}
+                onChange={setPhotoFiles}
+                disabled={disabled}
+                busy={submitting}
+                compact
+              />
+              <DiaryFileUploader
+                files={diaryFiles}
+                onChange={setDiaryFiles}
+                disabled={disabled}
+                busy={submitting}
+                compact
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="wd-composer-note-area">
+          <textarea
+            ref={composerRef}
+            className="wd-composer-input"
+            placeholder="메모 내용을 입력하세요."
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value)
+              autoResizeComposer(e.target)
+            }}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault()
+                handleSubmit()
+              }
+            }}
+            disabled={disabled || submitting}
+          />
+        </div>
+      </div>
+      {lookupOpen && (
+        <CustomerMemoLookupModal
+          onClose={() => setLookupOpen(false)}
+          onSelect={handleLookupSelect}
+        />
+      )}
+
+      {submitError && <div className="wd-photo-error" role="alert">{submitError}</div>}
+
+      <div className="wd-composer-bar">
+        <div className="wd-composer-hint">
+          <code>Cmd/Ctrl + Enter</code> 로 저장
+          {previewTags.length > 0 && (
+            <span style={{ marginLeft: 12 }}>
+              감지된 태그: {previewTags.map((t) => `#${t}`).join(' ')}
+            </span>
+          )}
+        </div>
+        <div className="wd-composer-actions-right">
+          <select
+            className="wd-composer-writer-select"
+            value={writer}
+            onChange={(e) => setWriter(e.target.value)}
+            disabled={disabled || submitting}
+          >
+            <option value="케이탑">케이탑</option>
+          </select>
+          <button
+            type="button"
+            className="wd-btn wd-btn-ghost"
+            onClick={() => {
+              resetComposerDraft()
+              onCancel?.()
+            }}
+            disabled={submitting}
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            className="wd-btn wd-btn-primary"
+            onClick={handleSubmit}
+            disabled={disabled || submitting || !value.trim()}
+          >
+            {submitting ? '저장 중...' : '저장'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ===== 다이어리 리스트 메인 ===== */
+export default function DiaryList({
+  selectedDate,
+  memos,
+  loading,
+  error,
+  searchMode,
+  searchQuery,
+  onNewMemo,
+  onCreate,
+  onAddPhotos,
+  onAddFiles,
+  onDeleteAttachment,
+  onChangeStatus,
+  onDelete,
+  onUpdateContent,
+  onUpdateLinkKey,
+  onOpenAddMemoForMemo,
+  onOpenTimelineForMemo,
+  onOpenTimelineForCustomer,
+  composerDisabled,
+  allLinkKeys,
+  onLinkKeyClick,
+  onAddToBoard,
+  onNavigate,
+  highlightMemoId,
+  photoMap,
+  fileMap,
+  resetToken = 0,
+  onComposerDirtyChange,
+}) {
+  const [gallery, setGallery] = useState(null)
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [composerKey, setComposerKey] = useState(0)
+  const dateLabel = selectedDate
+    ? `${selectedDate.getFullYear()}년 ${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`
+    : ''
+
+  const weekdayLabel = selectedDate
+    ? ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][
+        selectedDate.getDay()
+      ]
+    : ''
+
+  const importantCount = memos.filter((m) => m.status === 'important').length
+  const doneCount = memos.filter((m) => m.status === 'done').length
+  const selectedDateKey = selectedDate
+    ? `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`
+    : ''
+  // work_diary.date/schedule_date와 동일한 형식(YYYY-MM-DD, zero-padded)의 날짜 키
+  const selectedDateKeyPadded = selectedDate
+    ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+    : ''
+
+  useEffect(() => {
+    // 날짜가 바뀌면 열려 있던 작성 폼을 즉시 닫고 다음 열림 때 빈 폼으로 시작한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setComposerOpen(false)
+    clearComposerDraft()
+    setComposerKey((key) => key + 1)
+    onComposerDirtyChange?.(false)
+  }, [selectedDateKey, onComposerDirtyChange])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setComposerOpen(false)
+    clearComposerDraft()
+    setComposerKey((key) => key + 1)
+    onComposerDirtyChange?.(false)
+  }, [resetToken, onComposerDirtyChange])
+
+  function openComposer() {
+    onNewMemo?.()
+    clearComposerDraft()
+    setComposerKey((key) => key + 1)
+    setComposerOpen(true)
+    requestAnimationFrame(() => {
+      document.querySelector('.wd-composer-input')?.focus()
+    })
+  }
+
+  async function handleDeleteGalleryPhoto(photo) {
+    if (!photo || !onDeleteAttachment) return false
+    const deleted = await onDeleteAttachment(photo)
+    if (!deleted) return false
+
+    setGallery((prev) => {
+      if (!prev) return null
+      const nextPhotos = prev.photos.filter((item) => item.id !== photo.id)
+      if (!nextPhotos.length) return null
+      return {
+        photos: nextPhotos,
+        index: Math.min(prev.index, nextPhotos.length - 1),
+      }
+    })
+    return true
+  }
+
+  return (
+    <section className="wd-panel wd-diary" aria-label="메모 목록">
+      {!searchMode && (
+        <header className="wd-diary-header">
+          <div>
+            <div className="wd-diary-date">{dateLabel}</div>
+            <div className="wd-diary-date-sub">
+              {weekdayLabel} · {memos.length}건 · 중요 {importantCount} · 완료 {doneCount}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="wd-new-memo-btn"
+            onClick={openComposer}
+          >
+            새 메모 작성
+          </button>
+        </header>
+      )}
+
+      {searchMode && (
+        <div className="wd-search-result-banner">
+          <div className="wd-search-result-title">
+            <span className="wd-search-result-label">검색 결과</span>
+            {searchQuery && (
+              <span className="wd-search-result-keyword">"{searchQuery.trim()}"</span>
+            )}
+            <span className="wd-search-result-count-wrap">
+              총 <strong>{memos.length}</strong>건
+              {memos.length >= 100 && (
+                <span className="wd-search-result-cap"> (상위 100건 표시)</span>
+              )}
+            </span>
+          </div>
+          <span className="wd-search-result-hint">
+            검색어를 지우거나 ✕를 누르면 날짜별 일지로 돌아갑니다
+          </span>
+        </div>
+      )}
+
+      {!searchMode && composerOpen && (
+        <Composer
+          key={composerKey}
+          defaultDate={selectedDateKeyPadded}
+          onSubmit={async (content, writer, sticker, linkKey, photoFiles, name, phone, title, diaryFiles, customerId, scheduleDate, relationOpts) => {
+            await onCreate(content, writer, sticker, linkKey, photoFiles, name, phone, title, diaryFiles, customerId, scheduleDate, relationOpts)
+            setComposerOpen(false)
+            onComposerDirtyChange?.(false)
+          }}
+          onCancel={() => {
+            clearComposerDraft()
+            setComposerKey((key) => key + 1)
+            setComposerOpen(false)
+            onComposerDirtyChange?.(false)
+          }}
+          disabled={composerDisabled}
+          allLinkKeys={allLinkKeys}
+          onNavigate={onNavigate}
+          onOpenTimelineForCustomer={onOpenTimelineForCustomer}
+          onDirtyChange={onComposerDirtyChange}
+        />
+      )}
+
+      {error && <div className="wd-error" role="alert">{error}</div>}
+
+      <div className="wd-list">
+        {loading ? (
+          <div className="wd-loading">불러오는 중...</div>
+        ) : memos.length === 0 ? (
+          <div className="wd-empty">
+            <div className="wd-empty-icon" aria-hidden="true">
+              {searchMode ? '○' : '✎'}
+            </div>
+            <div className="wd-empty-title">
+              {searchMode ? '검색 결과가 없습니다' : '아직 메모가 없습니다'}
+            </div>
+            <div className="wd-empty-sub">
+              {searchMode
+                ? '다른 키워드로 검색해보세요.'
+                : '새 메모 작성 버튼을 눌러 첫 메모를 남겨보세요.'}
+            </div>
+          </div>
+        ) : (
+          groupCallMemos(memos).map((group) => {
+            const first = group.memos[0]
+            const renderMemo = (m) => (
+            <MemoCard
+              key={m.id}
+              memo={m}
+              variant={searchMode ? 'full' : 'compact'}
+              photos={photoMap?.[m.id] || []}
+              files={fileMap?.[m.id] || []}
+              onOpenPhotos={(photos, index) => setGallery({ photos, index })}
+              onAddPhotos={onAddPhotos}
+              onAddFiles={onAddFiles}
+              onDeleteAttachment={onDeleteAttachment}
+              showDate={searchMode}
+              onChangeStatus={onChangeStatus}
+              onDelete={onDelete}
+              onUpdateContent={onUpdateContent}
+              onLinkKeyClick={onLinkKeyClick}
+              onUpdateLinkKey={onUpdateLinkKey}
+              onOpenAddMemoForMemo={onOpenAddMemoForMemo}
+              onOpenTimelineForMemo={onOpenTimelineForMemo}
+              allLinkKeys={allLinkKeys}
+              onAddToBoard={onAddToBoard}
+              isHighlighted={m.id === highlightMemoId}
+              onNavigate={searchMode ? onNavigate : undefined}
+              resetToken={resetToken}
+              dayContextDate={searchMode ? null : selectedDateKeyPadded}
+            />
+            )
+            if (!group.isCall) return renderMemo(first)
+            return (
+              <section key={group.key} className="wd-call-group" aria-label="고객별 전화 상담">
+                <header className="wd-call-group-header">
+                  <strong>{first.customer_name || '고객'} · 전화 상담</strong>
+                  <span>{formatPhone(first.customer_phone)} · {group.memos.length}회{searchMode ? ` · ${formatDateLabel(first.date, true)}` : ''}</span>
+                  {first.customer_id && (
+                    <button type="button" className="wd-action-btn" onClick={() => onOpenTimelineForMemo?.(first)}>전체 상담 기록</button>
+                  )}
+                </header>
+                <div className="wd-call-group-entries">{group.memos.map(renderMemo)}</div>
+              </section>
+            )
+          })
+        )}
+      </div>
+
+      {gallery && (
+        <PhotoGalleryModal
+          photos={gallery.photos}
+          startIndex={gallery.index}
+          onClose={() => setGallery(null)}
+          onDelete={onDeleteAttachment ? handleDeleteGalleryPhoto : undefined}
+        />
+      )}
+    </section>
+  )
+}

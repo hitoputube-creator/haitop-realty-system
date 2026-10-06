@@ -1,0 +1,153 @@
+import { useEffect, useRef, useState } from 'react'
+import './AddCustomerMemoModal.css'
+
+/*
+ * 고객에게 후속 메모를 빠르게 추가하는 작은 모달.
+ * 고객은 항상 부모(WorkDiary)에서 확정되어 전달됨 — 이 컴포넌트 안에서
+ * 고객을 바꾸지 않으므로 "고객 선택 없이 메모 저장" 상황이 생기지 않는다.
+ */
+export default function AddCustomerMemoModal({
+  customerId,
+  sourceDiaryId,
+  sourceTitle = '',
+  sourceCustomerName = '',
+  sourcePhone = '',
+  defaultDate,
+  defaultWriter = '케이탑',
+  onClose,
+  onSave,
+}) {
+  const [content, setContent] = useState('')
+  const [date, setDate] = useState(defaultDate || '')
+  const [writer, setWriter] = useState(defaultWriter)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const taRef = useRef(null)
+
+  useEffect(() => {
+    taRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === 'Escape' && !submitting) onClose?.()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [submitting, onClose])
+
+  async function handleSave() {
+    const trimmed = content.trim()
+    if (!trimmed || !date || submitting) return
+    setSubmitting(true)
+    setError('')
+    try {
+      // title/customerName/phone은 원본 카드(또는 선택한 고객)에서 그대로 넘어온 값을 그대로 저장한다.
+      // 여기서 서로 대신 채우거나 뒤바꾸지 않는다.
+      await onSave({
+        customerId,
+        sourceDiaryId,
+        title: sourceTitle,
+        customerName: sourceCustomerName,
+        phone: sourcePhone,
+        date,
+        content: trimmed,
+        writer,
+      })
+      onClose?.()
+    } catch (err) {
+      setError(err.message || String(err))
+      // 실패 시 입력 내용은 그대로 유지 (content/date 초기화하지 않음)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="acm-overlay" role="dialog" aria-modal="true" aria-label="메모 추가">
+      <div className="acm-panel">
+        <div className="acm-header">
+          <div>
+            <div className="acm-title">{sourceDiaryId ? '✏️ 추가 메모' : '✏️ 메모 추가'}</div>
+            <div className="acm-source-info">
+              {sourceDiaryId && (
+                <div className="acm-source-row">
+                  <span className="acm-source-label">연결</span>
+                  <span className="acm-source-value">현재 메모의 추가 메모로 저장</span>
+                </div>
+              )}
+              {sourceTitle && (
+                <div className="acm-source-row">
+                  <span className="acm-source-label">제목</span>
+                  <span className="acm-source-value">{sourceTitle}</span>
+                </div>
+              )}
+              <div className="acm-source-row">
+                <span className="acm-source-label">고객명</span>
+                <span className="acm-source-value">{sourceCustomerName || '미입력'}</span>
+              </div>
+              {sourcePhone && (
+                <div className="acm-source-row">
+                  <span className="acm-source-label">연락처</span>
+                  <span className="acm-source-value">{sourcePhone}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <button type="button" className="acm-close" onClick={() => !submitting && onClose?.()} aria-label="닫기">✕</button>
+        </div>
+
+        <div className="acm-body">
+          <textarea
+            ref={taRef}
+            className="acm-textarea"
+            placeholder={sourceDiaryId ? '현재 메모에 이어서 남길 내용을 입력해주세요.' : '이 고객에게 남길 메모 내용을 입력해주세요.'}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            disabled={submitting}
+          />
+
+          <div className="acm-row">
+            <label className="acm-label">
+              기록 날짜
+              <input
+                type="date"
+                className="acm-input"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                disabled={submitting}
+              />
+            </label>
+            <label className="acm-label">
+              작성자
+              <select
+                className="acm-input"
+                value={writer}
+                onChange={(e) => setWriter(e.target.value)}
+                disabled={submitting}
+              >
+                <option value="케이탑">케이탑</option>
+              </select>
+            </label>
+          </div>
+
+          {error && <div className="acm-error" role="alert">{error}</div>}
+        </div>
+
+        <div className="acm-footer">
+          <button type="button" className="acm-btn" onClick={() => !submitting && onClose?.()} disabled={submitting}>
+            취소
+          </button>
+          <button
+            type="button"
+            className="acm-btn acm-btn-primary"
+            onClick={handleSave}
+            disabled={submitting || !content.trim() || !date}
+          >
+            {submitting ? '저장 중...' : '저장'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

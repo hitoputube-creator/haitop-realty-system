@@ -31,13 +31,15 @@ function renderMainNav() {
   if (!mount) return;
   const active = document.body.dataset.navActive || "";
 
-  const linksHtml = NAV_ITEMS.map(item => {
+  const linksHtml = NAV_ITEMS.map(original => {
+    const item = OfficeConfig.id === 'ktop' && original.key === 'worklog' ? {...original,label:'업무일지',href:OFFICE_DIARY_URL,external:false} : original;
     const cls = "nav-link" + (item.key === active ? " active" : "");
     const attrs = item.external ? ' target="_blank" rel="noopener noreferrer"' : "";
     return `<a class="${cls}" href="${item.href}"${attrs}>${item.label}</a>`;
   }).join("");
 
-  const toolsHtml = NAV_TOOLS.map(t => {
+  const toolsHtml = NAV_TOOLS.map(original => {
+    const t = OfficeConfig.id === 'ktop' && original.label === '업무일지' ? {...original,href:OFFICE_DIARY_URL,external:false} : original;
     if (t.action) {
       if (typeof window[t.action] === "function") {
         return `<button type="button" onclick="${t.action}()">${t.label}</button>`;

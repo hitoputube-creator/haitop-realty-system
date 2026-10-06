@@ -22,6 +22,8 @@ const OfficeConfig = (() => {
   return Object.freeze({ id, ...offices[id], urlFor: url });
 })();
 
+const OFFICE_DIARY_URL = OfficeConfig.id === 'ktop' ? new URL('ktop-diary/', location.href).href : 'https://haitop-realestate-diary.vercel.app/';
+
 const OfficeStorage = {
   key(key) { return OfficeConfig.id === 'hitop' ? key : 'ktop:' + key; },
   local: {

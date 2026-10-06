@@ -1,0 +1,818 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import {
+  deletePrivateNoteAttachment,
+  downloadAttachment,
+  formatPhotoSize,
+  getAttachmentSignedUrl,
+  listPrivateNoteAttachmentsForIds,
+  uploadPrivateNoteFiles,
+  uploadPrivateNotePhotos,
+} from '../lib/attachments'
+import { DiaryFileUploader } from './DiaryFiles'
+import { DiaryPhotoUploader, PhotoGalleryModal } from './DiaryPhotos'
+import './PrivateNotes.css'
+
+/* ── 상수 ── */
+const CAT_OPTIONS = ['개인적인기록', '업무기록']
+const CAT_ALL     = ['전체', ...CAT_OPTIONS]
+
+const CAT_COLOR = {
+  개인적인기록: '#3b82f6',
+  업무기록:     '#f59e0b',
+}
+
+const WEEK_NAMES = ['일', '월', '화', '수', '목', '금', '토']
+
+/* ── 날짜 헬퍼 ── */
+function isoToDate(iso) { return iso ? iso.slice(0, 10) : null }
+function fmtShort(iso) {
+  if (!iso) return ''
+  const [y, m, d] = iso.slice(0, 10).split('-')
+  return `${y}.${m}.${d}`
+}
+function fmtKo(dateStr) {
+  if (!dateStr) return ''
+  const [y, m, d] = dateStr.split('-')
+  return `${y}년 ${Number(m)}월 ${Number(d)}일`
+}
+
+function todayStr() { return isoToDate(new Date().toISOString()) }
+
+const EMPTY_FORM = { category: CAT_OPTIONS[0], memo: '', memo_date: todayStr() }
+
+/* ── 작성 중인 폼 임시저장 (탭 전환/새로고침에도 유지) ── */
+function draftKey(owner) { return `pn_draft_${owner}` }
+
+function loadDraft(owner) {
+  try {
+    const raw = sessionStorage.getItem('ktop-diary:' + draftKey(owner))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function saveDraft(owner, form, editId) {
+  try {
+    sessionStorage.setItem('ktop-diary:' + draftKey(owner), JSON.stringify({ form, editId }))
+  } catch {
+    // 저장 실패해도 작성은 계속 가능해야 하므로 무시
+  }
+}
+
+function clearDraft(owner) {
+  try {
+    sessionStorage.removeItem('ktop-diary:' + draftKey(owner))
+  } catch {
+    // 무시
+  }
+}
+
+async function getCurrentUserId() {
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (error) return null
+    return data?.user?.id || null
+  } catch {
+    return null
+  }
+}
+
+/* ══════════════════════════════════════════════
+   메인 컴포넌트
+══════════════════════════════════════════════ */
+export default function PrivateNotes({ onBack, initialOwner = '케이탑' }) {
+  /* owner는 진입 시 고정 — 화면 안에서 변경 불가 */
+  const owner = initialOwner
+
+  /* 데이터 */
+  const [notes,       setNotes]       = useState([])
+  const [dataLoading, setDataLoading] = useState(false)
+  const [dataErr,     setDataErr]     = useState('')
+
+  /* 검색/필터 */
+  const [searchQ,    setSearchQ]    = useState('')
+  const [catFilter,  setCatFilter]  = useState('전체')
+
+  /* 작성 중이던 임시저장 폼 (탭 전환/새로고침 대비 — 최초 1회만 읽음) */
+  const initialDraft = useMemo(() => loadDraft(owner), [owner])
+
+  /* 달력 & 선택 날짜 */
+  const [calYear,    setCalYear]    = useState(new Date().getFullYear())
+  const [calMonth,   setCalMonth]   = useState(new Date().getMonth())
+  const [calSelDate, setCalSelDate] = useState(initialDraft?.form?.memo_date || todayStr())
+
+  /* 작성폼 */
+  const [form,     setForm]     = useState(initialDraft?.form || { ...EMPTY_FORM, memo_date: todayStr() })
+  const [editId,   setEditId]   = useState(initialDraft?.editId ?? null)
+  const [saveBusy, setSaveBusy] = useState(false)
+  const [photoFiles, setPhotoFiles] = useState([])
+  const [fileFiles, setFileFiles] = useState([])
+  const [attachmentMap, setAttachmentMap] = useState({ photos: {}, files: {} })
+  const [attachmentBusy, setAttachmentBusy] = useState(false)
+  const [attachmentErr, setAttachmentErr] = useState('')
+  const [photoGallery, setPhotoGallery] = useState(null)
+  const formMemoRef = useRef(null)
+
+  /* 작성 중인 폼을 sessionStorage에 계속 동기화 — 내용이 비어있고 편집중도
+     아니면(=사실상 빈 폼) 임시저장을 지워서 다음 진입 시 불필요한 복원을 막는다 */
+  useEffect(() => {
+    const isEmpty = !form.memo.trim() && !editId
+    if (isEmpty) {
+      clearDraft(owner)
+    } else {
+      saveDraft(owner, form, editId)
+    }
+  }, [owner, form, editId])
+
+  /* ── 메모 불러오기 ── */
+  const loadNotes = useCallback(async () => {
+    setDataLoading(true)
+    setDataErr('')
+    try {
+      const { data, error } = await supabase
+        .from('private_notes')
+        .select('id, title, category, memo, due_date, created_at, updated_at, writer_name')
+        .eq('writer_name', owner)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      const noteRows = data || []
+      setNotes(noteRows)
+      const attachments = await listPrivateNoteAttachmentsForIds(noteRows.map((note) => note.id), owner)
+      setAttachmentMap(attachments)
+    } catch (e) {
+      setDataErr(`불러오기 실패: ${e.message}`)
+    } finally {
+      setDataLoading(false)
+    }
+  }, [owner])
+
+  /* 최초 진입 시 목록 로드 */
+  useEffect(() => {
+    Promise.resolve().then(loadNotes)
+  }, [loadNotes])
+
+  /* ── 폼 초기화 ── */
+  function resetForm() {
+    setEditId(null)
+    setPhotoFiles([])
+    setFileFiles([])
+    setAttachmentErr('')
+    setForm({ ...EMPTY_FORM, memo_date: calSelDate || todayStr() })
+    setTimeout(() => {
+      formMemoRef.current?.focus()
+    }, 50)
+  }
+
+  /* ── 편집 폼 열기 ── */
+  function openEditForm(note) {
+    setEditId(note.id)
+    setPhotoFiles([])
+    setFileFiles([])
+    setAttachmentErr('')
+    setForm({
+      category:  note.category  || CAT_OPTIONS[0],
+      memo:      note.memo      || '',
+      memo_date: note.due_date  || isoToDate(note.created_at) || todayStr(),
+    })
+    if (note.due_date) {
+      setCalSelDate(note.due_date)
+      const [y, m] = note.due_date.split('-')
+      setCalYear(Number(y))
+      setCalMonth(Number(m) - 1)
+    }
+    setTimeout(() => {
+      formMemoRef.current?.focus()
+      formMemoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 50)
+  }
+
+  /* ── 저장 (항목명을 그대로 title로 저장 — 제목 입력칸은 없음) ── */
+  async function persistNote(category, targetEditId) {
+    setSaveBusy(true)
+    try {
+      const payload = {
+        title:       category,
+        category,
+        memo:        form.memo.trim() || null,
+        updated_at:  new Date().toISOString(),
+        due_date:    form.memo_date || null,
+        status:      '예정',
+        priority:    '보통',
+        next_action: null,
+      }
+      const userId = await getCurrentUserId()
+      if ((photoFiles.length > 0 || fileFiles.length > 0) && !userId) {
+        throw new Error('첨부파일을 저장하려면 로그인 세션이 필요합니다.')
+      }
+      if (userId) payload.user_id = userId
+      if (targetEditId) {
+        const { error } = await supabase.from('private_notes').update(payload).eq('id', targetEditId)
+        if (error) throw error
+      } else {
+        payload.writer_name = owner   // 현재 선택된 작성자로 저장
+        const { data, error } = await supabase.from('private_notes').insert(payload).select('id').single()
+        if (error) throw error
+        targetEditId = data?.id
+      }
+      if (targetEditId && photoFiles.length > 0) {
+        await uploadPrivateNotePhotos({ files: photoFiles, privateNoteId: targetEditId, uploadedBy: owner })
+      }
+      if (targetEditId && fileFiles.length > 0) {
+        await uploadPrivateNoteFiles({ files: fileFiles, privateNoteId: targetEditId, uploadedBy: owner })
+      }
+      if (form.memo_date) {
+        setCalSelDate(form.memo_date)
+        const [y, m] = form.memo_date.split('-')
+        setCalYear(Number(y))
+        setCalMonth(Number(m) - 1)
+      }
+      resetForm()
+      await loadNotes()
+    } catch (err) {
+      setDataErr(`저장 실패: ${err.message}`)
+    } finally {
+      setSaveBusy(false)
+    }
+  }
+
+  /* 수정 모드에서 "수정 저장" 버튼용 */
+  function saveNote(e) {
+    e.preventDefault()
+    persistNote(form.category, editId)
+  }
+
+  /* 새 메모 작성 중 항목(개인적인기록/업무기록)을 선택하면 바로 저장 */
+  function handleCategoryPick(cat) {
+    setForm(f => ({ ...f, category: cat }))
+    if (editId) return   // 편집 중에는 선택만 반영, 저장은 "수정 저장" 버튼으로
+    persistNote(cat, null)
+  }
+
+  /* ── 삭제 ── */
+  async function deleteNote(id) {
+    if (!window.confirm('이 메모를 삭제할까요?')) return
+    try {
+      const attachments = [
+        ...(attachmentMap.photos?.[id] || []),
+        ...(attachmentMap.files?.[id] || []),
+      ]
+      for (const attachment of attachments) {
+        await deletePrivateNoteAttachment(attachment, owner)
+      }
+      const { error } = await supabase.from('private_notes').delete().eq('id', id)
+      if (error) throw error
+      setNotes(prev => prev.filter(n => n.id !== id))
+      setAttachmentMap(prev => ({
+        photos: Object.fromEntries(Object.entries(prev.photos || {}).filter(([noteId]) => noteId !== id)),
+        files: Object.fromEntries(Object.entries(prev.files || {}).filter(([noteId]) => noteId !== id)),
+      }))
+      if (editId === id) resetForm()
+    } catch (err) {
+      setDataErr(`삭제 실패: ${err.message}`)
+    }
+  }
+
+  /* ── 필터링된 노트 ── */
+  const filteredNotes = useMemo(() => {
+    const q = searchQ.trim().toLowerCase()
+    return notes.filter(n => {
+      if (catFilter !== '전체' && n.category !== catFilter) return false
+      if (q && !(n.title||'').toLowerCase().includes(q) && !(n.memo||'').toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [notes, catFilter, searchQ])
+
+  const calDateMap = useMemo(() => {
+    const map = {}
+    filteredNotes.forEach(n => {
+      const d = n.due_date
+      if (!d) return
+      if (!map[d]) map[d] = []
+      map[d].push(n)
+    })
+    return map
+  }, [filteredNotes])
+
+  const calSelNotes = calSelDate ? (calDateMap[calSelDate] || []) : []
+
+  /* ── 달력 네비게이션 ── */
+  function calMove(delta) {
+    let m = calMonth + delta, y = calYear
+    if (m < 0) { m = 11; y-- }
+    if (m > 11) { m = 0; y++ }
+    setCalMonth(m); setCalYear(y)
+  }
+
+  function handleDateClick(dateStr) {
+    setCalSelDate(dateStr)
+    if (!editId) setForm(f => ({ ...f, memo_date: dateStr }))
+  }
+
+  async function handleDeleteAttachment(attachment) {
+    if (!window.confirm('이 첨부파일을 삭제할까요?')) return
+    setAttachmentBusy(true)
+    setAttachmentErr('')
+    try {
+      await deletePrivateNoteAttachment(attachment, owner)
+      setAttachmentMap(prev => removeAttachmentFromMap(prev, attachment))
+    } catch (err) {
+      setAttachmentErr(`첨부 삭제 실패: ${err.message}`)
+      await loadNotes()
+    } finally {
+      setAttachmentBusy(false)
+    }
+  }
+
+  const editingPhotos = editId ? (attachmentMap.photos?.[editId] || []) : []
+  const editingFiles = editId ? (attachmentMap.files?.[editId] || []) : []
+
+  /* ════════════ 렌더 ════════════ */
+  return (
+    <div className="pn-app">
+      {/* 헤더 */}
+      <header className="pn-header">
+        <div className="pn-brand">
+          <div className="pn-brand-mark">H</div>
+          <div>
+            <div className="pn-brand-title">{owner} 개인일지</div>
+            <div className="pn-brand-sub">개인 달력 · 메모 작성 · 분류 관리</div>
+          </div>
+        </div>
+
+        {/* 상단 필터/검색 */}
+        <div className="pn-top-filters">
+          <div className="pn-search-wrap">
+            <span className="pn-search-icon">🔍</span>
+            <input
+              className="pn-search"
+              type="text"
+              placeholder="제목 또는 내용 검색"
+              value={searchQ}
+              onChange={e => setSearchQ(e.target.value)}
+            />
+            {searchQ && (
+              <button type="button" className="pn-search-clear" onClick={() => setSearchQ('')}>✕</button>
+            )}
+          </div>
+          <div className="pn-cat-bar">
+            {CAT_ALL.map(cat => (
+              <button key={cat} type="button"
+                className={`pn-cat-btn${catFilter === cat ? ' active' : ''}`}
+                style={cat !== '전체' ? { '--cat-c': CAT_COLOR[cat] } : {}}
+                onClick={() => setCatFilter(cat)}>
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="pn-header-right">
+          <button type="button" className="pn-back-btn" onClick={onBack}>← 업무일지로 돌아가기</button>
+        </div>
+      </header>
+
+      {/* 메모 개수 표시 (전환 버튼 없음) */}
+      <div className="pn-owner-info">
+        <span className="pn-owner-indicator">
+          📓 <strong>{owner}</strong> 개인일지 {!dataLoading && `· 총 ${notes.length}개`}
+        </span>
+      </div>
+
+      {/* 에러 */}
+      {dataErr && (
+        <div className="pn-err">
+          {dataErr}
+          <button type="button" className="pn-err-close" onClick={() => setDataErr('')}>✕</button>
+        </div>
+      )}
+
+      {/* 3단 본문 레이아웃 */}
+      <div className="pn-body-3col">
+        {/* 1. 달력 영역 (왼쪽) */}
+        <div className="pn-col-calendar">
+          <div className="pn-cal-panel">
+            <div className="pn-cal-header">
+              <button type="button" className="pn-cal-nav-btn" onClick={() => calMove(-1)}>◀</button>
+              <span className="pn-cal-title">{calYear}년 {calMonth + 1}월</span>
+              <button type="button" className="pn-cal-nav-btn" onClick={() => calMove(1)}>▶</button>
+            </div>
+            <div className="pn-cal-grid">
+              {WEEK_NAMES.map((n, i) => (
+                <div key={n} className={`pn-cal-dname${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}`}>{n}</div>
+              ))}
+              <CalCells
+                year={calYear} month={calMonth}
+                calDateMap={calDateMap}
+                selDate={calSelDate}
+                onSelect={handleDateClick}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 2. 스티커 목록 영역 (가운데) */}
+        <div className="pn-col-stickers">
+          <div className="pn-stickers-head">
+            <span className="pn-stickers-title">
+              📅 {calSelDate ? fmtKo(calSelDate) + ' 메모' : '날짜를 선택하세요'}
+            </span>
+            {calSelDate && <span className="pn-stickers-count">{calSelNotes.length}개</span>}
+          </div>
+
+          <div className="pn-stickers-list">
+            {dataLoading && <div className="pn-center-msg">불러오는 중...</div>}
+
+            {!dataLoading && calSelDate && calSelNotes.length === 0 && (
+              <div className="pn-empty-state">
+                <div className="pn-empty-icon">📝</div>
+                <div className="pn-empty-text">이 날짜에 작성된 메모가 없습니다.</div>
+              </div>
+            )}
+
+            {!dataLoading && !calSelDate && (
+              <div className="pn-empty-state">
+                <div className="pn-empty-icon">👈</div>
+                <div className="pn-empty-text">달력에서 날짜를 선택해주세요.</div>
+              </div>
+            )}
+
+            {!dataLoading && calSelNotes.map(note => (
+              <StickerCard
+                key={note.id}
+                note={note}
+                photos={attachmentMap.photos?.[note.id] || []}
+                files={attachmentMap.files?.[note.id] || []}
+                isActive={editId === note.id}
+                onOpenPhoto={(photos, startIndex) => setPhotoGallery({ photos, startIndex })}
+                onEdit={() => openEditForm(note)}
+                onDelete={() => deleteNote(note.id)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* 3. 메모 입력창 영역 (오른쪽) */}
+        <div className="pn-col-editor">
+          <div className="pn-editor-panel">
+            <form className="pn-form" onSubmit={saveNote}>
+              <div className="pn-form-head">
+                <span className="pn-form-title">
+                  {editId ? '✏️ 메모 수정' : `✏️ ${owner} 새 메모`}
+                </span>
+                <div className="pn-form-head-actions">
+                  <button type="button" className="pn-new-reset-btn" onClick={resetForm}>
+                    ✨ 새 메모
+                  </button>
+                </div>
+              </div>
+
+              <div className="pn-form-date-row">
+                <label className="pn-date-label">기록 날짜</label>
+                <input
+                  className="pn-date-input"
+                  type="date"
+                  value={form.memo_date}
+                  onChange={e => {
+                    setForm(f => ({ ...f, memo_date: e.target.value }))
+                    if (!editId) setCalSelDate(e.target.value)
+                  }}
+                />
+              </div>
+
+              <textarea
+                ref={formMemoRef}
+                className="pn-memo-input"
+                placeholder="개인적인 기록이나 업무 관련 메모를 자유롭게 적어주세요."
+                value={form.memo}
+                onChange={e => setForm(f => ({ ...f, memo: e.target.value }))}
+              />
+
+              <div className="pn-attach-panel">
+                <div className="pn-attach-head">
+                  <span className="pn-attach-title">사진·파일 첨부</span>
+                  <span className="pn-attach-help">사진과 문서 파일을 여러 개 첨부할 수 있습니다.</span>
+                </div>
+
+                {editId && (editingPhotos.length > 0 || editingFiles.length > 0) && (
+                  <div className="pn-existing-attachments">
+                    <div className="pn-existing-title">기존 첨부파일</div>
+                    {editingPhotos.length > 0 && (
+                      <div className="pn-existing-photo-grid" aria-label="기존 첨부 사진">
+                        {editingPhotos.map((photo, index) => (
+                          <PrivatePhotoAttachment
+                            key={photo.id || photo.storage_path}
+                            photo={photo}
+                            disabled={attachmentBusy || saveBusy}
+                            onOpen={() => setPhotoGallery({ photos: editingPhotos, startIndex: index })}
+                            onDownload={() => downloadAttachment(photo)}
+                            onDelete={() => handleDeleteAttachment(photo)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    {editingFiles.length > 0 && (
+                      <div className="pn-existing-file-list" aria-label="기존 첨부 파일">
+                        {editingFiles.map((file) => (
+                          <PrivateFileAttachment
+                            key={file.id || file.storage_path}
+                            file={file}
+                            disabled={attachmentBusy || saveBusy}
+                            onDelete={() => handleDeleteAttachment(file)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <DiaryPhotoUploader
+                  files={photoFiles}
+                  onChange={setPhotoFiles}
+                  disabled={saveBusy}
+                  busy={saveBusy}
+                  compact
+                />
+                <DiaryFileUploader
+                  files={fileFiles}
+                  onChange={setFileFiles}
+                  disabled={saveBusy}
+                  busy={saveBusy}
+                  compact
+                />
+                {attachmentErr && <div className="pn-attach-error" role="alert">{attachmentErr}</div>}
+              </div>
+
+              <div className="pn-cat-choice-row">
+                {CAT_OPTIONS.map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={`pn-cat-choice-btn${form.category === cat ? ' active' : ''}`}
+                    style={{ '--cat-c': CAT_COLOR[cat] }}
+                    disabled={saveBusy}
+                    onClick={() => handleCategoryPick(cat)}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              {!editId && (
+                <div className="pn-cat-choice-hint">항목을 선택하면 바로 저장됩니다.</div>
+              )}
+
+              <div className="pn-form-foot">
+                {editId && (
+                  <button type="button" className="pn-cancel-btn pn-del-btn" onClick={() => deleteNote(editId)}>
+                    🗑 삭제
+                  </button>
+                )}
+                <div style={{ flex: 1 }}></div>
+                <button type="button" className="pn-cancel-btn" onClick={resetForm}>초기화</button>
+                {editId && (
+                  <button type="submit" className="pn-save-btn" disabled={saveBusy}>
+                    {saveBusy ? '저장 중...' : '💾 수정 저장'}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>{/* /pn-body-3col */}
+      {photoGallery && (
+        <PhotoGalleryModal
+          photos={photoGallery.photos}
+          startIndex={photoGallery.startIndex}
+          onClose={() => setPhotoGallery(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════
+   스티커 카드
+══════════════════════════════════════════════ */
+function StickerCard({ note, photos = [], files = [], isActive, onEdit, onDelete }) {
+  const color = CAT_COLOR[note.category] || '#9ca3af'
+  const isEdited = note.updated_at && note.updated_at !== note.created_at
+  const attachCount = photos.length + files.length
+
+  return (
+    <div className={`pn-sticker ${isActive ? 'active' : ''}`} style={{ '--cat-c': color }} onClick={onEdit}>
+      <div className="pn-sticker-head">
+        <span className="pn-sticker-cat" style={{ color, borderColor: color + '55', background: color + '15' }}>
+          {note.category}
+        </span>
+        <div className="pn-sticker-actions" onClick={e => e.stopPropagation()}>
+          <button type="button" className="pn-s-act" onClick={onEdit}>✏️</button>
+          <button type="button" className="pn-s-act del" onClick={onDelete}>🗑</button>
+        </div>
+      </div>
+      {note.title && note.title !== note.category && (
+        <div className="pn-sticker-title">{note.title}</div>
+      )}
+      {note.memo && (
+        <div className="pn-sticker-body">
+          {note.memo.length > 160 ? note.memo.slice(0, 160) + '...' : note.memo}
+        </div>
+      )}
+      {attachCount > 0 && (
+        <div className="pn-sticker-attach-summary">
+          {photos.length > 0 && <span>사진 {photos.length}</span>}
+          {files.length > 0 && <span>파일 {files.length}</span>}
+        </div>
+      )}
+      <div className="pn-sticker-foot">
+        작성 {fmtShort(note.created_at)}
+        {isEdited ? ` · 수정 ${fmtShort(note.updated_at)}` : ''}
+      </div>
+    </div>
+  )
+}
+
+function removeAttachmentFromMap(prev, attachment) {
+  const noteId = attachment.private_note_id
+  const key = attachment.id || attachment.storage_path
+  const removeFrom = (map = {}) => ({
+    ...map,
+    [noteId]: (map[noteId] || []).filter((item) => (item.id || item.storage_path) !== key),
+  })
+
+  return {
+    photos: removeFrom(prev.photos),
+    files: removeFrom(prev.files),
+  }
+}
+
+function getFileBadge(name = '') {
+  const parts = String(name).split('.')
+  if (parts.length < 2) return 'FILE'
+  return parts.pop().toUpperCase().slice(0, 5)
+}
+
+function PrivatePhotoAttachment({ photo, disabled, onOpen, onDownload, onDelete }) {
+  const [src, setSrc] = useState(null)
+  const [status, setStatus] = useState('loading')
+  const [busy, setBusy] = useState('')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    getAttachmentSignedUrl(photo)
+      .then((url) => {
+        if (cancelled) return
+        setSrc(url)
+        setStatus('ready')
+      })
+      .catch(() => {
+        if (!cancelled) setStatus('error')
+      })
+    return () => { cancelled = true }
+  }, [photo])
+
+  async function handleDownload() {
+    if (disabled || busy) return
+    setBusy('download')
+    setError('')
+    try {
+      await onDownload()
+    } catch (err) {
+      setError(err.message || String(err))
+    } finally {
+      setBusy('')
+    }
+  }
+
+  return (
+    <div className="pn-photo-attachment">
+      <button type="button" className="pn-photo-thumb" onClick={onOpen} disabled={disabled} title={photo.original_name || '첨부 사진'}>
+        {status === 'ready' && <img src={src} alt={photo.original_name || '첨부 사진'} onError={() => setStatus('error')} />}
+        {status === 'loading' && <span>...</span>}
+        {status === 'error' && <span>사진</span>}
+      </button>
+      <div className="pn-photo-meta">
+        <strong title={photo.original_name}>{photo.original_name || '첨부 사진'}</strong>
+        <span>{formatPhotoSize(photo.file_size)}</span>
+      </div>
+      <div className="pn-attach-actions">
+        <button type="button" onClick={onOpen} disabled={disabled}>열기</button>
+        <button type="button" onClick={handleDownload} disabled={disabled || busy === 'download'}>
+          {busy === 'download' ? '다운로드 중...' : '다운로드'}
+        </button>
+        <button type="button" className="danger" onClick={onDelete} disabled={disabled}>삭제</button>
+      </div>
+      {error && <div className="pn-attach-error" role="alert">{error}</div>}
+    </div>
+  )
+}
+
+function PrivateFileAttachment({ file, disabled, onDelete }) {
+  const [viewing, setViewing] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleView() {
+    if (disabled || viewing) return
+    const newTab = window.open('about:blank', '_blank')
+    if (newTab) newTab.opener = null
+    setViewing(true)
+    setError('')
+    try {
+      const url = await getAttachmentSignedUrl(file, { expiresIn: 300, forceRefresh: true })
+      if (newTab) newTab.location.href = url
+      else window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      if (newTab) newTab.close()
+      setError(err.message || String(err))
+    } finally {
+      setViewing(false)
+    }
+  }
+
+  async function handleDownload() {
+    if (disabled || downloading) return
+    setDownloading(true)
+    setError('')
+    try {
+      await downloadAttachment(file)
+    } catch (err) {
+      setError(err.message || String(err))
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div className="pn-file-attachment">
+      <span className="pn-file-badge" aria-hidden="true">{getFileBadge(file.original_name)}</span>
+      <div className="pn-file-meta">
+        <strong title={file.original_name}>{file.original_name || '첨부 파일'}</strong>
+        <span>{formatPhotoSize(file.file_size)}</span>
+      </div>
+      <div className="pn-attach-actions">
+        <button type="button" onClick={handleView} disabled={disabled || viewing}>
+          {viewing ? '여는 중...' : '열기'}
+        </button>
+        <button type="button" onClick={handleDownload} disabled={disabled || downloading}>
+          {downloading ? '다운로드 중...' : '다운로드'}
+        </button>
+        <button type="button" className="danger" onClick={onDelete} disabled={disabled}>삭제</button>
+      </div>
+      {error && <div className="pn-attach-error" role="alert">{error}</div>}
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════
+   달력 셀
+══════════════════════════════════════════════ */
+function CalCells({ year, month, calDateMap, selDate, onSelect }) {
+  const today     = todayStr()
+  const firstDow  = new Date(year, month, 1).getDay()
+  const daysInMon = new Date(year, month + 1, 0).getDate()
+  const prevDays  = new Date(year, month, 0).getDate()
+
+  const cells = []
+  for (let i = firstDow - 1; i >= 0; i--) cells.push({ day: prevDays - i, cur: false })
+  for (let d = 1; d <= daysInMon; d++)    cells.push({ day: d, cur: true })
+  const remain = (7 - (cells.length % 7)) % 7
+  for (let d = 1; d <= remain; d++)       cells.push({ day: d, cur: false })
+
+  return cells.map((cell, i) => {
+    const dow     = i % 7
+    const dateStr = cell.cur
+      ? `${year}-${String(month + 1).padStart(2, '0')}-${String(cell.day).padStart(2, '0')}`
+      : null
+    const isToday  = dateStr === today
+    const isSel    = dateStr === selDate
+    const dayNotes = (cell.cur && dateStr && calDateMap[dateStr]) || []
+
+    return (
+      <div
+        key={i}
+        className={[
+          'pn-cal-cell',
+          !cell.cur ? 'other' : '',
+          isToday   ? 'today' : '',
+          isSel     ? 'selected' : '',
+          cell.cur && dayNotes.length ? 'has-notes' : '',
+        ].filter(Boolean).join(' ')}
+        onClick={() => cell.cur && dateStr && onSelect(dateStr)}
+      >
+        <span className={`pn-cal-num${dow === 0 ? ' sun' : dow === 6 ? ' sat' : ''}`}>
+          {cell.day}
+        </span>
+        {dayNotes.length > 0 && (
+          <div className="pn-cal-sticker-badges">
+            📝 {dayNotes.length}
+          </div>
+        )}
+      </div>
+    )
+  })
+}

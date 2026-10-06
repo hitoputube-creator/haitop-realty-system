@@ -6,12 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="assets/js/storage.js?v=20261006-shared1"></script>
+  <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
-  <script src="assets/js/nav.js?v=20261006-brand-layout"></script>
+  <script src="assets/js/nav.js?v=20261006-ktop-diary1"></script>
   <style>
     /* 목록보기 테이블 */
     #listViewTable { width:100%; border-collapse:collapse; font-size:0.82rem; }
@@ -1068,10 +1068,9 @@ if (tab === "done")       renderDoneList();
     _makePagination("customerPagination", filtered.length, CUST_PER_PAGE, customerPage, (p) => { customerPage = p; renderCustomers(); });
   }
 
-  const DIARY_APP_URL = "https://haitop-realestate-diary.vercel.app/";
+  const DIARY_APP_URL = OFFICE_DIARY_URL;
 
   function openCustomerDiary(id) {
-    if (OfficeConfig.id === "ktop") { alert("케이탑 업무일지 연결은 아직 준비 중입니다."); return; }
     window.open(DIARY_APP_URL + "?customerId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");
   }
 
