@@ -13,7 +13,7 @@
     }
     .resource-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
     .resource-toolbar .floor-status-entry { margin-left:0; }
-    .resource-toolbar .resource-location-entry { margin-left:auto; }
+    .resource-toolbar .resource-kakao-entry { margin-left:auto; }
     .floor-status-entry:hover, .floor-status-entry:focus-visible { background:#27496a; color:#fff; }
   </style>
   <script src="assets/js/storage.js"></script>
@@ -42,6 +42,7 @@
   <div class="resource-toolbar" style="margin:16px 0 10px;">
     <button class="btn btn-primary" id="driveRegisterToggleBtn">📁 자료 등록</button>
     <button class="btn btn-ghost" id="driveCategoryAddBtn">+ 카테고리 추가</button>
+    <a class="btn floor-status-entry resource-kakao-entry" href="residential-kakao.html">🗺 카카오맵으로 보기</a>
     <a class="btn floor-status-entry resource-location-entry" href="residential-location.html">📍 위치도로 찾기</a>
   </div>
 
