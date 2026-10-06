@@ -222,6 +222,18 @@
       </div>
     </div>
 
+    <div class="form-grid" id="residentialOverviewFields" style="display:none;margin-top:16px;">
+      <div class="field"><label>지번주소</label><input id="ov_lot_address" type="text" /></div>
+      <div class="field"><label>행정구역</label><input id="ov_district" type="text" /></div>
+      <div class="field"><label>동수</label><input id="ov_blocks" type="text" placeholder="예: 10개동" /></div>
+      <div class="field"><label>세대수</label><input id="ov_households" type="text" placeholder="예: 1,000세대" /></div>
+      <div class="field"><label>주택종류</label><input id="ov_housing_type" type="text" /></div>
+      <div class="field"><label>분양구분</label><input id="ov_tenure" type="text" placeholder="분양 / 임대 / 혼합" /></div>
+      <div class="field"><label>자료기준일</label><input id="ov_source_date" type="text" placeholder="예: 2026.08.06" /></div>
+      <div class="field"><label>자료출처</label><input id="ov_source" type="text" /></div>
+      <div class="field" style="grid-column:1/-1;"><label>네이버 단지정보 링크</label><input id="ov_naver_complex" type="url" placeholder="네이버부동산에서 단지를 연 뒤 주소를 붙여넣으세요" /></div>
+    </div>
+
     <div class="extra-memo">
       <label>추가 메모</label>
       <textarea id="ov_extra" rows="5" placeholder="기타 특이사항, 임대 현황, 주요 입점 업종 등"></textarea>
@@ -243,10 +255,20 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
+<script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
 <script>
 const MEMO_SEP      = '---추가메모---';
 const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토지면적','건축면적','연면적','관리사무소','규모'];
 const FIELD_IDS     = ['ov_address','ov_parking','ov_approval','ov_structure','ov_land','ov_footprint','ov_total','ov_mgmt','ov_scale'];
+const RESIDENTIAL_FIELDS = [
+  ['지번주소','ov_lot_address'], ['행정구역','ov_district'], ['동수','ov_blocks'],
+  ['세대수','ov_households'], ['주택종류','ov_housing_type'], ['분양구분','ov_tenure'],
+  ['자료기준일','ov_source_date'], ['자료출처','ov_source'], ['네이버단지링크','ov_naver_complex']
+];
+function editableOverviewFields() {
+  return FIELD_LABELS.map((label, i) => [label, FIELD_IDS[i]])
+    .concat(resourceScope === 'residential' ? RESIDENTIAL_FIELDS : []);
+}
 
 // 읽기전용 표에 표시할 순서 — 매물정보 외 건물명/카테고리는 memo가 아닌 drive_resources 컬럼값을 쓴다.
 const INFO_TABLE_ROWS = [
@@ -304,9 +326,17 @@ function parseMemo(raw) {
 }
 
 function buildMemo() {
-  const lines = FIELD_LABELS.map((lbl, i) => {
-    const val = document.getElementById(FIELD_IDS[i]).value.trim();
+  const editable = editableOverviewFields();
+  const lines = editable.map(([lbl, id]) => {
+    const val = document.getElementById(id).value.trim();
     return `${lbl}: ${val}`;
+  });
+  // Keep source links and other imported/custom fields when editing the overview.
+  const known = new Set(editable.map(([label]) => label));
+  const raw = (buildingData && buildingData.memo || '').split(MEMO_SEP)[0];
+  raw.split('\n').forEach(line => {
+    const colon = line.indexOf(':');
+    if (line.trim() && (colon < 0 || !known.has(line.slice(0, colon).trim()))) lines.push(line);
   });
   const basic = lines.join('\n');
   const extra = document.getElementById('ov_extra').value.trim();
@@ -316,8 +346,8 @@ function buildMemo() {
 
 function populateForm(memo) {
   const { fields, extra } = parseMemo(memo);
-  FIELD_LABELS.forEach((lbl, i) => {
-    document.getElementById(FIELD_IDS[i]).value = fields[lbl] || '';
+  editableOverviewFields().forEach(([lbl, id]) => {
+    document.getElementById(id).value = fields[lbl] || '';
   });
   document.getElementById('ov_extra').value = extra;
 }
@@ -414,7 +444,9 @@ function renderReadOnlyViews() {
   document.getElementById('driveOpenBtn').style.opacity = hasUrl ? '1' : '0.45';
   document.getElementById('driveCopyBtn').style.opacity = hasUrl ? '1' : '0.45';
 
-  const tableHtml = INFO_TABLE_ROWS.map(row => {
+  const rows = INFO_TABLE_ROWS.concat(resourceScope === 'residential'
+    ? RESIDENTIAL_FIELDS.map(([label]) => ({ label, value: () => memoFields[label] })) : []);
+  const tableHtml = rows.map(row => {
     const val = row.value() || '';
     return `<div class="info-table-label">${esc(row.label)}</div>` +
            `<div class="info-table-value${val ? '' : ' empty'}">${val ? esc(val) : '—'}</div>`;
@@ -463,6 +495,7 @@ async function init() {
     }
     document.getElementById('buildingName').textContent = buildingData.name;
     document.title = `하이탑부동산 | ${buildingData.name} 개요`;
+    document.getElementById('residentialOverviewFields').style.display = resourceScope === 'residential' ? '' : 'none';
 
     renderReadOnlyViews();
   } catch(e) {
@@ -472,6 +505,15 @@ async function init() {
 
 // ── 저장 ──
 async function saveOverview() {
+  if (resourceScope === 'residential') {
+    const value = document.getElementById('ov_naver_complex').value.trim();
+    if (value) {
+      try {
+        const url = new URL(value);
+        if (url.protocol !== 'https:' || !['fin.land.naver.com','new.land.naver.com'].includes(url.hostname)) throw new Error();
+      } catch (_) { showToast('네이버부동산 단지 페이지의 https 주소를 입력해주세요.'); return; }
+    }
+  }
   const memo = buildMemo();
   try {
     await updateDriveResource(buildingId, { memo });

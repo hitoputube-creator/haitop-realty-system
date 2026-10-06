@@ -29,6 +29,17 @@
     if (!url) link.setAttribute('tabindex', '-1');
     else link.removeAttribute('tabindex');
   }
+  function complexDestination(name, memo) {
+    var line = String(memo || '').split('\n').find(function (value) { return /^네이버단지링크\s*:/.test(value); });
+    var saved = line ? line.replace(/^네이버단지링크\s*:/, '').trim() : '';
+    try {
+      var parsed = new URL(saved);
+      if (parsed.protocol === 'https:' && ['fin.land.naver.com', 'new.land.naver.com'].includes(parsed.hostname)) {
+        return {url: parsed.href, label: '네이버 단지정보'};
+      }
+    } catch (_) {}
+    return {url: 'https://new.land.naver.com/search?keyword=' + encodeURIComponent('파주시 ' + String(name || '').trim()), label: '네이버 단지검색'};
+  }
   function append(container, address, className, position) {
     var destinations = urls(address, position);
     [['네이버부동산', destinations && destinations.realEstate], ['네이버지도', destinations && destinations.map]].forEach(function (item) {
@@ -52,5 +63,5 @@
     window.kakao.maps.event.addListener(map, 'idle', update);
     link.addEventListener('click', update);
   }
-  window.HitopNaverLinks = { urls: urls, updateLink: updateLink, append: append, bindMapView: bindMapView };
+  window.HitopNaverLinks = { urls: urls, updateLink: updateLink, append: append, bindMapView: bindMapView, complexDestination: complexDestination };
 })();

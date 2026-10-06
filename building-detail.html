@@ -463,7 +463,13 @@
 
   <!-- ===== 기타 자료 ===== -->
   <div class="card" style="margin-bottom:20px;">
-    <div class="sec-title">📄 기타 자료</div>
+    <div class="sec-title" id="buildingFilesTitle">📄 기타 자료</div>
+    <div id="residentialMaterialActions" style="display:none;margin-bottom:12px;gap:8px;flex-wrap:wrap;">
+      <a class="btn" id="residentialNaverComplex" target="_blank" rel="noopener noreferrer">네이버 단지검색</a>
+      <button class="btn" type="button" data-material-name="단지배치도">단지배치도 추가</button>
+      <button class="btn" type="button" data-material-name="동호수배치도">동호수배치도 추가</button>
+      <button class="btn" type="button" data-material-name="평면도">평면도 추가</button>
+    </div>
 
     <!-- 파일 업로드 -->
     <div class="upload-row file-row">
@@ -625,7 +631,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
-<script src="assets/js/naver-links.js?v=20261006-residential-maps-1"></script>
+<script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
 <script src="assets/js/building-register-view.js?v=20260929-compact-table"></script>
 <script>
 /* ═══════════════════════════════════════════
@@ -651,6 +657,7 @@ const params     = new URLSearchParams(location.search);
 const buildingId = params.get('id');
 let resourceScope = HitopResourceRooms.readDetailScope(location.search);
 let buildingAddress = '';
+const RESIDENTIAL_OV_FIELDS = ['지번주소','행정구역','동수','세대수','주택종류','분양구분','규모','자료기준일','자료출처'];
 
 /* ── 유틸 ── */
 function showToast(msg, dur = 2500) {
@@ -840,6 +847,18 @@ async function init() {
       document.title = `하이탑부동산 | ${building.name}`;
       buildingAddress = parseMemoFields(building.memo || '').주소 || '';
       renderInfoGrid(building.memo || '');
+      if (resourceScope === 'residential') {
+        document.getElementById('buildingFilesTitle').textContent = '📄 단지배치도 · 동호수배치도 · 추가자료';
+        document.getElementById('residentialMaterialActions').style.display = 'flex';
+        const destination = HitopNaverLinks.complexDestination(building.name, building.memo);
+        const naverLink = document.getElementById('residentialNaverComplex');
+        naverLink.href = destination.url; naverLink.textContent = destination.label + ' · 평면도/호별정보';
+        document.getElementById('fileName').placeholder = '자료명 (예: 단지배치도, 동호수배치도)';
+        document.querySelectorAll('[data-material-name]').forEach(button => button.addEventListener('click', () => {
+          document.getElementById('fileName').value = button.dataset.materialName;
+          document.getElementById('fileUpload').click();
+        }));
+      }
     }
   } catch(e) { /* 이름 로드 실패 무시 */ }
 
@@ -861,7 +880,8 @@ function parseMemoFields(raw) {
 
 function renderInfoGrid(memo) {
   const fields = parseMemoFields(memo);
-  const html = OV_FIELDS.map(f => {
+  const overviewFields = OV_FIELDS.concat(resourceScope === 'residential' ? RESIDENTIAL_OV_FIELDS.map(key => ({label:key,key})) : []);
+  const html = overviewFields.map(f => {
     const val = fields[f.key] || '';
     return `<div class="info-cell">
       <div class="info-cell-label">${esc(f.label)}</div>

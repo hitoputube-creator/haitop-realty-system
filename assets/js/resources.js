@@ -18,6 +18,7 @@ function openDriveBuilding(page, id) {
   location.href = HitopResourceRooms.detailUrl(page, id, driveResourceScope);
 }
 let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
+let residentialSearch = '';
 
 // ===== 공통 유틸 =====
 function showToast(msg, duration = 2000) {
@@ -159,8 +160,9 @@ function residentialMapLinks(item) {
   const line = String(item.memo || '').split('\n').find(value => /^주소\s*:/.test(value));
   const address = line ? line.replace(/^주소\s*:/, '').trim() : '';
   const destinations = window.HitopNaverLinks && HitopNaverLinks.urls(address);
+  const complex = window.HitopNaverLinks && HitopNaverLinks.complexDestination(item.name, item.memo);
   const id = encodeURIComponent(item.id);
-  return `<a class="btn btn-ghost" href="residential-location.html?id=${id}">위치도</a><a class="btn btn-ghost" href="residential-kakao.html?id=${id}">카카오맵</a>` + (destinations ? `<a class="btn btn-ghost" href="${escapeCategory(destinations.map)}" target="_blank" rel="noopener noreferrer">네이버지도</a>` : '');
+  return `<a class="btn btn-ghost" href="residential-location.html?id=${id}">위치도</a><a class="btn btn-ghost" href="residential-kakao.html?id=${id}">카카오맵</a>` + (destinations ? `<a class="btn btn-ghost" href="${escapeCategory(destinations.map)}" target="_blank" rel="noopener noreferrer">네이버지도</a>` : '') + (complex ? `<a class="btn btn-ghost" href="${escapeCategory(complex.url)}" target="_blank" rel="noopener noreferrer">${complex.label}</a>` : '');
 }
 function _buildDriveItemsHtml(items, cat) {
   return items.map(item => {
@@ -171,6 +173,7 @@ function _buildDriveItemsHtml(items, cat) {
       <div style="margin-bottom:10px;">
         <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>
         ${memoPreview ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;line-height:1.4;">📝 ${memoPreview}</div>` : ''}
+        ${residentialBasicSummary(item)}
         ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}
       </div>
       <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
@@ -184,6 +187,23 @@ function _buildDriveItemsHtml(items, cat) {
       </div>
     </div>`;
   }).join("");
+}
+
+function residentialBasicSummary(item) {
+  if (HitopResourceRooms.resourceRoom(item) !== 'residential') return '';
+  const fields = {};
+  String(item.memo || '').split(MEMO_SEP)[0].split('\n').forEach(line => {
+    const colon = line.indexOf(':');
+    if (colon >= 0) fields[line.slice(0, colon).trim()] = line.slice(colon + 1).trim();
+  });
+  const summary = ['행정구역','동수','세대수','사용승인일'].filter(key => fields[key])
+    .map(key => key === '사용승인일' ? '준공 ' + fields[key] : fields[key]);
+  return summary.length ? `<div style="font-size:.78rem;color:var(--gold-soft);margin-top:6px;">${escapeCategory(summary.join(' · '))}</div>` : '';
+}
+
+function searchResidentialItems(items) {
+  const words = residentialSearch.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  return items.filter(item => words.every(word => `${item.name} ${item.memo || ''}`.toLocaleLowerCase().includes(word)));
 }
 
 
@@ -321,9 +341,15 @@ function renderDriveTab() {
   // 선택된 카테고리 목록 (전체 표시 — 페이지네이션 없음)
   const cat = activeDriveCat;
   const items = sortedByCatOrder(cat, grouped[cat]);
+  const shown = driveResourceScope === 'residential' ? searchResidentialItems(items) : items;
+  const searchHtml = driveResourceScope === 'residential' ? `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+    <input id="residentialResourceSearch" type="search" aria-label="주거자료 검색" placeholder="단지명 · 마을명 · 주소 검색" value="${escapeCategory(residentialSearch)}" style="flex:1;min-width:180px;">
+    <span id="residentialSearchCount" style="font-size:.8rem;color:var(--text-muted);">${shown.length} / ${items.length}개</span>
+  </div>` : '';
   const sectionHtml = `
     <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
-      <div class="listing-grid">${items.length ? _buildDriveItemsHtml(items, cat) : '<div class="loading">등록된 자료가 없습니다. 자료 등록 버튼으로 추가해주세요.</div>'}</div>
+      ${searchHtml}
+      <div class="listing-grid" id="driveResourceResults">${shown.length ? _buildDriveItemsHtml(shown, cat) : '<div class="loading">표시할 자료가 없습니다.</div>'}</div>
     </div>`;
 
   container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
@@ -335,6 +361,13 @@ function renderDriveTab() {
   </div>`;
 
   bindDriveCategoryDrag(container);
+  const searchInput = document.getElementById('residentialResourceSearch');
+  if (searchInput) searchInput.addEventListener('input', () => {
+    residentialSearch = searchInput.value;
+    const filtered = searchResidentialItems(items);
+    document.getElementById('driveResourceResults').innerHTML = filtered.length ? _buildDriveItemsHtml(filtered, cat) : '<div class="loading">검색 결과가 없습니다.</div>';
+    document.getElementById('residentialSearchCount').textContent = `${filtered.length} / ${items.length}개`;
+  });
   // innerHTML 완료 후 버튼 이벤트 바인딩
   container.querySelectorAll("[data-cidx]").forEach(btn => {
     btn.addEventListener("click", () => {
