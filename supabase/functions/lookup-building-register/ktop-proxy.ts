@@ -20,7 +20,7 @@ Deno.serve(async req => {
   let body;
   try{body=await req.json();}catch{return reply({error:'올바른 조회 요청이 아닙니다.'},400);}
   if(typeof body?.address!=='string'||!body.address.trim()||body.address.length>500)return reply({error:'조회할 지번주소를 입력해주세요.'},400);
-  const upstream=await fetch(source+'/functions/v1/lookup-building-register',{method:'POST',headers:{apikey:sourceKey,Authorization:'Bearer '+sourceKey,'Content-Type':'application/json'},body:JSON.stringify({address:body.address.trim(),hoNm:typeof body.hoNm==='string'?body.hoNm.slice(0,50):'',dongNm:typeof body.dongNm==='string'?body.dongNm.slice(0,50):'',apartment:body.apartment===true}),signal:AbortSignal.timeout(95000)});
+  const upstream=await fetch(source+'/functions/v1/lookup-building-register',{method:'POST',headers:{apikey:sourceKey,Authorization:'Bearer '+sourceKey,'Content-Type':'application/json'},body:JSON.stringify({address:body.address.trim(),hoNm:typeof body.hoNm==='string'?body.hoNm.slice(0,50):'',dongNm:typeof body.dongNm==='string'?body.dongNm.slice(0,50):'',apartment:body.apartment===true,scope:body.scope==='complex'?'complex':'',buildingName:typeof body.buildingName==='string'?body.buildingName.slice(0,200):''}),signal:AbortSignal.timeout(95000)});
   const data=await upstream.json();
   return reply(data,upstream.status);
  }catch(error){console.error('Building register proxy failed',error instanceof Error?error.name:'Error');return reply({error:'건축물대장 조회 서버가 응답하지 않습니다. 잠시 후 다시 조회해주세요.'},502);}
