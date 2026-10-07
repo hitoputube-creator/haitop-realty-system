@@ -250,7 +250,7 @@
   <div class="toast" id="toast"></div>
 </div>
 
-<script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+<script src="assets/js/storage.js?v=20261007-building-register"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -388,7 +388,8 @@ function fillRegisterMemo(raw, candidates) {
 
 async function fillFromBuildingRegister() {
   if (!buildingData || document.getElementById('editFormCard').style.display !== 'none') return;
-  const address = (parseMemo(buildingData.memo || '').fields['주소'] || '').trim();
+  const fields = parseMemo(buildingData.memo || '').fields;
+  const address = (fields['지번주소'] || fields['주소'] || '').trim();
   if (!address) { showToast('주소를 먼저 입력해 주세요.'); return; }
 
   const button = document.getElementById('registerFillBtn');
