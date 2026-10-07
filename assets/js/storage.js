@@ -824,7 +824,7 @@ async function lookupBuildingRegister(address, opts) {
   // hoNm이 있으면 전유부를 여러 페이지 순회하며 찾을 수 있고, data.go.kr 게이트웨이가
   // 가끔 일시적으로 느리거나 500을 던져(연속 2회까지도 관측됨) 서버 쪽에서 재시도까지
   // 하는 경우가 있어 일반 조회보다 훨씬 오래 걸릴 수 있다 — 넉넉하게 50초로 설정.
-  const timeout = opts.hoNm ? 50000 : 20000;
+  const timeout = opts.hoNm ? 80000 : 70000;
   const res = await fetchWithTimeout(SUPABASE_URL + "/functions/v1/lookup-building-register", {
     method: "POST",
     headers,
