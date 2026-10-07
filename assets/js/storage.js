@@ -121,14 +121,20 @@ function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category
     const cat1 = category1Id ? (document.getElementById(category1Id)?.value || "") : "";
     const cat2 = category2Id ? (document.getElementById(category2Id)?.value || "") : "";
     const hiddenForCategory = cat1 === "공장창고" || cat1 === "토지";
+    const isApartment = cat2 === "아파트";
     const onlyOfficetel = cat2 === "오피스텔";
     const prevValue = sel.value;
 
-    if (field) field.style.display = hiddenForCategory ? "none" : "";
+    if (field) field.style.display = hiddenForCategory || isApartment ? "none" : "";
     if (complexField) complexField.style.display = hiddenForCategory ? "none" : "";
     if (hiddenForCategory) {
       sel.value = "";
       if (complexEl) complexEl.value = "";
+      return;
+    }
+
+    if (isApartment) {
+      sel.innerHTML = '<option value="">아파트 단지명 직접 입력</option>';
       return;
     }
 
@@ -173,6 +179,45 @@ function setupQuickBuildingSelect(selectId, publicId, mapId, complexId, category
     if (cat1El) cat1El.addEventListener("change", render);
   }
 
+  return render;
+}
+
+
+function normalizeApartmentUnit(value, suffix) {
+  return String(value || "").trim().replace(new RegExp(suffix + "$"), "").trim();
+}
+function fillApartmentUnitFields(prefix, item = {}) {
+  const detail = item.privateDetailAddress || item.detailAddress || "";
+  const dongMatch = detail.match(/(?:^|\s)([^\s]+)동(?:\s|$)/);
+  const hoMatch = detail.match(/(?:^|\s)([^\s]+)호(?:\s|$)/);
+  document.getElementById(prefix + "apartmentDong").value = normalizeApartmentUnit(item.dong || dongMatch?.[1], "동");
+  document.getElementById(prefix + "apartmentHo").value = normalizeApartmentUnit(item.ho || item.roomNo || hoMatch?.[1], "호");
+}
+function readApartmentUnitFields(prefix) {
+  const dong = normalizeApartmentUnit(document.getElementById(prefix + "apartmentDong").value, "동");
+  const ho = normalizeApartmentUnit(document.getElementById(prefix + "apartmentHo").value, "호");
+  const privateDetailAddress = [dong ? dong + "동" : "", ho ? ho + "호" : ""].filter(Boolean).join(" ");
+  return { dong, ho, privateDetailAddress };
+}
+function setupApartmentUnitFields(prefix, category2Id) {
+  const categoryEl = document.getElementById(category2Id);
+  const detailEl = document.getElementById(prefix + "privateDetailAddress");
+  const dongEl = document.getElementById(prefix + "apartmentDong");
+  const hoEl = document.getElementById(prefix + "apartmentHo");
+  function render() {
+    const isApartment = categoryEl.value === "아파트";
+    dongEl.closest(".field").style.display = isApartment ? "" : "none";
+    hoEl.closest(".field").style.display = isApartment ? "" : "none";
+    detailEl.closest(".field").style.display = isApartment ? "none" : "";
+    if (isApartment && !dongEl.value && !hoEl.value && detailEl.value) {
+      fillApartmentUnitFields(prefix, { privateDetailAddress: detailEl.value });
+    }
+  }
+  [dongEl, hoEl].forEach(el => el.addEventListener("input", () => {
+    if (categoryEl.value === "아파트") detailEl.value = readApartmentUnitFields(prefix).privateDetailAddress;
+  }));
+  categoryEl.addEventListener("change", render);
+  render();
   return render;
 }
 
