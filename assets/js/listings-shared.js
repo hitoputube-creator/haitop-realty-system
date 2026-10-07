@@ -368,7 +368,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
       </div>
       <div class="lc-actions-side">
         <button class="lc-status-chip${isDone ? " done" : ""}" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
-        <div class="lc-toggle" onclick="event.stopPropagation()">
+        <div class="lc-toggle" data-homepage-only onclick="event.stopPropagation()">
           <span class="lc-toggle-label">홈페이지</span>
           <span class="lc-switch">
             <input type="checkbox" ${item.is_public === true ? "checked" : ""} onchange="handlePublicToggle('${idArg}')">
