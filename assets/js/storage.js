@@ -199,13 +199,42 @@ function readApartmentUnitFields(prefix) {
   const privateDetailAddress = [dong ? dong + "동" : "", ho ? ho + "호" : ""].filter(Boolean).join(" ");
   return { dong, ho, privateDetailAddress };
 }
+
+function readApartmentAddresses(prefix) {
+  const roadAddress = document.getElementById(prefix + "publicAddress").value.trim();
+  const jibunAddress = document.getElementById(prefix + "mapAddress").value.trim();
+  return {
+    roadAddress, jibunAddress, apartmentAddressMode: true,
+    publicAddress: [roadAddress ? "새주소: " + roadAddress : "", jibunAddress ? "구주소: " + jibunAddress : ""].filter(Boolean).join(" / "),
+    mapAddress: roadAddress || jibunAddress
+  };
+}
+
 function setupApartmentUnitFields(prefix, category2Id) {
   const categoryEl = document.getElementById(category2Id);
   const detailEl = document.getElementById(prefix + "privateDetailAddress");
   const dongEl = document.getElementById(prefix + "apartmentDong");
   const hoEl = document.getElementById(prefix + "apartmentHo");
+  const publicEl = document.getElementById(prefix + "publicAddress");
+  const mapEl = document.getElementById(prefix + "mapAddress");
+  const publicLabel = publicEl.closest(".field").querySelector("label");
+  const mapLabel = mapEl.closest(".field").querySelector("label");
+  const originalPublicLabel = publicLabel.innerHTML;
+  const originalMapLabel = mapLabel.innerHTML;
+  const originalPublicPlaceholder = publicEl.placeholder;
+  const originalMapPlaceholder = mapEl.placeholder;
   function render() {
     const isApartment = categoryEl.value === "아파트";
+    publicLabel.innerHTML = isApartment ? "공개주소 · 새주소(도로명주소)" : originalPublicLabel;
+    mapLabel.innerHTML = isApartment ? "공개주소 · 구주소(지번주소)" : originalMapLabel;
+    publicEl.placeholder = isApartment ? "예) 경기도 파주시 ○○로 123" : originalPublicPlaceholder;
+    mapEl.placeholder = isApartment ? "예) 경기도 파주시 동패동 1234" : originalMapPlaceholder;
+    const lookupBtn = document.getElementById(prefix ? "editLookupBuildingBtn" : "lookupBuildingBtn");
+    if (lookupBtn) lookupBtn.style.display = isApartment ? "none" : "";
+    ["managementFee", "premium"].forEach(id => {
+      const el = document.getElementById(prefix + id);
+      if (el) el.closest(".field").style.display = isApartment ? "none" : "";
+    });
     dongEl.closest(".field").style.display = isApartment ? "" : "none";
     hoEl.closest(".field").style.display = isApartment ? "" : "none";
     detailEl.closest(".field").style.display = isApartment ? "none" : "";
