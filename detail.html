@@ -1321,7 +1321,7 @@ function closeHomepageTab(tab) {
     if (item.status !== "거래완료") {
       html += `<button class="btn btn-success" id="doneBtn">✅ 거래완료 처리</button>`;
     } else {
-      html += `<button class="btn btn-ghost" id="undoneBtn">↩ 광고중으로 변경</button>`;
+      html += `<button class="btn btn-ghost" id="undoneBtn">↩ 진행중으로 변경</button>`;
     }
     if (contact) {
       html += `<a class="contact-btn" href="tel:${escapeAttr(contact)}">📞 ${escapeHtml(contact)}</a>`;
@@ -1407,7 +1407,7 @@ function closeHomepageTab(tab) {
     html += `<section class="detail-section"><div class="detail-section-title">이미지·자료</div><div class="detail-read-grid">${materialHtml}</div></section>`;
 
     html += detailSection("등록상태", [
-      detailField("거래상태", item.status || "광고중", { required: true }),
+      detailField("거래상태", (!item.status || item.status === "광고중" ? "진행중" : item.status), { required: true }),
       ...(OfficeConfig.id === "ktop" ? [] : [detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true })]),
       detailField("등록일", formatDateValue(item.created_at)),
       detailField("최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))),
@@ -1541,7 +1541,7 @@ function closeHomepageTab(tab) {
     });
     if (undoneBtn) undoneBtn.addEventListener("click", async () => {
       undoneBtn.disabled = true;
-      try { await updateListingStatus(id, "광고중"); showToast("↩ 광고중으로 변경됐어요!"); setTimeout(() => location.reload(), 1200); }
+      try { await updateListingStatus(id, "광고중"); showToast("↩ 진행중으로 변경됐어요!"); setTimeout(() => location.reload(), 1200); }
       catch(e) { showToast("❌ 실패: "+e.message); undoneBtn.disabled = false; }
     });
     const printBriefBtn = document.getElementById("printBriefBtn");

@@ -240,7 +240,7 @@ function renderPreview() {
       <td style="font-size:0.82rem;">${formatPrice(item)}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${contact}</td>
-      <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:${isDone?'rgba(238,136,136,0.15)':'rgba(82,197,100,0.12)'};color:${isDone?'#e88':'#52c564'};">${isDone?"완료":(item.status||"광고중")}</span></td>
+      <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:${isDone?'rgba(238,136,136,0.15)':'rgba(82,197,100,0.12)'};color:${isDone?'#e88':'#52c564'};">${isDone?"완료":getStatusLabel(item)}</span></td>
       <td style="font-size:0.78rem;color:var(--text-muted);">${memoShort}</td>
     </tr>`;
   }).join("");

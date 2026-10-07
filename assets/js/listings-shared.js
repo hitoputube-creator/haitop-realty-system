@@ -137,7 +137,7 @@ function isNeedsCheck(item) {
 function getStatusLabel(item) {
   if (item.status === "거래완료") return "거래완료";
   if (isNeedsCheck(item)) return "확인 필요";
-  return item.status || "광고중";
+  return !item.status || item.status === "광고중" ? "진행중" : item.status;
 }
 
 function getStatusClass(item) {
