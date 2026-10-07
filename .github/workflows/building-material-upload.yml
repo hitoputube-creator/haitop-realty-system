@@ -1,0 +1,21 @@
+name: Building material upload regression
+on:
+  push:
+    paths:
+      - 'assets/js/storage.js'
+      - 'building-detail.html'
+      - 'supabase/functions/upload-building-material/**'
+      - 'tests/building-material-upload.cjs'
+      - '.github/workflows/building-material-upload.yml'
+  workflow_dispatch:
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/building-material-upload.cjs
+        env:
+          MATERIAL_LIVE: '1'

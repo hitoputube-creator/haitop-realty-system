@@ -737,7 +737,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261007-area-units"></script>
+<script src="assets/js/storage.js?v=20261007-ktop-material-upload"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -826,6 +826,20 @@ async function getCloudinarySignature(folder) {
 }
 
 async function cloudinaryUpload(file, folder = 'haitop') {
+  if(OfficeConfig.id==='ktop'){
+    const kind=folder==='haitop/floors' ? 'floors' : folder==='haitop/files' ? 'files' : '';
+    if(!kind)throw new Error('지원하지 않는 자료 구분입니다.');
+    if(file.size>20*1024*1024)throw new Error('파일은 20MB 이하로 올려주세요.');
+    const body=new FormData();body.append('file',file);body.append('buildingId',buildingId);body.append('kind',kind);
+    const {data,error}=await hitopAuthClient.functions.invoke('upload-building-material',{body});
+    if(error){
+      let message=error.message || '업로드 실패';
+      try{const result=await error.context.json();if(result.error)message=result.error;}catch(_){}
+      throw new Error(message);
+    }
+    if(!data || !data.url)throw new Error('파일 저장 응답이 올바르지 않습니다.');
+    return data.url;
+  }
   const { signature, timestamp, apiKey, cloudName } = await getCloudinarySignature(folder);
 
   const fd = new FormData();
@@ -2033,5 +2047,6 @@ async function deleteBFile(id) {
 </script>
 </body>
 </html>
+
 
 

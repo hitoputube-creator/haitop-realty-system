@@ -1366,10 +1366,21 @@ async function getAllBuildingFloors() {
   if (!res.ok) throw new Error("평면도 목록 조회 실패");
   return await res.json();
 }
+async function resolveBuildingMaterialUrls(rows) {
+  if(OfficeConfig.id!=='ktop')return rows;
+  const prefix=SUPABASE_URL+'/storage/v1/object/authenticated/building-materials/';
+  const paths=[...new Set(rows.map(row=>row.cloudinary_url || '').filter(url=>url.startsWith(prefix)).map(url=>url.slice(prefix.length)))];
+  if(!paths.length)return rows;
+  const {data,error}=await hitopAuthClient.storage.from('building-materials').createSignedUrls(paths,3600);
+  if(error)throw new Error('자료 열람 권한을 확인하지 못했습니다. 다시 로그인해주세요.');
+  const urls=new Map((data || []).filter(row=>row.signedUrl && !row.error).map(row=>[row.path,row.signedUrl]));
+  if(urls.size!==paths.length)throw new Error('저장된 파일을 열지 못했습니다. 새로고침 후 다시 확인해주세요.');
+  return rows.map(row=>row.cloudinary_url?.startsWith(prefix) ? {...row,material_storage_url:row.cloudinary_url,cloudinary_url:urls.get(row.cloudinary_url.slice(prefix.length))} : row);
+}
 async function getBuildingFloors(buildingId) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_floors?building_id=eq." + encodeURIComponent(buildingId) + "&order=sort_order.asc.nullslast,created_at.asc", { headers });
   if (!res.ok) throw new Error("평면도 목록 조회 실패");
-  return await res.json();
+  return await resolveBuildingMaterialUrls(await res.json());
 }
 async function saveBuildingFloorOrder(buildingId, floorIds) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/rpc/reorder_building_floors", {
@@ -1410,7 +1421,7 @@ async function deleteBuildingFloor(id) {
 async function getBuildingFiles(buildingId) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_files?building_id=eq." + encodeURIComponent(buildingId) + "&order=created_at.asc", { headers });
   if (!res.ok) throw new Error("기타 자료 목록 조회 실패");
-  return await res.json();
+  return await resolveBuildingMaterialUrls(await res.json());
 }
 async function addBuildingFile(item) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_files", {
@@ -1753,5 +1764,6 @@ document.addEventListener('click', event => {
     alert('이 업무앱의 케이탑 연결은 아직 준비 중입니다.');
   }
 }, true);
+
 
 
