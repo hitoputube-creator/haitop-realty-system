@@ -173,12 +173,6 @@
     <div class="info-table" id="infoTable"></div>
   </div>
 
-  <!-- ===== 추가 메모 (읽기전용) ===== -->
-  <div class="card" id="extraMemoCard" style="margin-bottom:20px;">
-    <div class="section-title">🗒 추가 메모</div>
-    <div class="extra-memo-view" id="extraMemoView">—</div>
-  </div>
-
   <!-- ===== 개요 편집 폼 (기본 숨김) ===== -->
   <div class="card" id="editFormCard" style="display:none;">
     <div class="section-title">📝 건물 기본 정보 수정</div>
@@ -232,11 +226,6 @@
       <div class="field"><label>자료기준일</label><input id="ov_source_date" type="text" placeholder="예: 2026.08.06" /></div>
       <div class="field"><label>자료출처</label><input id="ov_source" type="text" /></div>
       <div class="field" style="grid-column:1/-1;"><label>네이버 단지정보 링크</label><input id="ov_naver_complex" type="url" placeholder="네이버부동산에서 단지를 연 뒤 주소를 붙여넣으세요" /></div>
-    </div>
-
-    <div class="extra-memo">
-      <label>추가 메모</label>
-      <textarea id="ov_extra" rows="5" placeholder="기타 특이사항, 임대 현황, 주요 입점 업종 등"></textarea>
     </div>
 
     <div class="btn-row">
@@ -340,7 +329,7 @@ function buildMemo() {
     if (line.trim() && (colon < 0 || !known.has(line.slice(0, colon).trim()))) lines.push(line);
   });
   const basic = lines.join('\n');
-  const extra = document.getElementById('ov_extra').value.trim();
+  const extra = parseMemo(buildingData ? buildingData.memo || '' : '').extra;
   if (!extra) return basic;
   return basic + '\n' + MEMO_SEP + '\n' + extra;
 }
@@ -350,7 +339,6 @@ function populateForm(memo) {
   editableOverviewFields().forEach(([lbl, id]) => {
     document.getElementById(id).value = fields[lbl] || '';
   });
-  document.getElementById('ov_extra').value = extra;
 }
 
 // ── 건축물대장 값으로 비어 있는 개요 항목 채우기 ──
@@ -446,8 +434,13 @@ function renderReadOnlyViews() {
   document.getElementById('driveOpenBtn').style.opacity = hasUrl ? '1' : '0.45';
   document.getElementById('driveCopyBtn').style.opacity = hasUrl ? '1' : '0.45';
 
-  const rows = INFO_TABLE_ROWS.concat(resourceScope === 'residential'
-    ? RESIDENTIAL_FIELDS.map(([label]) => ({ label, value: () => memoFields[label] })) : []);
+  const rows = INFO_TABLE_ROWS.map(row => resourceScope === 'residential' && row.label === '주소'
+    ? {...row,label:'새주소(도로명주소)'} : row);
+  if (resourceScope === 'residential') {
+    rows.splice(2,0,{label:'지번주소(구주소)',value:()=>memoFields['지번주소']});
+    rows.push(...RESIDENTIAL_FIELDS.filter(([label])=>label!=='지번주소')
+      .map(([label])=>({label,value:()=>memoFields[label]})));
+  }
   const tableHtml = rows.map(row => {
     const val = row.value() || '';
     return `<div class="info-table-label">${esc(row.label)}</div>` +
@@ -455,9 +448,6 @@ function renderReadOnlyViews() {
   }).join('');
   document.getElementById('infoTable').innerHTML = tableHtml;
 
-  const extraEl = document.getElementById('extraMemoView');
-  extraEl.textContent = memoExtra || '등록된 추가 메모가 없습니다.';
-  extraEl.classList.toggle('empty', !memoExtra);
 }
 
 // ── 수정 모드 토글 ──
@@ -534,7 +524,7 @@ function togglePreview() {
   if (box.classList.contains('show')) {
     box.classList.remove('show'); return;
   }
-  box.textContent = buildMemo();
+  box.textContent = buildMemo().split(MEMO_SEP)[0].trim();
   box.classList.add('show');
 }
 
