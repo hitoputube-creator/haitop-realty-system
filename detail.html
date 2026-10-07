@@ -30,6 +30,17 @@
 .apartment-listing-form .amt-hint{font-size:.72rem;color:var(--gold);display:block}
 @media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}}
 @media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}}
+
+/* 아파트 상세: 각 행의 항목명과 값을 가로로 맞춥니다. */
+.apartment-info-table{border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
+.apartment-info-row{display:grid;grid-template-columns:repeat(var(--pairs),minmax(96px,128px) minmax(0,1fr))}
+.apartment-info-row>div{min-width:0;padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.1);line-height:1.5;box-sizing:border-box}
+.apartment-info-row:last-child>div{border-bottom:0}
+.apartment-info-row .ipt-label{display:flex;align-items:center;color:var(--gold);background:#0f2032;font-size:.82rem;font-weight:700;border-right:1px solid rgba(255,255,255,.08)}
+.apartment-info-row .ipt-value{display:flex;align-items:center;background:#182c43;font-size:.88rem;overflow-wrap:anywhere;white-space:pre-wrap}
+.apartment-info-row[style="--pairs:1"] .ipt-value{display:block}
+@media(max-width:850px){.apartment-info-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-info-row[style="--pairs:1"]{grid-template-columns:108px minmax(0,1fr)}}
+@media(max-width:580px){.apartment-info-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row[style="--pairs:1"]{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row>div{padding:9px 10px}}
 </style>
 </head>
 <body data-nav-active="properties">
@@ -1099,17 +1110,33 @@ function closeHomepageTab(tab) {
     if (category.category2 === "아파트" || item.type === "apartment") {
       const u = apartmentSource(item);
       const man = n => n == null || n === "" ? "" : Number(n).toLocaleString("ko-KR") + "만원";
+      const row = pairs => '<div class="apartment-info-row" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => iptCell(label,value)).join('') + '</div>';
+      const section = (title, rows) => '<section class="detail-section apartment-info-section"><div class="detail-section-title">' + escapeHtml(title) + '</div><div class="apartment-info-table">' + rows.map(row).join('') + '</div></section>';
+      const memoRows = [
+        [["옵션내역",u.옵션내역]],
+        [["비고",u.비고]],
+        ...((Array.isArray(u.추가메모) ? u.추가메모 : []).map(memo => [["추가메모", (memo.created_at ? new Date(memo.created_at).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"}) + " · " : "") + memo.text]]))
+      ];
       return [
-        iptRow([["아파트명",u.아파트명],["접수일자",u.접수일자]]),
-        iptRow([["동",u.동],["호수",u.호],["평형",u.평형],["타입",u.타입]]),
-        iptRow([["공개주소 · 새주소(도로명주소)",item.roadAddress],["공개주소 · 구주소(지번주소)",item.jibunAddress]]),
-        iptRow([["분양면적(공급면적)",formatAreaPair(u.분양_m2,u.분양_평)],["전용면적",formatAreaPair(u.전용_m2,u.전용_평)]]),
-        iptRow([["매매·임대 구분",u.거래구분],["매매가",man(u.현_매매가격)],["임대 보증금·전세가",man(u.현_보증금)],["월세",man(u.현_월세)]]),
-        iptRow([["소유자 이름",u.소유주],["소유자 연락처",u.연락처],["통신사",u.소유자통신사]]),
-        iptRow([["세입자 현황",u.세입자현황],["세입자 이름",u.세입자이름],["세입자 연락처",u.세입자연락처]]),
-        iptRow([["세입자 계약 시작일",u.세입자계약시작일],["세입자 계약 종료일",u.세입자계약종료일]]),
-        iptRow([["옵션내역",u.옵션내역],["비고",u.비고]]),
-        ...((Array.isArray(u.추가메모) ? u.추가메모 : []).map(memo => iptRow([["추가메모", (memo.created_at ? new Date(memo.created_at).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"}) + " · " : "") + memo.text]])))
+        section("기본정보", [
+          [["아파트명",u.아파트명],["접수일자",u.접수일자]],
+          [["동",u.동],["호수",u.호],["평형",u.평형],["타입",u.타입]],
+          [["새주소(도로명주소)",item.roadAddress]],
+          [["구주소(지번주소)",item.jibunAddress]],
+          [["분양면적(공급면적)",formatAreaPair(u.분양_m2,u.분양_평)],["전용면적",formatAreaPair(u.전용_m2,u.전용_평)]]
+        ]),
+        section("가격정보", [
+          [["거래구분",u.거래구분],["매매가",man(u.현_매매가격)]],
+          [["보증금·전세가",man(u.현_보증금)],["월세",man(u.현_월세)]]
+        ]),
+        section("소유자 정보", [
+          [["이름",u.소유주],["연락처",u.연락처],["통신사",u.소유자통신사]]
+        ]),
+        section("세입자 정보", [
+          [["현황",u.세입자현황],["이름",u.세입자이름],["연락처",u.세입자연락처]],
+          [["계약 시작일",u.세입자계약시작일],["계약 종료일",u.세입자계약종료일]]
+        ]),
+        section("옵션·메모", memoRows)
       ].join("");
     }
     const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "");
