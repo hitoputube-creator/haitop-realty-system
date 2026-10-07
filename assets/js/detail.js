@@ -112,7 +112,7 @@ function closeHomepageTab(tab) {
         <button id="btnBack" class="btn">목록으로</button>
         <button id="btnEstimate" class="btn primary">견적서 출력</button>
         <button id="btnEdit" class="btn">수정하기</button>
-        <button class="btn primary" id="sendHomeBtn">${x.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>
+        ${typeof OfficeConfig !== "undefined" && OfficeConfig.id === "ktop" ? "" : `<button class="btn primary" id="sendHomeBtn">${x.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`}
       `;
     }
 

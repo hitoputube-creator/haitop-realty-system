@@ -718,7 +718,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+<script src="assets/js/storage.js?v=20261007-ktop-internal"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1623,7 +1623,7 @@ async function deleteBFile(id) {
           <button class="btn-unit-edit" data-ri="${ri}">수정</button>
           ${u.listing_id
             ? `<span class="sbadge 임차중">매물등록</span> <a class="btn-listing-view" href="detail.html?id=${u.listing_id}">매물보기</a>`
-              + `<a class="btn-listing-home" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html?id=${u.listing_id}" target="_blank">홈페이지</a>`
+              + (OfficeConfig.id === "ktop" ? "" : `<a class="btn-listing-home" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html?id=${u.listing_id}" target="_blank">홈페이지</a>`)
             : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`
           }
         </td>
