@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-apartment-layout2"></script>
+<script src="assets/js/storage.js?v=20261007-tenant-note"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -21,6 +21,7 @@
 .apartment-listing-form label{display:block;font-size:.76rem;margin-bottom:4px;color:var(--text-muted)}
 .apartment-listing-form input,.apartment-listing-form select,.apartment-listing-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:7px 9px}
 .apartment-listing-form textarea{min-height:46px;height:46px}
+.apartment-listing-form #apt_추가메모{min-height:92px;height:92px}
 .apartment-listing-form .span-3{grid-column:span 3}
 .apartment-listing-form .span-2{grid-column:span 2}
 .apartment-listing-form .full{grid-column:1/-1}
@@ -43,7 +44,7 @@
 .apartment-memo-section .ipt-value{max-height:120px;overflow-y:auto}
 .apartment-info-table{border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
 .apartment-info-row{display:grid;grid-template-columns:repeat(var(--pairs),minmax(96px,128px) minmax(0,1fr))}
-.apartment-info-row.apartment-unit-row{grid-template-columns:76px minmax(50px,.8fr) 76px minmax(146px,1.4fr) 76px minmax(70px,1fr) 76px minmax(45px,.7fr)}
+.apartment-info-row.apartment-unit-row{grid-template-columns:64px minmax(50px,.7fr) 68px minmax(155px,1.4fr) 60px minmax(70px,.8fr) 56px minmax(50px,.6fr)}
 .apartment-info-row>div{min-width:0;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.1);line-height:1.5;box-sizing:border-box}
 .apartment-info-row:last-child>div{border-bottom:0}
 .apartment-info-row .ipt-label{display:flex;align-items:center;color:var(--gold);background:#0f2032;font-size:.82rem;font-weight:700;border-right:1px solid rgba(255,255,255,.08)}
@@ -1186,7 +1187,8 @@ function closeHomepageTab(tab) {
         ...apartmentNotes(item).map(note => [note])
       ];
       const basic = section("기본정보", [
-        [["아파트명",u.아파트명],["접수일자",u.접수일자]],
+        [["아파트명",u.아파트명]],
+        [["접수일자",u.접수일자]],
         [["동",u.동],["호수",u.호],["평형",u.평형],["타입",u.타입]],
         [["분양면적(공급면적)",formatAreaPair(u.분양_m2,u.분양_평)],["전용면적",formatAreaPair(u.전용_m2,u.전용_평)]],
         [["새주소(도로명주소)",addresses.roadAddress]],
@@ -1204,9 +1206,10 @@ function closeHomepageTab(tab) {
           [["이름",u.소유주]],
           [["연락처",u.연락처],["통신사",u.소유자통신사]]
         ]),
-        section("세입자 정보", [
-          [["현황",u.세입자현황],["이름",u.세입자이름],["연락처",u.세입자연락처]],
-          [["계약 시작일",u.세입자계약시작일],["계약 종료일",u.세입자계약종료일]]
+        section("세입자 정보 · " + (u.세입자현황 === "임차중" || u.세입자이름 || u.세입자연락처 ? "있음" : u.세입자현황 === "미확인" || !u.세입자현황 ? "미확인" : "없음"), [
+          [["이름",u.세입자이름]],
+          [["연락처",u.세입자연락처]],
+          [["비고",u.세입자비고]]
         ])
       ].join("");
       return '<div class="apartment-details-layout">'+basic+

@@ -325,7 +325,13 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const statusLabel = getStatusLabel(item);
   const addressText = item.address || "(주소 미입력)";
   const listingNo = getListingNumber(item);
-  const priceText = formatPrice(item) || "-";
+  const priceText = (formatPrice(item) || "-").replace(/^(?:매매|전세|월세|임대)\s+/, "");
+  const apartment = item.apartmentUnitData || {};
+  const fullName = apartment.아파트명 || item.complexName || item.buildingName || "";
+  const village = (fullName.match(/^(.*?마을\s*\d+단지)/) || [])[1] || "";
+  const apartmentName = village ? fullName.slice(village.length).trim() : fullName;
+  const dong = String(apartment.동 || item.apartmentDong || item.dong || "").replace(/동$/, "");
+  const room = String(apartment.호 || item.apartmentHo || item.ho || "").replace(/호$/, "");
   const ownerName = getListingOwnerName(item);
   const phone1 = getListingPhone1(item);
   const phone2 = getListingPhone2(item);
@@ -342,10 +348,10 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     <div class="listing-cell listing-cell-deal" data-label="거래유형">
       ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType] || ""}">${escapeHtml(dealType)}</span>` : "<span>-</span>"}
     </div>
-    <div class="listing-cell listing-cell-address" data-label="소재지">
-      <span class="lc-title">${escapeHtml(addressText)}</span>
-      <span class="lc-no">No. ${escapeHtml(listingNo)}</span>
-    </div>
+    <div class="listing-cell listing-cell-village" data-label="마을단지">${escapeHtml(village || "-")}</div>
+    <div class="listing-cell listing-cell-apartment" data-label="아파트명">${escapeHtml(apartmentName || (village ? "-" : addressText))}<span class="lc-no">No. ${escapeHtml(listingNo)}</span></div>
+    <div class="listing-cell listing-cell-dong" data-label="동">${escapeHtml(dong || "-")}</div>
+    <div class="listing-cell listing-cell-room" data-label="호수">${escapeHtml(room || "-")}</div>
     <div class="listing-cell listing-cell-price" data-label="금액">
       <span class="lc-price-text">${escapeHtml(priceText)}</span>
     </div>
@@ -354,7 +360,6 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
       <span>${escapeHtml(phone1)}</span>
       ${phone2 ? `<span class="lc-phone-secondary">${escapeHtml(phone2)}</span>` : ""}
     </div>
-    <div class="listing-cell listing-cell-note${isDone ? " lc-desc-done" : ""}" data-label="비고설명">${escapeHtml(noteText)}</div>
     <div class="listing-cell listing-cell-actions listing-actions" data-label="관리">
       <div class="lc-actions-main">
         <button class="btn btn-primary" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>

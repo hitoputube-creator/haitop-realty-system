@@ -375,21 +375,23 @@ function renderListView(items) {
 let _currentListItems = [];
 let _currentCardItems = [];
 
+let listingColumnSort = {key:"",direction:1};
+function listingColumnValue(item,key) {
+  const u=item.apartmentUnitData || {};
+  const name=u.아파트명 || item.complexName || item.buildingName || "";
+  const village=(name.match(/^(.*?마을\s*\d+단지)/)||[])[1]||"";
+  const map={type:()=>getListingCategoryLabel(item),deal:()=>getTransactionType(item),village:()=>village,apartment:()=>name.slice(village.length).trim()||item.address||"",dong:()=>u.동||item.apartmentDong||item.dong||"",room:()=>u.호||item.apartmentHo||item.ho||"",price:()=>Number(item.salePrice||item.deposit||item.monthlyRent||0),owner:()=>getListingOwnerName(item),phone:()=>getListingPhone1(item)};
+  return map[key]?.() ?? "";
+}
+function sortListingColumn(key) {
+  listingColumnSort={key,direction:listingColumnSort.key===key ? -listingColumnSort.direction : 1};
+  currentPage=1; renderList();
+}
 function makeListingColumnHeader() {
   const header = document.createElement("div");
   header.className = "listing-column-header";
-  header.setAttribute("aria-hidden", "true");
-  header.innerHTML = `
-    <div class="listing-cell-select">선택</div>
-    <div class="listing-cell-type">매물종류</div>
-    <div class="listing-cell-deal">거래유형</div>
-    <div class="listing-cell-address">소재지</div>
-    <div class="listing-cell-price">금액</div>
-    <div class="listing-cell-owner">소유주</div>
-    <div class="listing-cell-phone">연락처</div>
-    <div class="listing-cell-note">비고설명</div>
-    <div class="listing-cell-actions">관리</div>
-  `;
+  const heading=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+label+' <span aria-hidden="true">'+(listingColumnSort.key===key ? (listingColumnSort.direction===1 ? '↑' : '↓') : '↕')+'</span></button>';
+  header.innerHTML = '<div class="listing-cell-select">선택</div>'+[['type','매물종류'],['deal','구분'],['village','마을단지'],['apartment','아파트명'],['dong','동'],['room','호수'],['price','가격'],['owner','소유주'],['phone','연락처']].map(([key,label])=>'<div class="listing-cell-'+key+'">'+heading(key,label)+'</div>').join('')+'<div class="listing-cell-actions">관리</div>';
   return header;
 }
 
@@ -445,6 +447,11 @@ function getFilteredListings() {
     const da = new Date(a.created_at || 0);
     const db = new Date(b.created_at || 0);
     return currentSort === "newest" ? db - da : da - db;
+  });
+  if (listingColumnSort.key) filtered.sort((a,b)=>{
+    const av=listingColumnValue(a,listingColumnSort.key), bv=listingColumnValue(b,listingColumnSort.key);
+    const comparison=typeof av==="number" && typeof bv==="number" ? av-bv : String(av).localeCompare(String(bv),"ko",{numeric:true});
+    return comparison*listingColumnSort.direction;
   });
   return filtered;
 }

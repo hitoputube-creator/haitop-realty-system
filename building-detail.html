@@ -459,34 +459,21 @@
     }
     .unit-sec-head h3 { margin: 0; font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.92); }
   
-    .unit-counts-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-    .unit-filter-reset{border:1px solid rgba(212,175,55,.3);border-radius:6px;background:transparent;color:var(--gold-soft);padding:6px 10px;font:inherit;font-size:.76rem;cursor:pointer}
-    .unit-filter-reset[hidden]{display:none}
     .unit-dong-cell,.unit-room-cell{white-space:nowrap}
     .unit-dong-cell strong,.unit-room-cell strong{font-size:.94rem;font-variant-numeric:tabular-nums}
     .unit-dong-cell>small,.unit-room-cell>small{margin-left:3px;color:var(--muted);font-size:.72rem}
     .unit-room-cell>small:last-child:not(:first-of-type){margin-left:0}
 
 
-    .residential-unit-table{table-layout:fixed;min-width:1120px}
-    .residential-unit-table th:nth-child(1),.residential-unit-table th:nth-child(2){width:6%}
-    .residential-unit-table th:nth-child(3){width:9%}
-    .residential-unit-table th:nth-child(4){width:7%}
-    .residential-unit-table th:nth-child(5){width:9%}
-    .residential-unit-table th:nth-child(6){width:13%}
-    .residential-unit-table th:nth-child(7){width:14%}
-    .residential-unit-table th:nth-child(8){width:8%}
-    .residential-unit-table th:nth-child(9){width:11%}
-    .residential-unit-table th:nth-child(10){width:17%}
+    .residential-unit-table{table-layout:auto;min-width:1120px}
     .residential-unit-table th,.residential-unit-table td{box-sizing:border-box;padding-left:8px;padding-right:8px}
-    .residential-unit-table td{overflow:hidden;text-overflow:ellipsis}
+    .residential-unit-table td{overflow:visible;text-overflow:clip}
 
-    .unit-filter-heading{position:relative;display:flex;align-items:center;gap:5px;min-height:24px;cursor:pointer}
-    .unit-filter-heading svg{width:12px;height:12px;flex-shrink:0;opacity:.65}
-    .unit-filter-heading select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
-    .unit-filter-heading.active{color:var(--gold-soft)}
-    .unit-filter-heading.active svg{opacity:1;fill:rgba(212,175,55,.2)}
-    .unit-filter-heading:focus-within{outline:1px solid var(--gold-soft);outline-offset:3px;border-radius:3px}
+    .unit-sort{display:inline-flex;align-items:center;gap:5px;width:100%;border:0;background:none;color:inherit;font:inherit;font-weight:inherit;text-align:left;white-space:nowrap;cursor:pointer;padding:4px 0}
+    .unit-sort:hover,.unit-sort.active{color:var(--gold-soft)}
+    .unit-sort:focus-visible{outline:2px solid var(--gold-soft);outline-offset:2px;border-radius:3px}
+    .unit-sort-arrow{font-size:.7rem;opacity:.6}
+    .unit-sort.active .unit-sort-arrow{opacity:1}
 </style>
 </head>
 <body>
@@ -594,7 +581,7 @@
       </div>
     </div>
 
-    <div class="unit-counts-row"><p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.7;"></p><button type="button" id="unitFiltersReset" class="unit-filter-reset" hidden>필터 초기화</button></div>
+    <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.7;"></p>
     <!-- 층 필터 탭 -->
     <div class="floor-tabs" id="unitFloorTabs"></div>
 
@@ -1465,79 +1452,71 @@ async function deleteBFile(id) {
   }
 
 
-  const residentialFilters={room:'',sizeType:'',deal:'',sale:'',rentChoice:'',owner:'',tenant:'',received:'',listed:''};
-  function residentialFilterValue(u,key) {
-    const value=v=>v==null ? '' : String(v).trim();
+
+  let residentialSort={key:'',direction:''};
+  const unitCollator=new Intl.Collator('ko-KR',{numeric:true,sensitivity:'base'});
+  function residentialSortParts(unit,key){
+    const parts=roomParts(unit);
+    const number=value=>{
+      if(value==null || String(value).trim()==='')return null;
+      const result=Number(String(value).replace(/,/g,''));
+      return Number.isFinite(result) ? result : null;
+    };
+    const text=value=>String(value ?? '').trim() || null;
     switch(key){
-      case 'room':return roomParts(u).room;
-      case 'sizeType':return [u.평형,u.타입].filter(v=>value(v)).map(value).join(' / ');
-      case 'deal':return value(u.거래구분);
-      case 'sale':return value(u.현_매매가격);
-      case 'owner':return [u.소유주,u.연락처].filter(v=>value(v)).map(value).join(' · ');
-      case 'tenant':return value(u.세입자현황 || u.공실여부 || '미확인');
-      case 'received':return value(u.접수일자);
-      case 'listed':return String(u.listing_id || '').trim() ? 'registered' : 'unregistered';
+      case 'dong':return [text(parts.dong),text(parts.room)];
+      case 'room':return [text(parts.room),text(parts.dong)];
+      case 'sizeType':return [number(String(unit.평형 || '').match(/[\d.]+/)?.[0]),text(unit.타입)];
+      case 'deal':return [text(unit.거래구분)];
+      case 'sale':return [number(unit.현_매매가격)];
+      case 'rent':return [number(effectiveUnitPrice(unit.현_보증금,unit.보증금)),number(effectiveUnitPrice(unit.현_월세,unit.월차임))];
+      case 'owner':return [text(unit.소유주),text(unit.연락처)];
+      case 'tenant':return [text(unit.세입자현황 || unit.공실여부 || '미확인')];
+      case 'received':return [text(unit.접수일자)];
+      case 'listed':return [String(unit.listing_id || '').trim() ? 1 : 0];
     }
-    return '';
+    return [];
   }
-  function matchesResidentialFilters(u) {
-    return Object.entries(residentialFilters).every(([key,selected])=>{
-      if(!selected)return true;
-      if(key==='rentChoice'){
-        const deposit=effectiveUnitPrice(u.현_보증금,u.보증금),rent=effectiveUnitPrice(u.현_월세,u.월차임);
-        if(selected==='__empty__')return (deposit==null || deposit==='') && (rent==null || rent==='');
-        const [kind,amount]=selected.split(':');
-        const actual=kind==='deposit' ? deposit : rent;
-        return actual!=null && actual!=='' && String(actual)===amount;
+  function sortedResidentialUnits(rows){
+    if(!residentialSort.key)return rows;
+    const factor=residentialSort.direction==='asc' ? 1 : -1;
+    return rows.slice().sort((a,b)=>{
+      const left=residentialSortParts(a,residentialSort.key),right=residentialSortParts(b,residentialSort.key);
+      for(let i=0;i<Math.max(left.length,right.length);i++){
+        const av=left[i],bv=right[i];
+        if(av==null && bv==null)continue;
+        if(av==null)return 1;
+        if(bv==null)return -1;
+        const result=typeof av==='number' && typeof bv==='number' ? av-bv : unitCollator.compare(String(av),String(bv));
+        if(result)return Math.sign(result)*factor;
       }
-      const actual=residentialFilterValue(u,key);
-      return selected==='__empty__' ? !actual : actual===selected;
+      return 0;
     });
   }
-  function renderResidentialHeader() {
+  function renderResidentialHeader(){
     const head=$('unitsTableHead');
     head.closest('table').classList.add('residential-unit-table');
-    if(!head.dataset.residentialFilters){
-      const columns=[['dong','동'],['room','호수'],['sizeType','평형·타입'],['deal','거래구분'],['sale','매매가(만)'],['rentChoice','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['received','접수일자'],['listed','관리']];
-      const icon='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 3h12L9.5 8v4l-3 1V8z"/></svg>';
-      head.innerHTML='<tr>'+columns.map(([key,label])=>'<th><div class="unit-filter-heading"><span>'+label+'</span>'+icon+'<select data-unit-filter="'+key+'" aria-label="'+label+' 필터" title="'+label+' 필터 보기"></select></div></th>').join('')+'</tr>';
-      head.dataset.residentialFilters='true';
-      head.querySelectorAll('[data-unit-filter]').forEach(control=>{
-        control.addEventListener('change',()=>{
-          const key=control.dataset.unitFilter;
-          if(key==='dong'){filterFloor=control.value || '전체';renderAll();}
-          else{residentialFilters[key]=control.value;renderTable();}
+    if(!head.dataset.sortReady){
+      const columns=[['dong','동'],['room','호수'],['sizeType','평형·타입'],['deal','거래구분'],['sale','매매가(만)'],['rent','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['received','접수일자'],['listed','관리']];
+      head.innerHTML='<tr>'+columns.map(([key,label])=>'<th><button type="button" class="unit-sort" data-unit-sort="'+key+'" aria-label="'+label+' 정렬"><span>'+label+'</span><span class="unit-sort-arrow" aria-hidden="true">↕</span></button></th>').join('')+'</tr>';
+      head.dataset.sortReady='true';
+      head.querySelectorAll('.unit-sort').forEach(button=>{
+        button.addEventListener('click',()=>{
+          const key=button.dataset.unitSort;
+          residentialSort={key,direction:residentialSort.key===key && residentialSort.direction==='asc' ? 'desc' : 'asc'};
+          renderTable();
         });
       });
-      const reset=$('unitFiltersReset');reset.hidden=false;
-      reset.addEventListener('click',()=>{
-        Object.keys(residentialFilters).forEach(key=>residentialFilters[key]='');
-        filterFloor='전체';renderAll();
-      });
     }
-    const setOptions=(key,entries)=>{
-      const control=head.querySelector('[data-unit-filter="'+key+'"]');
-      const html='<option value="">전체 보기</option>'+entries.map(([value,label])=>'<option value="'+esc(value)+'">'+esc(label)+'</option>').join('');
-      if(control.innerHTML!==html)control.innerHTML=html;
-      const selected=key==='dong' ? (filterFloor==='전체' ? '' : filterFloor) : residentialFilters[key];
-      control.value=selected;
-      control.parentElement.classList.toggle('active',!!selected);
-      control.title=selected ? '필터: '+(control.selectedOptions[0]?.textContent || selected) : '필터 보기';
-    };
-    const ordinary=(key,values)=>{
-      const unique=[...new Set(values.map(v=>String(v ?? '').trim()))].sort((a,b)=>a.localeCompare(b,'ko',{numeric:true}));
-      setOptions(key,unique.map(v=>[v || '__empty__',v || '미입력']));
-    };
-    ordinary('dong',units.map(u=>roomParts(u).dong || '미입력'));
-    ['room','sizeType','deal','sale','owner','tenant','received'].forEach(key=>ordinary(key,units.map(u=>residentialFilterValue(u,key))));
-    const money=[];
-    for(const [kind,label] of [['deposit','보증금'],['rent','월세']]){
-      const values=[...new Set(units.map(u=>kind==='deposit' ? effectiveUnitPrice(u.현_보증금,u.보증금) : effectiveUnitPrice(u.현_월세,u.월차임)).filter(v=>v!=null && v!==''))].sort((a,b)=>Number(a)-Number(b));
-      values.forEach(amount=>money.push([kind+':'+amount,label+' '+Number(amount).toLocaleString('ko-KR')+'만원']));
-    }
-    if(units.some(u=>[effectiveUnitPrice(u.현_보증금,u.보증금),effectiveUnitPrice(u.현_월세,u.월차임)].every(v=>v==null || v==='')))money.push(['__empty__','미입력']);
-    setOptions('rentChoice',money);
-    setOptions('listed',[['registered','매물등록'],['unregistered','미등록']]);
+    head.querySelectorAll('.unit-sort').forEach(button=>{
+      const active=button.dataset.unitSort===residentialSort.key;
+      const label=button.querySelector('span').textContent;
+      const th=button.closest('th');
+      th.setAttribute('aria-sort',active ? (residentialSort.direction==='asc' ? 'ascending' : 'descending') : 'none');
+      button.classList.toggle('active',active);
+      button.querySelector('.unit-sort-arrow').textContent=active ? (residentialSort.direction==='asc' ? '▲' : '▼') : '↕';
+      button.title=label+' '+(active && residentialSort.direction==='asc' ? '내림차순' : '오름차순')+' 정렬';
+    });
   }
 
   function renderResidentialTable(filtered) {
@@ -1698,7 +1677,7 @@ async function deleteBFile(id) {
     const grouped = filterFloor === "전체"
       ? units
       : units.filter(u => unitGroup(u) === filterFloor);
-    const filtered = residentialUnitMode() ? grouped.filter(matchesResidentialFilters) : grouped;
+    const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped) : grouped;
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
     const listed = filtered.filter(u => String(u.listing_id || '').trim()).length;
@@ -1708,7 +1687,7 @@ async function deleteBFile(id) {
 
     if (residentialUnitMode()) renderResidentialHeader();
     if (!filtered.length) {
-      if(residentialUnitMode())empty.textContent=units.length ? "조건에 맞는 세대가 없습니다. 필터를 변경하거나 초기화해주세요." : "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.";
+      if(residentialUnitMode())empty.textContent=units.length ? "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요." : "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.";
       tbody.innerHTML = "";
       empty.style.display = "";
       return;

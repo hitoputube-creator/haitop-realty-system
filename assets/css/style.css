@@ -1622,3 +1622,31 @@ textarea { resize: vertical; min-height: 120px; }
 .cust-consultation-editor textarea { min-height: 180px; resize: vertical; line-height: 1.7; }
 .consult-error { color: var(--red); font-size: .85rem; white-space: pre-wrap; }
 @media (max-width: 600px) { #customerDetailModal, #customerEditModal { padding: 12px 6px; } .cust-consultation { padding: 12px; } }
+
+/* 매물관리: 단지와 동호수, 거래구분과 가격을 각각 한 칸에 배치 */
+.properties-page #listingContainer { overflow-x:auto; }
+.properties-page .listing-grid { --property-row-columns:28px 76px 55px 118px minmax(145px,1fr) 40px 50px 106px 62px 108px 126px; }
+.properties-page .listing-column-header,.properties-page .listing-card.listing-row-card { min-width:1040px;grid-template-columns:var(--property-row-columns);grid-template-areas:none;column-gap:5px; }
+.properties-page .listing-column-header { display:grid; }
+.properties-page .listing-cell-village,.properties-page .listing-cell-apartment,.properties-page .listing-cell-dong,.properties-page .listing-cell-room { min-width:0;overflow-wrap:anywhere;font-size:12px;line-height:1.35; }
+.properties-page .listing-cell-apartment { display:flex;flex-direction:column;gap:3px;font-weight:600; }
+.properties-page .listing-cell-dong,.properties-page .listing-cell-room { text-align:center;font-weight:700; }
+.properties-page .listing-sort-btn { border:0;background:none;color:inherit;font:inherit;font-weight:700;padding:2px 0;text-align:left;white-space:nowrap;cursor:pointer; }
+.properties-page .listing-sort-btn:hover,.properties-page .listing-sort-btn:focus-visible { color:var(--gold); }
+.properties-page .listing-sort-btn span { color:var(--gold); }
+@media(max-width:800px) {
+  .properties-page #listingContainer { overflow-x:visible; }
+  .properties-page .listing-column-header { display:none; }
+  .properties-page .listing-card.listing-row-card { min-width:0;grid-template-columns:24px minmax(0,1fr) 100px;grid-template-areas:"select village actions" "select apartment actions" "select dong actions" "select room actions" "select deal price" "select owner phone" "select type type";row-gap:6px; }
+  .properties-page .listing-cell-select { grid-area:select; }
+  .properties-page .listing-cell-village { grid-area:village; }
+  .properties-page .listing-cell-apartment { grid-area:apartment; }
+  .properties-page .listing-cell-dong { grid-area:dong;text-align:left; }
+  .properties-page .listing-cell-room { grid-area:room;text-align:left; }
+  .properties-page .listing-cell-deal { grid-area:deal; }
+  .properties-page .listing-cell-price { grid-area:price; }
+  .properties-page .listing-cell-owner { grid-area:owner; }
+  .properties-page .listing-cell-phone { grid-area:phone; }
+  .properties-page .listing-cell-type { grid-area:type; }
+  .properties-page .listing-cell-actions { grid-area:actions; }
+}
