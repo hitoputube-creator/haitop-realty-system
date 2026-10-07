@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-apartment-fields"></script>
+<script src="assets/js/storage.js?v=20261007-apartment-addresses"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -704,6 +704,10 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_dealType").value           = item.dealType || "";
     document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
     document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
+    if (category.category2 === "아파트" || item.type === "apartment") {
+      document.getElementById("edit_publicAddress").value = item.roadAddress || "";
+      document.getElementById("edit_mapAddress").value = item.jibunAddress || "";
+    }
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
     fillApartmentUnitFields("edit_", item);
     syncEditApartmentFields();
@@ -798,6 +802,7 @@ function closeHomepageTab(tab) {
     let lastSynced = mapEl.value;
 
     publicEl.addEventListener('input', () => {
+      if (document.getElementById("edit_category2").value === "아파트") return;
       if (mapEl.value === '' || mapEl.value === lastSynced) {
         mapEl.value = publicEl.value;
         lastSynced = mapEl.value;
@@ -1089,7 +1094,9 @@ function closeHomepageTab(tab) {
     const rows = [
       iptRow([["1차구분", category.category1 || item.category1], ["2차구분", category.category2 || item.category2], ["거래유형", dealType]]),
       iptRow([["제목", item.title]]),
-      iptRow([["공개주소", publicAddress], ["비공개주소", mapAddress]]),
+      category.category2 === "아파트" || item.type === "apartment"
+        ? iptRow([["공개주소 · 새주소(도로명주소)", item.roadAddress], ["공개주소 · 구주소(지번주소)", item.jibunAddress]])
+        : iptRow([["공개주소", publicAddress], ["비공개주소", mapAddress]]),
       iptRow([["보증금", formatWonOrText(item.deposit)], ["월세/매매가", rentOrSale], ["전용면적", exclusiveArea]]),
       iptRow([["건물명", complexName], ["토지면적", landArea], ["연면적", totalFloorArea]]),
       iptRow([["주차대수", parking], ["사용승인일", item.approvalDate], ["구조", structure]]),
@@ -1110,8 +1117,8 @@ function closeHomepageTab(tab) {
     const extraPairs = [
       ["매물구분", getListingCategoryLabel(item)],
       ["분양가", formatWonOrText(item.presalePrice)],
-      ["관리비", formatWonOrText(item.managementFee)],
-      ["권리금", formatWonOrText(item.premium)],
+      ["관리비", item.type === "apartment" ? "" : formatWonOrText(item.managementFee)],
+      ["권리금", item.type === "apartment" ? "" : formatWonOrText(item.premium)],
       ["상가 보증금", formatManWon(item.shop_deposit)],
       ["상가 월세", formatManWon(item.shop_monthlyRent)],
       ["상가 관리비", formatManWon(item.shop_maintenance)],
@@ -1125,7 +1132,7 @@ function closeHomepageTab(tab) {
       ["대지면적", formatAreaPair(item.landAreaM2 || item.factory_siteArea_sqm, item.landAreaPy || item.factory_siteArea_py || item.factory_land_py)],
       ["건축면적", formatAreaPair(item.buildingAreaM2 || item.factory_buildArea_sqm, item.buildingAreaPy || item.factory_buildArea_py || item.factory_area_py)],
       ["레거시 토지면적", formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py)],
-      ["상세주소·동호수", detailAddress],
+      [item.type === "apartment" ? "동·호수" : "상세주소·동호수", detailAddress],
       ["도로조건", firstDetailValue(item.roadAccess, item.land_road)],
       ["형상", item.land_shape],
       ["대형차진입", item.factory_truck],
@@ -1461,8 +1468,9 @@ function closeHomepageTab(tab) {
         const category1          = resolveStorageCategory1(gv("edit_category1"), gv("edit_category2"));
         const category2          = gv("edit_category2");
         const type               = gv("edit_propertyType");
-        const publicAddress      = gv("edit_publicAddress");
-        const mapAddress         = gv("edit_mapAddress");
+        const apartmentAddresses = category2 === "아파트" ? readApartmentAddresses("edit_") : {};
+        const publicAddress = category2 === "아파트" ? apartmentAddresses.publicAddress : gv("edit_publicAddress");
+        const mapAddress = category2 === "아파트" ? apartmentAddresses.mapAddress : gv("edit_mapAddress");
         const apartmentUnit = category2 === "아파트" ? readApartmentUnitFields("edit_") : {};
         const privateDetailAddress = category2 === "아파트" ? apartmentUnit.privateDetailAddress : gv("edit_privateDetailAddress");
         const complexName        = gv("edit_complexName");
@@ -1474,7 +1482,8 @@ function closeHomepageTab(tab) {
         const updated = Object.assign({}, item, {
           type, category1, category2,
           title:              editTitle || item.title || `${getTypeLabel(type)} · ${publicAddress || "주소미입력"}`,
-          address:            mapAddress || publicAddress,
+          address:            mapAddress || publicAddress || item.address,
+          ...apartmentAddresses,
           publicAddress,
           mapAddress,
           privateDetailAddress,
