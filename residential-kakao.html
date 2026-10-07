@@ -6,7 +6,7 @@
   <title>하이탑부동산 | 주거 실제 지도 보기</title>
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout">
   <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261004-naver-2">
-  <link rel="stylesheet" href="assets/css/shop-kakao.css?v=20261006-residential-maps-1">
+  <link rel="stylesheet" href="assets/css/shop-kakao.css?v=20261007-residential-counts">
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
@@ -31,7 +31,7 @@
 
   <section class="kakao-intro">
     <h1>최신 지도로 보는 주거 현황</h1>
-    <p>주거 자료관리에 등록한 건물의 주소를 카카오 지도 위에 자동으로 표시합니다. 건물을 누르면 공실 현황과 함께 건물 상세·층별 현황으로 바로 이동할 수 있습니다.</p>
+    <p>주거 자료관리에 등록한 건물의 주소를 카카오 지도 위에 자동으로 표시합니다. 연락처나 매물이 등록된 아파트만 표시합니다. 표식에 마우스를 올리면 아파트명이 나오고, 클릭하면 상세정보를 확인할 수 있습니다.</p>
   </section>
 
   <section id="kakaoSetupNotice" class="kakao-notice" hidden>
@@ -46,12 +46,11 @@
       <button class="btn" type="button" data-overlay="district" aria-pressed="false">지적도</button>
     </div>
     <div class="kakao-control-group">
-      <label>공실 보기
+      <label>자료 보기
         <select id="shopVacancyFilter">
           <option value="all">전체</option>
-          <option value="vacant">공실 있음</option>
-          <option value="full">공실 없음</option>
-          <option value="none">호실 미등록</option>
+          <option value="contacts">연락처 있음</option>
+          <option value="listed">매물 있음</option>
         </select>
       </label>
       <label class="kakao-search">건물명·주소 검색
@@ -75,15 +74,11 @@
   <p id="kakaoStatus" class="kakao-status" role="status" aria-live="polite">불러오는 중입니다.</p>
   <div id="kakaoMap" class="kakao-map" aria-label="카카오 지도" hidden></div>
 
-  <p class="kakao-legend" id="shopLegend" hidden>
-    <span><i class="dot dot-shop-vacant"></i>공실 있음</span>
-    <span><i class="dot dot-shop-full"></i>공실 없음</span>
-    <span><i class="dot dot-shop-none"></i>호실 미등록</span>
-  </p>
+  <p class="kakao-legend" id="shopLegend" hidden></p>
 
   <section class="shop-kakao-list" id="shopListSection" hidden>
-    <h2>건물 목록 <span id="shopListCount"></span></h2>
-    <p class="kakao-status">공실등록: 공실로 입력된 호실 · 연락처 확보: 소유주와 연락처 모두 입력 · 매물등록: 매물자료가 연결된 호실</p>
+    <h2>아파트 목록 <span id="shopListCount"></span></h2>
+    <p class="kakao-status">연락처: 소유주와 연락처가 등록된 세대 · 매물: 매물자료가 연결된 세대</p>
     <div id="shopList" class="shop-kakao-buttons"></div>
     <p id="shopUnplaced" class="kakao-status" hidden></p>
   </section>
@@ -91,6 +86,6 @@
 <script src="assets/js/kakao-config.js"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
 <script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
-<script src="assets/js/shop-kakao.js?v=20261006-office-login"></script>
+<script src="assets/js/shop-kakao.js?v=20261007-residential-counts"></script>
 </body>
 </html>

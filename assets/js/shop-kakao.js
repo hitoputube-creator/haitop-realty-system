@@ -211,7 +211,7 @@
   // ---------- 지도 표시 ----------
   function stateText(it) { return !it.total ? '호실 미등록' : '공실 ' + it.vacant + '/' + it.total; }
 
-  function countsText(it) { return '공실등록 ' + it.vacant + ' · 연락처 확보 ' + it.contacts + ' · 매물등록 ' + it.listed; }
+  function countsText(it) { return residential ? '연락처 ' + it.contacts + ' · 매물 ' + it.listed : '공실등록 ' + it.vacant + ' · 연락처 확보 ' + it.contacts + ' · 매물등록 ' + it.listed; }
 
   function unitListUrl(it) {
     return HitopResourceRooms.detailUrl('building-detail.html', it.id, scope) + '#unitStatus';
@@ -219,7 +219,7 @@
 
   function pinContent(it) {
     var el = document.createElement('div');
-    el.className = 'shop-pin ' + it.state + (selectedId === it.id ? ' selected' : '');
+    el.className = 'shop-pin ' + (residential ? 'residential-pin full' : it.state) + (selectedId === it.id ? ' selected' : '');
     var body = document.createElement('div');
     body.className = 'shop-pin-body';
     var name = document.createElement('strong'); name.textContent = it.name;
@@ -236,7 +236,12 @@
     counts.textContent = '연락처 ' + it.contacts + ' · 매물 ' + it.listed;
     counts.href = unitListUrl(it); counts.title = '소유주·연락처 모두 입력된 호실 / 매물 연결된 호실';
     counts.addEventListener('click', function (event) { event.stopPropagation(); if (editing) { event.preventDefault(); selectForEdit(it); } });
-    body.append(name, sub, counts);
+    if (residential) {
+      counts.textContent = '연락처 ' + it.contacts + ' · 매물 ' + it.listed;
+      counts.title = it.name + ' · 세대 목록 보기';
+      counts.setAttribute('aria-label', it.name + ' · ' + counts.textContent + ' · 세대 목록 보기');
+      body.append(counts);
+    } else body.append(name, sub, counts);
     el.appendChild(body);
     el.title = it.name + ' · ' + it.address;
     el.addEventListener('click', function () { if (editing) selectForEdit(it); else openInfo(it); });
@@ -246,7 +251,11 @@
 
   function matches(it) {
     var filter = $('shopVacancyFilter').value;
-    if (filter !== 'all' && it.state !== filter) return false;
+    if (residential) {
+      if (!it.contacts && !it.listed) return false;
+      if (filter === 'contacts' && !it.contacts) return false;
+      if (filter === 'listed' && !it.listed) return false;
+    } else if (filter !== 'all' && it.state !== filter) return false;
     var q = $('shopSearch').value.trim().toLowerCase();
     if (q && (it.name + ' ' + it.address).toLowerCase().indexOf(q) < 0) return false;
     return true;
@@ -261,7 +270,7 @@
       if (!it.overlay) {
         it.overlay = new kakao.maps.CustomOverlay({
           position: new kakao.maps.LatLng(it.lat, it.lng), content: pinContent(it),
-          xAnchor: 0, yAnchor: 0, clickable: true, zIndex: it.state === 'vacant' ? 3 : 2
+          xAnchor: 0, yAnchor: 0, clickable: true, zIndex: residential ? 2 : it.state === 'vacant' ? 3 : 2
         });
       }
       it.overlay.setMap(map);
@@ -270,9 +279,10 @@
       shown++;
     });
     if (fit && shown) map.setBounds(bounds, 60, 60, 60, 60);
-    var noAddress = items.filter(function (it) { return !it.query; }).length;
-    var missing = items.filter(function (it) { return it.query && it.lat === null; }).length;
-    var text = label + ' 건물 ' + items.length + '개 중 ' + shown + '개 표시';
+    var relevant = residential ? listed : items;
+    var noAddress = relevant.filter(function (it) { return !it.query; }).length;
+    var missing = relevant.filter(function (it) { return it.query && it.lat === null; }).length;
+    var text = residential ? '연락처·매물 등록 아파트 ' + listed.length + '개 중 ' + shown + '개 표시' : label + ' 건물 ' + items.length + '개 중 ' + shown + '개 표시';
     if (noAddress) text += ' · 주소 없음 ' + noAddress + '개';
     if (missing) text += ' · 지도에서 위치를 못 찾음 ' + missing + '개';
     setStatus(text);
@@ -286,12 +296,12 @@
     listed.forEach(function (it) {
       var button = document.createElement('button');
       button.type = 'button';
-      button.className = it.state + (it.lat === null ? ' unplaced' : '');
+      button.className = (residential ? 'full' : it.state) + (it.lat === null ? ' unplaced' : '');
       button.append(it.name);
       var small = document.createElement('small');
       small.textContent = countsText(it) + (it.lat === null ? ' · 지도 위치 없음' : it.manual ? ' · 위치 직접 지정' : '');
       button.appendChild(small);
-      var total = document.createElement('small'); total.textContent = '등록 호실 ' + it.total + '개'; button.appendChild(total);
+      if (!residential) { var total = document.createElement('small'); total.textContent = '등록 호실 ' + it.total + '개'; button.appendChild(total); }
       button.addEventListener('click', function () {
         if (editing) {
           if (it.lat !== null) { map.setLevel(3); map.setCenter(new kakao.maps.LatLng(it.lat, it.lng)); }
@@ -309,7 +319,7 @@
     });
     $('shopListCount').textContent = '(' + listed.length + '개)';
     $('shopListSection').hidden = false;
-    $('shopLegend').hidden = false;
+    $('shopLegend').hidden = residential;
   }
 
   function openInfo(it, noMap) {
@@ -323,7 +333,7 @@
     var title = document.createElement('b'); title.textContent = it.name; root.appendChild(title);
     function line(text) { var s = document.createElement('span'); s.className = 'row'; s.textContent = text; root.appendChild(s); }
     line(it.address || '주소 없음');
-    line(it.total ? '호실 ' + it.total + '개 · 공실 ' + it.vacant + '개' : '호실이 아직 등록되지 않았습니다.');
+    if (!residential) line(it.total ? '호실 ' + it.total + '개 · 공실 ' + it.vacant + '개' : '호실이 아직 등록되지 않았습니다.');
     line(countsText(it));
     var links = document.createElement('div'); links.className = 'links';
     function link(label, href) {
@@ -333,9 +343,9 @@
     link('건물 상세', HitopResourceRooms.detailUrl('building-detail.html', it.id, scope));
     link('위치도', prefix + '-location.html?id=' + id);
     link('개요', HitopResourceRooms.detailUrl('building-overview.html', it.id, scope));
-    link('층별 리스트', unitListUrl(it));
+    link(residential ? '세대 목록' : '층별 리스트', unitListUrl(it));
     var first = it.floors[0];
-    link('층별 현황', 'floor-status.html?' + new URLSearchParams(first ? { id: it.id, floorId: first.id, floor: String(first.floor_number || '') } : { id: it.id }).toString());
+    if (!residential) link('층별 현황', 'floor-status.html?' + new URLSearchParams(first ? { id: it.id, floorId: first.id, floor: String(first.floor_number || '') } : { id: it.id }).toString());
     if (it.lat !== null) {
       var a = document.createElement('a');
       a.href = 'https://map.kakao.com/link/map/' + encodeURIComponent(it.name) + ',' + it.lat + ',' + it.lng;
