@@ -5,12 +5,32 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261007-apartment-addresses"></script>
+  <script src="assets/js/storage.js?v=20261007-apartment-unit-form"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
   <script src="assets/js/nav.js?v=20261006-ktop-diary1"></script>
+<style>
+.apartment-listing-form[hidden], [id$="nonApartmentFields"][hidden]{display:none!important}
+.apartment-listing-form .um-section{border-radius:10px;overflow:hidden;margin:10px 0;background:#0d1f3c}
+.apartment-listing-form .um-section-title{padding:6px 10px;font-weight:700;font-size:.82rem;background:#8b6914;color:#fff}
+.apartment-listing-form .sale .um-section-title{background:#1a3a6e}
+.apartment-listing-form .umgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;padding:10px}
+.apartment-listing-form .umfield{min-width:0}
+.apartment-listing-form label{display:block;font-size:.76rem;margin-bottom:4px;color:var(--text-muted)}
+.apartment-listing-form input,.apartment-listing-form select,.apartment-listing-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:7px 9px}
+.apartment-listing-form textarea{min-height:46px;height:46px}
+.apartment-listing-form .span-3{grid-column:span 3}
+.apartment-listing-form .span-2{grid-column:span 2}
+.apartment-listing-form .full{grid-column:1/-1}
+.apartment-listing-form .area-row{display:flex;gap:7px;align-items:center}
+.apartment-listing-form .area-row input{flex:1;width:0}
+.apartment-listing-form .owner-phone-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:6px}
+.apartment-listing-form .amt-hint{font-size:.72rem;color:var(--gold);display:block}
+@media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}}
+@media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}}
+</style>
 </head>
 <body data-nav-active="properties">
 <div class="page">
@@ -122,6 +142,8 @@
     </div>
   </section>
 
+  <div class="apartment-listing-form" id="apartmentListingForm" hidden></div>
+  <div id="nonApartmentFields">
   <!-- ② 가격정보 -->
   <section class="card">
     <div class="card-title"><span>💰 가격정보</span></div>
@@ -310,6 +332,7 @@
     </div>
   </section>
 
+  </div><!-- nonApartmentFields -->
   <!-- ⑧ 이미지 -->
   <section class="card">
     <div class="card-title"><span>📷 이미지 (최대 5장)</span></div>
@@ -357,6 +380,7 @@
 
   const syncApartmentFields = setupApartmentUnitFields("", "category2Select");
   const syncQuickBuildingFields = setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName', 'category1Select', 'category2Select');
+  const syncApartmentListingForm = setupApartmentListingForm("", "category2Select");
   setupListingDescriptionEmojiToolbar('detailDescription');
 
   function renderCat2() {
@@ -384,6 +408,7 @@
     }
     document.querySelector('.commercial-section').style.display =
       COMMERCIAL_CATS.includes(storageCat1) ? '' : 'none';
+    syncApartmentListingForm();
   }
 
   cat1El.addEventListener('change', renderCat2);
@@ -804,8 +829,8 @@
     // 상가주택·다가구주택은 화면상 "주거용"에서 선택하지만, 실제 저장은 건물빌딩으로 통일한다.
     const cat1 = resolveStorageCategory1(cat1Raw, cat2);
     const title = document.getElementById('title').value.trim();
-    if (!title) { showToast('제목을 입력하세요'); return; }
-    if (!document.getElementById('dealType').value) { showToast('거래유형을 선택하세요'); return; }
+    if (!title && cat2 !== '아파트') { showToast('제목을 입력하세요'); return; }
+    if (!document.getElementById('dealType').value && cat2 !== '아파트') { showToast('거래유형을 선택하세요'); return; }
 
     const type = document.getElementById('propertyType').value || 'etc';
     const stickers = Array.from(document.querySelectorAll('input[name="stickers"]:checked')).map(c => c.value);
@@ -881,6 +906,10 @@
       stickers,
     };
 
+    if (cat2 === "아파트") {
+      try { Object.assign(item, collectApartmentListingFields("")); }
+      catch(error) { showToast(error.message); return; }
+    }
     const btn = document.getElementById('saveBtn');
     btn.disabled = true; btn.textContent = '저장 중...';
 
@@ -1093,6 +1122,10 @@
       if (approvalDate)document.getElementById("approvalDate").value  = approvalDate;
       if (zoning)      document.getElementById("zoning").value        = zoning;
       if (descParts.length) document.getElementById("detailDescription").value = descParts.join("\n");
+      if (isResidentialUnit) {
+        fillApartmentListingForm("", { complexName:bldgName, import_unit_snapshot:unit || {} }, true);
+        syncApartmentListingForm();
+      }
 
       // 자동입력 안내 배너
       const refBox  = document.getElementById("prefillRefBox");
@@ -1207,6 +1240,10 @@
         } catch (e) {
           console.warn("[업무일지 사진 가져오기 실패]", e.message || e);
         }
+      }
+      if (cat2El.value === "아파트") {
+        fillApartmentListingForm("", {complexName:document.getElementById("complexName").value, owner_name:document.getElementById("owner_name").value, owner_phone1:document.getElementById("owner_phone1").value, description:document.getElementById("description").value}, true);
+        syncApartmentListingForm();
       }
       // 공개주소/지도주소는 직접 입력 — 빠른저장 위치는 참고용으로만 표시
       const refBox = document.getElementById("prefillRefBox");
