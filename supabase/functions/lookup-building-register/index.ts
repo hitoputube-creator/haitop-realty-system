@@ -267,7 +267,8 @@ async function queryBuildingRegister(body: any) {
     if (!recap) throw new Error("해당 주소의 총괄표제부를 하나로 확인하지 못했습니다. 단지명과 지번주소를 확인해주세요.");
     const buildings = [...new Map(uniqueRows(titles).map(row=>[String(row.mgmBldrgstPk || JSON.stringify(row)),row])).values()];
     const residential = buildings.filter(row=>/아파트|공동주택/.test(String(row.mainPurpsCdNm || "")+String(row.etcPurps || "")));
-    const main = residential.length ? residential : buildings.filter(row=>String(row.mainAtchGbCdNm || "").includes("주"));
+    const numberedResidential = residential.filter(row=>/^\d+$/.test(rowDong(row)));
+    const main = numberedResidential.length ? numberedResidential : residential.length ? residential : buildings.filter(row=>String(row.mainAtchGbCdNm || "").includes("주"));
     const relevant = main.length ? main : buildings;
     const distinct = (key: string) => [...new Set(relevant.map(row=>String(row[key] || "").trim()).filter(Boolean))];
     const above = relevant.map(row=>numericField(row,"grndFlrCnt")).filter(value=>value!=null && value>0) as number[];
