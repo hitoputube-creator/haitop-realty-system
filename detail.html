@@ -1113,6 +1113,45 @@ function closeHomepageTab(tab) {
 
   // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나로 합친 압축 표.
   // 기존 필드를 그대로 읽어서 표시만 하며, 새 필드나 저장 구조 변경은 없다.
+
+  function apartmentNotes(item) {
+    const u = apartmentSource(item);
+    const displayed = new Set();
+    const fields = [
+      ["동",u.동],["호",u.호],["호수",u.호],["타입",u.타입],["평형",u.평형],
+      ["가격",u.현_매매가격 || u.현_보증금 || u.현_월세],["소유주",u.소유주],
+      ["연락처",u.연락처],["통신사",u.소유자통신사],["거래구분",u.거래구분],
+      ["아파트명",u.아파트명],["접수일자",u.접수일자]
+    ];
+    fields.forEach(([key,value]) => { if (value !== undefined && value !== null && String(value).trim()) displayed.add(key); });
+    function clean(raw) {
+      const text = String(raw || '').trim();
+      if (!/^\[엑셀 원본[^\]]*\]/.test(text)) return text;
+      return text.split(/\r?\n/).flatMap(line => {
+        const trimmed = line.trim();
+        if (/^\[엑셀 원본[^\]]*\]$/.test(trimmed)) return [];
+        const match = trimmed.match(/^([^:：]+)[:：]\s*(.*)$/);
+        if (match && displayed.has(match[1].trim())) return [];
+        return [match && match[1].trim() === '비고' ? match[2].trim() : trimmed];
+      }).filter(Boolean).join('\n').trim();
+    }
+    const seen = new Set([String(u.옵션내역 || '').replace(/\s+/g,' ').trim()].filter(Boolean));
+    const notes = [];
+    function add(label,raw,date) {
+      const text = clean(raw);
+      const key = text.replace(/\s+/g,' ').trim();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      notes.push([label, (date ? new Date(date).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}) + ' · ' : '') + text]);
+    }
+    add('비고',u.비고);
+    (Array.isArray(u.추가메모) ? u.추가메모 : []).forEach(memo => add('추가메모',memo.text,memo.created_at));
+    add('공개 설명',item.detailDescription);
+    add('내부 메모',item.description);
+    add('빠른등록 메모',item.quick_memo);
+    return notes;
+  }
+
   function renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact) {
     if (category.category2 === "아파트" || item.type === "apartment") {
       const u = apartmentSource(item);
@@ -1120,9 +1159,8 @@ function closeHomepageTab(tab) {
       const row = pairs => '<div class="apartment-info-row" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => iptCell(label,value)).join('') + '</div>';
       const section = (title, rows) => '<section class="detail-section apartment-info-section"><div class="detail-section-title">' + escapeHtml(title) + '</div><div class="apartment-info-table">' + rows.map(row).join('') + '</div></section>';
       const memoRows = [
-        [["옵션내역",u.옵션내역]],
-        [["비고",u.비고]],
-        ...((Array.isArray(u.추가메모) ? u.추가메모 : []).map(memo => [["추가메모", (memo.created_at ? new Date(memo.created_at).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"}) + " · " : "") + memo.text]]))
+        ...(u.옵션내역 ? [[["옵션내역",u.옵션내역]]] : []),
+        ...apartmentNotes(item).map(note => [note])
       ];
       return '<div class="apartment-details-layout">' + [
         section("기본정보", [
@@ -1143,7 +1181,7 @@ function closeHomepageTab(tab) {
           [["현황",u.세입자현황],["이름",u.세입자이름],["연락처",u.세입자연락처]],
           [["계약 시작일",u.세입자계약시작일],["계약 종료일",u.세입자계약종료일]]
         ]),
-        section("옵션·메모", memoRows)
+        ...(memoRows.length ? [section("옵션·메모", memoRows)] : [])
       ].join("") + '</div>';
     }
     const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "");
@@ -1289,22 +1327,26 @@ function closeHomepageTab(tab) {
     // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나의 "매물 상세정보" 표로 통합.
     html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
 
-    html += detailSection("설명·메모", [
+    const isApartmentDetail = category.category2 === "아파트" || item.type === "apartment";
+    if (!isApartmentDetail) html += detailSection("설명·메모", [
       detailField("공개 매물설명", item.detailDescription, { wide: true, pre: true }),
       detailField("비공개 내부메모", item.description, { wide: true, pre: true }),
       detailField("빠른등록 메모", differentValue(item.quick_memo, item.description), { wide: true, pre: true }),
       detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true }),
     ], { extraClass: "description-section" });
 
+    if (isApartmentDetail) html += detailSection("특징·태그", [detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true })]);
+
     let materialHtml = "";
     if (item.resource_id) {
       const res = _allDriveResources.find(r => r.id === item.resource_id);
       if (res) {
-        const memoHtml = res.memo ? `<div class="detail-read-value pre-line" style="margin-top:8px;color:var(--text-muted);">${escapeHtml(res.memo)}</div>` : "";
+        const memoHtml = !isApartmentDetail && res.memo ? `<div class="detail-read-value pre-line" style="margin-top:8px;color:var(--text-muted);">${escapeHtml(res.memo)}</div>` : "";
         materialHtml += `<div class="detail-read-item wide">
           <div class="detail-read-label">연결된 빌딩 자료</div>
           <div class="detail-resource-row">
             <div class="detail-read-value">${escapeHtml([res.category, res.name].filter(Boolean).join(" · ") || "빌딩 자료")}</div>
+            ${isApartmentDetail ? `<a href="building-overview.html?${new URLSearchParams({id:res.id,office:OfficeConfig.id})}" class="btn btn-ghost" style="font-size:0.78rem;padding:5px 14px;text-decoration:none;">단지 자료 보기</a>` : ""}
             ${res.url ? `<a href="${escapeAttr(res.url)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.78rem;padding:5px 14px;text-decoration:none;">📁 빌딩자료 보기</a>` : ""}
           </div>
           ${memoHtml}
