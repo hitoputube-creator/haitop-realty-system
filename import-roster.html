@@ -132,15 +132,23 @@
     if (!backedUp) return;
     if (!confirm(`${OfficeConfig.label}에 명단 ${rows.length}건을 입력합니다. 계속할까요?`)) return;
     $("importBtn").disabled = true;
-    let ok = 0, skipped = 0, failed = 0;
+    let ok = 0, skipped = 0, failed = 0, noLink = 0;
     for (const r of rows) {
-      try { await addListing(buildItem(r)); ok++; }
+      try {
+        try { await addListing(buildItem(r)); }
+        catch (e1) {
+          // 이 사무실의 단지 자료 목록에 없는 단지면 연결(resource_id) 없이 저장한다 (단지명으로는 계속 연결됨)
+          if (/resource_id_fkey|23503/.test(e1.message)) { const it = buildItem(r); it.resource_id = null; await addListing(it); noLink++; }
+          else throw e1;
+        }
+        ok++;
+      }
       catch (e) {
         if (/duplicate|23505|already exists|409/i.test(e.message)) skipped++;
         else { failed++; log(`❌ ${r.id} (${r.unit || r.phone1}): ${e.message}`); }
       }
     }
-    log(`입력 완료 — 새로 ${ok}건, 이미 있어서 건너뜀 ${skipped}건, 실패 ${failed}건`);
+    log(`입력 완료 — 새로 ${ok}건` + (noLink ? ` (그중 단지 자료 연결 없이 ${noLink}건)` : "") + `, 이미 있어서 건너뜀 ${skipped}건, 실패 ${failed}건`);
     try {
       const all = await getListingsRaw();
       const n = all.filter(x => String(x.id).startsWith(idPrefix)).length;
