@@ -137,7 +137,7 @@
       </div>
     </div>
     <div class="actions">
-      <button class="btn" onclick="goDetail()">📐 자료</button>
+      <button class="btn" onclick="goDetail()">📐 평면도·배치도 입력</button>
       <button class="btn" onclick="goBack()">← 뒤로</button>
     </div>
   </header>
@@ -493,6 +493,7 @@ async function init() {
     document.getElementById('residentialOverviewFields').style.display = resourceScope === 'residential' ? '' : 'none';
 
     renderReadOnlyViews();
+    if(new URLSearchParams(location.search).get('edit')==='1')toggleEditMode();
   } catch(e) {
     showToast('❌ 불러오기 실패: ' + e.message);
   }

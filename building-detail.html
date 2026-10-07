@@ -501,7 +501,7 @@
     </div>
     <div class="building-location-links" id="buildingLocationLinks" aria-label="네이버에서 위치와 매물 보기"></div>
     <div style="display:flex;justify-content:flex-end;">
-      <button class="btn" style="font-size:0.82rem;" onclick="goOverview()">📝 개요 상세보기</button>
+      <button class="btn" style="font-size:0.82rem;" onclick="goOverview()">📝 단지 기본정보</button>
     </div>
   </div>
 
@@ -533,6 +533,7 @@
   <div class="card" style="margin-bottom:20px;">
     <div class="sec-title" id="buildingFilesTitle">📄 기타 자료</div>
     <div id="residentialMaterialActions" style="display:none;margin-bottom:12px;gap:8px;flex-wrap:wrap;">
+      <a class="btn" id="residentialPlanSearch" target="_blank" rel="noopener noreferrer">평면도·배치도 찾기</a>
       <a class="btn" id="residentialNaverComplex" target="_blank" rel="noopener noreferrer">네이버 단지검색</a>
       <button class="btn" type="button" data-material-name="단지배치도">단지배치도 추가</button>
       <button class="btn" type="button" data-material-name="동호수배치도">동호수배치도 추가</button>
@@ -988,6 +989,7 @@ async function init() {
         document.getElementById('buildingFilesTitle').textContent = '📄 단지배치도 · 동호수배치도 · 추가자료';
         document.getElementById('residentialMaterialActions').style.display = 'flex';
         const destination = HitopNaverLinks.complexDestination(building.name, building.memo);
+        document.getElementById('residentialPlanSearch').href='https://search.naver.com/search.naver?query='+encodeURIComponent(building.name+' 평면도 배치도');
         const naverLink = document.getElementById('residentialNaverComplex');
         naverLink.href = destination.url; naverLink.textContent = destination.label + ' · 평면도/호별정보';
         document.getElementById('fileName').placeholder = '자료명 (예: 단지배치도, 동호수배치도)';
@@ -2031,4 +2033,5 @@ async function deleteBFile(id) {
 </script>
 </body>
 </html>
+
 

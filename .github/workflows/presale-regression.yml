@@ -4,6 +4,8 @@ on:
     paths:
       - 'assets/js/storage.js'
       - 'assets/js/shop-kakao.js'
+      - 'assets/js/resources.js'
+      - 'tests/map-resource-flow.cjs'
       - 'tests/presale-regression.cjs'
       - '.github/workflows/presale-regression.yml'
   workflow_dispatch:
@@ -16,3 +18,4 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/presale-regression.cjs
+      - run: node tests/map-resource-flow.cjs

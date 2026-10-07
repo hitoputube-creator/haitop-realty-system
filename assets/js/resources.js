@@ -112,7 +112,16 @@ document.getElementById("driveSaveBtn").addEventListener("click", async () => {
       document.getElementById("drive_memo_extra_reg").value
     );
     await ensureCategoryInRoom(category);
-    await addDriveResource({ category, name, url, memo });
+    let createdId;
+    const next=document.getElementById('drive_after_save')?.value || '';
+    if(driveResourceScope==='residential' && next){
+      const existing=(await getDriveResources()).filter(r=>HitopResourceRooms.isResidential(r) && r.category===category && r.name.replace(/\s+/g,'')===name.replace(/\s+/g,''));
+      if(existing.length>1)throw new Error('같은 이름의 단지 자료가 여러 개입니다. 자료목록에서 사용할 단지를 선택해주세요.');
+      if(existing.length===1){location.href=OfficeConfig.urlFor(HitopResourceRooms.detailUrl(next==='plans'?'building-detail.html':'building-overview.html',existing[0].id,'residential')+(next==='overview'?'&edit=1':''));return;}
+      createdId=crypto.randomUUID();
+    }
+    await addDriveResource({ ...(createdId ? {id:createdId} : {}), category, name, url, memo });
+    if(createdId){location.href=OfficeConfig.urlFor(HitopResourceRooms.detailUrl(next==='plans'?'building-detail.html':'building-overview.html',createdId,'residential')+(next==='overview'?'&edit=1':''));return;}
     document.getElementById("drive_category").value = "";
     document.getElementById("drive_name").value = "";
     document.getElementById("drive_url").value = "";
@@ -557,5 +566,24 @@ async function initResourcesPage() {
     document.getElementById("driveContent").innerHTML = `<div class="loading">❌ 불러오기 실패: ${e.message}</div>`;
   }
 }
+function prefillMapComplex() {
+  const params=new URLSearchParams(location.search);
+  if(driveResourceScope!=='residential' || params.get('fromMap')!=='1')return;
+  document.getElementById('driveRegisterCard').style.display='';
+  document.getElementById('driveRegisterToggleBtn').textContent='📁 자료 등록 접기';
+  document.getElementById('drive_category').value='아파트';
+  document.getElementById('drive_name').value=params.get('apartmentName') || '';
+  let basic=MEMO_TEMPLATE;
+  const set=(key,value)=>{if(value)basic=basic.split(/\r?\n/).filter(line=>!line.startsWith(key+':')).join('\n')+'\n'+key+': '+value;};
+  set('주소',params.get('roadAddress') || params.get('jibunAddress'));set('지번주소',params.get('jibunAddress'));set('주택종류','아파트');
+  const lat=Number(params.get('mapLat')),lng=Number(params.get('mapLng'));
+  if(params.has('mapLat') && params.has('mapLng') && lat>=33 && lat<=39 && lng>=124 && lng<=132){set('지도위도',String(lat));set('지도경도',String(lng));}
+  document.getElementById('drive_memo_basic_reg').value=basic;
+  const name=params.get('apartmentName') || '',month=name.match(/(20\d{2})년\s*(\d{1,2})월/);
+  if(/예정/.test(name))document.getElementById('drive_completion_reg').value='입주예정';
+  if(month)document.getElementById('drive_movein_reg').value=month[1]+'-'+month[2].padStart(2,'0');
+  document.getElementById('drive_after_save').value='overview';
+}
+prefillMapComplex();
 initResourcesPage();
 
