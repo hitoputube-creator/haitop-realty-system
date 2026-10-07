@@ -39,6 +39,52 @@
   }
   function hasListing(unit) { return Boolean(String(unit.listing_id || '').trim()); }
 
+
+  function apartmentNameKey(value) {
+    return String(value || '').replace(/\([^)]*\)/g,'').replace(/아파트/g,'').replace(/\s+/g,'').trim();
+  }
+  function listingNames(listing) {
+    var unit=listing.apartmentUnitData || listing.import_unit_snapshot || {};
+    return [listing.complexName,listing.buildingName,unit.아파트명].filter(Boolean).map(apartmentNameKey);
+  }
+  function mergeResidentialListings(mapped, listings) {
+    mapped.forEach(function(it){it.listings=[];});
+    (listings || []).forEach(function(listing){
+      if (listing.status === '거래완료') return;
+      var names=listingNames(listing);
+      var it=mapped.find(function(row){return listing.resource_id && row.id === listing.resource_id;});
+      if (!it) it=mapped.find(function(row){return row.unitListingIds.includes(String(listing.id));});
+      var isApartment=listing.type === 'apartment' || listing.category2 === '아파트';
+      if (!it && isApartment) {
+        var named=mapped.filter(function(row){return row.apartment && names.includes(apartmentNameKey(row.name));});
+        if(named.length===1)it=named[0];
+      }
+      if (!it && isApartment) {
+        var addresses=[listing.roadAddress,listing.jibunAddress,listing.mapAddress,listing.address].filter(Boolean).map(addressKey);
+        var addressed=mapped.filter(function(row){return row.apartment && [row.roadAddress,row.lotAddress].filter(Boolean).some(function(address){return addresses.includes(addressKey(address));});});
+        if(addressed.length===1)it=addressed[0];
+      }
+      if (!it && isApartment) {
+        var road=listing.roadAddress || '',lot=listing.jibunAddress || '';
+        var address=road || lot || listing.mapAddress || listing.address || '';
+        if (!address) return;
+        var name=listing.complexName || listing.buildingName || (listing.apartmentUnitData || {}).아파트명 || listing.title || address;
+        it=mapped.find(function(row){return row.listingOnly && apartmentNameKey(row.name)===apartmentNameKey(name) && addressKey(row.address)===addressKey(address);});
+        if(!it){
+          var match=address.match(ADDRESS_PATTERN);
+          it={id:'listing:'+listing.id,name:name,address:address,apartment:true,listingOnly:true,
+            roadAddress:road,lotAddress:lot,query:match ? match[0] : address,
+            total:0,vacant:0,contacts:0,listed:0,unitListingIds:[],listings:[],state:'none',floors:[],
+            lat:null,lng:null,overlay:null,el:null};
+          mapped.push(it);
+        }
+      }
+      if(it && !it.listings.some(function(row){return String(row.id)===String(listing.id);}))it.listings.push(listing);
+    });
+    mapped.forEach(function(it){it.listed=it.listings.length;});
+    return mapped;
+  }
+
   // ---------- 데이터 불러오기 (기존 상가 위치도와 같은 출처) ----------
   async function loadBuildings() {
     var session = await hitopAuthClient.auth.getSession();
@@ -48,13 +94,14 @@
       getDriveResources(),
       getAllBuildingFloors(),
       fetchWithTimeout(SUPABASE_URL + '/rest/v1/buildings?select=local_id,name,units', { headers: headers }),
-      getDriveCategories()
+      getDriveCategories(),
+      residential ? getListings() : Promise.resolve([])
     ]);
     var resources = results[0], floors = results[1], recordsRes = results[2];
     if (!recordsRes.ok) throw new Error('건물 호실 자료를 불러오지 못했습니다.');
     var records = await recordsRes.json();
     // 자료실 카테고리를 기준으로 상가·주거를 구분하며, 새 주거 카테고리도 포함합니다.
-    return HitopResourceRooms.visible(resources, scope).filter(function (r) { return residential || /상가/.test(String(r.category || '')); }).map(function (r) {
+    var mapped = HitopResourceRooms.visible(resources, scope).filter(function (r) { return residential || /상가/.test(String(r.category || '')); }).map(function (r) {
       var rec = records.find(function (x) { return x.local_id === r.id; }) || records.find(function (x) { return x.name === r.name; }) || null;
       var line = String(r.memo || '').split('\n').find(function (l) { return /^주소\s*:/.test(l); });
       var address = line ? line.replace(/^주소\s*:/, '').trim() : '';
@@ -70,12 +117,14 @@
       var vacant = units.filter(function (u) { return u.공실여부 === '공실'; }).length;
       return {
         id: r.id, name: r.name, address: address, apartment: apartment, roadAddress: fields['주소'] || '', lotAddress: fields['지번주소'] || '', query: match ? match[0] : /[가-힣]+(?:로|길)\s*\d+/.test(address) ? address : '',
+        unitListingIds: units.filter(hasListing).map(function(u){return String(u.listing_id);}),
         total: units.length, vacant: vacant, contacts: units.filter(hasOwnerContact).length, listed: units.filter(hasListing).length,
         state: !units.length ? 'none' : vacant ? 'vacant' : 'full',
         floors: floors.filter(function (f) { return f.building_id === r.id; }),
         lat: null, lng: null, overlay: null, el: null
       };
     });
+    return residential ? mergeResidentialListings(mapped, results[4]) : mapped;
   }
 
   // ---------- 지오코딩 ----------
@@ -222,6 +271,7 @@
   function countsText(it) { return residential ? '연락처 ' + it.contacts + ' · 매물 ' + it.listed : '공실등록 ' + it.vacant + ' · 연락처 확보 ' + it.contacts + ' · 매물등록 ' + it.listed; }
 
   function unitListUrl(it) {
+    if (it.listingOnly && it.listings[0]) return OfficeConfig.urlFor('detail.html?id=' + encodeURIComponent(it.listings[0].id));
     return HitopResourceRooms.detailUrl('building-detail.html', it.id, scope) + '#unitStatus';
   }
 
@@ -247,7 +297,7 @@
       mapApartment: '1', apartmentName: name, roadAddress: road || '',
       jibunAddress: lot || '', resourceScope: 'residential'
     });
-    if (selection && selection.id) params.set('buildingId', selection.id);
+    if (selection && selection.id && !selection.listingOnly) params.set('buildingId', selection.id);
     return OfficeConfig.urlFor('register.html?' + params.toString());
   }
   async function openListingMenu(position, knownItem) {
@@ -453,10 +503,12 @@
       var a = document.createElement('a'); a.href = href; a.textContent = label; links.appendChild(a);
     }
     var id = encodeURIComponent(it.id);
+    if (!it.listingOnly) {
     link('건물 상세', HitopResourceRooms.detailUrl('building-detail.html', it.id, scope));
     link('위치도', prefix + '-location.html?id=' + id);
     link('개요', HitopResourceRooms.detailUrl('building-overview.html', it.id, scope));
     link(residential ? '세대 목록' : '층별 리스트', unitListUrl(it));
+    }
     var first = it.floors[0];
     if (!residential) link('층별 현황', 'floor-status.html?' + new URLSearchParams(first ? { id: it.id, floorId: first.id, floor: String(first.floor_number || '') } : { id: it.id }).toString());
     if (it.lat !== null) {
@@ -467,6 +519,21 @@
     }
     window.HitopNaverLinks.append(links, it.query || it.address, '', {lat:it.lat,lng:it.lng});
     root.appendChild(links);
+    if (residential && it.listings && it.listings.length) {
+      var listingBox=document.createElement('div'); listingBox.className='kk-registered-listings';
+      listingBox.style.cssText='margin-top:8px;max-height:180px;overflow-y:auto;white-space:normal';
+      it.listings.forEach(function(listing){
+        var unit=listing.apartmentUnitData || listing.import_unit_snapshot || {};
+        var dong=listing.dong || unit.동 || '', room=listing.ho || unit.호 || '';
+        var unitName=(dong ? dong+'동 ' : '')+(room ? room+'호' : '');
+        var a=document.createElement('a');
+        a.href=OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(listing.id));
+        a.textContent=[unitName || listing.title || '매물',listing.dealType || unit.거래구분 || ''].filter(Boolean).join(' · ')+' 보기';
+        a.style.cssText='display:block;padding:6px 0;color:#244e91;text-decoration:underline';
+        listingBox.appendChild(a);
+      });
+      root.appendChild(listingBox);
+    }
     if (noMap || it.lat === null) {
       line('지도에서 위치를 찾지 못했습니다. 자료관리에서 주소를 "와동동 1460"처럼 지번으로 확인해 주세요.');
       infoWindow.close();
