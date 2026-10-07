@@ -339,6 +339,55 @@ async function lookupApartmentUnitReference(item) {
   const u=apartmentSource(item);
   return apartmentUnitReference(resource,plans,record,u.동,u.호);
 }
+
+
+function openApartmentRegistrySearch(item,onMessage,source="registry") {
+  const unit=apartmentSource(item);
+  const address=item.jibunAddress || item.roadAddress || item.mapAddress || "";
+  const query=[address,unit.아파트명,unit.동 ? normalizeApartmentUnit(unit.동,"동")+"동" : "",unit.호 ? normalizeApartmentUnit(unit.호,"호")+"호" : ""].filter(Boolean).join(" ");
+  const service=source==="building" ? "정부24 건축물대장" : "인터넷등기소";
+  window.open(source==="building" ? "https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098" : "https://www.iros.go.kr/","_blank","noopener,noreferrer");
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(query).then(()=>onMessage("주소·동·호수를 복사했습니다. "+service+"에서 검색한 뒤 소유자 표시를 확인해주세요.")).catch(()=>onMessage(service+"에서 검색해주세요: "+query));
+  }else onMessage(service+"에서 검색해주세요: "+query);
+}
+
+function apartmentAutofillMessage(reference) {
+  const messages=[];
+  if(reference.registryMatched)messages.push("건축물대장 전용면적을 채웠습니다.");
+  else messages.push("건축물대장: "+(reference.registryWarning || "해당 세대를 확인하지 못했습니다."));
+  if(reference.planMatched)messages.push("단지자료의 평형·타입·공급면적을 활용했습니다.");
+  else messages.push("확인되지 않은 항목은 기존 값을 유지했습니다.");
+  return messages.join(" ");
+}
+async function lookupApartmentAutofill(item,onProgress) {
+  const unit=apartmentSource(item);
+  const dong=normalizeApartmentUnit(unit.동,"동"),ho=normalizeApartmentUnit(unit.호,"호");
+  if(!dong||!ho)throw new Error("동과 호수를 먼저 입력해주세요.");
+  let reference={matched:false};
+  try{reference=await lookupApartmentUnitReference(item);}catch(error){reference.planWarning=error.message;}
+  reference={...reference,planMatched:!!reference.matched,registryMatched:false};
+  const address=(reference.jibunAddress || item.jibunAddress || reference.roadAddress || item.roadAddress || item.mapAddress || "").replace(/\([^)]*\)/g,"").trim();
+  if(!address){reference.registryWarning="주소를 먼저 입력해주세요.";return reference;}
+  if(onProgress)onProgress("건축물대장 동·호수 조회 중…");
+  try{
+    const data=await lookupBuildingRegister(address,{dongNm:dong,hoNm:ho});
+    const returnedDong=normalizeApartmentUnit(data.unit_dong_name || "","동");
+    const requestedDigits=String(dong).replace(/\D/g,"");
+    const returnedDigits=String(returnedDong).replace(/\D/g,"");
+    const area=Number(data.exclusive_area_m2);
+    if(data.unit_area_warning || !returnedDong || (requestedDigits ? returnedDigits!==requestedDigits : returnedDong!==dong) || !Number.isFinite(area) || area<=0){
+      reference.registryWarning="해당 동·호수의 전용면적을 확인하지 못했습니다.";
+      return reference;
+    }
+    reference.exclusive=area;
+    reference.matched=true;
+    reference.registryMatched=true;
+    reference.registry={source:"건축물대장",queried_at:new Date().toISOString(),address,dong,ho,exclusive_area_m2:area};
+  }catch(error){reference.registryWarning=error.message || "조회에 실패했습니다.";}
+  return reference;
+}
+
 function applyApartmentUnitReference(item, reference) {
   const u={...apartmentSource(item)};
   const updated={...item,resource_id:reference.resource_id || item.resource_id};
@@ -353,6 +402,7 @@ function applyApartmentUnitReference(item, reference) {
       if(value!=null){updated[key]=u[name+"_m2"]=value;updated[pykey]=u[name+"_평"]=value/(400/121);}
     }
   }
+  if(reference.registry)updated.apartmentRegistryReference=reference.registry;
   updated.apartmentUnitData=u;
   updated.title=(u.아파트명||updated.complexName||"아파트")+" · "+u.동+"동 "+u.호+"호";
   return updated;
@@ -368,9 +418,19 @@ function setupApartmentListingForm(prefix, category2Id) {
   hoInput.parentNode.insertBefore(actionRow,hoInput);actionRow.appendChild(hoInput);
   hoInput.style.cssText="flex:1;min-width:0";
   const autoButton=document.createElement("button");
-  autoButton.type="button";autoButton.className="btn btn-ghost";autoButton.textContent="자동입력";
+  autoButton.type="button";autoButton.className="btn btn-ghost";autoButton.textContent="건축물대장 조회";
   autoButton.style.cssText="flex-shrink:0;padding:6px 8px;font-size:.76rem;white-space:nowrap";
+  actionRow.style.flexWrap="wrap";
   actionRow.appendChild(autoButton);
+  const registryButton=document.createElement("button");
+  registryButton.type="button";registryButton.className="btn btn-ghost";registryButton.textContent="대법원 소유주 조회";
+  registryButton.style.cssText=autoButton.style.cssText;
+  actionRow.appendChild(registryButton);
+  registryButton.addEventListener("click",()=>openApartmentRegistrySearch({complexName:document.getElementById(prefix+"apt_아파트명").value,dong:document.getElementById(prefix+"apt_동").value,ho:hoInput.value,roadAddress:document.getElementById(prefix+"publicAddress").value,jibunAddress:document.getElementById(prefix+"mapAddress").value},message=>autoStatus.textContent=message));
+  const buildingOwnerButton=document.createElement("button");
+  buildingOwnerButton.type="button";buildingOwnerButton.className="btn btn-ghost";buildingOwnerButton.textContent="건축물대장 소유주 확인";
+  buildingOwnerButton.style.cssText=autoButton.style.cssText;actionRow.appendChild(buildingOwnerButton);
+  buildingOwnerButton.addEventListener("click",()=>openApartmentRegistrySearch({complexName:document.getElementById(prefix+"apt_아파트명").value,dong:document.getElementById(prefix+"apt_동").value,ho:hoInput.value,roadAddress:document.getElementById(prefix+"publicAddress").value,jibunAddress:document.getElementById(prefix+"mapAddress").value},message=>autoStatus.textContent=message,"building"));
   const autoStatus=document.createElement("div");
   autoStatus.style.cssText="font-size:.78rem;padding:0 10px 8px;color:var(--gold)";
   autoStatus.setAttribute("role","status");host.firstElementChild.appendChild(autoStatus);
@@ -382,9 +442,10 @@ function setupApartmentListingForm(prefix, category2Id) {
     autoButton.disabled=true;autoStatus.textContent="단지 자료 조회 중…";
     try{
       const original=host._apartmentItem || {};
-      const item={...original,complexName:p("아파트명").value.trim(),dong,ho};
+      const item={...original,complexName:p("아파트명").value.trim(),dong,ho,
+        roadAddress:document.getElementById(prefix+"publicAddress").value.trim(),jibunAddress:document.getElementById(prefix+"mapAddress").value.trim()};
       if(item.complexName!==apartmentSource(original).아파트명)delete item.resource_id;
-      const reference=await lookupApartmentUnitReference(item);
+      const reference=await lookupApartmentAutofill(item,message=>autoStatus.textContent=message);
       if(reference.roadAddress)document.getElementById(prefix+"publicAddress").value=reference.roadAddress;
       if(reference.jibunAddress)document.getElementById(prefix+"mapAddress").value=reference.jibunAddress;
       if(reference.resource_id && document.getElementById(prefix+"resource_id"))document.getElementById(prefix+"resource_id").value=reference.resource_id;
@@ -395,7 +456,7 @@ function setupApartmentListingForm(prefix, category2Id) {
           if(area!=null){p(name+"_m2").value=area;p(name+"_평").value=(area/(400/121)).toFixed(2);}
         }
       }
-      autoStatus.textContent=reference.matched ? "평형·타입·주소를 채웠습니다."+((reference.supply==null||reference.exclusive==null)?" 면적 미등록 항목은 기존 값을 유지했습니다.":" 공급·전용면적도 채웠습니다.")+" 저장을 눌러주세요." : "주소를 채웠습니다. 해당 동·호수의 배치 자료가 없어 평형·면적은 기존 값을 유지했습니다.";
+      autoStatus.textContent=apartmentAutofillMessage(reference)+" 저장을 눌러주세요.";
     }catch(error){autoStatus.textContent=error.message;}
     finally{autoButton.disabled=false;}
   });
