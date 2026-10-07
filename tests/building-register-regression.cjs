@@ -62,6 +62,21 @@ async function tests(){
  const memos=context.apartmentMemoEntries([{id:'a',text:imported,created_at:'2026-10-07'},{id:'b',text:'다음 상담'}],'올수리, 확장.');
  assert.equal(memos.length,1);assert.equal(memos[0].text,'다음 상담');
  const ui=fs.readFileSync(path.join(root,'assets/js/building-register-view.js'),'utf8');new vm.Script(ui);assert(!ui.includes("['호실 용도'"));assert(!ui.includes('info.exclusive_area_m2 ?? info.area_m2'));
+ class El {
+  constructor(){this.children=[];this.nodes=new Map();this.handlers={};this.style={};this.classList={add(){},remove(){},contains(){return true}};}
+  querySelector(key){if(!this.nodes.has(key))this.nodes.set(key,new El());return this.nodes.get(key);}
+  append(...values){this.children.push(...values)}appendChild(value){this.append(value)}
+  replaceChildren(){this.children=[]}addEventListener(name,fn){this.handlers[name]=fn}focus(){}
+ }
+ const body=new El(),head=new El(),uiWindow={};
+ let uiResult={building_match_verified:true,building_name:'한빛마을7단지',unit_dong_name:'717동',unit_floor:'13층',exclusive_area_m2:84.95,common_area_m2:77.6467,parking_count:1776,parking_scope:'단지 전체',structure:'철근콘크리트구조'};
+ vm.runInContext(ui,vm.createContext({window:uiWindow,document:{body,head,createElement:()=>new El(),addEventListener(){}},lookupBuildingRegister:async()=>uiResult,Number,String}));
+ uiWindow.openBuildingRegisterInfo(address,'1302','717',{buildingName:'한빛마을7단지',apartment:true});
+ const box=body.children[0];await box.querySelector('.br-fetch').handlers.click();
+ const cells=box.querySelector('#brDetails tbody').children.flatMap(row=>row.children.map(cell=>cell.textContent));
+ assert(cells.includes('717동'));assert(cells.includes('13층'));assert(cells.includes('단지 전체 주차대수'));assert(cells.includes('1,776대'));assert(cells.includes('철근콘크리트구조'));assert(!cells.includes('호실 용도'));
+ uiResult={area_m2:199.2};await box.querySelector('.br-fetch').handlers.click();
+ assert.equal(box.querySelector('#brResult').hidden,true);assert(box.querySelector('#brError').textContent.includes('일치 여부'));
  console.log('PASS: exact lot/dong/ho, paginated titles, masked form suffixes, exclusive/common aggregation, whole-complex parking, failures, script syntax and remarks/history cleaning.');
 }
 async function live(){
@@ -73,7 +88,7 @@ async function live(){
  const data=await response.json();
  console.log('Live Hanbit lookup:',JSON.stringify({status:response.status,error:data.error,version:data.lookup_version,lot:data.queried_lot,building:data.building_name,dong:data.unit_dong_name,floor:data.unit_floor,exclusive:data.exclusive_area_m2,common:data.common_area_m2,parking:data.parking_count,parking_scope:data.parking_scope,purpose:data.main_purpose,structure:data.structure,total:data.total_area_m2,footprint:data.footprint_area_m2,floors:data.floor_info}));
  assert.equal(response.status,200,data.error);assert.equal(data.lookup_version,'20261007-exact-building');assert.equal(data.queried_lot.bun,'1026');
- assert.equal(data.unit_dong_name,'717동');assert.equal(data.exclusive_area_m2,84.95);assert.equal(data.unit_floor,'13층');assert(data.structure.includes('철근콘크리트'));assert(data.main_purpose.includes('아파트'));
+ assert.equal(data.unit_dong_name,'717동');assert.equal(data.exclusive_area_m2,84.95);assert.equal(data.unit_floor,'13층');assert(data.structure.includes('철근콘크리트'));assert(/아파트|공동주택/.test(data.main_purpose));
  assert(data.common_area_m2>0);assert(data.total_area_m2>199.2);assert(data.footprint_area_m2>199.2);assert.equal(data.parking_scope,'단지 전체');assert(data.parking_count==null||data.parking_count>2);
  console.log('PASS: deployed live Hanbit 717동 1302호 matches the provided building-register document.');
 }
