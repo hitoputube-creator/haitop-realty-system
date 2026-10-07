@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261007-apartment-fields"></script>
+  <script src="assets/js/storage.js?v=20261007-apartment-addresses"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -399,6 +399,7 @@
     let lastSynced = mapEl.value;
 
     publicEl.addEventListener('input', () => {
+      if (document.getElementById("category2Select").value === "아파트") return;
       if (mapEl.value === '' || mapEl.value === lastSynced) {
         mapEl.value = publicEl.value;
         lastSynced = mapEl.value;
@@ -814,8 +815,9 @@
     const gv = id => (g(id) ? g(id).value.trim() : '');
     const gn = id => (g(id) && g(id).value ? g(id).value : null);
 
-    const publicAddress        = document.getElementById("publicAddress").value.trim();
-    const mapAddress           = document.getElementById("mapAddress").value.trim();
+    const apartmentAddresses = cat2 === "아파트" ? readApartmentAddresses("") : {};
+    const publicAddress = cat2 === "아파트" ? apartmentAddresses.publicAddress : document.getElementById("publicAddress").value.trim();
+    const mapAddress = cat2 === "아파트" ? apartmentAddresses.mapAddress : document.getElementById("mapAddress").value.trim();
     syncApartmentFields();
     const apartmentUnit = cat2 === "아파트" ? readApartmentUnitFields("") : {};
     const privateDetailAddress = cat2 === "아파트" ? apartmentUnit.privateDetailAddress : document.getElementById("privateDetailAddress").value.trim();
@@ -827,6 +829,7 @@
       type, category1: cat1, category2: cat2,
       title,
       address:            mapAddress || publicAddress,
+      ...apartmentAddresses,
       publicAddress,
       mapAddress,
       privateDetailAddress,
