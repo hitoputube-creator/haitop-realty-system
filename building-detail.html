@@ -634,6 +634,7 @@
         <div class="um-section current"><div class="um-section-title">👤 소유자 정보</div><div class="umgrid">
           <div class="umfield"><label>소유자 이름</label><input id="ru_소유자" /></div>
           <div class="umfield span-3"><label>소유자 연락처</label><div class="owner-phone-row"><select id="ru_통신사" aria-label="소유자 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>알뜰폰</option><option>미확인</option></select><input id="ru_연락처" type="tel" placeholder="010-0000-0000" aria-label="소유자 전화번호" /></div></div>
+          <div class="umfield full" style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn-unit-ghost" id="ru_ownerRegistry">대법원 인터넷등기소 확인</button><button type="button" class="btn-unit-ghost" id="ru_ownerBuilding">건축물대장 확인</button></div>
         </div></div>
         <div class="um-section sale"><div class="um-section-title">📅 세입자·계약</div><div class="umgrid">
           <div class="umfield"><label>세입자 현황</label><select id="ru_세입자현황"><option>미확인</option><option>자가거주</option><option value="임차중">세입자 거주</option><option>공실</option></select></div>
@@ -714,6 +715,7 @@
         <button class="btn-unit-del" id="umDelete" style="display:none;">삭제</button>
         <button class="btn-unit-add" id="umSave">저장</button>
       </div>
+      <p id="unitRegistryApplied" role="status" hidden style="color:var(--gold-soft);font-size:.8rem;margin:8px 0 0;"></p>
     </div>
   </div>
 </div><!-- /page -->
@@ -734,14 +736,14 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261007-exact-building-notes"></script>
+<script src="assets/js/storage.js?v=20261007-owner-unit-apply"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
-<script src="assets/js/building-register-view.js?v=20261007-exact-building"></script>
+<script src="assets/js/building-register-view.js?v=20261007-unit-apply"></script>
 <script>
 /* ═══════════════════════════════════════════
    Cloudinary 설정
@@ -1386,6 +1388,12 @@ async function deleteBFile(id) {
   let editIdx     = -1;
   let filterFloor = "전체";
   let bName       = "";
+  let apartmentListings = [];
+  let listingLookupLoaded = false;
+  let pendingRegistryInfo = null;
+  let unitModalVersion = 0;
+  function linkedUnitListings(unit) { return apartmentUnitLinkedListings(unit, apartmentListings, buildingId, bName); }
+  function unitDeal(unit) { return apartmentUnitDeal(unit, linkedUnitListings(unit)); }
 
   const residentialUnitMode = () => apartmentBuildingMode;
   let unitPlans = [];
@@ -1432,6 +1440,7 @@ async function deleteBFile(id) {
     const fields = {아파트명:bName,동:parts.dong,호수:parts.room,접수일자:u.접수일자 || (isNew ? todayInKorea() : ''),평형:u.평형,타입:u.타입,거래구분:u.거래구분,
       매매가:u.현_매매가격,보증금:effectiveUnitPrice(u.현_보증금,u.보증금),월세:effectiveUnitPrice(u.현_월세,u.월차임),소유자:u.소유주,연락처:u.연락처,통신사:u.소유자통신사,
       세입자이름:u.세입자이름,세입자연락처:u.세입자연락처,세입자현황:u.세입자현황 || (u.공실여부 === '공실' ? '공실' : u.공실여부 === '임차중' ? '임차중' : '미확인'),계약시작:u.세입자계약시작일,계약종료:u.세입자계약종료일,옵션:u.옵션내역,비고:apartmentRemarksOnly(u.비고)};
+    fields.거래구분 = unitDeal(u);
     $('ru_통신사').querySelectorAll('[data-custom-carrier]').forEach(option => option.remove());
     if (u.소유자통신사 && !Array.from($('ru_통신사').options).some(option => option.value === u.소유자통신사)) {
       const option = document.createElement('option'); option.value = option.textContent = u.소유자통신사; option.dataset.customCarrier = 'true'; $('ru_통신사').appendChild(option);
@@ -1537,7 +1546,8 @@ async function deleteBFile(id) {
       const ri = units.indexOf(u), parts=roomParts(u);
       const sale = u.현_매매가격 == null ? '-' : Number(u.현_매매가격).toLocaleString('ko-KR');
       const tenant = u.세입자현황 || u.공실여부 || '미확인';
-      return `<tr><td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(u.평형 || '-')}<br>${esc(u.타입 || '')}</td><td>${esc(u.거래구분 || '-')}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions"><button class="btn-unit-edit" data-ri="${ri}">수정·메모</button>${u.listing_id ? `<a class="btn-listing-view" href="detail.html?id=${encodeURIComponent(u.listing_id)}">매물보기</a>` : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`}</td></tr>`;
+      const links=linkedUnitListings(u);
+      return `<tr><td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(u.평형 || '-')}<br>${esc(u.타입 || '')}</td><td>${esc(unitDeal(u) || '-')}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions"><button class="btn-unit-edit" data-ri="${ri}">수정·메모</button>${links.length ? links.map(item=>`<a class="btn-listing-view" href="${esc(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(item.id)))}">매물보기${links.length>1 ? ' · '+esc(item.dealType || '') : ''}</a>`).join('') : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`}</td></tr>`;
     }).join('');
   }
 
@@ -1635,6 +1645,10 @@ async function deleteBFile(id) {
       console.error("[호실현황] 로드 실패:", e);
       units = [];
     }
+    if (residentialUnitMode()) {
+      try { apartmentListings = await getListings(); listingLookupLoaded = true; }
+      catch (error) { apartmentListings = []; listingLookupLoaded = false; showToast('등록 매물 연결 조회 실패: '+error.message); }
+    }
     renderAll();
     if (location.hash === '#unitStatus') $('unitStatus').scrollIntoView({ block: 'start' });
   }
@@ -1651,7 +1665,7 @@ async function deleteBFile(id) {
   function renderSummary() {
     const occ  = units.filter(u => u.공실여부 === "임차중").length;
     const vac  = units.filter(u => u.공실여부 === "공실").length;
-    const sale = units.filter(u => residentialUnitMode() ? String(u.거래구분 || "").includes("매매") : u.공실여부 === "매매가능").length;
+    const sale = units.filter(u => residentialUnitMode() ? String(unitDeal(u)).includes("매매") : u.공실여부 === "매매가능").length;
     const rev  = units.reduce((s, u) => s + (Number(effectiveUnitPrice(u.현_월세, u.월차임)) || 0), 0);
     $("sumOccupied").textContent = occ;
     $("sumVacant").textContent   = vac;
@@ -1692,7 +1706,7 @@ async function deleteBFile(id) {
     const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped) : grouped;
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
-    const listed = filtered.filter(u => String(u.listing_id || '').trim()).length;
+    const listed = filtered.filter(u => residentialUnitMode() && listingLookupLoaded ? linkedUnitListings(u).length > 0 : String(u.listing_id || '').trim()).length;
     $("unitCounts").textContent = `${floorLabel(filterFloor)} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => u.공실여부 === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
     const tbody = $("unitsTbody");
     const empty = $("unitsEmpty");
@@ -1742,12 +1756,16 @@ async function deleteBFile(id) {
   }
 
   function openModal(idx) {
+    unitModalVersion++;
     editIdx = idx;
+    pendingRegistryInfo = null;
     const isNew = idx < 0;
     $("umTitle").textContent    = isNew ? "호실 추가" : "호실 수정";
     $("umDelete").style.display = isNew ? "none" : "";
-    $("umRegistry").style.display = isNew ? "none" : "";
+    $("umRegistry").style.display = "";
     const u = isNew ? {} : units[idx];
+    $('unitRegistryApplied').hidden = !u.건축물대장조회;
+    $('unitRegistryApplied').textContent = u.건축물대장조회 ? '저장된 대장: 전유 '+u.건축물대장조회.exclusive_area_m2+'㎡ · 공용 합계 '+(u.건축물대장조회.common_area_m2 ?? '미확인')+'㎡ · '+(u.건축물대장조회.unit_floor || '') : '';
     $('unitModal').classList.toggle('residential-modal', residentialUnitMode());
     $('residentialUnitFields').hidden = !residentialUnitMode();
     $('commercialUnitSale').hidden = residentialUnitMode();
@@ -1792,6 +1810,7 @@ async function deleteBFile(id) {
   }
 
   function closeModal() {
+    unitModalVersion++;
     $("unitModal").classList.remove("open");
     editIdx = -1;
   }
@@ -1827,6 +1846,11 @@ async function deleteBFile(id) {
     if (residentialUnitMode()) {
       try { unit = residentialUnitChanges(original); }
       catch (e) { showToast(e.message); return; }
+    }
+    if (pendingRegistryInfo) unit.건축물대장조회 = pendingRegistryInfo;
+    if (residentialUnitMode() && !unit.listing_id) {
+      const matches = linkedUnitListings(unit);
+      if (matches.length === 1) unit.listing_id = matches[0].id;
     }
     const newMemo = $('u_추가메모').value.trim();
     unit.추가메모 = [...unitMemos(original)];
@@ -1949,6 +1973,11 @@ async function deleteBFile(id) {
   }
 
   $('ru_타입').addEventListener('change', fillUnitPlanAreas);
+  function ownerSearch(source) {
+    openApartmentRegistrySearch({complexName:bName,dong:$('ru_동').value,ho:$('ru_호수').value,jibunAddress:buildingAddress},message=>showToast(message,10000),source);
+  }
+  $('ru_ownerRegistry').addEventListener('click',()=>ownerSearch('registry'));
+  $('ru_ownerBuilding').addEventListener('click',()=>ownerSearch('building'));
   ['ru_연락처','ru_세입자연락처'].forEach(id => $(id).addEventListener('blur', () => {$(id).value = ownerPhone($(id).value);}));
   ['매매가','보증금','월세'].forEach(k => $('ru_'+k).addEventListener('input', () => {$('h_ru_'+k).textContent = toKorAmt($('ru_'+k).value);}));
   bindAreaPair('ru_분양_평','ru_분양_m2');
@@ -1961,10 +1990,29 @@ async function deleteBFile(id) {
   $("umSave").addEventListener("click", saveUnit);
   $("umDelete").addEventListener("click", deleteUnit);
   $("umRegistry").addEventListener("click", () => {
-    if (editIdx < 0) return;
-    const unit=units[editIdx];
-    const parts=roomParts(unit);
-    openBuildingRegisterInfo(buildingAddress, parts.room, parts.dong, {buildingName:bName, apartment:residentialUnitMode()});
+    const targetEditIdx=editIdx;
+    const targetModalVersion=unitModalVersion;
+    const residential=residentialUnitMode();
+    const parts=residential ? {dong:$('ru_동').value.trim(),room:$('ru_호수').value.trim()} : roomParts({호수:$('u_호수').value});
+    if(!parts.room || (residential && !parts.dong)){showToast('동과 호수를 먼저 입력해주세요.');return;}
+    openBuildingRegisterInfo(buildingAddress, parts.room, parts.dong, {buildingName:bName, apartment:residential,onApply:info=>{
+      if(unitModalVersion!==targetModalVersion || editIdx!==targetEditIdx || !$('unitModal').classList.contains('open'))throw new Error('세대 수정창이 변경되었습니다. 다시 조회해주세요.');
+      const current=residential ? {dong:$('ru_동').value.trim(),room:$('ru_호수').value.trim()} : roomParts({호수:$('u_호수').value});
+      if(normalizeApartmentUnit(current.room,'호')!==normalizeApartmentUnit(info.unit_ho_name,'호') || (residential && normalizeApartmentUnit(current.dong,'동')!==normalizeApartmentUnit(info.unit_dong_name,'동')))throw new Error('수정 중인 동·호수가 변경되었습니다. 다시 조회해주세요.');
+      const prefix=residential ? 'ru_' : 'u_';
+      $(prefix+'전용_m2').value=info.exclusive_area_m2;
+      $(prefix+'전용_평').value=(Number(info.exclusive_area_m2)/(400/121)).toFixed(2);
+      const plan=residential ? unitPlans.find(p=>String(p.floor_number).replace(/\s/g,'')===$('ru_타입').value.trim().replace(/\s/g,'')) : null;
+      const supply=info.residential_supply_area_m2 ?? (plan && plan.supply_area_m2);
+      if(supply!=null && Number(supply)>=Number(info.exclusive_area_m2)){
+        $(prefix+'분양_m2').value=supply;$(prefix+'분양_평').value=(Number(supply)/(400/121)).toFixed(2);
+        if(residential)$('ru_평형').value=(Number(supply)/(400/121)).toFixed(2)+'평';
+      }
+      pendingRegistryInfo={...info,queried_at:new Date().toISOString()};
+      $('unitRegistryApplied').hidden=false;
+      $('unitRegistryApplied').textContent='대장 적용: 전유 '+info.exclusive_area_m2+'㎡ · 공용 합계 '+(info.common_area_m2 ?? '미확인')+'㎡ · '+(info.unit_floor || '')+'. 저장을 눌러주세요.';
+      showToast('조회값을 수정칸에 적용했습니다. 저장을 눌러주세요.');
+    }});
   });
   $("umCancel").addEventListener("click", closeModal);
   $("umClose").addEventListener("click", closeModal);

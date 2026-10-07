@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-exact-building-notes"></script>
+<script src="assets/js/storage.js?v=20261007-owner-unit-apply"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1162,8 +1162,8 @@ function closeHomepageTab(tab) {
       const u = apartmentSource(item);
       const addresses=apartmentDetailAddresses(item);
       const man = n => n == null || n === "" ? "" : Number(n).toLocaleString("ko-KR") + "만원";
-      const row = pairs => '<div class="apartment-info-row' + (pairs.length===2 && pairs[0][0]==='연락처' && pairs[1][0]==='통신사' ? ' owner-contact-row' : pairs.length===4 ? ' apartment-unit-row' : '') + '" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => label==='호수' ? '<div class="ipt-label">호수</div><div class="ipt-value apartment-unit-action"><span>'+escapeHtml(detailText(value)||'—')+'</span><button type="button" class="apartment-autofill-btn" id="autoFillApartmentBtn" title="건축물대장과 단지자료로 면적·타입·주소 자동입력" aria-label="건축물대장으로 자동입력"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 7a7 7 0 0 1 11.5-1L20 9M4 15l2.5 3A7 7 0 0 0 18 17"/></svg>건축물대장 조회</button><button type="button" class="apartment-autofill-btn" id="registryOwnerSearchBtn" title="인터넷등기소에서 소유자 표시 확인">대법원 소유주 조회</button><button type="button" class="apartment-autofill-btn" id="buildingOwnerSearchBtn" title="정부24 건축물대장 원문에서 소유주 확인">건축물대장 소유주 확인</button></div>' : iptCell(label,value)).join('') + '</div>';
-      const section = (title, rows) => '<section class="detail-section apartment-info-section' + (title==='옵션·메모' ? ' apartment-memo-section' : '') + '"><div class="detail-section-title">' + escapeHtml(title) + '</div><div class="apartment-info-table">' + rows.map(row).join('') + '</div></section>';
+      const row = pairs => '<div class="apartment-info-row' + (pairs.length===2 && pairs[0][0]==='연락처' && pairs[1][0]==='통신사' ? ' owner-contact-row' : pairs.length===4 ? ' apartment-unit-row' : '') + '" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => label==='호수' ? '<div class="ipt-label">호수</div><div class="ipt-value apartment-unit-action"><span>'+escapeHtml(detailText(value)||'—')+'</span><button type="button" class="apartment-autofill-btn" id="autoFillApartmentBtn" title="건축물대장과 단지자료로 면적·타입·주소 자동입력" aria-label="건축물대장으로 자동입력"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 7a7 7 0 0 1 11.5-1L20 9M4 15l2.5 3A7 7 0 0 0 18 17"/></svg>건축물대장 조회</button></div>' : iptCell(label,value)).join('') + '</div>';
+      const section = (title, rows) => '<section class="detail-section apartment-info-section' + (title==='옵션·메모' ? ' apartment-memo-section' : '') + '"><div class="detail-section-title">' + escapeHtml(title) + '</div><div class="apartment-info-table">' + rows.map(row).join('') + '</div>' + (title==='소유자 정보' ? '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px;"><button type="button" class="apartment-autofill-btn" id="registryOwnerSearchBtn" title="인터넷등기소에서 소유자 표시 확인">대법원 인터넷등기소 확인</button><button type="button" class="apartment-autofill-btn" id="buildingOwnerSearchBtn" title="정부24 건축물대장 원문에서 소유주 확인">건축물대장 확인</button></div>' : '') + '</section>';
       const memoRows = [
         ...(u.옵션내역 ? [[["옵션내역",u.옵션내역]]] : []),
         ...apartmentNotes(item).map(note => [note])
@@ -1741,4 +1741,5 @@ function closeHomepageTab(tab) {
 </script>
 </body>
 </html>
+
 

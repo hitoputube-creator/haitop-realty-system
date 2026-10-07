@@ -409,6 +409,33 @@ function applyApartmentUnitReference(item, reference) {
   return updated;
 }
 
+
+function apartmentUnitLinkedListings(unit, listings, resourceId, buildingName) {
+  const combined=String(unit.호수 || "").match(/^(.+?)동\s*(.+?)(?:호)?$/);
+  const dong=normalizeApartmentUnit(unit.동 || (combined && combined[1]),"동");
+  const ho=normalizeApartmentUnit(unit.호 || (combined && combined[2]) || unit.호수,"호");
+  const nameKey=value=>String(value || "").replace(/\s+/g,"").replace(/아파트$/,"");
+  const seen=new Set();
+  return listings.filter(item=>{
+    if(!item.id || seen.has(item.id))return false;
+    const linked=item.id===unit.listing_id;
+    const belongs=item.resource_id ? item.resource_id===resourceId :
+      nameKey(item.complexName || item.buildingName || apartmentSource(item).아파트명)===nameKey(buildingName);
+    const source=apartmentSource(item);
+    const sameUnit=normalizeApartmentUnit(source.동,"동")===dong && normalizeApartmentUnit(source.호,"호")===ho;
+    if(!(linked || (belongs && dong && ho && sameUnit)))return false;
+    seen.add(item.id);return true;
+  });
+}
+function apartmentUnitDeal(unit, linkedListings=[]) {
+  if(String(unit.거래구분 || "").trim())return unit.거래구분;
+  const active=linkedListings.filter(item=>item.status!=="거래완료");
+  const deals=[...new Set(active.map(item=>item.dealType || apartmentSource(item).거래구분).filter(Boolean))];
+  if(deals.length)return deals.join("·");
+  const sale=Number(unit.현_매매가격);
+  return Number.isFinite(sale) && sale>0 ? "매매" : "";
+}
+
 function setupApartmentListingForm(prefix, category2Id) {
   const host = document.getElementById(prefix + "apartmentListingForm");
   host.innerHTML = APARTMENT_LISTING_FORM_HTML.replace(/id="([^"]+)"/g, (_, id) => 'id="' + prefix + id + '"')
@@ -424,13 +451,16 @@ function setupApartmentListingForm(prefix, category2Id) {
   actionRow.style.flexWrap="wrap";
   actionRow.appendChild(autoButton);
   const registryButton=document.createElement("button");
-  registryButton.type="button";registryButton.className="btn btn-ghost";registryButton.textContent="대법원 소유주 조회";
+  registryButton.type="button";registryButton.className="btn btn-ghost";registryButton.textContent="대법원 인터넷등기소 확인";
   registryButton.style.cssText=autoButton.style.cssText;
-  actionRow.appendChild(registryButton);
+  const ownerActions=document.createElement("div");
+  ownerActions.style.cssText="grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap";
+  document.getElementById(prefix+"apt_소유자").closest(".umgrid").appendChild(ownerActions);
+  ownerActions.appendChild(registryButton);
   registryButton.addEventListener("click",()=>openApartmentRegistrySearch({complexName:document.getElementById(prefix+"apt_아파트명").value,dong:document.getElementById(prefix+"apt_동").value,ho:hoInput.value,roadAddress:document.getElementById(prefix+"publicAddress").value,jibunAddress:document.getElementById(prefix+"mapAddress").value},message=>autoStatus.textContent=message));
   const buildingOwnerButton=document.createElement("button");
-  buildingOwnerButton.type="button";buildingOwnerButton.className="btn btn-ghost";buildingOwnerButton.textContent="건축물대장 소유주 확인";
-  buildingOwnerButton.style.cssText=autoButton.style.cssText;actionRow.appendChild(buildingOwnerButton);
+  buildingOwnerButton.type="button";buildingOwnerButton.className="btn btn-ghost";buildingOwnerButton.textContent="건축물대장 확인";
+  buildingOwnerButton.style.cssText=autoButton.style.cssText;ownerActions.appendChild(buildingOwnerButton);
   buildingOwnerButton.addEventListener("click",()=>openApartmentRegistrySearch({complexName:document.getElementById(prefix+"apt_아파트명").value,dong:document.getElementById(prefix+"apt_동").value,ho:hoInput.value,roadAddress:document.getElementById(prefix+"publicAddress").value,jibunAddress:document.getElementById(prefix+"mapAddress").value},message=>autoStatus.textContent=message,"building"));
   const autoStatus=document.createElement("div");
   autoStatus.style.cssText="font-size:.78rem;padding:0 10px 8px;color:var(--gold)";
@@ -1696,3 +1726,4 @@ document.addEventListener('click', event => {
     alert('이 업무앱의 케이탑 연결은 아직 준비 중입니다.');
   }
 }, true);
+

@@ -77,7 +77,34 @@ async function tests(){
  assert(cells.includes('717동'));assert(cells.includes('13층'));assert(cells.includes('단지 전체 주차대수'));assert(cells.includes('1,776대'));assert(cells.includes('철근콘크리트구조'));assert(!cells.includes('호실 용도'));
  uiResult={area_m2:199.2};await box.querySelector('.br-fetch').handlers.click();
  assert.equal(box.querySelector('#brResult').hidden,true);assert(box.querySelector('#brError').textContent.includes('일치 여부'));
- console.log('PASS: exact lot/dong/ho, paginated titles, masked form suffixes, exclusive/common aggregation, whole-complex parking, failures, script syntax and remarks/history cleaning.');
+ const normalize=storage.slice(storage.indexOf('function normalizeApartmentUnit('),storage.indexOf('\nfunction ',storage.indexOf('function normalizeApartmentUnit(')+10));
+ const linkage=storage.slice(storage.indexOf('function apartmentUnitLinkedListings('),storage.indexOf('\nfunction setupApartmentListingForm('));
+ const linkContext=vm.createContext({Set,Number,String});
+ const apartmentSourceCode=storage.slice(storage.indexOf('function apartmentSource('),storage.indexOf('\nconst CHORONG11_RESOURCE_ID'));
+ vm.runInContext(normalize+'\n'+apartmentSourceCode+'\n'+linkage,linkContext);
+ const unit={동:'717',호:'1302',현_매매가격:48000};
+ const listing={id:'listing-one',resource_id:'complex-one',dong:'717동',ho:'1302호',dealType:'매매'};
+ const links=linkContext.apartmentUnitLinkedListings(unit,[listing,{...listing,id:'wrong-complex',resource_id:'other'},{...listing,id:'wrong-dong',dong:'718'},listing],'complex-one','한빛마을7단지');
+ assert.equal(links.length,1);assert.equal(links[0].id,'listing-one');
+ assert.equal(linkContext.apartmentUnitDeal(unit,links),'매매');
+ assert.equal(linkContext.apartmentUnitDeal(unit,[]),'매매');
+ assert.equal(linkContext.apartmentUnitDeal({...unit,거래구분:'전세'},links),'전세');
+ assert.equal(linkContext.apartmentUnitDeal({현_매매가격:0},[]),'');
+ let applied=0;
+ uiResult={building_match_verified:true,exclusive_area_m2:84.95,unit_dong_name:'717동',unit_ho_name:'1302호'};
+ uiWindow.openBuildingRegisterInfo(address,'1302','717',{apartment:true,onApply:()=>{applied++}});
+ assert.equal(box.querySelector('.br-apply').hidden,false);
+ assert.equal(box.querySelector('.br-apply').disabled,true);
+ await box.querySelector('.br-fetch').handlers.click();
+ assert.equal(box.querySelector('.br-apply').disabled,false);
+ box.querySelector('.br-close').handlers.click();assert.equal(applied,0);
+ uiWindow.openBuildingRegisterInfo(address,'1302','717',{apartment:true,onApply:()=>{applied++}});
+ await box.querySelector('.br-fetch').handlers.click();
+ box.querySelector('#brRoom').value='1303';await box.querySelector('.br-apply').handlers.click();assert.equal(applied,0);
+ uiWindow.openBuildingRegisterInfo(address,'1302','717',{apartment:true,onApply:()=>{applied++}});
+ await box.querySelector('.br-fetch').handlers.click();await box.querySelector('.br-apply').handlers.click();assert.equal(applied,1);
+ uiWindow.openBuildingRegisterInfo(address,'1302','717',{});assert.equal(box.querySelector('.br-apply').hidden,true);
+ console.log('PASS: exact building/unit lookup, script syntax, notes, office-scoped listing linkage, sale inference, and explicit query apply/close behavior.');
 }
 async function live(){
  // 이미 운영 프록시에서 사용하는 공개 anon JWT로 기존 읽기 전용 조회를 검증한다.

@@ -3,6 +3,10 @@
 (function () {
   let dialog;
   let lookupContext = {};
+  let latestInfo = null;
+  let latestInputs = '';
+  let requestVersion = 0;
+  const inputKey = box => ['#brAddress','#brDong','#brRoom'].map(key=>box.querySelector(key).value.trim()).join('|');
 
   function ensureDialog() {
     if (dialog) return dialog;
@@ -54,11 +58,20 @@
       <p class="br-error" id="brError" role="alert"></p>
       <div class="br-result" id="brResult" hidden><table id="brDetails" aria-label="건축물대장 조회 결과"><tbody></tbody></table><p id="brWarning"></p></div>
       <div class="br-actions"><button type="button" class="br-close">닫기</button>
-        <button type="button" class="br-fetch">정보 조회</button></div>
+        <button type="button" class="br-fetch">정보 조회</button>
+        <button type="button" class="br-apply" hidden disabled>조회값 적용</button></div>
     </div>`;
     document.body.appendChild(dialog);
     const close = () => { dialog.classList.remove('open'); document.body.style.overflow = ''; };
     dialog.querySelector('.br-close').addEventListener('click', close);
+    dialog.querySelector('.br-apply').addEventListener('click', async () => {
+      const error=dialog.querySelector('#brError'),button=dialog.querySelector('.br-apply');
+      if(!latestInfo || typeof lookupContext.onApply !== 'function')return;
+      if(inputKey(dialog)!==latestInputs){error.textContent='주소·동·호수가 변경되었습니다. 다시 조회해주세요.';button.disabled=true;return;}
+      button.disabled=true;
+      try{await lookupContext.onApply(latestInfo);close();}
+      catch(e){error.textContent=e.message || '조회값 적용에 실패했습니다.';button.disabled=false;}
+    });
     dialog.addEventListener('click', event => { if (event.target === dialog) close(); });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && dialog.classList.contains('open')) close();
@@ -73,12 +86,16 @@
       resultBox.hidden = true;
       if (!address || !room) { error.textContent = '지번주소와 호수를 입력해 주세요.'; return; }
       const btn = dialog.querySelector('.br-fetch');
+      const version=++requestVersion;
+      const queryInputs=inputKey(dialog);
+      latestInfo=null;dialog.querySelector('.br-apply').disabled=true;
       btn.disabled = true;
       btn.textContent = '조회 중...';
       try {
         const dong = address.match(/(?:^|\s)(\d+)\s*동(?:\s|,|$)/);
         const requestedDong = selectedDong || (dong ? dong[1] : '');
         const info = await lookupBuildingRegister(address, { hoNm: room, dongNm: requestedDong, apartment: lookupContext.apartment === true });
+        if(version!==requestVersion)return;
         if (!info.building_match_verified) throw new Error('해당 건물의 일치 여부를 확인하지 못했습니다. 다시 조회해주세요.');
         const area = value => {
           if (value == null || value === '') return '조회되지 않음';
@@ -123,11 +140,12 @@
           ? '이 호실의 전유·공용면적을 확인하지 못했습니다. 연면적은 건물 전체 면적이므로 호실 면적으로 사용하지 마세요. 원본 대장과 대조해 주세요.'
           : '전유+공용 합계는 대장에 조회된 면적의 합산값이며 분양 공급면적과 다를 수 있습니다.') + (info.parking_warning ? ' ' + info.parking_warning : '');
         resultBox.hidden = false;
+        latestInfo=info;latestInputs=queryInputs;
+        dialog.querySelector('.br-apply').disabled=!!info.unit_area_warning || !Number.isFinite(Number(info.exclusive_area_m2)) || Number(info.exclusive_area_m2)<=0;
       } catch (e) {
-        error.textContent = e.message || '건축물대장정보 조회에 실패했습니다.';
+        if(version===requestVersion)error.textContent = e.message || '건축물대장정보 조회에 실패했습니다.';
       } finally {
-        btn.disabled = false;
-        btn.textContent = '정보 조회';
+        if(version===requestVersion){btn.disabled = false;btn.textContent = '정보 조회';}
       }
     });
     return dialog;
@@ -135,7 +153,11 @@
 
   window.openBuildingRegisterInfo = function (address, room, dong = '', context = {}) {
     lookupContext = context;
+    requestVersion++;latestInfo=null;latestInputs='';
     const box = ensureDialog();
+    const apply=box.querySelector('.br-apply');apply.hidden=typeof context.onApply!=='function';apply.disabled=true;
+    box.querySelector('.br-fetch').disabled=false;box.querySelector('.br-fetch').textContent='정보 조회';
+    box.querySelector('.br-box p').textContent=typeof context.onApply==='function' ? '정보 조회 후 조회값 적용을 누르면 수정칸에 채워집니다. 세대 수정창에서 저장해주세요.' : '주소와 호수를 확인한 뒤 조회하세요. 조회 결과는 참고용입니다.';
     box.querySelector('#brDong').value = String(dong || '').replace(/\s*동$/, '').trim();
     box.querySelector('#brAddress').value = address || '';
     box.querySelector('#brRoom').value = String(room || '').replace(/^.*?동\s*/, '').replace(/\s*호$/, '').trim();
