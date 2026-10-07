@@ -240,12 +240,15 @@
     .sum-card.vacant   { background: rgba(239,68,68,0.10);  border-color: rgba(239,68,68,0.25); }
     .sum-card.forsale  { background: rgba(234,179,8,0.10);  border-color: rgba(234,179,8,0.25); }
     .sum-card.revenue  { background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.25); }
+    .sum-card.own      { background: rgba(167,139,250,0.10); border-color: rgba(167,139,250,0.28); }
+    .summary-note { margin: -4px 0 10px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
     .sum-num   { font-size: 1.65rem; font-weight: 900; line-height: 1; }
     .sum-label { font-size: 0.76rem; color: var(--muted); margin-top: 5px; }
     .sum-card.occupied .sum-num { color: #4ade80; }
     .sum-card.vacant   .sum-num { color: #f87171; }
     .sum-card.forsale  .sum-num { color: #facc15; }
     .sum-card.revenue  .sum-num { color: #93c5fd; }
+    .sum-card.own      .sum-num { color: #c4b5fd; }
 
     /* 층 필터 탭 */
     .floor-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
@@ -563,7 +566,26 @@
     </div>
 
     <!-- 요약 카드 -->
-    <div class="summary-grid">
+    <div class="summary-grid" id="residentialSummaryGrid" style="display:none;">
+      <div class="sum-card forsale">
+        <div class="sum-num" id="sumDealSale">-</div>
+        <div class="sum-label">매매</div>
+      </div>
+      <div class="sum-card revenue">
+        <div class="sum-num" id="sumDealJeonse">-</div>
+        <div class="sum-label">전세</div>
+      </div>
+      <div class="sum-card occupied">
+        <div class="sum-num" id="sumDealWolse">-</div>
+        <div class="sum-label">월세</div>
+      </div>
+      <div class="sum-card own">
+        <div class="sum-num" id="sumOwn">-</div>
+        <div class="sum-label">자가</div>
+      </div>
+    </div>
+    <p class="summary-note" id="residentialSummaryNote" style="display:none;"></p>
+    <div class="summary-grid" id="commercialSummaryGrid">
       <div class="sum-card occupied">
         <div class="sum-num" id="sumOccupied">-</div>
         <div class="sum-label">임차중</div>
@@ -1687,6 +1709,25 @@ async function deleteBFile(id) {
     $("sumVacant").textContent   = vac;
     $("sumForSale").textContent  = sale;
     $("sumRevenue").textContent  = rev ? rev.toLocaleString("ko-KR") : "-";
+
+    // 주거(세대별 자료): 매매·전세·월세는 세대의 '거래구분', 자가는 '세입자현황=자가거주' 기준으로 센다.
+    // '매매·임대'처럼 둘 이상이면 각각 집계된다.
+    const resi = residentialUnitMode();
+    $("residentialSummaryGrid").style.display = resi ? "" : "none";
+    $("residentialSummaryNote").style.display = resi ? "" : "none";
+    $("commercialSummaryGrid").style.display  = resi ? "none" : "";
+    if (resi) {
+      const deals = units.map(u => String(unitDeal(u) || ""));
+      $("sumDealSale").textContent   = deals.filter(d => d.includes("매매")).length;
+      $("sumDealJeonse").textContent = deals.filter(d => d.includes("전세")).length;
+      $("sumDealWolse").textContent  = deals.filter(d => d.includes("월세")).length;
+      $("sumOwn").textContent        = units.filter(u => (u.세입자현황 || u.공실여부 || "") === "자가거주").length;
+      const undecided = deals.filter(d => !/매매|전세|월세/.test(d)).length;
+      $("residentialSummaryNote").textContent =
+        `임차중 ${occ} · 공실 ${vac} · 월차임 합계 ${rev ? rev.toLocaleString("ko-KR") + "만" : "-"}` +
+        ` · 매매·전세·월세는 거래구분 기준(둘 이상이면 각각 집계)` +
+        (undecided ? ` · 거래구분 미정·임대 ${undecided}세대` : "");
+    }
   }
 
   function renderFloorTabs() {
