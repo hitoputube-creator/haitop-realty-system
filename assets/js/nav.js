@@ -31,7 +31,7 @@ function renderMainNav() {
   if (!mount) return;
   const active = document.body.dataset.navActive || "";
 
-  const linksHtml = NAV_ITEMS.map(original => {
+  const linksHtml = NAV_ITEMS.filter(item => OfficeConfig.id !== "ktop" || item.key !== "homepage").map(original => {
     const item = OfficeConfig.id === 'ktop' && original.key === 'worklog' ? {...original,label:'업무일지',href:OFFICE_DIARY_URL,external:false} : original;
     const cls = "nav-link" + (item.key === active ? " active" : "");
     const attrs = item.external ? ' target="_blank" rel="noopener noreferrer"' : "";

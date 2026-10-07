@@ -5,12 +5,12 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-apartment-autofill"></script>
+<script src="assets/js/storage.js?v=20261007-ktop-internal"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
-<script src="assets/js/nav.js?v=20261006-ktop-diary1"></script>
+<script src="assets/js/nav.js?v=20261007-ktop-internal"></script>
 <style>
 .apartment-listing-form[hidden], [id$="nonApartmentFields"][hidden]{display:none!important}
 .apartment-listing-form .um-section{border-radius:10px;overflow:hidden;margin:10px 0;background:#0d1f3c}
@@ -338,7 +338,7 @@
 
     </div><!-- edit_nonApartmentFields -->
     <!-- 홈페이지 공개 -->
-    <div class="field" style="margin-bottom:12px;">
+    <div data-homepage-only class="field" style="margin-bottom:12px;">
       <label>홈페이지 공개</label>
       <label style="display:flex;align-items:center;gap:8px;color:var(--text-main);font-size:0.86rem;">
         <input id="edit_is_public" type="checkbox" style="width:auto;accent-color:var(--gold);" /> 공개
@@ -348,7 +348,7 @@
     <!-- 이미지 -->
     <div class="modal-section-title">📷 이미지·문서 (최대 5장)</div>
     <div class="field" style="margin-bottom:14px;">
-      <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;margin-bottom:8px;">
+      <div data-homepage-only style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;margin-bottom:8px;">
         홈페이지에 공개할 사진만 체크하세요. 체크 해제한 사진은 내부 매물관리에서만 보관됩니다.
         PDF 문서(등기부등본·건축물대장 등)는 홈페이지에 공개되지 않고 내부 매물관리에서만 보관됩니다.
       </div>
@@ -624,7 +624,7 @@ function closeHomepageTab(tab) {
           ? `<div class="image-preview-thumb-doc" onclick="window.open('${escapeAttr(url)}','_blank')">📄<span>PDF 문서</span></div>`
           : `<img src="${escapeAttr(url)}" alt="listing image ${idx + 1}" />`}
         <button type="button" onclick="removeEditImage(${idx})">&times;</button>
-        ${isDoc ? "" : `
+        ${isDoc || OfficeConfig.id === "ktop" ? "" : `
         <label class="image-public-check">
           <input type="checkbox" ${_editPublicImageUrls.includes(url) ? "checked" : ""} onchange="setEditImagePublic(${idx}, this.checked)" />
           공개
@@ -640,7 +640,7 @@ function closeHomepageTab(tab) {
           ? `<div class="image-preview-thumb-doc">📄<span>${escapeAttr(file.name || "PDF 문서")}</span></div>`
           : `<img src="${URL.createObjectURL(file)}" alt="new listing image ${idx + 1}" />`}
         <button type="button" onclick="removeEditNewImage(${idx})">&times;</button>
-        ${isDoc ? "" : `
+        ${isDoc || OfficeConfig.id === "ktop" ? "" : `
         <label class="image-public-check">
           <input type="checkbox" ${_editNewImagePublicFlags[idx] !== false ? "checked" : ""} onchange="setEditNewImagePublic(${idx}, this.checked)" />
           공개
@@ -1335,11 +1335,11 @@ function closeHomepageTab(tab) {
     html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button>`;
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
-    html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`;
-    html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
+    if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`;
+    if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
     html += `</div>`;
 
-    html += `<div class="detail-badges"><span class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
+    html += `<div class="detail-badges"><span data-homepage-only class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
 
     // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나의 "매물 상세정보" 표로 통합.
     html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
@@ -1408,7 +1408,7 @@ function closeHomepageTab(tab) {
 
     html += detailSection("등록상태", [
       detailField("거래상태", item.status || "광고중", { required: true }),
-      detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true }),
+      ...(OfficeConfig.id === "ktop" ? [] : [detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true })]),
       detailField("등록일", formatDateValue(item.created_at)),
       detailField("최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))),
     ], { required: true });
@@ -1646,7 +1646,7 @@ function closeHomepageTab(tab) {
           complexName,
           description:        gv("edit_description"),
           resource_id:        gv("edit_resource_id") || null,
-          is_public:          document.getElementById("edit_is_public").checked,
+          is_public:          OfficeConfig.id === "ktop" ? _currentItem.is_public === true : document.getElementById("edit_is_public").checked,
           image_urls:         [],
           imageUrls:          _editImageUrls,
           allImageUrls:       _editImageUrls,

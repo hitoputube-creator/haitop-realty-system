@@ -22,6 +22,12 @@ const OfficeConfig = (() => {
   return Object.freeze({ id, ...offices[id], urlFor: url });
 })();
 
+if (OfficeConfig.id === 'ktop') {
+  const style=document.createElement('style');
+  style.textContent='[data-homepage-only],.image-public-check{display:none!important}';
+  document.head.appendChild(style);
+}
+
 const OFFICE_DIARY_URL = OfficeConfig.id === 'ktop' ? new URL('ktop-diary/', location.href).href : 'https://haitop-realestate-diary.vercel.app/';
 
 const OfficeStorage = {
@@ -1567,6 +1573,7 @@ function officeDecorateLinks(root) {
     try {
       const target = new URL(link.getAttribute('href'), location.href);
       const appRoot = new URL('./', location.href);
+      if (OfficeConfig.id === 'ktop' && target.hostname === 'hitoputube-creator.github.io' && /^\/hitop-property-platform\//.test(target.pathname)) { link.remove(); return; }
       if (target.origin === appRoot.origin && target.pathname.startsWith(appRoot.pathname) && target.pathname.endsWith('.html')) {
         link.href = OfficeConfig.urlFor(target.href);
       }
