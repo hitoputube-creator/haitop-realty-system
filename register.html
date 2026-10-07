@@ -704,6 +704,11 @@
         opt.textContent = `${r.category} · ${r.name}`;
         sel.appendChild(opt);
       });
+      const mapParams = new URLSearchParams(location.search);
+      if (mapParams.get("mapApartment") === "1") {
+        const resourceId = mapParams.get("buildingId");
+        if (resources.some(r => r.id === resourceId)) sel.value = resourceId;
+      }
     } catch(e) { /* silent */ }
   }
 
@@ -957,7 +962,7 @@
     const qp     = new URLSearchParams(location.search);
     const bldgId = qp.get("buildingId");
     const roomNo = qp.get("roomNo");
-    if (!bldgId) return;
+    if (!bldgId || qp.get("mapApartment") === "1") return;
 
     // 호수 정규화: 공백·"호" 제거 후 비교 (매칭 전용, 표시값은 원본 유지)
     function normalizeRoom(s) {
@@ -1266,6 +1271,28 @@
       }
     } catch(e) { /* 무시 */ }
   })();
+  // 지도 오른쪽 클릭으로 선택한 아파트: 연락처나 다른 세대 자료는 가져오지 않는다.
+  (function autofillMapApartment() {
+    const params = new URLSearchParams(location.search);
+    if (params.get("mapApartment") !== "1") return;
+    const name = (params.get("apartmentName") || "").trim();
+    const road = (params.get("roadAddress") || "").trim();
+    const lot = (params.get("jibunAddress") || "").trim();
+    cat1El.value = "주거용"; renderCat2(); cat2El.value = "아파트"; updateDynamicSections();
+    document.getElementById("complexName").value = name;
+    document.getElementById("publicAddress").value = road;
+    document.getElementById("mapAddress").value = lot;
+    fillApartmentListingForm("", {
+      type:"apartment", category1:"주거용", category2:"아파트",
+      complexName:name, buildingName:name, roadAddress:road, jibunAddress:lot,
+      resource_id:params.get("buildingId") || "",
+      apartmentUnitData:{아파트명:name}
+    }, true);
+    syncApartmentListingForm();
+    document.getElementById("prefillRefText").textContent = (name ? name + " · 지도에서 선택한 아파트입니다. 동·호수와 거래정보를 입력하세요." : "아파트명·주소와 동·호수, 거래정보를 입력하세요.");
+    document.getElementById("prefillRefBox").style.display = "";
+  })();
+
 </script>
 </body>
 </html>

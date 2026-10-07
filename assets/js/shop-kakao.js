@@ -58,11 +58,18 @@
       var rec = records.find(function (x) { return x.local_id === r.id; }) || records.find(function (x) { return x.name === r.name; }) || null;
       var line = String(r.memo || '').split('\n').find(function (l) { return /^주소\s*:/.test(l); });
       var address = line ? line.replace(/^주소\s*:/, '').trim() : '';
+      var fields = {};
+      String(r.memo || '').split('---추가메모---')[0].split('\n').forEach(function (line) {
+        var colon=line.indexOf(':');if(colon>=0) fields[line.slice(0,colon).trim()]=line.slice(colon+1).trim();
+      });
+      var category=String(r.category || '').replace(/\s+/g,'');
+      var housingType=String(fields['주택종류'] || '').replace(/\s+/g,'');
+      var apartment=!/오피스텔|상가/.test(category) && !/상가/.test(r.name) && (housingType ? housingType === '아파트' : category === '아파트');
       var match = address.match(ADDRESS_PATTERN);
       var units = rec && Array.isArray(rec.units) ? rec.units : [];
       var vacant = units.filter(function (u) { return u.공실여부 === '공실'; }).length;
       return {
-        id: r.id, name: r.name, address: address, query: match ? match[0] : /[가-힣]+(?:로|길)\s*\d+/.test(address) ? address : '',
+        id: r.id, name: r.name, address: address, apartment: apartment, roadAddress: fields['주소'] || '', lotAddress: fields['지번주소'] || '', query: match ? match[0] : /[가-힣]+(?:로|길)\s*\d+/.test(address) ? address : '',
         total: units.length, vacant: vacant, contacts: units.filter(hasOwnerContact).length, listed: units.filter(hasListing).length,
         state: !units.length ? 'none' : vacant ? 'vacant' : 'full',
         floors: floors.filter(function (f) { return f.building_id === r.id; }),
@@ -201,6 +208,7 @@
 
   function toggleEditing() {
     if (!geoAvailable) { setStatus('위치 저장용 표를 사용할 수 없어 핀을 옮길 수 없습니다.'); return; }
+    closeListingMenu();
     editing = !editing;
     infoWindow.close();
     updateEditUi();
@@ -215,6 +223,107 @@
 
   function unitListUrl(it) {
     return HitopResourceRooms.detailUrl('building-detail.html', it.id, scope) + '#unitStatus';
+  }
+
+
+  // ---------- 지도 오른쪽 클릭 → 아파트 매물추가 ----------
+  var listingMenu = null, listingMenuVersion = 0;
+  function closeListingMenu() {
+    listingMenuVersion++;
+    if (listingMenu) listingMenu.setMap(null);
+    listingMenu = null;
+  }
+  function distanceMeters(it, position) {
+    if (it.lat === null || it.lng === null) return Infinity;
+    var dy = (it.lat - position.getLat()) * 111320;
+    var dx = (it.lng - position.getLng()) * 111320 * Math.cos(position.getLat() * Math.PI / 180);
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function addressKey(value) {
+    return String(value || '').replace(/^(경기도|경기)\s*/, '').replace(/\s+/g, '').replace(/\(.*?\)/g, '').replace(/외.*$/, '');
+  }
+  function apartmentListingUrl(selection, name, road, lot) {
+    var params = new URLSearchParams({
+      mapApartment: '1', apartmentName: name, roadAddress: road || '',
+      jibunAddress: lot || '', resourceScope: 'residential'
+    });
+    if (selection && selection.id) params.set('buildingId', selection.id);
+    return OfficeConfig.urlFor('register.html?' + params.toString());
+  }
+  async function openListingMenu(position, knownItem) {
+    if (!residential || editing) return;
+    closeListingMenu();
+    infoWindow.close();
+    var version = listingMenuVersion;
+    var root = document.createElement('div');
+    root.className = 'apartment-map-menu';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-label', '아파트 매물추가');
+    var header = document.createElement('div'); header.className = 'apartment-map-menu-head';
+    var title = document.createElement('strong'); title.textContent = '아파트 매물추가';
+    var close = document.createElement('button'); close.type = 'button'; close.textContent = '×';
+    close.setAttribute('aria-label', '닫기'); close.addEventListener('click', closeListingMenu);
+    header.append(title, close); root.appendChild(header);
+    var status = document.createElement('p'); status.textContent = '위치 정보를 확인하는 중…'; root.appendChild(status);
+    ['mousedown', 'touchstart', 'click', 'contextmenu'].forEach(function (eventName) {
+      root.addEventListener(eventName, function (event) {
+        event.stopPropagation(); kakao.maps.event.preventMap();
+        if (eventName === 'contextmenu') event.preventDefault();
+      });
+    });
+    listingMenu = new kakao.maps.CustomOverlay({position:position,content:root,xAnchor:0.5,yAnchor:1.05,zIndex:30,clickable:true});
+    listingMenu.setMap(map);
+    var address = knownItem ? null : await new Promise(function (resolve) {
+      var timeout = setTimeout(function () { resolve(null); }, 8000);
+      try {
+        geocoder.coord2Address(position.getLng(), position.getLat(), function (result, code) {
+          clearTimeout(timeout);
+          resolve(code === kakao.maps.services.Status.OK && result[0] ? result[0] : null);
+        });
+      } catch (_) { clearTimeout(timeout); resolve(null); }
+    });
+    if (version !== listingMenuVersion) return;
+    var road = address && address.road_address || {};
+    var lot = address && address.address || {};
+    var candidates = items.filter(function (it) {
+      return it.apartment && (it === knownItem || distanceMeters(it, position) <= 800);
+    }).sort(function (a,b) { return distanceMeters(a,position) - distanceMeters(b,position); }).slice(0,10);
+    var exact = knownItem && knownItem.apartment ? knownItem : items.find(function (it) {
+      return it.apartment && (
+        (lot.address_name && addressKey(it.lotAddress) === addressKey(lot.address_name)) ||
+        (road.address_name && addressKey(it.roadAddress) === addressKey(road.address_name))
+      );
+    });
+    if (exact && !candidates.includes(exact)) candidates.unshift(exact);
+    var selection = exact || null;
+    status.textContent = selection ? selection.name : road.address_name || lot.address_name || '아파트를 선택하거나 이름을 입력하세요.';
+    var select = document.createElement('select'); select.setAttribute('aria-label','아파트 선택');
+    var empty = document.createElement('option'); empty.value = ''; empty.textContent = '직접 입력 / 다른 아파트'; select.appendChild(empty);
+    candidates.forEach(function (it) { var option=document.createElement('option'); option.value=it.id; option.textContent=it.name;select.appendChild(option); });
+    select.value = selection ? selection.id : '';
+    if (candidates.length) root.appendChild(select);
+    var name = document.createElement('input'); name.type='text';name.placeholder='아파트명';name.setAttribute('aria-label','아파트명');
+    name.value = selection ? selection.name : road.building_name || '';
+    root.appendChild(name);
+    var chosenRoad = selection ? selection.roadAddress : road.address_name || '';
+    var chosenLot = selection ? selection.lotAddress : lot.address_name || '';
+    var addressLine=document.createElement('p'); addressLine.textContent=chosenRoad || chosenLot || '등록창에서 주소를 입력해 주세요.';root.appendChild(addressLine);
+    select.addEventListener('change',function () {
+      selection = candidates.find(function (it) { return it.id === select.value; }) || null;
+      name.value = selection ? selection.name : road.building_name || '';
+      chosenRoad = selection ? selection.roadAddress : road.address_name || '';
+      chosenLot = selection ? selection.lotAddress : lot.address_name || '';
+      addressLine.textContent=chosenRoad || chosenLot || '등록창에서 주소를 입력해 주세요.';
+    });
+    name.addEventListener('input',function () {
+      if (selection && name.value.trim() !== selection.name) { selection=null;select.value=''; }
+    });
+    var add=document.createElement('button');add.type='button';add.className='apartment-map-menu-add';add.textContent='+ 아파트 매물추가';
+    add.addEventListener('click',function () {
+      if (!name.value.trim()) { name.focus(); status.textContent='아파트명을 입력하세요.'; return; }
+      location.href=apartmentListingUrl(selection,name.value.trim(),chosenRoad,chosenLot);
+    });
+    root.appendChild(add);
   }
 
   function pinContent(it) {
@@ -245,6 +354,10 @@
     el.appendChild(body);
     el.title = it.name + ' · ' + it.address;
     el.addEventListener('click', function () { if (editing) selectForEdit(it); else openInfo(it); });
+    if (residential && it.apartment) el.addEventListener('contextmenu', function (event) {
+      event.preventDefault();event.stopPropagation();kakao.maps.event.preventMap();
+      openListingMenu(new kakao.maps.LatLng(it.lat,it.lng),it);
+    });
     it.el = el;
     return el;
   }
@@ -385,7 +498,14 @@
     $('shopFit').addEventListener('click', function () { render(true); });
     $('shopEditToggle').addEventListener('click', toggleEditing);
     $('shopEditReset').addEventListener('click', resetSelected);
-    kakao.maps.event.addListener(map, 'click', function (mouseEvent) { placeSelected(mouseEvent.latLng); });
+    kakao.maps.event.addListener(map, 'click', function (mouseEvent) { closeListingMenu();placeSelected(mouseEvent.latLng); });
+    if (residential) {
+      $('apartmentMapRegister').href = apartmentListingUrl(null, '', '', '');
+      $('kakaoMap').addEventListener('contextmenu',function(event){event.preventDefault();});
+      kakao.maps.event.addListener(map,'rightclick',function(event){openListingMenu(event.latLng);});
+      ['dragstart','zoom_changed'].forEach(function(event){kakao.maps.event.addListener(map,event,closeListingMenu);});
+      document.addEventListener('keydown',function(event){if(event.key==='Escape')closeListingMenu();});
+    }
     $('shopRetry').addEventListener('click', async function () {
       $('shopRetry').disabled = true;
       await resolveAll(true);

@@ -12,6 +12,14 @@
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
+<style>
+.apartment-map-menu{box-sizing:border-box;width:290px;max-width:80vw;padding:14px;background:#13243b;color:#e8eef7;border:1px solid #c9a84c;border-radius:12px;box-shadow:0 8px 26px #0006;white-space:normal;font-family:inherit}
+.apartment-map-menu-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.apartment-map-menu-head button{background:transparent;border:0;color:#b9c6d8;font-size:22px;cursor:pointer}
+.apartment-map-menu p{margin:8px 0;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.apartment-map-menu input,.apartment-map-menu select{box-sizing:border-box;display:block;width:100%;margin:8px 0;padding:8px;border:1px solid #52647d;border-radius:6px;background:#0c192b;color:#e8eef7;font-family:inherit}
+.apartment-map-menu-add{width:100%;padding:10px;background:#c9a84c;border:0;border-radius:7px;color:#142036;font-family:inherit;font-weight:700;cursor:pointer}
+</style>
 </head>
 <body data-resource-scope="residential">
 <main class="page land-kakao-page shop-kakao-page">
@@ -67,6 +75,7 @@
     </div>
     <div class="kakao-control-group kakao-naverview-group">
       <a class="btn kakao-naverview" id="kakaoNaverListings" aria-disabled="true" target="_blank" rel="noopener noreferrer">네이버부동산 매물보기</a>
+      <a class="btn kakao-naverview" id="apartmentMapRegister" href="register.html?mapApartment=1">매물등록</a>
     </div>
   </section>
   <p id="shopEditHelp" class="kakao-status shop-edit-help" hidden>핀 위치 수정 중: ① 지도의 핀이나 아래 목록에서 건물을 고르고 ② 지도에서 건물이 있는 정확한 자리를 누르면 저장됩니다. 핀의 뾰족한 끝이 누른 자리에 놓입니다.</p>
@@ -86,6 +95,6 @@
 <script src="assets/js/kakao-config.js"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
 <script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
-<script src="assets/js/shop-kakao.js?v=20261007-residential-counts"></script>
+<script src="assets/js/shop-kakao.js?v=20261007-map-add-apartment"></script>
 </body>
 </html>
