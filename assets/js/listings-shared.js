@@ -301,6 +301,44 @@ function getListingNoteText(item) {
   return displayCellValue(summarizeDescription(source) || source);
 }
 
+// ===== 마을단지 → 단지 자료(건물 상세) 연결 =====
+// 매물에 연결된 자료(resource_id) 또는 단지명(전체 아파트명)이 같은 단지 자료를 찾는다.
+// 못 찾으면 null — 이 경우 마을단지는 링크 없이 글자로만 보여준다.
+let _villageIndexSrc = null, _villageIndex = null;
+function _normResName(v) { return String(v || "").replace(/\s+/g, ""); }
+function findVillageResource(item, village) {
+  if (!Array.isArray(allDriveResources) || !allDriveResources.length) return null;
+  if (_villageIndexSrc !== allDriveResources) {
+    _villageIndexSrc = allDriveResources;
+    _villageIndex = { byId: new Map(), byName: new Map() };
+    allDriveResources.forEach(r => {
+      if (!r || !r.id) return;
+      _villageIndex.byId.set(r.id, r);
+      const n = _normResName(r.name);
+      if (n && !_villageIndex.byName.has(n)) _villageIndex.byName.set(n, r);
+    });
+  }
+  if (item.resource_id && _villageIndex.byId.has(item.resource_id)) return _villageIndex.byId.get(item.resource_id);
+  const u = item.apartmentUnitData || {};
+  for (const name of [u.아파트명, item.complexName, item.buildingName]) {
+    const hit = _villageIndex.byName.get(_normResName(name));
+    if (hit) return hit;
+  }
+  // 단지명 전체가 없을 때: 마을단지명으로 시작하는 자료가 딱 하나일 때만 사용
+  const v = _normResName(village);
+  if (v) {
+    const starts = allDriveResources.filter(r => r && r.id && _normResName(r.name).startsWith(v));
+    if (starts.length === 1) return starts[0];
+  }
+  return null;
+}
+function villageResourceUrl(item, village) {
+  const r = findVillageResource(item, village);
+  if (!r) return "";
+  const target = "building-detail.html?id=" + encodeURIComponent(r.id) + "&resourceScope=residential";
+  return typeof OfficeConfig !== "undefined" && OfficeConfig.urlFor ? OfficeConfig.urlFor(target) : target;
+}
+
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
 function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const card = document.createElement("div");
@@ -330,6 +368,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const fullName = apartment.아파트명 || item.complexName || item.buildingName || "";
   const village = (fullName.match(/^(.*?마을\s*\d+단지)/) || [])[1] || "";
   const apartmentName = village ? fullName.slice(village.length).trim() : fullName;
+  const villageUrl = village ? villageResourceUrl(item, village) : "";
   const dong = String(apartment.동 || item.apartmentDong || item.dong || "").replace(/동$/, "");
   const room = String(apartment.호 || item.apartmentHo || item.ho || "").replace(/호$/, "");
   const ownerName = getListingOwnerName(item);
@@ -348,7 +387,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     <div class="listing-cell listing-cell-deal" data-label="거래유형">
       ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType] || ""}">${escapeHtml(dealType)}</span>` : "<span>-</span>"}
     </div>
-    <div class="listing-cell listing-cell-village" data-label="마을단지">${escapeHtml(village || "-")}</div>
+    <div class="listing-cell listing-cell-village" data-label="마을단지">${village && villageUrl ? `<a class="listing-village-link" href="${escapeHtml(villageUrl)}" title="${escapeHtml(village)} 단지 자료 보기" onclick="event.stopPropagation()">${escapeHtml(village)}</a>` : escapeHtml(village || "-")}</div>
     <div class="listing-cell listing-cell-apartment" data-label="아파트명">${escapeHtml(apartmentName || (village ? "-" : addressText))}<span class="lc-no">No. ${escapeHtml(listingNo)}</span></div>
     <div class="listing-cell listing-cell-dong" data-label="동">${escapeHtml(dong || "-")}</div>
     <div class="listing-cell listing-cell-room" data-label="호수">${escapeHtml(room || "-")}</div>
