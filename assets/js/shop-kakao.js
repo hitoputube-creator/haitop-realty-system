@@ -47,6 +47,10 @@
     var unit=listing.apartmentUnitData || listing.import_unit_snapshot || {};
     return [listing.complexName,listing.buildingName,unit.아파트명].filter(Boolean).map(apartmentNameKey);
   }
+  function listingCoordinates(listing) {
+    var p=listing.mapCoordinates;
+    return p && Number.isFinite(p.lat) && Number.isFinite(p.lng) && p.lat>=33 && p.lat<=39 && p.lng>=124 && p.lng<=132 ? [p.lat,p.lng] : null;
+  }
   function mergeResidentialListings(mapped, listings) {
     mapped.forEach(function(it){it.listings=[];});
     (listings || []).forEach(function(listing){
@@ -79,6 +83,7 @@
           mapped.push(it);
         }
       }
+      if(it && !it.registrationCoordinates)it.registrationCoordinates=listingCoordinates(listing);
       if(it && !it.listings.some(function(row){return String(row.id)===String(listing.id);}))it.listings.push(listing);
     });
     mapped.forEach(function(it){it.listed=it.listings.length;});
@@ -116,7 +121,7 @@
       var units = rec && Array.isArray(rec.units) ? rec.units : [];
       var vacant = units.filter(function (u) { return u.공실여부 === '공실'; }).length;
       return {
-        id: r.id, name: r.name, address: address, apartment: apartment, roadAddress: fields['주소'] || '', lotAddress: fields['지번주소'] || '', query: match ? match[0] : /[가-힣]+(?:로|길)\s*\d+/.test(address) ? address : '',
+        id: r.id, name: r.name, address: address, apartment: apartment, roadAddress: fields['주소'] || '', lotAddress: fields['지번주소'] || '', completion:fields['단지상태'] || '', moveInMonth:fields['입주예정월'] || '', query: match ? match[0] : /[가-힣]+(?:로|길)\s*\d+/.test(address) ? address : '',
         unitListingIds: units.filter(hasListing).map(function(u){return String(u.listing_id);}),
         total: units.length, vacant: vacant, contacts: units.filter(hasOwnerContact).length, listed: units.filter(hasListing).length,
         state: !units.length ? 'none' : vacant ? 'vacant' : 'full',
@@ -160,6 +165,7 @@
     items.forEach(function (it) {
       it.lat = null; it.lng = null; it.overlay = null; it.el = null; it.manual = false;
       if (saved[it.id]) { it.lat = saved[it.id][0]; it.lng = saved[it.id][1]; it.manual = true; return; }
+      if (it.registrationCoordinates) {it.lat=it.registrationCoordinates[0];it.lng=it.registrationCoordinates[1];return;}
       if (!it.query) return;
       var hit = geoCache[normalizeAddress(it.query)];
       if (!Array.isArray(hit)) return;
@@ -292,11 +298,15 @@
   function addressKey(value) {
     return String(value || '').replace(/^(경기도|경기)\s*/, '').replace(/\s+/g, '').replace(/\(.*?\)/g, '').replace(/외.*$/, '');
   }
-  function apartmentListingUrl(selection, name, road, lot) {
+  function apartmentListingUrl(selection, name, road, lot, position) {
     var params = new URLSearchParams({
       mapApartment: '1', apartmentName: name, roadAddress: road || '',
       jibunAddress: lot || '', resourceScope: 'residential'
     });
+    if(selection && selection.lat!=null && selection.lng!=null){params.set('mapLat',selection.lat);params.set('mapLng',selection.lng);}
+    else if(position){params.set('mapLat',position.getLat());params.set('mapLng',position.getLng());}
+    if(selection && selection.completion==='입주예정')params.set('presale','1');
+    if(selection && /^20\d{2}-\d{2}$/.test(selection.moveInMonth || ''))params.set('moveInMonth',selection.moveInMonth);
     if (selection && selection.id && !selection.listingOnly) params.set('buildingId', selection.id);
     return OfficeConfig.urlFor('register.html?' + params.toString());
   }
@@ -371,7 +381,7 @@
     var add=document.createElement('button');add.type='button';add.className='apartment-map-menu-add';add.textContent='+ 아파트 매물추가';
     add.addEventListener('click',function () {
       if (!name.value.trim()) { name.focus(); status.textContent='아파트명을 입력하세요.'; return; }
-      location.href=apartmentListingUrl(selection,name.value.trim(),chosenRoad,chosenLot);
+      location.href=apartmentListingUrl(selection,name.value.trim(),chosenRoad,chosenLot,position);
     });
     root.appendChild(add);
   }
@@ -528,7 +538,7 @@
         var unitName=(dong ? dong+'동 ' : '')+(room ? room+'호' : '');
         var a=document.createElement('a');
         a.href=OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(listing.id));
-        a.textContent=[unitName || listing.title || '매물',listing.dealType || unit.거래구분 || ''].filter(Boolean).join(' · ')+' 보기';
+        a.textContent=[unitName || listing.title || '매물',unit.권리구분 === '분양권' ? '분양권' : '',listing.dealType || unit.거래구분 || ''].filter(Boolean).join(' · ')+' 보기';
         a.style.cssText='display:block;padding:6px 0;color:#244e91;text-decoration:underline';
         listingBox.appendChild(a);
       });
@@ -620,3 +630,4 @@
     }
   })();
 })();
+

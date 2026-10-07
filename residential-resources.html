@@ -16,7 +16,7 @@
     .resource-toolbar .resource-kakao-entry { margin-left:auto; }
     .floor-status-entry:hover, .floor-status-entry:focus-visible { background:#27496a; color:#fff; }
   </style>
-  <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+  <script src="assets/js/storage.js?v=20261007-presale"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -68,6 +68,7 @@
       <label>드라이브 링크</label>
       <input id="drive_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
     </div>
+    <div class="form-grid"><div class="field"><label>단지상태</label><select id="drive_completion_reg"><option value="">미확인</option><option>입주예정</option><option>준공</option></select></div><div class="field"><label>입주예정월</label><input id="drive_movein_reg" type="month" /></div></div><p style="font-size:.8rem;">입주예정 단지도 건축물대장 없이 분양자료 기준으로 등록할 수 있습니다.</p>
     <div class="field" style="margin-bottom:10px;">
       <label>건물 개요 메모 — 기본 정보 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
       <textarea id="drive_memo_basic_reg" rows="8" style="width:100%;resize:vertical;min-height:200px;box-sizing:border-box;font-family:inherit;"></textarea>
@@ -184,6 +185,7 @@
 
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
-<script src="assets/js/resources.js?v=20261006-shared1-20261006-office-login"></script>
+<script src="assets/js/resources.js?v=20261007-presale"></script>
 </body>
 </html>
+

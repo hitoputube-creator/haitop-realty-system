@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261007-area-units"></script>
+  <script src="assets/js/storage.js?v=20261007-presale"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -916,6 +916,8 @@
     };
 
     if (cat2 === "아파트") {
+      const mapParams=new URLSearchParams(location.search),lat=Number(mapParams.get('mapLat')),lng=Number(mapParams.get('mapLng'));
+      if(mapParams.has('mapLat') && mapParams.has('mapLng') && lat>=33 && lat<=39 && lng>=124 && lng<=132)item.mapCoordinates={lat,lng};
       try { Object.assign(item, collectApartmentListingFields("")); }
       catch(error) { showToast(error.message); return; }
     }
@@ -1286,7 +1288,7 @@
       type:"apartment", category1:"주거용", category2:"아파트",
       complexName:name, buildingName:name, roadAddress:road, jibunAddress:lot,
       resource_id:params.get("buildingId") || "",
-      apartmentUnitData:{아파트명:name}
+      apartmentUnitData:{아파트명:name,권리구분:params.get('presale')==='1' || /예정/.test(name) ? '분양권' : '일반 아파트',입주예정월:params.get('moveInMonth') || (name.match(/(20\d{2})년\s*(\d{1,2})월/) || []).slice(1).map((x,i)=>i ? x.padStart(2,'0') : x).join('-') || ''}
     }, true);
     syncApartmentListingForm();
     document.getElementById("prefillRefText").textContent = (name ? name + " · 지도에서 선택한 아파트입니다. 동·호수와 거래정보를 입력하세요." : "아파트명·주소와 동·호수, 거래정보를 입력하세요.");
@@ -1296,6 +1298,7 @@
 </script>
 </body>
 </html>
+
 
 
 

@@ -222,6 +222,7 @@
       <div class="field"><label>동수</label><input id="ov_blocks" type="text" placeholder="예: 10개동" /></div>
       <div class="field"><label>세대수</label><input id="ov_households" type="text" placeholder="예: 1,000세대" /></div>
       <div class="field"><label>주택종류</label><input id="ov_housing_type" type="text" /></div>
+      <div class="field"><label>단지상태</label><select id="ov_completion"><option value="">미확인</option><option>입주예정</option><option>준공</option></select></div><div class="field"><label>입주예정월</label><input id="ov_movein_month" type="month" /></div>
       <div class="field"><label>분양구분</label><input id="ov_tenure" type="text" placeholder="분양 / 임대 / 혼합" /></div>
       <div class="field"><label>자료기준일</label><input id="ov_source_date" type="text" placeholder="예: 2026.08.06" /></div>
       <div class="field"><label>자료출처</label><input id="ov_source" type="text" /></div>
@@ -239,7 +240,7 @@
   <div class="toast" id="toast"></div>
 </div>
 
-<script src="assets/js/storage.js?v=20261007-complex-register"></script>
+<script src="assets/js/storage.js?v=20261007-presale"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -252,7 +253,7 @@ const FIELD_LABELS  = ['주소','주차대수','사용승인일','구조','토�
 const FIELD_IDS     = ['ov_address','ov_parking','ov_approval','ov_structure','ov_land','ov_footprint','ov_total','ov_mgmt','ov_scale'];
 const RESIDENTIAL_FIELDS = [
   ['지번주소','ov_lot_address'], ['행정구역','ov_district'], ['동수','ov_blocks'],
-  ['세대수','ov_households'], ['주택종류','ov_housing_type'], ['분양구분','ov_tenure'],
+  ['단지상태','ov_completion'], ['입주예정월','ov_movein_month'], ['세대수','ov_households'], ['주택종류','ov_housing_type'], ['분양구분','ov_tenure'],
   ['자료기준일','ov_source_date'], ['자료출처','ov_source'], ['네이버단지링크','ov_naver_complex']
 ];
 function editableOverviewFields() {
@@ -377,6 +378,7 @@ function fillRegisterMemo(raw, candidates) {
 async function fillFromBuildingRegister() {
   if (!buildingData || document.getElementById('editFormCard').style.display !== 'none') return;
   const fields = parseMemo(buildingData.memo || '').fields;
+  if(fields['단지상태']==='입주예정'){showToast('입주예정 단지는 분양자료 기준으로 기본정보를 직접 입력해 저장하세요.');return;}
   const address = (fields['지번주소'] || fields['주소'] || '').trim();
   if (!address) { showToast('주소를 먼저 입력해 주세요.'); return; }
 
@@ -533,3 +535,4 @@ init();
 </script>
 </body>
 </html>
+

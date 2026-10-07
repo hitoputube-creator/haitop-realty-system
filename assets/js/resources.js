@@ -102,8 +102,13 @@ document.getElementById("driveSaveBtn").addEventListener("click", async () => {
   if (!name) { showToast(driveResourceScope === "land" ? "자료명을 입력해주세요" : "건물명을 입력해주세요"); return; }
   btn.disabled = true; btn.textContent = "저장 중...";
   try {
+    const statusEl=document.getElementById("drive_completion_reg"),monthEl=document.getElementById("drive_movein_reg");
+    let basic=document.getElementById("drive_memo_basic_reg").value;
+    for(const [key,el] of [["단지상태",statusEl],["입주예정월",monthEl]]){
+      if(el && el.value) basic=basic.split(/\r?\n/).filter(line=>!line.startsWith(key+":")).join("\n")+"\n"+key+": "+el.value;
+    }
     const memo = joinMemo(
-      document.getElementById("drive_memo_basic_reg").value,
+      basic,
       document.getElementById("drive_memo_extra_reg").value
     );
     await ensureCategoryInRoom(category);
@@ -111,6 +116,7 @@ document.getElementById("driveSaveBtn").addEventListener("click", async () => {
     document.getElementById("drive_category").value = "";
     document.getElementById("drive_name").value = "";
     document.getElementById("drive_url").value = "";
+    if(statusEl)statusEl.value="";if(monthEl)monthEl.value="";
     document.getElementById("drive_memo_basic_reg").value = MEMO_TEMPLATE;
     document.getElementById("drive_memo_extra_reg").value = "";
     document.getElementById("drive_cat_select").value = "";
@@ -196,8 +202,8 @@ function residentialBasicSummary(item) {
     const colon = line.indexOf(':');
     if (colon >= 0) fields[line.slice(0, colon).trim()] = line.slice(colon + 1).trim();
   });
-  const summary = ['행정구역','동수','세대수','사용승인일'].filter(key => fields[key])
-    .map(key => key === '사용승인일' ? '준공 ' + fields[key] : fields[key]);
+  const summary = ['행정구역','동수','세대수','단지상태','입주예정월','사용승인일'].filter(key => fields[key])
+    .map(key => key === '사용승인일' ? '준공 ' + fields[key] : key === '입주예정월' ? fields[key]+' 입주예정' : fields[key]);
   return summary.length ? `<div style="font-size:.78rem;color:var(--gold-soft);margin-top:6px;">${escapeCategory(summary.join(' · '))}</div>` : '';
 }
 
@@ -552,3 +558,4 @@ async function initResourcesPage() {
   }
 }
 initResourcesPage();
+
