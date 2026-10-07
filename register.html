@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+  <script src="assets/js/storage.js?v=20261007-apartment-fields"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -102,6 +102,14 @@
       <div class="field">
         <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호, B동 203호" />
+      </div>
+      <div class="field" style="display:none;">
+        <label>동 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
+        <input id="apartmentDong" type="text" placeholder="예) 1101" />
+      </div>
+      <div class="field" style="display:none;">
+        <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
+        <input id="apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
       </div>
       <div class="field">
         <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
@@ -347,6 +355,7 @@
   const cat1El = document.getElementById('category1Select');
   const cat2El = document.getElementById('category2Select');
 
+  const syncApartmentFields = setupApartmentUnitFields("", "category2Select");
   const syncQuickBuildingFields = setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName', 'category1Select', 'category2Select');
   setupListingDescriptionEmojiToolbar('detailDescription');
 
@@ -362,6 +371,7 @@
   function updateDynamicSections() {
     const cat1 = cat1El.value;
     const cat2 = cat2El.value;
+    syncApartmentFields();
     // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
     const storageCat1 = resolveStorageCategory1(cat1, cat2);
     document.getElementById('propertyType').value = (cat1 && cat2) ? getTypeFromCategory(storageCat1, cat2) : '';
@@ -806,7 +816,9 @@
 
     const publicAddress        = document.getElementById("publicAddress").value.trim();
     const mapAddress           = document.getElementById("mapAddress").value.trim();
-    const privateDetailAddress = document.getElementById("privateDetailAddress").value.trim();
+    syncApartmentFields();
+    const apartmentUnit = cat2 === "아파트" ? readApartmentUnitFields("") : {};
+    const privateDetailAddress = cat2 === "아파트" ? apartmentUnit.privateDetailAddress : document.getElementById("privateDetailAddress").value.trim();
     const complexName          = document.getElementById("complexName").value.trim();
     const _additionalContacts  = collectAdditionalContacts();
 
@@ -818,6 +830,8 @@
       publicAddress,
       mapAddress,
       privateDetailAddress,
+      dong: apartmentUnit.dong || "",
+      ho: apartmentUnit.ho || "",
       complexName,
       status:      gv('status') || '광고중',
       description: gv('description'),
@@ -1049,6 +1063,8 @@
       const hoStr      = matchedRoom ? (String(matchedRoom).endsWith("호") ? matchedRoom : matchedRoom + "호") : "";
       const detailAddr = [bldgName, hoStr].filter(Boolean).join(" ");
       if (detailAddr)  document.getElementById("privateDetailAddress").value = detailAddr;
+      fillApartmentUnitFields("", { privateDetailAddress: detailAddr });
+      syncApartmentFields();
 
       // 제목: 건물명 + 호실 + 상가 (최대 20자)
       const titleVal = [bldgName, hoStr, unitCategory].filter(Boolean).join(" ").slice(0, 20);
