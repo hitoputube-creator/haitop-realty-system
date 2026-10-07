@@ -1625,8 +1625,13 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* 매물관리: 단지와 동호수, 거래구분과 가격을 각각 한 칸에 배치 */
 .properties-page #listingContainer { overflow-x:auto; }
-.properties-page .listing-grid { --property-row-columns:28px 76px 55px 118px minmax(145px,1fr) 40px 50px 106px 62px 108px 126px; }
-.properties-page .listing-column-header,.properties-page .listing-card.listing-row-card { min-width:1040px;grid-template-columns:var(--property-row-columns);grid-template-areas:none;column-gap:5px; }
+.properties-page .listing-grid { --property-row-columns:28px 76px 55px 118px minmax(145px,1fr) 40px 50px 106px 62px 108px 116px; }
+.properties-page .listing-column-header,.properties-page .listing-card.listing-row-card { min-width:990px;grid-template-columns:var(--property-row-columns);grid-template-areas:none;column-gap:5px; }
+/* 관리 칸: 상세·수정 / 삭제·거래완료 2×2로 배치해 오른쪽 끝에서 버튼이 잘리지 않게 한다 (홈페이지 토글은 아래 한 줄) */
+.properties-page .listing-row-card .listing-actions { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;align-content:center;padding-left:0; }
+.properties-page .listing-row-card .lc-actions-main,.properties-page .listing-row-card .lc-actions-side { display:contents; }
+.properties-page .listing-row-card .lc-actions-main .btn,.properties-page .listing-row-card .lc-status-chip { width:100%;min-width:0;box-sizing:border-box;justify-content:center;text-align:center; }
+.properties-page .listing-row-card .lc-toggle { grid-column:1 / -1; }
 .properties-page .listing-column-header { display:grid; }
 .properties-page .listing-cell-village,.properties-page .listing-cell-apartment,.properties-page .listing-cell-dong,.properties-page .listing-cell-room { min-width:0;overflow-wrap:anywhere;font-size:12px;line-height:1.35; }
 .properties-page .listing-cell-apartment { display:flex;flex-direction:column;gap:3px;font-weight:600; }
