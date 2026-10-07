@@ -71,7 +71,7 @@
       if (!it && isApartment) {
         var road=listing.roadAddress || '',lot=listing.jibunAddress || '';
         var address=road || lot || listing.mapAddress || listing.address || '';
-        if (!address) return;
+        if (!address && !listingCoordinates(listing)) return;
         var name=listing.complexName || listing.buildingName || (listing.apartmentUnitData || {}).아파트명 || listing.title || address;
         it=mapped.find(function(row){return row.listingOnly && apartmentNameKey(row.name)===apartmentNameKey(name) && addressKey(row.address)===addressKey(address);});
         if(!it){
@@ -333,7 +333,7 @@
     });
     listingMenu = new kakao.maps.CustomOverlay({position:position,content:root,xAnchor:0.5,yAnchor:1.05,zIndex:30,clickable:true});
     listingMenu.setMap(map);
-    var address = knownItem ? null : await new Promise(function (resolve) {
+    var addressPromise = knownItem ? Promise.resolve(null) : new Promise(function (resolve) {
       var timeout = setTimeout(function () { resolve(null); }, 8000);
       try {
         geocoder.coord2Address(position.getLng(), position.getLat(), function (result, code) {
@@ -342,7 +342,7 @@
         });
       } catch (_) { clearTimeout(timeout); resolve(null); }
     });
-    if (version !== listingMenuVersion) return;
+    var address = null;
     var road = address && address.road_address || {};
     var lot = address && address.address || {};
     var candidates = items.filter(function (it) {
@@ -361,7 +361,7 @@
     var empty = document.createElement('option'); empty.value = ''; empty.textContent = '직접 입력 / 다른 아파트'; select.appendChild(empty);
     candidates.forEach(function (it) { var option=document.createElement('option'); option.value=it.id; option.textContent=it.name;select.appendChild(option); });
     select.value = selection ? selection.id : '';
-    if (candidates.length) root.appendChild(select);
+    select.hidden=!candidates.length;root.appendChild(select);
     var name = document.createElement('input'); name.type='text';name.placeholder='아파트명';name.setAttribute('aria-label','아파트명');
     name.value = selection ? selection.name : road.building_name || '';
     root.appendChild(name);
@@ -380,10 +380,29 @@
     });
     var add=document.createElement('button');add.type='button';add.className='apartment-map-menu-add';add.textContent='+ 아파트 매물추가';
     add.addEventListener('click',function () {
-      if (!name.value.trim()) { name.focus(); status.textContent='아파트명을 입력하세요.'; return; }
       location.href=apartmentListingUrl(selection,name.value.trim(),chosenRoad,chosenLot,position);
     });
     root.appendChild(add);
+    addressPromise.then(function(found){
+      if(version!==listingMenuVersion || selection)return;
+      road=found && found.road_address || {};lot=found && found.address || {};
+      chosenRoad=road.address_name || '';chosenLot=lot.address_name || '';
+      if(!name.value.trim())name.value=road.building_name || '';
+      addressLine.textContent=chosenRoad || chosenLot || '위치는 저장됩니다. 등록창에서 아파트명과 주소를 입력하세요.';
+      status.textContent='선택한 위치에 매물을 등록합니다.';
+    });
+    if(!knownItem){
+      try{
+        new kakao.maps.services.Places().keywordSearch('아파트',function(results,code){
+          if(version!==listingMenuVersion || code!==kakao.maps.services.Status.OK)return;
+          results.filter(function(place){return /아파트/.test(place.place_name || '');}).forEach(function(place){
+            if(candidates.some(function(it){return apartmentNameKey(it.name)===apartmentNameKey(place.place_name);}))return;
+            var candidate={id:'place:'+place.id,listingOnly:true,apartment:true,name:place.place_name,roadAddress:place.road_address_name || '',lotAddress:place.address_name || '',lat:Number(place.y),lng:Number(place.x)};
+            candidates.push(candidate);var option=document.createElement('option');option.value=candidate.id;option.textContent=candidate.name;select.appendChild(option);select.hidden=false;
+          });
+        },{location:position,radius:300,sort:kakao.maps.services.SortBy.DISTANCE});
+      }catch(_){}
+    }
   }
 
   function pinContent(it) {
@@ -575,11 +594,17 @@
     $('shopFit').addEventListener('click', function () { render(true); });
     $('shopEditToggle').addEventListener('click', toggleEditing);
     $('shopEditReset').addEventListener('click', resetSelected);
-    kakao.maps.event.addListener(map, 'click', function (mouseEvent) { closeListingMenu();placeSelected(mouseEvent.latLng); });
+    kakao.maps.event.addListener(map, 'click', function (mouseEvent) { closeListingMenu();placeSelected(mouseEvent.latLng);if(residential && !editing)$('apartmentMapRegister').href=apartmentListingUrl(null,'','','',mouseEvent.latLng); });
     if (residential) {
       $('apartmentMapRegister').href = apartmentListingUrl(null, '', '', '');
-      $('kakaoMap').addEventListener('contextmenu',function(event){event.preventDefault();});
-      kakao.maps.event.addListener(map,'rightclick',function(event){openListingMenu(event.latLng);});
+      $('kakaoMap').addEventListener('contextmenu',function(event){
+        if(event.target.closest && event.target.closest('.apartment-map-menu'))return;
+        event.preventDefault();event.stopPropagation();
+        var rect=$('kakaoMap').getBoundingClientRect();
+        var position=map.getProjection().coordsFromContainerPoint(new kakao.maps.Point(event.clientX-rect.left,event.clientY-rect.top));
+        $('apartmentMapRegister').href=apartmentListingUrl(null,'','','',position);
+        openListingMenu(position);
+      },true);
       ['dragstart','zoom_changed'].forEach(function(event){kakao.maps.event.addListener(map,event,closeListingMenu);});
       document.addEventListener('keydown',function(event){if(event.key==='Escape')closeListingMenu();});
     }
@@ -614,10 +639,10 @@
       infoWindow = new kakao.maps.InfoWindow({ removable: true, zIndex: 10 });
       map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
       setStatus(label + ' 건물 자료를 불러오는 중입니다.');
+      bindControls();
       var loaded = await loadBuildings();
       if (!loaded) return;
       items = loaded;
-      bindControls();
       if (!items.length) { setStatus('등록된 ' + label + ' 건물이 없습니다. ' + label + ' 자료관리에서 건물을 먼저 등록해 주세요.'); return; }
       setStatus('건물 위치를 찾는 중입니다.');
       await loadSaved();

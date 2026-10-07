@@ -21,10 +21,18 @@ for(const office of ['hitop','ktop']){
  get('apt_권리구분').value='일반 아파트';assert.equal(vm.runInContext('collectApartmentListingFields("",saved).title',c),'운정아이파크포레스트 · 101동 1302호');
 }
 const map=fs.readFileSync(path.join(root,'assets/js/shop-kakao.js'),'utf8'),c=vm.createContext({URLSearchParams,OfficeConfig:{urlFor:x=>x},ADDRESS_PATTERN:/야당동\s*\d+/});
-vm.runInContext(map.slice(map.indexOf('  function apartmentNameKey'),map.indexOf('  async function loadBuildings'))+map.slice(map.indexOf('  function addressKey'),map.indexOf('  async function openListingMenu')),c);
+vm.runInContext(map.slice(map.indexOf('  function apartmentNameKey'),map.indexOf('  async function loadBuildings'))+map.slice(map.indexOf('  function addressKey'),map.indexOf('  function pinContent')),c);
 // A new-build listing without a reference resource still creates its map item with saved coordinates.
 c.listing={id:'new',type:'apartment',status:'광고중',complexName:'운정아이파크포레스트',jibunAddress:'파주시 야당동 123',mapCoordinates:{lat:37.71,lng:126.74},apartmentUnitData:{권리구분:'분양권'}};
 const mapped=vm.runInContext('mergeResidentialListings([], [listing])',c);assert.equal(mapped.length,1);assert.equal(mapped[0].listed,1);assert.equal(mapped[0].registrationCoordinates[1],126.74);
 c.listing.status='거래완료';assert.equal(vm.runInContext('mergeResidentialListings([], [listing]).length',c),0);
-console.log('Presale save/reopen, negative premium, both offices, and new-build map integration passed');
+c.listing.status='광고중';c.listing.jibunAddress='';assert.equal(vm.runInContext('mergeResidentialListings([], [listing])[0].registrationCoordinates[0]',c),37.71);
+function element(tag){return {tag,children:[],style:{},value:'',listeners:{},setAttribute(){},addEventListener(k,f){this.listeners[k]=f;},append(...xs){this.children.push(...xs);},appendChild(x){this.children.push(x);}};}
+Object.assign(c,{residential:true,editing:false,listingMenuVersion:0,items:[],infoWindow:{close(){}},map:{},location:{href:''},setTimeout:()=>1,clearTimeout(){},document:{createElement:element},closeListingMenu(){c.listingMenuVersion++;}});
+c.kakao={maps:{event:{preventMap(){}},CustomOverlay:function(options){c.root=options.content;this.setMap=()=>{};},services:{Status:{OK:'OK'},SortBy:{DISTANCE:'DISTANCE'},Places:function(){this.keywordSearch=()=>{};}}}};
+c.geocoder={coord2Address(){}};c.position={getLat:()=>37.71,getLng:()=>126.74};
+await vm.runInContext('openListingMenu(position)',c);
+const add=c.root.children.find(x=>x.tag==='button');assert.ok(add,'Registration button must exist while geocoder has not answered');add.listeners.click();
+assert.ok(c.location.href.includes('mapLat=37.71'));assert.ok(c.location.href.includes('mapApartment=1'));
+console.log('Presale persistence, both offices, blank-address map pins, and immediate registration with pending lookup passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});
