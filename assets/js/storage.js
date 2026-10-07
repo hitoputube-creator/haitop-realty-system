@@ -1119,6 +1119,24 @@ async function getListings() {
   return rows.map(normalizeListingRow);
 }
 
+// 백업용 — listings 테이블의 원본 행(컬럼 + data JSON)을 가공 없이 전부 가져온다.
+// 한 번에 가져올 수 있는 행 수 제한이 있어도 빠지지 않도록 페이지 단위로 끝까지 읽는다.
+async function getListingsRaw() {
+  const PAGE = 500;
+  const all = [];
+  for (let offset = 0; ; offset += PAGE) {
+    const res = await fetchWithTimeout(
+      SUPABASE_URL + "/rest/v1/listings?select=*&order=created_at.desc,id.asc&limit=" + PAGE + "&offset=" + offset,
+      { headers }
+    );
+    if (!res.ok) throw new Error("매물 원본 데이터를 불러오지 못했습니다. (" + res.status + ")");
+    const rows = await res.json();
+    all.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return all;
+}
+
 async function getListingById(id) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), { headers });
   if (!res.ok) throw new Error("Lookup failed");

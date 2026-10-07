@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261007-columns-sort" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="assets/js/storage.js?v=20261007-presale"></script>
+  <script src="assets/js/storage.js?v=20261007-backup"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -209,7 +209,7 @@
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">📋 선택매물보기</button>
           <button class="btn btn-ghost btn-select-delete" id="deleteSelectedBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">선택삭제 (0건)</button>
-          <button class="btn btn-ghost" onclick="downloadExcel()" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
+          <button class="btn btn-ghost" onclick="downloadExcel()" title="화면 필터와 관계없이 전체 매물(거래완료 포함)을 엑셀과 JSON 백업 파일로 받습니다" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
         </div>
       </div>
       <div id="printArea">
@@ -627,7 +627,7 @@
 </div>
 
 <script src="assets/js/listings-shared.js?v=20261007-progress-status"></script>
-<script src="assets/js/properties.js?v=20261007-progress-status"></script>
+<script src="assets/js/properties.js?v=20261007-backup"></script>
 <script src="assets/js/global-property-search-core.js?v=20261006-compact-search-2"></script>
 <script src="assets/js/global-property-search.js?v=20261006-compact-search-2"></script>
 </body>

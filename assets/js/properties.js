@@ -638,7 +638,10 @@ complexFilterSelect.addEventListener("change", () => {
 });
 
 /* ══════════════════════════════════════════
-   엑셀 다운로드 — 현재 필터 기준 (6컬럼 간결형)
+   엑셀 다운로드 = 전체 백업
+   - 화면 필터·검색·"거래완료 포함" 체크와 무관하게 DB에 저장된 모든 매물(거래완료 포함)을 받는다.
+   - 엑셀(사람이 보는 용) + JSON(복원용 원본)을 함께 내려받는다.
+   - 엑셀은 2개 시트: ① 매물목록(읽기 좋게 정리) ② 매물_전체필드(저장된 모든 필드를 원본 값 그대로)
 ══════════════════════════════════════════ */
 function _xlsxDate() {
   const d = new Date();
@@ -648,85 +651,182 @@ function _makeSheet(rows) {
   return XLSX.utils.json_to_sheet(rows.length ? rows : [{}]);
 }
 
-function downloadExcel() {
-  const items = getFilteredListings();
-  if (!items.length) { showToast("⚠️ 다운로드할 매물이 없습니다."); return; }
-
-  function toMan(v) {
-    const n = Number(String(v || "").replace(/,/g, ""));
-    return (isFinite(n) && n > 0) ? Math.round(n / 10000) : 0;
+// 엑셀 셀 하나에 들어갈 수 있는 글자 수(32,767)를 넘기지 않도록 하고, 객체·배열은 JSON 글자로 바꾼다.
+function _backupCell(v) {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "object") {
+    try { v = JSON.stringify(v); } catch (e) { v = String(v); }
   }
+  if (typeof v === "string" && v.length > 32000) return v.slice(0, 32000) + "…(이하 생략 — JSON 파일에 전체 보관)";
+  return v;
+}
+function _backupNum(v) {
+  if (v === null || v === undefined || v === "") return "";
+  const n = Number(String(v).replace(/,/g, ""));
+  return isFinite(n) ? n : String(v);
+}
+function _backupDateTime(v) {
+  if (!v) return "";
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v);
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function _backupBlankDash(v) {
+  const s = String(v ?? "").trim();
+  return s === "-" ? "" : s;
+}
 
-  function fmtMan(manwon) {
-    if (!manwon) return "";
-    const eok = Math.floor(manwon / 10000);
-    const man = manwon % 10000;
-    const parts = [];
-    if (eok) parts.push(eok.toLocaleString("ko-KR") + "억");
-    if (man)  parts.push(man.toLocaleString("ko-KR") + "만");
-    return parts.join(" ");
-  }
-
-  function getDivision(x) {
-    return getListingCategoryLabel(x);
-  }
-
-  function getArea(x) {
-    const t = x.type || "";
-    const cat1 = (x.category1 || "").toLowerCase();
-    if (t.startsWith("land") || cat1 === "토지") {
-      const py = x.areaPy || x.landAreaPy;
-      return py ? py + "평" : "";
+// 한글 등 전각 문자는 2칸으로 계산해 컬럼 폭을 맞춘다.
+function _backupTextWidth(s) {
+  let w = 0;
+  for (const ch of String(s)) w += ch.charCodeAt(0) > 0x2e80 ? 2 : 1;
+  return w;
+}
+function _backupSheet(rows, headers) {
+  const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+  ws["!cols"] = headers.map(h => {
+    let w = _backupTextWidth(h);
+    for (let i = 0; i < rows.length && i < 300; i++) {
+      const cell = rows[i][h];
+      if (cell === "" || cell === null || cell === undefined) continue;
+      const line = String(cell).split(/\r?\n/)[0];
+      w = Math.max(w, _backupTextWidth(line));
     }
-    if (t === "factory" || cat1 === "공장창고") {
-      const py = x.landAreaPy || x.totalFloorAreaPy || x.buildingAreaPy || x.exclusiveAreaPy;
-      return py ? py + "평" : "";
-    }
-    if (t === "officetel" || t === "hilsstate" || t === "apartment") {
-      const py = x.exclusiveAreaPy || x.areaExclusivePy;
-      return py ? py + "평" : "";
-    }
-    const py = x.exclusiveAreaPy || x.areaExclusivePy || x.supplyAreaPy || x.areaSupplyPy || x.areaPy;
-    return py ? py + "평" : "";
+    return { wch: Math.min(Math.max(w + 2, 8), 50) };
+  });
+  if (ws["!ref"]) ws["!autofilter"] = { ref: ws["!ref"] };
+  return ws;
+}
+
+// ① 읽기 좋게 정리한 시트 — 화면에 보이는 항목 + 숫자 컬럼(정렬·합계용)
+function _buildListingReadableRows(rawRows) {
+  const headers = [
+    "매물번호","상태","매물종류","세부구분","거래유형","마을단지","아파트명(단지)","동","호수",
+    "매물명","주소","공개주소","면적(표시)","전용면적(평)","공급·분양면적(평)","대지면적(평)","가격(표시)",
+    "매매가(원)","분양가(원)","보증금(원)","월세(원)","전세가(만원)",
+    "소유주","연락처1","연락처2","설명","빠른메모","소유주메모",
+    "홈페이지공개","사진수","등록일","수정일","ID"
+  ];
+  const rows = rawRows.map(r => {
+    const x = normalizeListingRow(r);
+    const cat = (typeof normalizeListingCategory === "function" ? normalizeListingCategory(x) : null) || {};
+    return {
+      "매물번호": _backupBlankDash(getListingNumber(x)),
+      "상태": getStatusLabel(x),
+      "매물종류": getListingCategoryLabel(x),
+      "세부구분": cat.subCategory || "",
+      "거래유형": getTransactionType(x),
+      "마을단지": listingColumnValue(x, "village"),
+      "아파트명(단지)": listingColumnValue(x, "apartment"),
+      "동": listingColumnValue(x, "dong"),
+      "호수": listingColumnValue(x, "room"),
+      "매물명": _backupBlankDash(getListingName(x)),
+      "주소": x.address || "",
+      "공개주소": x.publicAddress || "",
+      "면적(표시)": _backupBlankDash(getAreaText(x)),
+      "전용면적(평)": _backupNum(x.areaExclusivePy || x.exclusiveAreaPy),
+      "공급·분양면적(평)": _backupNum(x.areaSupplyPy || x.supplyAreaPy),
+      "대지면적(평)": _backupNum(x.landAreaPy || x.land_area_py || x.land_py),
+      "가격(표시)": formatPrice(x) || "",
+      "매매가(원)": _backupNum(x.salePrice),
+      "분양가(원)": _backupNum(x.presalePrice),
+      "보증금(원)": _backupNum(x.deposit),
+      "월세(원)": _backupNum(x.monthlyRent),
+      "전세가(만원)": _backupNum(x.jeonsePriceManwon),
+      "소유주": _backupBlankDash(getListingOwnerName(x)),
+      "연락처1": _backupBlankDash(getListingPhone1(x)),
+      "연락처2": getListingPhone2(x),
+      "설명": _backupCell(x.description || ""),
+      "빠른메모": _backupCell(x.quick_memo || ""),
+      "소유주메모": _backupCell(x.owner_memo || ""),
+      "홈페이지공개": x.is_public === true ? "공개" : "비공개",
+      "사진수": Array.isArray(x.allImageUrls) ? x.allImageUrls.length : 0,
+      "등록일": _backupDateTime(x.created_at),
+      "수정일": _backupDateTime(x.updated_at || x.updatedAt || x.updated_at_local),
+      "ID": x.id || ""
+    };
+  });
+  return { rows, headers };
+}
+
+// ② 저장된 모든 필드 시트 — DB 컬럼 + data(JSON) 안의 모든 키를 원본 이름·원본 값 그대로
+function _buildListingAllFieldRows(rawRows) {
+  const FIRST = ["id","created_at","type","title","address","status","description","category1","category2","is_public","resource_id","image_urls"];
+  const topKeys = new Set();
+  const dataKeys = new Set();
+  const flat = rawRows.map(r => {
+    const out = {};
+    Object.keys(r).forEach(k => {
+      if (k === "data") return;
+      topKeys.add(k);
+      out[k] = _backupCell(r[k]);
+    });
+    const data = r.data && typeof r.data === "object" ? r.data : {};
+    Object.keys(data).forEach(k => {
+      const key = topKeys.has(k) || Object.prototype.hasOwnProperty.call(r, k) ? "data." + k : k;
+      dataKeys.add(key);
+      out[key] = _backupCell(data[k]);
+    });
+    return out;
+  });
+  const ordered = [
+    ...FIRST.filter(k => topKeys.has(k)),
+    ...[...topKeys].filter(k => !FIRST.includes(k)).sort(),
+    ...[...dataKeys].sort((a, b) => a.localeCompare(b, "ko"))
+  ];
+  return { rows: flat, headers: ordered };
+}
+
+function _appendListingBackupSheets(wb, rawRows) {
+  const readable = _buildListingReadableRows(rawRows);
+  XLSX.utils.book_append_sheet(wb, _backupSheet(readable.rows, readable.headers), "매물목록");
+  const all = _buildListingAllFieldRows(rawRows);
+  XLSX.utils.book_append_sheet(wb, _backupSheet(all.rows, all.headers), "매물_전체필드");
+}
+
+function _downloadJsonFile(obj, filename) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+let _excelBackupRunning = false;
+async function downloadExcel() {
+  if (_excelBackupRunning) return;
+  _excelBackupRunning = true;
+  showToast("⏳ 전체 매물을 불러오는 중...");
+  try {
+    const rawRows = await getListingsRaw();
+    if (!rawRows.length) { showToast("⚠️ 다운로드할 매물이 없습니다."); return; }
+
+    const stamp = _xlsxDate();
+    const wb = XLSX.utils.book_new();
+    _appendListingBackupSheets(wb, rawRows);
+    XLSX.writeFile(wb, `${officeCompanyName}_매물백업_${stamp}.xlsx`);
+
+    _downloadJsonFile({
+      exportedAt: new Date().toISOString(),
+      office: OfficeConfig.id,
+      officeName: officeCompanyName,
+      table: "listings",
+      count: rawRows.length,
+      rows: rawRows
+    }, `${officeCompanyName}_매물백업_${stamp}.json`);
+
+    const done = rawRows.filter(r => r.status === "거래완료").length;
+    showToast(`✅ 전체 ${rawRows.length}건(거래완료 ${done}건 포함) 백업 완료 — 엑셀 + JSON`);
+  } catch (e) {
+    showToast("❌ 백업 실패: " + (e && e.message ? e.message : e));
+  } finally {
+    _excelBackupRunning = false;
   }
-
-  function getPrice(x) {
-    const deal = (x.dealType || "").trim();
-    const sale   = toMan(x.salePrice);
-    const pre    = toMan(x.presalePrice);
-    const dep    = toMan(x.deposit);
-    const rent   = toMan(x.monthlyRent);
-    const jeonse = toMan(x.jeonsePriceManwon);
-
-    if (deal === "매매" || deal === "분양") return fmtMan(sale || pre) || "";
-    if (deal === "전세") return fmtMan(dep || jeonse) || "";
-    if (deal === "월세" || deal === "임대") {
-      const depStr  = dep  ? fmtMan(dep)  : "";
-      const rentStr = rent ? fmtMan(rent) : "";
-      if (depStr && rentStr) return depStr + "/" + rentStr;
-      if (rentStr) return rentStr;
-      return depStr;
-    }
-    if (sale) return fmtMan(sale);
-    if (dep && rent) return fmtMan(dep) + "/" + fmtMan(rent);
-    if (dep)  return fmtMan(dep);
-    if (rent) return fmtMan(rent);
-    return "";
-  }
-
-  const rows = items.map(x => ({
-    "구분":   getDivision(x),
-    "거래":   x.dealType || "",
-    "매물명": x.title || "",
-    "주소":   x.publicAddress || x.address || "",
-    "면적":   getArea(x),
-    "가격":   getPrice(x),
-  }));
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, _makeSheet(rows), "매물목록");
-  XLSX.writeFile(wb, `${officeCompanyName}_매물목록_${_xlsxDate()}.xlsx`);
-  showToast(`✅ ${items.length}건 다운로드 완료`);
 }
 
 /* ══════════════════════════════════════════
@@ -741,7 +841,7 @@ async function exportAll() {
   showToast("⏳ 전체 데이터를 불러오는 중...");
   try {
     const [listings, requests, customers, doneCustomers, driveResources, recommended, referenceProps, memos] = await Promise.all([
-      getListings(),
+      getListingsRaw(),
       getRequests(),
       getCustomers(),
       getDoneCustomers(),
@@ -753,15 +853,7 @@ async function exportAll() {
 
     const wb = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(wb, _makeSheet(listings.map(item => ({
-      "유형": getListingCategoryLabel(item),
-      "주소": item.address || item.title || "",
-      "가격": formatPrice(item),
-      "연락처": item.owner_phone1 || item.quick_contact || item.owner_contact || "",
-      "메모": item.quick_memo || item.description || "",
-      "등록일": item.created_at ? new Date(item.created_at).toLocaleDateString("ko-KR") : "",
-      "상태": item.status || "진행중"
-    }))), "매물관리");
+    _appendListingBackupSheets(wb, listings);
 
     XLSX.utils.book_append_sheet(wb, _makeSheet(requests.map(r => ({
       "고객명": r.name || "",
