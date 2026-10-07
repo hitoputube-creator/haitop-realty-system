@@ -620,10 +620,10 @@
           <div class="umfield"><label>접수일자</label><input id="ru_접수일자" type="date" /></div>
           <div class="umfield"><label>동 *</label><input id="ru_동" placeholder="예: 1101" /></div>
           <div class="umfield"><label>호수 *</label><input id="ru_호수" placeholder="예: 101" /></div>
-          <div class="umfield"><label>평형</label><input id="ru_평형" placeholder="예: 24평" /></div>
+          <div class="umfield"><label>분양평형</label><input id="ru_평형" placeholder="예: 24평" /></div>
           <div class="umfield"><label>타입</label><input id="ru_타입" list="residentialUnitTypes" placeholder="예: 55A/AS" /><datalist id="residentialUnitTypes"></datalist></div>
-          <div class="umfield area-dual full"><label>분양면적(공급면적)</label><div class="area-row"><input id="ru_분양_평" type="number" min="0" step="0.01" placeholder="평" aria-label="분양면적 평" /><span class="area-arrow">↔</span><input id="ru_분양_m2" type="number" min="0" step="0.0001" placeholder="㎡" aria-label="분양면적 제곱미터" /><span class="area-unit">㎡</span></div></div>
-          <div class="umfield area-dual full"><label>전용면적</label><div class="area-row"><input id="ru_전용_평" type="number" min="0" step="0.01" placeholder="평" aria-label="전용면적 평" /><span class="area-arrow">↔</span><input id="ru_전용_m2" type="number" min="0" step="0.0001" placeholder="㎡" aria-label="전용면적 제곱미터" /><span class="area-unit">㎡</span></div></div>
+          <div class="umfield area-dual full"><label>분양면적(공급면적)</label><div class="area-row"><input id="ru_분양_평" type="number" min="0" step="0.01" placeholder="평" aria-label="분양면적 평" /><span class="area-unit">평</span><span class="area-arrow">↔</span><input id="ru_분양_m2" type="number" min="0" step="0.0001" placeholder="㎡" aria-label="분양면적 제곱미터" /><span class="area-unit">㎡</span></div></div>
+          <div class="umfield area-dual full"><label>전용면적</label><div class="area-row"><input id="ru_전용_평" type="number" min="0" step="0.01" placeholder="평" aria-label="전용면적 평" /><span class="area-unit">평</span><span class="area-arrow">↔</span><input id="ru_전용_m2" type="number" min="0" step="0.0001" placeholder="㎡" aria-label="전용면적 제곱미터" /><span class="area-unit">㎡</span></div></div>
         </div></div>
         <div class="um-section current"><div class="um-section-title">💰 거래·가격</div><div class="umgrid">
           <div class="umfield"><label>매매·임대 구분</label><select id="ru_거래구분"><option value="">미정</option><option>매매</option><option>전세</option><option>월세</option><option>임대</option><option>매매·임대</option></select></div>
@@ -736,7 +736,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261007-owner-unit-apply"></script>
+<script src="assets/js/storage.js?v=20261007-area-units"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1518,7 +1518,7 @@ async function deleteBFile(id) {
     const head=$('unitsTableHead');
     head.closest('table').classList.add('residential-unit-table');
     if(!head.dataset.sortReady){
-      const columns=[['dong','동'],['room','호수'],['sizeType','평형·타입'],['deal','거래구분'],['sale','매매가(만)'],['rent','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['received','접수일자'],['listed','관리']];
+      const columns=[['dong','동'],['room','호수'],['sizeType','분양평형·타입'],['deal','거래구분'],['sale','매매가(만)'],['rent','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['received','접수일자'],['listed','관리']];
       head.innerHTML='<tr>'+columns.map(([key,label])=>'<th><button type="button" class="unit-sort" data-unit-sort="'+key+'" aria-label="'+label+' 정렬"><span>'+label+'</span><span class="unit-sort-arrow" aria-hidden="true">↕</span></button></th>').join('')+'</tr>';
       head.dataset.sortReady='true';
       head.querySelectorAll('.unit-sort').forEach(button=>{
@@ -1981,6 +1981,7 @@ async function deleteBFile(id) {
   ['ru_연락처','ru_세입자연락처'].forEach(id => $(id).addEventListener('blur', () => {$(id).value = ownerPhone($(id).value);}));
   ['매매가','보증금','월세'].forEach(k => $('ru_'+k).addEventListener('input', () => {$('h_ru_'+k).textContent = toKorAmt($('ru_'+k).value);}));
   bindAreaPair('ru_분양_평','ru_분양_m2');
+  ['ru_분양_평','ru_분양_m2'].forEach(id=>$(id).addEventListener('input',()=>{$('ru_평형').value=Number($('ru_분양_평').value)>0 ? Number($('ru_분양_평').value).toFixed(2)+'평' : '';}));
   bindAreaPair('ru_전용_평','ru_전용_m2');
   $('umAddMemo').addEventListener('click', () => {
     if (!$('u_추가메모').value.trim()) { showToast('추가메모를 입력하세요.'); return; }
@@ -2002,15 +2003,15 @@ async function deleteBFile(id) {
       const prefix=residential ? 'ru_' : 'u_';
       $(prefix+'전용_m2').value=info.exclusive_area_m2;
       $(prefix+'전용_평').value=(Number(info.exclusive_area_m2)/(400/121)).toFixed(2);
-      const plan=residential ? unitPlans.find(p=>String(p.floor_number).replace(/\s/g,'')===$('ru_타입').value.trim().replace(/\s/g,'')) : null;
-      const supply=info.residential_supply_area_m2 ?? (plan && plan.supply_area_m2);
+      const plan=residential ? apartmentSupplyPlan(unitPlans,Number(info.exclusive_area_m2),$('ru_타입').value.trim()) : null;
+      const supply=info.residential_supply_area_m2 ?? (plan && plan.supply);
       if(supply!=null && Number(supply)>=Number(info.exclusive_area_m2)){
         $(prefix+'분양_m2').value=supply;$(prefix+'분양_평').value=(Number(supply)/(400/121)).toFixed(2);
         if(residential)$('ru_평형').value=(Number(supply)/(400/121)).toFixed(2)+'평';
       }
       pendingRegistryInfo={...info,queried_at:new Date().toISOString()};
       $('unitRegistryApplied').hidden=false;
-      $('unitRegistryApplied').textContent='대장 적용: 전유 '+info.exclusive_area_m2+'㎡ · 공용 합계 '+(info.common_area_m2 ?? '미확인')+'㎡ · '+(info.unit_floor || '')+'. 저장을 눌러주세요.';
+      $('unitRegistryApplied').textContent='대장 적용: 전유 '+info.exclusive_area_m2+'㎡ · 공용 합계 '+(info.common_area_m2 ?? '미확인')+'㎡ · '+(info.unit_floor || '')+'. '+(supply!=null ? '공급면적 '+Number(supply).toFixed(2)+'㎡ · 분양평형 '+(Number(supply)/(400/121)).toFixed(2)+'평 적용.' : '공급면적 미확인: 해당 타입의 단지자료가 필요합니다. 기존 값은 유지했습니다.')+' 저장을 눌러주세요.';
       showToast('조회값을 수정칸에 적용했습니다. 저장을 눌러주세요.');
     }});
   });
@@ -2030,3 +2031,4 @@ async function deleteBFile(id) {
 </script>
 </body>
 </html>
+
