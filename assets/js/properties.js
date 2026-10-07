@@ -387,11 +387,168 @@ function sortListingColumn(key) {
   listingColumnSort={key,direction:listingColumnSort.key===key ? -listingColumnSort.direction : 1};
   currentPage=1; renderList();
 }
+
+/* ══════════════════════════════════════════
+   컬럼 필터 (엑셀식) — 목록 머리글의 ▾ 버튼
+   - 값 선택형: 매물종류·구분·마을단지·아파트명·동·호수·소유주
+   - 범위형: 가격(만원 단위 최소~최대)
+   - 글자 포함형: 연락처
+   카드 보기에서만 적용되며, 정렬·검색·유형 필터와 함께(AND) 작동한다.
+══════════════════════════════════════════ */
+const LISTING_FILTER_COLUMNS = {
+  type:{label:"매물종류",mode:"values"}, deal:{label:"구분",mode:"values"},
+  village:{label:"마을단지",mode:"values"}, apartment:{label:"아파트명",mode:"values"},
+  dong:{label:"동",mode:"values"}, room:{label:"호수",mode:"values"},
+  price:{label:"가격",mode:"range"},
+  owner:{label:"소유주",mode:"values"}, phone:{label:"연락처",mode:"text"}
+};
+const COL_FILTER_BLANK = "(빈 값)";
+let listingColumnFilters = {}; // key → {values:[...]} | {min,max} | {text}
+let _colFilterPop = null;
+let _colFilterPopKey = "";
+
+function _colFilterValue(item, key) {
+  let v = String(listingColumnValue(item, key) ?? "").trim();
+  if (v === "-") v = "";
+  return v;
+}
+function matchesColumnFilters(item, skipKey) {
+  for (const key in listingColumnFilters) {
+    if (key === skipKey) continue;
+    const f = listingColumnFilters[key];
+    if (!f) continue;
+    if (f.values) {
+      const v = _colFilterValue(item, key) || COL_FILTER_BLANK;
+      if (!f.values.includes(v)) return false;
+    } else if (key === "price") {
+      const man = Number(listingColumnValue(item, "price")) / 10000;
+      if (!(man > 0)) return false;
+      if (f.min != null && man < f.min) return false;
+      if (f.max != null && man > f.max) return false;
+    } else if (f.text) {
+      const q = f.text.toLowerCase();
+      const hay = [getListingPhone1(item), getListingPhone2(item)].join(" ").toLowerCase();
+      const qd = q.replace(/\D/g, "");
+      if (!(hay.includes(q) || (qd && hay.replace(/\D/g, "").includes(qd)))) return false;
+    }
+  }
+  return true;
+}
+function columnFilterCount() { return Object.keys(listingColumnFilters).length; }
+
+function closeColumnFilterPopover() {
+  if (_colFilterPop) { _colFilterPop.remove(); _colFilterPop = null; _colFilterPopKey = ""; }
+}
+function clearColumnFilters() {
+  listingColumnFilters = {};
+  closeColumnFilterPopover();
+  currentPage = 1; renderList(); saveFilterState();
+}
+function _applyColumnFilter(key, filter) {
+  if (filter) listingColumnFilters[key] = filter; else delete listingColumnFilters[key];
+  closeColumnFilterPopover();
+  currentPage = 1; renderList(); saveFilterState();
+}
+
+function openColumnFilter(key, btn, ev) {
+  if (ev) ev.stopPropagation();
+  const reopen = _colFilterPopKey === key;
+  closeColumnFilterPopover();
+  if (reopen) return;
+  const cfg = LISTING_FILTER_COLUMNS[key];
+  if (!cfg) return;
+  const cur = listingColumnFilters[key] || null;
+  const pop = document.createElement("div");
+  pop.className = "col-filter-pop";
+  pop.addEventListener("click", e => e.stopPropagation());
+  const title = `<div class="cfp-title">${escapeHtml(cfg.label)} 필터</div>`;
+
+  if (cfg.mode === "values") {
+    const base = getBaseFilteredListings().filter(i => matchesColumnFilters(i, key));
+    const counts = new Map();
+    base.forEach(i => { const v = _colFilterValue(i, key) || COL_FILTER_BLANK; counts.set(v, (counts.get(v) || 0) + 1); });
+    cur && cur.values.forEach(v => { if (!counts.has(v)) counts.set(v, 0); });
+    const options = [...counts.keys()].sort((a, b) =>
+      a === COL_FILTER_BLANK ? 1 : b === COL_FILTER_BLANK ? -1 : a.localeCompare(b, "ko", { numeric: true }));
+    const selected = new Set(cur ? cur.values : options);
+    pop.innerHTML = title +
+      `<input type="search" class="cfp-search" placeholder="검색" aria-label="${escapeHtml(cfg.label)} 값 검색" />
+       <div class="cfp-quick"><button type="button" data-q="all">보이는 항목 모두 선택</button><button type="button" data-q="none">모두 해제</button></div>
+       <div class="cfp-list"></div>
+       <div class="cfp-msg" role="alert"></div>
+       <div class="cfp-actions"><button type="button" class="cfp-reset">이 열 필터 해제</button><button type="button" class="cfp-apply">적용</button></div>`;
+    const listEl = pop.querySelector(".cfp-list");
+    const searchEl = pop.querySelector(".cfp-search");
+    const msgEl = pop.querySelector(".cfp-msg");
+    const visible = () => options.filter(v => v.toLowerCase().includes(searchEl.value.trim().toLowerCase()));
+    const paint = () => {
+      listEl.innerHTML = visible().map(v =>
+        `<label class="cfp-row"><input type="checkbox" value="${escapeHtml(v)}" ${selected.has(v) ? "checked" : ""}/><span class="cfp-val">${escapeHtml(v)}</span><span class="cfp-n">${counts.get(v)}</span></label>`).join("") ||
+        `<div class="cfp-empty">일치하는 항목이 없습니다.</div>`;
+    };
+    listEl.addEventListener("change", e => {
+      const cb = e.target;
+      if (cb && cb.type === "checkbox") { cb.checked ? selected.add(cb.value) : selected.delete(cb.value); msgEl.textContent = ""; }
+    });
+    searchEl.addEventListener("input", paint);
+    pop.querySelector(".cfp-quick").addEventListener("click", e => {
+      const q = e.target.dataset && e.target.dataset.q;
+      if (q === "all") visible().forEach(v => selected.add(v));
+      if (q === "none") visible().forEach(v => selected.delete(v));
+      if (q) { msgEl.textContent = ""; paint(); }
+    });
+    pop.querySelector(".cfp-apply").addEventListener("click", () => {
+      if (!selected.size) { msgEl.textContent = "하나 이상 선택해 주세요."; return; }
+      _applyColumnFilter(key, options.every(v => selected.has(v)) ? null : { values: options.filter(v => selected.has(v)) });
+    });
+    pop.querySelector(".cfp-reset").addEventListener("click", () => _applyColumnFilter(key, null));
+    paint();
+  } else if (cfg.mode === "range") {
+    pop.innerHTML = title +
+      `<div class="cfp-range"><input type="number" class="cfp-min" min="0" inputmode="numeric" placeholder="최소" value="${cur && cur.min != null ? cur.min : ""}" />
+       <span>~</span><input type="number" class="cfp-max" min="0" inputmode="numeric" placeholder="최대" value="${cur && cur.max != null ? cur.max : ""}" /><span class="cfp-unit">만원</span></div>
+       <div class="cfp-hint">예) 3억~5억 → 30000 ~ 50000<br>가격이 비어 있는 매물은 범위를 걸면 제외됩니다.</div>
+       <div class="cfp-msg" role="alert"></div>
+       <div class="cfp-actions"><button type="button" class="cfp-reset">이 열 필터 해제</button><button type="button" class="cfp-apply">적용</button></div>`;
+    pop.querySelector(".cfp-apply").addEventListener("click", () => {
+      const rawMin = pop.querySelector(".cfp-min").value.trim(), rawMax = pop.querySelector(".cfp-max").value.trim();
+      const min = rawMin === "" ? null : Number(rawMin), max = rawMax === "" ? null : Number(rawMax);
+      if ((min != null && !isFinite(min)) || (max != null && !isFinite(max))) { pop.querySelector(".cfp-msg").textContent = "숫자만 입력해 주세요."; return; }
+      if (min != null && max != null && min > max) { pop.querySelector(".cfp-msg").textContent = "최소가 최대보다 클 수 없습니다."; return; }
+      _applyColumnFilter(key, min == null && max == null ? null : { min, max });
+    });
+    pop.querySelector(".cfp-reset").addEventListener("click", () => _applyColumnFilter(key, null));
+  } else {
+    pop.innerHTML = title +
+      `<input type="search" class="cfp-text" placeholder="번호 일부 (예: 7941, 010-5103)" value="${cur ? escapeHtml(cur.text) : ""}" />
+       <div class="cfp-msg" role="alert"></div>
+       <div class="cfp-actions"><button type="button" class="cfp-reset">이 열 필터 해제</button><button type="button" class="cfp-apply">적용</button></div>`;
+    const apply = () => { const t = pop.querySelector(".cfp-text").value.trim(); _applyColumnFilter(key, t ? { text: t } : null); };
+    pop.querySelector(".cfp-apply").addEventListener("click", apply);
+    pop.querySelector(".cfp-text").addEventListener("keydown", e => { if (e.key === "Enter") apply(); });
+    pop.querySelector(".cfp-reset").addEventListener("click", () => _applyColumnFilter(key, null));
+  }
+
+  document.body.appendChild(pop);
+  const r = btn.getBoundingClientRect();
+  const w = pop.offsetWidth || 260;
+  pop.style.left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - w - 8)) + "px";
+  pop.style.top = (r.bottom + window.scrollY + 4) + "px";
+  _colFilterPop = pop;
+  _colFilterPopKey = key;
+  const first = pop.querySelector("input[type=search], input[type=number]");
+  if (first) first.focus();
+}
+document.addEventListener("click", closeColumnFilterPopover);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeColumnFilterPopover(); });
+
 function makeListingColumnHeader() {
   const header = document.createElement("div");
   header.className = "listing-column-header";
-  const heading=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+label+' <span aria-hidden="true">'+(listingColumnSort.key===key ? (listingColumnSort.direction===1 ? '↑' : '↓') : '↕')+'</span></button>';
-  header.innerHTML = '<div class="listing-cell-select">선택</div>'+[['type','매물종류'],['deal','구분'],['village','마을단지'],['apartment','아파트명'],['dong','동'],['room','호수'],['price','가격'],['owner','소유주'],['phone','연락처']].map(([key,label])=>'<div class="listing-cell-'+key+'">'+heading(key,label)+'</div>').join('')+'<div class="listing-cell-actions">관리</div>';
+  const sortBtn=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+label+' <span aria-hidden="true">'+(listingColumnSort.key===key ? (listingColumnSort.direction===1 ? '↑' : '↓') : '↕')+'</span></button>';
+  const filterBtn=(key,label)=>{ const on=!!listingColumnFilters[key]; return '<button type="button" class="listing-filter-btn'+(on?' active':'')+'" onclick="openColumnFilter(\''+key+'\',this,event)" aria-label="'+label+' 필터'+(on?' (적용 중)':'')+'" title="'+label+' 필터'+(on?' (적용 중)':'')+'">'+(on?'●':'▾')+'</button>'; };
+  const n = columnFilterCount();
+  header.innerHTML = '<div class="listing-cell-select">선택</div>'+[['type','매물종류'],['deal','구분'],['village','마을단지'],['apartment','아파트명'],['dong','동'],['room','호수'],['price','가격'],['owner','소유주'],['phone','연락처']].map(([key,label])=>'<div class="listing-cell-'+key+'">'+sortBtn(key,label)+filterBtn(key,label)+'</div>').join('')+'<div class="listing-cell-actions">'+(n?'<button type="button" class="listing-filter-reset" onclick="clearColumnFilters()" title="적용 중인 열 필터를 모두 해제">✕ 필터 해제 '+n+'</button>':'관리')+'</div>';
   return header;
 }
 
@@ -434,7 +591,8 @@ function matchesAllFilters(item) {
   return true;
 }
 
-function getFilteredListings() {
+// 유형·거래유형·검색 조건만 적용한 목록 (컬럼 필터·정렬 전) — 컬럼 필터의 값 목록 계산에도 쓴다.
+function getBaseFilteredListings() {
   let filtered = allListings.filter(item => {
     if (item.status === "거래완료") return includeCompleted && matchesAllFilters(item);
     return matchesAllFilters(item);
@@ -443,6 +601,12 @@ function getFilteredListings() {
     const kw = searchKeyword.toLowerCase();
     filtered = filtered.filter(item => matchesKeyword(item, kw));
   }
+  return filtered;
+}
+
+function getFilteredListings() {
+  let filtered = getBaseFilteredListings();
+  if (viewMode === "card" && columnFilterCount()) filtered = filtered.filter(item => matchesColumnFilters(item));
   filtered.sort((a, b) => {
     const da = new Date(a.created_at || 0);
     const db = new Date(b.created_at || 0);
@@ -495,6 +659,8 @@ function renderList() {
     if (cardSelectBar) cardSelectBar.style.display = "none";
     emptyMessage.style.display = "block";
     paginationEl.innerHTML = "";
+    // 열 필터 때문에 0건이 된 경우에도 머리글(필터 해제 버튼)을 남겨, 스스로 풀 수 있게 한다.
+    if (viewMode === "card" && columnFilterCount()) listingContainer.appendChild(makeListingColumnHeader());
     updatePrintBtn();
     return;
   }
@@ -1159,7 +1325,7 @@ function saveFilterState() {
   try {
     OfficeStorage.session.setItem(FILTER_STATE_KEY, JSON.stringify({
       searchKeyword, currentMajor, currentSub, currentTag, currentDealFilter,
-      includeCompleted, currentSort, viewMode,
+      includeCompleted, currentSort, viewMode, columnFilters: listingColumnFilters,
       scrollY: window.scrollY
     }));
   } catch (e) { /* 세션스토리지 사용 불가 시 조용히 무시 */ }
@@ -1176,6 +1342,11 @@ function restoreFilterState() {
 
     currentSort = saved.currentSort === "oldest" ? "oldest" : "newest";
     document.getElementById("sortSelect").value = currentSort;
+
+    listingColumnFilters = {};
+    if (saved.columnFilters && typeof saved.columnFilters === "object") {
+      Object.keys(saved.columnFilters).forEach(k => { if (LISTING_FILTER_COLUMNS[k] && saved.columnFilters[k]) listingColumnFilters[k] = saved.columnFilters[k]; });
+    }
 
     includeCompleted = !!saved.includeCompleted;
     document.getElementById("includeCompletedChk").checked = includeCompleted;

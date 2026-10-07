@@ -1625,8 +1625,8 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* 매물관리: 단지와 동호수, 거래구분과 가격을 각각 한 칸에 배치 */
 .properties-page #listingContainer { overflow-x:auto; }
-.properties-page .listing-grid { --property-row-columns:28px 76px 55px 118px minmax(145px,1fr) 40px 50px 106px 62px 108px 116px; }
-.properties-page .listing-column-header,.properties-page .listing-card.listing-row-card { min-width:990px;grid-template-columns:var(--property-row-columns);grid-template-areas:none;column-gap:5px; }
+.properties-page .listing-grid { --property-row-columns:28px 76px 55px 118px minmax(145px,1fr) 46px 56px 106px 62px 108px 116px; }
+.properties-page .listing-column-header,.properties-page .listing-card.listing-row-card { min-width:1004px;grid-template-columns:var(--property-row-columns);grid-template-areas:none;column-gap:5px; }
 /* 관리 칸: 상세·수정 / 삭제·거래완료 2×2로 배치해 오른쪽 끝에서 버튼이 잘리지 않게 한다 (홈페이지 토글은 아래 한 줄) */
 .properties-page .listing-row-card .listing-actions { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;align-content:center;padding-left:0; }
 .properties-page .listing-row-card .lc-actions-main,.properties-page .listing-row-card .lc-actions-side { display:contents; }
@@ -1655,3 +1655,33 @@ textarea { resize: vertical; min-height: 120px; }
   .properties-page .listing-cell-type { grid-area:type; }
   .properties-page .listing-cell-actions { grid-area:actions; }
 }
+
+/* 매물관리: 열 머리글 필터 (엑셀식 ▾) */
+.properties-page .listing-filter-btn { border:0;background:none;color:var(--text-muted,#94a3b8);font-size:10px;line-height:1;padding:3px 2px;margin-left:1px;cursor:pointer;border-radius:4px; }
+.properties-page .listing-filter-btn:hover,.properties-page .listing-filter-btn:focus-visible { color:var(--gold);background:rgba(216,184,74,0.14); }
+.properties-page .listing-filter-btn.active { color:var(--gold);background:rgba(216,184,74,0.2); }
+.properties-page .listing-filter-reset { border:1px solid rgba(216,184,74,0.5);background:rgba(216,184,74,0.12);color:var(--gold);font:inherit;font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;cursor:pointer;white-space:nowrap; }
+.properties-page .listing-filter-reset:hover { background:rgba(216,184,74,0.24); }
+.col-filter-pop { position:absolute;z-index:1000;width:260px;box-sizing:border-box;padding:10px;border-radius:10px;background:#0f1d33;border:1px solid rgba(216,184,74,0.5);box-shadow:0 12px 32px rgba(0,0,0,0.55);color:#e5e9f0;font-size:12px; }
+.col-filter-pop .cfp-title { font-weight:700;color:var(--gold);margin-bottom:8px; }
+.col-filter-pop input[type=search],.col-filter-pop input[type=number] { width:100%;box-sizing:border-box;padding:6px 8px;border-radius:6px;border:1px solid rgba(126,151,184,0.35);background:#081224;color:#e5e9f0;font-size:12px; }
+.col-filter-pop .cfp-quick { display:flex;gap:6px;margin:8px 0 4px; }
+.col-filter-pop .cfp-quick button { flex:1;padding:4px 2px;border-radius:6px;border:1px solid rgba(126,151,184,0.3);background:transparent;color:#cbd5e1;font-size:11px;cursor:pointer; }
+.col-filter-pop .cfp-quick button:hover { border-color:var(--gold);color:var(--gold); }
+.col-filter-pop .cfp-list { max-height:230px;overflow:auto;border:1px solid rgba(126,151,184,0.2);border-radius:6px;background:#081224; }
+.col-filter-pop .cfp-row { display:flex;align-items:center;gap:6px;padding:5px 8px;cursor:pointer; }
+.col-filter-pop .cfp-row:hover { background:rgba(216,184,74,0.1); }
+.col-filter-pop .cfp-row input { width:auto;margin:0;accent-color:var(--gold); }
+.col-filter-pop .cfp-val { flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.col-filter-pop .cfp-n { color:var(--text-muted,#94a3b8);font-size:11px; }
+.col-filter-pop .cfp-empty { padding:10px;color:var(--text-muted,#94a3b8);text-align:center; }
+.col-filter-pop .cfp-range { display:flex;align-items:center;gap:6px; }
+.col-filter-pop .cfp-range input { min-width:0; }
+.col-filter-pop .cfp-unit { color:var(--text-muted,#94a3b8);white-space:nowrap; }
+.col-filter-pop .cfp-hint { margin-top:8px;color:var(--text-muted,#94a3b8);font-size:11px;line-height:1.5; }
+.col-filter-pop .cfp-msg { min-height:14px;margin-top:6px;color:#f08a8a;font-size:11px; }
+.col-filter-pop .cfp-actions { display:flex;gap:6px;margin-top:8px; }
+.col-filter-pop .cfp-actions button { flex:1;padding:6px 4px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer; }
+.col-filter-pop .cfp-reset { border:1px solid rgba(126,151,184,0.35);background:transparent;color:#cbd5e1; }
+.col-filter-pop .cfp-apply { border:1px solid var(--gold);background:var(--gold);color:#101828; }
+.properties-page .listing-column-header .listing-cell-apartment { flex-direction:row;align-items:center;gap:0; }
