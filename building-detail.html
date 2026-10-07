@@ -458,7 +458,37 @@
       margin-bottom: 14px; gap: 10px;
     }
     .unit-sec-head h3 { margin: 0; font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.92); }
-  </style>
+  
+    .unit-counts-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .unit-filter-reset{border:1px solid rgba(212,175,55,.3);border-radius:6px;background:transparent;color:var(--gold-soft);padding:6px 10px;font:inherit;font-size:.76rem;cursor:pointer}
+    .unit-filter-reset[hidden]{display:none}
+    .units-tbl th:has(.unit-column-filter){vertical-align:top;white-space:nowrap}
+    .unit-column-filter{display:block;box-sizing:border-box;width:100%;min-width:64px;margin-top:7px;padding:5px 6px;border:1px solid rgba(255,255,255,.15);border-radius:5px;background:#102033;color:#e4ecf5;font:inherit;font-size:.74rem;line-height:1.35}
+    .unit-column-filter::placeholder{color:#8091a9}
+    .unit-column-filter:focus{outline:none;border-color:var(--gold-soft)}
+    .unit-rent-filters{display:flex;gap:4px}
+    .unit-rent-filters .unit-column-filter{width:50%;min-width:60px}
+    .unit-dong-cell,.unit-room-cell{white-space:nowrap}
+    .unit-dong-cell strong,.unit-room-cell strong{font-size:.94rem;font-variant-numeric:tabular-nums}
+    .unit-dong-cell>small,.unit-room-cell>small{margin-left:3px;color:var(--muted);font-size:.72rem}
+    .unit-room-cell>small:last-child:not(:first-of-type){margin-left:0}
+
+
+    .residential-unit-table{table-layout:fixed;min-width:1120px}
+    .residential-unit-table th:nth-child(1),.residential-unit-table th:nth-child(2){width:6%}
+    .residential-unit-table th:nth-child(3){width:9%}
+    .residential-unit-table th:nth-child(4){width:7%}
+    .residential-unit-table th:nth-child(5){width:9%}
+    .residential-unit-table th:nth-child(6){width:13%}
+    .residential-unit-table th:nth-child(7){width:14%}
+    .residential-unit-table th:nth-child(8){width:8%}
+    .residential-unit-table th:nth-child(9){width:11%}
+    .residential-unit-table th:nth-child(10){width:17%}
+    .residential-unit-table th,.residential-unit-table td{box-sizing:border-box;padding-left:8px;padding-right:8px}
+    .residential-unit-table td{overflow:hidden;text-overflow:ellipsis}
+    .residential-unit-table .unit-column-filter{min-width:0}
+    .residential-unit-table .unit-rent-filters .unit-column-filter{min-width:0}
+</style>
 </head>
 <body>
 <div class="page">
@@ -565,7 +595,7 @@
       </div>
     </div>
 
-    <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.7;"></p>
+    <div class="unit-counts-row"><p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.7;"></p><button type="button" id="unitFiltersReset" class="unit-filter-reset" hidden>필터 초기화</button></div>
     <!-- 층 필터 탭 -->
     <div class="floor-tabs" id="unitFloorTabs"></div>
 
@@ -1433,13 +1463,98 @@ async function deleteBFile(id) {
       세입자이름:value('세입자이름') || null,세입자연락처:ownerPhone(value('세입자연락처')) || null,세입자현황:tenant,공실여부:tenant === '공실' ? '공실' : tenant === '임차중' ? '임차중' : tenant,세입자계약시작일:value('계약시작') || null,세입자계약종료일:value('계약종료') || null,
       옵션내역:value('옵션') || null,비고:value('비고') || null,updated_at:new Date().toISOString()};
   }
+
+  const residentialFilters = {room:'',sizeType:'',deal:'',sale:'',deposit:'',rent:'',owner:'',tenant:'',received:'',listed:''};
+  const filterText = value => String(value ?? '').toLowerCase().replace(/[\s,\-]/g,'');
+  function matchesUnitAmount(value, query) {
+    const q=String(query || '').replace(/[\s,]/g,'');
+    if(!q)return true;
+    if(value==null || value==='')return false;
+    const number=Number(String(value).replace(/,/g,''));
+    if(!Number.isFinite(number))return false;
+    const range=q.match(/^(\d*(?:\.\d+)?)~(\d*(?:\.\d+)?)$/);
+    if(range)return (!range[1] || number>=Number(range[1])) && (!range[2] || number<=Number(range[2]));
+    return /^\d+(?:\.\d+)?$/.test(q) && number===Number(q);
+  }
+  function matchesUnitDate(value, query) {
+    const q=String(query || '').trim();
+    if(!q)return true;
+    const date=String(value || '').slice(0,10);
+    if(!date)return false;
+    if(!q.includes('~'))return date.includes(q);
+    const parts=q.split('~').map(v=>v.trim());
+    return parts.length===2 && (!parts[0] || date>=parts[0]) && (!parts[1] || date<=parts[1]);
+  }
+  function matchesResidentialFilters(u) {
+    const f=residentialFilters,parts=roomParts(u);
+    const exact=(value,query)=>!query || (query==='__empty__' ? !String(value || '').trim() : String(value || '').trim()===query);
+    return (!f.room || filterText(parts.room).includes(filterText(f.room.replace(/호$/,'')))) &&
+      (!f.sizeType || filterText([u.평형,u.타입].filter(Boolean).join(' ')).includes(filterText(f.sizeType))) &&
+      exact(u.거래구분,f.deal) && matchesUnitAmount(u.현_매매가격,f.sale) &&
+      matchesUnitAmount(effectiveUnitPrice(u.현_보증금,u.보증금),f.deposit) &&
+      matchesUnitAmount(effectiveUnitPrice(u.현_월세,u.월차임),f.rent) &&
+      (!f.owner || filterText([u.소유주,u.연락처].filter(Boolean).join(' ')).includes(filterText(f.owner))) &&
+      exact(u.세입자현황 || u.공실여부 || '미확인',f.tenant) && matchesUnitDate(u.접수일자,f.received) &&
+      (!f.listed || (f.listed==='registered')===!!String(u.listing_id || '').trim());
+  }
+  function renderResidentialHeader() {
+    const head=$('unitsTableHead');
+    head.closest('table').classList.add('residential-unit-table');
+    if(!head.dataset.residentialFilters){
+      const input=(key,label,placeholder,title='')=>`<input class="unit-column-filter" data-unit-filter="${key}" aria-label="${label} 필터" placeholder="${placeholder}" title="${title}" autocomplete="off">`;
+      const select=(key,label)=>`<select class="unit-column-filter" data-unit-filter="${key}" aria-label="${label} 필터"></select>`;
+      const rangeTitle='예: 30000~50000, 30000~, ~50000 (만원)';
+      head.innerHTML='<tr>'+
+        '<th>동'+select('dong','동')+'</th>'+
+        '<th>호수'+input('room','호수','호수 검색')+'</th>'+
+        '<th>평형·타입'+input('sizeType','평형·타입','평형 / 타입')+'</th>'+
+        '<th>거래구분'+select('deal','거래구분')+'</th>'+
+        '<th>매매가(만)'+input('sale','매매가','최소~최대',rangeTitle)+'</th>'+
+        '<th>보증금 / 월세(만)<div class="unit-rent-filters">'+input('deposit','보증금','보증금 범위',rangeTitle)+input('rent','월세','월세 범위',rangeTitle)+'</div></th>'+
+        '<th>소유자·연락처'+input('owner','소유자·연락처','이름 / 전화번호')+'</th>'+
+        '<th>세입자현황'+select('tenant','세입자현황')+'</th>'+
+        '<th>접수일자'+input('received','접수일자','날짜 / 기간','예: 2026-01, 2026-01-01~2026-06-30')+'</th>'+
+        '<th>관리'+select('listed','매물등록 여부')+'</th></tr>';
+      head.dataset.residentialFilters='true';
+      head.querySelectorAll('[data-unit-filter]').forEach(control=>{
+        control.addEventListener(control.tagName==='SELECT' ? 'change' : 'input',()=>{
+          const key=control.dataset.unitFilter;
+          if(key==='dong'){filterFloor=control.value || '전체';renderAll();}
+          else{residentialFilters[key]=control.value;renderTable();}
+        });
+      });
+      const reset=$('unitFiltersReset');
+      reset.hidden=false;
+      reset.addEventListener('click',()=>{
+        Object.keys(residentialFilters).forEach(key=>residentialFilters[key]='');
+        filterFloor='전체';
+        head.querySelectorAll('input[data-unit-filter]').forEach(control=>control.value='');
+        renderAll();
+      });
+    }
+    const options=(key,values,label='전체',includeEmpty=false)=>{
+      const control=head.querySelector('[data-unit-filter="'+key+'"]');
+      const unique=[...new Set(values.filter(v=>String(v || '').trim()).map(v=>String(v).trim()))].sort((a,b)=>a.localeCompare(b,'ko',{numeric:true}));
+      const html='<option value="">'+label+'</option>'+unique.map(value=>'<option value="'+esc(value)+'">'+esc(value)+'</option>').join('')+(includeEmpty?'<option value="__empty__">미입력</option>':'');
+      if(control.innerHTML!==html)control.innerHTML=html;
+      control.value=key==='dong' ? (filterFloor==='전체' ? '' : filterFloor) : residentialFilters[key];
+    };
+    options('dong',units.map(u=>roomParts(u).dong || '미입력'),'전체 동');
+    options('deal',units.map(u=>u.거래구분),'전체',units.some(u=>!String(u.거래구분 || '').trim()));
+    options('tenant',units.map(u=>u.세입자현황 || u.공실여부 || '미확인'));
+    const listed=head.querySelector('[data-unit-filter="listed"]');
+    const listedOptions='<option value="">전체</option><option value="registered">매물등록</option><option value="unregistered">미등록</option>';
+    if(listed.innerHTML!==listedOptions)listed.innerHTML=listedOptions;
+    listed.value=residentialFilters.listed;
+  }
+
   function renderResidentialTable(filtered) {
-    $('unitsTableHead').innerHTML = '<tr><th>동·호수</th><th>평형·타입</th><th>거래구분</th><th>매매가(만)</th><th>보증금 / 월세(만)</th><th>소유자·연락처</th><th>세입자현황</th><th>접수일자</th><th>관리</th></tr>';
+    renderResidentialHeader();
     $('unitsTbody').innerHTML = filtered.map(u => {
-      const ri = units.indexOf(u), notes = unitMemos(u);
+      const ri = units.indexOf(u), notes = unitMemos(u), parts=roomParts(u);
       const sale = u.현_매매가격 == null ? '-' : Number(u.현_매매가격).toLocaleString('ko-KR');
       const tenant = u.세입자현황 || u.공실여부 || '미확인';
-      return `<tr><td><strong>${esc(u.호수 || '-')}</strong>${notes.length ? '<br><small>메모 '+notes.length+'건</small>' : ''}</td><td>${esc(u.평형 || '-')}<br>${esc(u.타입 || '')}</td><td>${esc(u.거래구분 || '-')}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions"><button class="btn-unit-edit" data-ri="${ri}">수정·메모</button>${u.listing_id ? `<a class="btn-listing-view" href="detail.html?id=${encodeURIComponent(u.listing_id)}">매물보기</a>` : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`}</td></tr>`;
+      return `<tr><td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small>${notes.length ? '<br><small>메모 '+notes.length+'건</small>' : ''}</td><td>${esc(u.평형 || '-')}<br>${esc(u.타입 || '')}</td><td>${esc(u.거래구분 || '-')}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions"><button class="btn-unit-edit" data-ri="${ri}">수정·메모</button>${u.listing_id ? `<a class="btn-listing-view" href="detail.html?id=${encodeURIComponent(u.listing_id)}">매물보기</a>` : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`}</td></tr>`;
     }).join('');
   }
 
@@ -1588,9 +1703,10 @@ async function deleteBFile(id) {
   }
 
   function renderTable() {
-    const filtered = filterFloor === "전체"
+    const grouped = filterFloor === "전체"
       ? units
       : units.filter(u => unitGroup(u) === filterFloor);
+    const filtered = residentialUnitMode() ? grouped.filter(matchesResidentialFilters) : grouped;
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
     const listed = filtered.filter(u => String(u.listing_id || '').trim()).length;
@@ -1598,8 +1714,9 @@ async function deleteBFile(id) {
     const tbody = $("unitsTbody");
     const empty = $("unitsEmpty");
 
-    if (residentialUnitMode()) $('unitsTableHead').innerHTML = '<tr><th>동·호수</th><th>평형·타입</th><th>거래구분</th><th>매매가(만)</th><th>보증금 / 월세(만)</th><th>소유자·연락처</th><th>세입자현황</th><th>접수일자</th><th>관리</th></tr>';
+    if (residentialUnitMode()) renderResidentialHeader();
     if (!filtered.length) {
+      if(residentialUnitMode())empty.textContent=units.length ? "조건에 맞는 세대가 없습니다. 필터를 변경하거나 초기화해주세요." : "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.";
       tbody.innerHTML = "";
       empty.style.display = "";
       return;
