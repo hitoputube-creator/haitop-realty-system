@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>HITOP 부동산 매물관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20261007-villagelink" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20261007-kind" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/storage.js?v=20261007-backup"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
@@ -147,6 +147,11 @@
 
     <!-- ===== 검색·정렬·필터 통합 영역 ===== -->
     <section class="card filter-panel-card">
+      <div class="kind-tab-row" id="kindTabRow">
+        <button type="button" class="kind-tab active" data-kind="매물">매물<span class="kind-count" id="kindCountListing"></span></button>
+        <button type="button" class="kind-tab" data-kind="명단">명단<span class="kind-count" id="kindCountRoster"></span></button>
+        <button type="button" class="kind-tab" data-kind="전체">전체<span class="kind-count" id="kindCountAll"></span></button>
+      </div>
       <div class="toolbar-row" id="toolbarRow">
         <button class="btn btn-primary" id="detailRegisterBtn" style="flex:0 0 auto;white-space:nowrap;">+ 새 매물 등록</button>
         <div class="field search-field">
@@ -626,8 +631,8 @@
   </div>
 </div>
 
-<script src="assets/js/listings-shared.js?v=20261007-villagelink"></script>
-<script src="assets/js/properties.js?v=20261007-complexlist"></script>
+<script src="assets/js/listings-shared.js?v=20261007-kind"></script>
+<script src="assets/js/properties.js?v=20261007-kind"></script>
 <script src="assets/js/global-property-search-core.js?v=20261006-compact-search-2"></script>
 <script src="assets/js/global-property-search.js?v=20261006-compact-search-2"></script>
 </body>

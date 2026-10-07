@@ -162,6 +162,13 @@
           <option value="임대">임대</option>
         </select>
       </div>
+      <div class="field">
+        <label>등록구분</label>
+        <select id="edit_listingKind">
+          <option value="매물">매물 (시장에 나온 매물)</option>
+          <option value="명단">명단 (보관·관리용)</option>
+        </select>
+      </div>
       <div class="field" style="grid-column:1 / -1;">
         <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
         <select id="edit_quickBuildingSelect"></select>
@@ -761,6 +768,7 @@ function closeHomepageTab(tab) {
 
     // 기본정보
     document.getElementById("edit_dealType").value           = item.dealType || "";
+    document.getElementById("edit_listingKind").value        = item.listingKind === "명단" ? "명단" : "매물";
     document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
     document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
     if (category.category2 === "아파트" || item.type === "apartment") {
@@ -1412,6 +1420,7 @@ function closeHomepageTab(tab) {
     html += `<section class="detail-section"><div class="detail-section-title">이미지·자료</div><div class="detail-read-grid">${materialHtml}</div></section>`;
 
     html += detailSection("등록상태", [
+      detailField("등록구분", item.listingKind === "명단" ? "명단 (보관·관리용)" : "매물", { required: true }),
       detailField("거래상태", (!item.status || item.status === "광고중" ? "진행중" : item.status), { required: true }),
       ...(OfficeConfig.id === "ktop" ? [] : [detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true })]),
       detailField("등록일", formatDateValue(item.created_at)),
@@ -1655,7 +1664,7 @@ function closeHomepageTab(tab) {
           complexName,
           description:        gv("edit_description"),
           resource_id:        gv("edit_resource_id") || null,
-          is_public:          OfficeConfig.id === "ktop" ? _currentItem.is_public === true : document.getElementById("edit_is_public").checked,
+          is_public:          gv("edit_listingKind") === "명단" ? false : (OfficeConfig.id === "ktop" ? _currentItem.is_public === true : document.getElementById("edit_is_public").checked),
           image_urls:         [],
           imageUrls:          _editImageUrls,
           allImageUrls:       _editImageUrls,
@@ -1663,6 +1672,7 @@ function closeHomepageTab(tab) {
           drive_links:        item.drive_links || [],
           // 기본정보 추가
           dealType:           gv("edit_dealType"),
+          listingKind:        gv("edit_listingKind") === "명단" ? "명단" : "매물",
           // 가격정보
           salePrice:          gv("edit_salePrice"),
           quick_price: (() => {

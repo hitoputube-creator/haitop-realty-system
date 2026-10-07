@@ -42,6 +42,7 @@ let searchKeyword = "";
 let currentSort = "newest";
 let currentPage = 1;
 let includeCompleted = false;
+let currentKindTab = "매물"; // "매물" | "명단" | "전체" — 등록구분 탭
 let viewMode = "card"; // "card" | "list"
 let selectedIds = new Set(); // 선택된 매물 ID 집합
 let deletingSelected = false;
@@ -322,7 +323,7 @@ function renderListView(items) {
     const chk = selectedIds.has(item.id) ? "checked" : "";
     const idArg = idForCall(item.id);
     const statusClass = getStatusClass(item);
-    const name = getListingName(item);
+    const name = getListingName(item) + (isRosterListing(item) ? " [명단]" : "");
     return `<tr class="${statusClass}" onclick="location.href='detail.html?id=${encodeURIComponent(item.id)}'">
       <td class="col-select" onclick="event.stopPropagation()">
         <input type="checkbox" data-sel="${escapeHtml(item.id)}" ${chk} onchange="toggleSelect('${idArg}',this.checked)" />
@@ -592,8 +593,24 @@ function matchesAllFilters(item) {
 }
 
 // 유형·거래유형·검색 조건만 적용한 목록 (컬럼 필터·정렬 전) — 컬럼 필터의 값 목록 계산에도 쓴다.
+function matchesKindTab(item) {
+  if (currentKindTab === "전체") return true;
+  return currentKindTab === "명단" ? isRosterListing(item) : !isRosterListing(item);
+}
+
+function updateKindTabCounts() {
+  const live = allListings.filter(x => x.status !== "거래완료" || includeCompleted);
+  const roster = live.filter(isRosterListing).length;
+  const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = `(${n})`; };
+  set("kindCountListing", live.length - roster);
+  set("kindCountRoster", roster);
+  set("kindCountAll", live.length);
+  document.querySelectorAll("#kindTabRow .kind-tab").forEach(b => b.classList.toggle("active", b.dataset.kind === currentKindTab));
+}
+
 function getBaseFilteredListings() {
   let filtered = allListings.filter(item => {
+    if (!matchesKindTab(item)) return false;
     if (item.status === "거래완료") return includeCompleted && matchesAllFilters(item);
     return matchesAllFilters(item);
   });
@@ -688,6 +705,7 @@ function refreshComplexFilterOptions() {
 function renderList() {
   pruneSelectedIds();
   refreshComplexFilterOptions();
+  updateKindTabCounts();
   listingContainer.innerHTML = "";
   const unifiedPropertyLabel = document.getElementById("unifiedPropertyLabel");
   const unifiedDoneSection   = document.getElementById("unifiedDoneSection");
@@ -753,6 +771,13 @@ document.getElementById("searchInput").addEventListener("keydown", (e) => {
 });
 document.getElementById("searchBtn")?.addEventListener("click", doSearch);
 
+document.querySelectorAll("#kindTabRow .kind-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentKindTab = btn.dataset.kind;
+    currentPage = 1;
+    renderList();
+  });
+});
 document.getElementById("includeCompletedChk").addEventListener("change", (e) => {
   includeCompleted = e.target.checked;
   currentPage = 1;
@@ -911,7 +936,7 @@ function _backupSheet(rows, headers) {
 // ① 읽기 좋게 정리한 시트 — 화면에 보이는 항목 + 숫자 컬럼(정렬·합계용)
 function _buildListingReadableRows(rawRows) {
   const headers = [
-    "매물번호","상태","매물종류","세부구분","거래유형","마을단지","아파트명(단지)","동","호수",
+    "매물번호","등록구분","상태","매물종류","세부구분","거래유형","마을단지","아파트명(단지)","동","호수",
     "매물명","주소","공개주소","면적(표시)","전용면적(평)","공급·분양면적(평)","대지면적(평)","가격(표시)",
     "매매가(원)","분양가(원)","보증금(원)","월세(원)","전세가(만원)",
     "소유주","연락처1","연락처2","설명","빠른메모","소유주메모",
@@ -922,6 +947,7 @@ function _buildListingReadableRows(rawRows) {
     const cat = (typeof normalizeListingCategory === "function" ? normalizeListingCategory(x) : null) || {};
     return {
       "매물번호": _backupBlankDash(getListingNumber(x)),
+      "등록구분": isRosterListing(x) ? "명단" : "매물",
       "상태": getStatusLabel(x),
       "매물종류": getListingCategoryLabel(x),
       "세부구분": cat.subCategory || "",
@@ -1368,7 +1394,7 @@ function saveFilterState() {
   try {
     OfficeStorage.session.setItem(FILTER_STATE_KEY, JSON.stringify({
       searchKeyword, currentMajor, currentSub, currentTag, currentDealFilter,
-      includeCompleted, currentSort, viewMode, columnFilters: listingColumnFilters,
+      includeCompleted, currentKindTab, currentSort, viewMode, columnFilters: listingColumnFilters,
       scrollY: window.scrollY
     }));
   } catch (e) { /* 세션스토리지 사용 불가 시 조용히 무시 */ }
@@ -1392,6 +1418,7 @@ function restoreFilterState() {
     }
 
     includeCompleted = !!saved.includeCompleted;
+    if (["매물","명단","전체"].includes(saved.currentKindTab)) currentKindTab = saved.currentKindTab;
     document.getElementById("includeCompletedChk").checked = includeCompleted;
 
     currentMajor = saved.currentMajor && PROPERTY_CATEGORY_STANDARD[saved.currentMajor] ? saved.currentMajor : "";

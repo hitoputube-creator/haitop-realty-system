@@ -134,6 +134,11 @@ function isNeedsCheck(item) {
   return status.includes("확인") || item.quick_save === true;
 }
 
+// 등록구분: data.listingKind === "명단" 이면 보관·관리용 명단, 그 외(없음 포함)는 모두 매물
+function isRosterListing(item) {
+  return !!item && item.listingKind === "명단";
+}
+
 function getStatusLabel(item) {
   if (item.status === "거래완료") return "거래완료";
   if (isNeedsCheck(item)) return "확인 필요";
@@ -343,7 +348,7 @@ function villageResourceUrl(item, village) {
 function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const card = document.createElement("div");
   const statusClass = getStatusClass(item);
-  card.className = `listing-card listing-card-modern listing-row-card ${statusClass}`;
+  card.className = `listing-card listing-card-modern listing-row-card ${statusClass}${isRosterListing(item) ? " is-roster" : ""}`;
   card.onclick = () => location.href = `detail.html?id=${encodeURIComponent(item.id)}`;
   const isQuick = item.quick_save === true;
   const isDone = item.status === "거래완료";
@@ -353,8 +358,10 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const editAction = isQuick && typeof convertToDetail === "function"
     ? `convertToDetail('${idArg}')`
     : `location.href='detail.html?id=${encodeURIComponent(item.id)}&edit=1'`;
-  const statusAction = isDone || revert ? `handleRevertListing('${idArg}')` : `handleDealDone('${idArg}')`;
-  const statusText = isDone || revert ? "진행중으로" : "거래완료";
+  const isRoster = isRosterListing(item);
+  const statusAction = isRoster && !isDone && !revert ? `handleRosterToListing('${idArg}')`
+    : isDone || revert ? `handleRevertListing('${idArg}')` : `handleDealDone('${idArg}')`;
+  const statusText = isRoster && !isDone && !revert ? "매물로 전환" : isDone || revert ? "진행중으로" : "거래완료";
   const deleteButton = typeof handleDeleteListingFromCard === "function"
     ? `<button class="btn btn-danger lc-delete-btn" onclick="event.stopPropagation();handleDeleteListingFromCard('${idArg}')">삭제</button>`
     : "";
@@ -383,6 +390,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     <div class="listing-cell listing-cell-type" data-label="매물종류">
       <span class="lc-type">${escapeHtml(categoryLabel)}</span>
       <span class="lc-status ${statusClass}">${escapeHtml(statusLabel)}</span>
+      ${isRoster ? '<span class="lc-roster-badge">명단</span>' : ""}
     </div>
     <div class="listing-cell listing-cell-deal" data-label="거래유형">
       ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType] || ""}">${escapeHtml(dealType)}</span>` : "<span>-</span>"}
@@ -423,9 +431,29 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
 
 // ===== 매물 상태 변경 액션 (공개 전환 · 거래완료 처리 · 되돌리기) =====
 // 페이지 분리로 인해, 처리 후 "탭 전환" 대신 현재 페이지에 존재하는 목록만 새로고침한다.
+// 명단 → 매물 전환: 등록구분만 "매물"로 바꾼다 (나머지 정보는 그대로)
+async function handleRosterToListing(id) {
+  const item = allListings.find(x => x.id === id);
+  if (!item) return;
+  if (!confirm("이 명단을 [매물]로 전환하시겠습니까?\n매물 목록에 나타납니다.")) return;
+  try {
+    const current = await getListingById(id);
+    if (!current) throw new Error("매물을 찾을 수 없습니다.");
+    await updateListing(id, Object.assign({}, current, { listingKind: "매물" }));
+    item.listingKind = "매물";
+    showToast("✅ 매물로 전환됐어요");
+    if (typeof renderList === "function") renderList();
+    if (typeof renderDoneList === "function") renderDoneList();
+  } catch (e) { showToast("❌ 전환 실패: " + e.message); }
+}
+
 async function handlePublicToggle(id) {
   const item = allListings.find(x => x.id === id);
   if (!item) return;
+  if (isRosterListing(item)) {
+    showToast("명단은 홈페이지에 공개할 수 없습니다. 먼저 [매물로 전환] 하세요.", 3500);
+    return;
+  }
   // 빠른저장 매물은 홈페이지 공개 차단
   if (item.quick_save === true) {
     showToast("빠른등록 매물은 상세저장을 완료한 뒤 홈페이지로 보낼 수 있습니다.", 3500);

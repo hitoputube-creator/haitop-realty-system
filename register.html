@@ -97,6 +97,13 @@
         </select>
       </div>
       <div class="field">
+        <label>등록구분 <span style="font-size:0.78rem;color:#888;">명단은 매물 목록에 섞이지 않고 [명단] 탭에서 따로 봅니다</span></label>
+        <select id="listingKind">
+          <option value="매물">매물 (시장에 나온 매물)</option>
+          <option value="명단">명단 (보관·관리용)</option>
+        </select>
+      </div>
+      <div class="field">
         <label>거래상태</label>
         <select id="status">
           <option value="광고중">진행중</option>
@@ -871,8 +878,9 @@
       ho: apartmentUnit.ho || "",
       complexName,
       status:      gv('status') || '광고중',
+      listingKind: gv('listingKind') === '명단' ? '명단' : '매물',
       description: gv('description'),
-      is_public:   OfficeConfig.id !== 'ktop' && g('is_public').checked,
+      is_public:   OfficeConfig.id !== 'ktop' && gv('listingKind') !== '명단' && g('is_public').checked,
       resource_id: gv('resource_id') || null,
       image_urls:  [],
       imageUrls:   [],
