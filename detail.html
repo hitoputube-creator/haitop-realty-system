@@ -5,12 +5,32 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-apartment-addresses"></script>
+<script src="assets/js/storage.js?v=20261007-apartment-unit-form"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <script src="assets/js/nav.js?v=20261006-ktop-diary1"></script>
+<style>
+.apartment-listing-form[hidden], [id$="nonApartmentFields"][hidden]{display:none!important}
+.apartment-listing-form .um-section{border-radius:10px;overflow:hidden;margin:10px 0;background:#0d1f3c}
+.apartment-listing-form .um-section-title{padding:6px 10px;font-weight:700;font-size:.82rem;background:#8b6914;color:#fff}
+.apartment-listing-form .sale .um-section-title{background:#1a3a6e}
+.apartment-listing-form .umgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;padding:10px}
+.apartment-listing-form .umfield{min-width:0}
+.apartment-listing-form label{display:block;font-size:.76rem;margin-bottom:4px;color:var(--text-muted)}
+.apartment-listing-form input,.apartment-listing-form select,.apartment-listing-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:7px 9px}
+.apartment-listing-form textarea{min-height:46px;height:46px}
+.apartment-listing-form .span-3{grid-column:span 3}
+.apartment-listing-form .span-2{grid-column:span 2}
+.apartment-listing-form .full{grid-column:1/-1}
+.apartment-listing-form .area-row{display:flex;gap:7px;align-items:center}
+.apartment-listing-form .area-row input{flex:1;width:0}
+.apartment-listing-form .owner-phone-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:6px}
+.apartment-listing-form .amt-hint{font-size:.72rem;color:var(--gold);display:block}
+@media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}}
+@media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}}
+</style>
 </head>
 <body data-nav-active="properties">
 
@@ -145,6 +165,8 @@
       </div>
     </div>
 
+    <div class="apartment-listing-form" id="edit_apartmentListingForm" hidden></div>
+    <div id="edit_nonApartmentFields">
     <!-- 가격정보 -->
     <div class="modal-section-title">💰 가격정보</div>
     <div class="edit-grid-3">
@@ -289,6 +311,7 @@
       </div>
     </div>
 
+    </div><!-- edit_nonApartmentFields -->
     <!-- 홈페이지 공개 -->
     <div class="field" style="margin-bottom:12px;">
       <label>홈페이지 공개</label>
@@ -413,6 +436,7 @@ function closeHomepageTab(tab) {
     }
     const commercialEl = document.getElementById("edit_commercial_section");
     if (commercialEl) commercialEl.style.display = EDIT_COMMERCIAL_CATS.includes(storageCat1) ? "" : "none";
+    if (typeof syncEditApartmentListingForm === "function") syncEditApartmentListingForm();
   }
 
 
@@ -715,6 +739,8 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_complexName").value        = item.complexName || (item.type === "hilsstate" ? "힐스테이트더운정" : "");
     if (typeof syncEditQuickBuildingFields === "function") syncEditQuickBuildingFields();
     document.getElementById("edit_title").value              = item.title || "";
+    fillApartmentListingForm("edit_", item);
+    syncEditApartmentListingForm();
     // 가격정보
     document.getElementById("edit_salePrice").value     = item.salePrice || "";
     document.getElementById("edit_presalePrice").value  = item.presalePrice || "";
@@ -792,6 +818,7 @@ function closeHomepageTab(tab) {
 
   const syncEditApartmentFields = setupApartmentUnitFields("edit_", "edit_category2");
   const syncEditQuickBuildingFields = setupQuickBuildingSelect('edit_quickBuildingSelect', 'edit_publicAddress', 'edit_mapAddress', 'edit_complexName', 'edit_category1', 'edit_category2');
+  const syncEditApartmentListingForm = setupApartmentListingForm("edit_", "edit_category2");
   setupListingDescriptionEmojiToolbar('edit_detailDescription');
 
   // ── 공개주소 → 지도검색주소 자동복사 (번지는 직접 추가 입력) ──────────
@@ -1069,6 +1096,22 @@ function closeHomepageTab(tab) {
   // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나로 합친 압축 표.
   // 기존 필드를 그대로 읽어서 표시만 하며, 새 필드나 저장 구조 변경은 없다.
   function renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact) {
+    if (category.category2 === "아파트" || item.type === "apartment") {
+      const u = apartmentSource(item);
+      const man = n => n == null || n === "" ? "" : Number(n).toLocaleString("ko-KR") + "만원";
+      return [
+        iptRow([["아파트명",u.아파트명],["접수일자",u.접수일자]]),
+        iptRow([["동",u.동],["호수",u.호],["평형",u.평형],["타입",u.타입]]),
+        iptRow([["공개주소 · 새주소(도로명주소)",item.roadAddress],["공개주소 · 구주소(지번주소)",item.jibunAddress]]),
+        iptRow([["분양면적(공급면적)",formatAreaPair(u.분양_m2,u.분양_평)],["전용면적",formatAreaPair(u.전용_m2,u.전용_평)]]),
+        iptRow([["매매·임대 구분",u.거래구분],["매매가",man(u.현_매매가격)],["임대 보증금·전세가",man(u.현_보증금)],["월세",man(u.현_월세)]]),
+        iptRow([["소유자 이름",u.소유주],["소유자 연락처",u.연락처],["통신사",u.소유자통신사]]),
+        iptRow([["세입자 현황",u.세입자현황],["세입자 이름",u.세입자이름],["세입자 연락처",u.세입자연락처]]),
+        iptRow([["세입자 계약 시작일",u.세입자계약시작일],["세입자 계약 종료일",u.세입자계약종료일]]),
+        iptRow([["옵션내역",u.옵션내역],["비고",u.비고]]),
+        ...((Array.isArray(u.추가메모) ? u.추가메모 : []).map(memo => iptRow([["추가메모", (memo.created_at ? new Date(memo.created_at).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"}) + " · " : "") + memo.text]])))
+      ].join("");
+    }
     const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "");
     const rentOrSale = firstDetailValue(
       dealType === "매매" ? formatWonOrText(item.salePrice) : "",
@@ -1479,6 +1522,11 @@ function closeHomepageTab(tab) {
         const newImageFiles      = _editNewImageFiles;
         const _editAdditionalContacts = collectEditAdditionalContacts();
 
+        let apartmentFields = {};
+        if (category2 === "아파트") {
+          try { apartmentFields = collectApartmentListingFields("edit_", item); }
+          catch(error) { showToast(error.message); btn.disabled = false; btn.textContent = "저장"; return; }
+        }
         const updated = Object.assign({}, item, {
           type, category1, category2,
           title:              editTitle || item.title || `${getTypeLabel(type)} · ${publicAddress || "주소미입력"}`,
@@ -1536,6 +1584,7 @@ function closeHomepageTab(tab) {
           stickers,
         });
 
+        Object.assign(updated, apartmentFields);
         try {
           if (newImageFiles.length) {
             const uploadedUrls = await uploadListingImages(newImageFiles, id, _editImageUrls.length);
