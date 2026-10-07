@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+<script src="assets/js/storage.js?v=20261007-apartment-fields"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -126,6 +126,14 @@
       <div class="field">
         <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="edit_privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호" />
+      </div>
+      <div class="field" style="display:none;">
+        <label>동 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
+        <input id="edit_apartmentDong" type="text" placeholder="예) 1101" />
+      </div>
+      <div class="field" style="display:none;">
+        <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
+        <input id="edit_apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
       </div>
       <div class="field">
         <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
@@ -384,6 +392,7 @@ function closeHomepageTab(tab) {
   function updateEditDynamicSections() {
     const cat1 = document.getElementById("edit_category1")?.value || "";
     const cat2 = document.getElementById("edit_category2")?.value || "";
+    if (typeof syncEditApartmentFields === "function") syncEditApartmentFields();
     // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
     const storageCat1 = resolveStorageCategory1(cat1, cat2);
     const hidden = document.getElementById("edit_propertyType");
@@ -696,6 +705,8 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
     document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
+    fillApartmentUnitFields("edit_", item);
+    syncEditApartmentFields();
     // 레거시 type="hilsstate" 매물은 단지명 필드가 비어 있어도 "힐스테이트더운정"을 자동 표시한다(세부유형은 강제 선택하지 않음).
     document.getElementById("edit_complexName").value        = item.complexName || (item.type === "hilsstate" ? "힐스테이트더운정" : "");
     if (typeof syncEditQuickBuildingFields === "function") syncEditQuickBuildingFields();
@@ -775,6 +786,7 @@ function closeHomepageTab(tab) {
   document.getElementById("edit_category1")?.addEventListener("change", () => renderEditCategory2Options());
   document.getElementById("edit_category2")?.addEventListener("change", updateEditDynamicSections);
 
+  const syncEditApartmentFields = setupApartmentUnitFields("edit_", "edit_category2");
   const syncEditQuickBuildingFields = setupQuickBuildingSelect('edit_quickBuildingSelect', 'edit_publicAddress', 'edit_mapAddress', 'edit_complexName', 'edit_category1', 'edit_category2');
   setupListingDescriptionEmojiToolbar('edit_detailDescription');
 
@@ -1451,7 +1463,8 @@ function closeHomepageTab(tab) {
         const type               = gv("edit_propertyType");
         const publicAddress      = gv("edit_publicAddress");
         const mapAddress         = gv("edit_mapAddress");
-        const privateDetailAddress = gv("edit_privateDetailAddress");
+        const apartmentUnit = category2 === "아파트" ? readApartmentUnitFields("edit_") : {};
+        const privateDetailAddress = category2 === "아파트" ? apartmentUnit.privateDetailAddress : gv("edit_privateDetailAddress");
         const complexName        = gv("edit_complexName");
         const editTitle          = gv("edit_title");
         const stickers           = Array.from(document.querySelectorAll("input[name='edit_stickers']:checked")).map(c => c.value);
@@ -1465,6 +1478,8 @@ function closeHomepageTab(tab) {
           publicAddress,
           mapAddress,
           privateDetailAddress,
+          dong: category2 === "아파트" ? apartmentUnit.dong : item.dong,
+          ho: category2 === "아파트" ? apartmentUnit.ho : item.ho,
           complexName,
           description:        gv("edit_description"),
           resource_id:        gv("edit_resource_id") || null,
