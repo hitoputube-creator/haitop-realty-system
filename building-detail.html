@@ -766,6 +766,17 @@ const params     = new URLSearchParams(location.search);
 const buildingId = params.get('id');
 let resourceScope = HitopResourceRooms.readDetailScope(location.search);
 let buildingAddress = '';
+let apartmentBuildingMode = false;
+function isApartmentBuilding(building) {
+  if (!building) return false;
+  const category = String(building.category || '').replace(/\s+/g, '');
+  const name = String(building.name || '').replace(/\s+/g, '');
+  const housingType = String(parseMemoFields(building.memo || '')['주택종류'] || '').replace(/\s+/g, '');
+  // A residential resource room also contains officetels and commercial units.
+  if (/오피스텔|상가/.test(category) || /상가/.test(name)) return false;
+  if (housingType) return housingType === '아파트';
+  return category === '아파트';
+}
 const RESIDENTIAL_OV_FIELDS = ['지번주소','행정구역','동수','세대수','주택종류','분양구분','규모','자료기준일','자료출처'];
 
 /* ── 유틸 ── */
@@ -951,6 +962,7 @@ async function init() {
     const resources = await getDriveResources();
     const building  = resources.find(r => r.id === buildingId);
     if (building) {
+      apartmentBuildingMode = isApartmentBuilding(building);
       if (!resourceScope) {
       await getDriveCategories();
       resourceScope = HitopResourceRooms.resourceRoom(building);
@@ -960,7 +972,7 @@ async function init() {
       const overviewAddresses = parseMemoFields(building.memo || '');
       buildingAddress = overviewAddresses['지번주소'] || overviewAddresses['주소'] || '';
       renderInfoGrid(building.memo || '');
-      if (resourceScope === 'residential') {
+      if (apartmentBuildingMode) {
         document.getElementById('buildingDetailSubtitle').textContent = '평형별 평면도 · 단지 자료 관리';
         document.getElementById('floorPlansTitle').textContent = '📐 평형별 평면도';
         document.getElementById('floorNum').placeholder = '평형·타입 (예: 55A)';
@@ -1003,7 +1015,7 @@ function parseMemoFields(raw) {
 
 function renderInfoGrid(memo) {
   const fields = parseMemoFields(memo);
-  const overviewFields = OV_FIELDS.concat(resourceScope === 'residential' ? RESIDENTIAL_OV_FIELDS.map(key => ({label:key,key})) : []);
+  const overviewFields = OV_FIELDS.concat(apartmentBuildingMode ? RESIDENTIAL_OV_FIELDS.map(key => ({label:key,key})) : []);
   const html = overviewFields.map(f => {
     const val = fields[f.key] || '';
     return `<div class="info-cell">
@@ -1107,11 +1119,11 @@ function renderFloors(floors) {
     return `
     <div class="floor-card" data-floor-id="${esc(f.id)}" draggable="true">
       ${previewHtml}
-      ${resourceScope === 'residential' ? renderPlanAreas(f) : ''}
+      ${apartmentBuildingMode ? renderPlanAreas(f) : ''}
       <div class="floor-card-foot">
         <span class="floor-badge">${badge}</span>
         ${f.source_pdf_url && /^https:\/\//i.test(f.source_pdf_url) ? `<a class="floor-status-link" href="${esc(f.source_pdf_url)}" target="_blank" rel="noopener noreferrer">원본 PDF 보기</a>` : ''}
-        ${image && resourceScope !== 'residential' ? `<a class="floor-status-link" href="floor-status.html?id=${encodeURIComponent(buildingId)}&floorId=${encodeURIComponent(f.id)}">현황보기</a>` : ''}
+        ${image && !apartmentBuildingMode ? `<a class="floor-status-link" href="floor-status.html?id=${encodeURIComponent(buildingId)}&floorId=${encodeURIComponent(f.id)}">현황보기</a>` : ''}
         <button type="button" class="floor-edit-btn" data-floor-id="${esc(f.id)}">수정</button>
         <input type="file" class="floor-replacement" data-floor-id="${esc(f.id)}" accept="image/*,.pdf" aria-label="${badge} 평면도 교체 파일 선택" hidden>
         <button class="btn-icon" title="삭제" onclick="deleteFloor('${f.id}')">🗑</button>
@@ -1237,10 +1249,10 @@ async function uploadFloor() {
   const fileInput = document.getElementById('floorFile');
   const file      = fileInput.files[0];
 
-  if (!floorNum) { showToast(resourceScope === 'residential' ? '평형·타입을 입력하세요.' : '층 번호를 입력하세요.'); return; }
+  if (!floorNum) { showToast(apartmentBuildingMode ? '평형·타입을 입력하세요.' : '층 번호를 입력하세요.'); return; }
   if (!file)     { showToast('파일을 선택하세요.'); return; }
   let areaFields = {};
-  if (resourceScope === 'residential') {
+  if (apartmentBuildingMode) {
     try { areaFields = readPlanAreas(document.getElementById('supplyArea').value, document.getElementById('exclusiveArea').value); }
     catch (e) { showToast(e.message); return; }
   }
@@ -1375,7 +1387,7 @@ async function deleteBFile(id) {
   let filterFloor = "전체";
   let bName       = "";
 
-  const residentialUnitMode = () => resourceScope === 'residential';
+  const residentialUnitMode = () => apartmentBuildingMode;
   let unitPlans = [];
   const todayInKorea = () => new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Seoul'});
   function roomParts(u) {

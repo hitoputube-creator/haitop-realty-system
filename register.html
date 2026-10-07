@@ -1082,7 +1082,12 @@
       if (unit && unit.비고)   descParts.push(`■ 비고: ${unit.비고}`);
 
       // 8) 폼 입력
-      const isResidentialUnit = qp.get("resourceScope") === "residential" || !!(unit && unit.아파트명);
+      const buildingCategory = String(bldgRes && bldgRes.category || "").replace(/\s+/g, "");
+      const housingType = String(memoFields["주택종류"] || "").replace(/\s+/g, "");
+      const isResidentialUnit = !!bldgRes
+        && !/오피스텔|상가/.test(buildingCategory)
+        && !/상가/.test(bldgName)
+        && (housingType ? housingType === "아파트" : buildingCategory === "아파트");
       const unitCategory = isResidentialUnit ? "아파트" : "상가";
       cat1El.value = isResidentialUnit ? "주거용" : "상가사무실";
       renderCat2();
