@@ -67,6 +67,7 @@
   const manwon = n => (n === null || n === undefined || n === "") ? null : Number(n) / 10000;
 
   function buildItem(r) {
+    if (r.item) return JSON.parse(JSON.stringify(r.item)); // 상가·토지 등은 완성된 항목 그대로 사용
     const floor = /^\d+$/.test(r.ho) ? Math.floor(Number(r.ho) / 100) : null;
     const unit = {
       아파트명: r.complex, 동: r.dong, 호: r.ho, 호수: r.unit, 층: floor, 접수일자: r.receivedDate || null,
@@ -92,6 +93,7 @@
   }
 
   function priceText(r) {
+    if (r.priceText !== undefined) return r.priceText;
     if (r.salePrice) return "매매 " + (r.salePrice / 10000).toLocaleString() + "만";
     if (r.monthlyRent) return (r.deposit / 10000).toLocaleString() + "/" + (r.monthlyRent / 10000).toLocaleString() + "만";
     if (r.deposit) return "보증금 " + (r.deposit / 10000).toLocaleString() + "만";
