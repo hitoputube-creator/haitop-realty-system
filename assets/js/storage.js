@@ -250,6 +250,123 @@ function setupApartmentUnitFields(prefix, category2Id) {
   return render;
 }
 
+
+const APARTMENT_LISTING_FORM_HTML = "\n        <div class=\"um-section sale\"><div class=\"um-section-title\">🏠 기본정보</div><div class=\"umgrid\">\n          <div class=\"umfield span-3\"><label>아파트명</label><input id=\"apt_아파트명\" /></div>\n          <div class=\"umfield\"><label>접수일자</label><input id=\"apt_접수일자\" type=\"date\" /></div>\n          <div class=\"umfield\"><label>동 *</label><input id=\"apt_동\" placeholder=\"예: 1101\" /></div>\n          <div class=\"umfield\"><label>호수 *</label><input id=\"apt_호수\" placeholder=\"예: 101\" /></div>\n          <div class=\"umfield\"><label>평형</label><input id=\"apt_평형\" placeholder=\"예: 24평\" /></div>\n          <div class=\"umfield\"><label>타입</label><input id=\"apt_타입\" list=\"aptUnitTypes\" placeholder=\"예: 55A/AS\" /><datalist id=\"aptUnitTypes\"></datalist></div>\n          <div class=\"umfield area-dual full\"><label>분양면적(공급면적)</label><div class=\"area-row\"><input id=\"apt_분양_평\" type=\"number\" min=\"0\" step=\"0.01\" placeholder=\"평\" aria-label=\"분양면적 평\" /><span class=\"area-arrow\">↔</span><input id=\"apt_분양_m2\" type=\"number\" min=\"0\" step=\"0.0001\" placeholder=\"㎡\" aria-label=\"분양면적 제곱미터\" /><span class=\"area-unit\">㎡</span></div></div>\n          <div class=\"umfield area-dual full\"><label>전용면적</label><div class=\"area-row\"><input id=\"apt_전용_평\" type=\"number\" min=\"0\" step=\"0.01\" placeholder=\"평\" aria-label=\"전용면적 평\" /><span class=\"area-arrow\">↔</span><input id=\"apt_전용_m2\" type=\"number\" min=\"0\" step=\"0.0001\" placeholder=\"㎡\" aria-label=\"전용면적 제곱미터\" /><span class=\"area-unit\">㎡</span></div></div>\n        </div></div>\n        <div class=\"um-section current\"><div class=\"um-section-title\">💰 거래·가격</div><div class=\"umgrid\">\n          <div class=\"umfield\"><label>매매·임대 구분</label><select id=\"apt_거래구분\"><option value=\"\">미정</option><option>매매</option><option>전세</option><option>월세</option><option>임대</option><option>매매·임대</option></select></div>\n          <div class=\"umfield\"><label>매매가 (만원)</label><input id=\"apt_매매가\" type=\"number\" min=\"0\" placeholder=\"예: 50000\" /><span class=\"amt-hint\" id=\"aptHint_매매가\"></span></div>\n          <div class=\"umfield\"><label>임대 보증금·전세가 (만원)</label><input id=\"apt_보증금\" type=\"number\" min=\"0\" placeholder=\"예: 30000\" /><span class=\"amt-hint\" id=\"aptHint_보증금\"></span></div>\n          <div class=\"umfield\"><label>월세 (만원)</label><input id=\"apt_월세\" type=\"number\" min=\"0\" placeholder=\"예: 100\" /><span class=\"amt-hint\" id=\"aptHint_월세\"></span></div>\n        </div></div>\n        <div class=\"um-section current\"><div class=\"um-section-title\">👤 소유자 정보</div><div class=\"umgrid\">\n          <div class=\"umfield\"><label>소유자 이름</label><input id=\"apt_소유자\" /></div>\n          <div class=\"umfield span-3\"><label>소유자 연락처</label><div class=\"owner-phone-row\"><select id=\"apt_통신사\" aria-label=\"소유자 통신사\"><option value=\"\">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>알뜰폰</option><option>미확인</option></select><input id=\"apt_연락처\" type=\"tel\" placeholder=\"010-0000-0000\" aria-label=\"소유자 전화번호\" /></div></div>\n        </div></div>\n        <div class=\"um-section sale\"><div class=\"um-section-title\">📅 세입자·계약</div><div class=\"umgrid\">\n          <div class=\"umfield\"><label>세입자 현황</label><select id=\"apt_세입자현황\"><option>미확인</option><option>자가거주</option><option value=\"임차중\">세입자 거주</option><option>공실</option></select></div>\n          <div class=\"umfield\"><label>세입자 이름</label><input id=\"apt_세입자이름\" /></div>\n          <div class=\"umfield span-2\"><label>세입자 연락처</label><input id=\"apt_세입자연락처\" type=\"tel\" placeholder=\"010-0000-0000\" /></div>\n          <div class=\"umfield span-2\"><label>세입자 계약 시작일</label><input id=\"apt_계약시작\" type=\"date\" /></div>\n          <div class=\"umfield span-2\"><label>세입자 계약 종료일</label><input id=\"apt_계약종료\" type=\"date\" /></div>\n        </div></div>\n        <div class=\"um-section current\"><div class=\"um-section-title\">📝 옵션·비고</div><div class=\"umgrid\">\n          <div class=\"umfield span-2\"><label>옵션내역</label><textarea id=\"apt_옵션\" placeholder=\"시스템에어컨, 붙박이장 등\"></textarea></div>\n          <div class=\"umfield span-2\"><label>비고</label><textarea id=\"apt_비고\" placeholder=\"매물 특이사항\"></textarea></div>\n        </div></div><div class=\"um-section current\"><div class=\"um-section-title\">💬 추가메모</div><div class=\"umgrid\"><div class=\"umfield full\"><div data-apt-memos></div><label>새 메모</label><textarea id=\"apt_추가메모\" placeholder=\"상담 내용이나 변경사항을 추가하세요. 기존 메모에 날짜별로 누적됩니다.\"></textarea></div></div></div>";
+function apartmentSource(item = {}) {
+  const u = item.apartmentUnitData || item.import_unit_snapshot || {};
+  const wonToMan = value => value === "" || value == null ? null : Number(String(value).replaceAll(",", "")) / 10000;
+  return { ...u,
+    아파트명: item.complexName ?? u.아파트명 ?? "", 동: item.dong ?? u.동 ?? "", 호: item.ho ?? u.호 ?? "",
+    접수일자: item.received_date ?? u.접수일자 ?? "",
+    평형: item.apartmentSize ?? u.평형 ?? "", 타입: item.apartmentType ?? u.타입 ?? "",
+    거래구분: item.dealType ?? u.거래구분 ?? "",
+    현_매매가격: item.salePrice !== undefined ? wonToMan(item.salePrice) : u.현_매매가격,
+    현_보증금: item.deposit !== undefined ? wonToMan(item.deposit) : u.현_보증금 ?? u.보증금,
+    현_월세: item.monthlyRent !== undefined ? wonToMan(item.monthlyRent) : u.현_월세 ?? u.월차임,
+    소유주: item.owner_name ?? u.소유주 ?? "", 연락처: item.owner_phone1 ?? u.연락처 ?? "",
+    소유자통신사: item.ownerCarrier ?? u.소유자통신사 ?? "",
+    분양_m2: item.supplyAreaM2 ?? u.분양_m2, 전용_m2: item.exclusiveAreaM2 ?? u.전용_m2,
+    비고: item.description ?? u.비고 ?? ""
+  };
+}
+function setupApartmentListingForm(prefix, category2Id) {
+  const host = document.getElementById(prefix + "apartmentListingForm");
+  host.innerHTML = APARTMENT_LISTING_FORM_HTML.replace(/id="([^"]+)"/g, (_, id) => 'id="' + prefix + id + '"')
+    .replace('list="aptUnitTypes"', 'list="' + prefix + 'aptUnitTypes"');
+  for (const name of ["분양", "전용"]) {
+    const py = document.getElementById(prefix + "apt_" + name + "_평");
+    const m2 = document.getElementById(prefix + "apt_" + name + "_m2");
+    py.addEventListener("input", () => { m2.value = py.value === "" ? "" : +(Number(py.value) * (400/121)).toFixed(4); });
+    m2.addEventListener("input", () => { py.value = m2.value === "" ? "" : +(Number(m2.value) / (400/121)).toFixed(2); });
+  }
+  for (const k of ["매매가", "보증금", "월세"]) {
+    const el = document.getElementById(prefix + "apt_" + k);
+    el.addEventListener("input", () => {
+      const n = Number(el.value);
+      document.getElementById(prefix + "aptHint_" + k).textContent = el.value ? n.toLocaleString("ko-KR") + "만원" : "";
+    });
+  }
+  function render() {
+    const apt = document.getElementById(category2Id).value === "아파트";
+    host.hidden = !apt;
+    document.getElementById(prefix + "nonApartmentFields").hidden = apt;
+    for (const id of ["complexName", "apartmentDong", "apartmentHo", "dealType", "title"]) {
+      const el = document.getElementById(prefix + id);
+      if (el) el.closest(".field").style.display = apt ? "none" : (id.startsWith("apartment") ? "none" : "");
+    }
+    if (apt && !document.getElementById(prefix + "apt_아파트명").value) {
+      document.getElementById(prefix + "apt_아파트명").value = document.getElementById(prefix + "complexName").value;
+    }
+  }
+  document.getElementById(category2Id).addEventListener("change", render);
+  fillApartmentListingForm(prefix, {}, true);
+  render();
+  return render;
+}
+function fillApartmentListingForm(prefix, item, isNew = false) {
+  const u = apartmentSource(item), p = key => document.getElementById(prefix + "apt_" + key);
+  const fields = { 아파트명:u.아파트명, 접수일자:u.접수일자 || (isNew ? new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Seoul"}) : ""),
+    동:u.동, 호수:u.호, 평형:u.평형, 타입:u.타입, 거래구분:u.거래구분,
+    매매가:u.현_매매가격, 보증금:u.현_보증금, 월세:u.현_월세, 소유자:u.소유주, 연락처:u.연락처,
+    통신사:u.소유자통신사, 세입자현황:u.세입자현황 || u.공실여부 || "미확인",
+    세입자이름:u.세입자이름, 세입자연락처:u.세입자연락처, 계약시작:u.세입자계약시작일, 계약종료:u.세입자계약종료일,
+    옵션:u.옵션내역, 비고:u.비고, 추가메모:"" };
+  p("통신사").querySelectorAll("[data-custom-carrier]").forEach(el => el.remove());
+  if (fields.통신사 && !Array.from(p("통신사").options).some(el => el.value === fields.통신사)) {
+    const option = document.createElement("option"); option.value = option.textContent = fields.통신사;
+    option.dataset.customCarrier = "true"; p("통신사").appendChild(option);
+  }
+  for (const [key,value] of Object.entries(fields)) p(key).value = value ?? "";
+  if (!p("세입자현황").value) p("세입자현황").value = "미확인";
+  for (const name of ["분양", "전용"]) {
+    const m2 = u[name + "_m2"] ?? (u[name + "_평"] != null ? Number(u[name + "_평"]) * (400/121) : null);
+    p(name + "_m2").value = m2 == null ? "" : +Number(m2).toFixed(4);
+    p(name + "_평").value = m2 == null ? "" : +(Number(m2)/(400/121)).toFixed(2);
+  }
+  const memoHost = document.getElementById(prefix + "apartmentListingForm").querySelector("[data-apt-memos]");
+  memoHost.replaceChildren();
+  for (const memo of Array.isArray(u.추가메모) ? u.추가메모 : []) {
+    const row = document.createElement("div");
+    row.style.cssText = "white-space:pre-wrap;font-size:.8rem;padding:6px 0;border-bottom:1px solid #ffffff18";
+    row.textContent = (memo.created_at ? new Date(memo.created_at).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"}) + "\n" : "") + memo.text;
+    memoHost.appendChild(row);
+  }
+  for(const k of ["매매가","보증금","월세"]) document.getElementById(prefix + "aptHint_" + k).textContent = fields[k] == null ? "" : Number(fields[k]).toLocaleString("ko-KR")+"만원";
+}
+function collectApartmentListingFields(prefix, original = {}) {
+  const value = key => document.getElementById(prefix + "apt_" + key).value.trim();
+  const num = key => {
+    if (!value(key)) return null;
+    const n = Number(value(key));
+    if (!Number.isFinite(n) || n < 0) throw new Error("면적과 가격은 0 이상의 숫자로 입력하세요.");
+    return n;
+  };
+  const name = value("아파트명"), dong = normalizeApartmentUnit(value("동"), "동"), ho = normalizeApartmentUnit(value("호수"), "호");
+  if (!name || !dong || !ho) throw new Error("아파트명과 동·호수를 입력하세요.");
+  if (value("계약시작") && value("계약종료") && value("계약시작") > value("계약종료")) throw new Error("계약 종료일은 시작일 이후여야 합니다.");
+  const supply = num("분양_m2"), exclusive = num("전용_m2");
+  if (supply != null && exclusive != null && supply < exclusive) throw new Error("분양면적은 전용면적 이상이어야 합니다.");
+  const tenant = value("세입자현황"), source = apartmentSource(original);
+  const notes = Array.isArray(source.추가메모) ? source.추가메모.slice() : [];
+  if (value("추가메모")) notes.push({id:crypto.randomUUID(),text:value("추가메모"),created_at:new Date().toISOString()});
+  const u = {...source, 아파트명:name, 동:dong, 호:ho, 호수:dong+"동 "+ho+"호",
+    층:/^\d+$/.test(ho) ? Math.floor(Number(ho)/100) : null, 접수일자:value("접수일자") || null,
+    평형:value("평형") || null, 타입:value("타입") || null, 분양_m2:supply, 전용_m2:exclusive,
+    분양_평:supply == null ? null : supply/(400/121), 전용_평:exclusive == null ? null : exclusive/(400/121),
+    거래구분:value("거래구분") || null, 현_매매가격:num("매매가"), 현_보증금:num("보증금"), 현_월세:num("월세"),
+    소유주:value("소유자") || null, 연락처:value("연락처") || null, 소유자통신사:value("통신사") || null,
+    세입자현황:tenant, 공실여부:tenant, 세입자이름:value("세입자이름") || null, 세입자연락처:value("세입자연락처") || null,
+    세입자계약시작일:value("계약시작") || null, 세입자계약종료일:value("계약종료") || null,
+    옵션내역:value("옵션") || null, 비고:value("비고") || null, 추가메모:notes, updated_at:new Date().toISOString()};
+  const won = n => n == null ? "" : String(n * 10000);
+  return {apartmentUnitData:u, complexName:name, buildingName:name, dong, ho, privateDetailAddress:u.호수,
+    title:name+" "+u.호수, received_date:u.접수일자, apartmentSize:u.평형, apartmentType:u.타입,
+    dealType:u.거래구분 || "", salePrice:won(u.현_매매가격), deposit:won(u.현_보증금), monthlyRent:won(u.현_월세),
+    supplyAreaM2:supply, supplyAreaPy:u.분양_평, exclusiveAreaM2:exclusive, exclusiveAreaPy:u.전용_평,
+    owner_name:u.소유주 || "", owner_phone1:u.연락처 || "", ownerCarrier:u.소유자통신사,
+    description:u.비고 || "", floorInfo:u.층 == null ? "" : u.층+"층"};
+}
+
 function setupListingDescriptionEmojiToolbar(textareaId) {
   const textarea = document.getElementById(textareaId);
   const toolbar = document.querySelector(`[data-emoji-target="${textareaId}"]`);
