@@ -239,7 +239,7 @@
   <div class="toast" id="toast"></div>
 </div>
 
-<script src="assets/js/storage.js?v=20261007-building-register"></script>
+<script src="assets/js/storage.js?v=20261007-complex-register"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -387,7 +387,8 @@ async function fillFromBuildingRegister() {
   button.textContent = '건축물대장 조회 중…';
   let stage = '조회';
   try {
-    const info = await lookupBuildingRegister(address);
+    const isApartment = /아파트/.test(String(buildingData.category || ''));
+    const info = await lookupBuildingRegister(address,isApartment ? {scope:'complex',apartment:true,buildingName:buildingData.name} : {});
     const date = String(info.use_apr_day || '');
     const candidates = {
       '토지면적': formatRegisterArea(info.land_area_m2),

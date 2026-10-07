@@ -261,6 +261,33 @@ async function queryBuildingRegister(body: any) {
   const codes = await lookupDongCode(parsed.sigunguName, parsed.dongName);
   if (!codes) throw new Error("주소의 법정동코드를 확인하지 못했습니다.");
   const titles = await readHubRows("getBrTitleInfo", codes, parsed);
+  if (body.scope === "complex") {
+    if (ho || dong) throw new Error("단지 기본정보 조회에는 동·호수를 입력하지 않습니다.");
+    const recap = selectRecap(await readHubRows("getBrRecapTitleInfo",codes,parsed),{bldNm:body.buildingName || ""});
+    if (!recap) throw new Error("해당 주소의 총괄표제부를 하나로 확인하지 못했습니다. 단지명과 지번주소를 확인해주세요.");
+    const buildings = [...new Map(uniqueRows(titles).map(row=>[String(row.mgmBldrgstPk || JSON.stringify(row)),row])).values()];
+    const residential = buildings.filter(row=>/아파트|공동주택/.test(String(row.mainPurpsCdNm || "")+String(row.etcPurps || "")));
+    const main = residential.length ? residential : buildings.filter(row=>String(row.mainAtchGbCdNm || "").includes("주"));
+    const relevant = main.length ? main : buildings;
+    const distinct = (key: string) => [...new Set(relevant.map(row=>String(row[key] || "").trim()).filter(Boolean))];
+    const above = relevant.map(row=>numericField(row,"grndFlrCnt")).filter(value=>value!=null && value>0) as number[];
+    const below = relevant.map(row=>numericField(row,"ugrndFlrCnt")).filter(value=>value!=null) as number[];
+    const range = (values: number[]) => Math.min(...values)===Math.max(...values) ? String(values[0]) : Math.min(...values)+"~"+Math.max(...values);
+    const floorInfo = above.length ? "지상 "+range(above)+"층"+(below.length && Math.max(...below)>0 ? "/지하 "+Math.max(...below)+"층" : "") : null;
+    const structures=distinct("strctCdNm"),dates=distinct("useAprDay"),purposes=distinct("mainPurpsCdNm");
+    const sumArea=(key: string)=>{const values=buildings.map(row=>numericField(row,key));return values.length && values.every(value=>value!=null) ? Math.round(values.reduce((sum:number,value)=>sum+(value || 0),0)*10000)/10000 : null;};
+    const total=numericField(recap,"totArea") ?? sumArea("totArea");
+    const footprint=numericField(recap,"archArea") ?? sumArea("archArea");
+    const parking=parkingTotal(recap);
+    return {area_m2:total,total_area_m2:total,land_area_m2:numericField(recap,"platArea"),footprint_area_m2:footprint,
+      building_name:recap.bldNm || body.buildingName || null,building_scope:"단지 전체",building_match_verified:true,
+      parking_count:parking,parking_scope:"단지 전체",parking_warning:parking==null ? "총괄표제부의 주차대수를 확인하지 못했습니다." : null,
+      structure:structures.length ? structures.join(" / ") : recap.strctCdNm || null,
+      main_purpose:recap.mainPurpsCdNm || purposes.join(" / ") || null,floor_info:floorInfo,
+      use_apr_day:dates.length===1 ? dates[0] : recap.useAprDay || null,
+      exclusive_area_m2:null,common_area_m2:null,supply_area_m2:null,unit_area_warning:false,
+      queried_lot:{sigungu:parsed.sigunguName,dong:parsed.dongName,bun:parsed.bun,ji:parsed.ji},lookup_version:"20261007-exact-building"};
+  }
   const title = selectTitle(titles, dong);
   if (!title) throw new Error(dong ? dong + "동의 표제부를 확인하지 못했습니다. 주소와 동을 확인해주세요." : "같은 지번에 여러 건물이 있습니다. 동을 입력해주세요.");
   const unit = ho ? await lookupExclusiveArea(codes, parsed, ho, dong || rowDong(title)) : null;

@@ -41,6 +41,14 @@ async function tests(){
  assert.equal(data.structure,'철근콘크리트구조');assert.equal(data.main_purpose,'아파트');assert.equal(data.total_area_m2,16000);assert.equal(data.floor_info,'지상 25층/지하 2층');
  assert.equal(data.parking_count,1620);assert.equal(data.parking_scope,'단지 전체');assert(requests.some(u=>u.pathname.endsWith('getBrTitleInfo')&&u.searchParams.get('pageNo')==='2'));
  assert(requests.filter(u=>u.pathname.includes('BldRgstHub')).every(u=>u.searchParams.get('bun')==='1026'));
+ const previousTitles=titleRows,previousRecaps=recapRows;
+ titleRows=[{...title,dongNm:'1001동',mgmBldrgstPk:'1001',grndFlrCnt:9},{...title,dongNm:'1002동',mgmBldrgstPk:'1002',grndFlrCnt:20},{...title,dongNm:'상가',mgmBldrgstPk:'shop',mainPurpsCdNm:'근린생활시설',strctCdNm:'일반철골구조'}];
+ recapRows=[{bldNm:'초롱꽃마을10단지',totArea:120000,archArea:9000,platArea:55000,totPkngCnt:1200}];
+ const complexRequest=()=>serve(new Request('https://example.test/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address,scope:'complex',buildingName:'초롱꽃마을10단지',apartment:true})}));
+ response=await complexRequest();assert.equal(response.status,200);data=await response.json();
+ assert.equal(data.building_scope,'단지 전체');assert.equal(data.total_area_m2,120000);assert.equal(data.footprint_area_m2,9000);assert.equal(data.land_area_m2,55000);assert.equal(data.parking_count,1200);assert.equal(data.structure,'철근콘크리트구조');assert.equal(data.floor_info,'지상 9~20층/지하 2층');assert.equal(data.exclusive_area_m2,null);
+ recapRows=[];response=await complexRequest();assert.equal(response.status,422);
+ titleRows=previousTitles;recapRows=previousRecaps;
  // 1302호 서버 표기 차이, 단지 주차 누락과 동일 동의 모호한 전유부.
  secondHoRows=[exclusive,...common];unitRows=[];recapRows=[];response=await request();data=await response.json();assert.equal(data.exclusive_area_m2,84.95);assert.equal(data.parking_count,null);assert(data.parking_warning);
  unitRows=[exclusive,{...exclusive,mgmBldrgstPk:'ambiguous'}];secondHoRows=unitRows;
@@ -118,5 +126,10 @@ async function live(){
  assert.equal(data.unit_dong_name,'717동');assert.equal(data.exclusive_area_m2,84.95);assert.equal(data.unit_floor,'13층');assert(data.structure.includes('철근콘크리트'));assert(/아파트|공동주택/.test(data.main_purpose));
  assert(data.common_area_m2>0);assert(data.total_area_m2>199.2);assert(data.footprint_area_m2>199.2);assert.equal(data.parking_scope,'단지 전체');assert(data.parking_count==null||data.parking_count>2);
  console.log('PASS: deployed live Hanbit 717동 1302호 matches the provided building-register document.');
+ const complexResponse=await fetch(endpoint,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({address:'경기도 파주시 동패동 2126',scope:'complex',buildingName:'초롱꽃마을10단지',apartment:true}),signal:AbortSignal.timeout(100000)});
+ const complex=await complexResponse.json();
+ console.log('Live Chorong 10 complex:',JSON.stringify({status:complexResponse.status,error:complex.error,scope:complex.building_scope,building:complex.building_name,lot:complex.queried_lot,total:complex.total_area_m2,footprint:complex.footprint_area_m2,land:complex.land_area_m2,parking:complex.parking_count,structure:complex.structure,floors:complex.floor_info}));
+ assert.equal(complexResponse.status,200,complex.error);assert.equal(complex.building_scope,'단지 전체');assert.equal(complex.queried_lot.bun,'2126');assert(complex.total_area_m2>0);assert(complex.parking_count>0);assert.equal(complex.exclusive_area_m2,null);
+ console.log('PASS: deployed complex lookup requires no dong/ho and reads recap values.');
 }
 (async()=>{await tests();if(process.argv.includes('--live'))await live();})().catch(error=>{console.error(error);process.exit(1)});

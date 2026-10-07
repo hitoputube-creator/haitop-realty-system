@@ -1090,7 +1090,7 @@ async function lookupBuildingRegister(address, opts) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/functions/v1/lookup-building-register", {
     method: "POST",
     headers,
-    body: JSON.stringify({ address: String(address || "").replace(/\([^)]*\)/g, "").replace(/（[^）]*）/g, "").trim(), hoNm: opts.hoNm || "", dongNm: opts.dongNm || "", apartment: opts.apartment === true })
+    body: JSON.stringify({ address: String(address || "").replace(/\([^)]*\)/g, "").replace(/（[^）]*）/g, "").trim(), hoNm: opts.hoNm || "", dongNm: opts.dongNm || "", apartment: opts.apartment === true, scope:opts.scope || "", buildingName:opts.buildingName || "" })
   }, timeout);
   let data = null;
   try { data = await res.json(); } catch (e) { /* 응답 본문이 JSON이 아닌 경우 무시 */ }
