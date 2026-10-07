@@ -429,6 +429,30 @@ function setupApartmentListingForm(prefix, category2Id) {
   render();
   return render;
 }
+function apartmentRemarksOnly(raw) {
+  const text=String(raw || "").trim();
+  const lines=text.split(/\r?\n/);
+  const imported=/^\[엑셀 원본[^\]]*\]/.test(text);
+  const structured=/^(?:동|호|호수|타입|평형|가격|소유주|연락처|통신사|거래구분|아파트명|접수일자)\s*[:：]/;
+  if(!imported && !(lines.some(line=>structured.test(line.trim())) && lines.some(line=>/^비고\s*[:：]/.test(line.trim()))))return text;
+  let reading=false;const remarks=[];
+  for(const line of lines){
+    const trimmed=line.trim(),match=trimmed.match(/^비고\s*[:：]\s*(.*)$/);
+    if(match){reading=true;if(match[1])remarks.push(match[1]);continue;}
+    if(/^\[엑셀 원본[^\]]*\]/.test(trimmed)||structured.test(trimmed)){reading=false;continue;}
+    if(reading)remarks.push(line);
+  }
+  return remarks.join("\n").trim();
+}
+function apartmentMemoEntries(memos, remarks) {
+  const seen=new Set([String(remarks || "").replace(/\s+/g," ").trim()].filter(Boolean));
+  return (Array.isArray(memos) ? memos : []).flatMap(memo=>{
+    const raw=String(memo.text || "").trim(),text=apartmentRemarksOnly(raw),key=text.replace(/\s+/g," ").trim();
+    if(!key || (raw!==text && seen.has(key)))return [];
+    seen.add(key);return [{...memo,text}];
+  });
+}
+
 function fillApartmentListingForm(prefix, item, isNew = false) {
   const host=document.getElementById(prefix+"apartmentListingForm");
   host._apartmentItem=item;
@@ -439,7 +463,7 @@ function fillApartmentListingForm(prefix, item, isNew = false) {
     매매가:u.현_매매가격, 보증금:u.현_보증금, 월세:u.현_월세, 소유자:u.소유주, 연락처:u.연락처,
     통신사:u.소유자통신사, 세입자현황:u.세입자현황 || u.공실여부 || "미확인",
     세입자이름:u.세입자이름, 세입자연락처:u.세입자연락처, 계약시작:u.세입자계약시작일, 계약종료:u.세입자계약종료일,
-    옵션:u.옵션내역, 비고:u.비고, 추가메모:"" };
+    옵션:u.옵션내역, 비고:apartmentRemarksOnly(u.비고), 추가메모:"" };
   p("통신사").querySelectorAll("[data-custom-carrier]").forEach(el => el.remove());
   if (fields.통신사 && !Array.from(p("통신사").options).some(el => el.value === fields.통신사)) {
     const option = document.createElement("option"); option.value = option.textContent = fields.통신사;
@@ -454,7 +478,7 @@ function fillApartmentListingForm(prefix, item, isNew = false) {
   }
   const memoHost = document.getElementById(prefix + "apartmentListingForm").querySelector("[data-apt-memos]");
   memoHost.replaceChildren();
-  for (const memo of Array.isArray(u.추가메모) ? u.추가메모 : []) {
+  for (const memo of apartmentMemoEntries(u.추가메모,fields.비고)) {
     const row = document.createElement("div");
     row.style.cssText = "white-space:pre-wrap;font-size:.8rem;padding:6px 0;border-bottom:1px solid #ffffff18";
     row.textContent = (memo.created_at ? new Date(memo.created_at).toLocaleString("ko-KR",{timeZone:"Asia/Seoul"}) + "\n" : "") + memo.text;
@@ -476,7 +500,7 @@ function collectApartmentListingFields(prefix, original = {}) {
   const supply = num("분양_m2"), exclusive = num("전용_m2");
   if (supply != null && exclusive != null && supply < exclusive) throw new Error("분양면적은 전용면적 이상이어야 합니다.");
   const tenant = value("세입자현황"), source = apartmentSource(original);
-  const notes = Array.isArray(source.추가메모) ? source.추가메모.slice() : [];
+  const notes = apartmentMemoEntries(source.추가메모,value("비고"));
   if (value("추가메모")) notes.push({id:crypto.randomUUID(),text:value("추가메모"),created_at:new Date().toISOString()});
   const u = {...source, 아파트명:name, 동:dong, 호:ho, 호수:dong+"동 "+ho+"호",
     층:/^\d+$/.test(ho) ? Math.floor(Number(ho)/100) : null, 접수일자:value("접수일자") || null,

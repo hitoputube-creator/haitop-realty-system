@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-ktop-internal"></script>
+<script src="assets/js/storage.js?v=20261007-apartment-layout2"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -31,30 +31,39 @@
 @media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}}
 @media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}}
 
-/* 아파트 상세: 각 행의 항목명과 값을 가로로 맞춥니다. */
-.apartment-details-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+/* 아파트 상세 */
+.apartment-details-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0;align-items:start}
+.apartment-details-layout>.apartment-info-section{grid-column:1/-1}
+.apartment-details-column{display:flex;flex-direction:column;gap:12px;min-width:0}
 .apartment-details-layout .detail-section{margin:0;padding:14px;min-width:0}
-.apartment-details-layout .detail-section:first-child{grid-column:1/-1}
 .apartment-details-layout .detail-section-title{margin:0 0 10px;font-size:.92rem}
-.apartment-details-layout .detail-section:not(:first-child) .apartment-info-row{grid-template-columns:90px minmax(0,1fr)}
-.apartment-details-layout .detail-section:last-child .ipt-value{max-height:120px;overflow-y:auto}
-@media(max-width:850px){.apartment-details-layout{grid-template-columns:minmax(0,1fr)}}
+.apartment-details-column .apartment-info-row{grid-template-columns:90px minmax(0,1fr)}
+.apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}
+.apartment-details-column .owner-contact-row .ipt-value{white-space:nowrap}
+.apartment-memo-section .ipt-value{max-height:120px;overflow-y:auto}
 .apartment-info-table{border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
 .apartment-info-row{display:grid;grid-template-columns:repeat(var(--pairs),minmax(96px,128px) minmax(0,1fr))}
+.apartment-info-row.apartment-unit-row{grid-template-columns:76px minmax(50px,.8fr) 76px minmax(146px,1.4fr) 76px minmax(70px,1fr) 76px minmax(45px,.7fr)}
 .apartment-info-row>div{min-width:0;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.1);line-height:1.5;box-sizing:border-box}
 .apartment-info-row:last-child>div{border-bottom:0}
 .apartment-info-row .ipt-label{display:flex;align-items:center;color:var(--gold);background:#0f2032;font-size:.82rem;font-weight:700;border-right:1px solid rgba(255,255,255,.08)}
 .apartment-info-row .ipt-value{display:flex;align-items:center;background:#182c43;font-size:.88rem;overflow-wrap:anywhere;white-space:pre-wrap}
 .apartment-info-row[style="--pairs:1"] .ipt-value{display:block}
-@media(max-width:850px){.apartment-info-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-info-row[style="--pairs:1"]{grid-template-columns:108px minmax(0,1fr)}}
-@media(max-width:580px){.apartment-info-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row[style="--pairs:1"]{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row>div{padding:9px 10px}}
-
-.apartment-detail-title{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.apartment-detail-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 24px}
 .apartment-title-name{line-height:1.4}
-.apartment-title-unit{display:inline-flex;align-items:center;gap:10px;flex-shrink:0;padding:5px 12px;border:1px solid rgba(212,175,55,.35);border-radius:8px;background:rgba(212,175,55,.08);font-size:.95rem;color:var(--text-main,#e8eef7);white-space:nowrap}
-.apartment-title-unit>span{color:var(--gold);font-weight:400}
+.apartment-title-unit{display:inline-flex;align-items:baseline;gap:18px;color:var(--text-main,#e8eef7);white-space:nowrap;line-height:1.3}
+.apartment-unit-part{display:inline-flex;align-items:baseline;gap:4px}
+.apartment-unit-part strong{font-size:1.6rem;font-weight:750;letter-spacing:-.02em}
+.apartment-unit-part small{font-size:1rem;font-weight:600;color:var(--text-muted)}
 .apartment-unit-action{gap:8px;flex-wrap:wrap}
-.apartment-unit-action .btn{padding:3px 7px;font-size:.72rem;white-space:nowrap}
+.apartment-info-row .ipt-value.apartment-unit-action{padding-right:6px}
+.apartment-autofill-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;min-height:28px;padding:4px 8px;border:1px solid rgba(212,175,55,.28);border-radius:6px;background:rgba(212,175,55,.09);color:var(--gold);font-family:inherit;font-size:.74rem;font-weight:600;line-height:1.2;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.apartment-autofill-btn:hover{background:rgba(212,175,55,.17);border-color:rgba(212,175,55,.6)}
+.apartment-autofill-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.apartment-autofill-btn:disabled{opacity:.6;cursor:wait}
+.apartment-autofill-btn svg{width:13px;height:13px;flex-shrink:0}
+@media(max-width:850px){.apartment-info-row.apartment-unit-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-details-layout{grid-template-columns:minmax(0,1fr)}.apartment-info-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-info-row[style="--pairs:1"]{grid-template-columns:108px minmax(0,1fr)}.apartment-details-column .apartment-info-row{grid-template-columns:90px minmax(0,1fr)}.apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}}
+@media(max-width:580px){.apartment-info-row.apartment-unit-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row[style="--pairs:1"]{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row>div{padding:9px 10px}.apartment-details-column .owner-contact-row{grid-template-columns:74px minmax(0,1fr) 52px 48px}.apartment-details-column .owner-contact-row>div{padding:8px 6px}.apartment-detail-title{gap:8px 18px}.apartment-unit-part strong{font-size:1.45rem}}
 </style>
 </head>
 <body data-nav-active="properties">
@@ -1170,33 +1179,39 @@ function closeHomepageTab(tab) {
       const u = apartmentSource(item);
       const addresses=apartmentDetailAddresses(item);
       const man = n => n == null || n === "" ? "" : Number(n).toLocaleString("ko-KR") + "만원";
-      const row = pairs => '<div class="apartment-info-row" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => label==='호수' ? '<div class="ipt-label">호수</div><div class="ipt-value apartment-unit-action"><span>'+escapeHtml(detailText(value)||'—')+'</span><button type="button" class="btn btn-ghost" id="autoFillApartmentBtn">자동입력</button></div>' : iptCell(label,value)).join('') + '</div>';
-      const section = (title, rows) => '<section class="detail-section apartment-info-section"><div class="detail-section-title">' + escapeHtml(title) + '</div><div class="apartment-info-table">' + rows.map(row).join('') + '</div></section>';
+      const row = pairs => '<div class="apartment-info-row' + (pairs.length===2 && pairs[0][0]==='연락처' && pairs[1][0]==='통신사' ? ' owner-contact-row' : pairs.length===4 ? ' apartment-unit-row' : '') + '" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => label==='호수' ? '<div class="ipt-label">호수</div><div class="ipt-value apartment-unit-action"><span>'+escapeHtml(detailText(value)||'—')+'</span><button type="button" class="apartment-autofill-btn" id="autoFillApartmentBtn" title="단지 배치표에서 평형·타입·면적·주소 자동입력" aria-label="단지 자료로 자동입력"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 7a7 7 0 0 1 11.5-1L20 9M4 15l2.5 3A7 7 0 0 0 18 17"/></svg>자동입력</button></div>' : iptCell(label,value)).join('') + '</div>';
+      const section = (title, rows) => '<section class="detail-section apartment-info-section' + (title==='옵션·메모' ? ' apartment-memo-section' : '') + '"><div class="detail-section-title">' + escapeHtml(title) + '</div><div class="apartment-info-table">' + rows.map(row).join('') + '</div></section>';
       const memoRows = [
         ...(u.옵션내역 ? [[["옵션내역",u.옵션내역]]] : []),
         ...apartmentNotes(item).map(note => [note])
       ];
-      return '<div class="apartment-details-layout">' + [
-        section("기본정보", [
-          [["아파트명",u.아파트명],["접수일자",u.접수일자]],
-          [["동",u.동],["호수",u.호],["평형",u.평형],["타입",u.타입]],
-          [["새주소(도로명주소)",addresses.roadAddress]],
-          [["구주소(지번주소)",addresses.jibunAddress]],
-          [["분양면적(공급면적)",formatAreaPair(u.분양_m2,u.분양_평)],["전용면적",formatAreaPair(u.전용_m2,u.전용_평)]]
-        ]),
+      const basic = section("기본정보", [
+        [["아파트명",u.아파트명],["접수일자",u.접수일자]],
+        [["동",u.동],["호수",u.호],["평형",u.평형],["타입",u.타입]],
+        [["분양면적(공급면적)",formatAreaPair(u.분양_m2,u.분양_평)],["전용면적",formatAreaPair(u.전용_m2,u.전용_평)]],
+        [["새주소(도로명주소)",addresses.roadAddress]],
+        [["구주소(지번주소)",addresses.jibunAddress]]
+      ]);
+      const left = [
         section("가격정보", [
           [["거래구분",u.거래구분],["매매가",man(u.현_매매가격)]],
           [["보증금·전세가",man(u.현_보증금)],["월세",man(u.현_월세)]]
         ]),
+        ...(memoRows.length ? [section("옵션·메모",memoRows)] : [])
+      ].join("");
+      const right = [
         section("소유자 정보", [
-          [["이름",u.소유주],["연락처",u.연락처],["통신사",u.소유자통신사]]
+          [["이름",u.소유주]],
+          [["연락처",u.연락처],["통신사",u.소유자통신사]]
         ]),
         section("세입자 정보", [
           [["현황",u.세입자현황],["이름",u.세입자이름],["연락처",u.세입자연락처]],
           [["계약 시작일",u.세입자계약시작일],["계약 종료일",u.세입자계약종료일]]
-        ]),
-        ...(memoRows.length ? [section("옵션·메모", memoRows)] : [])
-      ].join("") + '</div>';
+        ])
+      ].join("");
+      return '<div class="apartment-details-layout">'+basic+
+        '<div class="apartment-details-column">'+left+'</div>'+
+        '<div class="apartment-details-column">'+right+'</div></div>';
     }
     const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "");
     const rentOrSale = firstDetailValue(
@@ -1314,7 +1329,7 @@ function closeHomepageTab(tab) {
 
     if (category.category2 === "아파트" || item.type === "apartment") {
       const u=apartmentSource(item);
-      html += `<div class="detail-title apartment-detail-title"><span class="apartment-title-name">${escapeHtml(u.아파트명 || complexName || "아파트")}</span><span class="apartment-title-unit">${escapeHtml(u.동 || "—")}동 <span>·</span> ${escapeHtml(u.호 || "—")}호</span></div>`;
+      html += `<div class="detail-title apartment-detail-title"><span class="apartment-title-name">${escapeHtml(u.아파트명 || complexName || "아파트")}</span><span class="apartment-title-unit"><span class="apartment-unit-part"><strong>${escapeHtml(u.동 || "—")}</strong><small>동</small></span><span class="apartment-unit-part"><strong>${escapeHtml(u.호 || "—")}</strong><small>호</small></span></span></div>`;
     } else html += `<div class="detail-title">${escapeHtml(item.title || getListingCategoryLabel(item))}</div>`;
 
     html += `<div class="detail-actions">`;
