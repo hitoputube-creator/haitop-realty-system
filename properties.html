@@ -92,7 +92,7 @@
     .filter-panel-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .filter-panel-row .filter-row { flex: 1 1 auto; }
     .complex-filter-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
-    .complex-filter-wrap select { width: auto; min-width: 150px; padding: 5px 8px; font-size: 0.8rem; }
+    .complex-filter-wrap select { width: auto; min-width: 150px; max-width: 320px; padding: 5px 8px; font-size: 0.8rem; text-overflow: ellipsis; }
     /* 거래유형 필터 — 유형별 필터 오른쪽에 별도로 노출 (주거용 선택 시 전세·월세로 교체) */
     .deal-filter-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
     .deal-filter-wrap .filter-row { flex-wrap: nowrap; }
@@ -627,7 +627,7 @@
 </div>
 
 <script src="assets/js/listings-shared.js?v=20261007-progress-status"></script>
-<script src="assets/js/properties.js?v=20261007-colfilter"></script>
+<script src="assets/js/properties.js?v=20261007-complexlist"></script>
 <script src="assets/js/global-property-search-core.js?v=20261006-compact-search-2"></script>
 <script src="assets/js/global-property-search.js?v=20261006-compact-search-2"></script>
 </body>

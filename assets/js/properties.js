@@ -567,7 +567,7 @@ function closeHomepageTab(tab) {
 }
 
 function matchesCategoryFilter(item) {
-  if (currentTag && !matchesComplexTag(item, currentTag)) return false;
+  if (currentTag && !matchesSelectedComplex(item, currentTag)) return false;
   if (!currentMajor) return true;
   const cat = normalizeListingCategory(item);
   if (cat.majorKey !== currentMajor) return false;
@@ -643,8 +643,51 @@ function renderPagination(total) {
   paginationEl.appendChild(next);
 }
 
+
+/* ══════════════════════════════════════════
+   단지 드롭다운 — 등록된 매물의 아파트(단지)명 명단을 자동으로 채운다.
+   값: "" = 전체, 기존 키(예: 힐스테이트더운정), "apt:<전체 단지명>" = 명단에서 고른 단지
+══════════════════════════════════════════ */
+const COMPLEX_APT_PREFIX = "apt:";
+function getListingComplexFullName(item) {
+  const u = (item && item.apartmentUnitData) || {};
+  return String(u.아파트명 || (item && (item.complexName || item.buildingName)) || "").trim();
+}
+function matchesSelectedComplex(item, tag) {
+  if (String(tag).startsWith(COMPLEX_APT_PREFIX)) return getListingComplexFullName(item) === tag.slice(COMPLEX_APT_PREFIX.length);
+  return matchesComplexTag(item, tag);
+}
+let _complexOptionsSig = "";
+function refreshComplexFilterOptions() {
+  // 현재 선택한 단지는 빼고(유형·거래유형·검색 조건만 반영) 명단을 만든다.
+  const keep = currentTag;
+  currentTag = "";
+  let items;
+  try { items = getBaseFilteredListings(); } finally { currentTag = keep; }
+  const counts = new Map();
+  items.forEach(i => {
+    const name = getListingComplexFullName(i);
+    if (!name || COMPLEX_TAG_MATCHERS[name]) return; // 힐스테이트더운정은 기존 항목이 담당
+    counts.set(name, (counts.get(name) || 0) + 1);
+  });
+  if (keep.startsWith(COMPLEX_APT_PREFIX) && !counts.has(keep.slice(COMPLEX_APT_PREFIX.length))) counts.set(keep.slice(COMPLEX_APT_PREFIX.length), 0);
+  const names = [...counts.keys()].sort((a, b) => a.localeCompare(b, "ko", { numeric: true }));
+  const sig = keep + "|" + names.map(n => n + ":" + counts.get(n)).join("|");
+  if (sig === _complexOptionsSig) return;
+  _complexOptionsSig = sig;
+  const opt = (value, label) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+  complexFilterSelect.innerHTML =
+    opt("", "전체 단지") +
+    Object.keys(COMPLEX_TAG_MATCHERS).map(k => opt(k, k)).join("") +
+    (names.length ? `<optgroup label="등록된 단지 명단 (${names.length}곳)">` +
+      names.map(n => opt(COMPLEX_APT_PREFIX + n, `${n} (${counts.get(n)})`)).join("") + `</optgroup>` : "");
+  complexFilterSelect.value = keep;
+  if (complexFilterSelect.value !== keep) { currentTag = ""; complexFilterSelect.value = ""; }
+}
+
 function renderList() {
   pruneSelectedIds();
+  refreshComplexFilterOptions();
   listingContainer.innerHTML = "";
   const unifiedPropertyLabel = document.getElementById("unifiedPropertyLabel");
   const unifiedDoneSection   = document.getElementById("unifiedDoneSection");
