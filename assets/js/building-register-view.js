@@ -15,7 +15,7 @@
         color:#f8f3e6; box-shadow:0 20px 60px rgba(0,0,0,.55); }
       .br-box h2 { margin:0 0 4px; font-size:1.1rem; }
       .br-box p { margin:4px 0 8px; color:#b9c5d8; font-size:.8rem; line-height:1.4; }
-      .br-inputs { display:grid; grid-template-columns:minmax(0,2fr) minmax(100px,1fr); gap:12px; }
+      .br-inputs { display:grid; grid-template-columns:minmax(0,2fr) minmax(80px,.6fr) minmax(100px,1fr); gap:12px; }
       .br-box label { display:block; margin:0 0 4px; font-size:.78rem; }
       .br-box input { width:100%; box-sizing:border-box; border:1px solid #4b5c77;
         border-radius:7px; background:#0a1830; color:#fff; padding:7px 9px; font:inherit; }
@@ -48,6 +48,7 @@
       <h2 id="brTitle">건축물대장정보 확인</h2>
       <p>주소와 호수를 확인한 뒤 조회하세요. 조회 결과는 호실 정보에 자동 저장되지 않습니다.</p>
       <div class="br-inputs"><div><label for="brAddress">건물 지번주소</label><input id="brAddress" autocomplete="off" placeholder="예: 경기도 파주시 와동동 1456-3"></div>
+      <div><label for="brDong">동</label><input id="brDong" autocomplete="off" placeholder="예: 1101"></div>
       <div><label for="brRoom">호수</label><input id="brRoom" autocomplete="off" placeholder="예: 101"></div></div>
       <p class="br-error" id="brError" role="alert"></p>
       <div class="br-result" id="brResult" hidden><table id="brDetails" aria-label="건축물대장 조회 결과"><tbody></tbody></table><p id="brWarning"></p></div>
@@ -64,6 +65,7 @@
     dialog.querySelector('.br-fetch').addEventListener('click', async () => {
       const address = dialog.querySelector('#brAddress').value.trim();
       const room = dialog.querySelector('#brRoom').value.trim().replace(/\s*호$/, '');
+      const selectedDong = dialog.querySelector('#brDong').value.trim().replace(/\s*동$/, '');
       const error = dialog.querySelector('#brError');
       const resultBox = dialog.querySelector('#brResult');
       error.textContent = '';
@@ -74,7 +76,7 @@
       btn.textContent = '조회 중...';
       try {
         const dong = address.match(/(?:^|\s)(\d+)\s*동(?:\s|,|$)/);
-        const info = await lookupBuildingRegister(address, { hoNm: room, dongNm: dong ? dong[1] : '' });
+        const info = await lookupBuildingRegister(address, { hoNm: room, dongNm: selectedDong || (dong ? dong[1] : '') });
         const area = value => {
           if (value == null || value === '') return '조회되지 않음';
           const squareMeters = Number(value);
@@ -129,10 +131,11 @@
     return dialog;
   }
 
-  window.openBuildingRegisterInfo = function (address, room) {
+  window.openBuildingRegisterInfo = function (address, room, dong = '') {
     const box = ensureDialog();
+    box.querySelector('#brDong').value = String(dong || '').replace(/\s*동$/, '').trim();
     box.querySelector('#brAddress').value = address || '';
-    box.querySelector('#brRoom').value = room || '';
+    box.querySelector('#brRoom').value = String(room || '').replace(/^.*?동\s*/, '').replace(/\s*호$/, '').trim();
     box.querySelector('#brError').textContent = '';
     box.querySelector('#brResult').hidden = true;
     box.classList.add('open');

@@ -754,7 +754,7 @@
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
-<script src="assets/js/building-register-view.js?v=20260929-compact-table"></script>
+<script src="assets/js/building-register-view.js?v=20261007-lot-unit-lookup"></script>
 <script>
 /* ═══════════════════════════════════════════
    Cloudinary 설정
@@ -970,7 +970,8 @@ async function init() {
     }
       document.getElementById('buildingName').textContent = building.name;
       document.title = `하이탑부동산 | ${building.name}`;
-      buildingAddress = parseMemoFields(building.memo || '').주소 || '';
+      const overviewAddresses = parseMemoFields(building.memo || '');
+      buildingAddress = overviewAddresses['지번주소'] || overviewAddresses['주소'] || '';
       renderInfoGrid(building.memo || '');
       if (resourceScope === 'residential') {
         document.getElementById('buildingDetailSubtitle').textContent = '평형별 평면도 · 단지 자료 관리';
@@ -1970,7 +1971,9 @@ async function deleteBFile(id) {
   $("umDelete").addEventListener("click", deleteUnit);
   $("umRegistry").addEventListener("click", () => {
     if (editIdx < 0) return;
-    openBuildingRegisterInfo(buildingAddress, units[editIdx].호수);
+    const unit=units[editIdx];
+    const parts=roomParts(unit);
+    openBuildingRegisterInfo(buildingAddress, parts.room, parts.dong);
   });
   $("umCancel").addEventListener("click", closeModal);
   $("umClose").addEventListener("click", closeModal);
