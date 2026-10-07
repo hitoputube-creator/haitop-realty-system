@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-apartment-unit-form"></script>
+<script src="assets/js/storage.js?v=20261007-apartment-autofill"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -48,6 +48,13 @@
 .apartment-info-row[style="--pairs:1"] .ipt-value{display:block}
 @media(max-width:850px){.apartment-info-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-info-row[style="--pairs:1"]{grid-template-columns:108px minmax(0,1fr)}}
 @media(max-width:580px){.apartment-info-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row[style="--pairs:1"]{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row>div{padding:9px 10px}}
+
+.apartment-detail-title{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.apartment-title-name{line-height:1.4}
+.apartment-title-unit{display:inline-flex;align-items:center;gap:10px;flex-shrink:0;padding:5px 12px;border:1px solid rgba(212,175,55,.35);border-radius:8px;background:rgba(212,175,55,.08);font-size:.95rem;color:var(--text-main,#e8eef7);white-space:nowrap}
+.apartment-title-unit>span{color:var(--gold);font-weight:400}
+.apartment-unit-action{gap:8px;flex-wrap:wrap}
+.apartment-unit-action .btn{padding:3px 7px;font-size:.72rem;white-space:nowrap}
 </style>
 </head>
 <body data-nav-active="properties">
@@ -747,8 +754,8 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
     document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
     if (category.category2 === "아파트" || item.type === "apartment") {
-      document.getElementById("edit_publicAddress").value = item.roadAddress || "";
-      document.getElementById("edit_mapAddress").value = item.jibunAddress || "";
+      document.getElementById("edit_publicAddress").value = apartmentDetailAddresses(item).roadAddress || "";
+      document.getElementById("edit_mapAddress").value = apartmentDetailAddresses(item).jibunAddress || "";
     }
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
     fillApartmentUnitFields("edit_", item);
@@ -1152,11 +1159,18 @@ function closeHomepageTab(tab) {
     return notes;
   }
 
+  function apartmentDetailAddresses(item) {
+    const resource=apartmentReferenceResource(item,_allDriveResources);
+    const base=apartmentResourceAddresses(resource);
+    return {roadAddress:item.roadAddress || base.roadAddress,jibunAddress:item.jibunAddress || base.jibunAddress};
+  }
+
   function renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact) {
     if (category.category2 === "아파트" || item.type === "apartment") {
       const u = apartmentSource(item);
+      const addresses=apartmentDetailAddresses(item);
       const man = n => n == null || n === "" ? "" : Number(n).toLocaleString("ko-KR") + "만원";
-      const row = pairs => '<div class="apartment-info-row" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => iptCell(label,value)).join('') + '</div>';
+      const row = pairs => '<div class="apartment-info-row" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => label==='호수' ? '<div class="ipt-label">호수</div><div class="ipt-value apartment-unit-action"><span>'+escapeHtml(detailText(value)||'—')+'</span><button type="button" class="btn btn-ghost" id="autoFillApartmentBtn">자동입력</button></div>' : iptCell(label,value)).join('') + '</div>';
       const section = (title, rows) => '<section class="detail-section apartment-info-section"><div class="detail-section-title">' + escapeHtml(title) + '</div><div class="apartment-info-table">' + rows.map(row).join('') + '</div></section>';
       const memoRows = [
         ...(u.옵션내역 ? [[["옵션내역",u.옵션내역]]] : []),
@@ -1166,8 +1180,8 @@ function closeHomepageTab(tab) {
         section("기본정보", [
           [["아파트명",u.아파트명],["접수일자",u.접수일자]],
           [["동",u.동],["호수",u.호],["평형",u.평형],["타입",u.타입]],
-          [["새주소(도로명주소)",item.roadAddress]],
-          [["구주소(지번주소)",item.jibunAddress]],
+          [["새주소(도로명주소)",addresses.roadAddress]],
+          [["구주소(지번주소)",addresses.jibunAddress]],
           [["분양면적(공급면적)",formatAreaPair(u.분양_m2,u.분양_평)],["전용면적",formatAreaPair(u.전용_m2,u.전용_평)]]
         ]),
         section("가격정보", [
@@ -1298,7 +1312,10 @@ function closeHomepageTab(tab) {
       html += `<div class="deal-status">거래완료</div>`;
     }
 
-    html += `<div class="detail-title">${escapeHtml(item.title || getListingCategoryLabel(item))}</div>`;
+    if (category.category2 === "아파트" || item.type === "apartment") {
+      const u=apartmentSource(item);
+      html += `<div class="detail-title apartment-detail-title"><span class="apartment-title-name">${escapeHtml(u.아파트명 || complexName || "아파트")}</span><span class="apartment-title-unit">${escapeHtml(u.동 || "—")}동 <span>·</span> ${escapeHtml(u.호 || "—")}호</span></div>`;
+    } else html += `<div class="detail-title">${escapeHtml(item.title || getListingCategoryLabel(item))}</div>`;
 
     html += `<div class="detail-actions">`;
     if (item.status !== "거래완료") {
@@ -1488,6 +1505,19 @@ function closeHomepageTab(tab) {
   function rebindButtons() {
     const item = _currentItem;
     const id   = item.id;
+    const apartmentAutoButton=document.getElementById("autoFillApartmentBtn");
+    if(apartmentAutoButton)apartmentAutoButton.addEventListener("click",async()=>{
+      apartmentAutoButton.disabled=true;apartmentAutoButton.textContent="조회 중…";
+      try{
+        const reference=await lookupApartmentUnitReference(item);
+        const updated=applyApartmentUnitReference(item,reference);
+        await updateListing(id,updated);
+        _currentItem=updated;
+        document.getElementById("detailArea").innerHTML=renderDetail(updated);
+        rebindButtons();
+        showToast(reference.matched ? "평형·타입·주소를 자동입력하고 저장했습니다."+((reference.supply==null||reference.exclusive==null)?" 미등록 면적은 기존 값을 유지했습니다.":" 공급·전용면적도 저장했습니다.") : "주소를 저장했습니다. 해당 동·호수의 배치 자료가 없어 면적은 기존 값을 유지했습니다.",5000);
+      }catch(error){showToast("자동입력 실패: "+error.message,5000);apartmentAutoButton.disabled=false;apartmentAutoButton.textContent="자동입력";}
+    });
     const extraInfoToggle = document.getElementById("extraInfoToggle");
     const extraInfoTable  = document.getElementById("extraInfoTable");
     if (extraInfoToggle && extraInfoTable) {

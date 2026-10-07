@@ -269,10 +269,130 @@ function apartmentSource(item = {}) {
     비고: item.description ?? u.비고 ?? ""
   };
 }
+
+const CHORONG11_RESOURCE_ID = "5d1bbb0d-627f-5634-98c9-38c019e5771b";
+// 사용자 등록 2021.06 LH 팜플렛의 1101~1111동 층·호수 배치표.
+function chorong11UnitType(dong, ho) {
+  const rules = {
+    "1101":{max:20,lines:4,blue:2,missing:[102,103,202,203]},
+    "1102":{max:20,lines:5,blue:2,missing:[103,104,203,204]},
+    "1103":{max:20,lines:5,blue:4,missing:[102,103,202,203]},
+    "1104":{max:19,lines:4,blue:3,missing:[]},
+    "1105":{max:20,lines:4,blue:2,missing:[]},
+    "1106":{max:15,lines:3,blue:2,missing:[]},
+    "1107":{max:15,lines:3,blue:2,missing:[]},
+    "1108":{max:15,lines:3,blue:2,missing:[]},
+    "1109":{max:18,lines:3,blue:2,missing:[]},
+    "1110":{max:20,lines:4,blue:2,missing:[102,103,202,203]},
+    "1111":{max:19,lines:3,blue:2,missing:[]}
+  };
+  const rule = rules[normalizeApartmentUnit(dong,"동")], number=Number(normalizeApartmentUnit(ho,"호"));
+  if (!rule || !Number.isInteger(number)) return null;
+  const floor=Math.floor(number/100), line=number%100;
+  if (floor<1 || floor>rule.max || line<1 || line>rule.lines || rule.missing.includes(number)) return null;
+  if (normalizeApartmentUnit(dong,"동")==="1103" && floor>14 && line>2) return null;
+  return line===rule.blue ? "55B" : "55A";
+}
+function apartmentReferenceResource(item, resources) {
+  const name = String(item.complexName || item.buildingName || apartmentSource(item).아파트명 || "").replace(/\s+/g,"");
+  return resources.find(r=>r.id===item.resource_id) ||
+    resources.find(r=>String(r.name||"").replace(/\s+/g,"")===name) || null;
+}
+function apartmentResourceAddresses(resource) {
+  const fields={};
+  String(resource && resource.memo || "").split("---추가메모---")[0].split(/\r?\n/).forEach(line=>{
+    const i=line.indexOf(":");if(i>=0)fields[line.slice(0,i).trim()]=line.slice(i+1).trim();
+  });
+  return {roadAddress:fields["주소"]||"",jibunAddress:fields["지번주소"]||""};
+}
+function apartmentUnitReference(resource, plans, record, dong, ho) {
+  const normalizeType = value => String(value||"").replace(/\s+/g,"").toUpperCase();
+  const known = resource.id===CHORONG11_RESOURCE_ID;
+  const units = record && Array.isArray(record.units) ? record.units : [];
+  const matches=units.filter(u=>{
+    const combined=String(u.호수||"").match(/^(.+?)동\s*(.+?)(?:호)?$/);
+    return normalizeApartmentUnit(u.동 || (combined && combined[1]),"동")===normalizeApartmentUnit(dong,"동") &&
+      normalizeApartmentUnit(u.호 || (combined && combined[2]),"호")===normalizeApartmentUnit(ho,"호");
+  });
+  const unit=matches.length===1 ? matches[0] : {};
+  const type=known ? chorong11UnitType(dong,ho) : unit.타입;
+  if (!type) return {...apartmentResourceAddresses(resource),resource_id:resource.id,matched:false};
+  const matchingPlans=plans.filter(plan=>normalizeType(plan.floor_number).split("/").includes(normalizeType(type)));
+  const plan=matchingPlans.length===1 ? matchingPlans[0] : {};
+  const positive=value=>value!=="" && value!=null && Number.isFinite(Number(value)) && Number(value)>0 ? Number(value) : null;
+  const supply=positive(plan.supply_area_m2) ?? positive(unit.분양_m2) ?? (positive(unit.분양_평) ? Number(unit.분양_평)*(400/121) : null);
+  const exclusive=positive(plan.exclusive_area_m2) ?? positive(unit.전용_m2) ?? (positive(unit.전용_평) ? Number(unit.전용_평)*(400/121) : null);
+  return {...apartmentResourceAddresses(resource),resource_id:resource.id,matched:true,type,
+    size:supply ? (supply/(400/121)).toFixed(2)+"평" : unit.평형 || "",
+    supply,exclusive};
+}
+async function lookupApartmentUnitReference(item) {
+  const resource=apartmentReferenceResource(item,await getDriveResources());
+  if(!resource)throw new Error("연결된 단지 자료를 찾지 못했습니다. 아파트명이나 자료 연결을 확인해주세요.");
+  const [plans,record]=await Promise.all([getBuildingFloors(resource.id),getBuildingRecord(resource.name)]);
+  const u=apartmentSource(item);
+  return apartmentUnitReference(resource,plans,record,u.동,u.호);
+}
+function applyApartmentUnitReference(item, reference) {
+  const u={...apartmentSource(item)};
+  const updated={...item,resource_id:reference.resource_id || item.resource_id};
+  if(reference.roadAddress)updated.roadAddress=reference.roadAddress;
+  if(reference.jibunAddress)updated.jibunAddress=reference.jibunAddress;
+  updated.publicAddress=[updated.roadAddress?"새주소: "+updated.roadAddress:"",updated.jibunAddress?"구주소: "+updated.jibunAddress:""].filter(Boolean).join(" / ") || item.publicAddress;
+  updated.mapAddress=updated.roadAddress || updated.jibunAddress || item.mapAddress;
+  if(reference.matched){
+    if(reference.type){updated.apartmentType=u.타입=reference.type;}
+    if(reference.size){updated.apartmentSize=u.평형=reference.size;}
+    for(const [name,key,pykey,value] of [["분양","supplyAreaM2","supplyAreaPy",reference.supply],["전용","exclusiveAreaM2","exclusiveAreaPy",reference.exclusive]]){
+      if(value!=null){updated[key]=u[name+"_m2"]=value;updated[pykey]=u[name+"_평"]=value/(400/121);}
+    }
+  }
+  updated.apartmentUnitData=u;
+  updated.title=(u.아파트명||updated.complexName||"아파트")+" · "+u.동+"동 "+u.호+"호";
+  return updated;
+}
+
 function setupApartmentListingForm(prefix, category2Id) {
   const host = document.getElementById(prefix + "apartmentListingForm");
   host.innerHTML = APARTMENT_LISTING_FORM_HTML.replace(/id="([^"]+)"/g, (_, id) => 'id="' + prefix + id + '"')
     .replace('list="aptUnitTypes"', 'list="' + prefix + 'aptUnitTypes"');
+  const hoInput = document.getElementById(prefix + "apt_호수");
+  const actionRow = document.createElement("div");
+  actionRow.style.cssText = "display:flex;align-items:center;gap:6px";
+  hoInput.parentNode.insertBefore(actionRow,hoInput);actionRow.appendChild(hoInput);
+  hoInput.style.cssText="flex:1;min-width:0";
+  const autoButton=document.createElement("button");
+  autoButton.type="button";autoButton.className="btn btn-ghost";autoButton.textContent="자동입력";
+  autoButton.style.cssText="flex-shrink:0;padding:6px 8px;font-size:.76rem;white-space:nowrap";
+  actionRow.appendChild(autoButton);
+  const autoStatus=document.createElement("div");
+  autoStatus.style.cssText="font-size:.78rem;padding:0 10px 8px;color:var(--gold)";
+  autoStatus.setAttribute("role","status");host.firstElementChild.appendChild(autoStatus);
+  host._autoStatus=autoStatus;
+  autoButton.addEventListener("click",async()=>{
+    const p=key=>document.getElementById(prefix+"apt_"+key);
+    const dong=p("동").value.trim(),ho=p("호수").value.trim();
+    if(!dong||!ho){autoStatus.textContent="동과 호수를 먼저 입력해주세요.";return;}
+    autoButton.disabled=true;autoStatus.textContent="단지 자료 조회 중…";
+    try{
+      const original=host._apartmentItem || {};
+      const item={...original,complexName:p("아파트명").value.trim(),dong,ho};
+      if(item.complexName!==apartmentSource(original).아파트명)delete item.resource_id;
+      const reference=await lookupApartmentUnitReference(item);
+      if(reference.roadAddress)document.getElementById(prefix+"publicAddress").value=reference.roadAddress;
+      if(reference.jibunAddress)document.getElementById(prefix+"mapAddress").value=reference.jibunAddress;
+      if(reference.resource_id && document.getElementById(prefix+"resource_id"))document.getElementById(prefix+"resource_id").value=reference.resource_id;
+      if(reference.matched){
+        if(reference.type)p("타입").value=reference.type;
+        if(reference.size)p("평형").value=reference.size;
+        for(const [name,area] of [["분양",reference.supply],["전용",reference.exclusive]]){
+          if(area!=null){p(name+"_m2").value=area;p(name+"_평").value=(area/(400/121)).toFixed(2);}
+        }
+      }
+      autoStatus.textContent=reference.matched ? "평형·타입·주소를 채웠습니다."+((reference.supply==null||reference.exclusive==null)?" 면적 미등록 항목은 기존 값을 유지했습니다.":" 공급·전용면적도 채웠습니다.")+" 저장을 눌러주세요." : "주소를 채웠습니다. 해당 동·호수의 배치 자료가 없어 평형·면적은 기존 값을 유지했습니다.";
+    }catch(error){autoStatus.textContent=error.message;}
+    finally{autoButton.disabled=false;}
+  });
   for (const name of ["분양", "전용"]) {
     const py = document.getElementById(prefix + "apt_" + name + "_평");
     const m2 = document.getElementById(prefix + "apt_" + name + "_m2");
@@ -304,6 +424,9 @@ function setupApartmentListingForm(prefix, category2Id) {
   return render;
 }
 function fillApartmentListingForm(prefix, item, isNew = false) {
+  const host=document.getElementById(prefix+"apartmentListingForm");
+  host._apartmentItem=item;
+  if(host._autoStatus)host._autoStatus.textContent="";
   const u = apartmentSource(item), p = key => document.getElementById(prefix + "apt_" + key);
   const fields = { 아파트명:u.아파트명, 접수일자:u.접수일자 || (isNew ? new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Seoul"}) : ""),
     동:u.동, 호수:u.호, 평형:u.평형, 타입:u.타입, 거래구분:u.거래구분,
@@ -360,7 +483,7 @@ function collectApartmentListingFields(prefix, original = {}) {
     옵션내역:value("옵션") || null, 비고:value("비고") || null, 추가메모:notes, updated_at:new Date().toISOString()};
   const won = n => n == null ? "" : String(n * 10000);
   return {apartmentUnitData:u, complexName:name, buildingName:name, dong, ho, privateDetailAddress:u.호수,
-    title:name+" "+u.호수, received_date:u.접수일자, apartmentSize:u.평형, apartmentType:u.타입,
+    title:name+" · "+u.호수, received_date:u.접수일자, apartmentSize:u.평형, apartmentType:u.타입,
     dealType:u.거래구분 || "", salePrice:won(u.현_매매가격), deposit:won(u.현_보증금), monthlyRent:won(u.현_월세),
     supplyAreaM2:supply, supplyAreaPy:u.분양_평, exclusiveAreaM2:exclusive, exclusiveAreaPy:u.전용_평,
     owner_name:u.소유주 || "", owner_phone1:u.연락처 || "", ownerCarrier:u.소유자통신사,
