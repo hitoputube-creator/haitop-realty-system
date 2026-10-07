@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-registry-unit-autofill"></script>
+<script src="assets/js/storage.js?v=20261007-exact-building-notes"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1133,25 +1133,7 @@ function closeHomepageTab(tab) {
 
   function apartmentNotes(item) {
     const u = apartmentSource(item);
-    const displayed = new Set();
-    const fields = [
-      ["동",u.동],["호",u.호],["호수",u.호],["타입",u.타입],["평형",u.평형],
-      ["가격",u.현_매매가격 || u.현_보증금 || u.현_월세],["소유주",u.소유주],
-      ["연락처",u.연락처],["통신사",u.소유자통신사],["거래구분",u.거래구분],
-      ["아파트명",u.아파트명],["접수일자",u.접수일자]
-    ];
-    fields.forEach(([key,value]) => { if (value !== undefined && value !== null && String(value).trim()) displayed.add(key); });
-    function clean(raw) {
-      const text = String(raw || '').trim();
-      if (!/^\[엑셀 원본[^\]]*\]/.test(text)) return text;
-      return text.split(/\r?\n/).flatMap(line => {
-        const trimmed = line.trim();
-        if (/^\[엑셀 원본[^\]]*\]$/.test(trimmed)) return [];
-        const match = trimmed.match(/^([^:：]+)[:：]\s*(.*)$/);
-        if (match && displayed.has(match[1].trim())) return [];
-        return [match && match[1].trim() === '비고' ? match[2].trim() : trimmed];
-      }).filter(Boolean).join('\n').trim();
-    }
+    const clean = apartmentRemarksOnly;
     const seen = new Set([String(u.옵션내역 || '').replace(/\s+/g,' ').trim()].filter(Boolean));
     const notes = [];
     function add(label,raw,date) {
@@ -1759,3 +1741,4 @@ function closeHomepageTab(tab) {
 </script>
 </body>
 </html>
+

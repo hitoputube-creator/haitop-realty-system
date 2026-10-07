@@ -2,6 +2,7 @@
 // 조회 결과는 참고용으로만 표시하며 호실의 저장 값은 바꾸지 않는다.
 (function () {
   let dialog;
+  let lookupContext = {};
 
   function ensureDialog() {
     if (dialog) return dialog;
@@ -76,7 +77,9 @@
       btn.textContent = '조회 중...';
       try {
         const dong = address.match(/(?:^|\s)(\d+)\s*동(?:\s|,|$)/);
-        const info = await lookupBuildingRegister(address, { hoNm: room, dongNm: selectedDong || (dong ? dong[1] : '') });
+        const requestedDong = selectedDong || (dong ? dong[1] : '');
+        const info = await lookupBuildingRegister(address, { hoNm: room, dongNm: requestedDong, apartment: lookupContext.apartment === true });
+        if (!info.building_match_verified) throw new Error('해당 건물의 일치 여부를 확인하지 못했습니다. 다시 조회해주세요.');
         const area = value => {
           if (value == null || value === '') return '조회되지 않음';
           const squareMeters = Number(value);
@@ -86,7 +89,7 @@
         const date = value => /^\d{8}$/.test(String(value || ''))
           ? `${String(value).slice(0,4)}.${String(value).slice(4,6)}.${String(value).slice(6)}` : (value || '조회되지 않음');
         const fields = [
-          ['건물명', info.building_name || '조회되지 않음'],
+          ['건물명', info.building_name || lookupContext.buildingName || '조회되지 않음'],
           ['동명', info.unit_dong_name || info.dong_name || '조회되지 않음'],
           ['호수', room + '호'],
           ['해당 층', info.unit_floor || '조회되지 않음'],
@@ -94,12 +97,11 @@
           ['대지면적', area(info.land_area_m2)],
           ['건축면적', area(info.footprint_area_m2)],
           ['연면적', area(info.total_area_m2)],
-          ['호실 전유면적', info.unit_area_warning ? '조회되지 않음' : area(info.exclusive_area_m2 ?? info.area_m2)],
+          ['호실 전유면적', info.unit_area_warning ? '조회되지 않음' : area(info.exclusive_area_m2)],
           ['호실 공용면적', area(info.common_area_m2)],
           ['전유+공용 합계', area(info.supply_area_m2)],
-          ['주차대수', info.parking_count == null ? '조회되지 않음' : `${Number(info.parking_count).toLocaleString('ko-KR')}대`],
+          [info.parking_scope === '단지 전체' ? '단지 전체 주차대수' : '건물 전체 주차대수', info.parking_count == null ? '미확인' : `${Number(info.parking_count).toLocaleString('ko-KR')}대`],
           ['사용승인일', date(info.use_apr_day)],
-          ['호실 용도', info.unit_purpose || '조회되지 않음'],
           ['건물 주용도', info.main_purpose || '조회되지 않음'],
           ['건물 구조', info.structure || '조회되지 않음']
         ];
@@ -117,9 +119,9 @@
           }
           details.appendChild(row);
         }
-        dialog.querySelector('#brWarning').textContent = info.unit_area_warning
+        dialog.querySelector('#brWarning').textContent = (info.unit_area_warning
           ? '이 호실의 전유·공용면적을 확인하지 못했습니다. 연면적은 건물 전체 면적이므로 호실 면적으로 사용하지 마세요. 원본 대장과 대조해 주세요.'
-          : '전유+공용 합계는 조회된 면적의 합산값입니다. 공용면적이 제공되지 않으면 표시하지 않습니다. 원본 대장과 대조해 주세요.';
+          : '전유+공용 합계는 대장에 조회된 면적의 합산값이며 분양 공급면적과 다를 수 있습니다.') + (info.parking_warning ? ' ' + info.parking_warning : '');
         resultBox.hidden = false;
       } catch (e) {
         error.textContent = e.message || '건축물대장정보 조회에 실패했습니다.';
@@ -131,7 +133,8 @@
     return dialog;
   }
 
-  window.openBuildingRegisterInfo = function (address, room, dong = '') {
+  window.openBuildingRegisterInfo = function (address, room, dong = '', context = {}) {
+    lookupContext = context;
     const box = ensureDialog();
     box.querySelector('#brDong').value = String(dong || '').replace(/\s*동$/, '').trim();
     box.querySelector('#brAddress').value = address || '';

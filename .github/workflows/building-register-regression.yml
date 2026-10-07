@@ -1,0 +1,22 @@
+name: Building register regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/lookup-building-register/**'
+      - 'tests/building-register-regression.cjs'
+      - '.github/workflows/building-register-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify fixtures and deployed Hanbit lookup
+        run: node tests/building-register-regression.cjs --live

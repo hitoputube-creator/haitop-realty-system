@@ -734,14 +734,14 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261007-registry-unit-autofill"></script>
+<script src="assets/js/storage.js?v=20261007-exact-building-notes"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
-<script src="assets/js/building-register-view.js?v=20261007-lot-unit-lookup"></script>
+<script src="assets/js/building-register-view.js?v=20261007-exact-building"></script>
 <script>
 /* ═══════════════════════════════════════════
    Cloudinary 설정
@@ -1397,8 +1397,8 @@ async function deleteBFile(id) {
   }
   function unitGroup(u) { return residentialUnitMode() ? (roomParts(u).dong || '미입력') : floorOf(u.호수); }
   function unitMemos(u) {
-    if (Array.isArray(u.추가메모)) return u.추가메모;
-    return u.추가메모 ? [{text:String(u.추가메모),created_at:u.updated_at || null}] : [];
+    const memos = Array.isArray(u.추가메모) ? u.추가메모 : u.추가메모 ? [{text:String(u.추가메모),created_at:u.updated_at || null}] : [];
+    return residentialUnitMode() ? apartmentMemoEntries(memos, apartmentRemarksOnly(u.비고)) : memos;
   }
   function renderMemoHistory(u) {
     const notes = unitMemos(u);
@@ -1431,7 +1431,7 @@ async function deleteBFile(id) {
     const parts = roomParts(u);
     const fields = {아파트명:bName,동:parts.dong,호수:parts.room,접수일자:u.접수일자 || (isNew ? todayInKorea() : ''),평형:u.평형,타입:u.타입,거래구분:u.거래구분,
       매매가:u.현_매매가격,보증금:effectiveUnitPrice(u.현_보증금,u.보증금),월세:effectiveUnitPrice(u.현_월세,u.월차임),소유자:u.소유주,연락처:u.연락처,통신사:u.소유자통신사,
-      세입자이름:u.세입자이름,세입자연락처:u.세입자연락처,세입자현황:u.세입자현황 || (u.공실여부 === '공실' ? '공실' : u.공실여부 === '임차중' ? '임차중' : '미확인'),계약시작:u.세입자계약시작일,계약종료:u.세입자계약종료일,옵션:u.옵션내역,비고:u.비고};
+      세입자이름:u.세입자이름,세입자연락처:u.세입자연락처,세입자현황:u.세입자현황 || (u.공실여부 === '공실' ? '공실' : u.공실여부 === '임차중' ? '임차중' : '미확인'),계약시작:u.세입자계약시작일,계약종료:u.세입자계약종료일,옵션:u.옵션내역,비고:apartmentRemarksOnly(u.비고)};
     $('ru_통신사').querySelectorAll('[data-custom-carrier]').forEach(option => option.remove());
     if (u.소유자통신사 && !Array.from($('ru_통신사').options).some(option => option.value === u.소유자통신사)) {
       const option = document.createElement('option'); option.value = option.textContent = u.소유자통신사; option.dataset.customCarrier = 'true'; $('ru_통신사').appendChild(option);
@@ -1964,7 +1964,7 @@ async function deleteBFile(id) {
     if (editIdx < 0) return;
     const unit=units[editIdx];
     const parts=roomParts(unit);
-    openBuildingRegisterInfo(buildingAddress, parts.room, parts.dong);
+    openBuildingRegisterInfo(buildingAddress, parts.room, parts.dong, {buildingName:bName, apartment:residentialUnitMode()});
   });
   $("umCancel").addEventListener("click", closeModal);
   $("umClose").addEventListener("click", closeModal);
