@@ -1477,9 +1477,6 @@ async function deleteBFile(id) {
     $("unitSelectAll").checked=visible.length>0 && visible.every(input=>input.checked);
     unitBulkState();
   }
-  $("unitSelectAll")?.addEventListener("change",e=>{
-    $("unitsTbody").querySelectorAll(".unit-select-row").forEach(box=>{box.checked=e.target.checked;const id=Number(box.dataset.ri);if(box.checked)selectedUnitRows.add(id);else selectedUnitRows.delete(id);});unitBulkState();
-  });
   $("unitSelectPrint").addEventListener("click",()=>{
     const rows=units.filter((u,i)=>selectedUnitRows.has(i));if(!rows.length)return;
     const columns=residentialUnitMode()?["동·호수","분양면적/타입","거래구분","매매가(만원)","보증금/월세(만원)","소유주","연락처","세입자현황","접수일자","비고"]:["호수","업종","소유주","연락처","보증금(만원)","월세(만원)","상태","비고"];
@@ -1945,7 +1942,7 @@ async function deleteBFile(id) {
         </td>
       </tr>`;
     }).join(""); }
-    $("unitSelectAll").addEventListener("change",e=>{$("unitsTbody").querySelectorAll(".unit-select-row").forEach(box=>{box.checked=e.target.checked;const id=Number(box.dataset.ri);if(box.checked)selectedUnitRows.add(id);else selectedUnitRows.delete(id);});unitBulkState();});
+    $("unitSelectAll").onchange=e=>{$("unitsTbody").querySelectorAll(".unit-select-row").forEach(box=>{box.checked=e.target.checked;const id=Number(box.dataset.ri);if(box.checked)selectedUnitRows.add(id);else selectedUnitRows.delete(id);});unitBulkState();};
     bindUnitSelection();
 
     tbody.querySelectorAll(".btn-unit-edit[data-ri]").forEach(btn => {
