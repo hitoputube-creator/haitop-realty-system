@@ -272,6 +272,11 @@
         <input id="edit_areaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
       </div>
+      <div class="area-row">
+        <label class="area-label" for="edit_landUnitPrice">평당가격</label>
+        <input id="edit_landUnitPrice" type="text" readonly placeholder="자동계산" aria-label="토지 매매가 기준 평당가격" style="flex:1;width:180px;" />
+        <span class="area-unit">원/평</span>
+      </div>
       </div>
     </div>
 
@@ -496,6 +501,10 @@ function closeHomepageTab(tab) {
     const isFactoryWarehouse = cat1 === "공장창고";
     document.getElementById("editModal").classList.toggle("factory-warehouse-edit", isFactoryWarehouse);
     document.getElementById("edit_complexName").closest(".field").style.display = (isFactoryWarehouse || cat1 === "토지") ? "none" : "";
+    ["edit_presalePrice", "edit_managementFee", "edit_premium"].forEach(id => {
+      document.getElementById(id).closest(".field").style.display = cat1 === "토지" ? "none" : "";
+    });
+    updateEditLandUnitPrice();
     if (typeof syncEditApartmentFields === "function") syncEditApartmentFields();
     // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
     const storageCat1 = resolveStorageCategory1(cat1, cat2);
@@ -578,7 +587,16 @@ function closeHomepageTab(tab) {
       syncEditPricePreview(id);
     });
   }
-  function refreshEditPricePreviews() { EDIT_PRICE_IDS.forEach(syncEditPricePreview); }
+  function updateEditLandUnitPrice() {
+    const field = document.getElementById("edit_landUnitPrice");
+    if (!field) return;
+    const sale = Number(editPriceDigits(document.getElementById("edit_salePrice").value));
+    const py = Number(document.getElementById("edit_areaPy").value) || Number(document.getElementById("edit_areaM2").value) / 3.305785;
+    field.value = sale > 0 && py > 0 && Number.isFinite(sale / py)
+      ? Math.round(sale / py).toLocaleString("ko-KR") : "";
+  }
+  document.getElementById("editModal").addEventListener("input", updateEditLandUnitPrice);
+  function refreshEditPricePreviews() { EDIT_PRICE_IDS.forEach(syncEditPricePreview); updateEditLandUnitPrice(); }
   function cleanEditPriceInputs() {
     EDIT_PRICE_IDS.forEach(id => {
       const el = document.getElementById(id);
@@ -883,6 +901,7 @@ function closeHomepageTab(tab) {
     _editNewImageFiles = [];
     _editNewImagePublicFlags = [];
     renderEditImagePreview();
+    updateEditLandUnitPrice();
     document.getElementById("editModal").style.display = "flex";
   }
 
