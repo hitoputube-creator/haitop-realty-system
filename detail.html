@@ -495,7 +495,7 @@ function closeHomepageTab(tab) {
     const cat2 = document.getElementById("edit_category2")?.value || "";
     const isFactoryWarehouse = cat1 === "공장창고";
     document.getElementById("editModal").classList.toggle("factory-warehouse-edit", isFactoryWarehouse);
-    document.getElementById("edit_complexName").closest(".field").style.display = isFactoryWarehouse ? "none" : "";
+    document.getElementById("edit_complexName").closest(".field").style.display = (isFactoryWarehouse || cat1 === "토지") ? "none" : "";
     if (typeof syncEditApartmentFields === "function") syncEditApartmentFields();
     // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
     const storageCat1 = resolveStorageCategory1(cat1, cat2);
