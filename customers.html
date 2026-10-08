@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>하이탑부동산 | 전체 고객관리</title>
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout">
-  <script src="assets/js/storage.js?v=20261008-customer-types"></script>
+  <script src="assets/js/storage.js?v=20261008-customer-memos"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -42,7 +42,8 @@
     a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
     @media(max-width:640px){.customer-navigation{width:100%;margin:12px 0 0}.customer-navigation .return-main{flex:1;justify-content:center}}
     @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:1.15fr 1.2fr 1.35fr .9fr minmax(210px,1.35fr)}}
-  </style>
+  .customer-contact-row{display:grid;grid-template-columns:1fr 1fr 1.3fr auto;gap:6px;margin-bottom:8px}.customer-contact-row input{min-width:0;width:100%;box-sizing:border-box}.customer-note-form textarea{min-height:150px;width:100%;box-sizing:border-box;resize:vertical}.customer-note-form{margin:12px 0 18px}.customer-note-form label{display:block;margin:8px 0}.customer-note-form input[type=date]{color-scheme:dark}.customer-note-error{color:var(--red)}@media(max-width:640px){.customer-contact-row{grid-template-columns:1fr 1fr}.customer-contact-row input[type=tel]{grid-column:1/2}}
+</style>
 </head>
 <body>
 <div class="page">
@@ -70,7 +71,7 @@
         </div>
       </div>
       <div class="cust-form-grid">
-<div class="field" style="grid-column:1/-1"><label>고객 종류 (복수 선택)</label><div id="c_types" class="customer-type-picker"></div></div><div class="field" style="grid-column:1/-1"><label for="c_phones">추가 연락처 (한 줄에 하나)</label><textarea id="c_phones" rows="2" placeholder="배우자·회사 등 추가 연락처"></textarea></div>
+<div class="field" style="grid-column:1/-1"><label>고객 종류 (복수 선택)</label><div id="c_types" class="customer-type-picker"></div></div>
         
         <div class="field">
           <label>이름</label>
@@ -79,7 +80,7 @@
         <div class="field">
           <label>연락처</label>
           <input id="c_contact" type="tel" placeholder="010-0000-0000" />
-        </div>
+        </div><div class="field" style="grid-column:1/-1"><label>추가 연락처</label><div id="c_contacts"></div><button type="button" class="btn" data-add-contact="c">＋ 연락처 추가</button></div>
         <div class="field">
           <label>구분</label>
           <select id="c_role">
@@ -166,7 +167,7 @@
   <div class="modal-box" style="max-width:560px;">
     <div class="modal-title">✏️ 고객 수정</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
-<div class="field" style="grid-column:1/-1"><label>고객 종류 (복수 선택)</label><div id="ce_types" class="customer-type-picker"></div></div><div class="field" style="grid-column:1/-1"><label for="ce_phones">추가 연락처 (한 줄에 하나)</label><textarea id="ce_phones" rows="2" placeholder="배우자·회사 등 추가 연락처"></textarea></div>
+<div class="field" style="grid-column:1/-1"><label>고객 종류 (복수 선택)</label><div id="ce_types" class="customer-type-picker"></div></div>
         
       <div class="field">
         <label>이름</label>
@@ -175,7 +176,7 @@
       <div class="field">
         <label>연락처</label>
         <input id="ce_contact" type="tel" placeholder="010-0000-0000" />
-      </div>
+      </div><div class="field" style="grid-column:1/-1"><label>추가 연락처</label><div id="ce_contacts"></div><button type="button" class="btn" data-add-contact="ce">＋ 연락처 추가</button></div>
       <div class="field">
         <label>구분</label>
         <select id="ce_role">
@@ -211,8 +212,8 @@
       <label>고객 기본 메모 (요구사항)</label>
       <textarea id="ce_memo" rows="6" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
     </div>
-    <div class="cust-detail-section-title">상담 기록 · 업무일지</div>
-    <p class="cust-history-help">기본 메모와 별도로 저장된 상담입니다. 각 기록의 ‘상담 수정’에서 변경하고 저장하세요.</p>
+    <div id="ce_importDetails"></div><div id="ce_noteComposer"></div><div class="cust-detail-section-title">날짜별 메모 · 상담 기록</div>
+    <p class="cust-history-help">해당 고객에 연결된 메모와 상담입니다. 저장한 기록은 업무일지에서도 함께 보입니다.</p>
     <div id="custEditHistory" class="cust-history-list"></div>
     <div class="modal-btns">
       <button class="btn" onclick="document.getElementById('customerEditModal').style.display='none'">취소</button>
@@ -270,10 +271,10 @@
     const mapping={매수:'매수자',임차:'임차인',매도:'소유자',임대:'소유자'};
     return mapping[c.customer_role] ? [mapping[c.customer_role]] : [];
   }
-  function customerPhones(c) { return [...new Set([c.phone,...(c.contact_phones || [])].filter(Boolean))]; }
+  function customerPhones(c) { return [...new Set([c.phone,...(c.contact_phones || []),...(c.additional_contacts || []).map(x=>x.phone)].filter(Boolean))]; }
   function selectedCustomerKinds(prefix) { return Array.from(document.querySelectorAll('#'+prefix+'_types input:checked')).map(el=>el.value); }
   function setCustomerKinds(prefix,values) { document.querySelectorAll('#'+prefix+'_types input').forEach(el=>el.checked=values.includes(el.value)); }
-  function formPhones(prefix) { return [...new Set([document.getElementById(prefix+'_contact').value.trim(),...document.getElementById(prefix+'_phones').value.split(/\n|,/).map(v=>v.trim())].filter(Boolean))]; }
+  function formPhones(prefix) { return [...new Set([document.getElementById(prefix+'_contact').value.trim(),...readCustomerContacts(prefix).map(v=>v.phone)].filter(Boolean))]; }
   for(const prefix of ['c','ce'])document.getElementById(prefix+'_types').innerHTML=CUSTOMER_TYPES.map(t=>'<label><input type="checkbox" value="'+t+'">'+t+'</label>').join('');
   function renderCustomerTypeTabs() {
     const base=allCustomers.filter(c=>c.status!=='계약완료');
@@ -314,7 +315,7 @@
     if (customerSearch) {
       const kw = customerSearch.toLowerCase();
       filtered = filtered.filter(c =>
-        [c.name, ...customerPhones(c), c.memo, c.desired_price, c.desired_region, ...customerKinds(c), JSON.stringify(c.import_sources||[])].join(" ").toLowerCase().includes(kw) || (kw.replace(/\D/g,"").length>=4 && customerPhones(c).some(p=>normalizeCustomerPhone(p).includes(kw.replace(/\D/g,""))))
+        [c.name, ...customerPhones(c), customerBasicMemo(c), c.memo, JSON.stringify(c.additional_contacts||[]), c.desired_price, c.desired_region, ...customerKinds(c), JSON.stringify(c.import_sources||[])].join(" ").toLowerCase().includes(kw) || (kw.replace(/\D/g,"").length>=4 && customerPhones(c).some(p=>normalizeCustomerPhone(p).includes(kw.replace(/\D/g,""))))
       );
     }
 
@@ -359,12 +360,57 @@
     window.open(DIARY_APP_URL + "?customerId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");
   }
 
+  function customerBasicMemo(c) {
+    if (c.basic_memo != null) return c.basic_memo;
+    const memo = c.memo || '';
+    return (c.import_sources || []).some(s=>s.source==='연락처정리.xlsx') ? memo.split('[연락처정리 원본 ')[0].trim() : memo;
+  }
+  function addCustomerContactRow(prefix, contact={}) {
+    const row=document.createElement('div');row.className='customer-contact-row';
+    row.innerHTML='<input data-contact-name aria-label="연락처 이름" placeholder="이름"><input data-contact-relation aria-label="관계" placeholder="관계 (배우자·회사)"><input data-contact-phone type="tel" aria-label="추가 전화번호" placeholder="전화번호"><button type="button" class="btn" aria-label="추가 연락처 삭제">삭제</button>';
+    row.querySelector('[data-contact-name]').value=contact.name||'';
+    row.querySelector('[data-contact-relation]').value=contact.relation||'';
+    row.querySelector('[data-contact-phone]').value=contact.phone||'';
+    row.querySelector('button').onclick=()=>row.remove();
+    document.getElementById(prefix+'_contacts').appendChild(row);
+  }
+  function readCustomerContacts(prefix) {
+    return [...document.getElementById(prefix+'_contacts').children].map(row=>({name:row.querySelector('[data-contact-name]').value.trim(),relation:row.querySelector('[data-contact-relation]').value.trim(),phone:row.querySelector('[data-contact-phone]').value.trim()})).filter(c=>c.name||c.relation||c.phone);
+  }
+  function setCustomerContacts(prefix,c) {
+    document.getElementById(prefix+'_contacts').replaceChildren();
+    const contacts=Array.isArray(c.additional_contacts)?c.additional_contacts:[];
+    contacts.forEach(contact=>addCustomerContactRow(prefix,contact));
+    const known=new Set(contacts.map(c=>normalizeCustomerPhone(c.phone)));
+    customerPhones(c).filter(p=>normalizeCustomerPhone(p)!==normalizeCustomerPhone(c.phone)&&!known.has(normalizeCustomerPhone(p))).forEach(phone=>addCustomerContactRow(prefix,{phone}));
+  }
+  document.querySelectorAll('[data-add-contact]').forEach(btn=>btn.onclick=()=>addCustomerContactRow(btn.dataset.addContact));
+  function customerToday() { return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date()); }
+  function mountCustomerMemoForm(container,c,historyContainer) {
+    container.innerHTML='<form class="customer-note-form"><div class="cust-detail-section-title">＋ 날짜별 추가메모</div><label>메모 날짜<input name="date" type="date" required></label><label>추가메모<textarea name="content" rows="5" placeholder="통화 내용이나 추가 참고사항" required></textarea></label><p class="customer-note-error" role="alert"></p><button class="btn btn-primary" type="submit">메모 저장</button></form>';
+    const form=container.querySelector('form');form.elements.date.value=customerToday();let draft=null;
+    form.onsubmit=async event=>{
+      event.preventDefault();
+      const date=form.elements.date.value,content=form.elements.content.value.trim();
+      const error=form.querySelector('[role=alert]'),btn=form.querySelector('button');
+      if(!date||!content){error.textContent='날짜와 메모 내용을 입력해 주세요.';return;}
+      if(!draft||draft.date!==date||draft.content!==content)draft={id:crypto.randomUUID(),date,content};
+      btn.disabled=true;error.textContent='';
+      try {
+        await addCustomerDiaryMemo(c,draft);
+        if(container.isConnected&&container.querySelector('form')===form){form.elements.content.value='';draft=null;await renderCustomerHistory(historyContainer,c.id);}
+        showToast('메모를 저장했습니다. 고객과 업무일지에 연결됐습니다.');
+        loadCustomers();
+      } catch(e){error.textContent=e.message;}
+      finally {btn.disabled=false;}
+    };
+  }
   function customerImportDetails(c) {
     const sources=Array.isArray(c.import_sources)?c.import_sources:[];
     const props=[...new Map(sources.flatMap(r=>r.linked_properties||[]).map(p=>[JSON.stringify(p),p])).values()];
     const review=[...new Set(sources.flatMap(r=>r.review||[]))];
     const links=props.map(p=>p.listing_id ? '<a class="btn" href="'+escapeHtmlCust(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(p.listing_id)))+'">매물보기</a>' : p.building_id ? '<a class="btn" href="'+escapeHtmlCust(OfficeConfig.urlFor('building-detail.html?id='+encodeURIComponent(p.resource_id||p.building_id)+'#unitStatus'))+'">'+escapeHtmlCust([p.building_name,p.room].filter(Boolean).join(' · '))+'</a>' : '').join(' ');
-    return (links ? '<div class="cust-detail-section-title">연결된 매물·세대</div>'+links : '')+(review.length ? '<p class="customer-import-summary">확인사항: '+escapeHtmlCust(review.join(' · '))+'</p>' : '')+(sources.length ? '<details><summary>연락처 원본 '+sources.length+'건</summary>'+sources.map(r=>'<div class="customer-import-summary">'+escapeHtmlCust(r.source+' '+r.source_row+'행\n'+Object.entries(r.original||{}).filter(([,v])=>v!=null&&v!=='').map(([k,v])=>k+': '+v).join('\n'))+'</div>').join('<hr>')+'</details>' : '');
+    return (links ? '<div class="cust-detail-section-title">연결된 매물·세대</div>'+links : '')+(review.length ? '<p class="customer-import-summary">확인사항: '+escapeHtmlCust(review.join(' · '))+'</p>' : '')+(sources.length ? '<details><summary>연락처 원본 '+sources.length+'건</summary>'+sources.map(r=>'<div class="customer-import-summary">'+escapeHtmlCust(r.source+' '+r.source_row+'행\n'+Object.entries(r.original||{}).filter(([,v])=>v!=null&&v!=='').map(([k,v])=>k+': '+v).join('\n'))+'</div>').join('<hr>')+(c.memo ? '<details style="margin-top:10px"><summary>이전 통합메모 원본</summary><div class="customer-import-summary">'+escapeHtmlCust(c.memo)+'</div></details>' : '')+'</details>' : '');
   }
   async function openCustomerDetail(id) {
     const c = allCustomers.find(x => x.id === id) || await getCustomerById(id);
@@ -380,12 +426,15 @@
         <div><span>관심지역</span><strong>${escapeHtmlCust(c.desired_region) || "—"}</strong></div>
         <div><span>상태</span><strong>${escapeHtmlCust(c.status) || "—"}</strong></div>
       </div>
-      ${c.memo ? `<div class="cust-detail-memo">📝 ${escapeHtmlCust(c.memo)}</div>` : ""}
-      ${customerImportDetails(c)}
-      <div class="cust-detail-section-title">업무일지 이력</div>
+      ${customerBasicMemo(c) ? `<div class="cust-detail-memo">📝 ${escapeHtmlCust(customerBasicMemo(c))}</div>` : ""}
+      
+      ${(c.additional_contacts || []).length ? '<div class="cust-detail-section-title">추가 연락처</div>'+c.additional_contacts.map(contact=>'<div>'+escapeHtmlCust([contact.name,contact.relation,contact.phone].filter(Boolean).join(' · '))+'</div>').join('') : ''}
+      ${customerImportDetails(c)}<div id="custDetailNoteComposer"></div>
+      <div class="cust-detail-section-title">날짜별 메모 · 상담 기록</div>
       <div id="custDetailHistory" class="cust-history-list"><div class="loading" style="padding:14px;"><span class="spinner"></span>불러오는 중...</div></div>
     `;
     document.getElementById("customerDetailModal").style.display = "flex";
+    mountCustomerMemoForm(document.getElementById('custDetailNoteComposer'),c,document.getElementById('custDetailHistory'));
     await renderCustomerHistory(document.getElementById('custDetailHistory'), id);
   }
 
@@ -412,7 +461,7 @@
           <div class="cust-consultation-content">${escapeHtmlCust(entry.content || '(내용 없음)')}</div>
           <div class="cust-consultation-attachments"></div>
           <div class="cust-consultation-actions">
-            <button type="button" class="btn consult-edit">상담 수정</button>
+            <button type="button" class="btn consult-edit">메모·상담 수정</button>
             <a class="btn" href="${DIARY_APP_URL}?customerId=${encodeURIComponent(customerId)}" target="_blank" rel="noopener noreferrer">업무일지에서 보기 · 메모 추가</a>
           </div>`;
         attachmentSlots.set(entry.id, card.querySelector('.cust-consultation-attachments'));
@@ -423,11 +472,12 @@
           card.classList.add('is-editing');
           const form = document.createElement('form');
           form.className = 'cust-consultation-editor';
-          form.innerHTML = `<label>상담 제목<input name="title" type="text"></label>
+          form.innerHTML = `<label>기록 날짜<input name="date" type="date" required></label><label>상담 제목<input name="title" type="text"></label>
             <label>상담 내용<textarea name="content" rows="8" required></textarea></label>
             <p class="cust-history-help">저장하면 원본 업무일지에도 반영됩니다.</p>
             <p class="consult-error" role="alert"></p>
             <div class="cust-consultation-actions"><button type="submit" class="btn btn-primary">상담 저장</button><button type="button" class="btn consult-cancel">취소</button></div>`;
+          form.elements.date.value = entry.date || customerToday();
           form.elements.title.value = entry.title || '';
           form.elements.content.value = entry.content || '';
           form.querySelector('.consult-cancel').onclick = () => { form.remove(); card.classList.remove('is-editing'); editButton.hidden = false; };
@@ -439,12 +489,14 @@
             buttons.forEach(b => b.disabled = true);
             form.querySelector('.consult-error').textContent = '';
             try {
-              const saved = await updateCustomerDiaryEntry(customerId, entry, {title: form.elements.title.value.trim(), content});
+              const saved = await updateCustomerDiaryEntry(customerId, entry, {title: form.elements.title.value.trim(), date:form.elements.date.value, content});
               Object.assign(entry, saved);
+              card.querySelector('.cust-consultation-meta').textContent = formatDate(saved.date || entry.date) + ' · ' + (entry.writer || '');
               card.querySelector('.cust-consultation-title').textContent = saved.title || '(제목 없음)';
               card.querySelector('.cust-consultation-content').textContent = saved.content;
               form.remove(); card.classList.remove('is-editing'); editButton.hidden = false;
               showToast('상담 기록을 저장했습니다. 업무일지에도 반영됩니다.');
+              renderCustomerHistory(container,customerId);
               loadCustomers();
             } catch(error) {
               form.querySelector('.consult-error').textContent = error.message;
@@ -506,14 +558,16 @@
     if (!c) return;
     editingCustomerId = id;
     setCustomerKinds("ce",customerKinds(c));
-    document.getElementById("ce_phones").value=customerPhones(c).filter(p=>p!==c.phone).join("\n");
+    setCustomerContacts("ce",c);
     document.getElementById("ce_name").value    = c.name    || "";
     document.getElementById("ce_contact").value = c.phone   || "";
     document.getElementById("ce_role").value    = c.customer_role || "";
     document.getElementById("ce_type").value    = c.property_category || "";
     document.getElementById("ce_budget").value  = c.desired_price || "";
     document.getElementById("ce_region").value  = c.desired_region || "";
-    document.getElementById("ce_memo").value    = c.memo    || "";
+    document.getElementById("ce_memo").value = customerBasicMemo(c);
+    document.getElementById("ce_importDetails").innerHTML = customerImportDetails(c);
+    mountCustomerMemoForm(document.getElementById("ce_noteComposer"),c,document.getElementById("custEditHistory"));
     document.getElementById("customerEditModal").style.display = "flex";
     renderCustomerHistory(document.getElementById("custEditHistory"), id);
   }
@@ -529,11 +583,12 @@
         phone_normalized:  normalizeCustomerPhone(phone),
         customer_types: selectedCustomerKinds("ce"),
         contact_phones: formPhones("ce"),
+        additional_contacts: readCustomerContacts("ce"),
         customer_role:     document.getElementById("ce_role").value || null,
         property_category: document.getElementById("ce_type").value || null,
         desired_price:     document.getElementById("ce_budget").value.trim() || null,
         desired_region:    document.getElementById("ce_region").value.trim() || null,
-        memo:              document.getElementById("ce_memo").value.trim()
+        basic_memo:        document.getElementById("ce_memo").value.trim()
       });
       document.getElementById("customerEditModal").style.display = "none";
       showToast("✅ 수정 완료!");
@@ -546,7 +601,7 @@
   function resetCustomerQuickForm() {
     ["c_name","c_contact","c_budget","c_region","c_memo"].forEach(id => document.getElementById(id).value = "");
     document.getElementById("c_type").value = "";
-    document.getElementById("c_phones").value = "";setCustomerKinds("c",[]);
+    document.getElementById("c_contacts").replaceChildren();setCustomerKinds("c",[]);
     document.getElementById("c_role").value = "";
   }
   function closeCustomerQuickCard() {
@@ -594,7 +649,7 @@
         await addCustomer({
           customer_code: generateCustomerCode(),
           name, phone, phone_normalized: digits,
-          customer_types:selectedCustomerKinds("c"),contact_phones:formPhones("c"),
+          customer_types:selectedCustomerKinds("c"),contact_phones:formPhones("c"),additional_contacts:readCustomerContacts("c"),basic_memo:memo,
           customer_role: role || null,
           property_category: type || null,
           desired_price: budget || null,

@@ -1633,13 +1633,13 @@ function normalizeCustomerPhone(phone) {
 // 업무일지 이력을 읽는다(고객페이지 "업무일지 이력"/최근업무·최근상담일용). 이 앱은
 // 상담 수정은 동일한 work_diary 원본 행의 제목/본문만 갱신한다.
 async function getCustomerDiaryHistory(customerId) {
-  const res = await fetchWithTimeout(
-    SUPABASE_URL + "/rest/v1/work_diary?customer_id=eq." + encodeURIComponent(customerId) +
-      "&or=(link_key.is.null,link_key.neq.__daily_schedule__)&select=id,date,title,content,writer,created_at,updated_at&order=date.desc,created_at.desc",
-    { headers }
-  );
-  if (!res.ok) throw new Error("업무일지 이력 조회 실패");
-  return await res.json();
+  const result=[];
+  for(let offset=0;;offset+=500){
+    const res=await fetchWithTimeout(SUPABASE_URL + "/rest/v1/work_diary?customer_id=eq." + encodeURIComponent(customerId) +
+      "&or=(link_key.is.null,link_key.neq.__daily_schedule__)&select=id,date,title,content,writer,created_at,updated_at&order=date.desc,created_at.desc,id.asc&limit=500&offset="+offset,{headers});
+    if(!res.ok)throw new Error("업무일지 이력 조회 실패");
+    const rows=await res.json();result.push(...rows);if(rows.length<500)return result;
+  }
 }
 
 // 목록 화면의 "최근업무"/"최근상담일" 컬럼용 - 여러 고객의 최신 업무일지 1건씩을 한 번에 조회.
@@ -1715,11 +1715,11 @@ async function updateCustomerDiaryEntry(customerId, original, changes) {
     updated_at: original.updated_at ? 'eq.' + original.updated_at : 'is.null',
     content: original.content == null ? 'is.null' : 'eq.' + original.content,
     title: original.title == null ? 'is.null' : 'eq.' + original.title,
-    select: 'id,title,content,updated_at'
+    select: 'id,date,title,content,updated_at'
   });
   const res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/work_diary?' + params, {
     method: 'PATCH', headers: { ...headers, Prefer: 'return=representation' },
-    body: JSON.stringify({ title: changes.title, content: changes.content, updated_at: new Date().toISOString() })
+    body: JSON.stringify({ title: changes.title, content: changes.content, ...(changes.date ? {date:changes.date} : {}), updated_at: new Date().toISOString() })
   });
   if (!res.ok) throw new Error('상담 저장 실패. 로그인과 수정 권한을 확인해 주세요.');
   const rows = await res.json();
@@ -1791,3 +1791,13 @@ document.addEventListener('click', event => {
 
 
 
+
+async function addCustomerDiaryMemo(customer, draft) {
+  if (!customer.id || !draft.id || !/^\d{4}-\d{2}-\d{2}$/.test(draft.date) || !draft.content.trim()) throw new Error('고객·날짜·메모를 확인해 주세요.');
+  const body={id:draft.id,customer_id:customer.id,customer_name:customer.name||'',customer_phone:customer.phone||'',date:draft.date,title:'고객 추가메모',content:draft.content.trim(),record_type:'일반메모',writer:OfficeConfig.label};
+  const res=await fetchWithTimeout(SUPABASE_URL+'/rest/v1/work_diary?on_conflict=id', {
+    method:'POST',headers:{...headers,Prefer:'resolution=ignore-duplicates,return=representation'},body:JSON.stringify(body)
+  });
+  if(!res.ok)throw new Error('메모 저장 실패. 로그인과 입력 내용을 확인해 주세요.');
+  return (await res.json())[0] || body;
+}
