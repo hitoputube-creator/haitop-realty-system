@@ -241,6 +241,10 @@
     .sum-card.forsale  { background: rgba(234,179,8,0.10);  border-color: rgba(234,179,8,0.25); }
     .sum-card.revenue  { background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.25); }
     .sum-card.own      { background: rgba(167,139,250,0.10); border-color: rgba(167,139,250,0.28); }
+    .unit-summary-filter { cursor:pointer; font-family:inherit; color:inherit; }
+    .unit-summary-filter .sum-num, .unit-summary-filter .sum-label { display:block; }
+    .unit-summary-filter:hover { filter:brightness(1.2); }
+    .unit-summary-filter.active, .unit-summary-filter:focus-visible { outline:2px solid var(--gold, #D4AF37); outline-offset:2px; }
     .summary-note { margin: -4px 0 10px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
     .sum-num   { font-size: 1.65rem; font-weight: 900; line-height: 1; }
     .sum-label { font-size: 0.76rem; color: var(--muted); margin-top: 5px; }
@@ -579,22 +583,10 @@
 
     <!-- 요약 카드 -->
     <div class="summary-grid" id="residentialSummaryGrid" style="display:none;">
-      <div class="sum-card forsale">
-        <div class="sum-num" id="sumDealSale">-</div>
-        <div class="sum-label">매매</div>
-      </div>
-      <div class="sum-card revenue">
-        <div class="sum-num" id="sumDealJeonse">-</div>
-        <div class="sum-label">전세</div>
-      </div>
-      <div class="sum-card occupied">
-        <div class="sum-num" id="sumDealWolse">-</div>
-        <div class="sum-label">월세</div>
-      </div>
-      <div class="sum-card own">
-        <div class="sum-num" id="sumOwn">-</div>
-        <div class="sum-label">자가</div>
-      </div>
+      <button type="button" class="sum-card forsale unit-summary-filter" data-unit-deal="매매" aria-pressed="false" title="매매 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumDealSale">-</span><span class="sum-label">매매</span></button>
+      <button type="button" class="sum-card revenue unit-summary-filter" data-unit-deal="전세" aria-pressed="false" title="전세 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumDealJeonse">-</span><span class="sum-label">전세</span></button>
+      <button type="button" class="sum-card occupied unit-summary-filter" data-unit-deal="월세" aria-pressed="false" title="월세 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumDealWolse">-</span><span class="sum-label">월세</span></button>
+      <button type="button" class="sum-card own unit-summary-filter" data-unit-deal="자가" aria-pressed="false" title="자가 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumOwn">-</span><span class="sum-label">자가</span></button>
     </div>
     <p class="summary-note" id="residentialSummaryNote" style="display:none;"></p>
     <div class="summary-grid" id="commercialSummaryGrid">
@@ -1439,6 +1431,7 @@ async function deleteBFile(id) {
   let units       = [];
   let editIdx     = -1;
   let filterFloor = "전체";
+  let filterUnitDeal = "";
   let bName       = "";
   let apartmentListings = [];
   let listingLookupLoaded = false;
@@ -1747,6 +1740,11 @@ async function deleteBFile(id) {
     $("residentialSummaryGrid").style.display = resi ? "" : "none";
     $("residentialSummaryNote").style.display = resi ? "" : "none";
     $("commercialSummaryGrid").style.display  = resi ? "none" : "";
+    document.querySelectorAll('[data-unit-deal]').forEach(button => {
+      const active = resi && filterUnitDeal === button.dataset.unitDeal;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
     if (resi) {
       const deals = units.map(u => String(unitDeal(u) || ""));
       $("sumDealSale").textContent   = deals.filter(d => d.includes("매매")).length;
@@ -1787,21 +1785,34 @@ async function deleteBFile(id) {
     });
   }
 
+  function matchesUnitDealFilter(unit, deal) {
+    if (!deal) return true;
+    if (deal === '자가') return (unit.세입자현황 || unit.공실여부 || '') === '자가거주';
+    return String(unitDeal(unit) || '').includes(deal);
+  }
+  document.querySelectorAll('[data-unit-deal]').forEach(button => {
+    button.addEventListener('click', () => {
+      filterUnitDeal = filterUnitDeal === button.dataset.unitDeal ? '' : button.dataset.unitDeal;
+      filterFloor = '전체';
+      renderAll();
+    });
+  });
+
   function renderTable() {
     const grouped = filterFloor === "전체"
       ? units
       : units.filter(u => unitGroup(u) === filterFloor);
-    const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped) : grouped;
+    const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped.filter(u => matchesUnitDealFilter(u, filterUnitDeal))) : grouped;
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
     const listed = filtered.filter(u => residentialUnitMode() && listingLookupLoaded ? linkedUnitListings(u).length > 0 : String(u.listing_id || '').trim()).length;
-    $("unitCounts").textContent = `${floorLabel(filterFloor)} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => u.공실여부 === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
+    $("unitCounts").textContent = `${floorLabel(filterFloor)}${residentialUnitMode() && filterUnitDeal ? " · " + filterUnitDeal : ""} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => u.공실여부 === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
     const tbody = $("unitsTbody");
     const empty = $("unitsEmpty");
 
     if (residentialUnitMode()) renderResidentialHeader();
     if (!filtered.length) {
-      if(residentialUnitMode())empty.textContent=units.length ? "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요." : "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.";
+      if(residentialUnitMode())empty.textContent=units.length ? "선택한 조건에 해당하는 세대가 없습니다." : "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.";
       tbody.innerHTML = "";
       empty.style.display = "";
       return;
