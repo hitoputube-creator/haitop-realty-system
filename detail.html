@@ -90,14 +90,15 @@
   .apartment-basic-section .apartment-info-row[style="--pairs:1"] { grid-template-columns:110px minmax(0,1fr); }
 }
 
-/* 공장·창고: 구분 네 칸, 주소 세 칸, 내부 연락처 세 칸 */
+/* 기본정보: 구분 네 칸, 주소 세 칸, 건물 선택·단지명 */
 @media (min-width: 901px) {
-  #editModal.factory-warehouse-edit #edit_basicInfoGrid { grid-template-columns:repeat(12,minmax(0,1fr)); }
-  #editModal.factory-warehouse-edit #edit_basicInfoGrid > .field { grid-column:span 4;min-width:0; }
-  #editModal.factory-warehouse-edit #edit_basicInfoGrid > .field:nth-child(-n+4) { grid-column:span 3; }
-  #editModal.factory-warehouse-edit #edit_basicInfoGrid > .field[style*="1 / -1"] { grid-column:1 / -1; }
-  #editModal.factory-warehouse-edit #edit_internalInfoGrid { grid-template-columns:repeat(3,minmax(0,1fr)); }
-  #editModal.factory-warehouse-edit #edit_internalInfoGrid > .field { min-width:0; }
+  #editModal #edit_basicInfoGrid { grid-template-columns:repeat(12,minmax(0,1fr)); }
+  #editModal #edit_basicInfoGrid > .field { grid-column:span 4;min-width:0; }
+  #editModal #edit_basicInfoGrid > .field:nth-child(-n+4) { grid-column:span 3; }
+  #editModal #edit_basicInfoGrid > .edit-quick-building-field { grid-column:span 8; }
+  #editModal #edit_basicInfoGrid > .field[style*="1 / -1"] { grid-column:1 / -1; }
+  #editModal #edit_internalInfoGrid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  #editModal #edit_internalInfoGrid > .field { min-width:0; }
 }
 </style>
 </head>
@@ -203,10 +204,6 @@
           <option value="명단">명단 (보관·관리용)</option>
         </select>
       </div>
-      <div class="field" style="grid-column:1 / -1;">
-        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
-        <select id="edit_quickBuildingSelect"></select>
-      </div>
       <div class="field">
         <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
         <input id="edit_publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
@@ -230,6 +227,10 @@
       <div class="field" style="display:none;">
         <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
         <input id="edit_apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
+      </div>
+      <div class="field edit-quick-building-field">
+        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
+        <select id="edit_quickBuildingSelect"></select>
       </div>
       <div class="field">
         <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
