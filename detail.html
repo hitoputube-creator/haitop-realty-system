@@ -76,6 +76,11 @@
 }
 .owner-customer-link:hover { color:#fff3cc; background:#263b55; border-color:#ffe29a; }
 .owner-customer-link:focus-visible { outline:2px solid #ffe29a; outline-offset:3px; }
+
+.tenant-info-section > summary { cursor:pointer; margin-bottom:0; }
+.tenant-info-section[open] > summary { margin-bottom:12px; }
+.tenant-info-section > summary::after { content:'펼치기 ▾'; float:right; font-size:12px; }
+.tenant-info-section[open] > summary::after { content:'접기 ▴'; }
 </style>
 </head>
 <body data-nav-active="properties">
@@ -1214,11 +1219,17 @@ function closeHomepageTab(tab) {
           [["이름",u.소유주]],
           [["연락처",u.연락처],["통신사",u.소유자통신사]]
         ]),
-        section("세입자 정보 · " + (u.세입자현황 === "임차중" || u.세입자이름 || u.세입자연락처 ? "있음" : u.세입자현황 === "미확인" || !u.세입자현황 ? "미확인" : "없음"), [
-          [["이름",u.세입자이름]],
-          [["연락처",u.세입자연락처]],
-          [["비고",u.세입자비고]]
-        ])
+        (() => {
+          const hasTenant = u.세입자현황 === "임차중" || u.세입자현황 === "세입자 거주";
+          const status = hasTenant ? "있음" : !u.세입자현황 || u.세입자현황 === "미확인" ? "미확인" : "없음";
+          return '<details class="detail-section apartment-info-section tenant-info-section"' + (hasTenant ? ' open' : '') +
+            '><summary class="detail-section-title">세입자 정보 · ' + status + '</summary>' +
+            '<div class="apartment-info-table">' + [
+              [["이름",u.세입자이름]], [["연락처",u.세입자연락처]],
+              [["계약 시작일",u.계약시작],["계약 종료일",u.계약종료]],
+              [["비고",u.세입자비고]]
+            ].map(row).join('') + '</div></details>';
+        })()
       ].join("");
       return '<div class="apartment-details-layout">'+basic+
         '<div class="apartment-details-column">'+left+'</div>'+
