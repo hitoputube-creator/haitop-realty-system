@@ -1287,11 +1287,6 @@ function closeHomepageTab(tab) {
         '<div class="apartment-details-column">'+right+'</div></div>';
     }
     const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "");
-    const rentOrSale = firstDetailValue(
-      dealType === "매매" ? formatWonOrText(item.salePrice) : "",
-      formatWonOrText(item.monthlyRent),
-      formatWonOrText(item.salePrice)
-    );
     const exclusiveArea = formatAreaPair(
       item.exclusiveAreaM2 || item.shop_area_sqm || item.officetel_area_sqm || item.biz_privArea_sqm,
       item.exclusiveAreaPy || item.shop_area_py || item.officetel_area_py || item.biz_privArea_py
@@ -1308,20 +1303,108 @@ function closeHomepageTab(tab) {
     const zoning = firstDetailValue(item.zoning, item.land_zone);
     const heightPower = [withSuffix(item.factory_height, "m"), withSuffix(item.factory_power, "kW")].filter(Boolean).join(" / ");
 
+    // ── 종류(1차구분)별로 상세정보 표에 보여줄 항목을 고른다 ──
+    // 수정 화면의 종류별 입력 항목(EDIT_AREA_MAP·EDIT_COMMERCIAL_CATS)과 같은 기준이다.
+    // core: 값이 비어 있어도 "—"로 항상 보여주는 핵심 항목(입력 누락을 바로 알아볼 수 있게).
+    // cond: 값이 있을 때만 보여주는 항목. 종류에 해당하지 않는 항목은 값이 있을 때만 맨 뒤에 붙으므로
+    //       비어 있는 건물 전용 항목이 토지 화면에 줄줄이 "—"로 나오지 않는다.
+    const cat1Raw = ({ "공장/창고": "공장창고", "상가/사무실": "상가사무실" })[category.category1] || category.category1;
+    const storageCat1 = resolveStorageCategory1(cat1Raw, category.category2);
+    const profileKey = ({
+      "토지": "land", "공장창고": "factory", "상가사무실": "commercial",
+      "주거용": "residential", "건물빌딩": "building", "단독전원주택": "building"
+    })[storageCat1] || "default";
+
+    const landAreaMain = firstDetailValue(landArea, formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py));
+    const siteAreaPair = formatAreaPair(
+      item.landAreaM2 || item.factory_siteArea_sqm,
+      item.landAreaPy || item.factory_siteArea_py || item.factory_land_py
+    );
+    const buildAreaPair = formatAreaPair(
+      item.buildingAreaM2 || item.factory_buildArea_sqm,
+      item.buildingAreaPy || item.factory_buildArea_py || item.factory_area_py
+    );
+    const cells = {
+      buildingName: ["건물명", complexName],
+      detailAddr: ["상세주소·동호수", firstDetailValue(item.privateDetailAddress, item.detailAddress)],
+      landArea: ["토지면적", landAreaMain],
+      siteArea: ["대지면적", siteAreaPair],
+      buildArea: ["건축면적", buildAreaPair],
+      totalFloor: ["연면적", totalFloorArea],
+      exclusive: ["전용면적", exclusiveArea],
+      supply: ["공급면적", formatAreaPair(item.supplyAreaM2, item.supplyAreaPy)],
+      floor: ["층수", floorInfo],
+      parking: ["주차대수", parking],
+      approval: ["사용승인일", item.approvalDate],
+      structure: ["구조", structure],
+      direction: ["방향", direction],
+      available: ["입주가능일", availableDate],
+      use: ["건축물용도", buildingUse],
+      zoning: ["용도지역", zoning],
+      jimok: ["지목", item.land_jimok],
+      coverage: ["건폐율", withSuffix(item.land_coverage, "%")],
+      far: ["용적률", withSuffix(item.land_far, "%")],
+      heightPower: ["층고/전력", heightPower],
+      road: ["도로조건", firstDetailValue(item.roadAccess, item.land_road)],
+      shape: ["형상", item.land_shape],
+      truck: ["대형차진입", item.factory_truck],
+    };
+    const consumedCells = new Set();
+    // 공장·건물은 대지면적 칸이 비어 있으면 예전 데이터가 담긴 토지면적으로 채운다(중복 표시 방지).
+    if ((profileKey === "factory" || profileKey === "building") && !siteAreaPair && landAreaMain) {
+      cells.siteArea = ["대지면적", landAreaMain];
+      consumedCells.add("landArea");
+    }
+    const PROFILES = {
+      land:        { core: [["landArea", "jimok", "zoning"]],
+                     cond: ["coverage", "far", "road", "shape"] },
+      factory:     { core: [["siteArea", "buildArea", "totalFloor"], ["zoning", "floor"], ["parking", "approval"]],
+                     cond: ["use", "structure", "heightPower", "truck", "available"] },
+      commercial:  { core: [["buildingName", "detailAddr"], ["exclusive", "supply", "floor"], ["zoning", "parking", "approval"]],
+                     cond: ["use", "structure", "direction", "available"] },
+      residential: { core: [["buildingName", "detailAddr"], ["exclusive", "supply", "floor"], ["direction", "available", "parking"]],
+                     cond: ["approval", "structure", "use", "zoning"] },
+      building:    { core: [["buildingName"], ["siteArea", "buildArea", "totalFloor"], ["floor", "parking", "approval"], ["zoning", "structure", "use"]],
+                     cond: ["detailAddr", "direction", "available"] },
+      // 종류를 알 수 없는("확인 필요") 매물은 예전처럼 모든 항목을 보여준다.
+      default:     { core: [["exclusive", "landArea", "supply"], ["buildingName", "detailAddr", "totalFloor"], ["parking", "approval", "structure"],
+                            ["floor", "direction", "available"], ["use", "zoning", "jimok"], ["coverage", "far", "heightPower"]],
+                     cond: ["siteArea", "buildArea", "road", "shape", "truck"] },
+    };
+    const profile = PROFILES[profileKey];
+    const listedKeys = new Set([...profile.core.flat(), ...profile.cond]);
+    // 종류에 안 맞는 항목이라도 값이 실제로 들어 있으면 숨기지 않고 맨 뒤에 보여준다(입력 데이터 보호).
+    const strayKeys = Object.keys(cells).filter(k => !listedKeys.has(k) && !consumedCells.has(k));
+    const profileRows = profile.core.map(keys => iptRow(keys.map(k => cells[k])));
+    const profileCondPairs = [...profile.cond, ...strayKeys].map(k => cells[k]);
+
+    // 가격은 거래유형에 맞는 항목만 보여준다(매매면 매매가, 전세면 전세금, 월세·임대면 보증금+월세).
+    const saleText = firstDetailValue(formatWonOrText(item.salePrice), profileKey === "land" ? formatManWon(item.land_price) : "");
+    const depositText = formatWonOrText(item.deposit);
+    const rentText = formatWonOrText(item.monthlyRent);
+    let priceCore, priceCond;
+    if (dealType === "매매") {
+      priceCore = [["매매가", saleText]];
+      priceCond = [["보증금", depositText], ["월세", rentText]];
+    } else if (dealType === "전세") {
+      priceCore = [["전세금", depositText]];
+      priceCond = [["매매가", saleText], ["월세", rentText]];
+    } else if (dealType === "월세" || dealType === "임대") {
+      priceCore = [["보증금", depositText], ["월세", rentText]];
+      priceCond = [["매매가", saleText]];
+    } else {
+      priceCore = [["보증금", depositText], ["월세/매매가", firstDetailValue(rentText, saleText)]];
+      priceCond = [];
+    }
+
     const rows = [
       iptRow([["1차구분", category.category1 || item.category1], ["2차구분", category.category2 || item.category2], ["거래유형", dealType]]),
       iptRow([["제목", item.title]]),
-      category.category2 === "아파트" || item.type === "apartment"
-        ? iptRow([["공개주소 · 새주소(도로명주소)", item.roadAddress], ["공개주소 · 구주소(지번주소)", item.jibunAddress]])
-        : iptRow([["공개주소", publicAddress], ["비공개주소", mapAddress]]),
-      iptRow([["보증금", formatWonOrText(item.deposit)], ["월세/매매가", rentOrSale], ["전용면적", exclusiveArea]]),
-      iptRow([["건물명", complexName], ["토지면적", landArea], ["공급면적", formatAreaPair(item.supplyAreaM2, item.supplyAreaPy)]]),
-      iptRow([["상세주소·동호수", firstDetailValue(item.privateDetailAddress, item.detailAddress)], ["연면적", totalFloorArea]]),
-      iptRow([["주차대수", parking], ["사용승인일", item.approvalDate], ["구조", structure]]),
-      iptRow([["층수", floorInfo], ["방향", direction], ["입주가능일", availableDate]]),
+      iptRow([["공개주소", publicAddress], ["비공개주소", mapAddress]]),
+      iptRow(priceCore),
+      ...profileRows,
+      packRows([...priceCond, ...profileCondPairs], 3),
       iptRow([["소유주", ownerName], ["연락처1", contact], ["연락처2", item.owner_phone2]]),
-      iptRow([["건축물용도", buildingUse], ["용도지역", zoning], ["지목", item.land_jimok]]),
-      iptRow([["건폐율", withSuffix(item.land_coverage, "%")], ["용적률", withSuffix(item.land_far, "%")], ["층고/전력", heightPower]]),
     ].join("");
 
     const relatedContacts = (Array.isArray(item.additional_contacts) ? item.additional_contacts : [])
@@ -1340,16 +1423,11 @@ function closeHomepageTab(tab) {
       ["상가 관리비", formatManWon(item.shop_maintenance)],
       ["상가 권리금", item.shop_premium],
       ["오피스텔 금액", formatManWon(item.officetel_price)],
-      ["토지 매매가", formatManWon(item.land_price)],
+      // 토지 종류는 위 가격 칸(매매가)에 이미 합쳐서 보여준다.
+      ["토지 매매가", profileKey === "land" ? "" : formatManWon(item.land_price)],
       ["공장·창고 금액", formatManWon(item.factory_price)],
       ["지식산업센터 금액", formatManWon(item.biz_price)],
       ["가격 메모", item.quick_price],
-      ["대지면적", formatAreaPair(item.landAreaM2 || item.factory_siteArea_sqm, item.landAreaPy || item.factory_siteArea_py || item.factory_land_py)],
-      ["건축면적", formatAreaPair(item.buildingAreaM2 || item.factory_buildArea_sqm, item.buildingAreaPy || item.factory_buildArea_py || item.factory_area_py)],
-      ["레거시 토지면적", formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py)],
-      ["도로조건", firstDetailValue(item.roadAccess, item.land_road)],
-      ["형상", item.land_shape],
-      ["대형차진입", item.factory_truck],
       ["일반사업자", item.officetel_biz],
       ["전입", item.officetel_resident],
       ["임대상태", item.shop_status],
