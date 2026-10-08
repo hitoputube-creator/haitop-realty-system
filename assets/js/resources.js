@@ -19,6 +19,7 @@ function openDriveBuilding(page, id) {
 }
 let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
 let residentialSearch = '';
+let residentialVillage = '';
 
 // ===== 공통 유틸 =====
 function showToast(msg, duration = 2000) {
@@ -320,15 +321,11 @@ function apartmentVillageName(item) {
   return memoMatch ? memoMatch[1] : '기타 단지';
 }
 function buildDriveResourceResults(items, category) {
-  if (driveResourceScope !== 'residential' || category !== '아파트') return _buildDriveItemsHtml(items, category);
-  const groups = new Map();
-  items.forEach(item => {
-    const village = apartmentVillageName(item);
-    if (!groups.has(village)) groups.set(village, []);
-    groups.get(village).push(item);
-  });
-  return [...groups].sort(([a], [b]) => a === '기타 단지' ? 1 : b === '기타 단지' ? -1 : a.localeCompare(b, 'ko'))
-    .map(([village, resources]) => '<details class="apartment-village-group" style="grid-column:1/-1;border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:12px;"' + (residentialSearch.trim() ? ' open' : '') + '><summary style="cursor:pointer;color:var(--gold);font-weight:700;padding:4px;">' + escapeCategory(village) + ' <span style="font-size:.8rem;color:var(--text-muted);">(' + resources.length + ')</span></summary><div class="listing-grid" style="margin-top:12px;">' + _buildDriveItemsHtml(resources, category) + '</div></details>').join('');
+  return _buildDriveItemsHtml(items, category);
+}
+function selectedResidentialItems(items,category) {
+  const matches=searchResidentialItems(items);
+  return category==='아파트' && residentialVillage ? matches.filter(item=>apartmentVillageName(item)===residentialVillage) : matches;
 }
 
 function renderDriveTab() {
@@ -375,13 +372,20 @@ function renderDriveTab() {
   // 선택된 카테고리 목록 (전체 표시 — 페이지네이션 없음)
   const cat = activeDriveCat;
   const items = sortedByCatOrder(cat, grouped[cat]);
-  const shown = driveResourceScope === 'residential' ? searchResidentialItems(items) : items;
+  const isApartment=driveResourceScope==='residential' && cat==='아파트';
+  const villageCounts=new Map();
+  if(isApartment)items.forEach(item=>{const village=apartmentVillageName(item);villageCounts.set(village,(villageCounts.get(village)||0)+1);});
+  if(isApartment && residentialVillage && !villageCounts.has(residentialVillage))residentialVillage='';
+  const villages=[...villageCounts.keys()].sort((a,b)=>a==='기타 단지'?1:b==='기타 단지'?-1:a.localeCompare(b,'ko'));
+  const villageHtml=isApartment ? '<div style="margin-bottom:12px;"><select id="residentialVillageSelect" aria-label="마을 선택" style="width:260px;max-width:100%;color-scheme:dark;"><option value="">전체 마을 ('+items.length+')</option>'+villages.map(v=>'<option value="'+escapeCategory(v)+'"'+(residentialVillage===v?' selected':'')+'>'+escapeCategory(v)+' ('+villageCounts.get(v)+')</option>').join('')+'</select></div>' : '';
+  const shown = driveResourceScope === 'residential' ? selectedResidentialItems(items,cat) : items;
   const searchHtml = driveResourceScope === 'residential' ? `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
     <input id="residentialResourceSearch" type="search" aria-label="주거자료 검색" placeholder="단지명 · 마을명 · 주소 검색" value="${escapeCategory(residentialSearch)}" style="flex:1;min-width:180px;">
     <span id="residentialSearchCount" style="font-size:.8rem;color:var(--text-muted);">${shown.length} / ${items.length}개</span>
   </div>` : '';
   const sectionHtml = `
     <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
+      ${villageHtml}
       ${searchHtml}
       <div class="listing-grid" id="driveResourceResults">${shown.length ? buildDriveResourceResults(shown, cat) : '<div class="loading">표시할 자료가 없습니다.</div>'}</div>
     </div>`;
@@ -398,13 +402,21 @@ function renderDriveTab() {
   const searchInput = document.getElementById('residentialResourceSearch');
   if (searchInput) searchInput.addEventListener('input', () => {
     residentialSearch = searchInput.value;
-    const filtered = searchResidentialItems(items);
+    const filtered = selectedResidentialItems(items,cat);
     document.getElementById('driveResourceResults').innerHTML = filtered.length ? buildDriveResourceResults(filtered, cat) : '<div class="loading">검색 결과가 없습니다.</div>';
     document.getElementById('residentialSearchCount').textContent = `${filtered.length} / ${items.length}개`;
+  });
+  const villageSelect=document.getElementById('residentialVillageSelect');
+  if(villageSelect)villageSelect.addEventListener('change',()=>{
+    residentialVillage=villageSelect.value;
+    const filtered=selectedResidentialItems(items,cat);
+    document.getElementById('driveResourceResults').innerHTML=filtered.length?buildDriveResourceResults(filtered,cat):'<div class="loading">검색 결과가 없습니다.</div>';
+    document.getElementById('residentialSearchCount').textContent=filtered.length+' / '+items.length+'개';
   });
   // innerHTML 완료 후 버튼 이벤트 바인딩
   container.querySelectorAll("[data-cidx]").forEach(btn => {
     btn.addEventListener("click", () => {
+      if(activeDriveCat!==categories[+btn.dataset.cidx])residentialVillage='';
       activeDriveCat = categories[+btn.dataset.cidx];
       renderDriveTab();
     });
