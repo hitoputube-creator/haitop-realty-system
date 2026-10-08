@@ -98,7 +98,12 @@
     .rec-spinner.active { display:flex; }
     .rec-spinner-dot { width:12px; height:12px; border:2px solid rgba(212,175,55,0.3); border-top-color:var(--gold); border-radius:50%; animation:recSpin .7s linear infinite; }
     @keyframes recSpin { to { transform:rotate(360deg); } }
-  </style>
+  
+.customer-type-tabs { display:flex; gap:7px; flex-wrap:wrap; margin:10px 0 14px; }
+.customer-type-tabs button { border:1px solid var(--border-slate); border-radius:20px; background:transparent; color:var(--text-main); padding:7px 12px; cursor:pointer; font:inherit; font-size:.85rem; }
+.customer-type-tabs button.active { background:var(--gold); color:var(--bg-main); border-color:var(--gold); }
+.customer-tags { display:block; color:var(--gold); font-size:.76rem; margin-top:4px; }
+</style>
 </head>
 <body data-nav-active="index">
 
@@ -199,6 +204,7 @@
           <button class="btn btn-primary" id="customerAddToggleBtn" style="white-space:nowrap;flex-shrink:0;">+ 고객 등록</button>
         </div>
       </div>
+      <div id="customerTypeTabs" class="customer-type-tabs" aria-label="고객 종류"></div>
       <div id="customerTableWrap" class="cust-table-wrap">
         <div class="cust-table-head">
           <span>고객명</span><span>연락처</span><span>예산</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
@@ -1004,6 +1010,29 @@ if (tab === "done")       renderDoneList();
   let customerPage = 1;
   const CUST_PER_PAGE = 10;
   let customerSearch = "";
+  let customerTypeFilter = "";
+  const CUSTOMER_TYPES = ['매수자','임차인','소유자','부동산','업체','지인'];
+  function customerKinds(c) {
+    if(Array.isArray(c.customer_types) && c.customer_types.length)return c.customer_types;
+    const mapping={매수:'매수자',임차:'임차인',매도:'소유자',임대:'소유자'};
+    return mapping[c.customer_role] ? [mapping[c.customer_role]] : [];
+  }
+  function customerPhones(c) { return [...new Set([c.phone,...(c.contact_phones || []),...(c.additional_contacts || []).map(x=>x.phone)].filter(Boolean))]; }
+  function renderCustomerTypeTabs() {
+    const base=allCustomers.filter(c=>c.status!=='계약완료');
+    document.getElementById('customerTypeTabs').innerHTML=['전체',...CUSTOMER_TYPES,'미분류'].map(t=>{
+      const key=t==='전체' ? '' : t;
+      const count=base.filter(c=>!key || (key==='미분류' ? !customerKinds(c).length : customerKinds(c).includes(key))).length;
+      return '<button type="button" data-customer-kind="'+key+'" aria-pressed="'+(customerTypeFilter===key)+'" class="'+(customerTypeFilter===key?'active':'')+'">'+t+' '+count+'</button>';
+    }).join('');
+  }
+  document.getElementById('customerTypeTabs').addEventListener('click',e=>{
+    const button=e.target.closest('[data-customer-kind]');
+    if(!button)return;
+    customerTypeFilter=button.dataset.customerKind;customerPage=1;renderCustomers();
+  });
+
+
 
   // 레거시 매물유형 코드(shop/officetel/...)와 새 한글 값(상가/사무실 등)을 모두 그대로 보여준다.
   const LEGACY_TYPE_LABEL = { shop:"상가/사무실", officetel:"오피스텔", land:"토지", factory:"공장/창고", bizcenter:"지식산업센터" };
@@ -1024,11 +1053,13 @@ if (tab === "done")       renderDoneList();
     const badge = document.getElementById("customerCountBadge");
     container.innerHTML = "";
 
+    renderCustomerTypeTabs();
     let filtered = allCustomers.filter(c => c.status !== "계약완료");
+    if(customerTypeFilter)filtered=filtered.filter(c=>customerTypeFilter==="미분류" ? !customerKinds(c).length : customerKinds(c).includes(customerTypeFilter));
     if (customerSearch) {
       const kw = customerSearch.toLowerCase();
       filtered = filtered.filter(c =>
-        [c.name, c.phone, c.memo, c.desired_price, c.desired_region, c.customer_role].join(" ").toLowerCase().includes(kw)
+        [c.name, ...customerPhones(c), c.basic_memo, c.memo, c.desired_price, c.desired_region, ...customerKinds(c), JSON.stringify(c.additional_contacts||[]), JSON.stringify(c.import_sources||[])].join(" ").toLowerCase().includes(kw) || (kw.replace(/\D/g,"").length>=4 && customerPhones(c).some(p=>normalizeCustomerPhone(p).includes(kw.replace(/\D/g,""))))
       );
     }
 
@@ -1051,7 +1082,7 @@ if (tab === "done")       renderDoneList();
       const lastDate = activity && activity.date ? formatDate(activity.date) : "—";
 
       row.innerHTML = `
-        <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}</span>
+        <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}<small class="customer-tags">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")}</small></span>
         <span class="cust-cell" data-label="연락처">${c.phone ? `<a class="cust-phone-link" href="tel:${escapeHtmlCust(c.phone)}" onclick="event.stopPropagation()">📞 ${escapeHtmlCust(c.phone)}</a>` : "—"}</span>
         <span class="cust-cell" data-label="예산">${escapeHtmlCust(c.desired_price) || "—"}</span>
         <span class="cust-cell" data-label="최근업무">${escapeHtmlCust(lastWork)}</span>
@@ -1082,7 +1113,7 @@ if (tab === "done")       renderDoneList();
     body.innerHTML = `
       <div class="cust-detail-grid">
         <div><span>연락처</span><strong>${escapeHtmlCust(c.phone) || "—"}</strong></div>
-        <div><span>구분</span><strong>${escapeHtmlCust(c.customer_role) || "—"}</strong></div>
+        <div><span>고객 종류</span><strong>${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")}</strong></div>
         <div><span>찾는매물</span><strong>${escapeHtmlCust(getCustomerTypeLabel(c.property_category))}</strong></div>
         <div><span>예산</span><strong>${escapeHtmlCust(c.desired_price) || "—"}</strong></div>
         <div><span>관심지역</span><strong>${escapeHtmlCust(c.desired_region) || "—"}</strong></div>
