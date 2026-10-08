@@ -350,9 +350,6 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     ? `convertToDetail('${idArg}')`
     : `location.href='detail.html?id=${encodeURIComponent(item.id)}&edit=1'`;
   const isRoster = isRosterListing(item);
-  const statusAction = isRoster && !isDone && !revert ? `handleRosterToListing('${idArg}')`
-    : isDone || revert ? `handleRevertListing('${idArg}')` : `handleDealDone('${idArg}')`;
-  const statusText = isRoster && !isDone && !revert ? "매물로 전환" : isDone || revert ? "진행중으로" : "거래완료";
   const deleteButton = typeof handleDeleteListingFromCard === "function"
     ? `<button class="btn btn-danger lc-delete-btn" onclick="event.stopPropagation();handleDeleteListingFromCard('${idArg}')">삭제</button>`
     : "";
@@ -405,8 +402,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
         ${deleteButton}
       </div>
       <div class="lc-actions-side">
-        ${isRoster && !isDone && !revert ? '<button class="lc-status-chip" onclick="event.stopPropagation();'+statusAction+'">매물로 전환</button>' : ''}
-        <select class="lc-status-chip" aria-label="매물 거래상태" onclick="event.stopPropagation()" onchange="event.stopPropagation();handleListingProgressChange('${idArg}',this)">${['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(getStatusLabel(item)===status?' selected':'')+'>'+status+'</option>').join('')}</select>
+        <select class="lc-status-chip" aria-label="매물 거래상태" onclick="event.stopPropagation()" onchange="event.stopPropagation();handleListingProgressChange('${idArg}',this)">${isRoster && getStatusLabel(item)==='진행중' ? '<option value="" selected disabled>상태 선택</option>' : ''}${['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(getStatusLabel(item)===status && !(isRoster && status==='진행중')?' selected':'')+'>'+status+'</option>').join('')}</select>
         <div class="lc-toggle" data-homepage-only onclick="event.stopPropagation()">
           <span class="lc-toggle-label">홈페이지</span>
           <span class="lc-switch">
@@ -443,7 +439,7 @@ async function handlePublicToggle(id) {
   const item = allListings.find(x => x.id === id);
   if (!item) return;
   if (isRosterListing(item)) {
-    showToast("명단은 홈페이지에 공개할 수 없습니다. 먼저 [매물로 전환] 하세요.", 3500);
+    showToast("명단은 홈페이지에 공개할 수 없습니다. 상태에서 [진행중]을 선택해 매물로 전환하세요.", 3500);
     return;
   }
   // 빠른저장 매물은 홈페이지 공개 차단
@@ -487,11 +483,21 @@ async function handleRevertListing(id) {
 }
 
 async function handleListingProgressChange(id,select) {
-  const item=allListings.find(l=>l.id===id),before=item?listingProgressStatus(item):'진행중',status=select.value;
+  const item=allListings.find(l=>l.id===id),status=select.value;
+  const before=item && isRosterListing(item) && listingProgressStatus(item)==='진행중' ? '' : item?listingProgressStatus(item):'진행중';
+  if(!['진행중','보류','거래완료'].includes(status))return;
   select.disabled=true;
   try {
-    if(status==='거래완료')await markListingDone(id);else await updateListingStatus(id,status);
-    showToast('매물 상태를 '+status+'으로 변경했습니다.');
+    const convert = item && isRosterListing(item) && status==='진행중';
+    if(convert) {
+      const current=await getListingById(id);
+      if(!current)throw new Error('매물을 찾을 수 없습니다.');
+      await updateListing(id,Object.assign({},current,{listingKind:'매물',status:'진행중'}));
+      if(typeof invalidateCustomerLinkContext==='function')invalidateCustomerLinkContext();
+      item.listingKind='매물';item.status='진행중';
+    } else if(status==='거래완료')await markListingDone(id);
+    else await updateListingStatus(id,status);
+    showToast(convert ? '진행중 매물로 전환했습니다.' : '매물 상태를 '+status+'으로 변경했습니다.');
     if(typeof loadListings==='function')await loadListings();
     if(typeof renderDoneList==='function')renderDoneList();
     if(typeof renderList==='function')renderList();
