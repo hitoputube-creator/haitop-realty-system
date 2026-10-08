@@ -394,7 +394,19 @@
     .residential-modal .span-2 { grid-column:span 2; }
     .residential-modal .span-3 { grid-column:span 3; }
     .residential-modal .area-dual { grid-column:span 2; }
-    .residential-modal .area-row { margin-top:0; gap:4px; }
+    .residential-modal .area-row { margin-top:0; gap:4px; grid-template-columns:minmax(0,1fr) auto auto minmax(0,1fr) auto; }
+    .residential-modal .owner-phone-row { grid-template-columns:78px minmax(100px,1fr) auto auto; align-items:center; }
+    .owner-phone-row button { white-space:nowrap; padding:7px 10px; }
+    .residential-modal input[type=date] { color-scheme:dark; }
+    .unit-date-row { display:flex; align-items:center; gap:6px; }
+    .unit-date-row input { flex:1; min-width:0; }
+    .unit-date-row button { flex:0 0 32px; height:32px; padding:0; font-size:1rem; color:#f3d27b; }
+    .residential-modal .contract-dates { grid-column:1 / -1; display:grid; grid-template-columns:minmax(0,1fr) 100px minmax(0,1fr); gap:10px; }
+    @media(max-width:620px) {
+      .residential-modal .owner-phone-row { grid-template-columns:78px minmax(0,1fr) !important; }
+      .residential-modal .contract-dates { grid-template-columns:minmax(0,1fr) 76px; gap:7px; }
+      .contract-dates .contract-end { grid-column:1 / -1; }
+    }
     .residential-modal .amt-hint { min-height:0; margin-top:2px; }
     .owner-phone-row { display:grid; grid-template-columns:88px minmax(0,1fr); gap:6px; }
     .residential-modal #unitAdditionalNotes .umgrid { grid-template-columns:minmax(0,1fr) auto; align-items:end; }
@@ -656,15 +668,17 @@
         </div></div>
         <div class="um-section current"><div class="um-section-title">👤 소유자 정보</div><div class="umgrid">
           <div class="umfield"><label>소유자 이름</label><input id="ru_소유자" /></div>
-          <div class="umfield span-3"><label>소유자 연락처</label><div class="owner-phone-row"><select id="ru_통신사" aria-label="소유자 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>알뜰폰</option><option>미확인</option></select><input id="ru_연락처" type="tel" placeholder="010-0000-0000" aria-label="소유자 전화번호" /></div></div>
-          <div class="umfield full" style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn-unit-ghost" id="ru_ownerRegistry">대법원 인터넷등기소 확인</button><button type="button" class="btn-unit-ghost" id="ru_ownerBuilding">건축물대장 확인</button></div>
+          <div class="umfield span-3"><label>소유자 연락처</label><div class="owner-phone-row"><select id="ru_통신사" aria-label="소유자 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>알뜰폰</option><option>미확인</option></select><input id="ru_연락처" type="tel" placeholder="010-0000-0000" aria-label="소유자 전화번호" /><button type="button" class="btn-unit-ghost" id="ru_ownerRegistry" title="대법원 인터넷등기소 확인">대법원</button><button type="button" class="btn-unit-ghost" id="ru_ownerBuilding" title="건축물대장 확인">건축물대장</button></div></div>
         </div></div>
         <div class="um-section sale"><div class="um-section-title">📅 세입자·계약</div><div class="umgrid">
           <div class="umfield"><label>세입자 현황</label><select id="ru_세입자현황"><option>미확인</option><option>자가거주</option><option value="임차중">세입자 거주</option><option>공실</option></select></div>
           <div class="umfield"><label>세입자 이름</label><input id="ru_세입자이름" /></div>
           <div class="umfield span-2"><label>세입자 연락처</label><input id="ru_세입자연락처" type="tel" placeholder="010-0000-0000" /></div>
-          <div class="umfield span-2"><label>세입자 계약 시작일</label><input id="ru_계약시작" type="date" /></div>
-          <div class="umfield span-2"><label>세입자 계약 종료일</label><input id="ru_계약종료" type="date" /></div>
+          <div class="contract-dates">
+            <div class="umfield"><label for="ru_계약시작">세입자 계약 시작일</label><div class="unit-date-row"><input id="ru_계약시작" type="date" /><button type="button" class="btn-unit-ghost" data-unit-date="ru_계약시작" aria-label="계약 시작일 달력 열기">📅</button></div></div>
+            <div class="umfield"><label for="ru_계약기간">계약기간</label><select id="ru_계약기간"><option value="">선택</option><option value="1">1년</option><option value="2">2년</option></select></div>
+            <div class="umfield contract-end"><label for="ru_계약종료">세입자 계약 종료일</label><div class="unit-date-row"><input id="ru_계약종료" type="date" /><button type="button" class="btn-unit-ghost" data-unit-date="ru_계약종료" aria-label="계약 종료일 달력 열기">📅</button></div></div>
+          </div>
         </div></div>
         <div class="um-section current"><div class="um-section-title">📝 옵션·비고</div><div class="umgrid">
           <div class="umfield span-2"><label>옵션내역</label><textarea id="ru_옵션" placeholder="시스템에어컨, 붙박이장 등"></textarea></div>
@@ -1473,6 +1487,22 @@ async function deleteBFile(id) {
     }
     if (plan.supply_area_m2 != null) $('ru_평형').value = (Number(plan.supply_area_m2)/(400/121)).toFixed(2)+'평';
   }
+  function residentialContractEnd(start, years) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || ![1,2].includes(Number(years))) return '';
+    const [year, month, day] = start.split('-').map(Number);
+    const date = new Date(Date.UTC(year + Number(years), month - 1, day));
+    date.setUTCDate(date.getUTCDate() - 1);
+    return date.toISOString().slice(0,10);
+  }
+  function syncResidentialContractPeriod() {
+    const start = $('ru_계약시작').value, end = $('ru_계약종료').value;
+    $('ru_계약기간').value = start && end ? String([1,2].find(years => residentialContractEnd(start,years) === end) || '') : '';
+  }
+  function updateResidentialContractEnd() {
+    const start = $('ru_계약시작').value, years = $('ru_계약기간').value;
+    if (!years) return;
+    $('ru_계약종료').value = residentialContractEnd(start, years);
+  }
   function openResidentialFields(u, isNew) {
     const parts = roomParts(u);
     const fields = {아파트명:bName,동:parts.dong,호수:parts.room,접수일자:u.접수일자 || (isNew ? todayInKorea() : ''),평형:u.평형,타입:u.타입,거래구분:u.거래구분,
@@ -1484,6 +1514,7 @@ async function deleteBFile(id) {
       const option = document.createElement('option'); option.value = option.textContent = u.소유자통신사; option.dataset.customCarrier = 'true'; $('ru_통신사').appendChild(option);
     }
     Object.entries(fields).forEach(([key,value]) => { $('ru_'+key).value = value ?? ''; });
+    syncResidentialContractPeriod();
     for (const prefix of ['분양','전용']) {
       const m2 = u[prefix+'_m2'] ?? (u[prefix+'_평'] != null ? Number(u[prefix+'_평'])*(400/121) : null);
       $('ru_'+prefix+'_m2').value = m2 == null ? '' : Math.round(m2*10000)/10000;
@@ -2029,6 +2060,16 @@ async function deleteBFile(id) {
     });
   }
 
+  $('ru_계약기간').addEventListener('change', updateResidentialContractEnd);
+  $('ru_계약시작').addEventListener('change', updateResidentialContractEnd);
+  $('ru_계약종료').addEventListener('change', syncResidentialContractPeriod);
+  document.querySelectorAll('[data-unit-date]').forEach(button => button.addEventListener('click', () => {
+    const input = $(button.dataset.unitDate);
+    input.focus();
+    if (typeof input.showPicker === 'function') {
+      try { input.showPicker(); } catch (_) { /* Native date input remains available. */ }
+    }
+  }));
   $('ru_타입').addEventListener('change', fillUnitPlanAreas);
   function ownerSearch(source) {
     openApartmentRegistrySearch({complexName:bName,dong:$('ru_동').value,ho:$('ru_호수').value,jibunAddress:buildingAddress},message=>showToast(message,10000),source);
