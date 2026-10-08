@@ -46,6 +46,18 @@
 </style>
 <script src="assets/js/global-property-search-core.js?v=20261008-status-portfolio"></script>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-v1">
+<script>
+(function(){
+  var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+  document.documentElement.dataset.officeTheme=office;
+  if(office!=='ktop'){
+    var link=document.querySelector('link[href*="white-navy-workspace.css"]');
+    if(link)link.disabled=true;
+    var building=document.getElementById('ktop-building-light');
+    if(building)building.disabled=true;
+  }
+})();
+</script>
 </head>
 <body>
 <div class="page">
