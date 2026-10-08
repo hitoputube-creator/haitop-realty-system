@@ -1541,11 +1541,16 @@ async function deleteBFile(id) {
   }
   function renderMemoHistory(u) {
     const notes = unitMemos(u);
-    $('unitMemoHistory').innerHTML = notes.length ? [...notes].reverse().map(note => {
+    const remarks = residentialUnitMode() ? apartmentRemarksOnly(u.비고) : String(u.비고 || "").trim();
+    // Keep the saved remarks separate from dated consultation notes; show both without modifying stored data.
+    const blocks = [];
+    if (remarks) blocks.push('<div class="unit-memo-entry"><time>기존 비고</time>'+esc(remarks).replace(/\\n/g,'<br>')+'</div>');
+    [...notes].reverse().forEach(note => {
       const date = new Date(note.created_at);
       const label = note.created_at && !Number.isNaN(date.getTime()) ? date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}) : '이전 메모';
-      return `<div class="unit-memo-entry"><time>${esc(label)}</time>${esc(note.text || '').replace(/\n/g,'<br>')}</div>`;
-    }).join('') : '<p style="color:var(--muted);font-size:.8rem;">추가메모가 없습니다.</p>';
+      blocks.push('<div class="unit-memo-entry"><time>'+esc(label)+'</time>'+esc(note.text || '').replace(/\\n/g,'<br>')+'</div>');
+    });
+    $('unitMemoHistory').innerHTML = blocks.length ? blocks.join('') : '<p style="color:var(--muted);font-size:.8rem;">저장된 기존 메모가 없습니다.</p>';
   }
   function ownerPhone(value) {
     let digits = String(value || '').replace(/\D/g,'');
