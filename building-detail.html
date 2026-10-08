@@ -1877,7 +1877,7 @@ async function deleteBFile(id) {
       return `<tr>
         <td><strong>${u.호수 || "-"}</strong></td>
         <td>${u.현업종 || "-"}</td>
-        <td>${u.소유주 || "-"}${String(u.소유주 || "").trim() && String(u.연락처 || "").trim() ? ' <span class="sbadge 임차중">연락처 확보</span>' : ""}</td>
+        <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
         <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
