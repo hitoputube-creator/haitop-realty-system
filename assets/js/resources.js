@@ -312,6 +312,25 @@ function bindDriveCategoryDrag(container) {
   });
 }
 
+function apartmentVillageName(item) {
+  const name = String(item.name || '').normalize('NFC').replace(/\s+/g, '');
+  const match = name.match(/([가-힣]+마을)/);
+  if (match) return match[1];
+  const memoMatch = String(item.memo || '').match(/(?:마을명|마을)\s*[:：]\s*([가-힣]+마을)/);
+  return memoMatch ? memoMatch[1] : '기타 단지';
+}
+function buildDriveResourceResults(items, category) {
+  if (driveResourceScope !== 'residential' || category !== '아파트') return _buildDriveItemsHtml(items, category);
+  const groups = new Map();
+  items.forEach(item => {
+    const village = apartmentVillageName(item);
+    if (!groups.has(village)) groups.set(village, []);
+    groups.get(village).push(item);
+  });
+  return [...groups].sort(([a], [b]) => a === '기타 단지' ? 1 : b === '기타 단지' ? -1 : a.localeCompare(b, 'ko'))
+    .map(([village, resources]) => '<details class="apartment-village-group" style="grid-column:1/-1;border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:12px;"' + (residentialSearch.trim() ? ' open' : '') + '><summary style="cursor:pointer;color:var(--gold);font-weight:700;padding:4px;">' + escapeCategory(village) + ' <span style="font-size:.8rem;color:var(--text-muted);">(' + resources.length + ')</span></summary><div class="listing-grid" style="margin-top:12px;">' + _buildDriveItemsHtml(resources, category) + '</div></details>').join('');
+}
+
 function renderDriveTab() {
   const container = document.getElementById("driveContent");
   const visibleResources = visibleDriveResources();
@@ -364,7 +383,7 @@ function renderDriveTab() {
   const sectionHtml = `
     <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
       ${searchHtml}
-      <div class="listing-grid" id="driveResourceResults">${shown.length ? _buildDriveItemsHtml(shown, cat) : '<div class="loading">표시할 자료가 없습니다.</div>'}</div>
+      <div class="listing-grid" id="driveResourceResults">${shown.length ? buildDriveResourceResults(shown, cat) : '<div class="loading">표시할 자료가 없습니다.</div>'}</div>
     </div>`;
 
   container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
@@ -380,7 +399,7 @@ function renderDriveTab() {
   if (searchInput) searchInput.addEventListener('input', () => {
     residentialSearch = searchInput.value;
     const filtered = searchResidentialItems(items);
-    document.getElementById('driveResourceResults').innerHTML = filtered.length ? _buildDriveItemsHtml(filtered, cat) : '<div class="loading">검색 결과가 없습니다.</div>';
+    document.getElementById('driveResourceResults').innerHTML = filtered.length ? buildDriveResourceResults(filtered, cat) : '<div class="loading">검색 결과가 없습니다.</div>';
     document.getElementById('residentialSearchCount').textContent = `${filtered.length} / ${items.length}개`;
   });
   // innerHTML 완료 후 버튼 이벤트 바인딩
