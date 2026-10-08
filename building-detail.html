@@ -420,6 +420,52 @@
     .residential-modal #unitMemoHistory p { margin:0; }
     .residential-modal .unit-modal-actions { position:sticky; bottom:0; z-index:1; margin-top:8px; padding:8px 0 0; background:#132040; flex-wrap:wrap; }
 
+
+    /* Building resources light workspace: scoped to this page, no shared app changes. */
+    html, body {
+      --bg:#f5f7fa; --bg2:#f5f7fa; --panel:#fff; --panel2:#fff;
+      --text:#1f3045; --txt:#1f3045; --sub:#44576c; --muted:#65758a;
+      --border:#dee5ee; --line2:#cfd8e3; --gold:#a78343; --gold-soft:#9b783d;
+      background:#f5f7fa !important; background-image:none !important; color:#1f3045 !important;
+      color-scheme:light;
+    }
+    .page .card,.page .topbar {
+      background:#fff !important;border:1px solid #dfe6ee !important;
+      box-shadow:0 2px 12px rgba(24,44,71,.055) !important;color:#1f3045 !important;
+    }
+    .page .card::before {display:none !important;}
+    .page .brand-text h1 {color:#182c47 !important;text-shadow:none !important;}
+    .page .brand-text p {color:#60748a !important;}
+    .page .sec-title,.page .unit-sec-head h3 {color:#213c5b !important;}
+    .page .sec-title::after {background:#e2e8f0 !important;}
+    .page .info-cell,.page .floor-card,.page .file-card {
+      background:#f9fbfd !important;border-color:#e0e7ef !important;color:#233449 !important;
+    }
+    .page .info-cell-label {color:#64748b !important;}
+    .page .info-cell-value,.page .floor-card-foot {color:#233449 !important;}
+    .page .info-cell-value.empty {color:#94a3b8 !important;}
+    .page label,.page .plan-area-note {color:#53657a !important;}
+    .page input:not([type=checkbox]),.page select,.page textarea {
+      background:#fff !important;color:#203349 !important;border-color:#cbd5e1 !important;color-scheme:light;
+    }
+    .page input::placeholder,.page textarea::placeholder {color:#8b97a6 !important;}
+    .page input:focus,.page select:focus,.page textarea:focus {border-color:#40678f !important;box-shadow:0 0 0 2px rgba(64,103,143,.12) !important;}
+    .page .btn,.page .btn-unit-ghost {
+      background:#fff !important;color:#294968 !important;border:1px solid #cbd7e5 !important;box-shadow:none !important;
+    }
+    .page .btn:hover,.page .btn-unit-ghost:hover {background:#eef3f9 !important;}
+    .page .btn.primary,.page .btn-unit-add {background:#182c47 !important;color:#fff !important;border-color:#182c47 !important;}
+    .page .btn-unit-del {background:#fff1f2 !important;color:#ab3543 !important;border-color:#f0c6ce !important;}
+    .page .sum-card {background:#f7f9fc !important;border-color:#dfe7f0 !important;box-shadow:none !important;}
+    .page .sum-card .sum-num {color:#24496c !important;}
+    .page .sum-card .sum-label,.page .summary-note,.page #unitCounts {color:#53677b !important;}
+    .page .floor-tabs button,.page .unit-sort {color:#294b6e !important;}
+    .page .units-tbl th {background:#edf2f7 !important;color:#344a62 !important;border-color:#dbe4ed !important;}
+    .page .units-tbl td {background:#fff !important;color:#26384e !important;border-color:#e7edf4 !important;}
+    .page .units-tbl tr:hover td {background:#f4f8fc !important;}
+    .page .units-tbl small {color:#64748b !important;}
+    .page .unit-modal-overlay {background:rgba(24,44,71,.40) !important;}
+
     /* Light professional theme — residential unit editor pilot only */
     .residential-modal .unit-modal-box {
       background:#ffffff !important; color:#233247 !important;
