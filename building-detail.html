@@ -1544,14 +1544,14 @@ async function deleteBFile(id) {
     const remarks = residentialUnitMode() ? apartmentRemarksOnly(u.비고) : String(u.비고 || "").trim();
     const entries = [];
     // The original remarks are shown first; later saved memos follow in their original order.
-    if (remarks) entries.push({text:remarks,created_at:null});
+    if (remarks) entries.push({text:remarks,created_at:u.비고기록일 || u.비고작성일 || null, received_date:u.접수일자 || null});
     notes.forEach(note => {
       if (String(note.text || "").trim()) entries.push(note);
     });
     $('unitMemoHistory').innerHTML = entries.length
       ? entries.map((note,index) => {
           const date = note.created_at ? new Date(note.created_at) : null;
-          const dateText = date && !Number.isNaN(date.getTime()) ? ' · '+date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}) : '';
+          const dateText = date && !Number.isNaN(date.getTime()) ? ' · 기록일 '+date.toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}) : (note.received_date ? ' · 접수일 '+esc(note.received_date) : ' · 기록일 미상');
           return '<div class="unit-memo-entry"><time>메모 '+(index+1)+esc(dateText)+'</time>'+esc(note.text || '').replace(/\\n/g,'<br>')+'</div>';
         }).join('')
       : '<p style="color:var(--muted);font-size:.8rem;">저장된 기존 메모가 없습니다.</p>';
