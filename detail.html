@@ -66,6 +66,16 @@
 @media(max-width:850px){.apartment-info-row.apartment-unit-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-details-layout{grid-template-columns:minmax(0,1fr)}.apartment-info-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-info-row[style="--pairs:1"]{grid-template-columns:108px minmax(0,1fr)}.apartment-details-column .apartment-info-row{grid-template-columns:90px minmax(0,1fr)}.apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}}
 @media(max-width:580px){.apartment-info-row.apartment-unit-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row[style="--pairs:1"]{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row>div{padding:9px 10px}.apartment-details-column .owner-contact-row{grid-template-columns:74px minmax(0,1fr) 52px 48px}.apartment-details-column .owner-contact-row>div{padding:8px 6px}.apartment-detail-title{gap:8px 18px}.apartment-unit-part strong{font-size:1.45rem}}
 .detail-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.detail-print-tools{margin-left:auto;display:flex;align-items:center;gap:8px}.detail-actions #detailProgressStatus{width:108px;min-width:108px;max-width:108px;flex:0 0 108px;height:36px;margin:0;padding:6px 10px;font-size:.82rem;border:1px solid var(--border-slate);border-radius:18px;color-scheme:dark}.detail-print-tools #printBriefBtn{white-space:nowrap}
+
+/* 소유주 연결 고객 버튼 */
+.owner-customer-link, .owner-customer-link:visited {
+  display:inline-flex; align-items:center; justify-content:center;
+  margin:6px 8px 0 0; padding:8px 14px; border-radius:8px;
+  color:#ffe29a; background:#17263b; border:1px solid #c9a84c;
+  font-size:13px; font-weight:700; text-decoration:none;
+}
+.owner-customer-link:hover { color:#fff3cc; background:#263b55; border-color:#ffe29a; }
+.owner-customer-link:focus-visible { outline:2px solid #ffe29a; outline-offset:3px; }
 </style>
 </head>
 <body data-nav-active="properties">
@@ -1319,7 +1329,7 @@ function closeHomepageTab(tab) {
     const html = renderDetailContent(item);
     const ids = Array.from(new Set([...(item.owner_customer_ids || []), ...(item.apartmentUnitData?.owner_customer_ids || [])]));
     if (!ids.length) return html;
-    return html + '<section class="detail-section"><div class="detail-section-title">소유주 고객 · 연락처 원본</div>' + ids.map((id,index) => '<a style="display:inline-block;padding:12px" href="' + escapeHtml(OfficeConfig.urlFor('customers.html?customerId=' + encodeURIComponent(id))) + '" target="_blank" rel="noopener">연결 고객 ' + (index+1) + ' 보기</a>').join('') + '</section>';
+    return html + '<section class="detail-section"><div class="detail-section-title">소유주 고객 · 연락처 원본</div>' + ids.map((id,index) => '<a class="owner-customer-link" href="' + escapeHtml(OfficeConfig.urlFor('customers.html?customerId=' + encodeURIComponent(id))) + '" target="_blank" rel="noopener">연결 고객 ' + (index+1) + ' 보기</a>').join('') + '</section>';
   }
   function renderDetailContent(item) {
     let html = "";

@@ -499,6 +499,16 @@
     .unit-sort:focus-visible{outline:2px solid var(--gold-soft);outline-offset:2px;border-radius:3px}
     .unit-sort-arrow{font-size:.7rem;opacity:.6}
     .unit-sort.active .unit-sort-arrow{opacity:1}
+
+/* 소유주 연결 고객 버튼 */
+.owner-customer-link, .owner-customer-link:visited {
+  display:inline-flex; align-items:center; justify-content:center;
+  margin:6px 8px 0 0; padding:8px 14px; border-radius:8px;
+  color:#ffe29a; background:#17263b; border:1px solid #c9a84c;
+  font-size:13px; font-weight:700; text-decoration:none;
+}
+.owner-customer-link:hover { color:#fff3cc; background:#263b55; border-color:#ffe29a; }
+.owner-customer-link:focus-visible { outline:2px solid #ffe29a; outline-offset:3px; }
 </style>
 </head>
 <body>
@@ -1505,7 +1515,7 @@ async function deleteBFile(id) {
   function openResidentialFields(u, isNew) {
     const linkedOwners = Array.isArray(u.owner_customer_ids) ? u.owner_customer_ids : [];
     $('ru_ownerCustomers').style.display = linkedOwners.length ? '' : 'none';
-    $('ru_ownerCustomers').innerHTML = linkedOwners.map((id,index) => '<a href="' + escapeHtml(OfficeConfig.urlFor('customers.html?customerId=' + encodeURIComponent(id))) + '" target="_blank" rel="noopener">연결 고객 ' + (index+1) + ' · 연락처 원본 보기</a>').join(' · ');
+    $('ru_ownerCustomers').innerHTML = linkedOwners.map((id,index) => '<a class="owner-customer-link" href="' + escapeHtml(OfficeConfig.urlFor('customers.html?customerId=' + encodeURIComponent(id))) + '" target="_blank" rel="noopener">연결 고객 ' + (index+1) + ' · 연락처 원본 보기</a>').join(' · ');
     const parts = roomParts(u);
     const fields = {아파트명:bName,동:parts.dong,호수:parts.room,접수일자:u.접수일자 || (isNew ? todayInKorea() : ''),평형:u.평형,타입:u.타입,거래구분:u.거래구분,
       매매가:u.현_매매가격,보증금:effectiveUnitPrice(u.현_보증금,u.보증금),월세:effectiveUnitPrice(u.현_월세,u.월차임),소유자:u.소유주,연락처:u.연락처,통신사:u.소유자통신사,
