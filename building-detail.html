@@ -512,6 +512,7 @@
 </style>
 
 <style>
+.unit-sale-subtype{display:block;margin-top:4px;font-size:.72em;line-height:1.35;color:#d4af37;font-weight:600;white-space:nowrap}
 #unitPrintSheet{display:none}
 .unit-select-cell{width:34px!important;text-align:center!important}
 .unit-select-row,#unitSelectAll{width:16px;height:16px;accent-color:#d4af37;cursor:pointer}
@@ -525,6 +526,7 @@
  #unitPrintSheet .unit-print-header span{white-space:nowrap;font-size:8pt}
  #unitPrintSheet table{width:100%!important;table-layout:fixed!important}
  #unitPrintSheet td,#unitPrintSheet th{padding:7px 6px!important;white-space:pre-line!important;word-break:keep-all!important;overflow-wrap:anywhere!important}
+ #unitPrintSheet td:nth-child(3){white-space:pre-line!important;line-height:1.55!important}
  #unitPrintSheet td:last-child,#unitPrintSheet th:last-child{width:22%!important}
  #unitPrintSheet tr{break-inside:avoid!important;page-break-inside:avoid!important}
 }
@@ -1496,7 +1498,7 @@ async function deleteBFile(id) {
     const displayOption=u=>String(u.옵션내역 || u.옵션 || "").trim() || "-";
     const price=n=>n==null||n===""?"-":Number(n).toLocaleString("ko-KR");
     const cells=u=>residential
-      ? [roomParts(u).dong+"동 "+roomParts(u).room+"호",residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||"-"),unitDeal(u)+(u.매매유형==="세안고매매"?"\\n세안고매매":""),price(u.현_매매가격),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임)+(u.매매유형==="세안고매매"&&u.승계보증금!=null?"\\n승계 "+price(u.승계보증금):""),u.소유주||"-",u.연락처||"-",displayOption(u)]
+      ? [roomParts(u).dong+"동 "+roomParts(u).room+"호",residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||"-"),unitDeal(u)+(u.매매유형==="세안고매매" && String(unitDeal(u)).includes("매매") ? "\n세안고매매" : ""),price(u.현_매매가격),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임)+(u.매매유형==="세안고매매"&&u.승계보증금!=null?"\\n승계 "+price(u.승계보증금):""),u.소유주||"-",u.연락처||"-",displayOption(u)]
       : [u.호수||"-",u.현업종||"-",u.소유주||"-",u.연락처||"-",currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
     const printable=document.createElement("div");
     printable.id="unitPrintSheet";
@@ -1714,7 +1716,7 @@ async function deleteBFile(id) {
       const sale = u.현_매매가격 == null ? '-' : Number(u.현_매매가격).toLocaleString('ko-KR');
       const tenant = u.세입자현황 || u.공실여부 || '미확인';
       const area=residentialUnitArea(u);
-      return `<tr>${unitCheckbox(u)}<td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(area.size)}${area.supply ? '<br><small>'+area.supply.toLocaleString('ko-KR',{maximumFractionDigits:2})+'㎡</small>' : ''}<br>${esc(area.type)}</td><td>${esc(unitDeal(u) || '-')}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions">${residentialUnitActions(u,ri)}</td></tr>`;
+      return `<tr>${unitCheckbox(u)}<td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(area.size)}${area.supply ? '<br><small>'+area.supply.toLocaleString('ko-KR',{maximumFractionDigits:2})+'㎡</small>' : ''}<br>${esc(area.type)}</td><td>${esc(unitDeal(u) || '-')}${u.매매유형 === "세안고매매" && String(unitDeal(u)).includes("매매") ? '<span class="unit-sale-subtype">세안고매매</span>' : ""}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions">${residentialUnitActions(u,ri)}</td></tr>`;
     }).join('');
   }
 
