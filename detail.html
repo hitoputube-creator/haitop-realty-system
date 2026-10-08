@@ -89,6 +89,16 @@
   .apartment-basic-section .apartment-info-row,
   .apartment-basic-section .apartment-info-row[style="--pairs:1"] { grid-template-columns:110px minmax(0,1fr); }
 }
+
+/* 공장·창고: 구분 네 칸, 주소 세 칸, 내부 연락처 세 칸 */
+@media (min-width: 901px) {
+  #editModal.factory-warehouse-edit #edit_basicInfoGrid { grid-template-columns:repeat(12,minmax(0,1fr)); }
+  #editModal.factory-warehouse-edit #edit_basicInfoGrid > .field { grid-column:span 4;min-width:0; }
+  #editModal.factory-warehouse-edit #edit_basicInfoGrid > .field:nth-child(-n+4) { grid-column:span 3; }
+  #editModal.factory-warehouse-edit #edit_basicInfoGrid > .field[style*="1 / -1"] { grid-column:1 / -1; }
+  #editModal.factory-warehouse-edit #edit_internalInfoGrid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  #editModal.factory-warehouse-edit #edit_internalInfoGrid > .field { min-width:0; }
+}
 </style>
 </head>
 <body data-nav-active="properties">
@@ -160,7 +170,7 @@
 
     <!-- 기본정보 -->
     <div class="modal-section-title">📋 기본정보</div>
-    <div class="edit-grid-3">
+    <div id="edit_basicInfoGrid" class="edit-grid-3">
       <div class="field">
         <label>1차구분</label>
         <select id="edit_category1">
@@ -356,7 +366,7 @@
 
     <!-- 내부전용 -->
     <div class="modal-section-title">🔒 내부전용</div>
-    <div class="form-grid-2" style="margin-bottom:10px;">
+    <div id="edit_internalInfoGrid" class="form-grid-2" style="margin-bottom:10px;">
       <div class="field"><label for="edit_progressStatus">거래상태</label><select id="edit_progressStatus"><option>진행중</option><option>보류</option><option>거래완료</option></select></div>
 <div class="field">
         <label>소유주명</label>
@@ -482,6 +492,9 @@ function closeHomepageTab(tab) {
   function updateEditDynamicSections() {
     const cat1 = document.getElementById("edit_category1")?.value || "";
     const cat2 = document.getElementById("edit_category2")?.value || "";
+    const isFactoryWarehouse = cat1 === "공장창고";
+    document.getElementById("editModal").classList.toggle("factory-warehouse-edit", isFactoryWarehouse);
+    document.getElementById("edit_complexName").closest(".field").style.display = isFactoryWarehouse ? "none" : "";
     if (typeof syncEditApartmentFields === "function") syncEditApartmentFields();
     // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
     const storageCat1 = resolveStorageCategory1(cat1, cat2);
