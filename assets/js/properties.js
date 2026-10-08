@@ -42,6 +42,7 @@ let searchKeyword = "";
 let currentSort = "newest";
 let currentPage = 1;
 let includeCompleted = false;
+let currentStatusFilter = "진행중";
 let currentKindTab = "매물"; // "매물" | "명단" | "전체" — 등록구분 탭
 let viewMode = "card"; // "card" | "list"
 let selectedIds = new Set(); // 선택된 매물 ID 집합
@@ -599,7 +600,7 @@ function matchesKindTab(item) {
 }
 
 function updateKindTabCounts() {
-  const live = allListings.filter(x => x.status !== "거래완료" || includeCompleted);
+  const live = allListings.filter(x => currentStatusFilter==="전체" || listingProgressStatus(x)===currentStatusFilter);
   const roster = live.filter(isRosterListing).length;
   const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = `(${n})`; };
   set("kindCountListing", live.length - roster);
@@ -611,7 +612,7 @@ function updateKindTabCounts() {
 function getBaseFilteredListings() {
   let filtered = allListings.filter(item => {
     if (!matchesKindTab(item)) return false;
-    if (item.status === "거래완료") return includeCompleted && matchesAllFilters(item);
+    if(currentStatusFilter!=="전체" && listingProgressStatus(item)!==currentStatusFilter)return false;
     return matchesAllFilters(item);
   });
   if (searchKeyword) {
@@ -777,6 +778,10 @@ document.querySelectorAll("#kindTabRow .kind-tab").forEach(btn => {
     currentPage = 1;
     renderList();
   });
+});
+document.getElementById("listingStatusFilter").addEventListener("change",e=>{
+  currentStatusFilter=e.target.value;includeCompleted=currentStatusFilter==="전체"||currentStatusFilter==="거래완료";
+  document.getElementById("includeCompletedChk").checked=includeCompleted;currentPage=1;renderList();saveFilterState();
 });
 document.getElementById("includeCompletedChk").addEventListener("change", (e) => {
   includeCompleted = e.target.checked;
@@ -1394,7 +1399,7 @@ function saveFilterState() {
   try {
     OfficeStorage.session.setItem(FILTER_STATE_KEY, JSON.stringify({
       searchKeyword, currentMajor, currentSub, currentTag, currentDealFilter,
-      includeCompleted, currentKindTab, currentSort, viewMode, columnFilters: listingColumnFilters,
+      includeCompleted, currentStatusFilter, currentKindTab, currentSort, viewMode, columnFilters: listingColumnFilters,
       scrollY: window.scrollY
     }));
   } catch (e) { /* 세션스토리지 사용 불가 시 조용히 무시 */ }
@@ -1417,7 +1422,9 @@ function restoreFilterState() {
       Object.keys(saved.columnFilters).forEach(k => { if (LISTING_FILTER_COLUMNS[k] && saved.columnFilters[k]) listingColumnFilters[k] = saved.columnFilters[k]; });
     }
 
-    includeCompleted = !!saved.includeCompleted;
+    currentStatusFilter=["진행중","보류","거래완료","전체"].includes(saved.currentStatusFilter)?saved.currentStatusFilter:"진행중";
+    document.getElementById("listingStatusFilter").value=currentStatusFilter;
+    includeCompleted=currentStatusFilter==="전체"||currentStatusFilter==="거래완료";
     if (["매물","명단","전체"].includes(saved.currentKindTab)) currentKindTab = saved.currentKindTab;
     document.getElementById("includeCompletedChk").checked = includeCompleted;
 

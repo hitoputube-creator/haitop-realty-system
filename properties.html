@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261007-kind" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="assets/js/storage.js?v=20261007-backup"></script>
+  <script src="assets/js/storage.js?v=20261008-status-portfolio"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -158,10 +158,7 @@
           <input id="searchInput" type="text" placeholder="매물번호·주소·매물명·메모·단지명 검색" />
         </div>
         <button class="btn btn-ghost" id="searchBtn" style="flex:0 0 auto;white-space:nowrap;">검색</button>
-        <label class="include-done-label">
-          <input type="checkbox" id="includeCompletedChk" style="width:auto;accent-color:var(--gold);" />
-          거래완료 포함
-        </label>
+        <input type="checkbox" id="includeCompletedChk" hidden /><select id="listingStatusFilter" class="sort-select" aria-label="매물 거래상태 필터"><option value="진행중">진행중</option><option value="보류">보류</option><option value="거래완료">거래완료</option><option value="전체">전체 상태</option></select>
         <select id="sortSelect" class="sort-select">
           <option value="newest">최신순</option>
           <option value="oldest">오래된순</option>
@@ -631,10 +628,10 @@
   </div>
 </div>
 
-<script src="assets/js/listings-shared.js?v=20261007-kind"></script>
-<script src="assets/js/properties.js?v=20261007-kind"></script>
-<script src="assets/js/global-property-search-core.js?v=20261006-compact-search-2"></script>
-<script src="assets/js/global-property-search.js?v=20261006-compact-search-2"></script>
+<script src="assets/js/listings-shared.js?v=20261008-status-portfolio"></script>
+<script src="assets/js/properties.js?v=20261008-status-portfolio"></script>
+<script src="assets/js/global-property-search-core.js?v=20261008-status-portfolio"></script>
+<script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
 </body>
 </html>
 

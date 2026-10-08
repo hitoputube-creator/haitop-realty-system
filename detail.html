@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261007-presale"></script>
+<script src="assets/js/storage.js?v=20261008-status-portfolio"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -333,7 +333,8 @@
     <!-- 내부전용 -->
     <div class="modal-section-title">🔒 내부전용</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
-      <div class="field">
+      <div class="field"><label for="edit_progressStatus">거래상태</label><select id="edit_progressStatus"><option>진행중</option><option>보류</option><option>거래완료</option></select></div>
+<div class="field">
         <label>소유주명</label>
         <input id="edit_owner_name" type="text" placeholder="예) 홍길동" />
       </div>
@@ -812,6 +813,7 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_detailDescription").value = item.detailDescription || "";
     document.getElementById("edit_description").value       = item.description || item.quick_memo || "";
     // 내부전용
+    document.getElementById("edit_progressStatus").value = listingProgressStatus(item);
     document.getElementById("edit_owner_name").value   = item.owner_name || "";
     document.getElementById("edit_owner_phone1").value = item.owner_phone1 || "";
     // 추가 연락처: 신규 다중 목록이 있으면 그대로, 없으면 기존 연락처2를 1건으로 승계 표시
@@ -1337,11 +1339,7 @@ function closeHomepageTab(tab) {
     } else html += `<div class="detail-title">${escapeHtml(item.title || getListingCategoryLabel(item))}</div>`;
 
     html += `<div class="detail-actions">`;
-    if (item.status !== "거래완료") {
-      html += `<button class="btn btn-success" id="doneBtn">✅ 거래완료 처리</button>`;
-    } else {
-      html += `<button class="btn btn-ghost" id="undoneBtn">↩ 진행중으로 변경</button>`;
-    }
+    html += '<select id="detailProgressStatus" class="btn" aria-label="매물 거래상태">'+['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(listingProgressStatus(item)===status?' selected':'')+'>'+status+'</option>').join('')+'</select>';
     if (contact) {
       html += `<a class="contact-btn" href="tel:${escapeAttr(contact)}">📞 ${escapeHtml(contact)}</a>`;
     }
@@ -1427,7 +1425,7 @@ function closeHomepageTab(tab) {
 
     html += detailSection("등록상태", [
       detailField("등록구분", item.listingKind === "명단" ? "명단 (보관·관리용)" : "매물", { required: true }),
-      detailField("거래상태", (!item.status || item.status === "광고중" ? "진행중" : item.status), { required: true }),
+      detailField("거래상태", listingProgressStatus(item), { required: true }),
       ...(OfficeConfig.id === "ktop" ? [] : [detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true })]),
       detailField("등록일", formatDateValue(item.created_at)),
       detailField("최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))),
@@ -1552,6 +1550,13 @@ function closeHomepageTab(tab) {
         extraInfoToggle.querySelector("span").textContent = expanded ? "추가 정보 보기" : "추가 정보 닫기";
       });
     }
+    const progressSelect=document.getElementById("detailProgressStatus");
+    if(progressSelect)progressSelect.addEventListener('change',async()=>{
+      const old=listingProgressStatus(_currentItem);progressSelect.disabled=true;
+      try{if(progressSelect.value==='거래완료')await markListingDone(_currentItem.id);else await updateListingStatus(_currentItem.id,progressSelect.value);
+        _currentItem=await getListingById(_currentItem.id);document.getElementById('detailArea').innerHTML=renderDetail(_currentItem);rebindButtons();showToast('매물 상태를 저장했습니다.');
+      }catch(e){progressSelect.value=old;progressSelect.disabled=false;showToast(e.message);}
+    });
     const doneBtn   = document.getElementById("doneBtn");
     const undoneBtn = document.getElementById("undoneBtn");
     if (doneBtn) doneBtn.addEventListener("click", async () => {
@@ -1659,6 +1664,8 @@ function closeHomepageTab(tab) {
         }
         const updated = Object.assign({}, item, {
           type, category1, category2,
+          status: gv("edit_progressStatus"),
+          ...(gv("edit_progressStatus")==="거래완료" && item.status!=="거래완료" ? {completed_at:new Date().toISOString()} : {}),
           title:              editTitle || item.title || `${getTypeLabel(type)} · ${publicAddress || "주소미입력"}`,
           address:            mapAddress || publicAddress || item.address,
           ...apartmentAddresses,

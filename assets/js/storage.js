@@ -1235,6 +1235,7 @@ async function updateListingStatus(id, status) {
     body: JSON.stringify({ status: status })
   });
   if (!res.ok) throw new Error("상태 변경 실패");
+  invalidateCustomerLinkContext();
 }
 async function markListingDone(id) {
   const res1 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), { headers });
@@ -1249,6 +1250,7 @@ async function markListingDone(id) {
     body: JSON.stringify({ status: "거래완료", data })
   });
   if (!res2.ok) throw new Error("거래완료 처리 실패: " + await res2.text());
+  invalidateCustomerLinkContext();
 }
 async function deleteListing(id) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
@@ -1603,6 +1605,7 @@ async function updateCustomer(id, data) {
     body: JSON.stringify(body)
   });
   if (!res.ok) throw new Error("고객 수정 실패: " + await res.text());
+  invalidateCustomerLinkContext();
 }
 async function getDoneCustomers() {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers?status=eq.계약완료&order=completed_at.desc", { headers });
@@ -1633,10 +1636,15 @@ function normalizeCustomerPhone(phone) {
 // 업무일지 이력을 읽는다(고객페이지 "업무일지 이력"/최근업무·최근상담일용). 이 앱은
 // 상담 수정은 동일한 work_diary 원본 행의 제목/본문만 갱신한다.
 async function getCustomerDiaryHistory(customerId) {
+  if(window.HitopGlobalSearchCore){
+    const context=await getCustomerLinkContext(),customer=context.data.customers.find(c=>String(c.id)===String(customerId));
+    if(context.failed.includes('상담·메모'))throw new Error('상담·메모를 조회하지 못했습니다. 다시 열어 주세요.');
+    if(customer)return customerRelatedEntries(context,customer).history;
+  }
   const result=[];
   for(let offset=0;;offset+=500){
     const res=await fetchWithTimeout(SUPABASE_URL + "/rest/v1/work_diary?customer_id=eq." + encodeURIComponent(customerId) +
-      "&or=(link_key.is.null,link_key.neq.__daily_schedule__)&select=id,date,title,content,writer,created_at,updated_at&order=date.desc,created_at.desc,id.asc&limit=500&offset="+offset,{headers});
+      "&or=(link_key.is.null,link_key.neq.__daily_schedule__)&select=id,customer_id,listing_id,date,title,content,writer,created_at,updated_at&order=date.desc,created_at.desc,id.asc&limit=500&offset="+offset,{headers});
     if(!res.ok)throw new Error("업무일지 이력 조회 실패");
     const rows=await res.json();result.push(...rows);if(rows.length<500)return result;
   }
@@ -1711,7 +1719,7 @@ async function saveBuildingUnits(localId, name, units) {
 // 고객 화면과 업무일지는 같은 원본을 사용한다. 다른 필드는 덮어쓰지 않는다.
 async function updateCustomerDiaryEntry(customerId, original, changes) {
   const params = new URLSearchParams({
-    id: 'eq.' + original.id, customer_id: 'eq.' + customerId,
+    id: 'eq.' + original.id, customer_id: Object.hasOwn(original,'customer_id') ? (original.customer_id ? 'eq.'+original.customer_id : 'is.null') : 'eq.' + customerId,
     updated_at: original.updated_at ? 'eq.' + original.updated_at : 'is.null',
     content: original.content == null ? 'is.null' : 'eq.' + original.content,
     title: original.title == null ? 'is.null' : 'eq.' + original.title,
@@ -1724,6 +1732,7 @@ async function updateCustomerDiaryEntry(customerId, original, changes) {
   if (!res.ok) throw new Error('상담 저장 실패. 로그인과 수정 권한을 확인해 주세요.');
   const rows = await res.json();
   if (rows.length !== 1) throw new Error('다른 화면에서 변경됐거나 수정할 수 없는 기록입니다. 입력 내용을 복사한 뒤 다시 열어 주세요.');
+  invalidateCustomerLinkContext();
   return rows[0];
 }
 async function getCustomerDiaryAttachments(diaryIds) {
@@ -1799,5 +1808,42 @@ async function addCustomerDiaryMemo(customer, draft) {
     method:'POST',headers:{...headers,Prefer:'resolution=ignore-duplicates,return=representation'},body:JSON.stringify(body)
   });
   if(!res.ok)throw new Error('메모 저장 실패. 로그인과 입력 내용을 확인해 주세요.');
-  return (await res.json())[0] || body;
+  const saved=(await res.json())[0] || body;invalidateCustomerLinkContext();return saved;
+}
+
+function listingProgressStatus(item) { return item?.status === '거래완료' ? '거래완료' : item?.status === '보류' ? '보류' : '진행중'; }
+
+let customerLinkContextCache=null;
+function invalidateCustomerLinkContext(){customerLinkContextCache=null;}
+async function getCustomerLinkContext(){
+  if(customerLinkContextCache && Date.now()-customerLinkContextCache.time<15000)return customerLinkContextCache.promise;
+  if(!window.HitopGlobalSearchCore)throw new Error('고객 연결 검색을 불러오지 못했습니다.');
+  async function read(table){
+    const rows=[];
+    for(let offset=0;;offset+=500){
+      const res=await fetchWithTimeout(SUPABASE_URL+'/rest/v1/'+table+'?select=*&order=id.asc&limit=500&offset='+offset,{headers});
+      if(!res.ok)throw new Error(table+' 조회 실패');
+      const batch=await res.json();rows.push(...batch);if(batch.length<500)return rows;
+    }
+  }
+  const tables=[['listings','매물'],['buildings','세대·점포'],['drive_resources','기본자료'],['land_parcels','택지'],['customers','고객'],['drive_resource_categories','자료분류'],['work_diary','상담·메모']];
+  const promise=(async()=>{
+    const settled=await Promise.allSettled(tables.map(([table])=>read(table)));
+    const keys=['listings','buildings','resources','parcels','customers','categories','diary'],data={},failed=[];
+    settled.forEach((result,index)=>{data[keys[index]]=result.status==='fulfilled'?result.value:[];if(result.status==='rejected')failed.push(tables[index][1]);});
+    if(settled.every(r=>r.status==='rejected'))throw new Error('고객 연결 자료를 불러오지 못했습니다.');
+    return {data,entries:window.HitopGlobalSearchCore.build(data),failed};
+  })();
+  customerLinkContextCache={time:Date.now(),promise};
+  try{return await promise;}catch(e){invalidateCustomerLinkContext();throw e;}
+}
+function customerRelatedEntries(context,customer){
+  const core=window.HitopGlobalSearchCore;
+  const phones=new Set(core.customerContacts(customer).map(c=>core.phone(c.phone)).filter(p=>p.length>=7));
+  const ids=new Set([String(customer.id),...context.data.customers.filter(c=>core.customerContacts(c).some(contact=>phones.has(core.phone(contact.phone)))).map(c=>String(c.id))]);
+  const properties=context.entries.filter(e=>e.group!=='고객' && e.group!=='상담·메모' && ((e.customerIds||[]).some(id=>ids.has(String(id)))||e.contacts.some(c=>phones.has(core.phone(c.phone)))));
+  const listingIds=new Set(properties.map(p=>p.listingId).filter(Boolean).map(String));
+  const history=context.entries.filter(e=>e.group==='상담·메모' && ((e.customerIds||[]).some(id=>ids.has(String(id)))||e.contacts.some(c=>phones.has(core.phone(c.phone)))||listingIds.has(String(e.listingId)))).map(e=>e.diary)
+    .sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.created_at).localeCompare(String(a.created_at)));
+  return {properties,history,failed:context.failed};
 }

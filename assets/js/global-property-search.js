@@ -13,7 +13,7 @@ const status=el('p','gps-status');status.setAttribute('role','status');status.se
 const summary=el('div','gps-summary'),results=el('div','gps-results'),more=el('button','gps-more','더 보기');more.type='button';more.hidden=true;
 toolbar.append(form);section.append(status,summary,results,more);mount.append(section);
 let generation=0,matched=[],visible=0,busy=false;
-const sources=[['listings','등록 매물','*'],['buildings','세대·점포 자료','*'],['drive_resources','건물 정보','id,name,category,memo'],['land_parcels','필지 자료','*'],['customers','고객 연락처','id,name,phone,phone_normalized'],['drive_resource_categories','자료 분류','id,name,room']];
+const sources=[['listings','등록 매물','*'],['buildings','세대·점포 자료','*'],['drive_resources','건물 정보','id,name,category,memo'],['land_parcels','필지 자료','*'],['customers','고객 연락처','*'],['drive_resource_categories','자료 분류','id,name,room'],['work_diary','상담·메모','*']];
 async function readAll(table,select,token){
  const rows=[],seen=new Set();let offset=0;
  for(;;){
@@ -37,9 +37,9 @@ function renderRow(e){
   if(c.role&&c.role!=='소유주')line.append(el('small','gps-muted',c.role));
   contacts.append(line);
  });
- const info=el('div','gps-info');info.append(el('span','',e.source),el('span',e.listingId?'gps-listed':'gps-muted',e.listingId?'매물 등록 · '+e.status:'매물 미연결 · '+e.status));
+ const info=el('div','gps-info');info.append(el('span','',e.source),el('span',e.listingId?'gps-listed':'gps-muted',e.group==='고객'||e.group==='상담·메모'?e.status:e.listingId?'매물 등록 · '+e.status:'자료 · '+e.status));
  const actions=el('div','gps-actions'),seen=new Set();e.links.forEach(l=>{if(seen.has(l.href))return;seen.add(l.href);const a=el('a','',l.label);a.href=l.href;actions.append(a);});
- row.append(kind,place,contacts,info,actions);return row;
+ if(e.content){const content=el('p','gps-muted',e.content);content.style.whiteSpace='pre-wrap';content.style.gridColumn='1/-1';row.append(kind,place,contacts,info,content,actions);}else row.append(kind,place,contacts,info,actions);return row;
 }
 function showMore(){
  const end=Math.min(visible+50,matched.length);for(let i=visible;i<end;i++)results.append(renderRow(matched[i]));visible=end;
@@ -58,7 +58,7 @@ form.addEventListener('submit',async event=>{
   const auth=await hitopAuthClient.auth.getSession();if(auth.error||!auth.data?.session?.access_token)throw new Error('SESSION');
   const settled=await Promise.allSettled(sources.map(s=>readAll(s[0],s[2],auth.data.session.access_token)));
   if(mine!==generation)return;
-  const data={},failed=[],keys=['listings','buildings','resources','parcels','customers','categories'];
+  const data={},failed=[],keys=['listings','buildings','resources','parcels','customers','categories','diary'];
   settled.forEach((r,i)=>{if(r.status==='fulfilled')data[keys[i]]=r.value;else{data[keys[i]]=[];failed.push(sources[i][1]);}});
   if(settled.every(r=>r.status==='rejected'))throw new Error('ALL_FAILED');
   matched=core.search(core.build(data),data.customers,query);visible=0;

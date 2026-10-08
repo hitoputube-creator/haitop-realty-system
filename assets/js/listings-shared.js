@@ -139,17 +139,8 @@ function isRosterListing(item) {
   return !!item && item.listingKind === "명단";
 }
 
-function getStatusLabel(item) {
-  if (item.status === "거래완료") return "거래완료";
-  if (isNeedsCheck(item)) return "확인 필요";
-  return !item.status || item.status === "광고중" ? "진행중" : item.status;
-}
-
-function getStatusClass(item) {
-  if (item.status === "거래완료") return "status-done";
-  if (isNeedsCheck(item)) return "status-needs";
-  return "status-active";
-}
+function getStatusLabel(item) { return listingProgressStatus(item); }
+function getStatusClass(item) { const status=listingProgressStatus(item); return status==='거래완료'?'status-done':status==='보류'?'status-needs':'status-active'; }
 
 function getListingName(item) {
   return item.title && item.title !== item.address ? item.title : getBuildingName(item);
@@ -414,7 +405,8 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
         ${deleteButton}
       </div>
       <div class="lc-actions-side">
-        <button class="lc-status-chip${isDone ? " done" : ""}" onclick="event.stopPropagation();${statusAction}">${statusText}</button>
+        ${isRoster && !isDone && !revert ? '<button class="lc-status-chip" onclick="event.stopPropagation();'+statusAction+'">매물로 전환</button>' : ''}
+        <select class="lc-status-chip" aria-label="매물 거래상태" onclick="event.stopPropagation()" onchange="event.stopPropagation();handleListingProgressChange('${idArg}',this)">${['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(getStatusLabel(item)===status?' selected':'')+'>'+status+'</option>').join('')}</select>
         <div class="lc-toggle" data-homepage-only onclick="event.stopPropagation()">
           <span class="lc-toggle-label">홈페이지</span>
           <span class="lc-switch">
@@ -486,10 +478,23 @@ async function handleDealDone(id) {
 async function handleRevertListing(id) {
   if (!confirm("거래완료를 취소하고 매물관리로 되돌리시겠습니까?")) return;
   try {
-    await updateListingStatus(id, "광고중");
+    await updateListingStatus(id, "진행중");
     showToast("↩ 매물관리로 되돌렸습니다");
     await loadListings();
     if (typeof renderDoneList === "function") renderDoneList();
     if (typeof renderList === "function") renderList();
   } catch(e) { showToast("❌ 오류: " + e.message); }
+}
+
+async function handleListingProgressChange(id,select) {
+  const item=allListings.find(l=>l.id===id),before=item?listingProgressStatus(item):'진행중',status=select.value;
+  select.disabled=true;
+  try {
+    if(status==='거래완료')await markListingDone(id);else await updateListingStatus(id,status);
+    showToast('매물 상태를 '+status+'으로 변경했습니다.');
+    if(typeof loadListings==='function')await loadListings();
+    if(typeof renderDoneList==='function')renderDoneList();
+    if(typeof renderList==='function')renderList();
+  }catch(e){select.value=before;showToast('상태 변경 실패: '+e.message);}
+  finally{select.disabled=false;}
 }

@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261007-presale"></script>
+  <script src="assets/js/storage.js?v=20261008-status-portfolio"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -106,7 +106,7 @@
       <div class="field">
         <label>거래상태</label>
         <select id="status">
-          <option value="광고중">진행중</option>
+          <option value="진행중">진행중</option><option value="보류">보류</option>
           <option value="거래완료">거래완료</option>
         </select>
       </div>
@@ -877,7 +877,7 @@
       dong: apartmentUnit.dong || "",
       ho: apartmentUnit.ho || "",
       complexName,
-      status:      gv('status') || '광고중',
+      status:      gv('status') || '진행중',
       listingKind: gv('listingKind') === '명단' ? '명단' : '매물',
       description: gv('description'),
       is_public:   OfficeConfig.id !== 'ktop' && gv('listingKind') !== '명단' && g('is_public').checked,

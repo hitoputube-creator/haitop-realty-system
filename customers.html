@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>하이탑부동산 | 전체 고객관리</title>
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout">
-  <script src="assets/js/storage.js?v=20261008-customer-memos"></script>
+  <script src="assets/js/storage.js?v=20261008-status-portfolio"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -44,6 +44,7 @@
     @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:1.15fr 1.2fr 1.35fr .9fr minmax(210px,1.35fr)}}
   .customer-contact-row{display:grid;grid-template-columns:1fr 1fr 1.3fr auto;gap:6px;margin-bottom:8px}.customer-contact-row input{min-width:0;width:100%;box-sizing:border-box}.customer-note-form textarea{min-height:150px;width:100%;box-sizing:border-box;resize:vertical}.customer-note-form{margin:12px 0 18px}.customer-note-form label{display:block;margin:8px 0}.customer-note-form input[type=date]{color-scheme:dark}.customer-note-error{color:var(--red)}@media(max-width:640px){.customer-contact-row{grid-template-columns:1fr 1fr}.customer-contact-row input[type=tel]{grid-column:1/2}}
 </style>
+<script src="assets/js/global-property-search-core.js?v=20261008-status-portfolio"></script>
 </head>
 <body>
 <div class="page">
@@ -212,7 +213,7 @@
       <label>고객 기본 메모 (요구사항)</label>
       <textarea id="ce_memo" rows="6" placeholder="예) 운정역 근처 1층 상가, 권리금 없는 곳" style="width:100%;resize:vertical;min-height:150px;box-sizing:border-box;"></textarea>
     </div>
-    <div id="ce_importDetails"></div><div id="ce_noteComposer"></div><div class="cust-detail-section-title">날짜별 메모 · 상담 기록</div>
+    <div id="ce_importDetails"></div><div class="cust-detail-section-title">연결된 전체 매물·세대·택지</div><div id="ce_relatedProperties"></div><div id="ce_noteComposer"></div><div class="cust-detail-section-title">날짜별 메모 · 상담 기록</div>
     <p class="cust-history-help">해당 고객에 연결된 메모와 상담입니다. 저장한 기록은 업무일지에서도 함께 보입니다.</p>
     <div id="custEditHistory" class="cust-history-list"></div>
     <div class="modal-btns">
@@ -410,7 +411,7 @@
     const props=[...new Map(sources.flatMap(r=>r.linked_properties||[]).map(p=>[JSON.stringify(p),p])).values()];
     const review=[...new Set(sources.flatMap(r=>r.review||[]))];
     const links=props.map(p=>p.listing_id ? '<a class="btn" href="'+escapeHtmlCust(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(p.listing_id)))+'">매물보기</a>' : p.building_id ? '<a class="btn" href="'+escapeHtmlCust(OfficeConfig.urlFor('building-detail.html?id='+encodeURIComponent(p.resource_id||p.building_id)+'#unitStatus'))+'">'+escapeHtmlCust([p.building_name,p.room].filter(Boolean).join(' · '))+'</a>' : '').join(' ');
-    return (links ? '<div class="cust-detail-section-title">연결된 매물·세대</div>'+links : '')+(review.length ? '<p class="customer-import-summary">확인사항: '+escapeHtmlCust(review.join(' · '))+'</p>' : '')+(sources.length ? '<details><summary>연락처 원본 '+sources.length+'건</summary>'+sources.map(r=>'<div class="customer-import-summary">'+escapeHtmlCust(r.source+' '+r.source_row+'행\n'+Object.entries(r.original||{}).filter(([,v])=>v!=null&&v!=='').map(([k,v])=>k+': '+v).join('\n'))+'</div>').join('<hr>')+(c.memo ? '<details style="margin-top:10px"><summary>이전 통합메모 원본</summary><div class="customer-import-summary">'+escapeHtmlCust(c.memo)+'</div></details>' : '')+'</details>' : '');
+    return (review.length ? '<p class="customer-import-summary">확인사항: '+escapeHtmlCust(review.join(' · '))+'</p>' : '')+(sources.length ? '<details><summary>연락처 원본 '+sources.length+'건</summary>'+sources.map(r=>'<div class="customer-import-summary">'+escapeHtmlCust(r.source+' '+r.source_row+'행\n'+Object.entries(r.original||{}).filter(([,v])=>v!=null&&v!=='').map(([k,v])=>k+': '+v).join('\n'))+'</div>').join('<hr>')+(c.memo ? '<details style="margin-top:10px"><summary>이전 통합메모 원본</summary><div class="customer-import-summary">'+escapeHtmlCust(c.memo)+'</div></details>' : '')+'</details>' : '');
   }
   async function openCustomerDetail(id) {
     const c = allCustomers.find(x => x.id === id) || await getCustomerById(id);
@@ -430,14 +431,23 @@
       
       ${(c.additional_contacts || []).length ? '<div class="cust-detail-section-title">추가 연락처</div>'+c.additional_contacts.map(contact=>'<div>'+escapeHtmlCust([contact.name,contact.relation,contact.phone].filter(Boolean).join(' · '))+'</div>').join('') : ''}
       ${customerImportDetails(c)}<div id="custDetailNoteComposer"></div>
+      <div class="cust-detail-section-title">연결된 전체 매물·세대·택지</div><div id="custRelatedProperties"></div>
       <div class="cust-detail-section-title">날짜별 메모 · 상담 기록</div>
       <div id="custDetailHistory" class="cust-history-list"><div class="loading" style="padding:14px;"><span class="spinner"></span>불러오는 중...</div></div>
     `;
     document.getElementById("customerDetailModal").style.display = "flex";
     mountCustomerMemoForm(document.getElementById('custDetailNoteComposer'),c,document.getElementById('custDetailHistory'));
-    await renderCustomerHistory(document.getElementById('custDetailHistory'), id);
+    await Promise.all([renderCustomerHistory(document.getElementById('custDetailHistory'), id),renderCustomerProperties(document.getElementById('custRelatedProperties'),c)]);
   }
 
+  async function renderCustomerProperties(container,c){
+    const request=Symbol();container._propertyRequest=request;container.textContent='연결 매물을 불러오는 중...';
+    try{
+      const result=customerRelatedEntries(await getCustomerLinkContext(),c);
+      if(container._propertyRequest!==request)return;
+      container.innerHTML=(result.failed.length?'<p>'+escapeHtmlCust('일부 자료 조회 실패: '+result.failed.join(', '))+'</p>':'')+(result.properties.length?result.properties.map(p=>'<article class="cust-consultation"><strong>'+escapeHtmlCust(p.name)+'</strong><div>'+escapeHtmlCust(p.label+' · '+p.status)+'</div>'+p.links.map(link=>'<a class="btn" href="'+escapeHtmlCust(OfficeConfig.urlFor(link.href))+'">'+escapeHtmlCust(link.label)+'</a>').join(' ')+'</article>').join(''):'연결된 매물이 없습니다.');
+    }catch(e){if(container._propertyRequest===request)container.textContent=e.message;}
+  }
   async function renderCustomerHistory(container, customerId) {
     const request = Symbol();
     container._historyRequest = request;
@@ -457,7 +467,7 @@
         card.className = 'cust-consultation';
         card.innerHTML = `
           <div class="cust-consultation-meta">${escapeHtmlCust(formatDate(entry.date))} · ${escapeHtmlCust(entry.writer || '')}</div>
-          <strong class="cust-consultation-title">${escapeHtmlCust(entry.title || '(제목 없음)')}</strong>
+          <strong class="cust-consultation-title">${escapeHtmlCust(entry.title || '(제목 없음)')}</strong>${entry.listing_id ? '<a class="btn" href="'+escapeHtmlCust(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(entry.listing_id)))+'">해당 상담 매물보기</a>' : ''}
           <div class="cust-consultation-content">${escapeHtmlCust(entry.content || '(내용 없음)')}</div>
           <div class="cust-consultation-attachments"></div>
           <div class="cust-consultation-actions">
@@ -569,6 +579,7 @@
     document.getElementById("ce_importDetails").innerHTML = customerImportDetails(c);
     mountCustomerMemoForm(document.getElementById("ce_noteComposer"),c,document.getElementById("custEditHistory"));
     document.getElementById("customerEditModal").style.display = "flex";
+    renderCustomerProperties(document.getElementById("ce_relatedProperties"),c);
     renderCustomerHistory(document.getElementById("custEditHistory"), id);
   }
   document.getElementById("customerEditSaveBtn").addEventListener("click", async () => {
