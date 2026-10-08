@@ -280,12 +280,37 @@ function displayCellValue(value) {
   return text || "-";
 }
 
+// 예전 이름·번호 혼합 자료도 이름과 전화번호를 각각의 열에 표시한다.
+function parseListingOwnerContact(value) {
+  const text = String(value ?? "").trim();
+  const match = text.match(/(?:\+82[-\s]?(?:10|11|16|17|18|19)|0(?:1[016789]|2|[3-6]\d|70|80))[-.\s]?\d{3,4}[-.\s]?\d{4}(?!\d)/);
+  if (!match) return {name:text, phone:""};
+  let digits = match[0].replace(/\D/g, "");
+  if (digits.startsWith("82")) digits = "0" + digits.slice(2);
+  const prefixLength = digits.startsWith("02") ? 2 : 3;
+  const phone = digits.slice(0,prefixLength) + "-" + digits.slice(prefixLength,-4) + "-" + digits.slice(-4);
+  const name = text.slice(0,match.index).replace(/\[(?:기존 연락처|소유주|연락처)\]/g, "").replace(/^(?:소유주명?|연락처|전화번호)\s*[:：]\s*/, "").replace(/[\s:：,;/\-]+$/, "").trim();
+  return {name, phone};
+}
+
+function getListingOwnerContactParts(item) {
+  const values = [item.owner_name, item.quick_owner, item.owner_phone1, item.owner_contact, item.quick_contact];
+  // 메모 전체를 이름으로 쓰지 않고 전화번호가 있는 줄만 보조 자료로 사용한다.
+  const memoLines = String(item.owner_memo || "").split(/\r?\n/);
+  values.push(...memoLines.filter(line => parseListingOwnerContact(line).phone));
+  const parsed = values.filter(Boolean).map(parseListingOwnerContact);
+  const explicitName = [item.owner_name,item.quick_owner].filter(Boolean).map(parseListingOwnerContact).find(p => p.name && p.name !== "-");
+  const mixedName = parsed.find(p => p.phone && p.name && p.name !== "-");
+  const phone = [item.owner_phone1,item.owner_contact,item.quick_contact,...values].filter(Boolean).map(parseListingOwnerContact).find(p => p.phone)?.phone || "";
+  return {name:explicitName?.name || mixedName?.name || "", phone};
+}
+
 function getListingOwnerName(item) {
-  return displayCellValue(item.owner_name || item.quick_owner);
+  return displayCellValue(getListingOwnerContactParts(item).name);
 }
 
 function getListingPhone1(item) {
-  return displayCellValue(item.owner_phone1 || item.owner_contact || item.quick_contact);
+  return displayCellValue(getListingOwnerContactParts(item).phone);
 }
 
 function getListingPhone2(item) {
