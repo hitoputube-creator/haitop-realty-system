@@ -485,7 +485,7 @@ function setupApartmentListingForm(prefix, category2Id) {
   ownerActions.style.cssText="grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap";
   document.getElementById(prefix+"apt_소유자").closest(".umgrid").appendChild(ownerActions);
   ownerActions.hidden = true;
-  hoInput.closest(".umgrid").querySelector(".owner-phone-row").appendChild(registryButton);
+  document.getElementById(prefix+"apt_연락처").closest(".owner-phone-row").appendChild(registryButton);
   registryButton.addEventListener("click",()=>openApartmentRegistrySearch({complexName:document.getElementById(prefix+"apt_아파트명").value,dong:document.getElementById(prefix+"apt_동").value,ho:hoInput.value,roadAddress:document.getElementById(prefix+"publicAddress").value,jibunAddress:document.getElementById(prefix+"mapAddress").value},message=>autoStatus.textContent=message));
   const buildingOwnerButton=document.createElement("button");
   buildingOwnerButton.type="button";buildingOwnerButton.className="btn btn-ghost";buildingOwnerButton.textContent="건축물대장 확인";
