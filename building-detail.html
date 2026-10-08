@@ -485,6 +485,12 @@
 
 
     .residential-unit-table{table-layout:auto;min-width:1120px}
+    .residential-unit-table .tbl-actions { display:table-cell; white-space:nowrap; }
+    .residential-unit-table .tbl-actions > * { margin-right:5px; vertical-align:top; }
+    .unit-listing-menu { display:inline-block; }
+    .unit-listing-menu summary { list-style:none; }
+    .unit-listing-menu summary::-webkit-details-marker { display:none; }
+    .unit-listing-options { display:flex; flex-direction:column; gap:5px; margin-top:6px; }
     .residential-unit-table th,.residential-unit-table td{box-sizing:border-box;padding-left:8px;padding-right:8px}
     .residential-unit-table td{overflow:visible;text-overflow:clip}
 
@@ -1509,7 +1515,7 @@ async function deleteBFile(id) {
     Object.entries(fields).forEach(([key,value]) => { $('ru_'+key).value = value ?? ''; });
     syncResidentialContractPeriod();
     for (const prefix of ['분양','전용']) {
-      const m2 = u[prefix+'_m2'] ?? (u[prefix+'_평'] != null ? Number(u[prefix+'_평'])*(400/121) : null);
+      const m2 = u[prefix+'_m2'] ?? (u[prefix+'_평'] != null ? Number(u[prefix+'_평'])*(400/121) : null) ?? (prefix==='분양' ? residentialUnitArea(u).supply : null);
       $('ru_'+prefix+'_m2').value = m2 == null ? '' : Math.round(m2*10000)/10000;
       $('ru_'+prefix+'_평').value = m2 == null ? '' : (m2/(400/121)).toFixed(2);
     }
@@ -1549,7 +1555,7 @@ async function deleteBFile(id) {
     switch(key){
       case 'dong':return [text(parts.dong),text(parts.room)];
       case 'room':return [text(parts.room),text(parts.dong)];
-      case 'sizeType':return [number(String(unit.평형 || '').match(/[\d.]+/)?.[0]),text(unit.타입)];
+      case 'sizeType':{const area=residentialUnitArea(unit);return [area.supply ?? number(String(area.size).match(/[\d.]+/)?.[0]),text(area.type)];}
       case 'deal':return [text(unit.거래구분)];
       case 'sale':return [number(unit.현_매매가격)];
       case 'rent':return [number(effectiveUnitPrice(unit.현_보증금,unit.보증금)),number(effectiveUnitPrice(unit.현_월세,unit.월차임))];
@@ -1580,7 +1586,7 @@ async function deleteBFile(id) {
     const head=$('unitsTableHead');
     head.closest('table').classList.add('residential-unit-table');
     if(!head.dataset.sortReady){
-      const columns=[['dong','동'],['room','호수'],['sizeType','분양평형·타입'],['deal','거래구분'],['sale','매매가(만)'],['rent','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['received','접수일자'],['listed','관리']];
+      const columns=[['dong','동'],['room','호수'],['sizeType','분양면적·타입'],['deal','거래구분'],['sale','매매가(만)'],['rent','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['received','접수일자'],['listed','관리']];
       head.innerHTML='<tr>'+columns.map(([key,label])=>'<th><button type="button" class="unit-sort" data-unit-sort="'+key+'" aria-label="'+label+' 정렬"><span>'+label+'</span><span class="unit-sort-arrow" aria-hidden="true">↕</span></button></th>').join('')+'</tr>';
       head.dataset.sortReady='true';
       head.querySelectorAll('.unit-sort').forEach(button=>{
@@ -1602,14 +1608,29 @@ async function deleteBFile(id) {
     });
   }
 
+  function residentialUnitArea(unit) {
+    const positive = value => value != null && value !== '' && Number.isFinite(Number(value)) && Number(value)>0 ? Number(value) : null;
+    const parts = roomParts(unit);
+    const reference = apartmentUnitReference({id:buildingId,name:bName},unitPlans,{units:[unit]},parts.dong,parts.room);
+    const supply = positive(unit.분양_m2) ?? (positive(unit.분양_평) ? Number(unit.분양_평)*(400/121) : null) ?? positive(reference.supply);
+    return {supply, size:supply ? (supply/(400/121)).toFixed(2)+'평' : unit.평형 || '-', type:reference.type || unit.타입 || ''};
+  }
+  function residentialUnitActions(unit, index) {
+    const links = linkedUnitListings(unit);
+    const edit = '<button class="btn-unit-edit" data-ri="'+index+'">수정·메모</button>';
+    const url = id => esc(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(id)));
+    if (!links.length && !unit.listing_id) return edit+'<button class="btn-listing-reg" data-ri="'+index+'">매물등록</button>';
+    if (links.length<=1) return edit+'<a class="btn-listing-view" href="'+url(links[0]?.id || unit.listing_id)+'">매물보기</a>';
+    return edit+'<details class="unit-listing-menu"><summary class="btn-listing-view">매물보기 ('+links.length+')</summary><div class="unit-listing-options">'+links.map((item,i)=>'<a class="btn-listing-view" href="'+url(item.id)+'">'+esc(item.dealType || apartmentSource(item).거래구분 || '매물')+' · '+(i+1)+'</a>').join('')+'</div></details>';
+  }
   function renderResidentialTable(filtered) {
     renderResidentialHeader();
     $('unitsTbody').innerHTML = filtered.map(u => {
       const ri = units.indexOf(u), parts=roomParts(u);
       const sale = u.현_매매가격 == null ? '-' : Number(u.현_매매가격).toLocaleString('ko-KR');
       const tenant = u.세입자현황 || u.공실여부 || '미확인';
-      const links=linkedUnitListings(u);
-      return `<tr><td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(u.평형 || '-')}<br>${esc(u.타입 || '')}</td><td>${esc(unitDeal(u) || '-')}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions"><button class="btn-unit-edit" data-ri="${ri}">수정·메모</button>${links.length ? links.map(item=>`<a class="btn-listing-view" href="${esc(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(item.id)))}">매물보기${links.length>1 ? ' · '+esc(item.dealType || '') : ''}</a>`).join('') : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`}</td></tr>`;
+      const area=residentialUnitArea(u);
+      return `<tr><td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(area.size)}${area.supply ? '<br><small>'+area.supply.toLocaleString('ko-KR',{maximumFractionDigits:2})+'㎡</small>' : ''}<br>${esc(area.type)}</td><td>${esc(unitDeal(u) || '-')}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions">${residentialUnitActions(u,ri)}</td></tr>`;
     }).join('');
   }
 
@@ -1629,9 +1650,7 @@ async function deleteBFile(id) {
     const amount = Number(price);
     if (!Number.isFinite(amount)) return "-";
     const text = amount.toLocaleString("ko-KR");
-    return price === current && current !== null && current !== undefined && current !== ""
-      ? `<span class="unit-current-price" title="현재 임차가격">${text}<small class="unit-current-tag">현재</small></span>`
-      : text;
+    return text;
   }
 
   // 호수 -> 층 번호 문자열: 101->1, 201->2, 1001->10, B101->B1
