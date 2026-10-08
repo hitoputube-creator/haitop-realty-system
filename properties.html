@@ -24,30 +24,54 @@
     #selectedViewTable tbody td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; }
     #selectedViewTable tbody tr:hover td { background:rgba(212,175,55,0.05); }
     #selectedViewTable tbody tr.done-row td { color:#666; }
-    /* 인쇄 */
+    /* 선택매물 인쇄 전용: 화면 배치는 유지하고 A4 가로 표로 출력 */
+    @page { size: A4 landscape; margin: 10mm; }
     @media print {
+      html, body { width: auto !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
       body * { visibility: hidden; }
       #selectedPrintArea, #selectedPrintArea * { visibility: visible; }
+      #selectedPreviewSection { display: block !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
       #selectedPrintArea {
-        position: absolute; top: 0; left: 0;
-        width: 100%; padding: 20px; box-sizing: border-box; background: #fff;
+        position: absolute !important; top: 0; left: 0;
+        width: 100% !important; margin: 0 !important; padding: 0 !important;
+        box-sizing: border-box; background: #fff !important;
       }
-      #selectedPrintHeader { display: flex !important; }
-      #selectedViewTable { font-size: 10px; width: 100%; border-collapse: collapse; }
+      #selectedPrintHeader { display: flex !important; margin-bottom: 9px !important; }
+      #selectedViewTableWrap { width: 100% !important; overflow: visible !important; }
+      #selectedViewTable {
+        width: 100% !important; table-layout: fixed !important;
+        border-collapse: collapse !important; font-size: 9pt !important;
+        line-height: 1.4 !important; color: #111 !important;
+      }
+      #selectedViewTable th, #selectedViewTable td {
+        box-sizing: border-box !important; min-width: 0 !important;
+        white-space: normal !important; word-break: keep-all !important;
+        overflow-wrap: anywhere !important;
+      }
+      #selectedViewTable th:first-child, #selectedViewTable td:first-child { display: none !important; }
+      #selectedViewTable th:nth-child(2), #selectedViewTable td:nth-child(2) { width: 4% !important; text-align: center !important; }
+      #selectedViewTable th:nth-child(3), #selectedViewTable td:nth-child(3) { width: 9% !important; }
+      #selectedViewTable th:nth-child(4), #selectedViewTable td:nth-child(4) { width: 29% !important; }
+      #selectedViewTable th:nth-child(5), #selectedViewTable td:nth-child(5) { width: 14% !important; }
+      #selectedViewTable th:nth-child(6), #selectedViewTable td:nth-child(6) { width: 8% !important; }
+      #selectedViewTable th:nth-child(7), #selectedViewTable td:nth-child(7) { width: 13% !important; }
+      #selectedViewTable th:nth-child(8), #selectedViewTable td:nth-child(8) { width: 6% !important; }
+      #selectedViewTable th:nth-child(9), #selectedViewTable td:nth-child(9) { width: 17% !important; }
       #selectedViewTable thead th {
-        background: #1a2a4a !important; color: #d4af37 !important;
-        padding: 6px 8px; border-bottom: none;
+        background: #1a2a4a !important; color: #fff !important;
+        padding: 7px 5px !important; border: 1px solid #d6dce6 !important;
+        font-weight: 700 !important;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
       }
       #selectedViewTable tbody td {
-        padding: 5px 8px; border-bottom: 1px solid #ddd !important;
-        color: #111 !important; vertical-align: top;
+        padding: 7px 5px !important; border: 1px solid #d6dce6 !important;
+        color: #111 !important; vertical-align: top !important;
       }
-      #selectedViewTable tbody tr.done-row td {
-        color: #888 !important; background: #f5f5f5 !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-      }
-      thead { display: table-header-group; }
+      #selectedViewTable tbody td * { color: #111 !important; background: transparent !important; }
+      #selectedViewTable tbody tr.done-row td { color: #666 !important; background: #f5f5f5 !important; }
+      #selectedViewTable tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+      #selectedViewTable thead { display: table-header-group !important; }
+      #selectedViewTable tbody { display: table-row-group !important; }
     }
     @media screen {
       #printHeader { display: none; }
