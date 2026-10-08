@@ -55,8 +55,7 @@
   var k = typeof OfficeConfig!=="undefined" ? OfficeConfig.id==="ktop" : new URLSearchParams(location.search).get("office")==="ktop";
   if (!k) {
     document.getElementById("ktop-main-theme").disabled=true;
-    document.getElementById("ktop-main-contrast").disabled=true;
-    document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("uiThemeVersion");if(v)v.remove();});
+    document.addEventListener("DOMContentLoaded",function(){var style=document.getElementById("ktop-main-contrast");if(style)style.disabled=true;var v=document.getElementById("uiThemeVersion");if(v)v.remove();});
   }
 })();
 </script>
