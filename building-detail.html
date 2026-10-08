@@ -619,8 +619,8 @@
         <div class="sum-label">매매가능</div>
       </div>
       <div class="sum-card revenue">
-        <div class="sum-num" id="sumRevenue">-</div>
-        <div class="sum-label">월차임 합계(만)</div>
+        <div class="sum-num" id="sumListed">-</div>
+        <div class="sum-label">매물진행중</div>
       </div>
     </div>
 
@@ -1742,6 +1742,14 @@ async function deleteBFile(id) {
     if (residentialUnitMode()) {
       try { apartmentListings = await getListings(); listingLookupLoaded = true; }
       catch (error) { apartmentListings = []; listingLookupLoaded = false; showToast('등록 매물 연결 조회 실패: '+error.message); }
+    } else {
+      // 상가·사무실: 호실에 연결된 매물 중 거래상태가 진행중인 것만 세기 위해 매물 상태를 읽어둔다(읽기 전용).
+      try {
+        const rows = await getListings();
+        activeListingIds = {};
+        rows.forEach(l => { if (isActiveListing(l)) activeListingIds[String(l.id)] = true; });
+        activeListingLoaded = true;
+      } catch (error) { activeListingIds = {}; activeListingLoaded = false; }
     }
     renderAll();
     if (location.hash === '#unitStatus') $('unitStatus').scrollIntoView({ block: 'start' });
@@ -1756,15 +1764,25 @@ async function deleteBFile(id) {
     renderTable();
   }
 
+  // 매물진행중: 거래상태가 진행중이고 보관용 명단이 아닌 매물
+  let activeListingIds = {}, activeListingLoaded = false;
+  function isActiveListing(l) { return !!l && listingProgressStatus(l) === "진행중" && l.listingKind !== "명단"; }
+  function activeListingCount() {
+    if (residentialUnitMode()) {
+      return listingLookupLoaded ? units.filter(u => linkedUnitListings(u).some(isActiveListing)).length : null;
+    }
+    return activeListingLoaded ? units.filter(u => activeListingIds[String(u.listing_id || "").trim()]).length : null;
+  }
+
   function renderSummary() {
     const occ  = units.filter(u => u.공실여부 === "임차중").length;
     const vac  = units.filter(u => u.공실여부 === "공실").length;
     const sale = units.filter(u => residentialUnitMode() ? String(unitDeal(u)).includes("매매") : u.공실여부 === "매매가능").length;
-    const rev  = units.reduce((s, u) => s + (Number(effectiveUnitPrice(u.현_월세, u.월차임)) || 0), 0);
+    const listedActive = activeListingCount();
     $("sumOccupied").textContent = occ;
     $("sumVacant").textContent   = vac;
     $("sumForSale").textContent  = sale;
-    $("sumRevenue").textContent  = rev ? rev.toLocaleString("ko-KR") : "-";
+    $("sumListed").textContent   = listedActive === null ? "-" : listedActive;
 
     // 주거(세대별 자료): 매매·전세·월세는 세대의 '거래구분', 자가는 '세입자현황=자가거주' 기준으로 센다.
     // '매매·임대'처럼 둘 이상이면 각각 집계된다.
@@ -1785,7 +1803,7 @@ async function deleteBFile(id) {
       $("sumOwn").textContent        = units.filter(u => (u.세입자현황 || u.공실여부 || "") === "자가거주").length;
       const undecided = deals.filter(d => !/매매|전세|월세/.test(d)).length;
       $("residentialSummaryNote").textContent =
-        `임차중 ${occ} · 공실 ${vac} · 월차임 합계 ${rev ? rev.toLocaleString("ko-KR") + "만" : "-"}` +
+        `임차중 ${occ} · 공실 ${vac} · 매물진행중 ${listedActive === null ? "-" : listedActive}` +
         ` · 매매·전세·월세는 거래구분 기준(둘 이상이면 각각 집계)` +
         (undecided ? ` · 거래구분 미정·임대 ${undecided}세대` : "");
     }
