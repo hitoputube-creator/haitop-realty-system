@@ -517,6 +517,17 @@
 .unit-select-row,#unitSelectAll{width:16px;height:16px;accent-color:#d4af37;cursor:pointer}
 @page{size:A4 landscape;margin:11mm}
 @media print{body:has(#unitPrintSheet)>*:not(#unitPrintSheet){display:none!important}body:has(#unitPrintSheet){background:white!important;margin:0!important;padding:0!important}#unitPrintSheet{display:block!important;color:#111;font-family:Arial,sans-serif;font-size:9pt}#unitPrintSheet h2{font-size:14pt;margin:0 0 12px}#unitPrintSheet table{width:100%;table-layout:fixed;border-collapse:collapse}#unitPrintSheet td{white-space:pre-line}#unitPrintSheet th,#unitPrintSheet td{border:1px solid #bac3d0;padding:6px 5px;word-break:keep-all;overflow-wrap:anywhere;vertical-align:top}#unitPrintSheet th{background:#172847!important;color:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#unitPrintSheet tr{break-inside:avoid;page-break-inside:avoid}#unitPrintSheet thead{display:table-header-group}}
+@media print{
+ html,body{width:auto!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important}
+ #unitPrintSheet{position:static!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;font-size:9pt!important}
+ #unitPrintSheet .unit-print-header{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:9px}
+ #unitPrintSheet .unit-print-header h2{font-size:13pt!important;margin:0!important}
+ #unitPrintSheet .unit-print-header span{white-space:nowrap;font-size:8pt}
+ #unitPrintSheet table{width:100%!important;table-layout:fixed!important}
+ #unitPrintSheet td,#unitPrintSheet th{padding:7px 6px!important;white-space:pre-line!important;word-break:keep-all!important;overflow-wrap:anywhere!important}
+ #unitPrintSheet td:last-child,#unitPrintSheet th:last-child{width:22%!important}
+ #unitPrintSheet tr{break-inside:avoid!important;page-break-inside:avoid!important}
+}
 </style>
 </head>
 <body>
@@ -1478,13 +1489,22 @@ async function deleteBFile(id) {
     unitBulkState();
   }
   $("unitSelectPrint").addEventListener("click",()=>{
-    const rows=units.filter((u,i)=>selectedUnitRows.has(i));if(!rows.length)return;
-    const columns=residentialUnitMode()?["동·호수","분양면적/타입","거래구분","매매가(만원)","보증금/월세(만원)","소유주","연락처","세입자현황","접수일자","비고"]:["호수","업종","소유주","연락처","보증금(만원)","월세(만원)","상태","비고"];
-    const cells=u=>residentialUnitMode()?[(roomParts(u).dong+"동 "+roomParts(u).room+"호"),residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||""),unitDeal(u)+(u.매매유형==='세안고매매'?'\n세안고매매':''),u.현_매매가격==null?"":Number(u.현_매매가격).toLocaleString("ko-KR"),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임),u.소유주,u.연락처,u.세입자현황,u.접수일자,(u.매매유형==='세안고매매' && u.승계보증금!=null ? '승계 보증금 '+Number(u.승계보증금).toLocaleString('ko-KR')+'만원 / ' : '')+apartmentRemarksOnly(u.비고)]:[u.호수,u.현업종,u.소유주,u.연락처,currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부,u.비고];
-    const printable=document.createElement("div");printable.id="unitPrintSheet";printable.innerHTML='<h2>'+esc(bName)+' · 선택 '+rows.length+'건</h2><table><thead><tr>'+columns.map(v=>"<th>"+esc(v)+"</th>").join("")+"</tr></thead><tbody>"+rows.map(u=>"<tr>"+cells(u).map(v=>"<td>"+esc(v??"")+"</td>").join("")+"</tr>").join("")+"</tbody></table>";
+    const rows=units.filter((u,i)=>selectedUnitRows.has(i));
+    if(!rows.length)return;
+    const residential=residentialUnitMode();
+    const columns=residential?["동·호수","면적·타입","거래구분","매매가(만원)","보증금/월세(만원)","소유주","연락처","옵션"]:["호수","업종","소유주","연락처","보증금(만원)","월세(만원)","상태","옵션"];
+    const displayOption=u=>String(u.옵션내역 || u.옵션 || "").trim() || "-";
+    const price=n=>n==null||n===""?"-":Number(n).toLocaleString("ko-KR");
+    const cells=u=>residential
+      ? [roomParts(u).dong+"동 "+roomParts(u).room+"호",residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||"-"),unitDeal(u)+(u.매매유형==="세안고매매"?"\\n세안고매매":""),price(u.현_매매가격),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임)+(u.매매유형==="세안고매매"&&u.승계보증금!=null?"\\n승계 "+price(u.승계보증금):""),u.소유주||"-",u.연락처||"-",displayOption(u)]
+      : [u.호수||"-",u.현업종||"-",u.소유주||"-",u.연락처||"-",currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
+    const printable=document.createElement("div");
+    printable.id="unitPrintSheet";
+    printable.innerHTML='<div class="unit-print-header"><h2>'+esc(bName)+' · 선택 '+rows.length+'건</h2><span>출력일 '+new Date().toLocaleDateString("ko-KR")+'</span></div><table><thead><tr>'+columns.map(v=>"<th>"+esc(v)+"</th>").join("")+"</tr></thead><tbody>"+rows.map(u=>"<tr>"+cells(u).map(v=>"<td>"+esc(v??"")+"</td>").join("")+"</tr>").join("")+"</tbody></table>";
     document.body.appendChild(printable);
     const cleanup=()=>{printable.remove();window.removeEventListener("afterprint",cleanup);};
-    window.addEventListener("afterprint",cleanup,{once:true});window.print();
+    window.addEventListener("afterprint",cleanup,{once:true});
+    window.print();
   });
   $("unitSelectDelete").addEventListener("click",async()=>{
     const ids=[...selectedUnitRows].filter(i=>units[i]);if(!ids.length)return;
