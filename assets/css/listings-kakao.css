@@ -1,0 +1,40 @@
+/* 매물지도 (listings-kakao.html). 기본 모양은 land-kakao.css를 그대로 쓰고 매물지도용만 덧붙입니다. */
+.lk-cats .btn{display:inline-flex;align-items:center;gap:6px}
+.lk-cats .btn .lk-dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff;box-sizing:border-box}
+.lk-cats .btn .lk-count{font-size:.74rem;opacity:.75}
+
+/* 지도 위 매물 핀 */
+.lk-pin{position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,.55))}
+.lk-pin-body{display:flex;flex-direction:column;align-items:center;gap:1px;max-width:128px;padding:4px 8px;border:2px solid #fff;border-radius:8px;color:#fff;line-height:1.25;text-align:center;box-sizing:border-box;background:var(--lk-color,#6b7686)}
+.lk-pin-body strong{display:block;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.lk-pin-body span{display:block;font-size:11px;white-space:nowrap}
+.lk-pin::after{content:"";width:0;height:0;margin-top:-1px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #fff}
+.lk-pin.selected{z-index:5}
+.lk-pin.selected .lk-pin-body{outline:3px solid #e5bf35}
+.lk-pin-badge{position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#e5484d;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center;box-sizing:border-box}
+
+/* 말풍선 */
+.lk-info{min-width:230px;max-width:290px;padding:10px 12px;font-size:12.5px;line-height:1.55;color:#1c2733;white-space:normal}
+.lk-info h3{margin:0 0 2px;font-size:14px;color:#0f2032;word-break:break-all}
+.lk-info .lk-meta{color:#5b6b7d}
+.lk-info .lk-price{margin:2px 0;font-weight:700;color:#b4321f}
+.lk-info .lk-owner a{color:#244e91}
+.lk-info .lk-links{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px;padding-top:6px;border-top:1px solid #e1e6ec}
+.lk-info .lk-links a{color:#244e91;text-decoration:underline}
+.lk-info .lk-links a.lk-main{font-weight:700}
+.lk-group{max-height:240px;overflow-y:auto;margin:4px 0 0;padding:0;list-style:none}
+.lk-group li{padding:6px 0;border-top:1px solid #e1e6ec}
+.lk-group li:first-child{border-top:0}
+.lk-group a.lk-row{display:block;color:#1c2733;text-decoration:none}
+.lk-group a.lk-row:hover strong{text-decoration:underline}
+.lk-group .lk-tag{display:inline-block;margin-right:6px;padding:0 6px;border-radius:9px;color:#fff;font-size:11px;background:var(--lk-color,#6b7686)}
+
+/* 지도에 못 올린 매물 */
+.lk-unplaced{margin:16px 0 0;padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.03)}
+.lk-unplaced h2{margin:0 0 6px;font-size:1rem;color:var(--gold-soft,#e6c36a)}
+.lk-unplaced p{margin:0 0 8px}
+.lk-unplaced ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 16px}
+.lk-unplaced li{font-size:.85rem;line-height:1.5}
+.lk-unplaced a{color:var(--text-main,#e8eef7)}
+.lk-unplaced .lk-why{color:var(--text-muted,#9fb0c7);font-size:.78rem}
+@media(max-width:720px){.lk-pin-body{max-width:108px}.lk-info{min-width:200px}}

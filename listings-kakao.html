@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하이탑부동산 | 카카오맵 매물지도</title>
+  <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout">
+  <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261004-naver-2">
+  <link rel="stylesheet" href="assets/css/listings-kakao.css?v=20261008-listings-map1">
+  <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+</head>
+<body>
+<main class="page land-kakao-page listings-kakao-page">
+  <header class="header">
+    <div class="logo-icon" aria-hidden="true"></div>
+    <div class="logo-text"><div class="logo-main">하이탑부동산 매물지도</div><div class="logo-sub">카카오맵</div></div>
+    <nav class="main-nav" aria-label="페이지 이동">
+      <a class="nav-link" id="lkListLink" href="properties.html">매물목록</a>
+      <a class="nav-link" href="shop-kakao.html">상가 자료 지도</a>
+      <a class="nav-link" href="land-kakao.html">택지 자료 지도</a>
+      <a class="nav-link" id="lkBackLink" href="property-main.html">매물관리 메인으로</a>
+      <button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button>
+    </nav>
+  </header>
+  <div class="header-line"></div>
+
+  <section class="kakao-intro">
+    <h1>카카오맵으로 보는 내 매물</h1>
+    <p>거래상태가 <b>진행중</b>인 매물만 지도에 표시합니다. (보관용 명단·보류·거래완료는 제외) 핀을 누르면 가격·면적·소유주 연락처와 매물 상세 화면 링크가 나옵니다. 같은 건물처럼 위치가 같은 매물은 숫자가 붙은 핀 하나로 묶여 보입니다.</p>
+  </section>
+
+  <section id="kakaoSetupNotice" class="kakao-notice" hidden>
+    <h2>카카오맵 키 설정이 필요합니다</h2>
+    <p>assets/js/kakao-config.js 에 카카오 JavaScript 키를 넣으면 지도가 표시됩니다.</p>
+  </section>
+
+  <section id="kakaoControls" class="kakao-controls" hidden>
+    <div class="kakao-control-group" role="group" aria-label="지도 종류">
+      <button class="btn" type="button" data-maptype="road" aria-pressed="true">일반</button>
+      <button class="btn" type="button" data-maptype="sky" aria-pressed="false">위성</button>
+      <button class="btn" type="button" data-overlay="district" aria-pressed="false">지적도</button>
+    </div>
+    <div class="kakao-control-group lk-cats" id="lkCats" role="group" aria-label="매물 종류"></div>
+    <div class="kakao-control-group">
+      <label>거래유형
+        <select id="lkDeal">
+          <option value="all">전체</option>
+          <option value="sale">매매</option>
+          <option value="rent">임대(전세·월세)</option>
+        </select>
+      </label>
+      <label class="kakao-search">검색
+        <input id="lkSearch" type="search" maxlength="100" placeholder="제목·주소·소유주">
+      </label>
+    </div>
+    <div class="kakao-control-group">
+      <button class="btn" id="lkFit" type="button">표시된 매물에 맞춤</button>
+      <button class="btn" id="lkRetry" type="button" hidden>위치 못 찾은 매물 다시 시도</button>
+    </div>
+    <div class="kakao-control-group kakao-naverview-group">
+      <a class="btn kakao-naverview" id="kakaoNaverListings" aria-disabled="true" target="_blank" rel="noopener noreferrer">네이버부동산 매물보기</a>
+    </div>
+  </section>
+
+  <p id="kakaoStatus" class="kakao-status" role="status" aria-live="polite">불러오는 중입니다.</p>
+  <div id="kakaoMap" class="kakao-map" aria-label="카카오 매물지도" hidden></div>
+
+  <section id="lkUnplaced" class="lk-unplaced" hidden>
+    <h2>지도에 올리지 못한 매물</h2>
+    <p class="kakao-status" id="lkUnplacedNote"></p>
+    <ul id="lkUnplacedList"></ul>
+  </section>
+</main>
+<script src="assets/js/kakao-config.js"></script>
+<script src="assets/js/naver-links.js?v=20261004-2"></script>
+<script src="assets/js/listings-kakao-core.js?v=20261008-listings-map1"></script>
+<script src="assets/js/listings-kakao.js?v=20261008-listings-map1"></script>
+</body>
+</html>
