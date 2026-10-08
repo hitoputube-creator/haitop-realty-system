@@ -32,6 +32,18 @@
 @media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-v1">
+<script>
+(function(){
+  var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+  document.documentElement.dataset.officeTheme=office;
+  if(office!=='ktop'){
+    var link=document.querySelector('link[href*="white-navy-workspace.css"]');
+    if(link)link.disabled=true;
+    var building=document.getElementById('ktop-building-light');
+    if(building)building.disabled=true;
+  }
+})();
+</script>
 </head>
 <body data-nav-active="properties">
 <div class="page">
