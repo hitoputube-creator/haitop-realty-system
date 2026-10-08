@@ -1313,6 +1313,12 @@ function closeHomepageTab(tab) {
   }
 
   function renderDetail(item) {
+    const html = renderDetailContent(item);
+    const ids = Array.from(new Set([...(item.owner_customer_ids || []), ...(item.apartmentUnitData?.owner_customer_ids || [])]));
+    if (!ids.length) return html;
+    return html + '<section class="detail-section"><div class="detail-section-title">소유주 고객 · 연락처 원본</div>' + ids.map((id,index) => '<a style="display:inline-block;padding:12px" href="' + escapeHtml(OfficeConfig.urlFor('customers.html?customerId=' + encodeURIComponent(id))) + '" target="_blank" rel="noopener">연결 고객 ' + (index+1) + ' 보기</a>').join('') + '</section>';
+  }
+  function renderDetailContent(item) {
     let html = "";
     const category = getCategoryFromListing(item);
     const imageUrls = getListingImageUrls(item);

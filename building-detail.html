@@ -666,7 +666,7 @@
         </div></div>
         <div class="um-section current"><div class="um-section-title">👤 소유자 정보</div><div class="umgrid">
           <div class="umfield"><label>소유자 이름</label><input id="ru_소유자" /></div>
-          <div class="umfield span-3"><label>소유자 연락처</label><div class="owner-phone-row"><select id="ru_통신사" aria-label="소유자 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>알뜰폰</option><option>미확인</option></select><input id="ru_연락처" type="tel" placeholder="010-0000-0000" aria-label="소유자 전화번호" /><button type="button" class="btn-unit-ghost" id="ru_ownerRegistry" title="대법원 인터넷등기소 확인">대법원</button><button type="button" class="btn-unit-ghost" id="ru_ownerBuilding" title="건축물대장 확인">건축물대장</button></div></div>
+          <div class="umfield span-3"><label>소유자 연락처</label><div class="owner-phone-row"><select id="ru_통신사" aria-label="소유자 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>알뜰폰</option><option>미확인</option></select><input id="ru_연락처" type="tel" placeholder="010-0000-0000" aria-label="소유자 전화번호" /><button type="button" class="btn-unit-ghost" id="ru_ownerRegistry" title="대법원 인터넷등기소 확인">대법원</button><button type="button" class="btn-unit-ghost" id="ru_ownerBuilding" title="건축물대장 확인">건축물대장</button></div></div><div id="ru_ownerCustomers" class="umfield span-3" style="display:none"></div>
         </div></div>
         <div class="um-section sale"><div class="um-section-title">📅 세입자·계약</div><div class="umgrid">
           <div class="umfield"><label>세입자 현황</label><select id="ru_세입자현황"><option>미확인</option><option>자가거주</option><option value="임차중">세입자 거주</option><option>공실</option></select></div>
@@ -1503,6 +1503,9 @@ async function deleteBFile(id) {
     $('ru_계약종료').value = residentialContractEnd(start, years);
   }
   function openResidentialFields(u, isNew) {
+    const linkedOwners = Array.isArray(u.owner_customer_ids) ? u.owner_customer_ids : [];
+    $('ru_ownerCustomers').style.display = linkedOwners.length ? '' : 'none';
+    $('ru_ownerCustomers').innerHTML = linkedOwners.map((id,index) => '<a href="' + escapeHtml(OfficeConfig.urlFor('customers.html?customerId=' + encodeURIComponent(id))) + '" target="_blank" rel="noopener">연결 고객 ' + (index+1) + ' · 연락처 원본 보기</a>').join(' · ');
     const parts = roomParts(u);
     const fields = {아파트명:bName,동:parts.dong,호수:parts.room,접수일자:u.접수일자 || (isNew ? todayInKorea() : ''),평형:u.평형,타입:u.타입,거래구분:u.거래구분,
       매매가:u.현_매매가격,보증금:effectiveUnitPrice(u.현_보증금,u.보증금),월세:effectiveUnitPrice(u.현_월세,u.월차임),소유자:u.소유주,연락처:u.연락처,통신사:u.소유자통신사,

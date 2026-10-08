@@ -5,12 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>하이탑부동산 | 전체 고객관리</title>
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout">
-  <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+  <script src="assets/js/storage.js?v=20261008-customer-types"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
   <style>
+    .customer-type-tabs,.customer-type-picker{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px}
+    .customer-type-tabs button{border:1px solid var(--border-slate);border-radius:20px;background:transparent;color:var(--text-main);padding:7px 12px;cursor:pointer;font:inherit;font-size:.85rem}
+    .customer-type-tabs button.active{background:var(--gold);color:var(--bg-main);border-color:var(--gold)}
+    .customer-type-picker label{display:flex;align-items:center;gap:5px;font-size:.85rem}
+    .customer-type-picker input{width:auto;accent-color:var(--gold)}
+    .customer-tags{display:block;color:var(--gold-soft);font-size:.76rem;margin-top:4px}
+    .cust-detail-memo{white-space:pre-wrap;overflow-wrap:anywhere}
+    .customer-import-summary{white-space:pre-wrap;font-size:.8rem;line-height:1.6;overflow-wrap:anywhere}
     /* ── 고객 목록: 관리 버튼 4칸 세그먼트 색상 (상세·수정·삭제·일지) ── */
     .cust-act-detail { background:transparent; color:var(--blue); }
     .cust-act-detail:hover { background:rgba(95,159,216,0.18); }
@@ -62,6 +70,8 @@
         </div>
       </div>
       <div class="cust-form-grid">
+<div class="field" style="grid-column:1/-1"><label>고객 종류 (복수 선택)</label><div id="c_types" class="customer-type-picker"></div></div><div class="field" style="grid-column:1/-1"><label for="c_phones">추가 연락처 (한 줄에 하나)</label><textarea id="c_phones" rows="2" placeholder="배우자·회사 등 추가 연락처"></textarea></div>
+        
         <div class="field">
           <label>이름</label>
           <input id="c_name" type="text" placeholder="고객 이름" />
@@ -122,6 +132,7 @@
           <button class="btn btn-primary" id="customerAddToggleBtn" style="white-space:nowrap;flex-shrink:0;">+ 고객 등록</button>
         </div>
       </div>
+      <div id="customerTypeTabs" class="customer-type-tabs" aria-label="고객 종류"></div>
       <div id="customerTableWrap" class="cust-table-wrap">
         <div class="cust-table-head">
           <span>고객명</span><span>연락처</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
@@ -155,6 +166,8 @@
   <div class="modal-box" style="max-width:560px;">
     <div class="modal-title">✏️ 고객 수정</div>
     <div class="form-grid-2" style="margin-bottom:10px;">
+<div class="field" style="grid-column:1/-1"><label>고객 종류 (복수 선택)</label><div id="ce_types" class="customer-type-picker"></div></div><div class="field" style="grid-column:1/-1"><label for="ce_phones">추가 연락처 (한 줄에 하나)</label><textarea id="ce_phones" rows="2" placeholder="배우자·회사 등 추가 연락처"></textarea></div>
+        
       <div class="field">
         <label>이름</label>
         <input id="ce_name" type="text" placeholder="고객 이름" />
@@ -250,6 +263,31 @@
   let customerPage = 1;
   const CUST_PER_PAGE = 10;
   let customerSearch = "";
+  let customerTypeFilter = '';
+  const CUSTOMER_TYPES = ['매수자','임차인','소유자','부동산','업체','지인'];
+  function customerKinds(c) {
+    if(Array.isArray(c.customer_types) && c.customer_types.length)return c.customer_types;
+    const mapping={매수:'매수자',임차:'임차인',매도:'소유자',임대:'소유자'};
+    return mapping[c.customer_role] ? [mapping[c.customer_role]] : [];
+  }
+  function customerPhones(c) { return [...new Set([c.phone,...(c.contact_phones || [])].filter(Boolean))]; }
+  function selectedCustomerKinds(prefix) { return Array.from(document.querySelectorAll('#'+prefix+'_types input:checked')).map(el=>el.value); }
+  function setCustomerKinds(prefix,values) { document.querySelectorAll('#'+prefix+'_types input').forEach(el=>el.checked=values.includes(el.value)); }
+  function formPhones(prefix) { return [...new Set([document.getElementById(prefix+'_contact').value.trim(),...document.getElementById(prefix+'_phones').value.split(/\n|,/).map(v=>v.trim())].filter(Boolean))]; }
+  for(const prefix of ['c','ce'])document.getElementById(prefix+'_types').innerHTML=CUSTOMER_TYPES.map(t=>'<label><input type="checkbox" value="'+t+'">'+t+'</label>').join('');
+  function renderCustomerTypeTabs() {
+    const base=allCustomers.filter(c=>c.status!=='계약완료');
+    document.getElementById('customerTypeTabs').innerHTML=['전체',...CUSTOMER_TYPES,'미분류'].map(t=>{
+      const key=t==='전체' ? '' : t;
+      const count=base.filter(c=>!key || (key==='미분류' ? !customerKinds(c).length : customerKinds(c).includes(key))).length;
+      return '<button type="button" data-customer-kind="'+key+'" aria-pressed="'+(customerTypeFilter===key)+'" class="'+(customerTypeFilter===key?'active':'')+'">'+t+' '+count+'</button>';
+    }).join('');
+  }
+  document.getElementById('customerTypeTabs').addEventListener('click',e=>{
+    const button=e.target.closest('[data-customer-kind]');
+    if(!button)return;
+    customerTypeFilter=button.dataset.customerKind;customerPage=1;renderCustomers();
+  });
 
   // 레거시 매물유형 코드(shop/officetel/...)와 새 한글 값(상가/사무실 등)을 모두 그대로 보여준다.
   const LEGACY_TYPE_LABEL = { shop:"상가/사무실", officetel:"오피스텔", land:"토지", factory:"공장/창고", bizcenter:"지식산업센터" };
@@ -270,11 +308,13 @@
     const badge = document.getElementById("customerCountBadge");
     container.innerHTML = "";
 
+    renderCustomerTypeTabs();
     let filtered = allCustomers.filter(c => c.status !== "계약완료");
+    if(customerTypeFilter)filtered=filtered.filter(c=>customerTypeFilter==="미분류" ? !customerKinds(c).length : customerKinds(c).includes(customerTypeFilter));
     if (customerSearch) {
       const kw = customerSearch.toLowerCase();
       filtered = filtered.filter(c =>
-        [c.name, c.phone, c.memo, c.desired_price, c.desired_region, c.customer_role].join(" ").toLowerCase().includes(kw)
+        [c.name, ...customerPhones(c), c.memo, c.desired_price, c.desired_region, ...customerKinds(c), JSON.stringify(c.import_sources||[])].join(" ").toLowerCase().includes(kw) || (kw.replace(/\D/g,"").length>=4 && customerPhones(c).some(p=>normalizeCustomerPhone(p).includes(kw.replace(/\D/g,""))))
       );
     }
 
@@ -297,8 +337,8 @@
       const lastDate = activity && activity.date ? formatDate(activity.date) : "—";
 
       row.innerHTML = `
-        <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}</span>
-        <span class="cust-cell" data-label="연락처">${c.phone ? `<a class="cust-phone-link" href="tel:${escapeHtmlCust(c.phone)}" onclick="event.stopPropagation()">📞 ${escapeHtmlCust(c.phone)}</a>` : "—"}</span>
+        <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}<small class="customer-tags">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")}</small></span>
+        <span class="cust-cell" data-label="연락처">${customerPhones(c).length ? customerPhones(c).map(p=>`<a class="cust-phone-link" href="tel:${escapeHtmlCust(p)}" onclick="event.stopPropagation()">${escapeHtmlCust(p)}</a>`).join("<br>") : "—"}</span>
         <span class="cust-cell" data-label="최근업무">${escapeHtmlCust(lastWork)}</span>
         <span class="cust-cell" data-label="최근상담일">${lastDate}</span>
         <span class="cust-cell cust-cell-actions" data-label="관리">
@@ -319,6 +359,13 @@
     window.open(DIARY_APP_URL + "?customerId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");
   }
 
+  function customerImportDetails(c) {
+    const sources=Array.isArray(c.import_sources)?c.import_sources:[];
+    const props=[...new Map(sources.flatMap(r=>r.linked_properties||[]).map(p=>[JSON.stringify(p),p])).values()];
+    const review=[...new Set(sources.flatMap(r=>r.review||[]))];
+    const links=props.map(p=>p.listing_id ? '<a class="btn" href="'+escapeHtmlCust(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(p.listing_id)))+'">매물보기</a>' : p.building_id ? '<a class="btn" href="'+escapeHtmlCust(OfficeConfig.urlFor('building-detail.html?id='+encodeURIComponent(p.resource_id||p.building_id)+'#unitStatus'))+'">'+escapeHtmlCust([p.building_name,p.room].filter(Boolean).join(' · '))+'</a>' : '').join(' ');
+    return (links ? '<div class="cust-detail-section-title">연결된 매물·세대</div>'+links : '')+(review.length ? '<p class="customer-import-summary">확인사항: '+escapeHtmlCust(review.join(' · '))+'</p>' : '')+(sources.length ? '<details><summary>연락처 원본 '+sources.length+'건</summary>'+sources.map(r=>'<div class="customer-import-summary">'+escapeHtmlCust(r.source+' '+r.source_row+'행\n'+Object.entries(r.original||{}).filter(([,v])=>v!=null&&v!=='').map(([k,v])=>k+': '+v).join('\n'))+'</div>').join('<hr>')+'</details>' : '');
+  }
   async function openCustomerDetail(id) {
     const c = allCustomers.find(x => x.id === id) || await getCustomerById(id);
     if (!c) { showToast("고객 정보를 찾을 수 없습니다"); return; }
@@ -326,14 +373,15 @@
     const body = document.getElementById("custDetailBody");
     body.innerHTML = `
       <div class="cust-detail-grid">
-        <div><span>연락처</span><strong>${escapeHtmlCust(c.phone) || "—"}</strong></div>
-        <div><span>구분</span><strong>${escapeHtmlCust(c.customer_role) || "—"}</strong></div>
+        <div><span>연락처</span><strong>${escapeHtmlCust(customerPhones(c).join(" / ")) || "—"}</strong></div>
+        <div><span>고객 종류</span><strong>${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")}</strong></div>
         <div><span>찾는매물</span><strong>${escapeHtmlCust(getCustomerTypeLabel(c.property_category))}</strong></div>
         <div><span>예산</span><strong>${escapeHtmlCust(c.desired_price) || "—"}</strong></div>
         <div><span>관심지역</span><strong>${escapeHtmlCust(c.desired_region) || "—"}</strong></div>
         <div><span>상태</span><strong>${escapeHtmlCust(c.status) || "—"}</strong></div>
       </div>
       ${c.memo ? `<div class="cust-detail-memo">📝 ${escapeHtmlCust(c.memo)}</div>` : ""}
+      ${customerImportDetails(c)}
       <div class="cust-detail-section-title">업무일지 이력</div>
       <div id="custDetailHistory" class="cust-history-list"><div class="loading" style="padding:14px;"><span class="spinner"></span>불러오는 중...</div></div>
     `;
@@ -457,6 +505,8 @@
     const c = allCustomers.find(x => x.id === id);
     if (!c) return;
     editingCustomerId = id;
+    setCustomerKinds("ce",customerKinds(c));
+    document.getElementById("ce_phones").value=customerPhones(c).filter(p=>p!==c.phone).join("\n");
     document.getElementById("ce_name").value    = c.name    || "";
     document.getElementById("ce_contact").value = c.phone   || "";
     document.getElementById("ce_role").value    = c.customer_role || "";
@@ -477,6 +527,8 @@
         name:              document.getElementById("ce_name").value.trim(),
         phone:             phone,
         phone_normalized:  normalizeCustomerPhone(phone),
+        customer_types: selectedCustomerKinds("ce"),
+        contact_phones: formPhones("ce"),
         customer_role:     document.getElementById("ce_role").value || null,
         property_category: document.getElementById("ce_type").value || null,
         desired_price:     document.getElementById("ce_budget").value.trim() || null,
@@ -494,6 +546,7 @@
   function resetCustomerQuickForm() {
     ["c_name","c_contact","c_budget","c_region","c_memo"].forEach(id => document.getElementById(id).value = "");
     document.getElementById("c_type").value = "";
+    document.getElementById("c_phones").value = "";setCustomerKinds("c",[]);
     document.getElementById("c_role").value = "";
   }
   function closeCustomerQuickCard() {
@@ -541,6 +594,7 @@
         await addCustomer({
           customer_code: generateCustomerCode(),
           name, phone, phone_normalized: digits,
+          customer_types:selectedCustomerKinds("c"),contact_phones:formPhones("c"),
           customer_role: role || null,
           property_category: type || null,
           desired_price: budget || null,

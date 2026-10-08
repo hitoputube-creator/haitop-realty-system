@@ -1562,9 +1562,14 @@ async function deleteMemo(id) {
 
 // ===== 고객 관리 =====
 async function getCustomers() {
-  const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers?order=created_at.desc", { headers });
-  if (!res.ok) throw new Error("고객 목록 조회 실패");
-  return await res.json();
+  const result = [], pageSize=500;
+  for(let offset=0;;offset+=pageSize) {
+    const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers?order=created_at.desc,id.asc&limit="+pageSize+"&offset="+offset, { headers });
+    if (!res.ok) throw new Error("고객 목록 조회 실패");
+    const rows=await res.json();
+    result.push(...rows);
+    if(rows.length<pageSize)return result;
+  }
 }
 async function addCustomer(customer) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/customers", {
@@ -1639,21 +1644,22 @@ async function getCustomerDiaryHistory(customerId) {
 
 // 목록 화면의 "최근업무"/"최근상담일" 컬럼용 - 여러 고객의 최신 업무일지 1건씩을 한 번에 조회.
 async function getLatestDiaryActivityForCustomers(customerIds) {
-  const ids = (customerIds || []).filter(Boolean);
-  if (!ids.length) return {};
-  const inList = ids.map(id => encodeURIComponent(id)).join(",");
-  const res = await fetchWithTimeout(
-    SUPABASE_URL + "/rest/v1/work_diary?customer_id=in.(" + inList + ")" +
-      "&or=(link_key.is.null,link_key.neq.__daily_schedule__)&select=customer_id,date,title,content,created_at&order=date.desc,created_at.desc",
-    { headers }
-  );
-  if (!res.ok) return {};
-  const rows = await res.json();
-  const map = {};
-  rows.forEach(row => {
-    if (!row.customer_id || map[row.customer_id]) return; // 이미 최신 1건을 담았으면 스킵(정렬돼 있으므로 첫 항목이 최신)
-    map[row.customer_id] = row;
-  });
+  const ids=[...new Set((customerIds||[]).filter(Boolean))], chunks=[], map={};
+  for(let i=0;i<ids.length;i+=100)chunks.push(ids.slice(i,i+100));
+  let next=0;
+  async function worker(){
+    while(next<chunks.length){
+      const batch=chunks[next++], inList=batch.map(id=>encodeURIComponent(id)).join(",");
+      for(let offset=0;;offset+=500){
+        const res=await fetchWithTimeout(SUPABASE_URL+"/rest/v1/work_diary?customer_id=in.("+inList+")&or=(link_key.is.null,link_key.neq.__daily_schedule__)&select=customer_id,date,title,content,created_at&order=date.desc,created_at.desc&limit=500&offset="+offset,{headers});
+        if(!res.ok)break;
+        const rows=await res.json();
+        rows.forEach(row=>{if(row.customer_id&&!map[row.customer_id])map[row.customer_id]=row;});
+        if(rows.length<500)break;
+      }
+    }
+  }
+  await Promise.all(Array.from({length:Math.min(4,chunks.length)},worker));
   return map;
 }
 
