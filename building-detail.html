@@ -421,98 +421,6 @@
     .residential-modal .unit-modal-actions { position:sticky; bottom:0; z-index:1; margin-top:8px; padding:8px 0 0; background:#132040; flex-wrap:wrap; }
 
 
-    /* Building resources light workspace: scoped to this page, no shared app changes. */
-    html, body {
-      --bg:#f5f7fa; --bg2:#f5f7fa; --panel:#fff; --panel2:#fff;
-      --text:#1f3045; --txt:#1f3045; --sub:#44576c; --muted:#65758a;
-      --border:#dee5ee; --line2:#cfd8e3; --gold:#a78343; --gold-soft:#9b783d;
-      background:#f5f7fa !important; background-image:none !important; color:#1f3045 !important;
-      color-scheme:light;
-    }
-    .page .card,.page .topbar {
-      background:#fff !important;border:1px solid #dfe6ee !important;
-      box-shadow:0 2px 12px rgba(24,44,71,.055) !important;color:#1f3045 !important;
-    }
-    .page .card::before {display:none !important;}
-    .page .brand-text h1 {color:#182c47 !important;text-shadow:none !important;}
-    .page .brand-text p {color:#60748a !important;}
-    .page .sec-title,.page .unit-sec-head h3 {color:#213c5b !important;}
-    .page .sec-title::after {background:#e2e8f0 !important;}
-    .page .info-cell,.page .floor-card,.page .file-card {
-      background:#f9fbfd !important;border-color:#e0e7ef !important;color:#233449 !important;
-    }
-    .page .info-cell-label {color:#64748b !important;}
-    .page .info-cell-value,.page .floor-card-foot {color:#233449 !important;}
-    .page .info-cell-value.empty {color:#94a3b8 !important;}
-    .page label,.page .plan-area-note {color:#53657a !important;}
-    .page input:not([type=checkbox]),.page select,.page textarea {
-      background:#fff !important;color:#203349 !important;border-color:#cbd5e1 !important;color-scheme:light;
-    }
-    .page input::placeholder,.page textarea::placeholder {color:#8b97a6 !important;}
-    .page input:focus,.page select:focus,.page textarea:focus {border-color:#40678f !important;box-shadow:0 0 0 2px rgba(64,103,143,.12) !important;}
-    .page .btn,.page .btn-unit-ghost {
-      background:#fff !important;color:#294968 !important;border:1px solid #cbd7e5 !important;box-shadow:none !important;
-    }
-    .page .btn:hover,.page .btn-unit-ghost:hover {background:#eef3f9 !important;}
-    .page .btn.primary,.page .btn-unit-add {background:#182c47 !important;color:#fff !important;border-color:#182c47 !important;}
-    .page .btn-unit-del {background:#fff1f2 !important;color:#ab3543 !important;border-color:#f0c6ce !important;}
-    .page .sum-card {background:#f7f9fc !important;border-color:#dfe7f0 !important;box-shadow:none !important;}
-    .page .sum-card .sum-num {color:#24496c !important;}
-    .page .sum-card .sum-label,.page .summary-note,.page #unitCounts {color:#53677b !important;}
-    .page .floor-tabs button,.page .unit-sort {color:#294b6e !important;}
-    .page .units-tbl th {background:#edf2f7 !important;color:#344a62 !important;border-color:#dbe4ed !important;}
-    .page .units-tbl td {background:#fff !important;color:#26384e !important;border-color:#e7edf4 !important;}
-    .page .units-tbl tr:hover td {background:#f4f8fc !important;}
-    .page .units-tbl small {color:#64748b !important;}
-    .page .unit-modal-overlay {background:rgba(24,44,71,.40) !important;}
-
-    /* Light professional theme — residential unit editor pilot only */
-    .residential-modal .unit-modal-box {
-      background:#ffffff !important; color:#233247 !important;
-      border:1px solid #dfe5ee !important; box-shadow:0 20px 55px rgba(20,40,65,.22) !important;
-    }
-    .residential-modal .unit-modal-title {color:#182c47 !important;}
-    .residential-modal .unit-modal-close {color:#64748b !important;}
-    .residential-modal .unit-modal-close:hover {color:#182c47 !important;}
-    .residential-modal .um-section {background:#f7f9fc !important; border:1px solid #e4eaf1 !important;}
-    .residential-modal .um-section .um-section-title {
-      background:#edf2f8 !important; color:#213c5b !important;
-      border-bottom:1px solid #dce5ee !important; letter-spacing:0 !important;
-    }
-    .residential-modal .umfield label, .residential-modal .area-unit {color:#526477 !important;}
-    .residential-modal .umfield input,
-    .residential-modal .umfield select,
-    .residential-modal .umfield textarea {
-      background:#fff !important; color:#1b2b3c !important;
-      border:1px solid #cbd5e1 !important;
-      box-shadow:none !important;
-      color-scheme:light;
-    }
-    .residential-modal .umfield input::placeholder,
-    .residential-modal .umfield textarea::placeholder {color:#8995a5 !important;}
-    .residential-modal .umfield input:focus,
-    .residential-modal .umfield select:focus,
-    .residential-modal .umfield textarea:focus {
-      border-color:#345b85 !important; box-shadow:0 0 0 2px rgba(52,91,133,.13) !important;
-    }
-    .residential-modal .umfield input[readonly],
-    .residential-modal .umfield input:disabled,
-    .residential-modal .umfield select:disabled {background:#f0f3f7 !important;color:#64748b !important;}
-    .residential-modal .umfield select option {background:#fff !important;color:#1b2b3c !important;}
-    .residential-modal .area-arrow, .residential-modal .amt-hint {color:#9b783d !important;}
-    .residential-modal .btn-unit-ghost {
-      background:#fff !important;color:#284463 !important;border-color:#c7d3e2 !important;
-    }
-    .residential-modal .btn-unit-ghost:hover {background:#eef3f8 !important;}
-    .residential-modal .btn-unit-add {background:#182c47 !important;color:#fff !important;border-color:#182c47 !important;}
-    .residential-modal .btn-unit-del {background:#fff1f2 !important;color:#ad3442 !important;border-color:#f3c5ca !important;}
-    .residential-modal .unit-date-row button {color:#345b85 !important;}
-    .residential-modal .unit-memo-entry {border-color:#e0e6ed !important;color:#253449 !important;}
-    .residential-modal .unit-memo-entry time {color:#64748b !important;}
-    .residential-modal #unitMemoHistory p {color:#64748b !important;}
-    .residential-modal .unit-modal-actions {background:#fff !important;border-top:1px solid #e5eaf1 !important;}
-    .residential-modal #unitRegistryApplied {color:#526477 !important;}
-
     @media(max-width:620px) {
       .residential-modal { padding:12px 8px; }
       .residential-modal .unit-modal-box { padding:12px; }
@@ -626,6 +534,99 @@
 }
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-v1">
+<style id="ktop-building-light">    /* Building resources light workspace: scoped to this page, no shared app changes. */
+    html, body {
+      --bg:#f5f7fa; --bg2:#f5f7fa; --panel:#fff; --panel2:#fff;
+      --text:#1f3045; --txt:#1f3045; --sub:#44576c; --muted:#65758a;
+      --border:#dee5ee; --line2:#cfd8e3; --gold:#a78343; --gold-soft:#9b783d;
+      background:#f5f7fa !important; background-image:none !important; color:#1f3045 !important;
+      color-scheme:light;
+    }
+    .page .card,.page .topbar {
+      background:#fff !important;border:1px solid #dfe6ee !important;
+      box-shadow:0 2px 12px rgba(24,44,71,.055) !important;color:#1f3045 !important;
+    }
+    .page .card::before {display:none !important;}
+    .page .brand-text h1 {color:#182c47 !important;text-shadow:none !important;}
+    .page .brand-text p {color:#60748a !important;}
+    .page .sec-title,.page .unit-sec-head h3 {color:#213c5b !important;}
+    .page .sec-title::after {background:#e2e8f0 !important;}
+    .page .info-cell,.page .floor-card,.page .file-card {
+      background:#f9fbfd !important;border-color:#e0e7ef !important;color:#233449 !important;
+    }
+    .page .info-cell-label {color:#64748b !important;}
+    .page .info-cell-value,.page .floor-card-foot {color:#233449 !important;}
+    .page .info-cell-value.empty {color:#94a3b8 !important;}
+    .page label,.page .plan-area-note {color:#53657a !important;}
+    .page input:not([type=checkbox]),.page select,.page textarea {
+      background:#fff !important;color:#203349 !important;border-color:#cbd5e1 !important;color-scheme:light;
+    }
+    .page input::placeholder,.page textarea::placeholder {color:#8b97a6 !important;}
+    .page input:focus,.page select:focus,.page textarea:focus {border-color:#40678f !important;box-shadow:0 0 0 2px rgba(64,103,143,.12) !important;}
+    .page .btn,.page .btn-unit-ghost {
+      background:#fff !important;color:#294968 !important;border:1px solid #cbd7e5 !important;box-shadow:none !important;
+    }
+    .page .btn:hover,.page .btn-unit-ghost:hover {background:#eef3f9 !important;}
+    .page .btn.primary,.page .btn-unit-add {background:#182c47 !important;color:#fff !important;border-color:#182c47 !important;}
+    .page .btn-unit-del {background:#fff1f2 !important;color:#ab3543 !important;border-color:#f0c6ce !important;}
+    .page .sum-card {background:#f7f9fc !important;border-color:#dfe7f0 !important;box-shadow:none !important;}
+    .page .sum-card .sum-num {color:#24496c !important;}
+    .page .sum-card .sum-label,.page .summary-note,.page #unitCounts {color:#53677b !important;}
+    .page .floor-tabs button,.page .unit-sort {color:#294b6e !important;}
+    .page .units-tbl th {background:#edf2f7 !important;color:#344a62 !important;border-color:#dbe4ed !important;}
+    .page .units-tbl td {background:#fff !important;color:#26384e !important;border-color:#e7edf4 !important;}
+    .page .units-tbl tr:hover td {background:#f4f8fc !important;}
+    .page .units-tbl small {color:#64748b !important;}
+    .page .unit-modal-overlay {background:rgba(24,44,71,.40) !important;}
+
+    /* Light professional theme — residential unit editor pilot only */
+    .residential-modal .unit-modal-box {
+      background:#ffffff !important; color:#233247 !important;
+      border:1px solid #dfe5ee !important; box-shadow:0 20px 55px rgba(20,40,65,.22) !important;
+    }
+    .residential-modal .unit-modal-title {color:#182c47 !important;}
+    .residential-modal .unit-modal-close {color:#64748b !important;}
+    .residential-modal .unit-modal-close:hover {color:#182c47 !important;}
+    .residential-modal .um-section {background:#f7f9fc !important; border:1px solid #e4eaf1 !important;}
+    .residential-modal .um-section .um-section-title {
+      background:#edf2f8 !important; color:#213c5b !important;
+      border-bottom:1px solid #dce5ee !important; letter-spacing:0 !important;
+    }
+    .residential-modal .umfield label, .residential-modal .area-unit {color:#526477 !important;}
+    .residential-modal .umfield input,
+    .residential-modal .umfield select,
+    .residential-modal .umfield textarea {
+      background:#fff !important; color:#1b2b3c !important;
+      border:1px solid #cbd5e1 !important;
+      box-shadow:none !important;
+      color-scheme:light;
+    }
+    .residential-modal .umfield input::placeholder,
+    .residential-modal .umfield textarea::placeholder {color:#8995a5 !important;}
+    .residential-modal .umfield input:focus,
+    .residential-modal .umfield select:focus,
+    .residential-modal .umfield textarea:focus {
+      border-color:#345b85 !important; box-shadow:0 0 0 2px rgba(52,91,133,.13) !important;
+    }
+    .residential-modal .umfield input[readonly],
+    .residential-modal .umfield input:disabled,
+    .residential-modal .umfield select:disabled {background:#f0f3f7 !important;color:#64748b !important;}
+    .residential-modal .umfield select option {background:#fff !important;color:#1b2b3c !important;}
+    .residential-modal .area-arrow, .residential-modal .amt-hint {color:#9b783d !important;}
+    .residential-modal .btn-unit-ghost {
+      background:#fff !important;color:#284463 !important;border-color:#c7d3e2 !important;
+    }
+    .residential-modal .btn-unit-ghost:hover {background:#eef3f8 !important;}
+    .residential-modal .btn-unit-add {background:#182c47 !important;color:#fff !important;border-color:#182c47 !important;}
+    .residential-modal .btn-unit-del {background:#fff1f2 !important;color:#ad3442 !important;border-color:#f3c5ca !important;}
+    .residential-modal .unit-date-row button {color:#345b85 !important;}
+    .residential-modal .unit-memo-entry {border-color:#e0e6ed !important;color:#253449 !important;}
+    .residential-modal .unit-memo-entry time {color:#64748b !important;}
+    .residential-modal #unitMemoHistory p {color:#64748b !important;}
+    .residential-modal .unit-modal-actions {background:#fff !important;border-top:1px solid #e5eaf1 !important;}
+    .residential-modal #unitRegistryApplied {color:#526477 !important;}
+
+</style>
 </head>
 <body>
 <div class="page">
