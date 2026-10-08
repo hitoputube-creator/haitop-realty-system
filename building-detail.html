@@ -2074,6 +2074,7 @@ async function deleteBFile(id) {
     try {
       await saveBuildingUnits(bName, bName, next);
       units = next;
+      selectedUnitRows.clear();
       renderAll();
       if (options.keepOpen) { openModal(savedIndex); $('u_추가메모').focus(); }
       else closeModal();
@@ -2097,6 +2098,7 @@ async function deleteBFile(id) {
     try {
       await saveBuildingUnits(bName, bName, next);
       units = next;
+      selectedUnitRows.clear();
       closeModal();
       renderAll();
       if (typeof showToast === "function") showToast("삭제 완료되었습니다.");
