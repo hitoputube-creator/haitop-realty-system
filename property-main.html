@@ -24,7 +24,10 @@
     @media(max-width:760px){.page{padding:0 20px 32px}.topbar{align-items:flex-start;flex-direction:column;padding:20px 0}.categories{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.category{padding:13px 5px}.grid{grid-template-columns:1fr}.entry{padding:24px;min-height:240px}.heading{margin-top:24px}h1{font-size:27px}}
     @media(max-width:380px){.page{padding-left:14px;padding-right:14px}.category{font-size:14px}.entry-actions{flex-direction:column}.action{width:100%}}
   
-    /* White + navy professional property management landing page */
+</style>
+<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-brand-layout">
+<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-v1">
+<style id="ktop-main-theme">    /* White + navy professional property management landing page */
     :root{--bg:#f5f7fa;--bg2:#f5f7fa;--txt:#1c3047;--text:#1c3047;--sub:#586b80;--muted:#66788c;--panel:#fff;--panel2:#f6f8fb;--card2:#edf3f9;--line:#dfe6ef;--line2:#cbd7e5;--gold:#b39253;}
     html,body{background:#f5f7fa!important;color:#1c3047!important;color-scheme:light;}
     .topbar{border-color:#dce4ed;}
@@ -47,8 +50,16 @@
     input:focus,button:focus-visible,a:focus-visible{outline-color:#39658b;}
     [class*="gps-"]{color:inherit;}
 </style>
-<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-brand-layout">
-<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-v1">
+<script>
+(function(){
+  var k = typeof OfficeConfig!=="undefined" ? OfficeConfig.id==="ktop" : new URLSearchParams(location.search).get("office")==="ktop";
+  if (!k) {
+    document.getElementById("ktop-main-theme").disabled=true;
+    document.getElementById("ktop-main-contrast").disabled=true;
+    document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("uiThemeVersion");if(v)v.remove();});
+  }
+})();
+</script>
 </head>
 <body>
   <div class="page">
@@ -156,7 +167,7 @@
   </script>
 <script src="assets/js/global-property-search-core.js?v=20261006-compact-search-2"></script>
 <script src="assets/js/global-property-search.js?v=20261006-compact-search-2"></script>
-<style id="white-navy-theme-20261008">
+<style id="ktop-main-contrast">
 html body,body{background:#f5f7fa!important;color:#1c3047!important;}
 body .entry,body .category:not([aria-selected="true"]){background:#fff!important;color:#23374f!important;border-color:#d8e1eb!important;}
 body .category[aria-selected="true"],body .action.primary{background:#182c47!important;color:#fff!important;border-color:#182c47!important;}
