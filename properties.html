@@ -103,7 +103,8 @@
       .deal-filter-wrap { width: 100%; margin-top: 8px; }
       .deal-filter-wrap .filter-row { flex-wrap: wrap; }
     }
-  </style>
+  .apartment-deal-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}.apartment-deal-summary[hidden]{display:none}.apartment-deal-total{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:12px;border:1px solid currentColor;background:rgba(255,255,255,.03);cursor:pointer;font:inherit}.apartment-deal-total strong{font-size:1.55rem}.apartment-deal-total span{font-size:.8rem}.apartment-deal-0{color:#e5bf46}.apartment-deal-1{color:#8fbff3}.apartment-deal-2{color:#48d68b}.apartment-deal-3{color:#baa6ff}.apartment-deal-total.active{background:rgba(212,175,55,.18);box-shadow:inset 0 0 0 2px currentColor}
+</style>
 <link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-brand-layout">
 </head>
 <body class="properties-page" data-nav-active="properties">
@@ -158,7 +159,7 @@
           <input id="searchInput" type="text" placeholder="매물번호·주소·매물명·메모·단지명 검색" />
         </div>
         <button class="btn btn-ghost" id="searchBtn" style="flex:0 0 auto;white-space:nowrap;">검색</button>
-        <input type="checkbox" id="includeCompletedChk" hidden /><select id="listingStatusFilter" class="sort-select" aria-label="매물 거래상태 필터"><option value="진행중">진행중</option><option value="보류">보류</option><option value="거래완료">거래완료</option><option value="전체">전체 상태</option></select>
+        <input type="checkbox" id="includeCompletedChk" hidden /><select id="listingStatusFilter" class="sort-select" title="진행중·보류·거래완료로 필터링" aria-label="매물 거래상태 필터"><option value="진행중">진행중</option><option value="보류">보류</option><option value="거래완료">거래완료</option><option value="전체">전체 상태</option></select>
         <select id="sortSelect" class="sort-select">
           <option value="newest">최신순</option>
           <option value="oldest">오래된순</option>
@@ -199,7 +200,7 @@
     </section>
 
     <!-- 목록 -->
-    <section class="card">
+    <section class="card"><div id="apartmentDealSummary" class="apartment-deal-summary no-print" hidden aria-label="단지별 거래구분 필터"></div>
       <div class="card-title no-print" style="flex-wrap:wrap;gap:8px;">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
@@ -629,7 +630,7 @@
 </div>
 
 <script src="assets/js/listings-shared.js?v=20261008-status-portfolio"></script>
-<script src="assets/js/properties.js?v=20261008-status-portfolio"></script>
+<script src="assets/js/properties.js?v=20261008-apartment-deal-counts"></script>
 <script src="assets/js/global-property-search-core.js?v=20261008-status-portfolio"></script>
 <script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
 </body>

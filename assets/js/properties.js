@@ -580,6 +580,10 @@ function matchesCategoryFilter(item) {
 // "임대"는 전세·월세를 모두 포함하는 상위 개념(구조화 데이터에 "임대"라는 값 자체는 존재하지 않음)
 function matchesDealFilter(item) {
   if (!currentDealFilter) return false;
+  if(currentDealFilter==="자가")return isOwnerOccupiedListing(item);
+  const unit=item.apartmentUnitData || {};
+  const deals=String(unit.거래구분 || item.dealType || item.shop_dealType || item.officetel_dealType || getTransactionType(item));
+  if(["매매","전세","월세"].includes(currentDealFilter))return deals.includes(currentDealFilter);
   const t = getTransactionType(item);
   if (currentDealFilter === "임대") return t === "월세" || t === "전세";
   return t === currentDealFilter;
@@ -703,10 +707,37 @@ function refreshComplexFilterOptions() {
   if (complexFilterSelect.value !== keep) { currentTag = ""; complexFilterSelect.value = ""; }
 }
 
+function isOwnerOccupiedListing(item){
+  const unit=item.apartmentUnitData || {};
+  return (unit.세입자현황 || unit.공실여부 || item.세입자현황 || item.tenantStatus || item.occupancyStatus || "")==="자가거주";
+}
+function renderApartmentDealSummary(){
+  const host=document.getElementById("apartmentDealSummary");
+  const isApartment=item=>item.type==="apartment" || normalizeListingCategory(item).subCategory==="아파트";
+  const visible=currentMajor==="주거용" && (currentSub==="" || currentSub==="아파트") &&
+    (currentSub==="아파트" || (currentTag && allListings.some(item=>isApartment(item)&&matchesSelectedComplex(item,currentTag))));
+  host.hidden=!visible;if(!visible)return;
+  const selected=currentDealFilter;let items;
+  currentDealFilter="";
+  try{items=getBaseFilteredListings().filter(isApartment);if(viewMode==="card" && columnFilterCount())items=items.filter(item=>matchesColumnFilters(item));}
+  finally{currentDealFilter=selected;}
+  const counts={};
+  for(const deal of ["매매","전세","월세","자가"]){
+    currentDealFilter=deal;
+    try{counts[deal]=items.filter(matchesDealFilter).length;}finally{currentDealFilter=selected;}
+  }
+  host.innerHTML=["매매","전세","월세","자가"].map((deal,index)=>'<button type="button" class="apartment-deal-total apartment-deal-'+index+(selected===deal?' active':'')+'" data-apartment-deal="'+deal+'" aria-pressed="'+(selected===deal)+'"><strong>'+counts[deal]+'</strong><span>'+deal+'</span></button>').join("");
+  host.querySelectorAll('[data-apartment-deal]').forEach(btn=>btn.onclick=()=>{
+    currentDealFilter=currentDealFilter===btn.dataset.apartmentDeal?"":btn.dataset.apartmentDeal;
+    currentPage=1;renderDealFilterRow();renderList();saveFilterState();
+  });
+}
+
 function renderList() {
   pruneSelectedIds();
   refreshComplexFilterOptions();
   updateKindTabCounts();
+  renderApartmentDealSummary();
   listingContainer.innerHTML = "";
   const unifiedPropertyLabel = document.getElementById("unifiedPropertyLabel");
   const unifiedDoneSection   = document.getElementById("unifiedDoneSection");
@@ -824,7 +855,7 @@ function renderSubFilterRow() {
 // 거래유형 필터 — 기본은 [매매][임대], "주거용" 선택 시에는 [매매][전세][월세]로 교체된다.
 // 유형별 필터와 별개로 클릭 시 즉시 재조회되며, 이미 활성화된 버튼을 다시 누르면 선택 해제된다.
 function renderDealFilterRow() {
-  const options = currentMajor === "주거용" ? ["매매", "전세", "월세"] : ["매매", "임대"];
+  const options = currentMajor === "주거용" ? ["매매", "전세", "월세", "자가"] : ["매매", "임대"];
   if (currentDealFilter && !options.includes(currentDealFilter)) currentDealFilter = "";
   dealFilterRow.innerHTML = options.map(v =>
     `<button class="filter-btn deal${v === currentDealFilter ? " active" : ""}" data-deal="${v}">${v}</button>`
