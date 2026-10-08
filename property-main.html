@@ -23,7 +23,30 @@
     .secondary-links{margin-top:24px;display:flex;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--sub,#b4c2d2)}.secondary-links a{text-decoration:underline;text-underline-offset:4px}.status{color:var(--sub,#b4c2d2);margin-top:16px;font-size:14px}.status:empty{display:none}[hidden]{display:none!important}
     @media(max-width:760px){.page{padding:0 20px 32px}.topbar{align-items:flex-start;flex-direction:column;padding:20px 0}.categories{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.category{padding:13px 5px}.grid{grid-template-columns:1fr}.entry{padding:24px;min-height:240px}.heading{margin-top:24px}h1{font-size:27px}}
     @media(max-width:380px){.page{padding-left:14px;padding-right:14px}.category{font-size:14px}.entry-actions{flex-direction:column}.action{width:100%}}
-  </style>
+  
+    /* White + navy professional property management landing page */
+    :root{--bg:#f5f7fa;--bg2:#f5f7fa;--txt:#1c3047;--text:#1c3047;--sub:#586b80;--muted:#66788c;--panel:#fff;--panel2:#f6f8fb;--card2:#edf3f9;--line:#dfe6ef;--line2:#cbd7e5;--gold:#b39253;}
+    html,body{background:#f5f7fa!important;color:#1c3047!important;color-scheme:light;}
+    .topbar{border-color:#dce4ed;}
+    .brand-name,h1,h2,.entry h3{color:#1b3048;}
+    .brand-mark{color:#a78343;border-color:#a78343;background:#fff;}
+    .brand-sub,.entry p,.heading p:last-child,.secondary-links,.status{color:#607287;}
+    .eyebrow,.entry-label{color:#98733b;}
+    .categories .category{background:#fff;color:#344e69;border-color:#cbd7e5;box-shadow:0 1px 4px rgba(24,44,71,.04);}
+    .categories .category:hover{background:#edf3f8;color:#182c47;}
+    .categories .category[aria-selected="true"]{background:#182c47;color:#fff;border-color:#182c47;}
+    .entry{background:#fff;border-color:#dce4ee;box-shadow:0 5px 20px rgba(20,43,66,.055);}
+    .entry .action,.top-actions a{background:#fff;color:#274767;border-color:#cbd7e5;}
+    .entry .action:hover,.top-actions a:hover{background:#edf3f8;color:#182c47;}
+    .entry .action.primary{background:#182c47;color:#fff;border-color:#182c47;}
+    .entry .action.primary:hover{background:#28476a;color:#fff;}
+    .top-actions .customer-link{border-color:#b39253;color:#825f27;background:#fff;}
+    .panel-rule{background:#dce4ed;}
+    input,select,textarea{background:#fff!important;color:#1c3047!important;border-color:#cbd7e5!important;color-scheme:light;}
+    input::placeholder{color:#8996a5!important;}
+    input:focus,button:focus-visible,a:focus-visible{outline-color:#39658b;}
+    [class*="gps-"]{color:inherit;}
+</style>
 <link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-brand-layout">
 </head>
 <body>
