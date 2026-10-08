@@ -27,6 +27,18 @@
 </style>
 <link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-brand-layout">
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-v1">
+<script>
+(function(){
+  var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+  document.documentElement.dataset.officeTheme=office;
+  if(office!=='ktop'){
+    var link=document.querySelector('link[href*="white-navy-workspace.css"]');
+    if(link)link.disabled=true;
+    var building=document.getElementById('ktop-building-light');
+    if(building)building.disabled=true;
+  }
+})();
+</script>
 <style id="ktop-main-theme">    /* White + navy professional property management landing page */
     :root{--bg:#f5f7fa;--bg2:#f5f7fa;--txt:#1c3047;--text:#1c3047;--sub:#586b80;--muted:#66788c;--panel:#fff;--panel2:#f6f8fb;--card2:#edf3f9;--line:#dfe6ef;--line2:#cbd7e5;--gold:#b39253;}
     html,body{background:#f5f7fa!important;color:#1c3047!important;color-scheme:light;}
