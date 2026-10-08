@@ -1920,7 +1920,7 @@ async function deleteBFile(id) {
     empty.style.display = "none";
 
     if (residentialUnitMode()) renderResidentialTable(filtered);
-    else { $("unitsTableHead").querySelector("tr").insertAdjacentHTML("afterbegin", '<th class="unit-select-cell"><input type="checkbox" id="unitSelectAll" aria-label="현재 목록 전체선택"></th>'); tbody.innerHTML = filtered.map(u => {
+    else { if (!$("unitSelectAll")) $("unitsTableHead").querySelector("tr").insertAdjacentHTML("afterbegin", '<th class="unit-select-cell"><input type="checkbox" id="unitSelectAll" aria-label="현재 목록 전체선택"></th>'); tbody.innerHTML = filtered.map(u => {
       const ri     = units.indexOf(u);
       const status = u.공실여부 || "공실";
       const bc     = status === "임차중" ? "임차중" : status === "공실" ? "공실" : "매매가능";
