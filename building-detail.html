@@ -534,6 +534,18 @@
 }
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-v1">
+<script>
+(function(){
+  var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+  document.documentElement.dataset.officeTheme=office;
+  if(office!=='ktop'){
+    var link=document.querySelector('link[href*="white-navy-workspace.css"]');
+    if(link)link.disabled=true;
+    var building=document.getElementById('ktop-building-light');
+    if(building)building.disabled=true;
+  }
+})();
+</script>
 <style id="ktop-building-light">    /* Building resources light workspace: scoped to this page, no shared app changes. */
     html, body {
       --bg:#f5f7fa; --bg2:#f5f7fa; --panel:#fff; --panel2:#fff;
