@@ -1296,7 +1296,8 @@ function closeHomepageTab(tab) {
         ? iptRow([["공개주소 · 새주소(도로명주소)", item.roadAddress], ["공개주소 · 구주소(지번주소)", item.jibunAddress]])
         : iptRow([["공개주소", publicAddress], ["비공개주소", mapAddress]]),
       iptRow([["보증금", formatWonOrText(item.deposit)], ["월세/매매가", rentOrSale], ["전용면적", exclusiveArea]]),
-      iptRow([["건물명", complexName], ["토지면적", landArea], ["연면적", totalFloorArea]]),
+      iptRow([["건물명", complexName], ["토지면적", landArea], ["공급면적", formatAreaPair(item.supplyAreaM2, item.supplyAreaPy)]]),
+      iptRow([["상세주소·동호수", firstDetailValue(item.privateDetailAddress, item.detailAddress)], ["연면적", totalFloorArea]]),
       iptRow([["주차대수", parking], ["사용승인일", item.approvalDate], ["구조", structure]]),
       iptRow([["층수", floorInfo], ["방향", direction], ["입주가능일", availableDate]]),
       iptRow([["소유주", ownerName], ["연락처1", contact], ["연락처2", item.owner_phone2]]),
@@ -1304,7 +1305,6 @@ function closeHomepageTab(tab) {
       iptRow([["건폐율", withSuffix(item.land_coverage, "%")], ["용적률", withSuffix(item.land_far, "%")], ["층고/전력", heightPower]]),
     ].join("");
 
-    const detailAddress = firstDetailValue(item.privateDetailAddress, item.detailAddress);
     const relatedContacts = (Array.isArray(item.additional_contacts) ? item.additional_contacts : [])
       .filter(c => c && c.phone)
       .map(c => c.name ? `${c.name} ${c.phone}` : c.phone)
@@ -1313,7 +1313,6 @@ function closeHomepageTab(tab) {
 
     // 핵심표에 없는 나머지 필드들. 실제 값이 있는 것만 packRows가 걸러서 보여준다.
     const extraPairs = [
-      ["매물구분", getListingCategoryLabel(item)],
       ["분양가", formatWonOrText(item.presalePrice)],
       ["관리비", item.type === "apartment" ? "" : formatWonOrText(item.managementFee)],
       ["권리금", item.type === "apartment" ? "" : formatWonOrText(item.premium)],
@@ -1326,11 +1325,9 @@ function closeHomepageTab(tab) {
       ["공장·창고 금액", formatManWon(item.factory_price)],
       ["지식산업센터 금액", formatManWon(item.biz_price)],
       ["가격 메모", item.quick_price],
-      ["공급면적", formatAreaPair(item.supplyAreaM2, item.supplyAreaPy)],
       ["대지면적", formatAreaPair(item.landAreaM2 || item.factory_siteArea_sqm, item.landAreaPy || item.factory_siteArea_py || item.factory_land_py)],
       ["건축면적", formatAreaPair(item.buildingAreaM2 || item.factory_buildArea_sqm, item.buildingAreaPy || item.factory_buildArea_py || item.factory_area_py)],
       ["레거시 토지면적", formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py)],
-      [item.type === "apartment" ? "동·호수" : "상세주소·동호수", detailAddress],
       ["도로조건", firstDetailValue(item.roadAccess, item.land_road)],
       ["형상", item.land_shape],
       ["대형차진입", item.factory_truck],
@@ -1343,17 +1340,9 @@ function closeHomepageTab(tab) {
       ["소유주 메모", item.owner_memo],
     ];
     const extraRows = packRows(extraPairs, 3);
-    const extraInfoHtml = extraRows
-      ? `<button type="button" class="extra-info-toggle" id="extraInfoToggle" aria-expanded="false" aria-controls="extraInfoTable">
-          <span>추가 정보 보기</span><span class="extra-info-caret">▾</span>
-        </button>
-        <div class="listing-info-table extra-info-table" id="extraInfoTable" hidden>${extraRows}</div>`
-      : "";
-
     return `<section class="detail-section listing-info-section">
       <div class="detail-section-title">매물 상세정보</div>
-      <div class="listing-info-table">${rows}</div>
-      ${extraInfoHtml}
+      <div class="listing-info-table">${rows}${extraRows}</div>
     </section>`;
   }
 
