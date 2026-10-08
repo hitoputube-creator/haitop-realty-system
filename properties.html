@@ -164,6 +164,7 @@
   <nav class="property-main-return no-print" aria-label="매물관리 복귀">
     <a class="btn btn-ghost" id="propertyMainReturn" href="property-main.html">← 매물관리 메인</a>
     <a class="btn btn-ghost" id="propertyKakaoMap" href="residential-kakao.html">카카오맵</a>
+    <a class="btn btn-ghost" id="propertyCustomers" href="customers.html">고객관리</a>
   </nav>
   <div id="globalPropertySearch" class="no-print"></div>
   <script>
@@ -180,6 +181,7 @@
       if (!keys.includes(category)) category = 'all';
       document.getElementById('propertyMainReturn').href = 'property-main.html?category=' + category;
       document.getElementById('propertyKakaoMap').href = OfficeConfig.urlFor('residential-kakao.html');
+      document.getElementById('propertyCustomers').href = OfficeConfig.urlFor('customers.html');
     })();
   </script>
 
