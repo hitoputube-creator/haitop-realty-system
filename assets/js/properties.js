@@ -222,6 +222,15 @@ function printSelected() {
   renderPreview();
 }
 
+function formatSelectedPrintAddress(item) {
+  const address = String(item.address || item.title || "");
+  const escapeHtml = (value) => String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  // Separate apartment building/unit only at print time; other property addresses stay unchanged.
+  const match = address.match(/^(.*?)(\s+)(\d{1,5}\s*동\s*\d{1,5}\s*호)\s*$/);
+  if (!match || !match[1].trim()) return escapeHtml(address);
+  return `<span>${escapeHtml(match[1].trim())}</span><span class="selected-print-unit">${escapeHtml(match[3].replace(/\s+/g, " ").trim())}</span>`;
+}
+
 function renderPreview() {
   const list = getSelectedListings();
   document.getElementById("previewCount").textContent = `(${list.length}건)`;
@@ -238,7 +247,7 @@ function renderPreview() {
       </td>
       <td style="text-align:center;color:var(--text-muted);font-size:0.76rem;width:28px;">${i + 1}</td>
       <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getListingCategoryLabel(item)}</span></td>
-      <td style="font-weight:500;">${item.address || item.title || ""}</td>
+      <td style="font-weight:500;">${formatSelectedPrintAddress(item)}</td>
       <td style="font-size:0.82rem;">${formatPrice(item)}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${contact}</td>
