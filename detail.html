@@ -65,6 +65,7 @@
 .apartment-autofill-btn svg{width:13px;height:13px;flex-shrink:0}
 @media(max-width:850px){.apartment-info-row.apartment-unit-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-details-layout{grid-template-columns:minmax(0,1fr)}.apartment-info-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-info-row[style="--pairs:1"]{grid-template-columns:108px minmax(0,1fr)}.apartment-details-column .apartment-info-row{grid-template-columns:90px minmax(0,1fr)}.apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}}
 @media(max-width:580px){.apartment-info-row.apartment-unit-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row[style="--pairs:1"]{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row>div{padding:9px 10px}.apartment-details-column .owner-contact-row{grid-template-columns:74px minmax(0,1fr) 52px 48px}.apartment-details-column .owner-contact-row>div{padding:8px 6px}.apartment-detail-title{gap:8px 18px}.apartment-unit-part strong{font-size:1.45rem}}
+.detail-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.detail-print-tools{margin-left:auto;display:flex;align-items:center;gap:8px}.detail-actions #detailProgressStatus{width:108px;min-width:108px;max-width:108px;flex:0 0 108px;height:36px;margin:0;padding:6px 10px;font-size:.82rem;border:1px solid var(--border-slate);border-radius:18px;color-scheme:dark}.detail-print-tools #printBriefBtn{white-space:nowrap}
 </style>
 </head>
 <body data-nav-active="properties">
@@ -1339,7 +1340,7 @@ function closeHomepageTab(tab) {
     } else html += `<div class="detail-title">${escapeHtml(item.title || getListingCategoryLabel(item))}</div>`;
 
     html += `<div class="detail-actions">`;
-    html += '<select id="detailProgressStatus" class="btn" aria-label="매물 거래상태">'+['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(listingProgressStatus(item)===status?' selected':'')+'>'+status+'</option>').join('')+'</select>';
+
     if (contact) {
       html += `<a class="contact-btn" href="tel:${escapeAttr(contact)}">📞 ${escapeHtml(contact)}</a>`;
     }
@@ -1349,11 +1350,14 @@ function closeHomepageTab(tab) {
         html += `<a class="btn btn-ghost" href="${escapeAttr(res.url)}" target="_blank" rel="noopener" style="text-decoration:none;">📁 자료보기</a>`;
       }
     }
-    html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button>`;
+
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
     if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`;
     if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
+    html += '<div class="detail-print-tools">';
+    html += '<select id="detailProgressStatus" class="btn" aria-label="매물 거래상태">'+['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(listingProgressStatus(item)===status?' selected':'')+'>'+status+'</option>').join('')+'</select>';
+    html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button></div>`;
     html += `</div>`;
 
     html += `<div class="detail-badges"><span data-homepage-only class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
