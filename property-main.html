@@ -26,7 +26,7 @@
   
 </style>
 <link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-brand-layout">
-<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-v1">
+<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-office-v2">
 <script>
 (function(){
   var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
@@ -39,38 +39,8 @@
   }
 })();
 </script>
-<style id="ktop-main-theme">    /* White + navy professional property management landing page */
-    :root{--bg:#f5f7fa;--bg2:#f5f7fa;--txt:#1c3047;--text:#1c3047;--sub:#586b80;--muted:#66788c;--panel:#fff;--panel2:#f6f8fb;--card2:#edf3f9;--line:#dfe6ef;--line2:#cbd7e5;--gold:#b39253;}
-    html,body{background:#f5f7fa!important;color:#1c3047!important;color-scheme:light;}
-    .topbar{border-color:#dce4ed;}
-    .brand-name,h1,h2,.entry h3{color:#1b3048;}
-    .brand-mark{color:#a78343;border-color:#a78343;background:#fff;}
-    .brand-sub,.entry p,.heading p:last-child,.secondary-links,.status{color:#607287;}
-    .eyebrow,.entry-label{color:#98733b;}
-    .categories .category{background:#fff;color:#344e69;border-color:#cbd7e5;box-shadow:0 1px 4px rgba(24,44,71,.04);}
-    .categories .category:hover{background:#edf3f8;color:#182c47;}
-    .categories .category[aria-selected="true"]{background:#182c47;color:#fff;border-color:#182c47;}
-    .entry{background:#fff;border-color:#dce4ee;box-shadow:0 5px 20px rgba(20,43,66,.055);}
-    .entry .action,.top-actions a{background:#fff;color:#274767;border-color:#cbd7e5;}
-    .entry .action:hover,.top-actions a:hover{background:#edf3f8;color:#182c47;}
-    .entry .action.primary{background:#182c47;color:#fff;border-color:#182c47;}
-    .entry .action.primary:hover{background:#28476a;color:#fff;}
-    .top-actions .customer-link{border-color:#b39253;color:#825f27;background:#fff;}
-    .panel-rule{background:#dce4ed;}
-    input,select,textarea{background:#fff!important;color:#1c3047!important;border-color:#cbd7e5!important;color-scheme:light;}
-    input::placeholder{color:#8996a5!important;}
-    input:focus,button:focus-visible,a:focus-visible{outline-color:#39658b;}
-    [class*="gps-"]{color:inherit;}
-</style>
-<script>
-(function(){
-  var k = typeof OfficeConfig!=="undefined" ? OfficeConfig.id==="ktop" : new URLSearchParams(location.search).get("office")==="ktop";
-  if (!k) {
-    document.getElementById("ktop-main-theme").disabled=true;
-    document.addEventListener("DOMContentLoaded",function(){var style=document.getElementById("ktop-main-contrast");if(style)style.disabled=true;var v=document.getElementById("uiThemeVersion");if(v)v.remove();});
-  }
-})();
-</script>
+
+
 </head>
 <body>
   <div class="page">
@@ -178,14 +148,7 @@
   </script>
 <script src="assets/js/global-property-search-core.js?v=20261006-compact-search-2"></script>
 <script src="assets/js/global-property-search.js?v=20261006-compact-search-2"></script>
-<style id="ktop-main-contrast">
-html body,body{background:#f5f7fa!important;color:#1c3047!important;}
-body .entry,body .category:not([aria-selected="true"]){background:#fff!important;color:#23374f!important;border-color:#d8e1eb!important;}
-body .category[aria-selected="true"],body .action.primary{background:#182c47!important;color:#fff!important;border-color:#182c47!important;}
-body .topbar,body .panel-rule{border-color:#dbe4ef!important;}
-body .brand-name,body h1,body h2,body h3{color:#1b3048!important;}
-body .entry p,body .brand-sub{color:#617287!important;}
-</style>
-<div id="uiThemeVersion" aria-label="화면 테마 버전" style="position:fixed;bottom:12px;right:12px;font:11px Pretendard,sans-serif;color:#64748b;background:#fff;border:1px solid #e2e8f0;padding:4px 9px;border-radius:6px;z-index:999">화이트 테마 · 2026.10.08 v2</div>
+
+
 </body>
 </html>
