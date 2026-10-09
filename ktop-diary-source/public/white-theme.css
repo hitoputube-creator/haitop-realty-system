@@ -129,3 +129,44 @@ html,body,#root,.wd-app{background:#f3f6fa!important}
 .wd-empty-title{color:#526c86}
 .wd-empty-sub{color:#7b8da0}
 @media(prefers-reduced-motion:no-preference){.wd-new-memo-btn,.wd-btn-workcenter{transition:background .16s,border-color .16s,box-shadow .16s}}
+
+/* Reference palette: clear blue focal areas on a light canvas. */
+html:root{--color-bg:#f3f5f9;--color-primary:#1767d2;--color-primary-container:#145bbd;--color-primary-soft:rgba(23,103,210,.10)}
+html,body,#root,.wd-app{background:#f3f5f9!important}
+.wd-header{border-bottom-color:#d9e3f0}
+.wd-brand-mark{background:linear-gradient(145deg,#193860,#1767d2)!important;border-color:#1767d2!important;box-shadow:0 0 0 4px #eaf1fc!important}
+.wd-diary-header{background:linear-gradient(115deg,#193860 0%,#214c8d 70%,#2465ba 100%)!important;border-bottom:0;padding-top:24px;padding-bottom:24px}
+.wd-diary-header .wd-diary-date{color:#fff!important;font-weight:800}
+.wd-diary-header :is(.wd-diary-date-sub,.wd-diary-stats){color:#dbe7f8!important}
+.wd-diary-header .wd-stat-num{color:#fff!important}
+.wd-diary-header .wd-new-memo-btn{background:#fff!important;border-color:#fff!important;color:#1859af!important;box-shadow:0 4px 12px rgba(0,0,0,.10)}
+.wd-diary-header .wd-new-memo-btn:hover{background:#eaf2ff!important}
+.wd-date-card{background:linear-gradient(150deg,#1b3e70,#2362b3)!important;border-color:#214b85;box-shadow:0 7px 22px rgba(31,75,139,.17)}
+.wd-date-card::before{background:#82b4ff}
+.wd-date-weekday,.wd-date-number{color:#fff!important}
+.wd-date-number{font-weight:300;text-shadow:0 3px 14px rgba(0,0,0,.08)}
+.wd-date-stat{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.22);color:#e7effc}
+.wd-date-stat strong{color:#fff}
+.wd-date-stat--contract{background:#fff6da;border-color:#ecd18a}
+.wd-date-stat--contract :is(span,strong){color:#875c0c!important}
+.wd-date-stat--balance{background:#fff0ed;border-color:#f0b9ae}
+.wd-date-stat--balance :is(span,strong){color:#b42318!important}
+.wd-panel-title,.usw-title{display:flex;align-items:center;gap:9px;color:#193860;font-weight:800}
+.wd-panel-title::before,.usw-title::before{content:"";display:inline-block;width:5px;height:18px;border-radius:4px;background:#1767d2;flex-shrink:0}
+.usw-title::before{background:#19a494}
+.usw-header{background:#eff9f7;border-bottom-color:#dcefe9}
+.usw-section{border-color:#dce5ef;border-radius:16px;box-shadow:0 6px 22px rgba(24,44,71,.045)}
+.wd-panel-header{background:#f0f5fd}
+.wd-cal-month{color:#193860;font-weight:800}
+.wd-cal-day.selected,.wd-calendar--compact .wd-cal-day.selected .wd-cal-day-num-wrap{background:#1767d2!important;color:#fff!important;box-shadow:0 3px 10px rgba(23,103,210,.22)}
+.segmented-control .segment.is-active{background:#1767d2;color:#fff}
+.wd-btn-primary,.ssm-save-btn,.acm-btn-primary,.ctm-btn-primary,.ctm-add-btn,.pn-save-btn{background:#1767d2;color:#fff;box-shadow:0 3px 10px rgba(23,103,210,.12)}
+.wd-new-memo-btn{background:#1767d2!important;border-color:#1767d2!important;color:#fff!important}
+.wd-btn-workcenter{color:#1e5cb0!important;background:#eaf2ff!important;border-color:#c4d8f5!important}
+.wd-btn-workcenter:hover{color:#174a90!important;background:#dceaff!important;border-color:#9dbfe9!important}
+.wd-btn-google-calendar{color:#896010!important;background:#fff7e4!important;border-color:#efd59a!important}
+.wd-btn-google-calendar:hover{color:#73500e!important;background:#fff0cd!important}
+.diary-logout-btn{color:#52667b!important;background:#fff!important;border-color:#d3deeb!important}
+.wd-btn-private-notes{color:#6a4a99!important;background:#f3eefb!important;border-color:#dacbea!important}
+.wd-empty-icon{color:#1767d2}
+.wd-searchbar:focus-within{border-color:#1767d2;box-shadow:0 0 0 3px rgba(23,103,210,.10)}
