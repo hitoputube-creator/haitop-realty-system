@@ -119,7 +119,7 @@
       const rec = records.find(x => x.local_id === r.id) || records.find(x => x.name === r.name) || null;
       if (rec) used.add(rec.local_id);
       const scope = HitopResourceRooms.resourceRoom(r);
-      return { id: r.id, name: r.name, record: rec, units: toUnits(rec), commercial: scope === 'commercial', resource: true, scope, recs: [] };
+      return { id: r.id, name: r.name, record: rec, units: toUnits(rec), commercial: scope === 'commercial', resource: true, scope, recs: [], memo: r.memo || '' };
     });
     // 자료관리에 같은 이름이 없는 호실 기록(예: 남광, 월드플러스)도 빠지지 않게 포함한다
     records.filter(x => !used.has(x.local_id)).forEach(rec => {
@@ -273,7 +273,10 @@
     const pBtn = el('button', 'mini' + (isFlagOn(u.수익성매물) ? ' pon' : ''), isFlagOn(u.수익성매물) ? '💰 해제' : '💰 수익성');
     pBtn.type = 'button';
     pBtn.addEventListener('click', () => toggle(b, item, '수익성매물', pBtn));
-    act.append(recBtn, pBtn);
+    const oneBtn = el('button', 'mini', '📄 한 장');
+    oneBtn.type = 'button'; oneBtn.title = '이 호실만 A4 한 장으로 인쇄';
+    oneBtn.addEventListener('click', () => printOnePages([entry]));
+    act.append(recBtn, pBtn, oneBtn);
     if (b.resource) {
       const link = el('a', 'mini', '호실보기');
       link.href = HitopResourceRooms.detailUrl('building-detail.html', b.id, b.scope) + '#unitStatus';
@@ -393,6 +396,7 @@
   function updatePrintBtn() {
     const btn = $('printBtn');
     btn.style.display = mode === 'rec' ? '' : 'none';
+    $('sheetBtn').style.display = mode === 'rec' ? '' : 'none';
     const chosen = shown.filter(e => selected.has(selKey(e))).length;
     btn.textContent = chosen ? `🖨 손님용 인쇄 (선택 ${chosen}개)` : `🖨 손님용 인쇄 (전체 ${shown.length}개)`;
     btn.disabled = !shown.length;
@@ -436,6 +440,75 @@
     window.print();
   }
 
+  // ===== 호실별 A4 한 장 안내서 (소유주·연락처·비고·메모는 넣지 않는다) =====
+  function memoFields(raw) {
+    const base = String(raw || ''), cut = base.indexOf('---추가메모---');
+    const out = {};
+    (cut === -1 ? base : base.slice(0, cut)).split('\n').forEach(line => {
+      const c = line.indexOf(':');
+      if (c > 0) out[line.slice(0, c).trim()] = line.slice(c + 1).trim();
+    });
+    return out;
+  }
+
+  function areaText(u, kind) {
+    const pyeong = u[kind + '_평'], m2 = u[kind + '_m2'];
+    const parts = [];
+    if (pyeong !== undefined && pyeong !== null && String(pyeong).trim() !== '') parts.push(pyeong + '평');
+    if (m2 !== undefined && m2 !== null && String(m2).trim() !== '') parts.push(m2 + '㎡');
+    return parts.join(' / ');
+  }
+
+  function buildOnePages(entries) {
+    const area = $('printArea');
+    area.replaceChildren();
+    const now = new Date();
+    const dateStr = now.getFullYear() + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0');
+    const phone = OfficeConfig.id === 'ktop' ? '' : ' ☎ 031.949.8969';
+    entries.forEach(({ b, item, y }) => {
+      const u = item.u, ov = memoFields(b.memo);
+      const page = el('section', 'p-page');
+      const head = el('div', 'p-head');
+      head.append(el('h1', '', '매물 안내서'), el('div', 'p-co', officeCompanyName + phone));
+      page.append(head, el('p', 'p-date', '작성일 ' + dateStr + ' 기준'));
+      page.append(el('div', 'p-title', b.name + ' ' + roomLabel(item.room)));
+      if (u.현업종) page.append(el('div', 'p-sub', '업종 ' + u.현업종 + (u.공실여부 ? ' · ' + u.공실여부 : '')));
+
+      const kpi = el('div', 'p-kpi');
+      [['매매가', eok(price(u))], ['보증금', eok(deposit(u))],
+       ['월세', rent(u) === null ? '—' : rent(u).toLocaleString('ko-KR') + '만'],
+       ['수익률', y ? y.v.toFixed(1) + '%' : '—']].forEach(([k, v]) => {
+        const box = el('div', 'p-k'); box.append(el('div', 'p-kl', k), el('div', 'p-kv', v)); kpi.append(box);
+      });
+      page.append(kpi);
+
+      const rows = [];
+      const sale = areaText(u, '분양'), excl = areaText(u, '전용');
+      if (sale) rows.push(['분양면적', sale]);
+      if (excl) rows.push(['전용면적', excl]);
+      if (u.평당가) rows.push(['평당가', Number(u.평당가) ? eok(manwon(u.평당가, 1000000)) : String(u.평당가)]);
+      ['주소', '사용승인일', '구조', '주차대수', '연면적'].forEach(k => { if (ov[k]) rows.push([k, ov[k]]); });
+      if (rows.length) {
+        const t = document.createElement('table'); t.className = 'p-info';
+        rows.forEach(([k, v]) => { const tr = document.createElement('tr'); tr.append(el('th', '', k), el('td', '', v)); t.append(tr); });
+        page.append(t);
+      }
+      page.append(el('div', 'p-note', '※ 금액은 만원 단위 입력값 기준이며, 수익률은 월 임대료×12 ÷ (가격 − 보증금)으로 계산한 단순수익률(대출·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.'));
+      page.append(el('div', 'p-foot', '문의 ' + officeCompanyName + phone));
+      area.append(page);
+    });
+  }
+
+  function printOnePages(entries) {
+    if (!entries.length) { toast('인쇄할 호실을 체크해 주세요.'); return; }
+    buildOnePages(entries);
+    window.print();
+  }
+
+  function printChosenOnePages() {
+    printOnePages(shown.filter(e => selected.has(selKey(e))));
+  }
+
   function emptyBox(text) {
     const box = el('div', 'empty');
     if (text) { box.textContent = text; return box; }
@@ -457,6 +530,7 @@
     $('tabRec').addEventListener('click', () => setMode('rec'));
     $('tabCand').addEventListener('click', () => setMode('cand'));
     $('printBtn').addEventListener('click', printSheet);
+    $('sheetBtn').addEventListener('click', printChosenOnePages);
     ['q', 'onlyProfit', 'sort'].forEach(id => $(id).addEventListener(id === 'q' ? 'input' : 'change', render));
     try {
       if (!await load()) return;

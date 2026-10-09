@@ -92,6 +92,17 @@
       .p-bld td.ctr { text-align:center; }
       .p-bld tr { break-inside:avoid; }
       .p-bld .y { font-weight:700; color:#1a2f55; }
+      .p-page { break-after:page; page-break-after:always; }
+      .p-page:last-child { break-after:auto; page-break-after:auto; }
+      .p-title { font-size:24pt; font-weight:800; color:#1a2f55; margin:6px 0 2px; }
+      .p-sub { font-size:12pt; color:#444; margin-bottom:16px; }
+      .p-kpi { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0 0 18px; }
+      .p-k { border:1.5px solid #1a2f55; border-radius:6px; padding:12px 8px; text-align:center; }
+      .p-kl { font-size:10pt; color:#444; margin-bottom:4px; }
+      .p-kv { font-size:19pt; font-weight:800; color:#1a2f55; }
+      .p-info { width:100%; border-collapse:collapse; font-size:11.5pt; margin-bottom:14px; }
+      .p-info th { width:26%; background:#eaeef5; color:#1a2f55; text-align:left; padding:8px 10px; border:1px solid #b9c2d3; }
+      .p-info td { padding:8px 10px; border:1px solid #c9d0de; }
       .p-note { margin-top:10px; padding-top:8px; border-top:1px solid #b9c2d3; font-size:8.5pt; color:#444; line-height:1.55; }
       .p-foot { margin-top:6px; text-align:center; font-size:9.5pt; font-weight:700; color:#1a2f55; }
     }
@@ -130,6 +141,7 @@
       <option value="room">호수 순</option>
       <option value="building">건물명 순</option>
     </select>
+    <button type="button" class="btn" id="sheetBtn" title="체크한 호실을 호실마다 A4 한 장씩 인쇄합니다. 줄의 '📄 한 장' 버튼은 그 호실 하나만 인쇄합니다.">📄 호실별 한 장씩 인쇄</button>
     <button type="button" class="btn" id="printBtn" title="체크한 호실만 인쇄합니다. 체크가 없으면 화면에 보이는 전체를 인쇄합니다.">🖨 손님용 인쇄</button>
   </div>
 
@@ -141,6 +153,6 @@
 <div id="printArea" aria-hidden="true"></div>
 
 <script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
-<script src="assets/js/recommended-units.js?v=20261009-1"></script>
+<script src="assets/js/recommended-units.js?v=20261009-2"></script>
 </body>
 </html>
