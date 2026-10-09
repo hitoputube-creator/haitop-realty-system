@@ -32,6 +32,9 @@
     .twrap { overflow-x:auto; }
     table { width:100%; border-collapse:collapse; font-size:.9rem; }
     th { text-align:left; color:var(--muted); font-weight:600; font-size:.8rem; padding:9px 14px; border-bottom:1px solid var(--line); white-space:nowrap; }
+    th.sortable { cursor:pointer; user-select:none; }
+    th.sortable:hover { color:var(--gold); }
+    .sarrow { color:var(--gold); }
     td { padding:10px 14px; border-bottom:1px solid rgba(54,81,110,.55); white-space:nowrap; }
     tr:last-child td { border-bottom:0; }
     td.num, th.num { text-align:right; }
@@ -203,12 +206,6 @@
       <button type="button" class="tab" id="tabClosed" role="tab">📁 종료된 자료</button>
     </div>
     <input type="search" id="q" placeholder="건물명·업종 검색" aria-label="건물명 또는 업종 검색">
-    <select id="sort" aria-label="정렬">
-      <option value="yield">수익률 높은 순</option>
-      <option value="price">가격 낮은 순</option>
-      <option value="room">호수 순</option>
-      <option value="building">건물명 순</option>
-    </select>
     <button type="button" class="btn" id="sheetBtn" title="체크한 호실을 호실마다 A4 한 장씩 인쇄합니다. 줄의 '📄 한 장' 버튼은 그 호실 하나만 인쇄합니다.">📄 한 장씩 인쇄</button>
     <button type="button" class="btn" id="printBtn" title="체크한 호실만 인쇄합니다. 체크가 없으면 화면에 보이는 전체를 인쇄합니다.">🖨 손님용 인쇄</button>
   </div>
@@ -234,6 +231,6 @@
 <div id="printArea" aria-hidden="true"></div>
 
 <script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
-<script src="assets/js/recommended-units.js?v=20261009-12"></script>
+<script src="assets/js/recommended-units.js?v=20261009-13"></script>
 </body>
 </html>

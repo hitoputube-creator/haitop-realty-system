@@ -233,13 +233,31 @@
     });
     return out;
   }
-  function sorter() {
-    const by = $('sort').value;
-    if (mode === 'cand') return (a, c) => c.y.v - a.y.v;
-    if (by === 'price') return (a, c) => (price(a.item.u) ?? 1e12) - (price(c.item.u) ?? 1e12);
-    if (by === 'room') return (a, c) => roomSortKey(a.item.room) - roomSortKey(c.item.room);
-    if (by === 'building') return (a, c) => a.b.name.localeCompare(c.b.name, 'ko') || roomSortKey(a.item.room) - roomSortKey(c.item.room);
-    return (a, c) => ((c.y && c.y.v) || -1) - ((a.y && a.y.v) || -1);
+  // 표 머리글을 눌러 정렬한다 (한 번 = 오름차순, 다시 = 내림차순). 값이 없는 줄은 항상 맨 아래.
+  const SORT_DEFAULT = { building: 1, room: 1, biz: 1, price: 1, rent: 1, yield: -1, status: 1 };
+  let sortKey = 'yield', sortDir = -1;
+  const sortVal = {
+    building: e => e.b.name,
+    room: e => roomSortKey(e.item.room),
+    biz: e => e.item.u.현업종 || null,
+    price: e => price(e.item.u),
+    rent: e => rent(e.item.u),
+    yield: e => (e.y ? e.y.v : null),
+    status: e => e.item.u.공실여부 || '공실'
+  };
+  function sortList(list) {
+    const val = sortVal[sortKey];
+    return list.slice().sort((a, c) => {
+      const x = val(a), z = val(c);
+      const xn = x === null || x === undefined || x === '', zn = z === null || z === undefined || z === '';
+      if (xn || zn) return xn && zn ? 0 : xn ? 1 : -1;
+      const r = typeof x === 'number' && typeof z === 'number' ? x - z : String(x).localeCompare(String(z), 'ko');
+      return (r || a.b.name.localeCompare(c.b.name, 'ko') || roomSortKey(a.item.room) - roomSortKey(c.item.room)) * (r ? sortDir : 1);
+    });
+  }
+  function setSort(key) {
+    if (sortKey === key) sortDir = -sortDir; else { sortKey = key; sortDir = SORT_DEFAULT[key]; }
+    render();
   }
 
   function rowFor(entry) {
@@ -300,7 +318,16 @@
       });
       th.append(all); head.append(th); wrap._head = all; wrap._entries = entries;
     }
-    [['건물'], ['호실'], ['업종'], ['가격', 1], ['보증금 / 월세', 1], ['수익률', 1], ['상태'], ['']].forEach(([label, right]) => head.append(el('th', right ? 'num' : '', label)));
+    [['건물', 0, 'building'], ['호실', 0, 'room'], ['업종', 0, 'biz'], ['가격', 1, 'price'], ['보증금 / 월세', 1, 'rent'], ['수익률', 1, 'yield'], ['상태', 0, 'status'], ['']].forEach(([label, right, key]) => {
+      const th = el('th', (right ? 'num' : '') + (key ? ' sortable' : ''), label);
+      if (key) {
+        if (key === sortKey) th.append(el('span', 'sarrow', sortDir > 0 ? ' ▲' : ' ▼'));
+        th.title = '눌러서 정렬 (다시 누르면 반대 순서)';
+        th.addEventListener('click', () => setSort(key));
+        th.setAttribute('aria-sort', key === sortKey ? (sortDir > 0 ? 'ascending' : 'descending') : 'none');
+      }
+      head.append(th);
+    });
     const thead = document.createElement('thead'); thead.append(head);
     const tbody = document.createElement('tbody');
     entries.forEach(e => tbody.append(rowFor(e)));
@@ -311,17 +338,16 @@
   function render() {
     const list = $('list');
     list.replaceChildren();
-    $('sort').disabled = mode !== 'rec';
     renderFloorPanel();
     const closedCount = buildings.reduce((n, b) => n + b.recs.filter(r => r.closedAt).length, 0) + unmatchedRecs.filter(r => r.closedAt).length;
     $('tabClosed').textContent = '📁 종료된 자료' + (closedCount ? ` (${closedCount})` : '');
     if (mode === 'closed') { shown = []; updatePrintBtn(); renderClosed(list); return; }
-    const entries = collect().sort(sorter());
+    const entries = mode === 'cand' ? collect().sort((a, c) => c.y.v - a.y.v) : sortList(collect());
     shown = mode === 'rec' ? entries : [];
     updatePrintBtn();
 
     if (mode === 'cand') {
-      const shown = entries.slice(0, CAND_LIMIT);
+      const shown = sortList(entries.slice(0, CAND_LIMIT));
       $('summary').textContent = `수익률 ${CAND_MIN}~${CAND_MAX}% 후보 ${entries.length}개 중 상위 ${shown.length}개 · 마음에 드는 호실은 ⭐ 추천을 눌러 추천매물로 옮기세요 (월세·가격이 입력된 호실 기준 · 오피스텔 건물은 아래에서 정한 상가층까지 · 수익률 계산은 월세×12 ÷ (가격−보증금))`;
       if (!shown.length) { list.append(emptyBox('조건에 맞는 후보가 없습니다.')); return; }
       const card = el('section', 'bcard');
@@ -783,7 +809,7 @@
     $('loanGo').addEventListener('click', confirmSheet);
     $('loanCancel').addEventListener('click', () => { $('loanModal').style.display = 'none'; pendingSheet = null; });
     $('loanOn').addEventListener('change', () => { $('loanFields').style.opacity = $('loanOn').checked ? '1' : '.4'; });
-    ['q', 'sort'].forEach(id => $(id).addEventListener(id === 'q' ? 'input' : 'change', render));
+    $('q').addEventListener('input', render);
     try {
       if (!await load()) return;
       if (location.hash === '#closed') { setMode('closed'); return; }
