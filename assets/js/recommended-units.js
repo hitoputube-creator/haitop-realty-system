@@ -8,7 +8,7 @@
   let unmatchedRecs = [];   // 건물을 찾지 못한 추천매물장 자료
   let shopFloors = {};      // 건물(local_id) → 상가가 있는 마지막 층 (오피스텔 등 주거 건물용, 기본 1층)
   let shopFloorsOk = true;  // 설정 표를 불러왔는지
-  let mode = 'rec';     // 'rec' | 'cand'
+  let mode = 'rec';     // 'rec' | 'cand' | 'closed'
   const busy = new Set();
   const selected = new Set();        // 인쇄용으로 체크한 호실 (건물id|호수)
   let shown = [];                    // 지금 화면에 보이는 항목
@@ -135,7 +135,7 @@
     // 추천매물장 자료를 건물에 붙인다
     unmatchedRecs = [];
     (recProps || []).forEach(p => {
-      const rp = { id: p.id, name: p.name || '', date: p.received_date || '', memo: p.memo || '', links: recLinks(p) };
+      const rp = { id: p.id, name: p.name || '', date: p.received_date || '', memo: p.memo || '', links: recLinks(p), closedAt: p.closed_at || null };
       const b = matchBuilding(rp.name);
       if (b) b.recs.push(rp); else unmatchedRecs.push(rp);
     });
@@ -311,9 +311,10 @@
   function render() {
     const list = $('list');
     list.replaceChildren();
-    $('sort').disabled = mode === 'cand';
+    $('sort').disabled = mode !== 'rec';
     $('profitLabel').style.display = mode === 'rec' ? '' : 'none';
     renderFloorPanel();
+    if (mode === 'closed') { shown = []; updatePrintBtn(); renderClosed(list); return; }
     const entries = collect().sort(sorter());
     shown = mode === 'rec' ? entries : [];
     updatePrintBtn();
@@ -333,16 +334,18 @@
     const onlyProfit = $('onlyProfit').checked;     // 추천매물장 자료에는 💰표시가 없으므로 수익성만 볼 때는 숨긴다
     const recOk = (r, b) => !onlyProfit && (!q || r.name.toLowerCase().includes(q) || r.memo.toLowerCase().includes(q) || (b && b.name.toLowerCase().includes(q)));
     const recItems = [];
-    buildings.forEach(b => b.recs.forEach(r => { if (recOk(r, b)) recItems.push({ label: b.name, r }); }));
-    recItems.sort((a, c) => a.label.localeCompare(c.label, 'ko') || a.r.name.localeCompare(c.r.name, 'ko'));
-    unmatchedRecs.filter(r => recOk(r, null)).forEach(r => recItems.push({ label: '건물 미지정', r }));
+    buildings.forEach(b => b.recs.forEach(r => { if (!r.closedAt && recOk(r, b)) recItems.push({ label: b.name, r }); }));
+    recItems.sort((a, c) => (isOld(a.r) - isOld(c.r)) || a.label.localeCompare(c.label, 'ko') || a.r.name.localeCompare(c.r.name, 'ko'));
+    const unmatchedItems = unmatchedRecs.filter(r => !r.closedAt && recOk(r, null)).map(r => ({ label: '건물 미지정', r }));
+    unmatchedItems.sort((a, c) => isOld(a.r) - isOld(c.r));
+    unmatchedItems.forEach(it => recItems.push(it));
     const profitCount = entries.filter(e => isFlagOn(e.item.u.수익성매물)).length;
     const parts = [];
     if (entries.length) parts.push(`추천매물 ${entries.length}개`, `💰수익성 ${profitCount}개`);
     if (recItems.length) parts.push(`추천매물장 자료 ${recItems.length}건`);
     $('summary').textContent = parts.length ? parts.join(' · ') : '표시할 추천매물이 없습니다.';
     if (!entries.length && !recItems.length) {
-      const any = buildings.some(b => b.units.some(i => isFlagOn(i.u.추천매물))) || buildings.some(b => b.recs.length) || unmatchedRecs.length;
+      const any = buildings.some(b => b.units.some(i => isFlagOn(i.u.추천매물))) || buildings.some(b => b.recs.some(r => !r.closedAt)) || unmatchedRecs.some(r => !r.closedAt);
       list.append(emptyBox(any ? '조건에 맞는 추천매물이 없습니다.' : null));
       return;
     }
@@ -358,11 +361,32 @@
     syncHeadChecks();
   }
 
+  // 추천매물장 자료는 받은 지 OLD_DAYS일이 지나면 "오래됨"으로 표시한다
+  const OLD_DAYS = 90;
+  function ageDays(r) {
+    const t = Date.parse(r.date);
+    return Number.isNaN(t) ? null : Math.floor((Date.now() - t) / 86400000);
+  }
+  function isOld(r) { const d = ageDays(r); return d !== null && d >= OLD_DAYS ? 1 : 0; }
+
+  async function setClosed(r, closed, btn) {
+    btn.disabled = true;
+    try {
+      await updateRecommendedProperty(r.id, { closed_at: closed ? new Date().toISOString() : null });
+      r.closedAt = closed ? new Date().toISOString() : null;
+      toast(closed ? `"${r.name}" 자료를 종료 폴더로 옮겼습니다.` : `"${r.name}" 자료를 다시 추천매물장으로 되돌렸습니다.`);
+      render();
+    } catch (e) {
+      btn.disabled = false;
+      toast('저장하지 못했습니다: ' + e.message);
+    }
+  }
+
   // 추천매물장(받은 분양 잔여분·임대 자료) 목록: 건물, 자료 이름, 받은 날짜, 메모(내부용), 드라이브 자료 링크
-  function recSection(items) {
+  function recSection(items, closedView) {
     const card = el('section', 'bcard');
     const head = el('div', 'bhead');
-    head.append(el('h2', '', '📎 추천매물장 자료 (내부용 · 인쇄에는 포함되지 않습니다)'), el('span', '', items.length + '건'));
+    head.append(el('h2', '', closedView ? '📁 종료된 추천매물장 자료 (보관 중 · 삭제되지 않습니다)' : '📎 추천매물장 자료 (내부용 · 인쇄에는 포함되지 않습니다)'), el('span', '', items.length + '건'));
     card.append(head);
     const box = el('div', 'recblock');
     items.forEach(({ label, r }) => {
@@ -370,6 +394,11 @@
       const info = el('div', 'recinfo');
       info.append(el('span', 'bname', label + ' '), el('strong', '', r.name));
       if (r.date) info.append(el('span', 'recdate', String(r.date).slice(0, 10)));
+      if (closedView && r.closedAt) info.append(el('span', 'recdate', '· 종료 ' + String(r.closedAt).slice(0, 10)));
+      if (!closedView) {
+        const d = ageDays(r);
+        if (d !== null && d >= OLD_DAYS) info.append(el('span', 'flag old', '⏰ 오래됨 ' + Math.floor(d / 30) + '개월'));
+      }
       if (r.memo) info.append(el('div', 'recmemo', '💬 ' + r.memo));
       const links = el('div', 'act');
       if (r.links.length) r.links.forEach((l, i) => {
@@ -377,11 +406,31 @@
         a.href = l.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
         links.append(a);
       }); else links.append(el('span', 'recdate', '열 수 있는 자료 링크 없음'));
+      const cb = el('button', 'mini', closedView ? '↩ 되살리기' : '📦 종료');
+      cb.type = 'button'; cb.title = closedView ? '추천매물장으로 되돌립니다' : '삭제하지 않고 종료 폴더로 옮깁니다';
+      cb.addEventListener('click', () => setClosed(r, !closedView, cb));
+      links.append(cb);
       row.append(info, links);
       box.append(row);
     });
     card.append(box);
     return card;
+  }
+
+  // "종료된 자료" 폴더: 종료 처리한 추천매물장 자료 (최근 종료 순)
+  function renderClosed(list) {
+    const q = $('q').value.trim().toLowerCase();
+    const items = [];
+    buildings.forEach(b => b.recs.forEach(r => { if (r.closedAt) items.push({ label: b.name, r }); }));
+    unmatchedRecs.forEach(r => { if (r.closedAt) items.push({ label: '건물 미지정', r }); });
+    const shownItems = items.filter(({ label, r }) => !q || r.name.toLowerCase().includes(q) || r.memo.toLowerCase().includes(q) || label.toLowerCase().includes(q))
+      .sort((a, c) => String(c.r.closedAt).localeCompare(String(a.r.closedAt)));
+    $('summary').textContent = items.length ? `종료된 자료 ${shownItems.length}건 · 삭제하지 않고 보관합니다. 필요하면 "되살리기"로 되돌릴 수 있습니다.` : '아직 종료한 자료가 없습니다.';
+    if (!shownItems.length) {
+      list.append(el('div', 'empty', items.length ? '검색 조건에 맞는 종료 자료가 없습니다.' : '추천매물 탭의 추천매물장 자료에서 "📦 종료"를 누르면 이곳 폴더로 옮겨집니다.'));
+      return;
+    }
+    list.append(recSection(shownItems, true));
   }
 
   // 건물별 전체선택 칸을 실제 선택 상태에 맞춘다
@@ -602,12 +651,14 @@
     mode = next;
     $('tabRec').classList.toggle('active', next === 'rec');
     $('tabCand').classList.toggle('active', next === 'cand');
+    $('tabClosed').classList.toggle('active', next === 'closed');
     render();
   }
 
   async function init() {
     $('tabRec').addEventListener('click', () => setMode('rec'));
     $('tabCand').addEventListener('click', () => setMode('cand'));
+    $('tabClosed').addEventListener('click', () => setMode('closed'));
     $('printBtn').addEventListener('click', printSheet);
     $('sheetBtn').addEventListener('click', printChosenOnePages);
     $('loanGo').addEventListener('click', confirmSheet);
