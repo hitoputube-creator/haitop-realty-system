@@ -113,7 +113,8 @@ const _listingSections = () => [
 
 function getSelectedListings() {
   pruneSelectedIds();
-  return allListings.filter(item => selectedIds.has(item.id));
+  // 화면에서 정렬한 순서 그대로 미리보기·인쇄에 나오도록 같은 정렬을 적용한다.
+  return sortListingsForDisplay(allListings.filter(item => selectedIds.has(item.id)));
 }
 
 function getBulkDeleteLabel(item) {
@@ -286,7 +287,7 @@ function goBackToList() {
 
 function doPrint() {
   const kw = searchKeyword.trim();
-  const list = allListings.filter(l => selectedIds.has(l.id));
+  const list = getSelectedListings();
   document.getElementById("selectedPrintKeyword").textContent = kw ? `검색어: ${kw}` : "";
   document.getElementById("selectedPrintDate").textContent =
     `출력일: ${new Date().toLocaleDateString("ko-KR")}  총 ${list.length}건`;
@@ -652,15 +653,15 @@ function getBaseFilteredListings() {
   return filtered;
 }
 
-function getFilteredListings() {
-  let filtered = getBaseFilteredListings();
-  if (viewMode === "card" && columnFilterCount()) filtered = filtered.filter(item => matchesColumnFilters(item));
-  filtered.sort((a, b) => {
+// 화면 목록·선택매물 미리보기·인쇄가 모두 같은 정렬(등록일 → 열 정렬)을 쓰도록 한 곳에 둔다.
+function sortListingsForDisplay(list) {
+  const sorted = [...list];
+  sorted.sort((a, b) => {
     const da = new Date(a.created_at || 0);
     const db = new Date(b.created_at || 0);
     return currentSort === "newest" ? db - da : da - db;
   });
-  if (listingColumnSort.length) filtered.sort((a,b)=>{
+  if (listingColumnSort.length) sorted.sort((a,b)=>{
     for (const {key,direction} of listingColumnSort) {
       const av=listingColumnValue(a,key), bv=listingColumnValue(b,key);
       const comparison=typeof av==="number" && typeof bv==="number" ? av-bv : String(av).localeCompare(String(bv),"ko",{numeric:true});
@@ -668,7 +669,13 @@ function getFilteredListings() {
     }
     return 0;
   });
-  return filtered;
+  return sorted;
+}
+
+function getFilteredListings() {
+  let filtered = getBaseFilteredListings();
+  if (viewMode === "card" && columnFilterCount()) filtered = filtered.filter(item => matchesColumnFilters(item));
+  return sortListingsForDisplay(filtered);
 }
 
 function renderPagination(total) {

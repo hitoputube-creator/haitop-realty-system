@@ -1772,6 +1772,8 @@ async function getCustomerAttachmentUrl(row) {
 
 // 같은 관리앱의 새 탭·페이지 이동에도 선택한 부동산을 명시한다.
 function officeDecorateLinks(root) {
+  // 다운로드용 임시 링크처럼 곧바로 제거되는 노드는 parentNode가 null일 수 있다.
+  if (!root || typeof root.querySelectorAll !== 'function') return;
   root.querySelectorAll('a[href]').forEach(link => {
     try {
       const target = new URL(link.getAttribute('href'), location.href);
@@ -1793,7 +1795,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   new MutationObserver(records => {
     for (const record of records) for (const node of record.addedNodes) {
-      if (node.nodeType === 1) {
+      if (node.nodeType === 1 && node.isConnected) {
         if (node.matches('a[href]')) officeDecorateLinks(node.parentNode);
         else officeDecorateLinks(node);
       }
