@@ -224,8 +224,16 @@ function printSelected() {
 }
 
 function formatSelectedPrintAddress(item) {
-  const address = String(item.address || item.title || "");
+  let address = String(item.address || item.title || "");
   const escapeHtml = (value) => String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  // 주소에 동·호수가 없는 아파트(도로명/지번만 저장된 경우)는 정렬 기준인 동·호수가 보이도록 단지명+동호수로 표시한다.
+  if (!/\d+\s*동\s*\d+\s*호/.test(address)) {
+    const dong = String(listingColumnValue(item, "dong") || "").replace(/동$/, "").trim();
+    const ho = String(listingColumnValue(item, "room") || "").replace(/호$/, "").trim();
+    const u = item.apartmentUnitData || {};
+    const name = String(u.아파트명 || item.complexName || item.buildingName || "").trim();
+    if (dong && ho && name) address = `${name} ${dong}동 ${ho}호`;
+  }
   // Separate apartment building/unit only at print time; other property addresses stay unchanged.
   const match = address.match(/^(.*?)(\s+)(\d{1,5}\s*동\s*\d{1,5}\s*호)\s*$/);
   if (!match || !match[1].trim()) return escapeHtml(address);
