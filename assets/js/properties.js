@@ -113,8 +113,14 @@ const _listingSections = () => [
 
 function getSelectedListings() {
   pruneSelectedIds();
-  // 화면에서 정렬한 순서 그대로 미리보기·인쇄에 나오도록 같은 정렬을 적용한다.
-  return sortListingsForDisplay(allListings.filter(item => selectedIds.has(item.id)));
+  // 목록 화면에 보이는 순서(전체 페이지 기준) 그대로 미리보기·인쇄에 나오게 한다.
+  // 화면 목록에 없는 선택 항목(필터로 가려진 것)은 같은 정렬 규칙으로 뒤에 붙인다.
+  const position = new Map(getFilteredListings().map((item, i) => [item.id, i]));
+  const selected = sortListingsForDisplay(allListings.filter(item => selectedIds.has(item.id)));
+  return selected
+    .map((item, i) => ({ item, i, pos: position.has(item.id) ? position.get(item.id) : Infinity }))
+    .sort((a, b) => (a.pos === b.pos ? a.i - b.i : a.pos - b.pos))
+    .map(x => x.item);
 }
 
 function getBulkDeleteLabel(item) {
