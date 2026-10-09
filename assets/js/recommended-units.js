@@ -247,6 +247,8 @@
   function rowFor(entry) {
     const { b, item, y } = entry, u = item.u;
     const tr = document.createElement('tr');
+    tr.className = 'clickrow'; tr.title = '눌러서 상세보기';
+    tr.addEventListener('click', ev => { if (ev.target.closest('button, a, input, select, label')) return; openDetail(b, item.room); });
     if (mode === 'rec') {
       const sc = el('td', 'sel'), cb = document.createElement('input');
       cb.type = 'checkbox'; cb.checked = selected.has(selKey(entry)); cb.setAttribute('aria-label', roomLabel(item.room) + ' 인쇄 선택');
@@ -314,6 +316,8 @@
     $('sort').disabled = mode !== 'rec';
     $('profitLabel').style.display = mode === 'rec' ? '' : 'none';
     renderFloorPanel();
+    const closedCount = buildings.reduce((n, b) => n + b.recs.filter(r => r.closedAt).length, 0) + unmatchedRecs.filter(r => r.closedAt).length;
+    $('tabClosed').textContent = '📁 종료된 자료' + (closedCount ? ` (${closedCount})` : '');
     if (mode === 'closed') { shown = []; updatePrintBtn(); renderClosed(list); return; }
     const entries = collect().sort(sorter());
     shown = mode === 'rec' ? entries : [];
@@ -489,6 +493,123 @@
     window.print();
   }
 
+  // ===== 호실 상세 패널 (줄을 누르면 오른쪽에 열린다) =====
+  let detailRef = null;
+  function closeDetail() {
+    detailRef = null;
+    $('detail').classList.remove('open'); $('detailBack').classList.remove('open');
+    $('detail').setAttribute('aria-hidden', 'true');
+  }
+
+  function openDetail(b, room) {
+    const item = b.units.find(i => i.room === room);
+    if (!item) { closeDetail(); return; }
+    detailRef = { b, room };
+    const u = item.u, y = yieldOf(u), ov = memoFields(b.memo);
+    const entry = { b, item, y };
+    const box = $('detail');
+    box.replaceChildren();
+
+    const top = el('div', 'dt-top');
+    const ttl = el('div', 'dt-title');
+    ttl.append(el('div', 'dt-b', b.name), el('div', 'dt-r', roomLabel(item.room)));
+    if (isFlagOn(u.추천매물)) ttl.append(el('span', 'flag rec', '⭐추천'));
+    if (isFlagOn(u.수익성매물)) ttl.append(el('span', 'flag profit', '💰수익성'));
+    const x = el('button', 'mini', '✕ 닫기'); x.type = 'button'; x.addEventListener('click', closeDetail);
+    top.append(ttl, x);
+    box.append(top);
+
+    const kv = (k, v) => { const r = el('div', 'dt-kv'); r.append(el('span', 'dt-k', k), el('span', 'dt-v', v)); return r; };
+    const p0 = price(u), d0 = deposit(u), r0 = rent(u);
+    const kpi = el('div', 'dt-kpi');
+    [['매매가', eok(p0)], ['보증금', eok(d0)], ['월세', r0 === null ? '—' : r0.toLocaleString('ko-KR') + '만'], ['수익률', y ? y.v.toFixed(1) + '%' + (y.calc ? ' (계산)' : '') : '—']].forEach(([k, v]) => {
+      const c = el('div', 'dt-kc'); c.append(el('div', 'dt-kl', k), el('div', 'dt-kn', v)); kpi.append(c);
+    });
+    box.append(kpi);
+
+    const basic = el('div', 'dt-sec');
+    basic.append(el('h3', '', '호실 정보'), kv('업종', u.현업종 || '—'), kv('상태', u.공실여부 || '공실'));
+    const sale = areaText(u, '분양'), excl = areaText(u, '전용');
+    if (sale) basic.append(kv('분양면적', sale));
+    if (excl) basic.append(kv('전용면적', excl));
+    if (u.평당가 && Number(u.평당가)) basic.append(kv('평당가', eok(manwon(u.평당가, 1000000))));
+    box.append(basic);
+
+    // 대출 시뮬레이션 (대출 O / X)
+    const sim = el('div', 'dt-sec');
+    sim.append(el('h3', '', '대출 시뮬레이션'));
+    if (!p0 || r0 === null) {
+      sim.append(el('div', 'recmemo', '매매가와 월세가 입력되어야 계산할 수 있습니다.'));
+    } else {
+      const pref = readLoanPref();
+      const inRow = el('div', 'dt-inrow');
+      const ri = document.createElement('input'), ei = document.createElement('input');
+      [ri, ei].forEach(i => { i.type = 'number'; i.step = 'any'; });
+      ri.value = pref.ratio; ei.value = pref.rate;
+      const l1 = el('label', '', '대출비율 '); l1.append(ri, ' %');
+      const l2 = el('label', '', '이율 '); l2.append(ei, ' %');
+      inRow.append(l1, l2); sim.append(inRow);
+      const tbl = document.createElement('table'); tbl.className = 'dt-sim';
+      sim.append(tbl);
+      const calc = () => {
+        const ratio = Math.min(Math.max(parseFloat(ri.value) || 0, 0), 100), rate = Math.min(Math.max(parseFloat(ei.value) || 0, 0), 30);
+        const loanAmt = Math.round(p0 * ratio / 100), yearInt = loanAmt * rate / 100;
+        const eqO = Math.round(p0 - loanAmt - (d0 || 0)), eqX = p0 - (d0 || 0);
+        const man = n => Math.round(n).toLocaleString('ko-KR') + '만';
+        const yo = eqO > 0 ? ((r0 * 12 - yearInt) / eqO * 100).toFixed(2) + '%' : '—';
+        const yx = eqX > 0 ? (r0 * 12 / eqX * 100).toFixed(2) + '%' : '—';
+        const rows = [['', '대출 O', '대출 X'], ['대출금', eok(loanAmt), '-'], ['연 이자', man(yearInt), '-'],
+          ['실투자금', eqO > 0 ? eok(eqO) : '—', eqX > 0 ? eok(eqX) : '—'], ['월 수익', man(r0 - yearInt / 12), man(r0)],
+          ['연 수익', man(r0 * 12 - yearInt), man(r0 * 12)], ['수익률', yo, yx]];
+        tbl.replaceChildren();
+        rows.forEach((r, i) => {
+          const tr = document.createElement('tr');
+          r.forEach((c, j) => tr.append(el(i === 0 || j === 0 ? 'th' : 'td', i === rows.length - 1 && j ? 'strong' : '', c)));
+          tbl.append(tr);
+        });
+      };
+      ri.addEventListener('input', calc); ei.addEventListener('input', calc); calc();
+    }
+    box.append(sim);
+
+    const ovRows = ['주소', '사용승인일', '구조', '주차대수', '연면적'].filter(k => ov[k] && (k === '주소' || k === '구조' || /\d/.test(ov[k])));
+    if (ovRows.length) {
+      const o = el('div', 'dt-sec'); o.append(el('h3', '', '건물 개요'));
+      ovRows.forEach(k => o.append(kv(k, ov[k])));
+      box.append(o);
+    }
+
+    // 내부용 정보: 눌러야 펼쳐진다 (손님이 화면을 같이 볼 때 노출되지 않도록)
+    const inner = el('div', 'dt-sec');
+    const tg = el('button', 'mini', '🔒 내부용 보기 (소유주·연락처·비고)'); tg.type = 'button';
+    const innerBody = el('div', 'dt-inner'); innerBody.style.display = 'none';
+    [['소유주', u.소유주], ['연락처', u.연락처], ['비고', u.비고], ['추가메모', u.추가메모]].forEach(([k, v]) => innerBody.append(kv(k, v ? String(v) : '—')));
+    tg.addEventListener('click', () => {
+      const open = innerBody.style.display === 'none';
+      innerBody.style.display = open ? '' : 'none';
+      tg.textContent = open ? '🔓 내부용 숨기기' : '🔒 내부용 보기 (소유주·연락처·비고)';
+    });
+    inner.append(tg, innerBody); box.append(inner);
+
+    const act = el('div', 'dt-act');
+    const rb = el('button', 'mini' + (isFlagOn(u.추천매물) ? ' on' : ''), isFlagOn(u.추천매물) ? '⭐ 해제' : '⭐ 추천'); rb.type = 'button';
+    rb.addEventListener('click', async () => { await toggle(b, item, '추천매물', rb); if (detailRef) openDetail(b, room); });
+    const pb = el('button', 'mini' + (isFlagOn(u.수익성매물) ? ' pon' : ''), isFlagOn(u.수익성매물) ? '💰 해제' : '💰 수익성'); pb.type = 'button';
+    pb.addEventListener('click', async () => { await toggle(b, item, '수익성매물', pb); if (detailRef) openDetail(b, room); });
+    const ob = el('button', 'mini', '📄 안내서 인쇄'); ob.type = 'button';
+    ob.addEventListener('click', () => printOnePages([entry]));
+    act.append(rb, pb, ob);
+    if (b.resource) {
+      const link = el('a', 'mini', '건물 상세에서 수정');
+      link.href = HitopResourceRooms.detailUrl('building-detail.html', b.id, b.scope) + '#unitStatus';
+      act.append(link);
+    }
+    box.append(act);
+
+    box.classList.add('open'); $('detailBack').classList.add('open');
+    box.setAttribute('aria-hidden', 'false'); box.scrollTop = 0;
+  }
+
   // ===== 호실별 A4 한 장 안내서 (소유주·연락처·비고·메모는 넣지 않는다) =====
   function memoFields(raw) {
     const base = String(raw || ''), cut = base.indexOf('---추가메모---');
@@ -661,12 +782,15 @@
     $('tabClosed').addEventListener('click', () => setMode('closed'));
     $('printBtn').addEventListener('click', printSheet);
     $('sheetBtn').addEventListener('click', printChosenOnePages);
+    $('detailBack').addEventListener('click', closeDetail);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && detailRef) closeDetail(); });
     $('loanGo').addEventListener('click', confirmSheet);
     $('loanCancel').addEventListener('click', () => { $('loanModal').style.display = 'none'; pendingSheet = null; });
     $('loanOn').addEventListener('change', () => { $('loanFields').style.opacity = $('loanOn').checked ? '1' : '.4'; });
     ['q', 'onlyProfit', 'sort'].forEach(id => $(id).addEventListener(id === 'q' ? 'input' : 'change', render));
     try {
       if (!await load()) return;
+      if (location.hash === '#closed') { setMode('closed'); return; }
       render();
     } catch (e) {
       $('summary').textContent = '불러오지 못했습니다: ' + e.message;
