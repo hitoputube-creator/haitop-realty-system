@@ -7,6 +7,9 @@
   let buildings = [];   // { id, name, record, units: [{u, room}] }
   let mode = 'rec';     // 'rec' | 'cand'
   const busy = new Set();
+  const selected = new Set();        // 인쇄용으로 체크한 호실 (건물id|호수)
+  let shown = [];                    // 지금 화면에 보이는 항목
+  const selKey = e => e.b.id + '|' + e.item.room;
 
   // ----- 값 변환 -----
   function num(v) { if (v === null || v === undefined || v === '') return null; const n = Number(v); return Number.isFinite(n) ? n : null; }
@@ -138,6 +141,12 @@
   function rowFor(entry) {
     const { b, item, y } = entry, u = item.u;
     const tr = document.createElement('tr');
+    if (mode === 'rec') {
+      const sc = el('td', 'sel'), cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.checked = selected.has(selKey(entry)); cb.setAttribute('aria-label', roomLabel(item.room) + ' 인쇄 선택');
+      cb.addEventListener('change', () => { if (cb.checked) selected.add(selKey(entry)); else selected.delete(selKey(entry)); updatePrintBtn(); syncHeadChecks(); });
+      sc.append(cb); tr.append(sc);
+    }
     const room = el('td'); room.append(el('strong', '', roomLabel(item.room)));
     if (mode === 'cand') room.append(el('span', '', ' · ' + b.name));
     if (isFlagOn(u.추천매물)) room.append(el('span', 'flag rec', '⭐추천'));
@@ -169,6 +178,16 @@
     const wrap = el('div', 'twrap');
     const t = document.createElement('table');
     const head = document.createElement('tr');
+    if (mode === 'rec') {
+      const th = el('th', 'sel'), all = document.createElement('input');
+      all.type = 'checkbox'; all.className = 'headcheck'; all.setAttribute('aria-label', '이 건물 전체 선택');
+      all.addEventListener('change', () => {
+        entries.forEach(e => { if (all.checked) selected.add(selKey(e)); else selected.delete(selKey(e)); });
+        wrap.querySelectorAll('tbody .sel input').forEach(c => { c.checked = all.checked; });
+        updatePrintBtn();
+      });
+      th.append(all); head.append(th); wrap._head = all; wrap._entries = entries;
+    }
     [['호실'], ['업종'], ['가격', 1], ['보증금 / 월세', 1], ['수익률', 1], ['상태'], ['']].forEach(([label, right]) => head.append(el('th', right ? 'num' : '', label)));
     const thead = document.createElement('thead'); thead.append(head);
     const tbody = document.createElement('tbody');
@@ -183,6 +202,8 @@
     $('sort').disabled = mode === 'cand';
     $('profitLabel').style.display = mode === 'rec' ? '' : 'none';
     const entries = collect().sort(sorter());
+    shown = mode === 'rec' ? entries : [];
+    updatePrintBtn();
 
     if (mode === 'cand') {
       const shown = entries.slice(0, CAND_LIMIT);
@@ -212,6 +233,67 @@
       card.append(head, table(g.items));
       list.append(card);
     });
+    syncHeadChecks();
+  }
+
+  // 건물별 전체선택 칸을 실제 선택 상태에 맞춘다
+  function syncHeadChecks() {
+    document.querySelectorAll('.twrap').forEach(w => {
+      if (!w._head) return;
+      w._head.checked = w._entries.length > 0 && w._entries.every(e => selected.has(selKey(e)));
+    });
+  }
+
+  // ----- 손님용 A4 인쇄 -----
+  function updatePrintBtn() {
+    const btn = $('printBtn');
+    btn.style.display = mode === 'rec' ? '' : 'none';
+    const chosen = shown.filter(e => selected.has(selKey(e))).length;
+    btn.textContent = chosen ? `🖨 손님용 인쇄 (선택 ${chosen}개)` : `🖨 손님용 인쇄 (전체 ${shown.length}개)`;
+    btn.disabled = !shown.length;
+  }
+
+  // 인쇄물에는 소유주·연락처·비고·메모를 넣지 않는다 (가격, 임대 조건, 업종, 상태만)
+  function buildPrint(entries) {
+    const area = $('printArea');
+    area.replaceChildren();
+    const now = new Date();
+    const dateStr = now.getFullYear() + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0');
+    const phone = OfficeConfig.id === 'ktop' ? '' : ' ☎ 031.949.8969';
+
+    const head = el('div', 'p-head');
+    head.append(el('h1', '', '추천 매물 안내'), el('div', 'p-co', officeCompanyName + phone));
+    area.append(head, el('p', 'p-date', '작성일 ' + dateStr + ' 기준 · 총 ' + entries.length + '개 호실'));
+
+    const groups = new Map();
+    entries.forEach(e => { if (!groups.has(e.b.id)) groups.set(e.b.id, { b: e.b, items: [] }); groups.get(e.b.id).items.push(e); });
+    groups.forEach(g => {
+      const sec = el('section', 'p-bld');
+      sec.append(el('h2', '', g.b.name));
+      const t = document.createElement('table'), hr = document.createElement('tr');
+      ['호실', '업종', '가격', '보증금 / 월세', '수익률', '상태'].forEach(h => hr.append(el('th', '', h)));
+      const thead = document.createElement('thead'); thead.append(hr);
+      const tb = document.createElement('tbody');
+      g.items.forEach(({ item, y }) => {
+        const u = item.u, tr = document.createElement('tr');
+        tr.append(el('td', 'ctr', roomLabel(item.room)), el('td', '', u.현업종 || '—'), el('td', 'num', eok(price(u))),
+          el('td', 'num', eok(deposit(u)) + ' / ' + (rent(u) === null ? '—' : rent(u).toLocaleString('ko-KR') + '만')),
+          el('td', 'num y', y ? y.v.toFixed(1) + '%' : '—'), el('td', 'ctr', u.공실여부 || '—'));
+        tb.append(tr);
+      });
+      t.append(thead, tb); sec.append(t); area.append(sec);
+    });
+
+    area.append(el('div', 'p-note', '※ 금액은 만원 단위 입력값 기준이며, 수익률은 월 임대료×12 ÷ (가격 − 보증금)으로 계산한 단순수익률(대출·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.'));
+    area.append(el('div', 'p-foot', officeCompanyName + phone));
+  }
+
+  function printSheet() {
+    const chosen = shown.filter(e => selected.has(selKey(e)));
+    const target = chosen.length ? chosen : shown;
+    if (!target.length) { toast('인쇄할 추천매물이 없습니다.'); return; }
+    buildPrint(target);
+    window.print();
   }
 
   function emptyBox(text) {
@@ -234,6 +316,7 @@
   async function init() {
     $('tabRec').addEventListener('click', () => setMode('rec'));
     $('tabCand').addEventListener('click', () => setMode('cand'));
+    $('printBtn').addEventListener('click', printSheet);
     ['q', 'onlyProfit', 'sort'].forEach(id => $(id).addEventListener(id === 'q' ? 'input' : 'change', render));
     try {
       if (!await load()) return;

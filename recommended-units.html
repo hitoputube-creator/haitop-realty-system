@@ -53,7 +53,33 @@
     .empty b { color:var(--text); }
     #toast { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); background:#1b3452; border:1px solid var(--gold); padding:10px 18px; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; }
     #toast.show { opacity:1; }
+    td.sel, th.sel { width:34px; padding-right:0; }
+    td.sel input, th.sel input { width:17px; height:17px; accent-color:var(--gold); cursor:pointer; }
+    #printArea { display:none; }
     @media (max-width:640px) { main { padding:16px 12px 50px; } td, th { padding:9px 10px; } }
+
+    /* ===== 손님용 A4 인쇄 ===== */
+    @page { size:A4 portrait; margin:12mm; }
+    @media print {
+      html, body { background:#fff !important; }
+      main, #toast { display:none !important; }
+      #printArea { display:block; color:#111; font-family:Pretendard,'Malgun Gothic',sans-serif; font-size:10.5pt; }
+      .p-head { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2.5px solid #1a2f55; padding-bottom:8px; margin-bottom:6px; }
+      .p-head h1 { margin:0; font-size:19pt; color:#1a2f55; }
+      .p-head .p-co { text-align:right; font-size:11pt; font-weight:700; color:#1a2f55; }
+      .p-date { margin:0 0 12px; font-size:9.5pt; color:#444; }
+      .p-bld { margin:0 0 14px; break-inside:avoid; }
+      .p-bld h2 { margin:0 0 4px; font-size:12.5pt; color:#1a2f55; border-left:4px solid #b88a14; padding-left:8px; }
+      .p-bld table { width:100%; border-collapse:collapse; font-size:10pt; }
+      .p-bld th { background:#eaeef5; color:#1a2f55; font-weight:700; text-align:center; padding:5px 6px; border:1px solid #b9c2d3; white-space:nowrap; }
+      .p-bld td { padding:5px 7px; border:1px solid #c9d0de; white-space:nowrap; }
+      .p-bld td.num { text-align:right; }
+      .p-bld td.ctr { text-align:center; }
+      .p-bld tr { break-inside:avoid; }
+      .p-bld .y { font-weight:700; color:#1a2f55; }
+      .p-note { margin-top:10px; padding-top:8px; border-top:1px solid #b9c2d3; font-size:8.5pt; color:#444; line-height:1.55; }
+      .p-foot { margin-top:6px; text-align:center; font-size:9.5pt; font-weight:700; color:#1a2f55; }
+    }
   </style>
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
   <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
@@ -88,12 +114,14 @@
       <option value="price">가격 낮은 순</option>
       <option value="room">호수 순</option>
     </select>
+    <button type="button" class="btn" id="printBtn" title="체크한 호실만 인쇄합니다. 체크가 없으면 화면에 보이는 전체를 인쇄합니다.">🖨 손님용 인쇄</button>
   </div>
 
   <p id="summary" role="status">불러오는 중...</p>
   <div id="list"></div>
 </main>
 <div id="toast" role="status"></div>
+<div id="printArea" aria-hidden="true"></div>
 
 <script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
 <script src="assets/js/recommended-units.js?v=20261009-1"></script>
