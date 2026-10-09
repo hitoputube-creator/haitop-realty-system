@@ -797,7 +797,7 @@
           <div class="umfield"><label>수익률 (%)</label><input id="u_수익률" placeholder="예: 5.2" /></div>
           <div class="umfield umcheck"><label for="u_매물등록"><input id="u_매물등록" type="checkbox" /> 매물 등록</label></div>
           <div class="umfield umcheck"><label for="u_추천매물"><input id="u_추천매물" type="checkbox" /> ⭐ 추천매물</label></div>
-          <div class="umfield full" style="font-size:.76rem;color:var(--muted)">매물 등록을 선택하면 저장 후 매물등록 화면에서 내용을 확인할 수 있습니다.</div>
+          <div class="umfield full" style="font-size:.76rem;color:var(--muted)">매물 등록을 선택하면 입력한 정보로 바로 등록됩니다.</div>
           <div class="umfield umcheck"><label for="u_수익성매물"><input id="u_수익성매물" type="checkbox" /> 💰 수익성매물</label></div>
           <div class="umfield full"><label>비고</label><textarea id="u_비고" placeholder="특이사항 등 자유 입력"></textarea></div>
         </div>
@@ -810,6 +810,7 @@
       </div></div>
 
       <div class="unit-modal-actions">
+        <a class="btn-unit-ghost" id="umListingView" hidden>매물 상세보기</a>
         <button class="btn-unit-ghost" id="umRegistry" type="button" style="display:none;">건축물대장정보 확인</button>
         <button class="btn-unit-ghost" id="umCancel">취소</button>
         <button class="btn-unit-del" id="umDelete" style="display:none;">삭제</button>
@@ -2166,6 +2167,8 @@ async function deleteBFile(id) {
     $("u_추천매물").checked   = isFlagOn(u.추천매물);
     $('u_매물등록').checked = !!u.listing_id || isFlagOn(u.매물등록요청) || isFlagOn(u.추천매물);
     $('u_매물등록').disabled = !!u.listing_id;
+    $('umListingView').hidden = !u.listing_id;
+    $('umListingView').href = u.listing_id ? 'detail.html?id=' + encodeURIComponent(u.listing_id) : '#';
     $("u_수익성매물").checked = isFlagOn(u.수익성매물);
     $("u_비고").value       = u.비고        || "";
 
@@ -2180,6 +2183,46 @@ async function deleteBFile(id) {
     unitModalDirty = false;
     $("unitModal").classList.remove("open");
     editIdx = -1;
+  }
+
+  async function registerCommercialUnit(unit) {
+    const id = unit.listing_id || unit.pending_listing_id;
+    const existing = await getListingById(id);
+    const money = value => {
+      const n = Number(value);
+      return n > 0 && Number.isFinite(n) ? (n * 10000).toLocaleString('ko-KR') : '';
+    };
+    const sale = money(unit.현_매매가격);
+    const deposit = money(unit.현_보증금 ?? unit.보증금);
+    const rent = money(unit.현_월세 ?? unit.월차임);
+    const stickers = (existing?.stickers || []).filter(s => s !== '추천매물' && s !== '수익형');
+    if (isFlagOn(unit.추천매물)) stickers.push('추천매물');
+    if (isFlagOn(unit.수익성매물)) stickers.push('수익형');
+    const data = {
+      ...existing, id,
+      type:existing?.type || getTypeFromCategory('상가사무실', '상가', 'etc'),
+      category1:'상가사무실', category2:'상가',
+      title:existing?.title || `${bName} ${unit.호수}호 상가`,
+      address:existing?.address || buildingAddress || '',
+      mapAddress:existing?.mapAddress || buildingAddress || '',
+      privateDetailAddress:`${bName} ${unit.호수}호`,
+      complexName:bName, ho:unit.호수,
+      resource_id:buildingId, status:existing?.status || '진행중', listingKind:'매물',
+      is_public:existing?.is_public === true,
+      dealType:existing?.dealType || (sale && !deposit && !rent ? '매매' : '월세'),
+      salePrice:sale, deposit, monthlyRent:rent,
+      exclusiveAreaPy:Number(unit.전용_평) || null,
+      exclusiveAreaM2:unit.전용_평 ? Math.round(Number(unit.전용_평) * 3.30579 * 100) / 100 : null,
+      supplyAreaPy:Number(unit.분양_평) || null,
+      supplyAreaM2:unit.분양_평 ? Math.round(Number(unit.분양_평) * 3.30579 * 100) / 100 : null,
+      owner_name:unit.소유주 || '', owner_phone1:unit.연락처 || '', stickers,
+      owner_memo:unit.비고 || '',
+      detailDescription:existing?.detailDescription || unit.현업종 || '',
+      import_unit_snapshot:{...unit}
+    };
+    if (existing) await updateListing(id, data); else await addListing(data);
+    unit.listing_id = id;
+    delete unit.pending_listing_id;
   }
 
   async function saveUnit(options = {}) {
@@ -2224,6 +2267,8 @@ async function deleteBFile(id) {
     const newMemo = $('u_추가메모').value.trim();
     unit.추가메모 = [...unitMemos(original)];
     if (newMemo) unit.추가메모.push({id:crypto.randomUUID(),text:newMemo,created_at:new Date().toISOString()});
+    const registerNow = !options.keepOpen && !residentialUnitMode() && unit.매물등록요청;
+    if (registerNow && !unit.listing_id && !unit.pending_listing_id) unit.pending_listing_id = crypto.randomUUID();
     const wasNew = editIdx < 0;
     const savedIndex = wasNew ? units.length : editIdx;
     const next = [...units];
@@ -2235,14 +2280,17 @@ async function deleteBFile(id) {
     try {
       await saveBuildingUnits(bName, bName, next);
       units = next;
+      editIdx = savedIndex;
+      if (registerNow) {
+        await registerCommercialUnit(unit);
+        await saveBuildingUnits(bName, bName, next);
+        activeListingIds[unit.listing_id] = true;
+      }
       selectedUnitRows.clear();
       renderAll();
       if (options.keepOpen) { openModal(savedIndex); $('u_추가메모').focus(); }
       else closeModal();
-      if (typeof showToast === "function") showToast(newMemo ? '추가메모가 저장되었습니다.' : wasNew ? '자료가 추가되었습니다.' : '수정 완료되었습니다.');
-      if (!options.keepOpen && !residentialUnitMode() && unit.매물등록요청) {
-        location.href = unit.listing_id ? 'detail.html?id=' + encodeURIComponent(unit.listing_id) : buildRegisterUrl(unit);
-      }
+      if (typeof showToast === "function") showToast(registerNow ? '매물이 등록되었습니다.' : newMemo ? '추가메모가 저장되었습니다.' : wasNew ? '자료가 추가되었습니다.' : '수정 완료되었습니다.');
     } catch(e) {
       if (typeof showToast === "function") showToast("저장 실패: " + e.message);
       console.error("[호실현황] 저장 실패:", e);
