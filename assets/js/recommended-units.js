@@ -487,12 +487,27 @@
       if (sale) rows.push(['분양면적', sale]);
       if (excl) rows.push(['전용면적', excl]);
       if (u.평당가) rows.push(['평당가', Number(u.평당가) ? eok(manwon(u.평당가, 1000000)) : String(u.평당가)]);
-      ['주소', '사용승인일', '구조', '주차대수', '연면적'].forEach(k => { if (ov[k]) rows.push([k, ov[k]]); });
+      ['주소', '사용승인일', '구조', '주차대수', '연면적'].forEach(k => {
+        const v = ov[k];
+        if (v && (k === '주소' || k === '구조' || /\d/.test(v))) rows.push([k, v]);
+      });
+      const p0 = price(u), d0 = deposit(u), r0 = rent(u);
+      if (p0 && r0 !== null) {
+        const box = el('div', 'p-sum');
+        box.append(el('div', 'p-sum-t', '투자 요약'));
+        const g = el('div', 'p-sum-g');
+        [['실투자금 (매매가 − 보증금)', eok(Math.max(p0 - (d0 || 0), 0))], ['월 임대수익', r0.toLocaleString('ko-KR') + '만'],
+         ['연 임대수익 (월세×12)', eok(r0 * 12)]].forEach(([k, v]) => {
+          const c = el('div', 'p-sum-c'); c.append(el('div', 'p-sum-l', k), el('div', 'p-sum-v', v)); g.append(c);
+        });
+        box.append(g); page.append(box);
+      }
       if (rows.length) {
         const t = document.createElement('table'); t.className = 'p-info';
         rows.forEach(([k, v]) => { const tr = document.createElement('tr'); tr.append(el('th', '', k), el('td', '', v)); t.append(tr); });
         page.append(t);
       }
+      page.append(el('div', 'p-memo', '메모'));
       page.append(el('div', 'p-note', '※ 금액은 만원 단위 입력값 기준이며, 수익률은 월 임대료×12 ÷ (가격 − 보증금)으로 계산한 단순수익률(대출·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.'));
       page.append(el('div', 'p-foot', '문의 ' + officeCompanyName + phone));
       area.append(page);
