@@ -170,3 +170,36 @@ html,body,#root,.wd-app{background:#f3f5f9!important}
 .wd-btn-private-notes{color:#6a4a99!important;background:#f3eefb!important;border-color:#dacbea!important}
 .wd-empty-icon{color:#1767d2}
 .wd-searchbar:focus-within{border-color:#1767d2;box-shadow:0 0 0 3px rgba(23,103,210,.10)}
+
+/* Consistent weekly and monthly focal headers. */
+.wd-weekly-header,.wd-month-memos-header{background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba);border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:0 5px 18px rgba(31,75,139,.12)}
+.wd-weekly-header .wd-panel-title,.wd-month-memos-header .wd-panel-title{color:#fff!important}
+.wd-weekly-header .wd-panel-title::before,.wd-month-memos-header .wd-panel-title::before{background:#82b4ff}
+.wd-weekly-header .wd-panel-sub,.wd-month-memos-header .wd-panel-sub{color:#dbe7f8!important}
+.wd-weekly-nav .wd-action-btn{background:rgba(255,255,255,.12)!important;color:#fff!important;border-color:rgba(255,255,255,.25)!important}
+.wd-weekly-nav .wd-action-btn:hover,.wd-weekly-nav .wd-action-btn.active{background:#fff!important;color:#1956a3!important}
+.wd-week-day{border-color:#dce5ef;border-radius:13px;box-shadow:0 2px 7px rgba(24,44,71,.03)}
+.wd-week-day-header{background:linear-gradient(110deg,#eaf2ff,#f5f8fd);border-bottom-color:#d5e3f5;padding:13px 12px}
+.wd-week-day-header strong{color:#24476b}
+.wd-week-day-header span{color:#6a829a}
+.wd-week-day.is-today{border-color:#1767d2;box-shadow:0 4px 14px rgba(23,103,210,.12)}
+.wd-week-day.is-today .wd-week-day-header{background:linear-gradient(115deg,#1959b3,#1767d2)!important;border-bottom-color:#1767d2}
+.wd-week-day.is-today .wd-week-day-header :is(strong,span,.wd-week-add){color:#fff!important}
+.wd-week-day:nth-child(6):not(.is-today) .wd-week-day-header strong{color:#245c91}
+.wd-week-day:nth-child(7):not(.is-today) .wd-week-day-header{background:#fff3f0}
+.wd-week-day:nth-child(7):not(.is-today) .wd-week-day-header strong{color:#b42318}
+.wd-week-memo,.wd-month-memo-card{background:#fff!important;border-color:#dce5ef;border-left:3px solid #7ba9e5;box-shadow:0 2px 7px rgba(24,44,71,.035)}
+.wd-week-memo:hover,.wd-month-memo-card:hover{background:#f2f7ff!important;border-color:#9cbfe9;box-shadow:0 4px 12px rgba(31,75,139,.07)}
+.wd-week-customer,.wd-month-memo-name,.wd-month-memo-date{color:#1767d2}
+.wd-week-customer.is-empty{color:transparent}
+.wd-week-content,.wd-month-memo-content{color:#52667b}
+.wd-week-meta,.wd-month-memo-meta{color:#7b8da0}
+.wd-week-empty{color:#8a9bb0}
+.wd-week-detail-header{background:#eaf2ff;border-radius:9px;padding:12px}
+.wd-week-detail-card{background:#fff}
+.wd-week-followups{background:#f0f8f5;border-color:#d4e9df}
+.wd-month-calendar .wd-panel-header{background:linear-gradient(115deg,#193860,#2465ba)}
+.wd-month-calendar .wd-panel-header .wd-panel-title{color:#fff!important}
+.wd-month-calendar .wd-panel-header .wd-panel-title::before{background:#82b4ff}
+.wd-month-calendar .wd-panel-header .wd-panel-sub{color:#dbe7f8!important}
+@media(max-width:700px){.wd-weekly-header,.wd-month-memos-header{padding:16px}}
