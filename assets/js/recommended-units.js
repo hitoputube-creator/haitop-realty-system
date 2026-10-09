@@ -464,7 +464,7 @@
   }
 
   // 하이탑 견적서와 같은 디자인(네이비 배너 + 골드 포인트 + 사무소 정보 바닥글)의 호실별 A4 안내서
-  function buildOnePages(entries) {
+  function buildOnePages(entries, loan) {
     const area = $('printArea');
     area.replaceChildren();
     const now = new Date();
@@ -476,20 +476,42 @@
       const fl = floorNo(item.room);
       const sale = areaText(u, '분양'), excl = areaText(u, '전용');
       const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-      const row = (k, v, cls) => `<tr class="${cls || ''}"><td class="lbl">${esc(k)}</td><td class="val">${esc(v)}</td></tr>`;
-      const sec = t => `<tr class="sec"><td colspan="2">${t}</td></tr>`;
+      const row = (k, v, cls) => `<tr class="${cls || ''}"><td class="lbl">${esc(k)}</td><td class="val" colspan="${loan ? 2 : 1}">${esc(v)}</td></tr>`;
+      const row2 = (k, vo, vx, cls) => `<tr class="${cls || ''}"><td class="lbl">${esc(k)}</td><td class="val">${esc(vo)}</td><td class="val">${esc(vx)}</td></tr>`;
+      const sec = t => `<tr class="sec"><td colspan="${loan ? 3 : 2}">${t}</td></tr>`;
+      const man = n => Math.round(n).toLocaleString('ko-KR') + '만원';
       const rows = [];
       rows.push(sec('▪ &nbsp; 매 &nbsp; 매 &nbsp; 조 &nbsp; 건'));
       rows.push(row('매매가', eok(p0), 'emph'));
+      const canCalc = p0 && r0 !== null;
+      let loanAmt = 0, yearInt = 0, equityO = 0, equityX = 0;
+      if (loan && canCalc) {
+        loanAmt = Math.round(p0 * loan.ratio / 100); yearInt = loanAmt * loan.rate / 100;
+        equityO = Math.round(p0 - loanAmt - (d0 || 0)); equityX = p0 - (d0 || 0);
+        rows.push(row2('대출금액', eok(loanAmt), '-'));
+        rows.push(row2('대출비율', loan.ratio + ' %', '-'));
+        rows.push(row2('이율', loan.rate + ' %', '-'));
+        rows.push(row2('이자 (연)', man(yearInt), '-'));
+        rows.push(row2('월이자', man(yearInt / 12), '-'));
+      }
       rows.push(row('보증금', eok(d0)));
       rows.push(row('월 임대료', r0 === null ? '—' : r0.toLocaleString('ko-KR') + '만원'));
       if (u.평당가 && Number(u.평당가)) rows.push(row('평당가', eok(manwon(u.평당가, 1000000))));
-      if (p0 && r0 !== null) {
+      if (canCalc) {
         rows.push(sec('▪ &nbsp; 수 &nbsp; 익 &nbsp; 분 &nbsp; 석'));
-        rows.push(row('실투자금 (매매가 − 보증금)', eok(Math.max(p0 - (d0 || 0), 0))));
-        rows.push(row('월 임대수익', r0.toLocaleString('ko-KR') + '만원'));
-        rows.push(row('연 임대수익 (월세×12)', eok(r0 * 12)));
-        rows.push(`<tr class="yld"><td class="lbl">수 익 률</td><td class="val">${y ? y.v.toFixed(2) + '%' : '—'}</td></tr>`);
+        if (loan) {
+          const yo = equityO > 0 ? ((r0 * 12 - yearInt) / equityO * 100).toFixed(2) + '%' : '—';
+          const yx = equityX > 0 ? (r0 * 12 / equityX * 100).toFixed(2) + '%' : '—';
+          rows.push(row2('실투자금', equityO > 0 ? eok(equityO) : '—', equityX > 0 ? eok(equityX) : '—'));
+          rows.push(row2('월수익금', man(r0 - yearInt / 12), man(r0)));
+          rows.push(row2('연수익금', man(r0 * 12 - yearInt), man(r0 * 12)));
+          rows.push(`<tr class="yld"><td class="lbl">수 익 률</td><td class="val">${yo}</td><td class="val">${yx}</td></tr>`);
+        } else {
+          rows.push(row('실투자금 (매매가 − 보증금)', eok(Math.max(p0 - (d0 || 0), 0))));
+          rows.push(row('월 임대수익', r0.toLocaleString('ko-KR') + '만원'));
+          rows.push(row('연 임대수익 (월세×12)', eok(r0 * 12)));
+          rows.push(`<tr class="yld"><td class="lbl">수 익 률</td><td class="val">${y ? y.v.toFixed(2) + '%' : '—'}</td></tr>`);
+        }
       }
       const info = [];
       ['주소', '사용승인일', '구조', '주차대수', '연면적'].forEach(k => {
@@ -521,8 +543,8 @@
             <div><div class="i-label">전용면적</div><div class="i-value">${esc(excl || '-')}</div></div>
           </div>
         </div>
-        <table class="est-tbl"><thead><tr><th>항목</th><th>내용</th></tr></thead><tbody>${rows.join('')}</tbody></table>
-        <div class="est-note">※ 금액은 만원 단위 입력값 기준이며, 수익률은 월 임대료×12 ÷ (매매가 − 보증금)으로 계산한 단순수익률(대출·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부(${esc(u.공실여부 || '-')})는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.</div>
+        <table class="est-tbl"><thead><tr>${loan ? '<th>항목</th><th>대출 (O)</th><th>대출 (X)</th>' : '<th>항목</th><th>내용</th>'}</tr></thead><tbody>${rows.join('')}</tbody></table>
+        <div class="est-note">${loan && canCalc ? '※ <strong>취득세 (4.6%)</strong> : ' + eok(Math.round(p0 * 0.046)) + ' — 부가세 발생 여부 및 건물/토지 비율에 따라 변동될 수 있습니다.<br>' : ''}※ 금액은 만원 단위 입력값 기준이며, 수익률은 연수익금 ÷ 실투자금으로 계산한 단순수익률(취득세·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부(${esc(u.공실여부 || '-')})는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.</div>
         <div class="est-foot">
           <div class="ef-left">${logoSvg('#c9a24a', '#12244a', 26)}<div>
             <div class="fc">${ktop ? esc(officeCompanyName) : '하이탑부동산공인중개사사무소'}</div>
@@ -535,9 +557,30 @@
     });
   }
 
+  const LOAN_KEY = 'hitop_ru_loan';
+  function readLoanPref() {
+    try { const v = JSON.parse(localStorage.getItem(LOAN_KEY) || 'null'); if (v) return v; } catch (e) { /* 저장값 없음 */ }
+    return { on: true, ratio: 50, rate: 4.5 };
+  }
   function printOnePages(entries) {
     if (!entries.length) { toast('인쇄할 호실을 체크해 주세요.'); return; }
-    buildOnePages(entries);
+    const pref = readLoanPref();
+    $('loanOn').checked = !!pref.on; $('loanRatio').value = pref.ratio; $('loanRate').value = pref.rate;
+    $('loanFields').style.opacity = pref.on ? '1' : '.4';
+    $('loanTitle').textContent = entries.length === 1 ? `${entries[0].b.name} ${roomLabel(entries[0].item.room)} 안내서 인쇄` : `선택한 ${entries.length}개 호실 안내서 인쇄`;
+    $('loanModal').style.display = 'flex';
+    pendingSheet = entries;
+  }
+  let pendingSheet = null;
+  function confirmSheet() {
+    const on = $('loanOn').checked;
+    const ratio = Math.min(Math.max(parseFloat($('loanRatio').value) || 0, 0), 100);
+    const rate = Math.min(Math.max(parseFloat($('loanRate').value) || 0, 0), 30);
+    try { localStorage.setItem(LOAN_KEY, JSON.stringify({ on, ratio, rate })); } catch (e) { /* 저장 불가 */ }
+    $('loanModal').style.display = 'none';
+    if (!pendingSheet) return;
+    buildOnePages(pendingSheet, on ? { ratio, rate } : null);
+    pendingSheet = null;
     window.print();
   }
 
@@ -567,6 +610,9 @@
     $('tabCand').addEventListener('click', () => setMode('cand'));
     $('printBtn').addEventListener('click', printSheet);
     $('sheetBtn').addEventListener('click', printChosenOnePages);
+    $('loanGo').addEventListener('click', confirmSheet);
+    $('loanCancel').addEventListener('click', () => { $('loanModal').style.display = 'none'; pendingSheet = null; });
+    $('loanOn').addEventListener('change', () => { $('loanFields').style.opacity = $('loanOn').checked ? '1' : '.4'; });
     ['q', 'onlyProfit', 'sort'].forEach(id => $(id).addEventListener(id === 'q' ? 'input' : 'change', render));
     try {
       if (!await load()) return;
