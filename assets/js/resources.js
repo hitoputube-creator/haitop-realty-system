@@ -19,6 +19,7 @@ function openDriveBuilding(page, id) {
 }
 let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
 let residentialSearch = '';
+let driveGlobalSearch = '';   // 상단 검색창: 모든 폴더에서 이름·주소·메모로 검색
 let residentialVillage = '';
 
 // ===== 공통 유틸 =====
@@ -93,6 +94,12 @@ document.getElementById("drive_cat_select").addEventListener("change", (e) => {
   if (e.target.value) document.getElementById("drive_category").value = e.target.value;
   else document.getElementById("drive_category").value = "";
 });
+
+const driveGlobalSearchInput = document.getElementById("driveGlobalSearch");
+if (driveGlobalSearchInput) {
+  driveGlobalSearchInput.addEventListener("input", () => { driveGlobalSearch = driveGlobalSearchInput.value; renderDriveTab(); });
+  driveGlobalSearchInput.addEventListener("keydown", e => { if (e.key === "Escape") { driveGlobalSearchInput.value = ""; driveGlobalSearch = ""; renderDriveTab(); } });
+}
 
 document.getElementById("driveSaveBtn").addEventListener("click", async () => {
   const btn = document.getElementById("driveSaveBtn");
@@ -343,6 +350,22 @@ function renderDriveTab() {
     grouped[r.category].push(r);
   });
 
+
+  // 상단 검색창에 글자가 있으면 모든 폴더에서 찾은 결과를 폴더별로 보여준다
+  const searchWords = driveGlobalSearch.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  const countEl = document.getElementById('driveGlobalSearchCount');
+  if (searchWords.length) {
+    const matched = categories.map(c => [c, sortedByCatOrder(c, grouped[c]).filter(item => searchWords.every(w => `${item.name} ${item.memo || ''} ${c}`.toLocaleLowerCase().includes(w)))]).filter(([, list]) => list.length);
+    const total = matched.reduce((n, [, list]) => n + list.length, 0);
+    if (countEl) countEl.textContent = `검색 결과 ${total}건`;
+    container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">${total ? matched.map(([c, list]) => `
+      <div style="${'margin-top:6px;'}">
+        <div style="color:var(--gold);font-weight:700;font-size:.9rem;margin:10px 0 8px;">📂 ${escapeCategory(c)} <span style="font-size:.75rem;opacity:.7;">(${list.length})</span></div>
+        <div class="listing-grid">${buildDriveResourceResults(list, c)}</div>
+      </div>`).join('') : '<div class="loading">검색 결과가 없습니다.</div>'}</div>`;
+    return;
+  }
+  if (countEl) countEl.textContent = '';
 
   // 기본: 첫 번째 카테고리 선택
   if (!activeDriveCat || !grouped[activeDriveCat]) activeDriveCat = categories[0];

@@ -61,6 +61,11 @@
     <a class="btn floor-status-entry resource-location-entry" href="shop-location.html">🗺️ 상가 위치도</a>
   </div>
 
+  <div class="resource-search" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
+    <input id="driveGlobalSearch" type="search" aria-label="자료 검색" placeholder="🔍 건물명 · 주소 · 메모 검색 (모든 폴더)" autocomplete="off" style="flex:1;min-width:220px;max-width:520px;">
+    <span id="driveGlobalSearchCount" style="font-size:.85rem;color:var(--text-muted);" role="status"></span>
+  </div>
+
   <!-- ===== 자료 등록 ===== -->
   <div class="quick-card" id="driveRegisterCard" style="display:none;">
     <div class="quick-title">📁 자료 등록</div>
@@ -201,6 +206,6 @@
 </script>
 
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
-<script src="assets/js/resources.js?v=20261009-resource-colors"></script>
+<script src="assets/js/resources.js?v=20261009-search"></script>
 </body>
 </html>
