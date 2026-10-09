@@ -643,6 +643,7 @@
     <div class="unit-sec-head">
       <h3 id="unitStatusTitle">🏬 호실 현황</h3>
       <div id="unitBulkActions" style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-left:auto;">
+        <button type="button" class="btn-unit-add" id="unitBundleRegister" disabled>묶음매물 등록</button>
         <button type="button" class="btn-unit-ghost" id="unitSelectPrint" disabled>선택인쇄</button>
         <button type="button" class="btn-unit-del" id="unitSelectDelete" disabled>선택삭제</button>
       </div>
@@ -689,6 +690,7 @@
             <th>업종</th>
             <th>소유주</th>
             <th>연락처</th>
+            <th>매매가(만원)</th>
             <th>보증금(만)</th>
             <th>월차임(만)</th>
             <th>상태</th>
@@ -822,6 +824,26 @@
 </div><!-- /page -->
 
 <!-- ===== 라이트박스 ===== -->
+<div class="unit-modal-overlay" id="bundleModal" role="dialog" aria-modal="true" aria-labelledby="bundleTitle">
+  <div class="unit-modal-box">
+    <h3 id="bundleTitle">묶음매물 등록</h3>
+    <p id="bundleRooms" style="overflow-wrap:anywhere"></p>
+    <div class="umgrid">
+      <div class="umfield"><label for="bundleMode">등록 방식</label><select id="bundleMode"><option value="rooms">여러 호실 묶음</option><option value="floor">층 전체</option></select></div>
+      <div class="umfield"><label for="bundleDeal">거래구분</label><select id="bundleDeal"><option>월세</option><option>매매</option><option>전세</option></select></div>
+      <div class="umfield"><label for="bundleExclusive">전용면적 합계 (평)</label><input id="bundleExclusive" type="number" min="0" step="0.01"></div>
+      <div class="umfield"><label for="bundleSupply">공급면적 합계 (평)</label><input id="bundleSupply" type="number" min="0" step="0.01"></div>
+      <div class="umfield"><label for="bundleSale">묶음 매매가 (만원)</label><input id="bundleSale" type="number" min="0" step="any"></div>
+      <div class="umfield"><label for="bundleDeposit">묶음 보증금 (만원)</label><input id="bundleDeposit" type="number" min="0" step="any"></div>
+      <div class="umfield"><label for="bundleRent">묶음 월세 (만원)</label><input id="bundleRent" type="number" min="0" step="any"></div>
+      <div class="umfield"><label for="bundleTerms">거래 조건</label><select id="bundleTerms"><option>일괄 거래만 가능</option><option>개별 거래도 가능</option></select></div>
+      <div class="umfield umcheck"><label><input id="bundleRecommended" type="checkbox"> ⭐ 추천매물</label></div>
+      <div class="umfield full"><label for="bundleMemo">비고</label><textarea id="bundleMemo" style="min-height:100px"></textarea></div>
+    </div>
+    <p style="font-size:.78rem;color:var(--muted)">면적은 확인 후 수정하세요. 미입력 호실이 있으면 합산에서 빠집니다. 가격은 묶음 전체 금액을 입력하세요.</p>
+    <div class="unit-modal-actions"><button type="button" class="btn-unit-ghost" id="bundleCancel">취소</button><button type="button" class="btn-unit-add" id="bundleSave">매물 등록</button></div>
+  </div>
+</div>
 <div id="lightbox" onclick="closeLightbox()">
   <span id="lightbox-close" onclick="closeLightbox()">✕</span>
   <div id="lightbox-toolbar" onclick="event.stopPropagation()">
@@ -1585,6 +1607,8 @@ async function deleteBFile(id) {
   const selectedUnitRows = new Set();
   function unitBulkState() {
     const count = selectedUnitRows.size;
+    $('unitBundleRegister').hidden = residentialUnitMode();
+    $('unitBundleRegister').disabled = count < 2;
     $("unitSelectPrint").disabled = !count;
     $("unitSelectDelete").disabled = !count;
     $("unitSelectPrint").textContent = "선택인쇄 (" + count + ")";
@@ -2084,6 +2108,7 @@ async function deleteBFile(id) {
         <td>${u.현업종 || "-"}</td>
         <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
+        <td style="text-align:right">${currentRentPrice(u.현_매매가격, u.매매가격)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
         <td><span class="sbadge ${bc}">${status}</span></td>
@@ -2094,6 +2119,7 @@ async function deleteBFile(id) {
               + (OfficeConfig.id === "ktop" ? "" : `<a class="btn-listing-home" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html?id=${u.listing_id}" target="_blank">홈페이지</a>`)
             : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`
           }
+          ${(u.묶음매물연결 || []).map(link=>`<a class="btn-listing-view" href="detail.html?id=${encodeURIComponent(link.id)}" title="${esc(link.title)}">묶음매물 보기</a>`).join('')}
         </td>
       </tr>`;
     }).join(""); }
@@ -2202,14 +2228,15 @@ async function deleteBFile(id) {
       ...existing, id,
       type:existing?.type || getTypeFromCategory('상가사무실', '상가', 'etc'),
       category1:'상가사무실', category2:'상가',
-      title:existing?.title || `${bName} ${unit.호수}호 상가`,
+      ...(unit.bundle_details ? {bundle_details:unit.bundle_details} : {}),
+      title:unit.bundle_title || existing?.title || `${bName} ${unit.호수}호 상가`,
       address:existing?.address || buildingAddress || '',
       mapAddress:existing?.mapAddress || buildingAddress || '',
       privateDetailAddress:`${bName} ${unit.호수}호`,
       complexName:bName, ho:unit.호수,
       resource_id:buildingId, status:existing?.status || '진행중', listingKind:'매물',
       is_public:existing?.is_public === true,
-      dealType:existing?.dealType || (sale && !deposit && !rent ? '매매' : '월세'),
+      dealType:unit.거래구분 || existing?.dealType || (sale && !deposit && !rent ? '매매' : '월세'),
       salePrice:sale, deposit, monthlyRent:rent,
       exclusiveAreaPy:Number(unit.전용_평) || null,
       exclusiveAreaM2:unit.전용_평 ? Math.round(Number(unit.전용_평) * 3.30579 * 100) / 100 : null,
@@ -2217,13 +2244,72 @@ async function deleteBFile(id) {
       supplyAreaM2:unit.분양_평 ? Math.round(Number(unit.분양_평) * 3.30579 * 100) / 100 : null,
       owner_name:unit.소유주 || '', owner_phone1:unit.연락처 || '', stickers,
       owner_memo:unit.비고 || '',
-      detailDescription:existing?.detailDescription || unit.현업종 || '',
+      detailDescription:unit.bundle_details ? '묶음 호실: '+unit.bundle_details.rooms.join(' · ')+'\n거래 조건: '+unit.bundle_details.terms : existing?.detailDescription || unit.현업종 || '',
       import_unit_snapshot:{...unit}
     };
     if (existing) await updateListing(id, data); else await addListing(data);
     unit.listing_id = id;
     delete unit.pending_listing_id;
   }
+
+  let bundleRows = [], bundleSaving = false;
+  $('unitBundleRegister').addEventListener('click', () => {
+    bundleRows = units.filter((u,i) => selectedUnitRows.has(i));
+    if (residentialUnitMode() || bundleRows.length < 2) return;
+    $('bundleRooms').textContent = '선택 호실: ' + bundleRows.map(u => u.호수).join(' · ');
+    for (const [id,key] of [['bundleExclusive','전용_평'],['bundleSupply','분양_평']]) {
+      const sum = bundleRows.reduce((total,u)=>total+(Number(u[key]) || 0),0);
+      $(id).value = sum > 0 ? sum.toFixed(2) : '';
+    }
+    ['bundleSale','bundleDeposit','bundleRent','bundleMemo'].forEach(id=>$(id).value='');
+    $('bundleMode').value='rooms'; $('bundleDeal').value='월세'; $('bundleTerms').selectedIndex=0;
+    $('bundleRecommended').checked=false;
+    $('bundleModal').classList.add('open');
+  });
+  $('bundleCancel').addEventListener('click', () => { if (!bundleSaving) $('bundleModal').classList.remove('open'); });
+  $('bundleSave').addEventListener('click', async () => {
+    if (bundleSaving || bundleRows.length < 2) return;
+    const rows = bundleRows, groups = [...new Set(rows.map(unitGroup))];
+    const wholeFloor = $('bundleMode').value === 'floor';
+    if (wholeFloor && (groups.length !== 1 || units.filter(u=>unitGroup(u)===groups[0]).some(u=>!rows.includes(u)))) {
+      showToast('층 전체 등록은 해당 층의 모든 호실을 선택하세요.'); return;
+    }
+    const number = id => {
+      const value = $(id).value.trim();
+      if (!value) return null;
+      const n = Number(value);
+      if (!Number.isFinite(n) || n < 0) throw new Error('면적과 가격은 0 이상의 숫자로 입력하세요.');
+      return n;
+    };
+    try {
+      const sale=number('bundleSale'),deposit=number('bundleDeposit'),rent=number('bundleRent');
+      const deal=$('bundleDeal').value;
+      if (deal==='매매' && !(sale>0) || deal==='전세' && !(deposit>0) || deal==='월세' && !(rent>0)) throw new Error('선택한 거래구분의 묶음 전체 가격을 입력하세요.');
+      const exclusive=number('bundleExclusive'),supply=number('bundleSupply');
+      if (supply!=null && exclusive!=null && supply<exclusive) throw new Error('공급면적은 전용면적 이상이어야 합니다.');
+      const key = JSON.stringify(rows.map(u=>String(u.호수)).sort());
+      const previous = rows[0].묶음매물연결?.find(link=>link.key===key);
+      const id = previous?.id || rows[0].묶음등록대기?.[key] || crypto.randomUUID();
+      const virtual = {pending_listing_id:id, 호수:rows.map(u=>u.호수).join('·'),
+        bundle_title:`${bName} ${wholeFloor ? groups[0]+'층 전체' : rows.map(u=>u.호수).join('·')+'호 묶음'}`,
+        거래구분:deal,현_매매가격:deal==='매매'?sale:null,현_보증금:deal!=='매매'?deposit:null,현_월세:deal==='월세'?rent:null,
+        전용_평:exclusive,분양_평:supply,추천매물:$('bundleRecommended').checked,비고:$('bundleMemo').value.trim(),
+        bundle_details:{mode:wholeFloor?'floor':'rooms',rooms:rows.map(u=>String(u.호수)),terms:$('bundleTerms').value,memo:$('bundleMemo').value.trim()}
+      };
+      bundleSaving=true; $('bundleSave').disabled=true; $('bundleSave').textContent='등록 중…';
+      rows.forEach(u=>{u.묶음등록대기={...u.묶음등록대기,[key]:id};});
+      await saveBuildingUnits(bName,bName,units);
+      await registerCommercialUnit(virtual);
+      rows.forEach(u=>{
+        u.묶음매물연결=[...(u.묶음매물연결 || []).filter(link=>link.key!==key),{key,id:virtual.listing_id,title:virtual.bundle_title}];
+        delete u.묶음등록대기[key];
+      });
+      await saveBuildingUnits(bName,bName,units);
+      selectedUnitRows.clear(); renderAll(); $('bundleModal').classList.remove('open');
+      showToast('묶음매물이 등록되었습니다.');
+    } catch(error) { showToast('묶음매물 등록 실패: '+error.message); }
+    finally { bundleSaving=false; $('bundleSave').disabled=false; $('bundleSave').textContent='매물 등록'; }
+  });
 
   async function saveUnit(options = {}) {
     if ($("umSave").disabled) return;
