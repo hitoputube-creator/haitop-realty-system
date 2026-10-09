@@ -90,3 +90,42 @@ input::placeholder,textarea::placeholder{color:#8a98a8}
 .wd-calendar--compact .wd-cal-day.selected .wd-cal-day-num-wrap{color:#fff!important}
 ::-webkit-scrollbar-thumb{background:#cbd5e1}
 ::selection{background:#dbeafe;color:#1e3a56}
+
+/* 2026-10-09: refined light workspace */
+html:root{--color-bg:#f3f6fa;--color-bg-deeper:#edf2f7;--color-surface:#fff;--color-border:#dce5ef;--color-primary:#244664}
+html,body,#root,.wd-app{background:#f3f6fa!important}
+.wd-header{background:rgba(255,255,255,.96)!important;border-bottom:1px solid #dbe4ef;box-shadow:0 4px 22px rgba(28,52,79,.055)}
+.wd-brand-title{color:#1e3a56!important;letter-spacing:-.5px}
+.wd-brand-sub{color:#74859a;font-size:12px;letter-spacing:.8px}
+.wd-brand-mark{background:linear-gradient(145deg,#244664,#365d7b)!important;color:#fff!important;border-color:#244664!important;box-shadow:0 0 0 4px #eaf0f6!important}
+.wd-brand-mark::after{color:#fff!important}
+.wd-searchbar{background:#f7f9fc;border-color:#dce5ef;border-radius:12px}
+.wd-searchbar:focus-within{background:#fff;box-shadow:0 0 0 3px rgba(36,70,100,.08)}
+.wd-panel{background:#fff;border-color:#dce5ef;border-radius:16px;box-shadow:0 6px 22px rgba(24,44,71,.045),0 1px 3px rgba(24,44,71,.025)}
+.wd-panel-header{background:linear-gradient(90deg,#f5f8fc,#fff);border-bottom-color:#e3eaf2}
+.wd-panel-title{color:#244664;letter-spacing:-.3px}
+.wd-date-card{position:relative;background:linear-gradient(150deg,#f0f5fa 0%,#fff 65%)!important;border-color:#cfdae7}
+.wd-date-card::before{content:"";position:absolute;left:22px;right:22px;top:0;height:4px;background:linear-gradient(90deg,#244664,#7b97b1);border-radius:0 0 5px 5px}
+.wd-date-weekday{color:#36546f}
+.wd-date-number{color:#244664!important;font-weight:300;letter-spacing:-.065em}
+.wd-date-stat{background:rgba(255,255,255,.8);border-color:#dce5ef}
+.wd-date-stat--contract{background:#faf7ed;border-color:#e9dcb6}
+.wd-date-stat--balance{background:#fff2f0;border-color:#f0d0cb}
+.wd-diary-header{background:linear-gradient(110deg,#edf3f9,#fafcfe 75%);border-bottom:1px solid #dce5ef}
+.wd-diary-date{color:#1e3a56;letter-spacing:-.6px}
+.wd-new-memo-btn{background:#244664!important;border-color:#244664!important;color:#fff!important;border-radius:10px;box-shadow:0 3px 8px rgba(36,70,100,.12)}
+.wd-new-memo-btn:hover{background:#345c7c!important}
+.wd-btn-workcenter,.diary-logout-btn{color:#36546f!important;background:#f1f5fa!important;border-color:#d3deeb!important;border-radius:10px}
+.wd-btn-workcenter:hover,.diary-logout-btn:hover{color:#244664!important;background:#e7eef6!important;border-color:#aebfd2!important}
+.wd-btn-google-calendar{color:#7b601f!important;background:#faf6e9!important;border-color:#e7d9ac!important}
+.wd-btn-google-calendar:hover{color:#654b13!important;background:#f5eedb!important}
+.wd-btn-private-notes{color:#5b4b79!important;background:#f6f3fa!important;border-color:#ded5eb!important;border-radius:10px}
+.segmented-control{background:#fff;border-color:#d3deeb;border-radius:11px;box-shadow:0 2px 6px rgba(24,44,71,.025)}
+.segmented-control .segment.is-active{background:#244664;color:#fff}
+.wd-cal-day:hover:not(.empty):not(.selected){background:#edf3f9}
+.wd-cal-day.selected{background:#244664!important;box-shadow:0 3px 8px rgba(36,70,100,.15)}
+.wd-empty{background:radial-gradient(ellipse at center,#f6f9fc,transparent 70%)}
+.wd-empty-icon{color:#859bb1;opacity:.8}
+.wd-empty-title{color:#526c86}
+.wd-empty-sub{color:#7b8da0}
+@media(prefers-reduced-motion:no-preference){.wd-new-memo-btn,.wd-btn-workcenter{transition:background .16s,border-color .16s,box-shadow .16s}}
