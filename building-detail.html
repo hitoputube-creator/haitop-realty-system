@@ -690,9 +690,9 @@
             <th>업종</th>
             <th>소유주</th>
             <th>연락처</th>
-            <th>매매가(만원)</th>
-            <th>보증금(만)</th>
-            <th>월차임(만)</th>
+            <th>매매가</th>
+            <th>보증금</th>
+            <th>월세</th>
             <th>상태</th>
             <th>매물</th>
           </tr>
@@ -1630,12 +1630,12 @@ async function deleteBFile(id) {
     const rows=units.filter((u,i)=>selectedUnitRows.has(i));
     if(!rows.length)return;
     const residential=residentialUnitMode();
-    const columns=residential?["동·호수","면적·타입","거래구분","매매가(만원)","보증금/월세(만원)","소유주","연락처","옵션"]:["호수","업종","소유주","연락처","보증금(만원)","월세(만원)","상태","옵션"];
+    const columns=residential?["동·호수","면적·타입","거래구분","매매가","보증금/월세","소유주","연락처","옵션"]:["호수","업종","소유주","연락처","매매가","보증금","월세","상태","옵션"];
     const displayOption=u=>String(u.옵션내역 || u.옵션 || "").trim() || "-";
-    const price=n=>n==null||n===""?"-":Number(n).toLocaleString("ko-KR");
+    const price=n=>toKorAmt(n) || "-";
     const cells=u=>residential
       ? [roomParts(u).dong+"동 "+roomParts(u).room+"호",residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||"-"),unitDeal(u)+(u.매매유형==="세안고매매" && String(unitDeal(u)).includes("매매") ? "\n세안고매매" : ""),price(u.현_매매가격),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임)+(u.매매유형==="세안고매매"&&u.승계보증금!=null?"\\n승계 "+price(u.승계보증금):""),u.소유주||"-",u.연락처||"-",displayOption(u)]
-      : [u.호수||"-",u.현업종||"-",u.소유주||"-",u.연락처||"-",currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
+      : [u.호수||"-",u.현업종||"-",u.소유주||"-",u.연락처||"-",currentRentPrice(u.현_매매가격,u.매매가격),currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
     const printable=document.createElement("div");
     printable.id="unitPrintSheet";
     printable.innerHTML='<div class="unit-print-header"><h2>'+esc(bName)+' · 선택 '+rows.length+'건</h2><span>출력일 '+new Date().toLocaleDateString("ko-KR")+'</span></div><table><thead><tr>'+columns.map(v=>"<th>"+esc(v)+"</th>").join("")+"</tr></thead><tbody>"+rows.map(u=>"<tr>"+cells(u).map(v=>"<td>"+esc(v??"")+"</td>").join("")+"</tr>").join("")+"</tbody></table>";
@@ -1859,7 +1859,7 @@ async function deleteBFile(id) {
     renderResidentialHeader();
     $('unitsTbody').innerHTML = filtered.map(u => {
       const ri = units.indexOf(u), parts=roomParts(u);
-      const sale = u.현_매매가격 == null ? '-' : Number(u.현_매매가격).toLocaleString('ko-KR');
+      const sale = currentRentPrice(u.현_매매가격, null);
       const tenant = u.세입자현황 || u.공실여부 || '미확인';
       const area=residentialUnitArea(u);
       return `<tr>${unitCheckbox(u)}<td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(area.size)}${area.supply ? '<br><small>'+area.supply.toLocaleString('ko-KR',{maximumFractionDigits:2})+'㎡</small>' : ''}<br>${esc(area.type)}</td><td>${esc(unitDeal(u) || '-')}${u.매매유형 === "세안고매매" && String(unitDeal(u)).includes("매매") ? '<span class="unit-sale-subtype">세안고매매</span>' : ""}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions">${residentialUnitActions(u,ri)}</td></tr>`;
@@ -1879,10 +1879,7 @@ async function deleteBFile(id) {
   function currentRentPrice(current, original) {
     const price = effectiveUnitPrice(current, original);
     if (price === null || price === undefined || price === "") return "-";
-    const amount = Number(price);
-    if (!Number.isFinite(amount)) return "-";
-    const text = amount.toLocaleString("ko-KR");
-    return text;
+    return toKorAmt(price) || '-';
   }
 
   // 호수 -> 층 번호 문자열: 101->1, 201->2, 1001->10, B101->B1
@@ -2261,7 +2258,7 @@ async function deleteBFile(id) {
       const sum = bundleRows.reduce((total,u)=>total+(Number(u[key]) || 0),0);
       $(id).value = sum > 0 ? sum.toFixed(2) : '';
     }
-    ['bundleSale','bundleDeposit','bundleRent','bundleMemo'].forEach(id=>$(id).value='');
+    ['bundleSale','bundleDeposit','bundleRent','bundleMemo'].forEach(id=>{ $(id).value=''; $(id).dispatchEvent(new Event('input')); });
     $('bundleMode').value='rooms'; $('bundleDeal').value='월세'; $('bundleTerms').selectedIndex=0;
     $('bundleRecommended').checked=false;
     $('bundleModal').classList.add('open');
@@ -2408,15 +2405,19 @@ async function deleteBFile(id) {
   // ── 한글 금액 변환 ──
   // 입력: 만원 단위 숫자, 출력: "X억 X,XXX만원" 또는 "X,XXX만원"
   function toKorAmt(val) {
-    const n = Number(val);
-    if (!n || !isFinite(n) || n <= 0) return "";
-    const eok  = Math.floor(n / 10000);
-    const man  = n % 10000;
-    if (eok > 0 && man > 0)
-      return eok.toLocaleString("ko-KR") + "억 " + man.toLocaleString("ko-KR") + "만원";
-    if (eok > 0)
-      return eok.toLocaleString("ko-KR") + "억원";
-    return n.toLocaleString("ko-KR") + "만원";
+    if (val === null || val === undefined || String(val).trim() === '') return '';
+    const n = Number(String(val).replace(/,/g, ''));
+    const won = Math.round(n * 10000);
+    if (!Number.isSafeInteger(won) || won < 0) return '';
+    if (won === 0) return '0원';
+    const eok = Math.floor(won / 100000000);
+    const man = Math.floor((won % 100000000) / 10000);
+    const remainder = won % 10000;
+    const parts = [];
+    if (eok) parts.push(eok.toLocaleString('ko-KR') + (man || remainder ? '억' : '억원'));
+    if (man) parts.push(man.toLocaleString('ko-KR') + (remainder ? '만' : '만원'));
+    if (remainder) parts.push(remainder.toLocaleString('ko-KR') + '원');
+    return parts.join(' ');
   }
 
   // 한글 금액 힌트를 실시간으로 갱신하는 필드 목록
@@ -2433,6 +2434,17 @@ async function deleteBFile(id) {
     });
   }
   bindAmtHints();
+  ['u_분양금액','u_보증금','u_월차임','u_현매매가격','u_현보증금','u_현월세','u_평당가','ru_매매가','ru_보증금','ru_월세','ru_승계보증금','bundleSale','bundleDeposit','bundleRent'].forEach(id => {
+    const input = $(id);
+    if (!input) return;
+    input.step = 'any';
+    if (id.startsWith('bundle')) {
+      const hint = document.createElement('span');
+      hint.className = 'amt-hint';
+      input.insertAdjacentElement('afterend', hint);
+      input.addEventListener('input', () => { hint.textContent = toKorAmt(input.value); });
+    }
+  });
 
   // ── 평 ↔ m² 양방향 변환 바인딩 ──
   const PY_TO_M2 = 3.30579;
