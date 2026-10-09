@@ -1546,6 +1546,7 @@ async function deleteBFile(id) {
   let listingLookupLoaded = false;
   let pendingRegistryInfo = null;
   let unitModalVersion = 0;
+  let unitModalDirty = false, unitMouseDownOnOverlay = false;
   function linkedUnitListings(unit) { return apartmentUnitLinkedListings(unit, apartmentListings, buildingId, bName); }
   function unitDeal(unit) { return apartmentUnitDeal(unit, linkedUnitListings(unit)); }
 
@@ -2078,12 +2079,14 @@ async function deleteBFile(id) {
     $("u_비고").value       = u.비고        || "";
 
     refreshHints(u);
+    unitModalDirty = false;
     $("unitModal").classList.add("open");
     $(residentialUnitMode() ? "ru_동" : "u_호수").focus();
   }
 
   function closeModal() {
     unitModalVersion++;
+    unitModalDirty = false;
     $("unitModal").classList.remove("open");
     editIdx = -1;
   }
@@ -2303,7 +2306,16 @@ async function deleteBFile(id) {
   });
   $("umCancel").addEventListener("click", closeModal);
   $("umClose").addEventListener("click", closeModal);
-  $("unitModal").addEventListener("click", e => { if (e.target === $("unitModal")) closeModal(); });
+  // 입력 중 실수로 창이 닫히지 않도록: 글자를 드래그하다 창 밖에서 마우스를 놓아도 닫히지 않고,
+  // 입력한 내용이 있으면 확인을 거친 뒤에만 바깥 클릭으로 닫힌다.
+  $("unitModal").addEventListener("mousedown", e => { unitMouseDownOnOverlay = e.target === $("unitModal"); });
+  $("unitModal").addEventListener("input", () => { unitModalDirty = true; });
+  $("unitModal").addEventListener("change", () => { unitModalDirty = true; });
+  $("unitModal").addEventListener("click", e => {
+    if (e.target !== $("unitModal") || !unitMouseDownOnOverlay) return;
+    if (unitModalDirty && !confirm("입력 중인 내용이 있습니다. 저장하지 않고 닫을까요?")) return;
+    closeModal();
+  });
 
   // fallback: init() 2초 후에도 미로드 시 재시도
   setTimeout(() => {
