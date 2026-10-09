@@ -240,10 +240,11 @@ function formatSelectedPrintAddress(item) {
     const name = String(u.아파트명 || item.complexName || item.buildingName || "").trim();
     if (dong && ho && name) address = `${name} ${dong}동 ${ho}호`;
   }
-  // Separate apartment building/unit only at print time; other property addresses stay unchanged.
-  const match = address.match(/^(.*?)(\s+)(\d{1,5}\s*동\s*\d{1,5}\s*호)\s*$/);
+  // 단지·아파트명은 윗줄, 동·호수는 아랫줄로 나눈다(미리보기·인쇄 공통). 동·호수가 없는 주소는 그대로 둔다.
+  // 단지명 바로 뒤에 동이 붙은 "…(리베르니아)1101동 1401호" 형태도 나눌 수 있도록 공백은 있어도 없어도 된다.
+  const match = address.match(/^(.*?)\s*(\d{1,5}\s*동\s*\d{1,5}\s*호)\s*$/);
   if (!match || !match[1].trim()) return escapeHtml(address);
-  return `<span>${escapeHtml(match[1].trim())}</span><span class="selected-print-unit">${escapeHtml(match[3].replace(/\s+/g, " ").trim())}</span>`;
+  return `<span>${escapeHtml(match[1].trim())}</span><span class="selected-print-unit">${escapeHtml(match[2].replace(/\s+/g, " ").trim())}</span>`;
 }
 
 function renderPreview() {
