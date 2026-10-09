@@ -223,6 +223,11 @@
     .lb-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.15); margin: 0 2px; }
     .lb-btn.lb-close-btn { color: rgba(255,140,140,0.9); }
     .lb-btn.lb-close-btn:hover { background: rgba(255,79,106,0.18); color: var(--danger); }
+    .lb-btn:disabled { opacity:.45; cursor:wait; }
+    @media (max-width:600px) {
+      #lightbox-toolbar { max-width:calc(100vw - 24px); width:max-content; flex-wrap:wrap; justify-content:center; border-radius:16px; }
+      #lightbox-toolbar .lb-btn { padding:7px 9px; }
+    }
 
     /* ══════════════════════════════════
        호실 현황 섹션
@@ -824,6 +829,7 @@
     <button type="button" class="lb-btn" title="왼쪽 90° 회전" aria-label="왼쪽 90도 회전" onclick="lbRotate(-90)">↶</button>
     <button type="button" class="lb-btn" title="오른쪽 90° 회전" aria-label="오른쪽 90도 회전" onclick="lbRotate(90)">↷</button>
     <button type="button" class="lb-btn" title="회전 초기화" onclick="lbRotateReset()">원방향</button>
+    <button type="button" class="lb-btn" id="lb-save-rotation" onclick="lbSaveRotation()">회전 저장</button>
     <span class="lb-divider"></span>
     <button type="button" class="lb-btn lb-close-btn" title="닫기" onclick="closeLightbox()">✕ 닫기</button>
   </div>
@@ -962,6 +968,7 @@ function goOverview(){ window.location.href = HitopResourceRooms.detailUrl('buil
 const LB_MIN_SCALE = 1, LB_MAX_SCALE = 5, LB_STEP = 0.5;
 let lbScale = 1, lbX = 0, lbY = 0;
 let lbRotation = 0;
+let lbMaterial = null, lbSaving = false;
 let lbDragging = false, lbLastX = 0, lbLastY = 0;
 let lbPinchStartDist = 0, lbPinchStartScale = 1;
 
@@ -989,16 +996,20 @@ function lbZoomIn()    { lbSetScale(lbScale + LB_STEP); }
 function lbZoomOut()   { lbSetScale(lbScale - LB_STEP); }
 function lbZoomReset() { lbX = 0; lbY = 0; lbSetScale(1); }
 function lbRotate(degrees) {
+  if (lbSaving) return;
   lbRotation = ((lbRotation + degrees) % 360 + 360) % 360;
   lbX = 0; lbY = 0; lbDragging = false;
   lbApplyTransform();
 }
-function lbRotateReset() { lbRotation = 0; lbX = 0; lbY = 0; lbApplyTransform(); }
+function lbRotateReset() { if (lbSaving) return; lbRotation = 0; lbX = 0; lbY = 0; lbApplyTransform(); }
 window.addEventListener('resize', () => {
   if (document.getElementById('lightbox').classList.contains('open')) lbApplyTransform();
 });
 
-function openLightbox(url, caption) {
+function openLightbox(url, caption, material = null) {
+  if (lbSaving) return;
+  lbMaterial = material;
+  document.getElementById('lb-save-rotation').hidden = !material;
   const img = lbImg();
   img.src = url;
   document.getElementById('lightbox-caption').textContent = caption || '';
@@ -1007,16 +1018,74 @@ function openLightbox(url, caption) {
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function openPlanPreview(url, caption) {
-  openLightbox(url, caption);
+function openPlanPreview(url, caption, kind, id) {
+  openLightbox(url, caption, kind && id ? {kind, id, url} : null);
 }
 function closeLightbox() {
+  if (lbSaving) return;
+  lbMaterial = null;
   document.getElementById('lightbox').classList.remove('open');
   lbImg().src = '';
   lbX = 0; lbY = 0; lbScale = 1; lbRotation = 0; lbDragging = false;
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+async function lbSaveRotation() {
+  if (lbSaving || !lbMaterial) return;
+  if (!lbRotation) { showToast('방향을 회전한 뒤 저장하세요.'); return; }
+  const material = {...lbMaterial}, angle = lbRotation;
+  const button = document.getElementById('lb-save-rotation');
+  lbSaving = true;
+  button.textContent = '저장 중…';
+  document.querySelectorAll('#lightbox-toolbar button').forEach(b => { b.disabled = true; });
+  try {
+    const source = new Image();
+    source.crossOrigin = 'anonymous';
+    await new Promise((resolve, reject) => {
+      source.onload = resolve;
+      source.onerror = () => reject(new Error('이미지를 불러올 수 없습니다. 다시 열어주세요.'));
+      source.src = material.url;
+    });
+    const canvas = document.createElement('canvas');
+    const sideways = angle % 180 !== 0;
+    canvas.width = sideways ? source.naturalHeight : source.naturalWidth;
+    canvas.height = sideways ? source.naturalWidth : source.naturalHeight;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('이미지 저장을 지원하지 않는 브라우저입니다.');
+    context.translate(canvas.width / 2, canvas.height / 2);
+    context.rotate(angle * Math.PI / 180);
+    context.drawImage(source, -source.naturalWidth / 2, -source.naturalHeight / 2);
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(value => value ? resolve(value) : reject(new Error('회전 이미지 생성에 실패했습니다.')), 'image/png');
+    });
+    const file = new File([blob], `plan-${material.id}-rotated.png`, {type:'image/png'});
+    const url = await cloudinaryUpload(file, material.kind === 'floor' ? 'haitop/floors' : 'haitop/files');
+    if (material.kind === 'floor') {
+      await updateBuildingFloor(material.id, {cloudinary_url:url});
+    } else {
+      const response = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/building_files?id=eq.' + encodeURIComponent(material.id), {
+        method:'PATCH', headers:Object.assign({}, headers, {'Prefer':'return=representation'}),
+        body:JSON.stringify({cloudinary_url:url})
+      });
+      if (!response.ok) throw new Error('자료 저장 실패: ' + await response.text());
+      const rows = await response.json();
+      if (rows.length !== 1) throw new Error('저장할 자료를 찾지 못했습니다.');
+    }
+    lbMaterial = {...material, url};
+    lbImg().src = url;
+    lbRotation = 0; lbX = 0; lbY = 0; lbScale = 1;
+    lbApplyTransform();
+    if (material.kind === 'floor') await loadFloors(); else await loadFiles();
+    showToast('✅ 회전 방향이 저장되었습니다.');
+  } catch (error) {
+    showToast('❌ 회전 저장 실패: ' + error.message);
+  } finally {
+    lbSaving = false;
+    button.textContent = '회전 저장';
+    document.querySelectorAll('#lightbox-toolbar button').forEach(b => { b.disabled = false; });
+  }
+}
 
 /* 마우스 휠 / 트랙패드로 확대·축소 */
 lbImg().addEventListener('wheel', (e) => {
@@ -1237,7 +1306,7 @@ function renderFloors(floors) {
     const previewHtml = image
       ? `<img class="floor-thumb" src="${esc(url)}" alt="${badge}"
            loading="lazy" draggable="false"
-           onclick="openPlanPreview('${esc(url)}','${badge} — ${name}')">`
+           onclick="openPlanPreview('${esc(url)}','${badge} — ${name}','floor','${esc(f.id)}')">`
       : `<div class="floor-pdf" onclick="window.open('${esc(url)}','_blank')">
            <div class="floor-pdf-icon">📄</div>
            <div class="floor-pdf-label">${name}</div>
@@ -1439,7 +1508,7 @@ function renderFiles(files) {
     const previewHtml = isImage(url, f.file_name)
       ? `<img class="floor-thumb" src="${safe}" alt="${name}"
            loading="lazy"
-           onclick="openPlanPreview('${safe}','${name}')">`
+           onclick="openPlanPreview('${safe}','${name}','file','${esc(f.id)}')">`
       : `<div class="floor-pdf" onclick="window.open('${safe}','_blank')">
            <div class="floor-pdf-icon">📄</div>
            <div class="floor-pdf-label">${name}</div>
