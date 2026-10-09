@@ -795,7 +795,9 @@
           <div class="umfield"><label>소유주</label><input id="u_소유주" placeholder="소유주 성명" /></div>
           <div class="umfield"><label>연락처</label><input id="u_연락처" placeholder="010-0000-0000" /></div>
           <div class="umfield"><label>수익률 (%)</label><input id="u_수익률" placeholder="예: 5.2" /></div>
+          <div class="umfield umcheck"><label for="u_매물등록"><input id="u_매물등록" type="checkbox" /> 매물 등록</label></div>
           <div class="umfield umcheck"><label for="u_추천매물"><input id="u_추천매물" type="checkbox" /> ⭐ 추천매물</label></div>
+          <div class="umfield full" style="font-size:.76rem;color:var(--muted)">매물 등록을 선택하면 저장 후 매물등록 화면에서 내용을 확인할 수 있습니다.</div>
           <div class="umfield umcheck"><label for="u_수익성매물"><input id="u_수익성매물" type="checkbox" /> 💰 수익성매물</label></div>
           <div class="umfield full"><label>비고</label><textarea id="u_비고" placeholder="특이사항 등 자유 입력"></textarea></div>
         </div>
@@ -1896,6 +1898,7 @@ async function deleteBFile(id) {
     const p = new URLSearchParams();
     if (typeof buildingId !== "undefined" && buildingId) p.set("buildingId", buildingId);
     if (u.호수) p.set("roomNo", u.호수);
+    if (isFlagOn(u.추천매물)) p.set('recommended', '1');
     if (residentialUnitMode()) p.set("resourceScope", "residential");
     return "register.html?" + p.toString();
   }
@@ -2161,6 +2164,8 @@ async function deleteBFile(id) {
     $("u_연락처").value     = u.연락처      || "";
     $("u_수익률").value     = u.수익률      || "";
     $("u_추천매물").checked   = isFlagOn(u.추천매물);
+    $('u_매물등록').checked = !!u.listing_id || isFlagOn(u.매물등록요청) || isFlagOn(u.추천매물);
+    $('u_매물등록').disabled = !!u.listing_id;
     $("u_수익성매물").checked = isFlagOn(u.수익성매물);
     $("u_비고").value       = u.비고        || "";
 
@@ -2200,6 +2205,7 @@ async function deleteBFile(id) {
       현_월세:     Number($("u_현월세").value)     || null,
       수익률:      $("u_수익률").value.trim()    || null,
       추천매물:    $("u_추천매물").checked   ? true : null,
+      매물등록요청: $('u_매물등록').checked ? true : null,
       수익성매물:  $("u_수익성매물").checked ? true : null,
       비고:        $("u_비고").value.trim()      || null,
       updated_at:  new Date().toISOString()
@@ -2234,6 +2240,9 @@ async function deleteBFile(id) {
       if (options.keepOpen) { openModal(savedIndex); $('u_추가메모').focus(); }
       else closeModal();
       if (typeof showToast === "function") showToast(newMemo ? '추가메모가 저장되었습니다.' : wasNew ? '자료가 추가되었습니다.' : '수정 완료되었습니다.');
+      if (!options.keepOpen && !residentialUnitMode() && unit.매물등록요청) {
+        location.href = unit.listing_id ? 'detail.html?id=' + encodeURIComponent(unit.listing_id) : buildRegisterUrl(unit);
+      }
     } catch(e) {
       if (typeof showToast === "function") showToast("저장 실패: " + e.message);
       console.error("[호실현황] 저장 실패:", e);
@@ -2363,6 +2372,12 @@ async function deleteBFile(id) {
     saveUnit({keepOpen:true});
   });
   $("btnAddUnit").addEventListener("click", () => openModal(-1));
+  $('u_추천매물').addEventListener('change', () => {
+    if ($('u_추천매물').checked) $('u_매물등록').checked = true;
+  });
+  $('u_매물등록').addEventListener('change', () => {
+    if (!$('u_매물등록').checked) $('u_추천매물').checked = false;
+  });
   $("umSave").addEventListener("click", saveUnit);
   $("umDelete").addEventListener("click", deleteUnit);
   $("umRegistry").addEventListener("click", () => {
