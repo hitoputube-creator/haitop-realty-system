@@ -39,6 +39,7 @@
     if (base <= 0) return null;
     return { v: m * 12 / base * 100, calc: true };
   }
+  const isGroundFloor = room => /^1\d{2}호?$/.test(String(room || '').trim());   // 101~199호 = 1층
   function roomSortKey(room) {
     const s = String(room || ''), b = s.match(/^[Bb](\d+)/);
     const n = parseInt((s.match(/\d+/) || ['0'])[0], 10);
@@ -165,8 +166,9 @@
     const onlyProfit = $('onlyProfit').checked;
     const out = [];
     buildings.forEach(b => {
-      if (mode === 'cand' && !b.commercial) return;
       b.units.forEach(item => {
+        // 후보 보기: 상가 건물은 전체, 오피스텔 등 주거 건물은 1층(상가) 호실만
+        if (mode === 'cand' && !b.commercial && !isGroundFloor(item.room)) return;
         const u = item.u;
         const rec = isFlagOn(u.추천매물), profit = isFlagOn(u.수익성매물);
         if (mode === 'rec' && !rec) return;
@@ -260,7 +262,7 @@
 
     if (mode === 'cand') {
       const shown = entries.slice(0, CAND_LIMIT);
-      $('summary').textContent = `수익률 ${CAND_MIN}~${CAND_MAX}% 후보 ${entries.length}개 중 상위 ${shown.length}개 · 마음에 드는 호실은 ⭐ 추천을 눌러 추천매물로 옮기세요 (월세·가격이 입력된 호실 기준, 수익률 계산은 월세×12 ÷ (가격−보증금))`;
+      $('summary').textContent = `수익률 ${CAND_MIN}~${CAND_MAX}% 후보 ${entries.length}개 중 상위 ${shown.length}개 · 마음에 드는 호실은 ⭐ 추천을 눌러 추천매물로 옮기세요 (월세·가격이 입력된 호실 기준 · 오피스텔 건물은 1층 호실만 · 수익률 계산은 월세×12 ÷ (가격−보증금))`;
       if (!shown.length) { list.append(emptyBox('조건에 맞는 후보가 없습니다.')); return; }
       const card = el('section', 'bcard');
       const head = el('div', 'bhead'); head.append(el('h2', '', '수익률 높은 후보'), el('span', '', shown.length + '개'));
