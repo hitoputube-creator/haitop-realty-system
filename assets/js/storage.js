@@ -276,6 +276,42 @@ function apartmentSource(item = {}) {
   };
 }
 
+// ── 단지별 동·호수 → 타입·면적 자료 (data/apartment-units.json) ──
+// 단지를 추가하려면 그 파일에 단지 자료만 더하면 된다. 자료가 없는 단지는 기존 방식(단지 자료·건축물대장)으로 처리한다.
+const APARTMENT_UNIT_TABLE_URL = typeof document !== "undefined" && document.currentScript && document.currentScript.src
+  ? new URL("../../data/apartment-units.json", document.currentScript.src).href
+  : "data/apartment-units.json";
+let APARTMENT_UNIT_TABLE = null, apartmentUnitTablePromise = null;
+function ensureApartmentUnitTable() {
+  if (!apartmentUnitTablePromise) {
+    apartmentUnitTablePromise = fetch(APARTMENT_UNIT_TABLE_URL)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { APARTMENT_UNIT_TABLE = data && Array.isArray(data.complexes) ? data : null; return APARTMENT_UNIT_TABLE; })
+      .catch(() => null);
+  }
+  return apartmentUnitTablePromise;
+}
+// key는 단지 id 또는 이름. found=false면 자료에 없는 단지, type=null이면 자료에 있지만 없는 동·호수.
+function apartmentStaticUnit(key, dong, ho) {
+  const none = { found: false, type: null, supply: null, exclusive: null };
+  if (!APARTMENT_UNIT_TABLE) return none;
+  const norm = v => String(v || "").replace(/\s+/g, "");
+  const complex = APARTMENT_UNIT_TABLE.complexes.find(c => (c.id && c.id === key) || norm(c.name) === norm(key));
+  if (!complex) return none;
+  const miss = { found: true, type: null, supply: null, exclusive: null };
+  const rule = complex.dongs && complex.dongs[normalizeApartmentUnit(dong, "동")];
+  const number = Number(normalizeApartmentUnit(ho, "호"));
+  if (!rule || !Number.isInteger(number)) return miss;
+  const floor = Math.floor(number / 100), line = number % 100;
+  if (floor < 1 || floor > rule.maxFloor || (rule.exclude || []).includes(number)) return miss;
+  if (rule.lineMaxFloor && rule.lineMaxFloor[line] && floor > rule.lineMaxFloor[line]) return miss;
+  const type = rule.lines && rule.lines[String(line)];
+  if (!type) return miss;
+  const info = (complex.types && complex.types[type]) || {};
+  const positive = v => v != null && Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null;
+  return { found: true, type, supply: positive(info.supply_m2), exclusive: positive(info.exclusive_m2) };
+}
+
 const CHORONG11_RESOURCE_ID = "5d1bbb0d-627f-5634-98c9-38c019e5771b";
 // 사용자 등록 2021.06 LH 팜플렛의 1101~1111동 층·호수 배치표.
 function chorong11UnitType(dong, ho) {
@@ -321,18 +357,20 @@ function apartmentUnitReference(resource, plans, record, dong, ho) {
       normalizeApartmentUnit(u.호 || (combined && combined[2]),"호")===normalizeApartmentUnit(ho,"호");
   });
   const unit=matches.length===1 ? matches[0] : {};
-  const type=known ? chorong11UnitType(dong,ho) : unit.타입;
+  const staticUnit=apartmentStaticUnit(resource.id || resource.name,dong,ho);
+  const type=staticUnit.found ? staticUnit.type : (known ? chorong11UnitType(dong,ho) : unit.타입);
   if (!type) return {...apartmentResourceAddresses(resource),resource_id:resource.id,matched:false};
   const matchingPlans=plans.filter(plan=>normalizeType(plan.floor_number).split("/").includes(normalizeType(type)));
   const plan=matchingPlans.length===1 ? matchingPlans[0] : {};
   const positive=value=>value!=="" && value!=null && Number.isFinite(Number(value)) && Number(value)>0 ? Number(value) : null;
-  const supply=positive(plan.supply_area_m2) ?? positive(unit.분양_m2) ?? (positive(unit.분양_평) ? Number(unit.분양_평)*(400/121) : null);
-  const exclusive=positive(plan.exclusive_area_m2) ?? positive(unit.전용_m2) ?? (positive(unit.전용_평) ? Number(unit.전용_평)*(400/121) : null);
+  const supply=positive(plan.supply_area_m2) ?? staticUnit.supply ?? positive(unit.분양_m2) ?? (positive(unit.분양_평) ? Number(unit.분양_평)*(400/121) : null);
+  const exclusive=positive(plan.exclusive_area_m2) ?? staticUnit.exclusive ?? positive(unit.전용_m2) ?? (positive(unit.전용_평) ? Number(unit.전용_평)*(400/121) : null);
   return {...apartmentResourceAddresses(resource),resource_id:resource.id,matched:true,type,
     size:supply ? (supply/(400/121)).toFixed(2)+"평" : unit.평형 || "",
     supply,exclusive};
 }
 async function lookupApartmentUnitReference(item) {
+  await ensureApartmentUnitTable();
   const resource=apartmentReferenceResource(item,await getDriveResources());
   if(!resource)throw new Error("연결된 단지 자료를 찾지 못했습니다. 아파트명이나 자료 연결을 확인해주세요.");
   const [plans,record]=await Promise.all([getBuildingFloors(resource.id),getBuildingRecord(resource.name)]);

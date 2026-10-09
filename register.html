@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261008-sale-type"></script>
+  <script src="assets/js/storage.js?v=20261009-unit-table"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -28,6 +28,15 @@
 .apartment-listing-form .area-row input{flex:1;width:0}
 .apartment-listing-form .owner-phone-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:6px}
 .apartment-listing-form .amt-hint{font-size:.72rem;color:var(--gold);display:block}
+.apartment-listing-form .apt-picker-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:8px}
+.apartment-listing-form .apt-picker-row [hidden]{display:none!important}
+.apartment-listing-form .apt-auto-note{font-weight:400;font-size:.72rem;color:var(--gold);margin-left:4px}
+.apartment-listing-form .apt-more{padding:10px 14px}
+.apartment-listing-form .apt-more>summary{cursor:pointer;color:#d4af37;font-size:.85rem}
+.apartment-listing-form .apt-more>.um-section{margin:10px -14px 0}
+.homepage-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:transparent;border:1px dashed rgba(212,175,55,.45);border-radius:10px;padding:12px 14px;color:var(--text-main,inherit);font-size:.92rem;font-weight:700;cursor:pointer}
+.homepage-toggle-hint{font-size:.78rem;font-weight:400;color:var(--text-muted)}
+@media(max-width:650px){.apartment-listing-form .apt-picker-row{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}}
 @media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}}
 </style>
@@ -60,10 +69,10 @@
 
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
     <a class="btn btn-ghost back-to-properties" href="properties.html">← 매물관리로 돌아가기</a>
-    <h1 id="registerPageTitle" class="page-title" style="margin:0;">📝 상세저장 — 홈페이지 공개용 매물 등록</h1>
+    <h1 id="registerPageTitle" class="page-title" style="margin:0;">📝 상세저장 — 매물 등록</h1>
   </div>
   <div id="registerPageIntro" style="font-size:0.82rem;color:rgba(212,175,55,0.6);margin-bottom:16px;padding:10px 14px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:10px;">
-    홈페이지 공개와 매물보내기를 위한 정식 등록입니다. 공개주소·지도검색주소·비공개 상세주소를 입력해주세요.
+    매물 정보를 등록해주세요. 홈페이지에 올릴 매물은 맨 아래 「홈페이지용 상세 입력」을 눌러 입력하세요.
   </div>
   <!-- 빠른저장 전환 참고 정보 (sessionStorage 데이터가 있을 때만 표시) -->
   <div id="prefillRefBox" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;padding:10px 14px;background:rgba(80,180,100,0.07);border:1px solid rgba(80,180,100,0.2);border-radius:10px;">
@@ -284,47 +293,6 @@
     </div>
   </section>
 
-  <!-- ⑤ 홍보스티커 -->
-  <section class="card">
-    <div class="card-title"><span>🏷️ 홍보스티커</span></div>
-    <div class="sticker-grid">
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="추천매물" /> 추천매물</label>
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="급매물" /> 급매물</label>
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="수익형" /> 수익형</label>
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="역세권" /> 역세권</label>
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="즉시입주" /> 즉시입주</label>
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="단독공장" /> 단독공장</label>
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="민원적음" /> 민원적음</label>
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="추천업종" /> 추천업종</label>
-      <label class="sticker-chip"><input type="checkbox" name="stickers" value="권리금없음" /> 권리금없음</label>
-    </div>
-  </section>
-
-  <!-- ⑥ 매물설명 -->
-  <section class="card">
-    <div class="card-title"><span>📝 매물설명</span></div>
-    <div class="field" style="margin-bottom:10px;">
-      <label>공개 매물설명 <span style="color:var(--text-muted);font-size:0.75rem;">(상세보기 표시)</span></label>
-      <div class="emoji-toolbar" data-emoji-target="detailDescription" aria-label="매물설명 이모지">
-        <button type="button" class="emoji-btn" data-emoji="✅" title="체크">✅</button>
-        <button type="button" class="emoji-btn" data-emoji="📍" title="위치">📍</button>
-        <button type="button" class="emoji-btn" data-emoji="🚗" title="주차">🚗</button>
-        <button type="button" class="emoji-btn" data-emoji="🏭" title="공장">🏭</button>
-        <button type="button" class="emoji-btn" data-emoji="🏢" title="건물">🏢</button>
-        <button type="button" class="emoji-btn" data-emoji="🌿" title="환경">🌿</button>
-        <button type="button" class="emoji-btn" data-emoji="👍" title="추천">👍</button>
-        <button type="button" class="emoji-btn" data-emoji="⭐" title="강조">⭐</button>
-        <button type="button" class="emoji-btn" data-emoji="💰" title="가격">💰</button>
-        <button type="button" class="emoji-btn" data-emoji="🔹" title="항목">🔹</button>
-      </div>
-      <textarea id="detailDescription" rows="4" placeholder="입지, 도로접근성, 추천업종, 임대조건, 특이사항 등"></textarea>
-    </div>
-    <div class="field">
-      <label>내부 메모 <span style="color:var(--text-muted);font-size:0.75rem;">(비공개)</span></label>
-      <textarea id="description" rows="3" placeholder="관리용 메모 / 특이사항"></textarea>
-    </div>
-  </section>
-
   <!-- ⑦ 내부전용 -->
   <section class="card">
     <div class="card-title"><span>🔒 내부전용</span></div>
@@ -349,6 +317,10 @@
         <label>소유주 메모 / 특이사항</label>
         <textarea id="owner_memo" rows="2" placeholder="예) 통화 가능 시간, 특이사항 등"></textarea>
       </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <label>내부 메모 <span style="color:var(--text-muted);font-size:0.75rem;">(비공개)</span></label>
+        <textarea id="description" rows="3" placeholder="관리용 메모 / 특이사항"></textarea>
+      </div>
     </div>
   </section>
 
@@ -369,13 +341,53 @@
     </div>
   </section>
 
-  <!-- ⑨ 공개 + 저장 -->
-  <section class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <label data-homepage-only style="display:flex;align-items:center;gap:10px;font-size:0.9rem;color:var(--text-main);cursor:pointer;">
+  <!-- ⑨ 홈페이지용 상세 입력 (기본 접힘, 모든 매물 유형 공통) -->
+  <section class="card" id="homepageCard">
+    <button type="button" id="homepageToggleBtn" class="homepage-toggle" aria-expanded="false" aria-controls="homepagePanel">
+      <span>🌐 홈페이지용 상세 입력</span>
+      <span id="homepageToggleHint" class="homepage-toggle-hint">홈페이지에 올릴 때만 · 펼치기 ▾</span>
+    </button>
+    <div id="homepagePanel" hidden>
+      <div class="field" style="margin-top:14px;">
+        <label>🏷️ 홍보스티커</label>
+        <div class="sticker-grid">
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="추천매물" /> 추천매물</label>
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="급매물" /> 급매물</label>
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="수익형" /> 수익형</label>
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="역세권" /> 역세권</label>
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="즉시입주" /> 즉시입주</label>
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="단독공장" /> 단독공장</label>
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="민원적음" /> 민원적음</label>
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="추천업종" /> 추천업종</label>
+          <label class="sticker-chip"><input type="checkbox" name="stickers" value="권리금없음" /> 권리금없음</label>
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label>📝 공개 매물설명 <span style="color:var(--text-muted);font-size:0.75rem;">(홈페이지 상세보기에 표시)</span></label>
+        <div class="emoji-toolbar" data-emoji-target="detailDescription" aria-label="매물설명 이모지">
+          <button type="button" class="emoji-btn" data-emoji="✅" title="체크">✅</button>
+          <button type="button" class="emoji-btn" data-emoji="📍" title="위치">📍</button>
+          <button type="button" class="emoji-btn" data-emoji="🚗" title="주차">🚗</button>
+          <button type="button" class="emoji-btn" data-emoji="🏭" title="공장">🏭</button>
+          <button type="button" class="emoji-btn" data-emoji="🏢" title="건물">🏢</button>
+          <button type="button" class="emoji-btn" data-emoji="🌿" title="환경">🌿</button>
+          <button type="button" class="emoji-btn" data-emoji="👍" title="추천">👍</button>
+          <button type="button" class="emoji-btn" data-emoji="⭐" title="강조">⭐</button>
+          <button type="button" class="emoji-btn" data-emoji="💰" title="가격">💰</button>
+          <button type="button" class="emoji-btn" data-emoji="🔹" title="항목">🔹</button>
+        </div>
+        <textarea id="detailDescription" rows="4" placeholder="입지, 도로접근성, 추천업종, 임대조건, 특이사항 등"></textarea>
+      </div>
+      <label data-homepage-only style="display:flex;align-items:center;gap:10px;font-size:0.9rem;color:var(--text-main);cursor:pointer;margin-top:14px;">
         <input id="is_public" type="checkbox" style="width:auto;accent-color:var(--gold);" />
         홈페이지 공개
       </label>
+    </div>
+  </section>
+
+  <!-- ⑩ 저장 -->
+  <section class="card">
+    <div style="display:flex;justify-content:flex-end;">
       <button class="btn btn-primary" id="saveBtn">저장하기</button>
     </div>
   </section>
@@ -383,11 +395,8 @@
 </div>
 <div id="toast"></div>
 
+<script src="assets/js/register-picker.js?v=20261009-picker"></script>
 <script>
-  if (OfficeConfig.id === "ktop") {
-    document.getElementById("registerPageTitle").textContent = "📝 상세저장 — 매물 등록";
-    document.getElementById("registerPageIntro").textContent = "매물 정보를 등록해주세요. 새주소·구주소·상세주소를 입력할 수 있습니다.";
-  }
   // ── 카테고리 ──────────────────────────────────────
   const AREA_MAP = {
     '공장창고':    'building',
@@ -405,6 +414,7 @@
   const syncApartmentFields = setupApartmentUnitFields("", "category2Select");
   const syncQuickBuildingFields = setupQuickBuildingSelect('quickBuildingSelect', 'publicAddress', 'mapAddress', 'complexName', 'category1Select', 'category2Select');
   const syncApartmentListingForm = setupApartmentListingForm("", "category2Select");
+  RegisterUi.init();
   setupListingDescriptionEmojiToolbar('detailDescription');
 
   function renderCat2() {
@@ -433,6 +443,7 @@
     document.querySelector('.commercial-section').style.display =
       COMMERCIAL_CATS.includes(storageCat1) ? '' : 'none';
     syncApartmentListingForm();
+    if (window.RegisterUi) RegisterUi.sync();
   }
 
   cat1El.addEventListener('change', renderCat2);
@@ -1182,9 +1193,11 @@
       if (approvalDate)document.getElementById("approvalDate").value  = approvalDate;
       if (zoning)      document.getElementById("zoning").value        = zoning;
       if (descParts.length) document.getElementById("detailDescription").value = descParts.join("\n");
+      if (window.refreshHomepagePanel) refreshHomepagePanel();
       if (isResidentialUnit) {
         fillApartmentListingForm("", { complexName:bldgName, import_unit_snapshot:unit || {} }, true);
         syncApartmentListingForm();
+        if (window.RegisterUi) RegisterUi.sync();
       }
 
       // 자동입력 안내 배너
@@ -1304,6 +1317,7 @@
       if (cat2El.value === "아파트") {
         fillApartmentListingForm("", {complexName:document.getElementById("complexName").value, owner_name:document.getElementById("owner_name").value, owner_phone1:document.getElementById("owner_phone1").value, description:document.getElementById("description").value}, true);
         syncApartmentListingForm();
+        if (window.RegisterUi) RegisterUi.sync();
       }
       // 공개주소/지도주소는 직접 입력 — 빠른저장 위치는 참고용으로만 표시
       const refBox = document.getElementById("prefillRefBox");
@@ -1335,6 +1349,7 @@
       apartmentUnitData:{아파트명:name,권리구분:params.get('presale')==='1' || /예정/.test(name) ? '분양권' : '일반 아파트',입주예정월:params.get('moveInMonth') || (name.match(/(20\d{2})년\s*(\d{1,2})월/) || []).slice(1).map((x,i)=>i ? x.padStart(2,'0') : x).join('-') || ''}
     }, true);
     syncApartmentListingForm();
+    if (window.RegisterUi) RegisterUi.sync();
     document.getElementById("prefillRefText").textContent = (name ? name + " · 지도에서 선택한 아파트입니다. 동·호수와 거래정보를 입력하세요." : "아파트명·주소와 동·호수, 거래정보를 입력하세요.");
     document.getElementById("prefillRefBox").style.display = "";
   })();
