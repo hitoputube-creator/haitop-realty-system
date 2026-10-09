@@ -352,7 +352,7 @@ function renderDriveTab() {
     const isActive = c === activeDriveCat;
     return `<div class="drive-category-row" data-category-id="${visibleDriveCategories()[i].id}" draggable="true" style="display:flex;gap:4px;">
       <button type="button" class="drive-category-grip" data-category-grip aria-label="${escapeCategory(c)} 순서 변경: 끌기 또는 방향키" title="끌어서 순서 변경 · 방향키로 이동">⠿</button>
-      <button data-cidx="${i}" style="
+      <button data-cidx="${i}" aria-pressed="${isActive}" style="
         flex:1;min-width:0;padding:10px 14px;font-size:0.85rem;font-weight:${isActive?'700':'500'};
         text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
         background:${isActive?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.04)'};
