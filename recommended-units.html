@@ -56,6 +56,12 @@
     td.sel, th.sel { width:34px; padding-right:0; }
     td.sel input, th.sel input { width:17px; height:17px; accent-color:var(--gold); cursor:pointer; }
     #printArea { display:none; }
+    .floorpanel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin:0 0 14px; }
+    .fp-title { font-size:.84rem; color:var(--gold); font-weight:700; margin:0 0 8px; }
+    .fp-row { display:flex; flex-wrap:wrap; gap:8px 18px; }
+    .fp-item { display:flex; align-items:center; gap:8px; font-size:.9rem; }
+    .fp-item select { padding:6px 10px; border:1px solid #536989; border-radius:8px; background:#122844; color:#fff; font:inherit; font-size:.88rem; }
+    .fp-note { margin-top:8px; color:#ff9d8a; font-size:.82rem; }
     .nounits { padding:12px 16px; color:var(--muted); font-size:.88rem; display:flex; align-items:center; gap:8px; }
     .recblock { border-top:1px solid var(--line); background:rgba(0,0,0,.12); padding:10px 16px 12px; }
     .rectitle { font-size:.8rem; color:var(--gold); font-weight:700; margin:0 0 6px; }
@@ -125,6 +131,7 @@
     <button type="button" class="btn" id="printBtn" title="체크한 호실만 인쇄합니다. 체크가 없으면 화면에 보이는 전체를 인쇄합니다.">🖨 손님용 인쇄</button>
   </div>
 
+  <div id="floorPanel" class="floorpanel" style="display:none"></div>
   <p id="summary" role="status">불러오는 중...</p>
   <div id="list"></div>
 </main>

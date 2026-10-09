@@ -6,6 +6,8 @@
 
   let buildings = [];   // { id, name, record, units: [{u, room}], commercial, resource, scope, recs: [추천매물장 자료] }
   let unmatchedRecs = [];   // 건물을 찾지 못한 추천매물장 자료
+  let shopFloors = {};      // 건물(local_id) → 상가가 있는 마지막 층 (오피스텔 등 주거 건물용, 기본 1층)
+  let shopFloorsOk = true;  // 설정 표를 불러왔는지
   let mode = 'rec';     // 'rec' | 'cand'
   const busy = new Set();
   const selected = new Set();        // 인쇄용으로 체크한 호실 (건물id|호수)
@@ -39,7 +41,8 @@
     if (base <= 0) return null;
     return { v: m * 12 / base * 100, calc: true };
   }
-  const isGroundFloor = room => /^1\d{2}호?$/.test(String(room || '').trim());   // 101~199호 = 1층
+  const floorNo = room => { const m = String(room || '').trim().match(/^(\d)\d{2}호?$/); return m ? Number(m[1]) : null; };   // 101~199호 = 1층
+  const shopMaxFloor = b => (b.record && shopFloors[b.record.local_id]) || 1;
   function roomSortKey(room) {
     const s = String(room || ''), b = s.match(/^[Bb](\d+)/);
     const n = parseInt((s.match(/\d+/) || ['0'])[0], 10);
@@ -120,6 +123,13 @@
     records.filter(x => !used.has(x.local_id)).forEach(rec => {
       buildings.push({ id: 'orphan:' + rec.local_id, name: rec.name || rec.local_id, record: rec, units: toUnits(rec), commercial: true, resource: false, scope: 'commercial', recs: [] });
     });
+    // 오피스텔 건물별 상가층 설정 (표를 못 불러오면 모두 1층으로 보고 저장은 막는다)
+    try {
+      const fr = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/building_shop_floors?select=local_id,max_floor', { headers });
+      if (!fr.ok) throw new Error('floors');
+      shopFloors = {}; (await fr.json()).forEach(x => { shopFloors[x.local_id] = Number(x.max_floor) || 1; });
+      shopFloorsOk = true;
+    } catch (e) { shopFloors = {}; shopFloorsOk = false; }
     // 추천매물장 자료를 건물에 붙인다
     unmatchedRecs = [];
     (recProps || []).forEach(p => {
@@ -160,6 +170,47 @@
     }
   }
 
+  async function saveShopFloor(b, floor, select) {
+    select.disabled = true;
+    try {
+      const res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/building_shop_floors?on_conflict=local_id', {
+        method: 'POST',
+        headers: Object.assign({}, headers, { Prefer: 'resolution=merge-duplicates,return=minimal' }),
+        body: JSON.stringify({ local_id: b.record.local_id, max_floor: floor, updated_at: new Date().toISOString() })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      shopFloors[b.record.local_id] = floor;
+      toast(`${b.name}: 상가 ${floor === 1 ? '1층만' : floor + '층까지'}로 저장했습니다.`);
+    } catch (e) {
+      toast('저장 실패: ' + e.message);
+    } finally {
+      render();
+    }
+  }
+
+  // 후보 보기 위쪽: 오피스텔 등 주거 건물별 "상가가 몇 층까지인지" 선택
+  function renderFloorPanel() {
+    const panel = $('floorPanel');
+    panel.replaceChildren();
+    const list = buildings.filter(b => !b.commercial && b.record && b.units.length).sort((a, c) => a.name.localeCompare(c.name, 'ko'));
+    if (mode !== 'cand' || !list.length) { panel.style.display = 'none'; return; }
+    panel.style.display = '';
+    panel.append(el('div', 'fp-title', '🏢 오피스텔 건물의 상가 층 (후보에 넣을 층)'));
+    const row = el('div', 'fp-row');
+    list.forEach(b => {
+      const lab = el('label', 'fp-item'), sel = document.createElement('select');
+      for (let f = 1; f <= 5; f++) { const o = document.createElement('option'); o.value = String(f); o.textContent = f === 1 ? '1층만' : f + '층까지'; sel.append(o); }
+      sel.value = String(Math.min(shopMaxFloor(b), 5));
+      sel.disabled = !shopFloorsOk;
+      sel.setAttribute('aria-label', b.name + ' 상가 층');
+      sel.addEventListener('change', () => saveShopFloor(b, Number(sel.value), sel));
+      lab.append(el('span', '', b.name), sel);
+      row.append(lab);
+    });
+    panel.append(row);
+    if (!shopFloorsOk) panel.append(el('div', 'fp-note', '상가 층 설정을 불러오지 못해 모두 1층으로 보여줍니다.'));
+  }
+
   // ----- 화면 -----
   function collect() {
     const q = $('q').value.trim().toLowerCase();
@@ -167,8 +218,8 @@
     const out = [];
     buildings.forEach(b => {
       b.units.forEach(item => {
-        // 후보 보기: 상가 건물은 전체, 오피스텔 등 주거 건물은 1층(상가) 호실만
-        if (mode === 'cand' && !b.commercial && !isGroundFloor(item.room)) return;
+        // 후보 보기: 상가 건물은 전체, 오피스텔 등 주거 건물은 설정한 상가층(기본 1층)까지만
+        if (mode === 'cand' && !b.commercial) { const f = floorNo(item.room); if (f === null || f > shopMaxFloor(b)) return; }
         const u = item.u;
         const rec = isFlagOn(u.추천매물), profit = isFlagOn(u.수익성매물);
         if (mode === 'rec' && !rec) return;
@@ -256,13 +307,14 @@
     list.replaceChildren();
     $('sort').disabled = mode === 'cand';
     $('profitLabel').style.display = mode === 'rec' ? '' : 'none';
+    renderFloorPanel();
     const entries = collect().sort(sorter());
     shown = mode === 'rec' ? entries : [];
     updatePrintBtn();
 
     if (mode === 'cand') {
       const shown = entries.slice(0, CAND_LIMIT);
-      $('summary').textContent = `수익률 ${CAND_MIN}~${CAND_MAX}% 후보 ${entries.length}개 중 상위 ${shown.length}개 · 마음에 드는 호실은 ⭐ 추천을 눌러 추천매물로 옮기세요 (월세·가격이 입력된 호실 기준 · 오피스텔 건물은 1층 호실만 · 수익률 계산은 월세×12 ÷ (가격−보증금))`;
+      $('summary').textContent = `수익률 ${CAND_MIN}~${CAND_MAX}% 후보 ${entries.length}개 중 상위 ${shown.length}개 · 마음에 드는 호실은 ⭐ 추천을 눌러 추천매물로 옮기세요 (월세·가격이 입력된 호실 기준 · 오피스텔 건물은 아래에서 정한 상가층까지 · 수익률 계산은 월세×12 ÷ (가격−보증금))`;
       if (!shown.length) { list.append(emptyBox('조건에 맞는 후보가 없습니다.')); return; }
       const card = el('section', 'bcard');
       const head = el('div', 'bhead'); head.append(el('h2', '', '수익률 높은 후보'), el('span', '', shown.length + '개'));
