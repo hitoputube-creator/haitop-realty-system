@@ -965,9 +965,26 @@
         item.publicImageUrls = publicUrls;
         item.image_urls = item.is_public ? publicUrls : [];
       }
-      await addListing(item);
+      const savedListingId = await addListingReturnId(item);
+      const unitParams = new URLSearchParams(location.search);
+      if (savedListingId && unitParams.get('buildingId') && unitParams.get('roomNo')) {
+        try {
+          const resource = (await getDriveResources()).find(r => r.id === unitParams.get('buildingId'));
+          if (!resource) throw new Error('건물 자료를 찾지 못했습니다.');
+          const record = await getBuildingRecord(resource.name);
+          const room = String(unitParams.get('roomNo')).replace(/\s|호$/g, '');
+          const rows = Array.isArray(record?.units) ? record.units : [];
+          const matches = rows.filter(u => String(u.호수 || '').replace(/\s|호$/g, '') === room);
+          if (matches.length !== 1) throw new Error('연결할 호실을 정확히 찾지 못했습니다.');
+          const next = rows.map(u => u === matches[0] ? {...u, listing_id:savedListingId, 매물등록요청:true, 추천매물:stickers.includes('추천매물') ? true : null} : u);
+          await saveBuildingUnits(resource.name, resource.name, next);
+        } catch (error) {
+          showToast('매물은 저장됐지만 호실 연결 실패: ' + error.message);
+          alert('매물은 저장됐지만 호실 연결에 실패했습니다. 다시 등록하지 말고 매물관리에서 확인하세요.\n' + error.message);
+        }
+      }
       const _diaryId = new URLSearchParams(location.search).get('diaryId');
-      if (_diaryId) await linkDiaryEntryToListing(_diaryId, item.id);
+      if (_diaryId) await linkDiaryEntryToListing(_diaryId, savedListingId || item.id);
       showToast('✅ 저장완료!');
       setTimeout(() => location.href = 'properties.html', 1000);
     } catch(e) {
@@ -1091,6 +1108,12 @@
       else if (hasDeposit || hasRent)         autoDealtType = "월세";
 
       if (unit && ["매매", "전세", "월세"].includes(unit.거래구분)) autoDealtType = unit.거래구분;
+      if (unit?.listing_id) {
+        location.replace('detail.html?id=' + encodeURIComponent(unit.listing_id));
+        return;
+      }
+      const recommended = document.querySelector('input[name="stickers"][value="추천매물"]');
+      if (recommended) recommended.checked = qp.get('recommended') === '1' || unit?.추천매물 === true;
 
       // 7) 상세설명 자동작성
       const descParts = [];
