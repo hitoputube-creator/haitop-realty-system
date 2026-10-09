@@ -216,7 +216,6 @@
   // ----- 화면 -----
   function collect() {
     const q = $('q').value.trim().toLowerCase();
-    const onlyProfit = $('onlyProfit').checked;
     const out = [];
     buildings.forEach(b => {
       b.units.forEach(item => {
@@ -226,7 +225,6 @@
         const rec = isFlagOn(u.추천매물), profit = isFlagOn(u.수익성매물);
         if (mode === 'rec' && !rec) return;
         if (mode === 'cand' && rec) return;
-        if (mode === 'rec' && onlyProfit && !profit) return;
         if (q && !(b.name.toLowerCase().includes(q) || String(u.현업종 || '').toLowerCase().includes(q))) return;
         const y = yieldOf(u);
         if (mode === 'cand' && !(y && y.v >= CAND_MIN && y.v <= CAND_MAX)) return;
@@ -314,7 +312,6 @@
     const list = $('list');
     list.replaceChildren();
     $('sort').disabled = mode !== 'rec';
-    $('profitLabel').style.display = mode === 'rec' ? '' : 'none';
     renderFloorPanel();
     const closedCount = buildings.reduce((n, b) => n + b.recs.filter(r => r.closedAt).length, 0) + unmatchedRecs.filter(r => r.closedAt).length;
     $('tabClosed').textContent = '📁 종료된 자료' + (closedCount ? ` (${closedCount})` : '');
@@ -335,8 +332,7 @@
     }
 
     const q = $('q').value.trim().toLowerCase();
-    const onlyProfit = $('onlyProfit').checked;     // 추천매물장 자료에는 💰표시가 없으므로 수익성만 볼 때는 숨긴다
-    const recOk = (r, b) => !onlyProfit && (!q || r.name.toLowerCase().includes(q) || r.memo.toLowerCase().includes(q) || (b && b.name.toLowerCase().includes(q)));
+    const recOk = (r, b) => (!q || r.name.toLowerCase().includes(q) || r.memo.toLowerCase().includes(q) || (b && b.name.toLowerCase().includes(q)));
     const recItems = [];
     buildings.forEach(b => b.recs.forEach(r => { if (!r.closedAt && recOk(r, b)) recItems.push({ label: b.name, r }); }));
     recItems.sort((a, c) => (isOld(a.r) - isOld(c.r)) || a.label.localeCompare(c.label, 'ko') || a.r.name.localeCompare(c.r.name, 'ko'));
@@ -787,7 +783,7 @@
     $('loanGo').addEventListener('click', confirmSheet);
     $('loanCancel').addEventListener('click', () => { $('loanModal').style.display = 'none'; pendingSheet = null; });
     $('loanOn').addEventListener('change', () => { $('loanFields').style.opacity = $('loanOn').checked ? '1' : '.4'; });
-    ['q', 'onlyProfit', 'sort'].forEach(id => $(id).addEventListener(id === 'q' ? 'input' : 'change', render));
+    ['q', 'sort'].forEach(id => $(id).addEventListener(id === 'q' ? 'input' : 'change', render));
     try {
       if (!await load()) return;
       if (location.hash === '#closed') { setMode('closed'); return; }
