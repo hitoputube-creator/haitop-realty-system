@@ -28,13 +28,15 @@
     if (!e) return n.toLocaleString('ko-KR') + '만';
     return e + '억' + (r ? ' ' + r.toLocaleString('ko-KR') + '만' : '');
   }
-  function price(u) { return num(u.현_매매가격 ?? u.분양금액); }
-  function deposit(u) { return num(u.현_보증금 ?? u.보증금); }
-  function rent(u) { return num(u.현_월세 ?? u.월차임); }
+  // 금액은 만원 기준. 분양금액 등은 원 단위로 저장된 호실이 많아서, 만원으로 보기엔 비정상적으로 크면 원 단위로 보고 환산한다.
+  function manwon(v, limit) { const n = num(v); return n === null ? null : (n >= limit ? n / 10000 : n); }
+  function price(u) { return manwon(u.현_매매가격 ?? u.분양금액, 1000000); }      // 100억(만원 기준) 이상이면 원 단위
+  function deposit(u) { return manwon(u.현_보증금 ?? u.보증금, 1000000); }
+  function rent(u) { return manwon(u.현_월세 ?? u.월차임, 100000); }               // 월 10억(만원 기준) 이상이면 원 단위
   function roomLabel(r) { r = String(r || ''); return r.endsWith('호') ? r : r + '호'; }
   function yieldOf(u) {                  // 저장된 수익률이 있으면 그 값, 없으면 단순수익률 자동 계산
-    const saved = parseFloat(String(u.수익률 ?? '').replace('%', ''));
-    if (Number.isFinite(saved) && saved > 0) return { v: saved, calc: false };
+    const raw = String(u.수익률 ?? '').trim();                      // 전화번호 같은 숫자가 아닌 값은 무시하고 계산한다
+    if (/^\d{1,2}(\.\d+)?\s*%?$/.test(raw)) { const saved = parseFloat(raw); if (saved > 0 && saved <= 30) return { v: saved, calc: false }; }
     const p = price(u), m = rent(u), d = deposit(u) || 0;
     if (!p || !m) return null;
     const base = p - d;
@@ -238,6 +240,7 @@
     if (mode === 'cand') return (a, c) => c.y.v - a.y.v;
     if (by === 'price') return (a, c) => (price(a.item.u) ?? 1e12) - (price(c.item.u) ?? 1e12);
     if (by === 'room') return (a, c) => roomSortKey(a.item.room) - roomSortKey(c.item.room);
+    if (by === 'building') return (a, c) => a.b.name.localeCompare(c.b.name, 'ko') || roomSortKey(a.item.room) - roomSortKey(c.item.room);
     return (a, c) => ((c.y && c.y.v) || -1) - ((a.y && a.y.v) || -1);
   }
 
@@ -250,8 +253,8 @@
       cb.addEventListener('change', () => { if (cb.checked) selected.add(selKey(entry)); else selected.delete(selKey(entry)); updatePrintBtn(); syncHeadChecks(); });
       sc.append(cb); tr.append(sc);
     }
+    tr.append(el('td', 'bname', b.name));
     const room = el('td'); room.append(el('strong', '', roomLabel(item.room)));
-    if (mode === 'cand') room.append(el('span', '', ' · ' + b.name));
     if (isFlagOn(u.추천매물)) room.append(el('span', 'flag rec', '⭐추천'));
     if (isFlagOn(u.수익성매물)) room.append(el('span', 'flag profit', '💰수익성'));
     tr.append(room, el('td', '', u.현업종 || '—'));
@@ -294,7 +297,7 @@
       });
       th.append(all); head.append(th); wrap._head = all; wrap._entries = entries;
     }
-    [['호실'], ['업종'], ['가격', 1], ['보증금 / 월세', 1], ['수익률', 1], ['상태'], ['']].forEach(([label, right]) => head.append(el('th', right ? 'num' : '', label)));
+    [['건물'], ['호실'], ['업종'], ['가격', 1], ['보증금 / 월세', 1], ['수익률', 1], ['상태'], ['']].forEach(([label, right]) => head.append(el('th', right ? 'num' : '', label)));
     const thead = document.createElement('thead'); thead.append(head);
     const tbody = document.createElement('tbody');
     entries.forEach(e => tbody.append(rowFor(e)));
@@ -326,65 +329,43 @@
     const q = $('q').value.trim().toLowerCase();
     const onlyProfit = $('onlyProfit').checked;     // 추천매물장 자료에는 💰표시가 없으므로 수익성만 볼 때는 숨긴다
     const recOk = (r, b) => !onlyProfit && (!q || r.name.toLowerCase().includes(q) || r.memo.toLowerCase().includes(q) || (b && b.name.toLowerCase().includes(q)));
-    const groups = new Map();
-    entries.forEach(e => { if (!groups.has(e.b.id)) groups.set(e.b.id, { b: e.b, items: [] }); groups.get(e.b.id).items.push(e); });
-    // 순서: 호실을 ⭐한 건물(정렬 기준대로) → 추천매물장 자료만 있는 건물(이름순)
-    const cards = [...groups.values()].map(g => ({ b: g.b, items: g.items, recs: g.b.recs.filter(r => recOk(r, g.b)) }));
-    buildings.filter(b => !groups.has(b.id)).sort((a, c) => a.name.localeCompare(c.name, 'ko')).forEach(b => {
-      const r = b.recs.filter(x => recOk(x, b));
-      if (r.length) cards.push({ b, items: [], recs: r });
-    });
-    const unm = unmatchedRecs.filter(r => recOk(r, null));
+    const recItems = [];
+    buildings.forEach(b => b.recs.forEach(r => { if (recOk(r, b)) recItems.push({ label: b.name, r }); }));
+    recItems.sort((a, c) => a.label.localeCompare(c.label, 'ko') || a.r.name.localeCompare(c.r.name, 'ko'));
+    unmatchedRecs.filter(r => recOk(r, null)).forEach(r => recItems.push({ label: '건물 미지정', r }));
     const profitCount = entries.filter(e => isFlagOn(e.item.u.수익성매물)).length;
-    const recCount = cards.reduce((n, c) => n + c.recs.length, 0) + unm.length;
     const parts = [];
     if (entries.length) parts.push(`추천매물 ${entries.length}개`, `💰수익성 ${profitCount}개`);
-    if (cards.length) parts.push(`건물 ${cards.length}곳`);
-    if (recCount) parts.push(`추천매물장 자료 ${recCount}건`);
+    if (recItems.length) parts.push(`추천매물장 자료 ${recItems.length}건`);
     $('summary').textContent = parts.length ? parts.join(' · ') : '표시할 추천매물이 없습니다.';
-    if (!cards.length && !unm.length) {
+    if (!entries.length && !recItems.length) {
       const any = buildings.some(b => b.units.some(i => isFlagOn(i.u.추천매물))) || buildings.some(b => b.recs.length) || unmatchedRecs.length;
       list.append(emptyBox(any ? '조건에 맞는 추천매물이 없습니다.' : null));
       return;
     }
-    cards.forEach(c => {
+    if (entries.length) {
       const card = el('section', 'bcard');
-      const head = el('div', 'bhead');
-      head.append(el('h2', '', c.b.name), el('span', '', [c.items.length ? `호실 ${c.items.length}개` : '', c.recs.length ? `자료 ${c.recs.length}건` : ''].filter(Boolean).join(' · ')));
-      card.append(head);
-      if (c.items.length) card.append(table(c.items)); else card.append(noUnitsNote(c.b));
-      if (c.recs.length) card.append(recBlock(c.recs));
+      const head = el('div', 'bhead'); head.append(el('h2', '', '추천매물 리스트'), el('span', '', entries.length + '개'));
+      card.append(head, table(entries));
       list.append(card);
-    });
-    if (unm.length) {
-      const card = el('section', 'bcard');
-      const head = el('div', 'bhead'); head.append(el('h2', '', '건물을 찾지 못한 추천매물장 자료'), el('span', '', `자료 ${unm.length}건`));
-      card.append(head, recBlock(unm));
-      list.append(card);
+    } else {
+      list.append(el('div', 'empty', '⭐ 표시한 호실이 아직 없습니다. 후보 보기에서 ⭐ 추천을 눌러 추가하세요.'));
     }
+    if (recItems.length) list.append(recSection(recItems));
     syncHeadChecks();
   }
 
-  // ⭐ 호실은 없고 추천매물장 자료만 있는 건물
-  function noUnitsNote(b) {
-    const d = el('div', 'nounits');
-    d.append('⭐ 표시한 호실이 없습니다. ');
-    if (b.resource) {
-      const a = el('a', 'mini', '호실보기');
-      a.href = HitopResourceRooms.detailUrl('building-detail.html', b.id, b.scope) + '#unitStatus';
-      d.append(a);
-    }
-    return d;
-  }
-
-  // 추천매물장(받은 분양 잔여분·임대 자료) 목록: 이름, 받은 날짜, 메모(내부용), 드라이브 자료 링크
-  function recBlock(recs) {
+  // 추천매물장(받은 분양 잔여분·임대 자료) 목록: 건물, 자료 이름, 받은 날짜, 메모(내부용), 드라이브 자료 링크
+  function recSection(items) {
+    const card = el('section', 'bcard');
+    const head = el('div', 'bhead');
+    head.append(el('h2', '', '📎 추천매물장 자료 (내부용 · 인쇄에는 포함되지 않습니다)'), el('span', '', items.length + '건'));
+    card.append(head);
     const box = el('div', 'recblock');
-    box.append(el('div', 'rectitle', '📎 추천매물장 자료 (내부용 · 인쇄에는 포함되지 않습니다)'));
-    recs.forEach(r => {
+    items.forEach(({ label, r }) => {
       const row = el('div', 'recrow');
       const info = el('div', 'recinfo');
-      info.append(el('strong', '', r.name));
+      info.append(el('span', 'bname', label + ' '), el('strong', '', r.name));
       if (r.date) info.append(el('span', 'recdate', String(r.date).slice(0, 10)));
       if (r.memo) info.append(el('div', 'recmemo', '💬 ' + r.memo));
       const links = el('div', 'act');
@@ -396,7 +377,8 @@
       row.append(info, links);
       box.append(row);
     });
-    return box;
+    card.append(box);
+    return card;
   }
 
   // 건물별 전체선택 칸을 실제 선택 상태에 맞춘다
@@ -428,24 +410,19 @@
     head.append(el('h1', '', '추천 매물 안내'), el('div', 'p-co', officeCompanyName + phone));
     area.append(head, el('p', 'p-date', '작성일 ' + dateStr + ' 기준 · 총 ' + entries.length + '개 호실'));
 
-    const groups = new Map();
-    entries.forEach(e => { if (!groups.has(e.b.id)) groups.set(e.b.id, { b: e.b, items: [] }); groups.get(e.b.id).items.push(e); });
-    groups.forEach(g => {
-      const sec = el('section', 'p-bld');
-      sec.append(el('h2', '', g.b.name));
-      const t = document.createElement('table'), hr = document.createElement('tr');
-      ['호실', '업종', '가격', '보증금 / 월세', '수익률', '상태'].forEach(h => hr.append(el('th', '', h)));
-      const thead = document.createElement('thead'); thead.append(hr);
-      const tb = document.createElement('tbody');
-      g.items.forEach(({ item, y }) => {
-        const u = item.u, tr = document.createElement('tr');
-        tr.append(el('td', 'ctr', roomLabel(item.room)), el('td', '', u.현업종 || '—'), el('td', 'num', eok(price(u))),
-          el('td', 'num', eok(deposit(u)) + ' / ' + (rent(u) === null ? '—' : rent(u).toLocaleString('ko-KR') + '만')),
-          el('td', 'num y', y ? y.v.toFixed(1) + '%' : '—'), el('td', 'ctr', u.공실여부 || '—'));
-        tb.append(tr);
-      });
-      t.append(thead, tb); sec.append(t); area.append(sec);
+    const sec = el('section', 'p-bld');
+    const t = document.createElement('table'), hr = document.createElement('tr');
+    ['건물', '호실', '업종', '가격', '보증금 / 월세', '수익률', '상태'].forEach(h => hr.append(el('th', '', h)));
+    const thead = document.createElement('thead'); thead.append(hr);
+    const tb = document.createElement('tbody');
+    entries.forEach(({ b, item, y }) => {
+      const u = item.u, tr = document.createElement('tr');
+      tr.append(el('td', '', b.name), el('td', 'ctr', roomLabel(item.room)), el('td', '', u.현업종 || '—'), el('td', 'num', eok(price(u))),
+        el('td', 'num', eok(deposit(u)) + ' / ' + (rent(u) === null ? '—' : rent(u).toLocaleString('ko-KR') + '만')),
+        el('td', 'num y', y ? y.v.toFixed(1) + '%' : '—'), el('td', 'ctr', u.공실여부 || '—'));
+      tb.append(tr);
     });
+    t.append(thead, tb); sec.append(t); area.append(sec);
 
     area.append(el('div', 'p-note', '※ 금액은 만원 단위 입력값 기준이며, 수익률은 월 임대료×12 ÷ (가격 − 보증금)으로 계산한 단순수익률(대출·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.'));
     area.append(el('div', 'p-foot', officeCompanyName + phone));
