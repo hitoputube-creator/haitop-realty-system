@@ -386,7 +386,9 @@ function renderListView(items) {
 let _currentListItems = [];
 let _currentCardItems = [];
 
-let listingColumnSort = {key:"",direction:1};
+// 여러 열을 차례로 눌러 "동 → 호수"처럼 겹쳐서 정렬한다. 먼저 누른 열이 우선순위가 높다.
+// 같은 열을 누를 때마다 오름차순 → 내림차순 → 정렬 해제 순으로 바뀐다.
+let listingColumnSort = [];   // [{key, direction}]
 function listingColumnValue(item,key) {
   const u=item.apartmentUnitData || {};
   const name=u.아파트명 || item.complexName || item.buildingName || "";
@@ -395,8 +397,16 @@ function listingColumnValue(item,key) {
   return map[key]?.() ?? "";
 }
 function sortListingColumn(key) {
-  listingColumnSort={key,direction:listingColumnSort.key===key ? -listingColumnSort.direction : 1};
+  const i=listingColumnSort.findIndex(s=>s.key===key);
+  if (i<0) listingColumnSort=[...listingColumnSort,{key,direction:1}];
+  else if (listingColumnSort[i].direction===1) listingColumnSort=listingColumnSort.map((s,j)=>j===i ? {key,direction:-1} : s);
+  else listingColumnSort=listingColumnSort.filter((_,j)=>j!==i);
   currentPage=1; renderList();
+}
+function listingSortMark(key) {
+  const i=listingColumnSort.findIndex(s=>s.key===key);
+  if (i<0) return '↕';
+  return (listingColumnSort[i].direction===1 ? '↑' : '↓')+(listingColumnSort.length>1 ? '<sup>'+(i+1)+'</sup>' : '');
 }
 
 /* ══════════════════════════════════════════
@@ -556,7 +566,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeColumnF
 function makeListingColumnHeader() {
   const header = document.createElement("div");
   header.className = "listing-column-header";
-  const sortBtn=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+label+' <span aria-hidden="true">'+(listingColumnSort.key===key ? (listingColumnSort.direction===1 ? '↑' : '↓') : '↕')+'</span></button>';
+  const sortBtn=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+label+' <span aria-hidden="true">'+listingSortMark(key)+'</span></button>';
   const filterBtn=(key,label)=>{ const on=!!listingColumnFilters[key]; return '<button type="button" class="listing-filter-btn'+(on?' active':'')+'" onclick="openColumnFilter(\''+key+'\',this,event)" aria-label="'+label+' 필터'+(on?' (적용 중)':'')+'" title="'+label+' 필터'+(on?' (적용 중)':'')+'">'+(on?'●':'▾')+'</button>'; };
   const n = columnFilterCount();
   header.innerHTML = '<div class="listing-cell-select">선택</div>'+[['type','매물종류'],['deal','구분'],['village','마을단지'],['apartment','아파트명'],['dong','동'],['room','호수'],['price','가격'],['owner','소유주'],['phone','연락처']].map(([key,label])=>'<div class="listing-cell-'+key+'">'+sortBtn(key,label)+filterBtn(key,label)+'</div>').join('')+'<div class="listing-cell-actions">'+(n?'<button type="button" class="listing-filter-reset" onclick="clearColumnFilters()" title="적용 중인 열 필터를 모두 해제">✕ 필터 해제 '+n+'</button>':'관리')+'</div>';
@@ -643,10 +653,13 @@ function getFilteredListings() {
     const db = new Date(b.created_at || 0);
     return currentSort === "newest" ? db - da : da - db;
   });
-  if (listingColumnSort.key) filtered.sort((a,b)=>{
-    const av=listingColumnValue(a,listingColumnSort.key), bv=listingColumnValue(b,listingColumnSort.key);
-    const comparison=typeof av==="number" && typeof bv==="number" ? av-bv : String(av).localeCompare(String(bv),"ko",{numeric:true});
-    return comparison*listingColumnSort.direction;
+  if (listingColumnSort.length) filtered.sort((a,b)=>{
+    for (const {key,direction} of listingColumnSort) {
+      const av=listingColumnValue(a,key), bv=listingColumnValue(b,key);
+      const comparison=typeof av==="number" && typeof bv==="number" ? av-bv : String(av).localeCompare(String(bv),"ko",{numeric:true});
+      if (comparison) return comparison*direction;
+    }
+    return 0;
   });
   return filtered;
 }
