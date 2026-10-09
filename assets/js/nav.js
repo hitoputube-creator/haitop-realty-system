@@ -12,6 +12,7 @@ const NAV_ITEMS = [
 // properties.html로 이동해 자동 실행되도록 폴백한다(모든 화면에서 동일하게 동작 보장).
 const NAV_TOOLS = [
   { label: "자료관리",  href: "resources.html" },
+  { label: "건물별 추천매물", href: "recommended-units.html" },
   { label: "전체 백업", action: "exportAll" },
   { label: "견적서",    href: "https://hitoputube-creator.github.io/Commercial-Property-Quote/", external: true },
   { label: "계약문자",  action: "openContractModal" },

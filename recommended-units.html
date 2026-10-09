@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하이탑부동산 | 건물별 추천매물</title>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <style>
+    :root { --bg:#081727; --card:#10213b; --line:#36516e; --gold:#e2bd42; --text:#f8f3e6; --muted:#b9c5d8; --green:#6fd6a1; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Pretendard,system-ui,sans-serif; }
+    main { max-width:1280px; margin:auto; padding:24px 20px 60px; }
+    header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:18px; }
+    h1 { margin:0; font-size:1.5rem; }
+    header p { margin:6px 0 0; color:var(--muted); font-size:.9rem; }
+    .nav { display:flex; gap:8px; flex-wrap:wrap; }
+    .nav a, .btn { color:var(--text); background:transparent; border:1px solid #a17b19; border-radius:8px; padding:8px 13px; text-decoration:none; font:inherit; font-size:.88rem; cursor:pointer; }
+    .nav a:hover, .btn:hover { border-color:var(--gold); background:#1b3452; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 14px; }
+    .tabs { display:flex; gap:6px; }
+    .tab { padding:9px 16px; border-radius:999px; border:1px solid var(--line); background:#122844; color:var(--muted); font:inherit; font-weight:700; cursor:pointer; }
+    .tab.active { background:var(--gold); color:#1a1405; border-color:var(--gold); }
+    .toolbar input[type=search], .toolbar select { padding:8px 12px; border:1px solid #536989; border-radius:8px; background:#122844; color:#fff; font:inherit; font-size:.9rem; }
+    .toolbar label { display:flex; align-items:center; gap:6px; font-size:.9rem; color:var(--text); cursor:pointer; }
+    .toolbar input[type=checkbox] { width:17px; height:17px; accent-color:var(--gold); }
+    #summary { color:var(--muted); font-size:.92rem; margin:0 0 14px; min-height:1.4em; }
+    .bcard { background:var(--card); border:1px solid var(--line); border-radius:12px; margin:0 0 16px; overflow:hidden; }
+    .bhead { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 16px; background:#142a49; border-bottom:1px solid var(--line); }
+    .bhead h2 { margin:0; font-size:1.05rem; color:var(--gold); }
+    .bhead span { color:var(--muted); font-size:.84rem; }
+    .twrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    th { text-align:left; color:var(--muted); font-weight:600; font-size:.8rem; padding:9px 14px; border-bottom:1px solid var(--line); white-space:nowrap; }
+    td { padding:10px 14px; border-bottom:1px solid rgba(54,81,110,.55); white-space:nowrap; }
+    tr:last-child td { border-bottom:0; }
+    td.num, th.num { text-align:right; }
+    .flag { display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; font-size:.7rem; font-weight:700; vertical-align:middle; }
+    .flag.rec { background:rgba(212,175,55,.18); color:#e2bd42; border:1px solid rgba(212,175,55,.45); }
+    .flag.profit { background:rgba(80,200,140,.14); color:var(--green); border:1px solid rgba(80,200,140,.4); }
+    .yield { font-weight:800; color:var(--green); }
+    .yield small { font-weight:500; color:var(--muted); margin-left:3px; }
+    .sbadge { padding:2px 9px; border-radius:999px; font-size:.78rem; border:1px solid var(--line); }
+    .sbadge.공실 { color:#ff9d8a; border-color:#a5503f; }
+    .sbadge.임차중 { color:var(--green); border-color:#2f7a58; }
+    .sbadge.매매가능 { color:#9cc4ff; border-color:#456fa8; }
+    .act { display:flex; gap:6px; }
+    .mini { padding:5px 10px; border-radius:7px; border:1px solid var(--line); background:#122844; color:var(--text); font:inherit; font-size:.8rem; cursor:pointer; text-decoration:none; }
+    .mini:hover { border-color:var(--gold); }
+    .mini.on { background:rgba(212,175,55,.2); border-color:var(--gold); color:var(--gold); }
+    .mini.pon { background:rgba(80,200,140,.16); border-color:#2f7a58; color:var(--green); }
+    .mini[disabled] { opacity:.5; cursor:wait; }
+    .empty { padding:40px 20px; text-align:center; color:var(--muted); line-height:1.8; background:var(--card); border:1px dashed var(--line); border-radius:12px; }
+    .empty b { color:var(--text); }
+    #toast { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); background:#1b3452; border:1px solid var(--gold); padding:10px 18px; border-radius:10px; opacity:0; pointer-events:none; transition:opacity .2s; }
+    #toast.show { opacity:1; }
+    @media (max-width:640px) { main { padding:16px 12px 50px; } td, th { padding:9px 10px; } }
+  </style>
+  <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+  <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+</head>
+<body data-resource-scope="commercial">
+<main>
+  <header>
+    <div>
+      <h1>⭐ 건물별 추천매물</h1>
+      <p>호실에 ⭐추천을 체크한 매물만 건물별로 모아 봅니다 (내부용)</p>
+    </div>
+    <nav class="nav" aria-label="페이지 이동">
+      <a href="index.html">통합관리</a>
+      <a href="shop-location.html">상가 위치도</a>
+      <a href="resources.html">상가 자료관리</a>
+      <button type="button" class="btn" onclick="hitopAdminLogout()">로그아웃</button>
+    </nav>
+  </header>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab active" id="tabRec" role="tab">추천매물</button>
+      <button type="button" class="tab" id="tabCand" role="tab">후보 보기 (수익률 높은 순)</button>
+    </div>
+    <input type="search" id="q" placeholder="건물명·업종 검색" aria-label="건물명 또는 업종 검색">
+    <label id="profitLabel"><input type="checkbox" id="onlyProfit"> 💰 수익성만</label>
+    <select id="sort" aria-label="정렬">
+      <option value="yield">수익률 높은 순</option>
+      <option value="price">가격 낮은 순</option>
+      <option value="room">호수 순</option>
+    </select>
+  </div>
+
+  <p id="summary" role="status">불러오는 중...</p>
+  <div id="list"></div>
+</main>
+<div id="toast" role="status"></div>
+
+<script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
+<script src="assets/js/recommended-units.js?v=20261009-1"></script>
+</body>
+</html>
