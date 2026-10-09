@@ -4,7 +4,8 @@
   const $ = id => document.getElementById(id);
   const CAND_MIN = 3, CAND_MAX = 20, CAND_LIMIT = 50;   // 후보 보기: 수익률 3~20%, 상위 50개 (입력 오류로 튀는 값 제외)
 
-  let buildings = [];   // { id, name, record, units: [{u, room}] }
+  let buildings = [];   // { id, name, record, units: [{u, room}], commercial, resource, scope, recs: [추천매물장 자료] }
+  let unmatchedRecs = [];   // 건물을 찾지 못한 추천매물장 자료
   let mode = 'rec';     // 'rec' | 'cand'
   const busy = new Set();
   const selected = new Set();        // 인쇄용으로 체크한 호실 (건물id|호수)
@@ -58,25 +59,73 @@
     return e;
   }
 
+  // ----- 추천매물장 자료 -----
+  function recLinks(p) {                 // drive_url은 주소 하나이거나 [{date,url}] 목록이다
+    const raw = String(p.drive_url || '').trim();
+    if (!raw) return [];
+    let list = [];
+    if (raw.startsWith('[')) { try { list = JSON.parse(raw); } catch (e) { list = []; } }
+    else list = [{ url: raw }];
+    return (Array.isArray(list) ? list : []).filter(x => x && /^https?:\/\//i.test(String(x.url || '')))
+      .map(x => ({ url: String(x.url), date: x.date || '' }));
+  }
+  const normName = t => String(t || '').replace(/[\s·\-_()\[\]]/g, '');
+  // 추천매물장 이름("송림로데오 잔여분")에 들어 있는 건물명으로 건물을 찾는다. 애매하면 찾지 못한 것으로 둔다.
+  function matchBuilding(recName) {
+    const rn = normName(recName);
+    let best = null, top = 0, tie = false;
+    buildings.forEach(b => {
+      const bn = normName(b.name);
+      let score = 0;
+      if (bn.length >= 3 && rn.includes(bn)) score = 100 + bn.length;
+      else {
+        const m = bn.match(/^(.+?)(\d+차)$/);                      // "유은 9차" ↔ "유은타워 9차 잔여분"
+        if (m && m[1].length >= 2 && rn.includes(m[1]) && rn.includes(m[2])) score = 90;
+        else {
+          const hit = String(b.name || '').split(/\s+/).map(normName).filter(t => t.length >= 4 && rn.includes(t))
+            .sort((a, c) => c.length - a.length)[0];                // "초롱꽃마을4단지 신영지웰" ↔ "신영지웰 …"
+          if (hit) score = 50 + hit.length;
+        }
+      }
+      if (score > top) { best = b; top = score; tie = false; } else if (score && score === top) tie = true;
+    });
+    return tie ? null : best;
+  }
+
   // ----- 데이터 -----
   async function load() {
     const { data, error } = await hitopAuthClient.auth.getSession();
     if (error || !data.session) { hitopRedirectToLogin(); return false; }
     hitopApplyAuthHeader(data.session);
-    const [resources, recordsRes] = await Promise.all([
+    const [resources, recordsRes, recProps] = await Promise.all([
       getDriveResources(),
       fetchWithTimeout(SUPABASE_URL + '/rest/v1/buildings?select=local_id,name,units', { headers }),
+      getRecommendedProperties(),
       getDriveCategories()
     ]);
     if (!recordsRes.ok) throw new Error('건물 호실 조회 실패');
     const records = await recordsRes.json();
-    const shops = HitopResourceRooms.visible(resources, 'commercial');
-    buildings = shops.map(r => {
+    const used = new Set();
+    const toUnits = rec => (rec && Array.isArray(rec.units) ? rec.units : [])
+      .filter(u => String(u.호수 || '').trim()).map(u => ({ u, room: String(u.호수).trim() }));
+    // 자료관리의 모든 건물 (호실 기록이 없어도 추천매물장 자료를 붙일 수 있게 남겨둔다)
+    buildings = resources.map(r => {
       const rec = records.find(x => x.local_id === r.id) || records.find(x => x.name === r.name) || null;
-      const units = rec && Array.isArray(rec.units) ? rec.units : [];
-      return { id: r.id, name: r.name, record: rec,
-        units: units.filter(u => String(u.호수 || '').trim()).map(u => ({ u, room: String(u.호수).trim() })) };
-    }).filter(b => b.record);
+      if (rec) used.add(rec.local_id);
+      const scope = HitopResourceRooms.resourceRoom(r);
+      return { id: r.id, name: r.name, record: rec, units: toUnits(rec), commercial: scope === 'commercial', resource: true, scope, recs: [] };
+    });
+    // 자료관리에 같은 이름이 없는 호실 기록(예: 남광, 월드플러스)도 빠지지 않게 포함한다
+    records.filter(x => !used.has(x.local_id)).forEach(rec => {
+      buildings.push({ id: 'orphan:' + rec.local_id, name: rec.name || rec.local_id, record: rec, units: toUnits(rec), commercial: true, resource: false, scope: 'commercial', recs: [] });
+    });
+    // 추천매물장 자료를 건물에 붙인다
+    unmatchedRecs = [];
+    (recProps || []).forEach(p => {
+      const rp = { id: p.id, name: p.name || '', date: p.received_date || '', memo: p.memo || '', links: recLinks(p) };
+      const b = matchBuilding(rp.name);
+      if (b) b.recs.push(rp); else unmatchedRecs.push(rp);
+    });
     return true;
   }
 
@@ -116,6 +165,7 @@
     const onlyProfit = $('onlyProfit').checked;
     const out = [];
     buildings.forEach(b => {
+      if (mode === 'cand' && !b.commercial) return;
       b.units.forEach(item => {
         const u = item.u;
         const rec = isFlagOn(u.추천매물), profit = isFlagOn(u.수익성매물);
@@ -167,9 +217,12 @@
     const pBtn = el('button', 'mini' + (isFlagOn(u.수익성매물) ? ' pon' : ''), isFlagOn(u.수익성매물) ? '💰 해제' : '💰 수익성');
     pBtn.type = 'button';
     pBtn.addEventListener('click', () => toggle(b, item, '수익성매물', pBtn));
-    const link = el('a', 'mini', '호실보기');
-    link.href = HitopResourceRooms.detailUrl('building-detail.html', b.id, 'commercial') + '#unitStatus';
-    act.append(recBtn, pBtn, link);
+    act.append(recBtn, pBtn);
+    if (b.resource) {
+      const link = el('a', 'mini', '호실보기');
+      link.href = HitopResourceRooms.detailUrl('building-detail.html', b.id, b.scope) + '#unitStatus';
+      act.append(link);
+    }
     const atd = el('td'); atd.append(act); tr.append(atd);
     return tr;
   }
@@ -216,24 +269,80 @@
       return;
     }
 
+    const q = $('q').value.trim().toLowerCase();
+    const onlyProfit = $('onlyProfit').checked;     // 추천매물장 자료에는 💰표시가 없으므로 수익성만 볼 때는 숨긴다
+    const recOk = (r, b) => !onlyProfit && (!q || r.name.toLowerCase().includes(q) || r.memo.toLowerCase().includes(q) || (b && b.name.toLowerCase().includes(q)));
     const groups = new Map();
     entries.forEach(e => { if (!groups.has(e.b.id)) groups.set(e.b.id, { b: e.b, items: [] }); groups.get(e.b.id).items.push(e); });
+    // 순서: 호실을 ⭐한 건물(정렬 기준대로) → 추천매물장 자료만 있는 건물(이름순)
+    const cards = [...groups.values()].map(g => ({ b: g.b, items: g.items, recs: g.b.recs.filter(r => recOk(r, g.b)) }));
+    buildings.filter(b => !groups.has(b.id)).sort((a, c) => a.name.localeCompare(c.name, 'ko')).forEach(b => {
+      const r = b.recs.filter(x => recOk(x, b));
+      if (r.length) cards.push({ b, items: [], recs: r });
+    });
+    const unm = unmatchedRecs.filter(r => recOk(r, null));
     const profitCount = entries.filter(e => isFlagOn(e.item.u.수익성매물)).length;
-    $('summary').textContent = entries.length
-      ? `추천매물 ${entries.length}개 · 건물 ${groups.size}곳 · 💰수익성 ${profitCount}개`
-      : '표시할 추천매물이 없습니다.';
-    if (!entries.length) {
-      const any = buildings.some(b => b.units.some(i => isFlagOn(i.u.추천매물)));
+    const recCount = cards.reduce((n, c) => n + c.recs.length, 0) + unm.length;
+    const parts = [];
+    if (entries.length) parts.push(`추천매물 ${entries.length}개`, `💰수익성 ${profitCount}개`);
+    if (cards.length) parts.push(`건물 ${cards.length}곳`);
+    if (recCount) parts.push(`추천매물장 자료 ${recCount}건`);
+    $('summary').textContent = parts.length ? parts.join(' · ') : '표시할 추천매물이 없습니다.';
+    if (!cards.length && !unm.length) {
+      const any = buildings.some(b => b.units.some(i => isFlagOn(i.u.추천매물))) || buildings.some(b => b.recs.length) || unmatchedRecs.length;
       list.append(emptyBox(any ? '조건에 맞는 추천매물이 없습니다.' : null));
       return;
     }
-    [...groups.values()].forEach(g => {
+    cards.forEach(c => {
       const card = el('section', 'bcard');
-      const head = el('div', 'bhead'); head.append(el('h2', '', g.b.name), el('span', '', g.items.length + '개'));
-      card.append(head, table(g.items));
+      const head = el('div', 'bhead');
+      head.append(el('h2', '', c.b.name), el('span', '', [c.items.length ? `호실 ${c.items.length}개` : '', c.recs.length ? `자료 ${c.recs.length}건` : ''].filter(Boolean).join(' · ')));
+      card.append(head);
+      if (c.items.length) card.append(table(c.items)); else card.append(noUnitsNote(c.b));
+      if (c.recs.length) card.append(recBlock(c.recs));
       list.append(card);
     });
+    if (unm.length) {
+      const card = el('section', 'bcard');
+      const head = el('div', 'bhead'); head.append(el('h2', '', '건물을 찾지 못한 추천매물장 자료'), el('span', '', `자료 ${unm.length}건`));
+      card.append(head, recBlock(unm));
+      list.append(card);
+    }
     syncHeadChecks();
+  }
+
+  // ⭐ 호실은 없고 추천매물장 자료만 있는 건물
+  function noUnitsNote(b) {
+    const d = el('div', 'nounits');
+    d.append('⭐ 표시한 호실이 없습니다. ');
+    if (b.resource) {
+      const a = el('a', 'mini', '호실보기');
+      a.href = HitopResourceRooms.detailUrl('building-detail.html', b.id, b.scope) + '#unitStatus';
+      d.append(a);
+    }
+    return d;
+  }
+
+  // 추천매물장(받은 분양 잔여분·임대 자료) 목록: 이름, 받은 날짜, 메모(내부용), 드라이브 자료 링크
+  function recBlock(recs) {
+    const box = el('div', 'recblock');
+    box.append(el('div', 'rectitle', '📎 추천매물장 자료 (내부용 · 인쇄에는 포함되지 않습니다)'));
+    recs.forEach(r => {
+      const row = el('div', 'recrow');
+      const info = el('div', 'recinfo');
+      info.append(el('strong', '', r.name));
+      if (r.date) info.append(el('span', 'recdate', String(r.date).slice(0, 10)));
+      if (r.memo) info.append(el('div', 'recmemo', '💬 ' + r.memo));
+      const links = el('div', 'act');
+      if (r.links.length) r.links.forEach((l, i) => {
+        const a = el('a', 'mini', r.links.length > 1 ? `자료 ${i + 1} 열기` : '자료 열기');
+        a.href = l.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        links.append(a);
+      }); else links.append(el('span', 'recdate', '열 수 있는 자료 링크 없음'));
+      row.append(info, links);
+      box.append(row);
+    });
+    return box;
   }
 
   // 건물별 전체선택 칸을 실제 선택 상태에 맞춘다

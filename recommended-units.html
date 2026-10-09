@@ -56,6 +56,14 @@
     td.sel, th.sel { width:34px; padding-right:0; }
     td.sel input, th.sel input { width:17px; height:17px; accent-color:var(--gold); cursor:pointer; }
     #printArea { display:none; }
+    .nounits { padding:12px 16px; color:var(--muted); font-size:.88rem; display:flex; align-items:center; gap:8px; }
+    .recblock { border-top:1px solid var(--line); background:rgba(0,0,0,.12); padding:10px 16px 12px; }
+    .rectitle { font-size:.8rem; color:var(--gold); font-weight:700; margin:0 0 6px; }
+    .recrow { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:8px 0; border-top:1px dashed rgba(54,81,110,.7); }
+    .recrow:first-of-type { border-top:0; }
+    .recinfo strong { font-size:.92rem; }
+    .recdate { margin-left:8px; color:var(--muted); font-size:.78rem; }
+    .recmemo { margin-top:3px; color:var(--muted); font-size:.82rem; }
     @media (max-width:640px) { main { padding:16px 12px 50px; } td, th { padding:9px 10px; } }
 
     /* ===== 손님용 A4 인쇄 ===== */
