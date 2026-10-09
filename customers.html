@@ -26,6 +26,16 @@
     .cust-act-edit:hover { background:rgba(216,184,74,0.18); }
     .cust-act-delete { background:transparent; color:var(--red); }
     .cust-act-delete:hover { background:rgba(224,82,82,0.18); }
+    .cust-act-close { background:transparent; color:#ff9d8a; }
+    .cust-act-close:hover { background:rgba(255,157,138,0.18); }
+    .cust-act-restore { background:transparent; color:#6fd6a1; }
+    .cust-act-restore:hover { background:rgba(111,214,161,0.18); }
+    .cust-view-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+    .cust-view-tabs button{border:1px solid var(--border-slate);border-radius:8px;background:transparent;color:var(--text-main);padding:8px 14px;cursor:pointer;font:inherit;font-size:.9rem;font-weight:700}
+    .cust-view-tabs button.active{border-color:var(--gold);color:var(--gold);background:rgba(216,184,74,.12)}
+    .cust-bulk-bar{display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 0;padding:8px 12px;border:1px solid var(--gold);border-radius:8px;background:rgba(216,184,74,.08)}
+    .cust-select{width:18px;height:18px;margin-right:8px;vertical-align:middle;accent-color:var(--gold);cursor:pointer}
+    .cust-closed-note{margin:10px 0 0;color:var(--text-muted);font-size:.9rem}
     .cust-act-diary { background:transparent; color:#2dd4bf; }
     .cust-act-diary:hover { background:rgba(45,212,191,0.18); }
     /* ── 고객 목록: 연락처를 박스 없는 텍스트로 표시 ── */
@@ -44,7 +54,7 @@
     @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:1.15fr 1.2fr 1.35fr .9fr minmax(210px,1.35fr)}}
   .customer-contact-row{display:grid;grid-template-columns:1fr 1fr 1.3fr auto;gap:6px;margin-bottom:8px}.customer-contact-row input{min-width:0;width:100%;box-sizing:border-box}.customer-note-form textarea{min-height:150px;width:100%;box-sizing:border-box;resize:vertical}.customer-note-form{margin:12px 0 18px}.customer-note-form label{display:block;margin:8px 0}.customer-note-form input[type=date]{color-scheme:dark}.customer-note-error{color:var(--red)}@media(max-width:640px){.customer-contact-row{grid-template-columns:1fr 1fr}.customer-contact-row input[type=tel]{grid-column:1/2}}
 </style>
-<script src="assets/js/global-property-search-core.js?v=20261008-status-portfolio"></script>
+<script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-ktop-v3">
 <script>
 (function(){
@@ -147,6 +157,16 @@
           <button class="btn btn-primary" id="customerAddToggleBtn" style="white-space:nowrap;flex-shrink:0;">+ 고객 등록</button>
         </div>
       </div>
+      <div class="cust-view-tabs" role="tablist" aria-label="고객 목록 보기">
+        <button type="button" id="custViewActive" class="active">고객 목록</button>
+        <button type="button" id="custViewClosed">📁 종료고객</button>
+      </div>
+      <div id="custBulkBar" class="cust-bulk-bar">
+        <span>선택 <b id="custBulkCount">0</b>명</span>
+        <button type="button" class="btn cust-act-close" id="custBulkClose">📦 선택 고객 종료</button>
+        <button type="button" class="btn" id="custBulkClear">선택 해제</button>
+      </div>
+      <div id="custClosedNote" class="cust-closed-note" style="display:none">종료한 고객은 삭제되지 않고 이곳에 보관됩니다. "↩ 되살리기"를 누르면 고객 목록으로 돌아갑니다.</div>
       <div id="customerTypeTabs" class="customer-type-tabs" aria-label="고객 종류"></div>
       <div id="customerTableWrap" class="cust-table-wrap">
         <div class="cust-table-head">
@@ -160,6 +180,29 @@
       <div id="customerPagination" class="pagination"></div>
     </section>
 
+  </div>
+
+  <!-- 고객 종료 모달 -->
+  <div id="customerCloseModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:420px;">
+      <div class="modal-title" id="custCloseTitle">고객 종료</div>
+      <p style="margin:0 0 12px;color:var(--text-muted);font-size:.92rem;">종료한 고객은 삭제되지 않고 "종료고객" 폴더로 이동합니다. 나중에 되살릴 수 있습니다.</p>
+      <div class="field">
+        <label for="custCloseReason">종료 사유 (건너뛰어도 됩니다)</label>
+        <select id="custCloseReason">
+          <option value="">사유 없음</option>
+          <option>연락두절</option>
+          <option>다른 곳 계약</option>
+          <option>조건 안 맞음</option>
+          <option>보류</option>
+          <option>기타</option>
+        </select>
+      </div>
+      <div class="modal-btns">
+        <button class="btn" id="custCloseCancel">취소</button>
+        <button class="btn btn-primary" id="custCloseOk">📦 종료</button>
+      </div>
+    </div>
   </div>
 
   <!-- 고객 상세 모달 -->
@@ -279,6 +322,21 @@
   const CUST_PER_PAGE = 10;
   let customerSearch = "";
   let customerTypeFilter = '';
+  // 종료고객: status 칸에 "종료|사유|이전상태|종료일" 로 기록한다 (DB 구조 변경 없음, 삭제하지 않고 보관)
+  let customerView = 'active';          // 'active' | 'closed'
+  const selectedCust = new Set();
+  let pendingClose = [];                // 종료 모달에서 처리할 고객 id
+  const isClosedCust = c => String(c.status || '').startsWith('종료');
+  const isActiveCust = c => c.status !== '계약완료' && !isClosedCust(c);
+  function closedInfo(c) {
+    const [, reason = '', prev = '', at = ''] = String(c.status || '').split('|');
+    return { reason, prev, at: at || c.updated_at || '' };
+  }
+  function statusLabel(c) {
+    if (!isClosedCust(c)) return c.status || '';
+    const i = closedInfo(c);
+    return '종료' + (i.reason ? ' (' + i.reason + ')' : '');
+  }
   const CUSTOMER_TYPES = ['매수자','임차인','소유자','부동산','업체','지인'];
   function customerKinds(c) {
     if(Array.isArray(c.customer_types) && c.customer_types.length)return c.customer_types;
@@ -291,7 +349,7 @@
   function formPhones(prefix) { return [...new Set([document.getElementById(prefix+'_contact').value.trim(),...readCustomerContacts(prefix).map(v=>v.phone)].filter(Boolean))]; }
   for(const prefix of ['c','ce'])document.getElementById(prefix+'_types').innerHTML=CUSTOMER_TYPES.map(t=>'<label><input type="checkbox" value="'+t+'">'+t+'</label>').join('');
   function renderCustomerTypeTabs() {
-    const base=allCustomers.filter(c=>c.status!=='계약완료');
+    const base=allCustomers.filter(isActiveCust);
     document.getElementById('customerTypeTabs').innerHTML=['전체',...CUSTOMER_TYPES,'미분류'].map(t=>{
       const key=t==='전체' ? '' : t;
       const count=base.filter(c=>!key || (key==='미분류' ? !customerKinds(c).length : customerKinds(c).includes(key))).length;
@@ -323,9 +381,19 @@
     const badge = document.getElementById("customerCountBadge");
     container.innerHTML = "";
 
-    renderCustomerTypeTabs();
-    let filtered = allCustomers.filter(c => c.status !== "계약완료");
-    if(customerTypeFilter)filtered=filtered.filter(c=>customerTypeFilter==="미분류" ? !customerKinds(c).length : customerKinds(c).includes(customerTypeFilter));
+    const closedView = customerView === 'closed';
+    document.getElementById('custViewActive').classList.toggle('active', !closedView);
+    document.getElementById('custViewClosed').classList.toggle('active', closedView);
+    document.getElementById('custViewClosed').textContent = '📁 종료고객' + (allCustomers.some(isClosedCust) ? ' (' + allCustomers.filter(isClosedCust).length + ')' : '');
+    document.getElementById('custClosedNote').style.display = closedView ? '' : 'none';
+    document.getElementById('customerTypeTabs').style.display = closedView ? 'none' : '';
+    document.querySelector('.cust-table-head').innerHTML = closedView
+      ? '<span>고객명</span><span>연락처</span><span>종료 사유</span><span>종료일</span><span>관리</span>'
+      : '<span>고객명</span><span>연락처</span><span>최근업무</span><span>최근상담일</span><span>관리</span>';
+    if (!closedView) renderCustomerTypeTabs();
+    let filtered = allCustomers.filter(c => closedView ? isClosedCust(c) : isActiveCust(c));
+    if (closedView) filtered.sort((a, b) => String(closedInfo(b).at).localeCompare(String(closedInfo(a).at)));
+    if(!closedView && customerTypeFilter)filtered=filtered.filter(c=>customerTypeFilter==="미분류" ? !customerKinds(c).length : customerKinds(c).includes(customerTypeFilter));
     if (customerSearch) {
       const kw = customerSearch.toLowerCase();
       filtered = filtered.filter(c =>
@@ -335,6 +403,8 @@
 
     badge.textContent = filtered.length ? `(${filtered.length}명)` : "";
 
+    updateBulkBar();
+    empty.textContent = closedView ? '종료한 고객이 없습니다. 고객 목록에서 "📦 종료"를 누르면 이곳으로 옮겨집니다.' : '등록된 고객이 없습니다.';
     if (!filtered.length) {
       empty.style.display = "block";
       document.getElementById("customerPagination").innerHTML = "";
@@ -351,21 +421,92 @@
       const lastWork = activity ? (activity.title || (activity.content || "").slice(0, 24)) : "—";
       const lastDate = activity && activity.date ? formatDate(activity.date) : "—";
 
-      row.innerHTML = `
-        <span class="cust-cell cust-cell-name" data-label="고객명">${escapeHtmlCust(c.name) || "(이름 미입력)"}<small class="customer-tags">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")}</small></span>
-        <span class="cust-cell" data-label="연락처">${customerPhones(c).length ? customerPhones(c).map(p=>`<a class="cust-phone-link" href="tel:${escapeHtmlCust(p)}" onclick="event.stopPropagation()">${escapeHtmlCust(p)}</a>`).join("<br>") : "—"}</span>
-        <span class="cust-cell" data-label="최근업무">${escapeHtmlCust(lastWork)}</span>
-        <span class="cust-cell" data-label="최근상담일">${lastDate}</span>
-        <span class="cust-cell cust-cell-actions" data-label="관리">
-          <button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
+      const nameCell = (closedView ? '' : `<input type="checkbox" class="cust-select" data-cust-id="${c.id}" aria-label="${escapeHtmlCust(c.name)} 선택"${selectedCust.has(String(c.id)) ? ' checked' : ''} onclick="event.stopPropagation()">`) + (escapeHtmlCust(c.name) || "(이름 미입력)");
+      const phoneCell = customerPhones(c).length ? customerPhones(c).map(p=>`<a class="cust-phone-link" href="tel:${escapeHtmlCust(p)}" onclick="event.stopPropagation()">${escapeHtmlCust(p)}</a>`).join("<br>") : "—";
+      const ci = closedView ? closedInfo(c) : null;
+      const col3 = closedView ? (ci.reason || "사유 없음") + (ci.prev ? ' · 이전 상태 ' + ci.prev : '') : lastWork;
+      const col4 = closedView ? (ci.at ? formatDate(ci.at) : "—") : lastDate;
+      const actions = closedView
+        ? `<button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
+          <button class="btn cust-act-restore" onclick="event.stopPropagation();restoreCustomer('${c.id}')">↩ 되살리기</button>
+          <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">일지</button>`
+        : `<button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
           <button class="btn cust-act-edit" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">수정</button>
+          <button class="btn cust-act-close" onclick="event.stopPropagation();openCloseModal(['${c.id}'])">📦 종료</button>
           <button class="btn cust-act-delete" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
-          <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">일지</button>
-        </span>
+          <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">일지</button>`;
+      row.innerHTML = `
+        <span class="cust-cell cust-cell-name" data-label="고객명">${nameCell}<small class="customer-tags">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")}</small></span>
+        <span class="cust-cell" data-label="연락처">${phoneCell}</span>
+        <span class="cust-cell" data-label="${closedView ? '종료 사유' : '최근업무'}">${escapeHtmlCust(col3)}</span>
+        <span class="cust-cell" data-label="${closedView ? '종료일' : '최근상담일'}">${col4}</span>
+        <span class="cust-cell cust-cell-actions" data-label="관리">${actions}</span>
       `;
       container.appendChild(row);
     });
     _makePagination("customerPagination", filtered.length, CUST_PER_PAGE, customerPage, (p) => { customerPage = p; renderCustomers(); });
+  }
+
+  function updateBulkBar() {
+    const bar = document.getElementById('custBulkBar');
+    const alive = new Set(allCustomers.filter(isActiveCust).map(c => String(c.id)));
+    [...selectedCust].forEach(id => { if (!alive.has(id)) selectedCust.delete(id); });
+    bar.style.display = customerView === 'active' && selectedCust.size ? 'flex' : 'none';
+    document.getElementById('custBulkCount').textContent = selectedCust.size;
+  }
+  document.getElementById('customerContainer').addEventListener('change', e => {
+    const cb = e.target.closest('.cust-select');
+    if (!cb) return;
+    if (cb.checked) selectedCust.add(cb.dataset.custId); else selectedCust.delete(cb.dataset.custId);
+    updateBulkBar();
+  });
+  document.getElementById('custBulkClear').addEventListener('click', () => { selectedCust.clear(); renderCustomers(); });
+  document.getElementById('custBulkClose').addEventListener('click', () => openCloseModal([...selectedCust]));
+  document.getElementById('custViewActive').addEventListener('click', () => { customerView = 'active'; customerPage = 1; renderCustomers(); });
+  document.getElementById('custViewClosed').addEventListener('click', () => { customerView = 'closed'; customerPage = 1; renderCustomers(); });
+
+  function openCloseModal(ids) {
+    if (!ids.length) return;
+    pendingClose = ids.map(String);
+    const names = pendingClose.map(id => (allCustomers.find(c => String(c.id) === id) || {}).name || '').filter(Boolean);
+    document.getElementById('custCloseTitle').textContent = pendingClose.length === 1 ? `"${names[0] || '고객'}" 종료` : `선택한 ${pendingClose.length}명 종료`;
+    document.getElementById('custCloseReason').value = '';
+    document.getElementById('customerCloseModal').style.display = 'flex';
+  }
+  document.getElementById('custCloseCancel').addEventListener('click', () => { document.getElementById('customerCloseModal').style.display = 'none'; pendingClose = []; });
+  document.getElementById('custCloseOk').addEventListener('click', async () => {
+    const btn = document.getElementById('custCloseOk');
+    const reason = document.getElementById('custCloseReason').value;
+    const ids = pendingClose.slice();
+    btn.disabled = true;
+    try {
+      const now = new Date().toISOString();
+      await Promise.all(ids.map(id => {
+        const c = allCustomers.find(x => String(x.id) === id);
+        const prev = c && !isClosedCust(c) ? (c.status || '') : '';
+        return updateCustomer(id, { status: ['종료', reason, prev, now].join('|') });
+      }));
+      document.getElementById('customerCloseModal').style.display = 'none';
+      pendingClose = []; ids.forEach(id => selectedCust.delete(id));
+      showToast(ids.length === 1 ? '📦 종료고객 폴더로 옮겼습니다.' : `📦 ${ids.length}명을 종료고객 폴더로 옮겼습니다.`);
+      await loadCustomers();
+    } catch (e) {
+      showToast('❌ 종료 실패: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  async function restoreCustomer(id) {
+    const c = allCustomers.find(x => String(x.id) === String(id));
+    if (!c) return;
+    try {
+      await updateCustomer(id, { status: closedInfo(c).prev || '신규' });
+      showToast('↩ 고객 목록으로 되살렸습니다.');
+      await loadCustomers();
+    } catch (e) {
+      showToast('❌ 되살리기 실패: ' + e.message);
+    }
   }
 
   const DIARY_APP_URL = OFFICE_DIARY_URL;
@@ -438,7 +579,7 @@
         <div><span>찾는매물</span><strong>${escapeHtmlCust(getCustomerTypeLabel(c.property_category))}</strong></div>
         <div><span>예산</span><strong>${escapeHtmlCust(c.desired_price) || "—"}</strong></div>
         <div><span>관심지역</span><strong>${escapeHtmlCust(c.desired_region) || "—"}</strong></div>
-        <div><span>상태</span><strong>${escapeHtmlCust(c.status) || "—"}</strong></div>
+        <div><span>상태</span><strong>${escapeHtmlCust(statusLabel(c)) || "—"}</strong></div>
       </div>
       ${customerBasicMemo(c) ? `<div class="cust-detail-memo">📝 ${escapeHtmlCust(customerBasicMemo(c))}</div>` : ""}
       
@@ -731,7 +872,7 @@
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
-    ["customerDetailModal","customerEditModal"].forEach(id => document.getElementById(id).style.display = "none");
+    ["customerDetailModal","customerEditModal","customerCloseModal"].forEach(id => document.getElementById(id).style.display = "none");
   });
 </script>
 </body>

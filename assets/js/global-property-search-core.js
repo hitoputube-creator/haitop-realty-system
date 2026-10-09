@@ -56,7 +56,7 @@ function build(data){
   const e={key:'parcel:'+p.id,label:'토지·택지',group:'토지',name:[district,[block,text(p.subblock),text(p.parcel)].filter(Boolean).join('-')].filter(Boolean).join(' '),address:text(d.address),customerIds:customerIds(d),contacts:attachCustomer(d,contactsOf(d)),listingId:null,source:'필지자료',status:'자료등록',links:[{label:'필지보기',href:'land-location.html?'+params}]};
   const linked=byListing.get(String(d.listing_id||''));if(linked)merge(linked,e);else entries.push(e);
  }
- for(const customer of customers)entries.push({key:'customer:'+customer.id,label:'고객',group:'고객',name:text(customer.name)||'이름 미등록',address:text(customer.desired_region),customerIds:[String(customer.id)],customerId:customer.id,contacts:customerContacts(customer),listingId:null,source:'고객관리',status:(customer.customer_types||[]).join(' · ')||'미분류',links:[{label:'고객·매물·상담보기',href:'customers.html?customerId='+encodeURIComponent(customer.id)}]});
+ for(const customer of customers.filter(c=>!String(c.status||'').startsWith('종료')))entries.push({key:'customer:'+customer.id,label:'고객',group:'고객',name:text(customer.name)||'이름 미등록',address:text(customer.desired_region),customerIds:[String(customer.id)],customerId:customer.id,contacts:customerContacts(customer),listingId:null,source:'고객관리',status:(customer.customer_types||[]).join(' · ')||'미분류',links:[{label:'고객·매물·상담보기',href:'customers.html?customerId='+encodeURIComponent(customer.id)}]});
  for(const diary of data.diary||[]){
   if(diary.link_key==='__daily_schedule__')continue;
   const linked=byListing.get(String(diary.listing_id||''));

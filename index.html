@@ -1032,7 +1032,7 @@ if (tab === "done")       renderDoneList();
   }
   function customerPhones(c) { return [...new Set([c.phone,...(c.contact_phones || []),...(c.additional_contacts || []).map(x=>x.phone)].filter(Boolean))]; }
   function renderCustomerTypeTabs() {
-    const base=allCustomers.filter(c=>c.status!=='계약완료');
+    const base=allCustomers.filter(c=>c.status!=='계약완료'&&!String(c.status||'').startsWith('종료'));
     document.getElementById('customerTypeTabs').innerHTML=['전체',...CUSTOMER_TYPES,'미분류'].map(t=>{
       const key=t==='전체' ? '' : t;
       const count=base.filter(c=>!key || (key==='미분류' ? !customerKinds(c).length : customerKinds(c).includes(key))).length;
@@ -1067,7 +1067,7 @@ if (tab === "done")       renderDoneList();
     container.innerHTML = "";
 
     renderCustomerTypeTabs();
-    let filtered = allCustomers.filter(c => c.status !== "계약완료");
+    let filtered = allCustomers.filter(c => c.status !== "계약완료" && !String(c.status || "").startsWith("종료"));
     if(customerTypeFilter)filtered=filtered.filter(c=>customerTypeFilter==="미분류" ? !customerKinds(c).length : customerKinds(c).includes(customerTypeFilter));
     if (customerSearch) {
       const kw = customerSearch.toLowerCase();
@@ -1478,7 +1478,7 @@ if (tab === "done")       renderDoneList();
       allCustomers = await getCustomers();
       renderCustomers();
       // 최근업무/최근상담일은 work_diary 조회가 필요해 약간 늦게 채워진다 - 목록은 먼저 보여준다.
-      const ids = allCustomers.filter(c => c.status !== "계약완료").map(c => c.id);
+      const ids = allCustomers.filter(c => c.status !== "계약완료" && !String(c.status || "").startsWith("종료")).map(c => c.id);
       customerDiaryActivity = await getLatestDiaryActivityForCustomers(ids);
       renderCustomers();
     } catch(e) {
