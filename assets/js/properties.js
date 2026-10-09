@@ -386,8 +386,8 @@ function renderListView(items) {
 let _currentListItems = [];
 let _currentCardItems = [];
 
-// 여러 열을 차례로 눌러 "동 → 호수"처럼 겹쳐서 정렬한다. 먼저 누른 열이 우선순위가 높다.
-// 같은 열을 누를 때마다 오름차순 → 내림차순 → 정렬 해제 순으로 바뀐다.
+// 동·호수만 겹쳐서 정렬한다: 동 → 호수 순으로 누르면 동 먼저, 호수 → 동 순으로 누르면 호수 먼저.
+// 다른 열은 한 열씩만 정렬하고, 같은 열을 다시 누르면 오름차순/내림차순이 바뀐다.
 let listingColumnSort = [];   // [{key, direction}]
 function listingColumnValue(item,key) {
   const u=item.apartmentUnitData || {};
@@ -397,16 +397,23 @@ function listingColumnValue(item,key) {
   return map[key]?.() ?? "";
 }
 function sortListingColumn(key) {
-  const i=listingColumnSort.findIndex(s=>s.key===key);
-  if (i<0) listingColumnSort=[...listingColumnSort,{key,direction:1}];
-  else if (listingColumnSort[i].direction===1) listingColumnSort=listingColumnSort.map((s,j)=>j===i ? {key,direction:-1} : s);
-  else listingColumnSort=listingColumnSort.filter((_,j)=>j!==i);
+  const pair=["dong","room"];
+  const last=listingColumnSort[listingColumnSort.length-1];
+  if (!pair.includes(key)) {
+    listingColumnSort=[{key,direction:last && listingColumnSort.length===1 && last.key===key ? -last.direction : 1}];
+  } else if (listingColumnSort.length && listingColumnSort.every(s=>pair.includes(s.key))) {
+    const i=listingColumnSort.findIndex(s=>s.key===key);
+    if (i<0) listingColumnSort=[...listingColumnSort,{key,direction:1}];
+    else if (i===listingColumnSort.length-1) listingColumnSort=listingColumnSort.map((s,j)=>j===i ? {key,direction:-s.direction} : s);
+    else listingColumnSort=[...listingColumnSort.filter((_,j)=>j!==i),listingColumnSort[i]];   // 먼저 눌렀던 열을 다시 누르면 맨 뒤(2순위)로
+  } else {
+    listingColumnSort=[{key,direction:1}];
+  }
   currentPage=1; renderList();
 }
 function listingSortMark(key) {
-  const i=listingColumnSort.findIndex(s=>s.key===key);
-  if (i<0) return '↕';
-  return (listingColumnSort[i].direction===1 ? '↑' : '↓')+(listingColumnSort.length>1 ? '<sup>'+(i+1)+'</sup>' : '');
+  const s=listingColumnSort.find(x=>x.key===key);
+  return s ? (s.direction===1 ? '↑' : '↓') : '↕';
 }
 
 /* ══════════════════════════════════════════
