@@ -46,7 +46,7 @@
   <div class="page">
     <header class="topbar">
       <div class="brand"><span class="brand-mark" aria-hidden="true"></span><div><div class="brand-name">매물관리</div><div class="brand-sub">매물·자료 관리</div></div></div>
-      <nav class="top-actions" aria-label="주요 페이지"><a class="customer-link" href="customers.html">전체 고객관리</a><a id="officeWorkDiaryLink" href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html">업무센터</a><a href="index.html">기존 통합관리</a></nav>
+      <nav class="top-actions" aria-label="주요 페이지"><a class="customer-link" href="customers.html">전체 고객관리</a><a id="hitopWorkDiaryDirectLink" href="https://haitop-realestate-diary.vercel.app/" hidden>하이탑 업무일지</a><a id="officeWorkDiaryLink" href="https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html">업무센터</a><a href="index.html">기존 통합관리</a></nav>
     </header>
     <script id="initialOfficeBrand">
       // 첫 화면 상호는 공통 스크립트의 후속 처리와 관계없이 즉시 표시한다.
@@ -55,6 +55,7 @@
         document.querySelector('.brand-name').textContent = ktop ? 'KTOP부동산 매물관리' : '하이탑부동산';
         document.querySelector('.brand-mark').textContent = ktop ? 'K' : 'H';
         document.title = ktop ? 'KTOP부동산 매물관리' : '하이탑부동산 | 매물관리 메인';
+        document.getElementById('hitopWorkDiaryDirectLink').hidden = ktop;
         if (ktop) { document.getElementById('officeWorkDiaryLink').href = OFFICE_DIARY_URL + '?v=20261006-ui2'; document.getElementById('officeWorkDiaryLink').textContent = '케이탑 업무일지'; }
       })();
     </script>
