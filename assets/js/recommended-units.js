@@ -459,57 +459,78 @@
     return parts.join(' / ');
   }
 
+  function logoSvg(gold, navy, size) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" stroke="${gold}" stroke-width="1.6"/><path d="M13 24 L32 11 L51 24" stroke="${gold}" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 46 V25 M43 46 V25 M21 35.5 H43" stroke="${navy}" stroke-width="4.2" stroke-linecap="round"/></svg>`;
+  }
+
+  // 하이탑 견적서와 같은 디자인(네이비 배너 + 골드 포인트 + 사무소 정보 바닥글)의 호실별 A4 안내서
   function buildOnePages(entries) {
     const area = $('printArea');
     area.replaceChildren();
     const now = new Date();
-    const dateStr = now.getFullYear() + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0');
-    const phone = OfficeConfig.id === 'ktop' ? '' : ' ☎ 031.949.8969';
+    const dateStr = now.getFullYear() + '. ' + String(now.getMonth() + 1).padStart(2, '0') + '. ' + String(now.getDate()).padStart(2, '0') + '.';
+    const ktop = OfficeConfig.id === 'ktop';
     entries.forEach(({ b, item, y }) => {
       const u = item.u, ov = memoFields(b.memo);
-      const page = el('section', 'p-page');
-      const head = el('div', 'p-head');
-      head.append(el('h1', '', '매물 안내서'), el('div', 'p-co', officeCompanyName + phone));
-      page.append(head, el('p', 'p-date', '작성일 ' + dateStr + ' 기준'));
-      page.append(el('div', 'p-title', b.name + ' ' + roomLabel(item.room)));
-      if (u.현업종) page.append(el('div', 'p-sub', '업종 ' + u.현업종 + (u.공실여부 ? ' · ' + u.공실여부 : '')));
-
-      const kpi = el('div', 'p-kpi');
-      [['매매가', eok(price(u))], ['보증금', eok(deposit(u))],
-       ['월세', rent(u) === null ? '—' : rent(u).toLocaleString('ko-KR') + '만'],
-       ['수익률', y ? y.v.toFixed(1) + '%' : '—']].forEach(([k, v]) => {
-        const box = el('div', 'p-k'); box.append(el('div', 'p-kl', k), el('div', 'p-kv', v)); kpi.append(box);
-      });
-      page.append(kpi);
-
-      const rows = [];
+      const p0 = price(u), d0 = deposit(u), r0 = rent(u);
+      const fl = floorNo(item.room);
       const sale = areaText(u, '분양'), excl = areaText(u, '전용');
-      if (sale) rows.push(['분양면적', sale]);
-      if (excl) rows.push(['전용면적', excl]);
-      if (u.평당가) rows.push(['평당가', Number(u.평당가) ? eok(manwon(u.평당가, 1000000)) : String(u.평당가)]);
+      const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const row = (k, v, cls) => `<tr class="${cls || ''}"><td class="lbl">${esc(k)}</td><td class="val">${esc(v)}</td></tr>`;
+      const sec = t => `<tr class="sec"><td colspan="2">${t}</td></tr>`;
+      const rows = [];
+      rows.push(sec('▪ &nbsp; 매 &nbsp; 매 &nbsp; 조 &nbsp; 건'));
+      rows.push(row('매매가', eok(p0), 'emph'));
+      rows.push(row('보증금', eok(d0)));
+      rows.push(row('월 임대료', r0 === null ? '—' : r0.toLocaleString('ko-KR') + '만원'));
+      if (u.평당가 && Number(u.평당가)) rows.push(row('평당가', eok(manwon(u.평당가, 1000000))));
+      if (p0 && r0 !== null) {
+        rows.push(sec('▪ &nbsp; 수 &nbsp; 익 &nbsp; 분 &nbsp; 석'));
+        rows.push(row('실투자금 (매매가 − 보증금)', eok(Math.max(p0 - (d0 || 0), 0))));
+        rows.push(row('월 임대수익', r0.toLocaleString('ko-KR') + '만원'));
+        rows.push(row('연 임대수익 (월세×12)', eok(r0 * 12)));
+        rows.push(`<tr class="yld"><td class="lbl">수 익 률</td><td class="val">${y ? y.v.toFixed(2) + '%' : '—'}</td></tr>`);
+      }
+      const info = [];
       ['주소', '사용승인일', '구조', '주차대수', '연면적'].forEach(k => {
         const v = ov[k];
-        if (v && (k === '주소' || k === '구조' || /\d/.test(v))) rows.push([k, v]);
+        if (v && (k === '주소' || k === '구조' || /\d/.test(v))) info.push([k, v]);
       });
-      const p0 = price(u), d0 = deposit(u), r0 = rent(u);
-      if (p0 && r0 !== null) {
-        const box = el('div', 'p-sum');
-        box.append(el('div', 'p-sum-t', '투자 요약'));
-        const g = el('div', 'p-sum-g');
-        [['실투자금 (매매가 − 보증금)', eok(Math.max(p0 - (d0 || 0), 0))], ['월 임대수익', r0.toLocaleString('ko-KR') + '만'],
-         ['연 임대수익 (월세×12)', eok(r0 * 12)]].forEach(([k, v]) => {
-          const c = el('div', 'p-sum-c'); c.append(el('div', 'p-sum-l', k), el('div', 'p-sum-v', v)); g.append(c);
-        });
-        box.append(g); page.append(box);
+      if (info.length) {
+        rows.push(sec('▪ &nbsp; 건 &nbsp; 물 &nbsp; 개 &nbsp; 요'));
+        info.forEach(([k, v]) => rows.push(row(k, v)));
       }
-      if (rows.length) {
-        const t = document.createElement('table'); t.className = 'p-info';
-        rows.forEach(([k, v]) => { const tr = document.createElement('tr'); tr.append(el('th', '', k), el('td', '', v)); t.append(tr); });
-        page.append(t);
-      }
-      page.append(el('div', 'p-memo', '메모'));
-      page.append(el('div', 'p-note', '※ 금액은 만원 단위 입력값 기준이며, 수익률은 월 임대료×12 ÷ (가격 − 보증금)으로 계산한 단순수익률(대출·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.'));
-      page.append(el('div', 'p-foot', '문의 ' + officeCompanyName + phone));
+      const phone = ktop ? '' : '031-949-8969';
+      const page = el('section', 'p-page');
+      page.innerHTML = `
+        <div class="est-banner">
+          <div class="est-banner-top">
+            <div class="est-brand">${logoSvg('#e6cd8e', '#c9a24a', 30)}<div><span class="kr">${esc(officeCompanyName)}</span><span class="en">Haitop Realty</span></div></div>
+            <div class="est-date">작성일자 <b>${dateStr}</b></div>
+          </div>
+          <h2>매 &nbsp; 물 &nbsp; 안 &nbsp; 내 &nbsp; 서</h2>
+          <div class="sub">P R O P E R T Y &nbsp; G U I D E</div>
+        </div>
+        <div class="info-card">
+          <div class="info-loc"><div class="i-label">위치 (빌딩명)</div><div class="i-value">${esc(b.name)}</div></div>
+          <div class="info-grid">
+            <div><div class="i-label">호&nbsp;&nbsp;실</div><div class="i-value">${esc(roomLabel(item.room))}</div></div>
+            <div><div class="i-label">업&nbsp;&nbsp;종</div><div class="i-value">${esc(u.현업종 || '-')}</div></div>
+            <div><div class="i-label">층&nbsp;&nbsp;수</div><div class="i-value">${fl ? fl + ' 층' : '-'}</div></div>
+            <div><div class="i-label">분양면적</div><div class="i-value">${esc(sale || '-')}</div></div>
+            <div><div class="i-label">전용면적</div><div class="i-value">${esc(excl || '-')}</div></div>
+          </div>
+        </div>
+        <table class="est-tbl"><thead><tr><th>항목</th><th>내용</th></tr></thead><tbody>${rows.join('')}</tbody></table>
+        <div class="est-note">※ 금액은 만원 단위 입력값 기준이며, 수익률은 월 임대료×12 ÷ (매매가 − 보증금)으로 계산한 단순수익률(대출·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부(${esc(u.공실여부 || '-')})는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.</div>
+        <div class="est-foot">
+          <div class="ef-left">${logoSvg('#c9a24a', '#12244a', 26)}<div>
+            <div class="fc">${ktop ? esc(officeCompanyName) : '하이탑부동산공인중개사사무소'}</div>
+            ${ktop ? '' : '<div class="fp">대표: 주현희 &nbsp;|&nbsp; 경기도 파주시 책향기로 830, 1층<br>사업자등록번호 305-48-62183 &nbsp;|&nbsp; 중개사무소 등록번호 41480-2016-00026<br>newpajucity@naver.com</div>'}
+          </div></div>
+          ${ktop ? '' : '<div class="ef-right"><div class="ef-tel"><span>TEL</span>031-949-8969</div><div class="ef-fax">FAX 031-944-1108</div></div>'}
+        </div>
+        <div class="est-base"></div>`;
       area.append(page);
     });
   }

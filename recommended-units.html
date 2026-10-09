@@ -75,6 +75,7 @@
 
     /* ===== 손님용 A4 인쇄 ===== */
     @page { size:A4 portrait; margin:12mm; }
+    @page sheet { size:A4 portrait; margin:0; }
     @media print {
       html, body { background:#fff !important; }
       main, #toast { display:none !important; }
@@ -93,26 +94,45 @@
       .p-bld tr { break-inside:avoid; }
       .p-bld .y { font-weight:700; color:#1a2f55; }
       .p-page, .p-page * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-      .p-page { break-after:page; page-break-after:always; }
+      .p-page { page:sheet; width:210mm; height:296mm; display:flex; flex-direction:column; break-after:page; page-break-after:always; font-family:Pretendard,'Malgun Gothic',sans-serif; color:#26354D; overflow:hidden; }
       .p-page:last-child { break-after:auto; page-break-after:auto; }
-      .p-title { font-size:30pt; font-weight:800; color:#1a2f55; margin:6px 0 2px; }
-      .p-sub { font-size:13pt; color:#444; margin-bottom:20px; }
-      .p-kpi { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0 0 18px; }
-      .p-k { border:1.5px solid #1a2f55; border-radius:6px; padding:16px 8px; background:#f5f7fb; text-align:center; }
-      .p-kl { font-size:10pt; color:#444; margin-bottom:4px; }
-      .p-kv { white-space:nowrap; font-size:18pt; font-weight:800; color:#1a2f55; }
-      .p-info { width:100%; border-collapse:collapse; font-size:12.5pt; margin-bottom:16px; }
-      .p-info th { width:26%; background:#eaeef5; color:#1a2f55; text-align:left; padding:10px 12px; border:1px solid #b9c2d3; }
-      .p-info td { padding:10px 12px; border:1px solid #c9d0de; }
-      .p-sum { border:1.5px solid #b88a14; border-radius:6px; margin:0 0 18px; overflow:hidden; }
-      .p-sum-t { background:#b88a14; color:#fff; font-weight:700; font-size:11pt; padding:6px 12px; }
-      .p-sum-g { display:grid; grid-template-columns:repeat(3,1fr); }
-      .p-sum-c { padding:12px 10px; text-align:center; border-left:1px solid #e3d3a0; }
-      .p-sum-c:first-child { border-left:0; }
-      .p-sum-l { font-size:9.5pt; color:#555; margin-bottom:4px; }
-      .p-sum-v { font-size:16pt; font-weight:800; color:#1a2f55; }
-      .p-memo { height:55mm; border:1px solid #b9c2d3; border-radius:6px; padding:8px 12px; font-size:10pt; color:#777; margin-top:16px;
-        background:repeating-linear-gradient(transparent 0 8.4mm, #dfe4ee 8.4mm 8.6mm); }
+      .est-banner { background:linear-gradient(155deg,#0F1D3A 0%,#243F77 100%); color:#fff; text-align:center; padding:6mm 8mm 9mm; position:relative; }
+      .est-banner::after { content:''; display:block; height:3px; background:#C8A96B; position:absolute; bottom:0; left:0; right:0; }
+      .est-banner-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:5mm; }
+      .est-brand { display:flex; align-items:center; gap:8px; text-align:left; }
+      .est-brand .kr { display:block; font-size:10pt; font-weight:900; letter-spacing:1px; color:#fff; }
+      .est-brand .en { display:block; font-size:6pt; letter-spacing:2px; color:rgba(239,228,203,.75); text-transform:uppercase; margin-top:1px; }
+      .est-date { font-size:8pt; color:rgba(239,228,203,.85); border:1px solid rgba(239,228,203,.4); padding:1.2mm 3mm; }
+      .est-date b { color:#fff; margin-left:3px; }
+      .est-banner h2 { margin:0; font-size:21pt; font-weight:800; letter-spacing:4pt; }
+      .est-banner .sub { color:rgba(239,228,203,.78); font-size:8pt; letter-spacing:2.4pt; margin-top:2mm; font-weight:500; }
+      .info-card { background:#F5F3EA; border-left:4px solid #C8A96B; margin:-5mm 8mm 0; padding:4mm 6mm; position:relative; z-index:1; box-shadow:0 6px 16px rgba(15,29,58,.10); }
+      .info-loc { margin-bottom:3mm; }
+      .i-label { font-size:7.5pt; color:#778397; letter-spacing:.6px; margin-bottom:1mm; }
+      .info-loc .i-value { font-size:18pt; font-weight:800; color:#0F1D3A; }
+      .info-grid { display:grid; grid-template-columns:.8fr 1.2fr .7fr 1.5fr 1.5fr; gap:2mm 3mm; }
+      .info-grid .i-value { font-size:10pt; font-weight:700; color:#0F1D3A; }
+      .est-tbl { width:calc(100% - 16mm); margin:6mm 8mm 0; border-collapse:collapse; }
+      .est-tbl th, .est-tbl td { border:1px solid #D3D9E4; padding:2.6mm 4mm; font-size:11.5pt; }
+      .est-tbl thead th { background:#0F1D3A; color:#fff; font-size:10pt; text-align:center; letter-spacing:.8px; border-color:#243F77; }
+      .est-tbl .sec td { background:#172A52; color:#fff; font-size:9.5pt; font-weight:800; letter-spacing:3px; padding:2mm 4mm; border-color:#243F77; }
+      .est-tbl .lbl { background:#F4F6FA; font-weight:700; color:#4C5B73; width:38%; }
+      .est-tbl .val { text-align:right; font-weight:700; color:#0F1D3A; }
+      .est-tbl .emph .lbl { background:#E9EEF7; border-left:3px solid #C8A96B; color:#0F1D3A; }
+      .est-tbl .emph .val { background:#E9EEF7; font-size:15pt; font-weight:800; color:#B3202A; }
+      .est-tbl .yld td { padding:4mm; background:linear-gradient(90deg,#0F1D3A,#243F77); border-color:#243F77; }
+      .est-tbl .yld .lbl { font-size:13pt; font-weight:800; border-left:3px solid #C8A96B; color:#EFE4CB; background:linear-gradient(90deg,#0F1D3A,#1c3363); }
+      .est-tbl .yld .val { font-size:17pt; font-weight:900; color:#F3C9A8; background:linear-gradient(90deg,#1c3363,#243F77); }
+      .est-note { margin:3mm 8mm 0; padding:2.5mm 5mm; background:#EEF2FA; border-left:3px solid #C8A96B; font-size:8pt; color:#4C5B73; line-height:1.5; }
+      .est-foot { margin-top:auto; border:1px solid #D3D9E4; border-top:3px solid #C8A96B; background:#F8F6EE; padding:4mm 7mm 3mm; display:flex; align-items:center; justify-content:space-between; gap:4mm; }
+      .ef-left { display:flex; align-items:center; gap:3mm; }
+      .est-foot .fc { color:#0F1D3A; font-size:11pt; font-weight:900; letter-spacing:1px; }
+      .est-foot .fp { color:#7a8aab; font-size:7.5pt; margin-top:1.5mm; line-height:1.9; }
+      .ef-right { text-align:right; flex-shrink:0; }
+      .ef-tel { color:#0F1D3A; font-size:15pt; font-weight:900; }
+      .ef-tel span { color:#A98545; font-size:8pt; font-weight:800; margin-right:4px; }
+      .ef-fax { color:#778397; font-size:7.5pt; margin-top:1mm; }
+      .est-base { height:5mm; background:#0F1D3A; }
       .p-note { margin-top:10px; padding-top:8px; border-top:1px solid #b9c2d3; font-size:8.5pt; color:#444; line-height:1.55; }
       .p-foot { margin-top:6px; text-align:center; font-size:9.5pt; font-weight:700; color:#1a2f55; }
     }
@@ -163,6 +183,6 @@
 <div id="printArea" aria-hidden="true"></div>
 
 <script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
-<script src="assets/js/recommended-units.js?v=20261009-3"></script>
+<script src="assets/js/recommended-units.js?v=20261009-4"></script>
 </body>
 </html>
