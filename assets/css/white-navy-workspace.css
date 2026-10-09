@@ -59,3 +59,45 @@ html[data-office-theme='ktop'] :is(button,a,input,select,textarea):focus-visible
 
 html[data-office-theme='ktop'] select option {background:#fff!important;color:#1e293b!important}
 html[data-office-theme='ktop'] :is(.area-auto,.area-arrow,.unit-modal-title) {color:#254767!important}
+
+/* KTOP property management: light canvas and blue focal areas. */
+@media screen {
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page){background:#f3f5f9!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.header,.topbar){border-radius:16px;padding:20px 24px;margin-top:20px;background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;border:0!important;box-shadow:0 7px 24px rgba(31,75,139,.13)!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.header,.topbar) :is(.logo-main,.brand-name){color:#fff!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.header,.topbar) :is(.logo-sub,.brand-sub){color:#dbe7f8!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .brand-mark{background:rgba(255,255,255,.13)!important;color:#fff!important;border-color:rgba(255,255,255,.35)!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .logo-icon{background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.4)!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .logo-icon::before,html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .logo-icon::after{background:#fff!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.top-actions a){background:rgba(255,255,255,.1)!important;color:#eef5ff!important;border-color:rgba(255,255,255,.25)!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.header,.topbar) :is(.nav-link.active,.customer-link){background:#fff!important;color:#1956a3!important;border-color:#fff!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.top-actions a):hover{background:rgba(255,255,255,.2)!important;color:#fff!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .header-line{display:none}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.entry,.card){border-color:#dce5ef!important;border-radius:16px;box-shadow:0 5px 20px rgba(24,44,71,.045)!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .entry{border-top:4px solid #1767d2!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .entry:nth-child(2){border-top-color:#19a494!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .entry-label{display:inline-flex;align-self:flex-start;background:#eaf2ff;color:#1859af!important;padding:4px 11px;border-radius:7px;font-weight:750}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .entry:nth-child(2) .entry-label{background:#eaf7f3;color:#137a69!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.category[aria-selected="true"],.kind-tab.active,.filter-btn.active,.btn-primary,.action.primary){background:#1767d2!important;color:#fff!important;border-color:#1767d2!important;box-shadow:0 3px 9px rgba(23,103,210,.12)!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.category[aria-selected="false"],.kind-tab:not(.active),.filter-btn:not(.active)){background:#fff!important;border-color:#d8e3f1!important;color:#42617f!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .category:hover{border-color:#80ade6!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .panel-heading h2{display:flex;align-items:center;gap:9px;color:#193860!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .panel-heading h2::before{content:"";width:5px;height:20px;display:block;background:#1767d2;border-radius:4px}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .filter-panel-card{border-top:4px solid #1767d2!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .listing-top-row{padding-bottom:14px;border-bottom:1px solid #e3eaf3}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .filter-group-label{color:#35516f;font-weight:700}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .card-title{border-bottom:1px solid #e3eaf3;padding-bottom:12px;color:#193860!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .card-title::before{content:"";display:inline-block;width:5px;height:19px;background:#1767d2;border-radius:4px;margin-right:8px}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.listing-card,.lc-card){border-color:#dce5ef!important;box-shadow:0 3px 12px rgba(24,44,71,.045)!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.listing-card,.lc-card):hover{border-color:#a4c2e8!important;box-shadow:0 7px 20px rgba(31,75,139,.09)!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .lc-deal-badge.deal-sale{background:#eaf2ff!important;color:#1956a3!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .lc-deal-badge.deal-jeonse{background:#eaf7f0!important;color:#157347!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .lc-deal-badge.deal-monthly{background:#fff5e6!important;color:#946111!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .lc-status.status-active{background:#eaf7f0!important;color:#157347!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) .lc-status.status-done{background:#f0f3f6!important;color:#64748b!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) thead th{background:#eaf1fb!important;color:#24476b!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) tbody tr:hover td{background:#eef5ff!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(#searchBtn,#resourceLink){background:#eaf2ff!important;color:#1956a3!important;border-color:#c4d8f5!important}
+html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) input:focus,html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) select:focus{border-color:#1767d2!important;box-shadow:0 0 0 3px rgba(23,103,210,.10)!important}
+@media(max-width:760px){html[data-office-theme='ktop'] :is(.properties-page,.property-main-page) :is(.header,.topbar){padding:18px 16px;margin-top:12px}}
+}
