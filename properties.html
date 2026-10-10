@@ -185,6 +185,90 @@
   }
 })();
 </script>
+<style>
+
+/* KTOP property mobile layout · 2026-10-10 */
+.ktop-mobile-unit, .ktop-mobile-more, .ktop-mobile-more-body { display:contents; }
+.ktop-mobile-more > summary { display:none; }
+@media screen and (max-width:800px) {
+ html[data-office-theme="ktop"] .properties-page .page { width:100%; padding:12px; box-sizing:border-box; }
+ html[data-office-theme="ktop"] .properties-page #tabProperty > .card { padding:14px; border-radius:14px; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-title { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; position:relative; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-title::before { display:none; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-heading { justify-content:space-between; width:100%; gap:8px!important; flex-wrap:nowrap!important; font-size:15px; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-heading > span { white-space:nowrap; }
+ html[data-office-theme="ktop"] .properties-page #cardSelectAll { width:20px; height:20px; margin:0; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-actions { width:100%; gap:6px; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-actions .btn { min-height:40px; padding:8px 10px; font-size:12px!important; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-actions > button:disabled { display:none; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-actions > .btn:last-child { margin-left:auto; }
+ html[data-office-theme="ktop"] .properties-page #listingContainer { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; overflow:visible; }
+ html[data-office-theme="ktop"] .properties-page .listing-card.listing-row-card {
+   display:grid; min-width:0; min-height:0; padding:14px; gap:8px;
+   grid-template-columns:28px minmax(0,1fr) minmax(0,1fr);
+   grid-template-areas:"select apartment apartment" "select village village" "select unit unit" "deal price price" "owner owner phone" "type type type" "actions actions actions";
+   align-items:start; border-radius:12px; overflow:visible;
+ }
+ html[data-office-theme="ktop"] .properties-page .listing-cell { min-width:0; font-size:14px; line-height:1.45; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell::before { display:none; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-select { align-self:start; padding-top:3px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-select input { width:22px; height:22px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-apartment { font-size:17px; font-weight:750; gap:3px; overflow-wrap:anywhere; }
+ html[data-office-theme="ktop"] .properties-page .lc-no { font-size:11px; font-weight:400; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-village { font-size:13px; color:#617286; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-unit { grid-area:unit; display:flex; gap:12px; flex-wrap:wrap; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-unit > .listing-cell { display:block; font-size:15px; font-weight:700; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-dong::after { content:"동"; margin-left:2px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-room::after { content:"호"; margin-left:2px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-empty { display:none!important; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-deal { align-self:center; }
+ html[data-office-theme="ktop"] .properties-page .lc-deal-badge { font-size:12px; padding:4px 6px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-price { align-self:center; overflow:visible; }
+ html[data-office-theme="ktop"] .properties-page .lc-price-text { display:block; font-size:18px; line-height:1.4; color:#193860; overflow:visible; overflow-wrap:anywhere; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-owner,
+ html[data-office-theme="ktop"] .properties-page .listing-cell-phone { font-size:13px; white-space:normal; overflow-wrap:anywhere; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-owner::before,
+ html[data-office-theme="ktop"] .properties-page .listing-cell-phone::before { display:block; content:attr(data-label); font-size:11px; margin-bottom:3px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-phone > span { white-space:normal; overflow:visible; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-type { display:flex; flex-direction:row; gap:6px; flex-wrap:wrap; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-type > span { max-width:100%; width:auto; padding:3px 7px; border-radius:5px; font-size:11px; }
+ html[data-office-theme="ktop"] .properties-page .listing-row-card .listing-actions {
+   display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start;
+   gap:7px; padding-top:10px; margin-top:2px; border-top:1px solid #e3eaf3;
+ }
+ html[data-office-theme="ktop"] .properties-page .listing-row-card .lc-actions-main { display:contents; }
+ html[data-office-theme="ktop"] .properties-page .listing-row-card .lc-actions-main .btn,
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary {
+   box-sizing:border-box; width:100%; min-height:42px; padding:10px 4px; border-radius:8px; font-size:13px; line-height:1.4; text-align:center;
+ }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more { display:block; position:relative; min-width:0; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary { display:block; border:1px solid #cbd5e1; background:#fff; color:#294867; cursor:pointer; list-style:none; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary::-webkit-details-marker { display:none; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary:focus-visible { outline:2px solid #1767d2; outline-offset:2px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body { display:none; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more[open] .ktop-mobile-more-body {
+   display:grid; gap:8px; position:absolute; top:calc(100% + 6px); right:0; width:180px;
+   padding:10px; border:1px solid #dce5ef; border-radius:10px; background:#fff; box-shadow:0 6px 20px #19386022; z-index:20;
+ }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .btn { width:100%; min-height:42px; font-size:13px; padding:8px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .lc-actions-side { display:grid; gap:8px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .lc-status-chip { width:100%; min-height:42px; font-size:13px; padding:8px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .lc-toggle { display:flex; }
+ html[data-office-theme="ktop"] .properties-page .filter-panel-row { grid-template-columns:minmax(0,1fr); }
+ html[data-office-theme="ktop"] .properties-page #filterRow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; gap:6px; }
+ html[data-office-theme="ktop"] .properties-page #filterRow .filter-btn { padding:8px 3px; min-height:38px; font-size:12px; white-space:nowrap; }
+ html[data-office-theme="ktop"] .properties-page .complex-filter-wrap,
+ html[data-office-theme="ktop"] .properties-page .deal-filter-wrap { grid-column:1; grid-template-columns:60px minmax(0,1fr); margin:0; }
+ html[data-office-theme="ktop"] .properties-page .listing-top-row { gap:8px; }
+ html[data-office-theme="ktop"] .properties-page .kind-tab-row { flex:1; }
+ html[data-office-theme="ktop"] .properties-page .kind-tab { flex:1; padding:8px 6px; font-size:12px; white-space:nowrap; }
+ html[data-office-theme="ktop"] .properties-page #detailRegisterBtn { width:auto; padding:9px 10px; font-size:12px; }
+ html[data-office-theme="ktop"] .properties-page .toolbar-row input { font-size:16px; }
+ html[data-office-theme="ktop"] .properties-page .property-main-return { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+ html[data-office-theme="ktop"] .properties-page .property-main-return .btn { width:auto; text-align:center; padding:8px 3px; font-size:11px; }
+}
+
+</style>
 </head>
 <body class="properties-page" data-nav-active="properties">
 
@@ -283,15 +367,15 @@
 
     <!-- 목록 -->
     <section class="card"><div id="apartmentDealSummary" class="apartment-deal-summary no-print" hidden aria-label="단지별 거래구분 필터"></div>
-      <div class="card-title no-print" style="flex-wrap:wrap;gap:8px;">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="card-title no-print listing-tools-title" style="flex-wrap:wrap;gap:8px;">
+        <div class="listing-tools-heading" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
           <label id="cardSelectBar" style="display:none;align-items:center;gap:5px;cursor:pointer;font-size:0.78rem;color:var(--text-muted);user-select:none;">
             <input type="checkbox" id="cardSelectAll" style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelectAll(_currentCardItems,this.checked)" />
             전체선택
           </label>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <div class="listing-tools-actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">📋 선택매물보기</button>
           <button class="btn btn-ghost btn-select-delete" id="deleteSelectedBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">선택삭제 (0건)</button>
           <button class="btn btn-ghost" onclick="downloadExcel()" title="화면 필터와 관계없이 전체 매물(거래완료 포함)을 엑셀과 JSON 백업 파일로 받습니다" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
@@ -713,6 +797,66 @@
 
 <script src="assets/js/listings-shared.js?v=20261008-progress-convert"></script>
 <script src="assets/js/properties.js?v=20261009-print-2line"></script>
+<script>
+/* Reuse the original card controls and handlers; enhance KTOP only. */
+(function () {
+  if (document.documentElement.dataset.officeTheme !== 'ktop' || typeof makeCard !== 'function') return;
+  function arrangeMobileCard(card) {
+    var dong = card.querySelector('.listing-cell-dong');
+    var room = card.querySelector('.listing-cell-room');
+    var unit = document.createElement('div');
+    unit.className = 'ktop-mobile-unit';
+    if (dong && room) {
+      dong.before(unit);
+      unit.append(dong, room);
+      [dong, room].forEach(function (cell) {
+        if (!cell.textContent.trim() || cell.textContent.trim() === '-') cell.classList.add('ktop-mobile-empty');
+      });
+      if (Array.from(unit.children).every(function (cell) { return cell.classList.contains('ktop-mobile-empty'); })) unit.classList.add('ktop-mobile-empty');
+    }
+    var village = card.querySelector('.listing-cell-village');
+    if (village && village.textContent.trim() === '-') village.classList.add('ktop-mobile-empty');
+    var actions = card.querySelector('.listing-actions');
+    var deleteBtn = card.querySelector('.lc-delete-btn');
+    var side = card.querySelector('.lc-actions-side');
+    if (actions && side) {
+      var more = document.createElement('details');
+      more.className = 'ktop-mobile-more';
+      more.open = !window.matchMedia('(max-width:800px)').matches;
+      more.addEventListener('click', function (event) { event.stopPropagation(); });
+      var summary = document.createElement('summary');
+      summary.textContent = '더보기';
+      summary.setAttribute('aria-label', '매물 삭제 및 상태 관리');
+      var body = document.createElement('div');
+      body.className = 'ktop-mobile-more-body';
+      if (deleteBtn) body.appendChild(deleteBtn);
+      body.appendChild(side);
+      more.append(summary, body);
+      actions.appendChild(more);
+    }
+    var checkbox = card.querySelector('input[data-sel]');
+    var title = card.querySelector('.listing-cell-apartment');
+    if (checkbox) checkbox.setAttribute('aria-label', (title ? title.textContent.trim() : '매물') + ' 선택');
+    return card;
+  }
+  var mobileMedia = window.matchMedia('(max-width:800px)');
+  mobileMedia.addEventListener('change', function (event) {
+    document.querySelectorAll('.ktop-mobile-more').forEach(function (more) { more.open = !event.matches; });
+  });
+  var originalMakeCard = makeCard;
+  makeCard = function (item, options) { return arrangeMobileCard(originalMakeCard(item, options)); };
+  document.querySelectorAll('#listingContainer .listing-row-card').forEach(arrangeMobileCard);
+  document.addEventListener('click', function (event) {
+    if (!mobileMedia.matches) return;
+    document.querySelectorAll('.ktop-mobile-more[open]').forEach(function (more) {
+      if (!more.contains(event.target)) more.removeAttribute('open');
+    });
+  });
+  document.addEventListener('keydown', function (event) {
+    if (mobileMedia.matches && event.key === 'Escape') document.querySelectorAll('.ktop-mobile-more[open]').forEach(function (more) { more.removeAttribute('open'); });
+  });
+})();
+</script>
 <script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
 <script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
 </body>
