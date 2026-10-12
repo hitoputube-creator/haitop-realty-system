@@ -68,6 +68,20 @@
   }
 })();
 </script>
+<style>
+/* Customer actions: everyday actions above, close and delete below. */
+.cust-row .cust-cell-actions{display:flex;flex-wrap:wrap;gap:6px;width:156px;height:auto;min-height:34px;border:0;border-radius:0;background:transparent;overflow:visible;white-space:normal;align-content:center}
+.cust-cell-actions .cust-action-row{display:flex;gap:6px;width:100%}
+.cust-row .cust-cell-actions .btn{flex:0 0 48px;width:48px;height:32px;min-height:32px;padding:0;border:1px solid var(--border-slate);border-radius:7px;font-size:.8rem;font-weight:600;line-height:1;box-sizing:border-box;transition:background .15s,border-color .15s}
+.cust-row .cust-cell-actions .cust-act-detail,.cust-row .cust-cell-actions .cust-act-edit,.cust-row .cust-cell-actions .cust-act-diary{color:var(--text-main);background:rgba(128,150,175,.09)}
+.cust-row .cust-cell-actions .cust-act-close{color:var(--text-muted);background:transparent}
+.cust-row .cust-cell-actions .cust-act-delete{color:var(--red);background:transparent;border-color:rgba(224,82,82,.25)}
+.cust-row .cust-cell-actions .btn:hover{background:rgba(128,150,175,.2);border-color:var(--gold)}
+.cust-row .cust-cell-actions .cust-act-delete:hover{background:rgba(224,82,82,.12);border-color:var(--red)}
+.cust-row .cust-cell-actions .cust-act-restore{flex-basis:96px;width:96px}
+@media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:1.15fr 1.2fr 1.35fr .9fr 156px}.cust-row{min-height:84px}}
+@media(max-width:640px){.cust-row .cust-cell-actions{width:174px}.cust-row .cust-cell-actions .btn{flex-basis:54px;width:54px;height:36px;min-height:36px}}
+</style>
 </head>
 <body>
 <div class="page">
@@ -430,11 +444,14 @@
         ? `<button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
           <button class="btn cust-act-restore" onclick="event.stopPropagation();restoreCustomer('${c.id}')">↩ 되살리기</button>
           <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">일지</button>`
-        : `<button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
+        : `<span class="cust-action-row">
+          <button class="btn cust-act-detail" onclick="event.stopPropagation();openCustomerDetail('${c.id}')">상세</button>
           <button class="btn cust-act-edit" onclick="event.stopPropagation();openCustomerEdit('${c.id}')">수정</button>
-          <button class="btn cust-act-close" onclick="event.stopPropagation();openCloseModal(['${c.id}'])">📦 종료</button>
+          <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">일지</button>
+          </span><span class="cust-action-row cust-action-row-secondary">
+          <button class="btn cust-act-close" onclick="event.stopPropagation();openCloseModal(['${c.id}'])">종료</button>
           <button class="btn cust-act-delete" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
-          <button class="btn cust-act-diary" onclick="event.stopPropagation();openCustomerDiary('${c.id}')">일지</button>`;
+          </span>`;
       row.innerHTML = `
         <span class="cust-cell cust-cell-name" data-label="고객명">${nameCell}<small class="customer-tags">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")}</small></span>
         <span class="cust-cell" data-label="연락처">${phoneCell}</span>
