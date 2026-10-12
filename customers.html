@@ -82,7 +82,12 @@
 @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:1.15fr 1.2fr 1.35fr .9fr 156px}.cust-row{min-height:84px}}
 @media(max-width:640px){.cust-row .cust-cell-actions{width:174px}.cust-row .cust-cell-actions .btn{flex-basis:54px;width:54px;height:36px;min-height:36px}}
 </style>
-</head>
+<style>
+.customer-kind-change{border:1px solid transparent;border-radius:5px;background:transparent;padding:3px 5px;text-align:left;font:inherit;font-size:.76rem;cursor:pointer;max-width:100%;white-space:normal}
+.customer-kind-change:hover{border-color:var(--border-slate);background:rgba(128,150,175,.12)}
+#customerPagination{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center}
+#customerKindPicker label{padding:9px 12px;border:1px solid var(--border-slate);border-radius:8px}
+</style></head>
 <body>
 <div class="page">
   <header class="header">
@@ -294,6 +299,14 @@
 </div>
 
 
+<div class="modal-backdrop" id="customerKindModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="customerKindTitle">
+<div class="modal" style="width:min(440px,92vw);">
+<div class="modal-title" id="customerKindTitle">고객분류 변경</div>
+<p id="customerKindName" style="color:var(--text-muted)"></p>
+<div id="customerKindPicker" class="customer-type-picker"></div>
+<p style="font-size:.85rem;color:var(--text-muted)">여러 분류를 선택할 수 있습니다. 선택을 해제하면 미분류로 저장됩니다.</p>
+<div class="modal-btns"><button type="button" class="btn" id="customerKindClear">미분류</button><button type="button" class="btn" id="customerKindCancel">취소</button><button type="button" class="btn btn-primary" id="customerKindSave">저장</button></div>
+</div></div>
 <div id="toast" role="status"></div>
 <script>
   function showToast(msg, duration = 2000) {
@@ -307,28 +320,14 @@
     return d.getFullYear() + "." + String(d.getMonth()+1).padStart(2,"0") + "." + String(d.getDate()).padStart(2,"0");
   }
   // ===== 공통 페이지네이션 헬퍼 =====
-  function _makePagination(elId, total, perPage, curPage, cb) {
-    const el = document.getElementById(elId);
-    if (!el) return;
-    el.innerHTML = "";
-    const totalPages = Math.ceil(total / perPage);
-    if (totalPages <= 1) return;
-    const prev = document.createElement("button");
-    prev.className = "page-btn" + (curPage === 1 ? " disabled" : "");
-    prev.textContent = "‹ 이전";
-    prev.onclick = () => { if (curPage > 1) cb(curPage - 1); };
-    el.appendChild(prev);
-    const info = document.createElement("span");
-    info.className = "page-info";
-    info.textContent = `${curPage} / ${totalPages}`;
-    el.appendChild(info);
-    const next = document.createElement("button");
-    next.className = "page-btn" + (curPage === totalPages ? " disabled" : "");
-    next.textContent = "다음 ›";
-    next.onclick = () => { if (curPage < totalPages) cb(curPage + 1); };
-    el.appendChild(next);
+  function _makePagination(elId,total,perPage,curPage,cb) {
+    const el=document.getElementById(elId);if(!el)return;el.replaceChildren();
+    const totalPages=Math.ceil(total/perPage);if(totalPages<=1)return;
+    function button(label,target,disabled){const b=document.createElement('button');b.type='button';b.className='page-btn'+(disabled?' disabled':'');b.textContent=label;b.disabled=disabled;b.onclick=()=>cb(target);el.appendChild(b);}
+    button('« 처음',1,curPage===1);button('‹ 이전',curPage-1,curPage===1);
+    const info=document.createElement('span');info.className='page-info';info.textContent=curPage+' / '+totalPages;el.appendChild(info);
+    button('다음 ›',curPage+1,curPage===totalPages);button('끝 »',totalPages,curPage===totalPages);
   }
-
 
   // ===== 고객관리 =====
   let allCustomers = [];
@@ -357,11 +356,40 @@
     const mapping={매수:'매수자',임차:'임차인',매도:'소유자',임대:'소유자'};
     return mapping[c.customer_role] ? [mapping[c.customer_role]] : [];
   }
-  function customerPhones(c) { return [...new Set([c.phone,...(c.contact_phones || []),...(c.additional_contacts || []).map(x=>x.phone)].filter(Boolean))]; }
+  function formatCustomerPhone(value) {
+    const original=String(value||'').trim();let digits=original.replace(/[^0-9]/g,'');
+    if(/^(?:\\+82|0082)/.test(original))digits='0'+digits.replace(/^(?:0082|82)/,'').replace(/^0/,'');
+    if(/^02\\d{7,8}$/.test(digits))return digits.slice(0,2)+'-'+digits.slice(2,-4)+'-'+digits.slice(-4);
+    if(/^0\\d{9,10}$/.test(digits))return digits.slice(0,3)+'-'+digits.slice(3,-4)+'-'+digits.slice(-4);
+    if(/^\\d{8}$/.test(digits))return digits.slice(0,4)+'-'+digits.slice(4);
+    return original;
+  }
+  document.addEventListener('focusout',event=>{if(event.target.matches('#c_contact,#ce_contact,[data-contact-phone]'))event.target.value=formatCustomerPhone(event.target.value);});
+  function customerPhones(c) { return [...new Set([c.phone,...(c.contact_phones || []),...(c.additional_contacts || []).map(x=>x.phone)].filter(Boolean).map(formatCustomerPhone))]; }
   function selectedCustomerKinds(prefix) { return Array.from(document.querySelectorAll('#'+prefix+'_types input:checked')).map(el=>el.value); }
   function setCustomerKinds(prefix,values) { document.querySelectorAll('#'+prefix+'_types input').forEach(el=>el.checked=values.includes(el.value)); }
-  function formPhones(prefix) { return [...new Set([document.getElementById(prefix+'_contact').value.trim(),...readCustomerContacts(prefix).map(v=>v.phone)].filter(Boolean))]; }
+  function formPhones(prefix) { return [...new Set([formatCustomerPhone(document.getElementById(prefix+'_contact').value),...readCustomerContacts(prefix).map(v=>v.phone)].filter(Boolean))]; }
   for(const prefix of ['c','ce'])document.getElementById(prefix+'_types').innerHTML=CUSTOMER_TYPES.map(t=>'<label><input type="checkbox" value="'+t+'">'+t+'</label>').join('');
+  let editingKindId=null,kindReturnFocus=null;
+  function closeCustomerKindEditor(){document.getElementById('customerKindModal').style.display='none';kindReturnFocus?.focus();}
+  function openCustomerKindEditor(id){
+    const c=allCustomers.find(c=>c.id===id);if(!c)return;editingKindId=id;kindReturnFocus=document.activeElement;
+    document.getElementById('customerKindName').textContent=c.name||c.phone||'고객';
+    document.getElementById('customerKindPicker').innerHTML=CUSTOMER_TYPES.map(t=>'<label><input type="checkbox" value="'+t+'"'+(customerKinds(c).includes(t)?' checked':'')+'>'+t+'</label>').join('');
+    document.getElementById('customerKindModal').style.display='flex';document.querySelector('#customerKindPicker input').focus();
+  }
+  document.getElementById('customerKindCancel').onclick=closeCustomerKindEditor;
+  document.getElementById('customerKindClear').onclick=()=>document.querySelectorAll('#customerKindPicker input').forEach(el=>el.checked=false);
+  document.getElementById('customerKindModal').onclick=e=>{if(e.target.id==='customerKindModal')closeCustomerKindEditor();};
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('customerKindModal').style.display!=='none')closeCustomerKindEditor();});
+  document.getElementById('customerKindSave').onclick=async()=>{
+    if(!editingKindId)return;const btn=document.getElementById('customerKindSave');btn.disabled=true;btn.textContent='저장 중...';
+    try{const types=Array.from(document.querySelectorAll('#customerKindPicker input:checked')).map(el=>el.value);
+      const patch={customer_types:types};if(!types.length)patch.customer_role=null;
+      await updateCustomer(editingKindId,patch);const c=allCustomers.find(c=>c.id===editingKindId);if(c)Object.assign(c,patch);
+      closeCustomerKindEditor();renderCustomers();showToast('고객분류를 저장했습니다.');
+    }catch(e){showToast('저장 실패: '+e.message);}finally{btn.disabled=false;btn.textContent='저장';}
+  };
   function renderCustomerTypeTabs() {
     const base=allCustomers.filter(isActiveCust);
     document.getElementById('customerTypeTabs').innerHTML=['전체',...CUSTOMER_TYPES,'미분류'].map(t=>{
@@ -453,7 +481,7 @@
           <button class="btn cust-act-delete" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
           </span>`;
       row.innerHTML = `
-        <span class="cust-cell cust-cell-name" data-label="고객명">${nameCell}<small class="customer-tags">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")}</small></span>
+        <span class="cust-cell cust-cell-name" data-label="고객명">${nameCell}<button type="button" class="customer-tags customer-kind-change" title="고객분류 변경" aria-label="고객분류 변경" onclick="event.stopPropagation();openCustomerKindEditor(\'${c.id}\')">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")} <span aria-hidden="true">⌄</span></button></span>
         <span class="cust-cell" data-label="연락처">${phoneCell}</span>
         <span class="cust-cell" data-label="${closedView ? '종료 사유' : '최근업무'}">${escapeHtmlCust(col3)}</span>
         <span class="cust-cell" data-label="${closedView ? '종료일' : '최근상담일'}">${col4}</span>
@@ -542,12 +570,12 @@
     row.innerHTML='<input data-contact-name aria-label="연락처 이름" placeholder="이름"><input data-contact-relation aria-label="관계" placeholder="관계 (배우자·회사)"><input data-contact-phone type="tel" aria-label="추가 전화번호" placeholder="전화번호"><button type="button" class="btn" aria-label="추가 연락처 삭제">삭제</button>';
     row.querySelector('[data-contact-name]').value=contact.name||'';
     row.querySelector('[data-contact-relation]').value=contact.relation||'';
-    row.querySelector('[data-contact-phone]').value=contact.phone||'';
+    row.querySelector('[data-contact-phone]').value=formatCustomerPhone(contact.phone);
     row.querySelector('button').onclick=()=>row.remove();
     document.getElementById(prefix+'_contacts').appendChild(row);
   }
   function readCustomerContacts(prefix) {
-    return [...document.getElementById(prefix+'_contacts').children].map(row=>({name:row.querySelector('[data-contact-name]').value.trim(),relation:row.querySelector('[data-contact-relation]').value.trim(),phone:row.querySelector('[data-contact-phone]').value.trim()})).filter(c=>c.name||c.relation||c.phone);
+    return [...document.getElementById(prefix+'_contacts').children].map(row=>({name:row.querySelector('[data-contact-name]').value.trim(),relation:row.querySelector('[data-contact-relation]').value.trim(),phone:formatCustomerPhone(row.querySelector('[data-contact-phone]').value)})).filter(c=>c.name||c.relation||c.phone);
   }
   function setCustomerContacts(prefix,c) {
     document.getElementById(prefix+'_contacts').replaceChildren();
@@ -741,7 +769,7 @@
     setCustomerKinds("ce",customerKinds(c));
     setCustomerContacts("ce",c);
     document.getElementById("ce_name").value    = c.name    || "";
-    document.getElementById("ce_contact").value = c.phone   || "";
+    document.getElementById("ce_contact").value = formatCustomerPhone(c.phone);
     document.getElementById("ce_role").value    = c.customer_role || "";
     document.getElementById("ce_type").value    = c.property_category || "";
     document.getElementById("ce_budget").value  = c.desired_price || "";
@@ -758,7 +786,7 @@
     const btn = document.getElementById("customerEditSaveBtn");
     btn.disabled = true; btn.textContent = "저장 중...";
     try {
-      const phone = document.getElementById("ce_contact").value.trim();
+      const phone = formatCustomerPhone(document.getElementById("ce_contact").value);
       await updateCustomer(editingCustomerId, {
         name:              document.getElementById("ce_name").value.trim(),
         phone:             phone,
@@ -804,7 +832,7 @@
 
   document.getElementById("customerSaveBtn").addEventListener("click", async () => {
     const name    = document.getElementById("c_name").value.trim();
-    const phone   = document.getElementById("c_contact").value.trim();
+    const phone   = formatCustomerPhone(document.getElementById("c_contact").value);
     const role    = document.getElementById("c_role").value;
     const type    = document.getElementById("c_type").value;
     const budget  = document.getElementById("c_budget").value.trim();
