@@ -93,6 +93,11 @@
 .cust-sort-button:hover,.cust-sort-button:hover>span{color:var(--gold-soft)}
 .cust-row .cust-cell-name{font-size:.86rem;font-weight:600}
 @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:minmax(0,1.55fr) minmax(0,1.1fr) minmax(0,1.2fr) 105px 122px}}
+</style><style>
+.cust-row .cust-cell-actions{width:134px}
+.cust-row .cust-cell-actions .cust-act-register{flex-basis:50px;width:50px;font-size:.7rem;color:var(--gold-soft);background:rgba(216,184,74,.08);border-color:rgba(216,184,74,.28)}
+@media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:minmax(0,1.55fr) minmax(0,1.1fr) minmax(0,1.2fr) 105px 134px}}
+@media(max-width:640px){.cust-row .cust-cell-actions{width:148px}.cust-row .cust-cell-actions .cust-act-register{flex-basis:52px;width:52px}}
 </style></head>
 <body>
 <div class="page">
@@ -488,6 +493,16 @@
     return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
+  function startCustomerPropertyRegistration(id){
+    const c=allCustomers.find(c=>String(c.id)===String(id));if(!c)return;
+    try{
+      OfficeStorage.session.setItem('hitop_detail_prefill',JSON.stringify({
+        customerName:c.name||'',customerPhone:customerPhones(c)[0]||'',quick_contact:customerPhones(c)[0]||'',
+        quick_memo:customerBasicMemo(c)||'',source_customer_id:c.id
+      }));
+      location.href=OfficeConfig.urlFor('register.html');
+    }catch(e){showToast('매물 등록창을 열지 못했습니다. 다시 시도하세요.');}
+  }
   function renderCustomers() {
     const container = document.getElementById("customerContainer");
     const empty = document.getElementById("customerEmpty");
@@ -550,6 +565,7 @@
           </span><span class="cust-action-row cust-action-row-secondary">
           <button class="btn cust-act-close" onclick="event.stopPropagation();openCloseModal(['${c.id}'])">종료</button>
           <button class="btn cust-act-delete" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
+          <button class="btn cust-act-register" onclick="event.stopPropagation();startCustomerPropertyRegistration('${c.id}')">매물 등록</button>
           </span>`;
       row.innerHTML = `
         <span class="cust-cell cust-cell-name" data-label="고객명" title="${escapeHtmlCust(c.name||'')}">${nameCell}<button type="button" class="customer-tags customer-kind-change" title="고객분류 변경" aria-label="고객분류 변경" onclick="event.stopPropagation();openCustomerKindEditor(\'${c.id}\')">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")} <span aria-hidden="true">⌄</span></button></span>
