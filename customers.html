@@ -87,7 +87,7 @@
 .customer-kind-change:hover{border-color:var(--border-slate);background:rgba(128,150,175,.12)}
 #customerPagination{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center}
 #customerKindPicker label{padding:9px 12px;border:1px solid var(--border-slate);border-radius:8px}
-</style></head>
+</style><style>.customer-category-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.customer-category-toolbar .customer-type-tabs{flex:1;min-width:0}.customer-category-toolbar>button{font-size:.82rem;white-space:nowrap;padding:7px 11px}#customerCategoryName{width:100%;box-sizing:border-box}#customerCategoryError:empty{display:none}</style></head>
 <body>
 <div class="page">
   <header class="header">
@@ -186,7 +186,7 @@
         <button type="button" class="btn" id="custBulkClear">선택 해제</button>
       </div>
       <div id="custClosedNote" class="cust-closed-note" style="display:none">종료한 고객은 삭제되지 않고 이곳에 보관됩니다. "↩ 되살리기"를 누르면 고객 목록으로 돌아갑니다.</div>
-      <div id="customerTypeTabs" class="customer-type-tabs" aria-label="고객 종류"></div>
+      <div class="customer-category-toolbar"><div id="customerTypeTabs" class="customer-type-tabs" aria-label="고객 종류"></div><button type="button" class="btn" id="customerCategoryAdd">＋ 분류 추가</button></div>
       <div id="customerTableWrap" class="cust-table-wrap">
         <div class="cust-table-head">
           <span>고객명</span><span>연락처</span><span>최근업무</span><span>최근상담일</span><span>관리</span>
@@ -299,15 +299,20 @@
 </div>
 
 
-<div class="modal-backdrop" id="customerKindModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="customerKindTitle">
-<div class="modal" style="width:min(440px,92vw);">
+<div class="modal-overlay" id="customerKindModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="customerKindTitle">
+<div class="modal-box" style="width:min(440px,92vw);">
 <div class="modal-title" id="customerKindTitle">고객분류 변경</div>
 <p id="customerKindName" style="color:var(--text-muted)"></p>
 <div id="customerKindPicker" class="customer-type-picker"></div>
 <p style="font-size:.85rem;color:var(--text-muted)">여러 분류를 선택할 수 있습니다. 선택을 해제하면 미분류로 저장됩니다.</p>
 <div class="modal-btns"><button type="button" class="btn" id="customerKindClear">미분류</button><button type="button" class="btn" id="customerKindCancel">취소</button><button type="button" class="btn btn-primary" id="customerKindSave">저장</button></div>
 </div></div>
-<div id="toast" role="status"></div>
+<div class="modal-overlay" id="customerCategoryModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="customerCategoryTitle"><form class="modal-box" id="customerCategoryForm" style="width:min(420px,92vw)">
+<div class="modal-title" id="customerCategoryTitle">고객분류 추가</div>
+<div class="field"><label for="customerCategoryName">분류 이름</label><input id="customerCategoryName" type="text" maxlength="30" required placeholder="예: 병원, 학원, 투자고객"></div>
+<p id="customerCategoryError" role="alert" style="color:var(--red)"></p>
+<div class="modal-btns"><button type="button" class="btn" id="customerCategoryCancel">취소</button><button type="submit" class="btn btn-primary" id="customerCategorySave">추가</button></div>
+</form></div><div id="toast" role="status"></div>
 <script>
   function showToast(msg, duration = 2000) {
     const t = document.getElementById("toast");
@@ -358,10 +363,10 @@
   }
   function formatCustomerPhone(value) {
     const original=String(value||'').trim();let digits=original.replace(/[^0-9]/g,'');
-    if(/^(?:\\+82|0082)/.test(original))digits='0'+digits.replace(/^(?:0082|82)/,'').replace(/^0/,'');
-    if(/^02\\d{7,8}$/.test(digits))return digits.slice(0,2)+'-'+digits.slice(2,-4)+'-'+digits.slice(-4);
-    if(/^0\\d{9,10}$/.test(digits))return digits.slice(0,3)+'-'+digits.slice(3,-4)+'-'+digits.slice(-4);
-    if(/^\\d{8}$/.test(digits))return digits.slice(0,4)+'-'+digits.slice(4);
+    if(/^(?:\+82|0082)/.test(original))digits='0'+digits.replace(/^(?:0082|82)/,'').replace(/^0/,'');
+    if(/^02\d{7,8}$/.test(digits))return digits.slice(0,2)+'-'+digits.slice(2,-4)+'-'+digits.slice(-4);
+    if(/^0\d{9,10}$/.test(digits))return digits.slice(0,3)+'-'+digits.slice(3,-4)+'-'+digits.slice(-4);
+    if(/^\d{8}$/.test(digits))return digits.slice(0,4)+'-'+digits.slice(4);
     return original;
   }
   document.addEventListener('focusout',event=>{if(event.target.matches('#c_contact,#ce_contact,[data-contact-phone]'))event.target.value=formatCustomerPhone(event.target.value);});
@@ -369,7 +374,7 @@
   function selectedCustomerKinds(prefix) { return Array.from(document.querySelectorAll('#'+prefix+'_types input:checked')).map(el=>el.value); }
   function setCustomerKinds(prefix,values) { document.querySelectorAll('#'+prefix+'_types input').forEach(el=>el.checked=values.includes(el.value)); }
   function formPhones(prefix) { return [...new Set([formatCustomerPhone(document.getElementById(prefix+'_contact').value),...readCustomerContacts(prefix).map(v=>v.phone)].filter(Boolean))]; }
-  for(const prefix of ['c','ce'])document.getElementById(prefix+'_types').innerHTML=CUSTOMER_TYPES.map(t=>'<label><input type="checkbox" value="'+t+'">'+t+'</label>').join('');
+  for(const prefix of ['c','ce'])document.getElementById(prefix+'_types').innerHTML=CUSTOMER_TYPES.map(t=>'<label><input type="checkbox" value="'+escapeHtmlCust(t)+'">'+escapeHtmlCust(t)+'</label>').join('');
   let editingKindId=null,kindReturnFocus=null;
   function closeCustomerKindEditor(){document.getElementById('customerKindModal').style.display='none';kindReturnFocus?.focus();}
   function openCustomerKindEditor(id){
@@ -390,12 +395,45 @@
       closeCustomerKindEditor();renderCustomers();showToast('고객분류를 저장했습니다.');
     }catch(e){showToast('저장 실패: '+e.message);}finally{btn.disabled=false;btn.textContent='저장';}
   };
+  function renderCustomerKindPickers() {
+    for(const prefix of ['c','ce']){
+      const selected=selectedCustomerKinds(prefix);
+      const root=document.getElementById(prefix+'_types');root.replaceChildren();
+      for(const type of CUSTOMER_TYPES){const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.value=type;input.checked=selected.includes(type);label.append(input,document.createTextNode(type));root.appendChild(label);}
+    }
+  }
+  async function loadCustomerCategories(){
+    try{
+      const response=await fetchWithTimeout(SUPABASE_URL+'/rest/v1/customer_categories?select=name&order=created_at.asc,name.asc',{headers});
+      if(response.ok)for(const row of await response.json())if(!CUSTOMER_TYPES.includes(row.name))CUSTOMER_TYPES.push(row.name);
+    }catch(e){console.warn('Customer categories could not be loaded',e.message);}
+    for(const c of allCustomers)for(const type of c.customer_types||[])if(!CUSTOMER_TYPES.includes(type))CUSTOMER_TYPES.push(type);
+    renderCustomerKindPickers();renderCustomerTypeTabs();
+  }
+  function closeCustomerCategoryModal(){document.getElementById('customerCategoryModal').style.display='none';document.getElementById('customerCategoryAdd').focus();}
+  document.getElementById('customerCategoryAdd').onclick=()=>{
+    document.getElementById('customerCategoryForm').reset();document.getElementById('customerCategoryError').textContent='';
+    document.getElementById('customerCategoryModal').style.display='flex';document.getElementById('customerCategoryName').focus();
+  };
+  document.getElementById('customerCategoryCancel').onclick=closeCustomerCategoryModal;
+  document.getElementById('customerCategoryModal').onclick=e=>{if(e.target.id==='customerCategoryModal')closeCustomerCategoryModal();};
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('customerCategoryModal').style.display!=='none')closeCustomerCategoryModal();});
+  document.getElementById('customerCategoryForm').onsubmit=async e=>{
+    e.preventDefault();const name=document.getElementById('customerCategoryName').value.trim(),error=document.getElementById('customerCategoryError'),btn=document.getElementById('customerCategorySave');
+    if(!name||name.length>30){error.textContent='분류 이름을 1~30자로 입력하세요.';return;}
+    if(['전체','미분류'].includes(name)||CUSTOMER_TYPES.includes(name)){error.textContent='이미 사용 중인 분류 이름입니다.';return;}
+    btn.disabled=true;btn.textContent='추가 중...';
+    try{const response=await fetchWithTimeout(SUPABASE_URL+'/rest/v1/customer_categories',{method:'POST',headers:Object.assign({},headers,{Prefer:'return=minimal'}),body:JSON.stringify({name})});
+      if(!response.ok)throw Error(response.status===409?'이미 등록된 분류입니다.':'분류 저장에 실패했습니다. 다시 시도하세요.');
+      CUSTOMER_TYPES.push(name);renderCustomerKindPickers();renderCustomerTypeTabs();closeCustomerCategoryModal();showToast('고객분류를 추가했습니다.');
+    }catch(e){error.textContent=e.message;}finally{btn.disabled=false;btn.textContent='추가';}
+  };
   function renderCustomerTypeTabs() {
     const base=allCustomers.filter(isActiveCust);
     document.getElementById('customerTypeTabs').innerHTML=['전체',...CUSTOMER_TYPES,'미분류'].map(t=>{
       const key=t==='전체' ? '' : t;
       const count=base.filter(c=>!key || (key==='미분류' ? !customerKinds(c).length : customerKinds(c).includes(key))).length;
-      return '<button type="button" data-customer-kind="'+key+'" aria-pressed="'+(customerTypeFilter===key)+'" class="'+(customerTypeFilter===key?'active':'')+'">'+t+' '+count+'</button>';
+      return '<button type="button" data-customer-kind="'+escapeHtmlCust(key)+'" aria-pressed="'+(customerTypeFilter===key)+'" class="'+(customerTypeFilter===key?'active':'')+'">'+escapeHtmlCust(t)+' '+count+'</button>';
     }).join('');
   }
   document.getElementById('customerTypeTabs').addEventListener('click',e=>{
@@ -890,6 +928,7 @@
     container.innerHTML = `<div class="loading"><span class="spinner"></span>불러오는 중...</div>`;
     try {
       allCustomers = await getCustomers();
+      await loadCustomerCategories();
       renderCustomers();
       // 최근업무/최근상담일은 work_diary 조회가 필요해 약간 늦게 채워진다 - 목록은 먼저 보여준다.
       const ids = allCustomers.filter(c => c.status !== "계약완료").map(c => c.id);
