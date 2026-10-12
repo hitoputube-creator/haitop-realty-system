@@ -87,7 +87,13 @@
 .customer-kind-change:hover{border-color:var(--border-slate);background:rgba(128,150,175,.12)}
 #customerPagination{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center}
 #customerKindPicker label{padding:9px 12px;border:1px solid var(--border-slate);border-radius:8px}
-</style><style>.customer-category-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.customer-category-toolbar .customer-type-tabs{flex:1;min-width:0}.customer-category-toolbar>button{font-size:.82rem;white-space:nowrap;padding:7px 11px}#customerCategoryName{width:100%;box-sizing:border-box}#customerCategoryError:empty{display:none}</style></head>
+</style><style>.customer-category-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.customer-category-toolbar .customer-type-tabs{flex:1;min-width:0}.customer-category-toolbar>button{font-size:.82rem;white-space:nowrap;padding:7px 11px}#customerCategoryName{width:100%;box-sizing:border-box}#customerCategoryError:empty{display:none}</style><style>
+.cust-sort-button{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;padding:0;color:inherit;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}
+.cust-sort-button>span{font-size:.65rem;color:var(--text-muted)}
+.cust-sort-button:hover,.cust-sort-button:hover>span{color:var(--gold-soft)}
+.cust-row .cust-cell-name{font-size:.86rem;font-weight:600}
+@media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:minmax(0,1.55fr) minmax(0,1.1fr) minmax(0,1.2fr) 105px 122px}}
+</style></head>
 <body>
 <div class="page">
   <header class="header">
@@ -340,6 +346,33 @@
   const CUST_PER_PAGE = 10;
   let customerSearch = "";
   let customerTypeFilter = '';
+  let customerSort={key:'',direction:'asc'};
+  const customerSortCollator=new Intl.Collator('ko',{numeric:true,sensitivity:'base'});
+  function customerSortValue(c,key){
+    if(key==='name')return c.name||'';
+    if(key==='phone')return normalizeCustomerPhone(customerPhones(c)[0]||'');
+    const activity=customerDiaryActivity[c.id];
+    if(key==='work')return customerView==='closed'?(closedInfo(c).reason||''):(activity?(activity.title||(activity.content||'').slice(0,24)):'');
+    if(key==='date'){const value=customerView==='closed'?closedInfo(c).at:activity?.date;const time=value?Date.parse(value):NaN;return Number.isFinite(time)?time:null;}
+    return '';
+  }
+  function compareCustomerSort(a,b){
+    const av=customerSortValue(a,customerSort.key),bv=customerSortValue(b,customerSort.key);
+    const blankA=av==null||av==='',blankB=bv==null||bv==='';
+    if(blankA!==blankB)return blankA?1:-1;
+    const compared=typeof av==='number'&&typeof bv==='number'?av-bv:customerSortCollator.compare(String(av??''),String(bv??''));
+    return (customerSort.direction==='desc'?-compared:compared)||customerSortCollator.compare(a.name||'',b.name||'')||String(a.id).localeCompare(String(b.id));
+  }
+  function sortCustomerColumn(key){
+    customerSort={key,direction:customerSort.key===key&&customerSort.direction==='asc'?'desc':'asc'};
+    customerPage=1;renderCustomers();
+  }
+  function customerSortHeader(label,key){
+    const active=customerSort.key===key,arrow=active?(customerSort.direction==='asc'?'▲':'▼'):'↕';
+    const next=active&&customerSort.direction==='asc'?'내림차순':'오름차순';
+    return '<span role="columnheader" aria-sort="'+(active?(customerSort.direction==='asc'?'ascending':'descending'):'none')+'"><button type="button" class="cust-sort-button" title="'+label+' '+next+' 정렬" aria-label="'+label+' '+next+' 정렬" onclick="sortCustomerColumn(\''+key+'\')">'+label+' <span aria-hidden="true">'+arrow+'</span></button></span>';
+  }
+
   // 종료고객: status 칸에 "종료|사유|이전상태|종료일" 로 기록한다 (DB 구조 변경 없음, 삭제하지 않고 보관)
   let customerView = 'active';          // 'active' | 'closed'
   const selectedCust = new Set();
@@ -467,9 +500,7 @@
     document.getElementById('custViewClosed').textContent = '📁 종료고객' + (allCustomers.some(isClosedCust) ? ' (' + allCustomers.filter(isClosedCust).length + ')' : '');
     document.getElementById('custClosedNote').style.display = closedView ? '' : 'none';
     document.getElementById('customerTypeTabs').style.display = closedView ? 'none' : '';
-    document.querySelector('.cust-table-head').innerHTML = closedView
-      ? '<span>고객명</span><span>연락처</span><span>종료 사유</span><span>종료일</span><span>관리</span>'
-      : '<span>고객명</span><span>연락처</span><span>최근업무</span><span>최근상담일</span><span>관리</span>';
+    document.querySelector('.cust-table-head').innerHTML = customerSortHeader('고객명','name')+customerSortHeader('연락처','phone')+customerSortHeader(closedView?'종료 사유':'최근업무','work')+customerSortHeader(closedView?'종료일':'최근상담일','date')+'<span>관리</span>';
     if (!closedView) renderCustomerTypeTabs();
     let filtered = allCustomers.filter(c => closedView ? isClosedCust(c) : isActiveCust(c));
     if (closedView) filtered.sort((a, b) => String(closedInfo(b).at).localeCompare(String(closedInfo(a).at)));
@@ -481,6 +512,8 @@
       );
     }
 
+    if(customerSort.key)filtered.sort(compareCustomerSort);
+    customerPage=Math.max(1,Math.min(customerPage,Math.ceil(filtered.length/CUST_PER_PAGE)||1));
     badge.textContent = filtered.length ? `(${filtered.length}명)` : "";
 
     updateBulkBar();
@@ -519,7 +552,7 @@
           <button class="btn cust-act-delete" onclick="event.stopPropagation();handleDeleteCustomer('${c.id}')">삭제</button>
           </span>`;
       row.innerHTML = `
-        <span class="cust-cell cust-cell-name" data-label="고객명">${nameCell}<button type="button" class="customer-tags customer-kind-change" title="고객분류 변경" aria-label="고객분류 변경" onclick="event.stopPropagation();openCustomerKindEditor(\'${c.id}\')">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")} <span aria-hidden="true">⌄</span></button></span>
+        <span class="cust-cell cust-cell-name" data-label="고객명" title="${escapeHtmlCust(c.name||'')}">${nameCell}<button type="button" class="customer-tags customer-kind-change" title="고객분류 변경" aria-label="고객분류 변경" onclick="event.stopPropagation();openCustomerKindEditor(\'${c.id}\')">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")} <span aria-hidden="true">⌄</span></button></span>
         <span class="cust-cell" data-label="연락처">${phoneCell}</span>
         <span class="cust-cell" data-label="${closedView ? '종료 사유' : '최근업무'}">${escapeHtmlCust(col3)}</span>
         <span class="cust-cell" data-label="${closedView ? '종료일' : '최근상담일'}">${col4}</span>
