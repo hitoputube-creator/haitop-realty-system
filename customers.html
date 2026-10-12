@@ -101,8 +101,45 @@
 </style><style>
 .cust-row .cust-select{width:13px;height:13px;min-width:13px;min-height:13px;margin:0 6px 0 0;padding:0;vertical-align:-1px;flex-shrink:0}
 @media(max-width:640px){.cust-row .cust-select{width:14px;height:14px;min-width:14px;min-height:14px}}
-</style></head>
-<body>
+</style><style id="ktop-customer-accents">
+html[data-office-theme='ktop'] body.customer-management-page{background:#f3f6fb!important}
+html[data-office-theme='ktop'] .customer-management-page .header{background:transparent!important;box-shadow:none!important}
+html[data-office-theme='ktop'] .customer-management-page .header-line{background:#d8e3f1}
+html[data-office-theme='ktop'] .customer-management-page .logo-icon{background:#e7effc;border-color:#c6d8f4}
+html[data-office-theme='ktop'] .customer-management-page .customer-navigation .return-main{background:#245bb2!important;color:#fff!important;border-color:#245bb2!important}
+html[data-office-theme='ktop'] .customer-management-page .card{border:1px solid #dce5f2!important;box-shadow:0 5px 20px rgba(31,61,104,.06)!important}
+html[data-office-theme='ktop'] .customer-management-page .card-title>span{border-left:3px solid #3478d5;padding-left:10px;font-weight:700;color:#203c61}
+html[data-office-theme='ktop'] .customer-management-page .btn-primary{background:#245bb2!important;border-color:#245bb2!important;color:#fff!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-view-tabs button.active{background:#e8f0ff!important;border-color:#bbcff1!important;color:#2156a2!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-type-tabs button{background:#f8faff!important;color:#4d6380!important;border-color:#dce5f2!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-type-tabs button.active{background:#245bb2!important;color:#fff!important;border-color:#245bb2!important;box-shadow:0 2px 5px rgba(36,91,178,.15)}
+html[data-office-theme='ktop'] .customer-management-page #customerCategoryAdd{color:#245bb2!important;background:#edf4ff!important;border-color:#c7d9f5!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-table-head{background:#e9f0f9!important;color:#274569!important;border-top:1px solid #d7e3f3;border-bottom:1px solid #d7e3f3;border-radius:8px 8px 0 0}
+html[data-office-theme='ktop'] .customer-management-page .cust-sort-button{color:#274569!important;background:transparent!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-row{border-bottom:1px solid #e7edf6!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-row:nth-child(even){background:#f8fafd!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-row:hover{background:#edf4ff!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-name{color:#233f62!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-kind-change{background:#f0f3f7!important;color:#68778b!important;border:0!important;border-radius:5px;padding:2px 6px}
+html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[data-kind='매수자']{background:#e8efff!important;color:#2a55a5!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[data-kind='임차인']{background:#e6f5f1!important;color:#197766!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[data-kind='소유자']{background:#fff1dc!important;color:#926014!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[data-kind='부동산']{background:#eeeaff!important;color:#6650a8!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[data-kind='업체']{background:#e7f1f8!important;color:#326681!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[data-kind='지인']{background:#fcebf1!important;color:#9a4b6a!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions{background:transparent!important;border:0!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-detail{color:#2359a1!important;background:#eaf2ff!important;border-color:#cdddf5!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-edit{color:#8b5a13!important;background:#fff5e6!important;border-color:#eedcbb!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-diary{color:#197764!important;background:#e9f6f1!important;border-color:#cce7dc!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-close{color:#63728a!important;background:#f3f5f8!important;border-color:#dce2eb!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-delete{color:#ad403b!important;background:#fff0ee!important;border-color:#f0d1cc!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-register{color:#fff!important;background:#2c64b6!important;border-color:#2c64b6!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .btn:hover{filter:brightness(.94)}
+html[data-office-theme='ktop'] .customer-management-page .page-btn{background:#f2f6fc!important;color:#315b91!important;border-color:#d2def0!important}
+html[data-office-theme='ktop'] .customer-management-page .page-btn:disabled{opacity:.4}
+</style>
+</head>
+<body class="customer-management-page">
 <div class="page">
   <header class="header">
     <div class="logo-icon" aria-hidden="true"></div>
@@ -571,7 +608,7 @@
           <button class="btn cust-act-register" onclick="event.stopPropagation();startCustomerPropertyRegistration('${c.id}')">매물 등록</button>
           </span>`;
       row.innerHTML = `
-        <span class="cust-cell cust-cell-name" data-label="고객명" title="${escapeHtmlCust(c.name||'')}">${nameCell}<button type="button" class="customer-tags customer-kind-change" title="고객분류 변경" aria-label="고객분류 변경" onclick="event.stopPropagation();openCustomerKindEditor(\'${c.id}\')">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")} <span aria-hidden="true">⌄</span></button></span>
+        <span class="cust-cell cust-cell-name" data-label="고객명" title="${escapeHtmlCust(c.name||'')}">${nameCell}<button type="button" class="customer-tags customer-kind-change" data-kind="${escapeHtmlCust(customerKinds(c)[0] || '미분류')}" title="고객분류 변경" aria-label="고객분류 변경" onclick="event.stopPropagation();openCustomerKindEditor(\'${c.id}\')">${escapeHtmlCust(customerKinds(c).join(" · ") || "미분류")} <span aria-hidden="true">⌄</span></button></span>
         <span class="cust-cell" data-label="연락처">${phoneCell}</span>
         <span class="cust-cell" data-label="${closedView ? '종료 사유' : '최근업무'}">${escapeHtmlCust(col3)}</span>
         <span class="cust-cell" data-label="${closedView ? '종료일' : '최근상담일'}">${col4}</span>
