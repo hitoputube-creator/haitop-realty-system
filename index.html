@@ -147,6 +147,26 @@
 
   <!-- ===== 고객관리 탭 ===== -->
   <div id="tabCustomer">
+    <iframe id="sharedCustomerFrame" title="고객관리" style="display:block;width:100%;height:900px;border:0;background:transparent;" ></iframe>
+    <style>#tabCustomer > :not(#sharedCustomerFrame):not(style):not(script){display:none!important}</style>
+    <script>
+    (function(){
+      var frame=document.getElementById('sharedCustomerFrame');
+      var url=new URL('customers.html',location.href);
+      var query=new URLSearchParams(location.search);
+      url.searchParams.set('office',typeof OfficeConfig!=='undefined'?OfficeConfig.id:(query.get('office')||sessionStorage.getItem('realty_selected_office')||'hitop'));
+      url.searchParams.set('embed','customer');
+      url.searchParams.set('v','20261013-shared-customer');
+      if(query.get('customerId'))url.searchParams.set('customerId',query.get('customerId'));
+      frame.src=url.href;
+      function resizeCustomerFrame(){
+        frame.style.height=Math.max(640,window.innerHeight-180)+'px';
+      }
+      window.addEventListener('resize',resizeCustomerFrame);
+      resizeCustomerFrame();
+    })();
+    </script>
+
 
     <!-- ⚡ 빠른 고객등록 (기본 숨김 · '+ 고객 등록' 버튼으로 열고 닫음) -->
     <div class="quick-card quick-card-compact" id="customerQuickCard" style="display:none;">
