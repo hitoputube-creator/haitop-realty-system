@@ -287,6 +287,7 @@
   <nav class="property-main-return no-print" aria-label="매물관리 복귀">
     <a class="btn btn-ghost" id="propertyMainReturn" href="property-main.html">← 매물관리 메인</a>
     <a class="btn btn-ghost" id="propertyKakaoMap" href="listings-kakao.html">카카오맵으로 보기</a>
+    <a class="btn btn-ghost" id="propertyProfitRecommendations" href="profit-recommendations.html">수익성상가 추천매물</a>
     <a class="btn btn-ghost" id="propertyCustomers" href="customers.html">고객관리</a>
   </nav>
   <div id="globalPropertySearch" class="no-print"></div>
@@ -317,6 +318,7 @@
         const active = document.querySelector('#filterRow .filter-btn.active[data-major]');
         if (active) updateMapLink(majorToMapCategory[active.dataset.major] || 'all');
       });
+      document.getElementById('propertyProfitRecommendations').hidden = OfficeConfig.id !== 'hitop';
       document.getElementById('propertyCustomers').href = OfficeConfig.urlFor('customers.html');
     })();
   </script>
@@ -870,10 +872,11 @@
   });
 })();
 </script>
-<script src="assets/js/property-type-columns.js?v=20261013-types1"></script>
+<script src="assets/js/property-type-columns.js?v=20261013-profit1"></script>
 <script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
 <script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
 </body>
 </html>
+
 
 
