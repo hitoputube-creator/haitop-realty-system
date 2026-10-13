@@ -13,7 +13,7 @@ declare
   seen text[] := array[]::text[];
   added integer := 0;
   changed integer := 0;
-  allowed text[] := array['층','전용_평','분양_평','평당가','분양금액','현_매매가격','보증금','월차임','분양_VAT'];
+  allowed text[] := array['층','전용_평','분양_평','평당가','분양금액','현_매매가격','보증금','월차임','분양_VAT','현업종','가격표비고'];
 begin
   if auth.uid() is null or not public.is_admin() then raise exception '관리자 로그인이 필요합니다.'; end if;
   if length(trim(p_name))=0 or length(p_name)>200 then raise exception '건물명을 확인하세요.'; end if;
@@ -37,8 +37,8 @@ begin
     patch:='{}'::jsonb;
     foreach field in array allowed loop
       if row_data ? field and row_data->field<>'null'::jsonb and trim(row_data->>field)<>'' then
-        if field not in ('층','분양_VAT') and (jsonb_typeof(row_data->field)<>'number' or (row_data->>field)::numeric<0 or (row_data->>field)::numeric>1000000000) then raise exception '%호 % 값을 확인하세요.',room,field; end if;
-        if field in ('층','분양_VAT') and length(row_data->>field)>40 then raise exception '항목이 너무 깁니다.'; end if;
+        if field not in ('층','분양_VAT','현업종','가격표비고') and (jsonb_typeof(row_data->field)<>'number' or (row_data->>field)::numeric<0 or (row_data->>field)::numeric>1000000000) then raise exception '%호 % 값을 확인하세요.',room,field; end if;
+        if field in ('층','분양_VAT','현업종','가격표비고') and length(row_data->>field)>500 then raise exception '항목이 너무 깁니다.'; end if;
         if matches=0 or p_overwrite or not (old_unit ? field) or old_unit->field='null'::jsonb or old_unit->>field='' then patch:=patch||jsonb_build_object(field,row_data->field); end if;
       end if;
     end loop;
