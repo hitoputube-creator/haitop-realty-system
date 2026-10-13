@@ -6,10 +6,10 @@
 
   var CATEGORIES = [
     { key: 'shop',    label: '상가·사무실', color: '#2563eb' },
-    { key: 'land',    label: '토지',       color: '#16a34a' },
+    { key: 'land',    label: '택지·토지',       color: '#16a34a' },
     { key: 'home',    label: '주거',       color: '#d97706' },
     { key: 'factory', label: '공장·창고',   color: '#7c3aed' },
-    { key: 'other',   label: '건물·빌딩',   color: '#6b7686' }
+    { key: 'other',   label: '기타·건물',   color: '#6b7686' }
   ];
   var CAT1_ALIAS = { '공장/창고': '공장창고', '상가/사무실': '상가사무실' };
   var DISPLAY_TO_KEY = { '상가사무실': 'shop', '토지': 'land', '주거용': 'home', '공장창고': 'factory', '건물빌딩': 'other' };
