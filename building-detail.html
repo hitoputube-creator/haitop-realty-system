@@ -1391,6 +1391,7 @@ function renderFloors(floors) {
         ${image && !apartmentBuildingMode ? `<a class="floor-status-link" href="floor-status.html?id=${encodeURIComponent(buildingId)}&floorId=${encodeURIComponent(f.id)}">현황보기</a>` : ''}
         <button type="button" class="floor-edit-btn" data-floor-id="${esc(f.id)}">수정</button>
         <input type="file" class="floor-replacement" data-floor-id="${esc(f.id)}" accept="image/*,.pdf" aria-label="${badge} 평면도 교체 파일 선택" hidden>
+        ${OfficeConfig.id==='hitop' && !apartmentBuildingMode && /가격|price|분양표|임대료/i.test(f.floor_number+' '+f.file_name) ? `<button type="button" class="floor-status-link" onclick="PriceRoomImport.open('${esc(f.id)}')">호실자료 자동입력</button>` : ''}
         <button class="btn-icon" title="삭제" onclick="deleteFloor('${f.id}')">🗑</button>
       </div>
     </div>`;
@@ -2618,6 +2619,7 @@ async function deleteBFile(id) {
 
 })();
 </script>
+<script src="assets/js/price-room-import.js?v=20261013-import1"></script>
 </body>
 </html>
 
