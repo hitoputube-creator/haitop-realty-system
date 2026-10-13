@@ -4,7 +4,7 @@
   const common = [['deal','구분'],['price','가격'],['owner','소유주'],['phone','연락처']];
   const schemas = {
     '': [['type','매물유형'],['name','매물명'],['address','소재지'],...common],
-    '상가사무실': [['building','건물명'],['address','소재지'],['floorRoom','층/호실'],['exclusive','전용면적'],['maintenance','관리비'],['premium','권리금'],...common],
+    '상가사무실': [['presaleStatus','분양상태'],['building','건물명'],['address','소재지'],['floorRoom','층/호실'],['exclusive','전용면적'],['maintenance','관리비'],['premium','권리금'],...common],
     '토지': [['address','소재지'],['parcel','블럭/필지'],['landArea','토지면적'],['landUse','지목'],['zoning','용도지역'],['unitPrice','평당가'],...common],
     '주거용': [['village','마을'],['apartment','단지명'],['dong','동'],['room','호수'],['supply','분양평형/타입'],...common],
     '공장창고': [['address','소재지'],['landArea','대지면적'],['buildingArea','건축면적'],['totalArea','연면적'],['height','층고'],...common],
@@ -21,6 +21,7 @@
     const landM2=first(item.landAreaM2,item.land_area_sqm,item.areaM2);
     const sale=first(item.salePrice, num(first(item.land_price,item.factory_price,item.biz_price))*10000);
     return {
+      presaleStatus:window.CommercialPriceCore?.commercial(item)?CommercialPriceCore.status(item):'',
       name:first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address),
       building:first(item.buildingName,item.building_name,item.complexName,item.shop_building,item.biz_building),
       address:first(item.roadAddress,item.jibunAddress,item.address,item.publicAddress,item.mapAddress,item.quick_location),
@@ -76,7 +77,7 @@
     if (actions) actions.style.gridArea='auto';
     card.replaceChildren(select,...nodes,actions);
     card.classList.add('typed-property-row');
-    if (item.profitRecommendation) {
+    if (item.profitRecommendation || window.CommercialPriceCore?.recommendation(item)) {
       card.classList.add('profit-recommended-row');
       const target=card.querySelector('.listing-cell-building,.listing-cell-name,.listing-cell-address');
       if(target){const badge=document.createElement('small');badge.className='profit-recommended-badge';badge.textContent='수익성 추천';target.appendChild(badge);}
@@ -105,7 +106,7 @@
     const body=table.querySelector('tbody');
     items.forEach(item=>{
       const card=makeCard(item);
-      const tr=document.createElement('tr');tr.className=getStatusClass(item)+(item.profitRecommendation?' profit-recommended-row':'');
+      const tr=document.createElement('tr');tr.className=getStatusClass(item)+(item.profitRecommendation || window.CommercialPriceCore?.recommendation(item)?' profit-recommended-row':'');
       tr.addEventListener('click',card.onclick);
       Array.from(card.children).forEach(n=>{const td=document.createElement('td');td.appendChild(n);tr.appendChild(td);});
       body.appendChild(tr);
@@ -151,4 +152,5 @@
   document.head.appendChild(style);
   if (allListings.length) renderList();
 })();
+
 
