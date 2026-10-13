@@ -1441,7 +1441,6 @@ async function getAllBuildingFloors() {
   return await res.json();
 }
 async function resolveBuildingMaterialUrls(rows) {
-  if(OfficeConfig.id!=='ktop')return rows;
   const prefix=SUPABASE_URL+'/storage/v1/object/authenticated/building-materials/';
   const paths=[...new Set(rows.map(row=>row.cloudinary_url || '').filter(url=>url.startsWith(prefix)).map(url=>url.slice(prefix.length)))];
   if(!paths.length)return rows;
