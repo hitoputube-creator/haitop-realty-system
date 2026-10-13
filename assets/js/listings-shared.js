@@ -55,6 +55,12 @@ function _detailPrice(item) {
 }
 
 function formatPrice(item) {
+  if(window.CommercialPriceCore?.commercial(item)){
+    const p=CommercialPriceCore.price(item);
+    if(p.amount!==null && (item.dealType==='매매'||p.status==='분양중'||CommercialPriceCore.recommendation(item)))return p.label+' '+_fmtWon(p.amount);
+    if(p.status==='분양완료' && p.amount===null && p.original!==null && item.dealType==='매매')return '최초분양가 '+_fmtWon(p.original)+' (참고)';
+  }
+
   const detailPx = _detailPrice(item);
   if (item.type === "shop") {
     const d = item.shop_deposit ? Number(item.shop_deposit).toLocaleString("ko-KR")+"만원" : "";
@@ -529,3 +535,4 @@ async function handleListingProgressChange(id,select) {
   }catch(e){select.value=before;showToast('상태 변경 실패: '+e.message);}
   finally{select.disabled=false;}
 }
+
