@@ -1,6 +1,6 @@
 (function(root){
   'use strict';
-  const fields=[['층','층'],['전용_평','전용(평)'],['분양_평','분양(평)'],['평당가','평당가(만원)'],['분양금액','분양가(만원)'],['현_매매가격','매매가(만원)'],['보증금','보증금(만원)'],['월차임','월세(만원)'],['분양_VAT','VAT']];
+  const fields=[['층','층'],['전용_평','전용(평)'],['분양_평','분양(평)'],['평당가','평당가(만원)'],['분양금액','분양가(만원)'],['현_매매가격','매매가(만원)'],['보증금','보증금(만원)'],['월차임','월세(만원)'],['분양_VAT','VAT'],['현업종','업종'],['가격표비고','가격표 비고']];
   const normalizeRoom=value=>String(value??'').trim().replace(/[\s호]/g,'');
   function validate(rows){
     if(!rows.length)throw new Error('반영할 호실을 선택하세요.');
@@ -8,7 +8,7 @@
     rows.forEach(row=>{
       const room=normalizeRoom(row.호수);if(!room)throw new Error('호수를 입력하세요.');
       if(seen.has(room))throw new Error(room+'호가 중복되었습니다. 하나만 선택하세요.');seen.add(room);
-      fields.forEach(([key])=>{if(!['층','분양_VAT'].includes(key)&&row[key]!=null&&(!Number.isFinite(row[key])||row[key]<0))throw new Error(room+'호 '+key+' 숫자를 확인하세요.');});
+      fields.forEach(([key])=>{if(!['층','분양_VAT','현업종','가격표비고'].includes(key)&&row[key]!=null&&(!Number.isFinite(row[key])||row[key]<0))throw new Error(room+'호 '+key+' 숫자를 확인하세요.');});
       if(row.전용_평!=null&&row.분양_평!=null&&row.전용_평>row.분양_평)throw new Error(room+'호 전용면적이 분양면적보다 큽니다.');
     });return rows;
   }
@@ -127,14 +127,14 @@
     const counts=new Map();rows.forEach(r=>{const key=normalizeRoom(r.호수);counts.set(key,(counts.get(key)||0)+1);});
     el('priRows').innerHTML=rows.map((row,i)=>{
       const room=normalizeRoom(row.호수),old=existing.find(u=>normalizeRoom(u.호수)===room);const doubtful=row.review||!room||counts.get(room)>1;
-      return '<tr data-row="'+i+'"><td><input type="checkbox" data-selected '+(!doubtful?'checked':'')+' aria-label="'+esc(room)+'호 선택"></td><td><input data-key="호수" value="'+esc(room)+'" aria-label="호수"></td><td>'+ (old?'기존 호실':'신규 호실')+'</td>'+fields.map(([key,label])=>'<td><input data-key="'+key+'" type="'+(['층','분양_VAT'].includes(key)?'text':'number')+'" '+(!['층','분양_VAT'].includes(key)?'min="0" step="any"':'')+' value="'+esc(row[key]??'')+'" aria-label="'+label+'">'+(old&&old[key]!=null?'<div>기존: '+esc(old[key])+'</div>':'')+'</td>').join('')+'<td class="pri-warning">'+esc([doubtful?'확인 필요':'',counts.get(room)>1?'중복 호실':'',row.note].filter(Boolean).join(' · '))+'</td></tr>';
+      return '<tr data-row="'+i+'"><td><input type="checkbox" data-selected '+(!doubtful?'checked':'')+' aria-label="'+esc(room)+'호 선택"></td><td><input data-key="호수" value="'+esc(room)+'" aria-label="호수"></td><td>'+ (old?'기존 호실':'신규 호실')+'</td>'+fields.map(([key,label])=>'<td><input data-key="'+key+'" type="'+(['층','분양_VAT','현업종','가격표비고'].includes(key)?'text':'number')+'" '+(!['층','분양_VAT','현업종','가격표비고'].includes(key)?'min="0" step="any"':'')+' value="'+esc(row[key]??'')+'" aria-label="'+label+'">'+(old&&old[key]!=null?'<div>기존: '+esc(old[key])+'</div>':'')+'</td>').join('')+'<td class="pri-warning">'+esc([doubtful?'확인 필요':'',counts.get(room)>1?'중복 호실':'',row.note].filter(Boolean).join(' · '))+'</td></tr>';
     }).join('');el('priReview').hidden=!rows.length;
   }
   function selected(){
     const keys=new Set([...dialog.querySelectorAll('[data-field]:checked')].map(n=>n.dataset.field));
     return [...dialog.querySelectorAll('tr[data-row]')].filter(tr=>tr.querySelector('[data-selected]').checked).map(tr=>{
       const row={호수:normalizeRoom(tr.querySelector('[data-key="호수"]').value)};
-      tr.querySelectorAll('[data-key]').forEach(input=>{const key=input.dataset.key;if(key==='호수'||!keys.has(key)||input.value.trim()==='')return;row[key]=['층','분양_VAT'].includes(key)?input.value.trim():Number(input.value);});return row;
+      tr.querySelectorAll('[data-key]').forEach(input=>{const key=input.dataset.key;if(key==='호수'||!keys.has(key)||input.value.trim()==='')return;row[key]=['층','분양_VAT','현업종','가격표비고'].includes(key)?input.value.trim():Number(input.value);});return row;
     });
   }
   async function save(){
