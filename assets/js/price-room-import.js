@@ -22,7 +22,7 @@
     dialog=document.createElement('dialog');dialog.id='priceRoomDialog';dialog.className='price-room-dialog';
     dialog.innerHTML=`<div class="pri-head"><h2>가격표로 호실자료 자동입력</h2><button type="button" id="priClose" aria-label="닫기">닫기</button></div>
       <p id="priSource"></p><p>원본 가격표와 비교한 후 선택한 호실만 반영하세요. 기존 소유주·연락처·메모는 유지합니다.</p>
-      <div class="pri-toolbar"><a id="priOriginal" target="_blank" rel="noopener">원본 가격표 보기</a><label id="priPdfRange" hidden>PDF 페이지 <input id="priStart" type="number" min="1" value="1"> ~ <input id="priEnd" type="number" min="1" value="1"> (한 번에 최대 8쪽)</label><button type="button" id="priAnalyze">가격표 읽기</button></div>
+      <div class="pri-toolbar"><a id="priOriginal" target="_blank" rel="noopener">원본 가격표 보기</a><label id="priPdfRange" hidden>PDF 페이지 <input id="priStart" type="number" min="1" value="1"> ~ <input id="priEnd" type="number" min="1" value="1"> (한 번에 최대 8쪽)</label><button type="button" id="priAnalyze">Gemini로 가격표 읽기</button></div>
       <p id="priMessage" role="status" aria-live="polite"></p><div id="priWarnings"></div>
       <div id="priReview" hidden><div class="pri-toolbar"><label><input type="checkbox" id="priAll"> 전체 선택</label><label><input type="checkbox" id="priOverwrite"> 기존 값도 선택한 항목으로 변경</label></div>
       <details><summary>반영할 항목 선택</summary><div id="priFields"></div></details><div class="pri-table-wrap"><table><thead><tr><th>선택</th><th>호수</th><th>처리</th>${fields.map(([,label])=>'<th>'+label+'</th>').join('')}<th>확인사항</th></tr></thead><tbody id="priRows"></tbody></table></div>
