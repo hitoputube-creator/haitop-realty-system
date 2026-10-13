@@ -594,6 +594,8 @@
 
 <style>.units-tbl .profit-recommended-row td{background:rgba(212,175,55,.11)}.units-tbl .profit-recommended-row td:first-child{box-shadow:inset 3px 0 #d4af37}.units-tbl .profit-recommended-row:hover td{background:rgba(212,175,55,.17)}</style>
 <style>#unitModal #unitAdditionalNotes #u_추가메모{min-height:140px;height:140px;resize:vertical}.sbadge.미확인{background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.35)}</style>
+<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
+<style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#16233d;color:#e6edf7;cursor:pointer}.presale-switch button.active{background:#80651f;border-color:#d4af37;color:#fff3c2}.presale-hidden{display:none!important}</style>
 </head>
 <body>
 <div class="page">
@@ -730,7 +732,7 @@
             <th>업종</th>
             <th>소유주</th>
             <th>연락처</th>
-            <th>매매가</th>
+            <th>분양/매매가</th>
             <th>보증금</th>
             <th>월세</th>
             <th>상태</th>
@@ -788,9 +790,10 @@
         </div></div>
       </div>
 
+      <div id="unitPresaleSwitch" class="presale-switch"><span>분양상태</span><button type="button" data-unit-phase="분양중">분양중</button><button type="button" data-unit-phase="분양완료">분양완료</button><button type="button" id="unitOriginalPrices">최초 분양자료 보기</button></div>
       <!-- 분양 당시 -->
       <div class="um-section sale" id="commercialUnitSale">
-        <div class="um-section-title">📋 분양 당시</div>
+        <div class="um-section-title">📋 호실 기본정보 · 분양자료</div>
         <div class="umgrid">
           <div class="umfield g2"><label>호수 *</label><input id="u_호수" placeholder="예: 101, 202" /></div>
           <div class="umfield g2"><label>업종</label><input id="u_현업종" placeholder="예: 음식점, 학원" /></div>
@@ -903,7 +906,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261013-pdf30"></script>
+<script src="assets/js/storage.js?v=20261013-phase1"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1653,6 +1656,16 @@ async function deleteBFile(id) {
 
   const $ = id => document.getElementById(id);
 
+  let unitPhase='분양중', unitOriginalOpen=false;
+  function renderUnitPhase() {
+    const resi=residentialUnitMode();$('unitPresaleSwitch').hidden=resi;
+    document.querySelectorAll('[data-unit-phase]').forEach(b=>{b.classList.toggle('active',b.dataset.unitPhase===unitPhase);b.setAttribute('aria-pressed',String(b.dataset.unitPhase===unitPhase));});
+    $('unitOriginalPrices').hidden=unitPhase!=='분양완료';$('unitOriginalPrices').textContent=unitOriginalOpen?'최초 분양자료 접기':'최초 분양자료 보기';
+    for(const id of ['u_평당가','u_분양금액','u_보증금','u_월차임'])$(id).closest('.umfield').classList.toggle('presale-hidden',unitPhase==='분양완료'&&!unitOriginalOpen);
+    for(const id of ['u_현매매가격','u_현보증금','u_현월세'])$(id).closest('.umfield').classList.toggle('presale-hidden',unitPhase==='분양중');
+  }
+  document.querySelectorAll('[data-unit-phase]').forEach(b=>b.addEventListener('click',()=>{unitPhase=b.dataset.unitPhase;unitOriginalOpen=false;renderUnitPhase();}));
+  $('unitOriginalPrices').addEventListener('click',()=>{unitOriginalOpen=!unitOriginalOpen;renderUnitPhase();});
   let units       = [];
   const selectedUnitRows = new Set();
   function unitBulkState() {
@@ -1974,6 +1987,7 @@ async function deleteBFile(id) {
     const p = new URLSearchParams();
     if (typeof buildingId !== "undefined" && buildingId) p.set("buildingId", buildingId);
     if (u.호수) p.set("roomNo", u.호수);
+    if(!residentialUnitMode())p.set("presaleStatus",CommercialPriceCore.status(u,true));
     if (isFlagOn(u.추천매물)) p.set('recommended', '1');
     if (residentialUnitMode()) p.set("resourceScope", "residential");
     return "register.html?" + p.toString();
@@ -2052,10 +2066,14 @@ async function deleteBFile(id) {
   function commercialSaleCount() {
     return activeListingLoaded ? commercialLinkedIds(units).filter(id => {
       const listing = commercialListings[id];
-      return isActiveListing(listing) && String(listing.dealType || listing.deal_type || '').includes('매매');
+      return isActiveListing(listing) && String(listing.dealType || listing.deal_type || '').includes('매매') && CommercialPriceCore.price(listing).amount!==null;
     }).length : null;
   }
 
+  function commercialPriceText(u) {
+    const p=CommercialPriceCore.price(u,true);
+    return p.amount!==null ? esc(p.label)+' · '+toKorAmt(p.amount) : p.original!==null ? '최초분양가 '+toKorAmt(p.original)+'<small style="display:block;color:var(--muted)">참고 · 현재 매매가 미입력</small>' : '-';
+  }
   function commercialOccupancy(u) {
     const industry = String(u.현업종 || '').trim();
     return (industry && !['-','공실','없음','미확인'].includes(industry)) || u.공실여부 === '임차중' ? '임차중' : '공실';
@@ -2172,12 +2190,12 @@ async function deleteBFile(id) {
       const ri     = units.indexOf(u);
       const status = commercialOccupancy(u);
       const bc     = status;
-      return `<tr class="${u.추천등록일 ? 'profit-recommended-row' : ''}">
+      return `<tr class="${u.추천등록일 && isFlagOn(u.추천매물) && isFlagOn(u.수익성매물) ? 'profit-recommended-row' : ''}">
         ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
         <td>${u.현업종 || "-"}</td>
         <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
-        <td style="text-align:right">${currentRentPrice(u.현_매매가격, u.매매가격)}</td>
+        <td style="text-align:right">${commercialPriceText(u)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
         <td><span class="sbadge ${bc}">${status}</span></td>
@@ -2222,6 +2240,7 @@ async function deleteBFile(id) {
     $("umDelete").style.display = isNew ? "none" : "";
     $("umRegistry").style.display = "";
     const u = isNew ? {} : units[idx];
+    unitPhase=isNew?"분양중":CommercialPriceCore.status(u,true);unitOriginalOpen=false;renderUnitPhase();
     $('unitRegistryApplied').hidden = !u.건축물대장조회;
     $('unitRegistryApplied').textContent = u.건축물대장조회 ? '저장된 대장: 전유 '+u.건축물대장조회.exclusive_area_m2+'㎡ · 공용 합계 '+(u.건축물대장조회.common_area_m2 ?? '미확인')+'㎡ · '+(u.건축물대장조회.unit_floor || '') : '';
     $('unitModal').classList.toggle('residential-modal', residentialUnitMode());
@@ -2287,7 +2306,8 @@ async function deleteBFile(id) {
       const n = Number(value);
       return n > 0 && Number.isFinite(n) ? (n * 10000).toLocaleString('ko-KR') : '';
     };
-    const sale = money(unit.현_매매가격);
+    const sale = money(unit.현_매매가격 || unit.매매가격);
+    const presale = money(unit.분양금액);
     const deposit = money(unit.현_보증금 ?? unit.보증금);
     const rent = money(unit.현_월세 ?? unit.월차임);
     const stickers = (existing?.stickers || []).filter(s => s !== '추천매물' && s !== '수익형');
@@ -2305,8 +2325,8 @@ async function deleteBFile(id) {
       complexName:bName, ho:unit.호수,
       resource_id:buildingId, status:existing?.status || '진행중', listingKind:'매물',
       is_public:existing?.is_public === true,
-      dealType:unit.거래구분 || existing?.dealType || (sale && !deposit && !rent ? '매매' : '월세'),
-      salePrice:sale, deposit, monthlyRent:rent,
+      dealType:unit.거래구분 || existing?.dealType || (CommercialPriceCore.status(unit,true)==='분양중' || sale ? '매매' : '월세'),
+      salePrice:sale, presalePrice:presale, presaleStatus:CommercialPriceCore.status(unit,true), deposit, monthlyRent:rent,
       exclusiveAreaPy:Number(unit.전용_평) || null,
       exclusiveAreaM2:unit.전용_평 ? Math.round(Number(unit.전용_평) * 3.30579 * 100) / 100 : null,
       supplyAreaPy:Number(unit.분양_평) || null,
@@ -2407,19 +2427,20 @@ async function deleteBFile(id) {
     let unit = {
       ...(editIdx >= 0 ? units[editIdx] : {}),
       호수,
+      분양상태:unitPhase,
       공실여부:    $("u_공실여부").value,
       현업종:      $("u_현업종").value.trim()    || null,
       소유주:      $("u_소유주").value.trim()    || null,
       연락처:      $("u_연락처").value.trim()    || null,
-      보증금:      Number($("u_보증금").value)   || null,
-      월차임:      Number($("u_월차임").value)   || null,
+      보증금:      $("u_보증금").value === "" ? null : Number($("u_보증금").value),
+      월차임:      $("u_월차임").value === "" ? null : Number($("u_월차임").value),
       전용_평:     $("u_전용_평").value ? Math.round(parseFloat($("u_전용_평").value) * 100) / 100 : null,
       분양_평:     $("u_분양_평").value ? Math.round(parseFloat($("u_분양_평").value) * 100) / 100 : null,
       평당가:      Number($("u_평당가").value)   || null,
       분양금액:    Number($("u_분양금액").value) || null,
       현_매매가격: Number($("u_현매매가격").value) || null,
-      현_보증금:   Number($("u_현보증금").value)   || null,
-      현_월세:     Number($("u_현월세").value)     || null,
+      현_보증금:   $("u_현보증금").value === "" ? null : Number($("u_현보증금").value),
+      현_월세:     $("u_현월세").value === "" ? null : Number($("u_현월세").value),
       수익률:      $("u_수익률").value.trim()    || null,
       추천매물:    $("u_추천매물").checked   ? true : null,
       매물등록요청: $('u_매물등록').checked ? true : null,
@@ -2669,6 +2690,7 @@ async function deleteBFile(id) {
 <script src="assets/js/building-sales-contact.js?v=20261013-contact2"></script>
 </body>
 </html>
+
 
 
 
