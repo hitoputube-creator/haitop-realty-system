@@ -898,7 +898,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261008-sale-type"></script>
+<script src="assets/js/storage.js?v=20261013-pdf30"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -987,6 +987,16 @@ async function getCloudinarySignature(folder) {
 }
 
 async function cloudinaryUpload(file, folder = 'haitop') {
+  const pdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  if (OfficeConfig.id !== 'ktop' && pdf) {
+    if (file.size > 30*1024*1024) throw new Error('PDF는 30MB 이하로 올려주세요.');
+    const kind = folder === 'haitop/floors' ? 'floors' : folder === 'haitop/files' ? 'files' : '';
+    if (!kind) throw new Error('지원하지 않는 자료 구분입니다.');
+    const path = kind + '/' + buildingId + '/' + crypto.randomUUID() + '.pdf';
+    const {error} = await hitopAuthClient.storage.from('building-materials').upload(path, file, {contentType:'application/pdf', upsert:false});
+    if (error) throw new Error('PDF 업로드 실패: ' + error.message);
+    return SUPABASE_URL + '/storage/v1/object/authenticated/building-materials/' + path;
+  }
   if(OfficeConfig.id==='ktop'){
     const kind=folder==='haitop/floors' ? 'floors' : folder==='haitop/files' ? 'files' : '';
     if(!kind)throw new Error('지원하지 않는 자료 구분입니다.');
