@@ -39,11 +39,13 @@ begin
       if row_data ? field and row_data->field<>'null'::jsonb and trim(row_data->>field)<>'' then
         if field not in ('층','분양_VAT','현업종','가격표비고') and (jsonb_typeof(row_data->field)<>'number' or (row_data->>field)::numeric<0 or (row_data->>field)::numeric>1000000000) then raise exception '%호 % 값을 확인하세요.',room,field; end if;
         if field in ('층','분양_VAT','현업종','가격표비고') and length(row_data->>field)>500 then raise exception '항목이 너무 깁니다.'; end if;
-        if matches=0 or p_overwrite or not (old_unit ? field) or old_unit->field='null'::jsonb or old_unit->>field='' then patch:=patch||jsonb_build_object(field,row_data->field); end if;
+        if p_overwrite and row_data ? '_expected' and (old_unit->field is distinct from row_data->'_expected'->field) and not (old_unit->field is null and row_data->'_expected'->field='null'::jsonb) then raise exception '%호 % 값이 다른 화면에서 변경되었습니다. 다시 비교해주세요.',room,field; end if;
+        if (old_unit->field is distinct from row_data->field) and (matches=0 or p_overwrite or not (old_unit ? field) or old_unit->field='null'::jsonb or old_unit->>field='') then patch:=patch||jsonb_build_object(field,row_data->field); end if;
       end if;
     end loop;
     if coalesce((coalesce(patch->>'분양_평',old_unit->>'분양_평'))::numeric,0)>0 and coalesce((coalesce(patch->>'전용_평',old_unit->>'전용_평'))::numeric,0)>coalesce((coalesce(patch->>'분양_평',old_unit->>'분양_평'))::numeric,0) then raise exception '%호 전용면적이 분양면적보다 큽니다.',room; end if;
     if matches=0 or patch<>'{}'::jsonb then
+      patch:=patch||jsonb_build_object('가격변경이력',coalesce(old_unit->'가격변경이력','[]'::jsonb)||jsonb_build_array(jsonb_build_object('date',now(),'source',left(p_source,300),'before',(select coalesce(jsonb_object_agg(k,old_unit->k),'{}'::jsonb) from jsonb_object_keys(patch) k),'after',patch)));
       patch:=patch||jsonb_build_object('가격표출처',left(p_source,300),'가격표반영일',now(),'updated_at',now());
       if matches=1 then all_units:=jsonb_set(all_units,array[idx::text],old_unit||patch);changed:=changed+1;
       else all_units:=all_units||jsonb_build_array(old_unit||patch);added:=added+1; end if;
