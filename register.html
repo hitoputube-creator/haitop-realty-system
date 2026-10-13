@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261009-unit-table"></script>
+  <script src="assets/js/storage.js?v=20261013-phase1"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -53,6 +53,8 @@
   }
 })();
 </script>
+<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261013-phase1"></script>
 </head>
 <body data-nav-active="properties">
 <div class="page">
@@ -915,6 +917,8 @@
       // 가격정보
       salePrice:      gv('salePrice'),
       presalePrice:   gv('presalePrice'),
+      presaleStatus: cat1 === '상가사무실' ? window.registerCommercialPhase.status : undefined,
+      occupancy: cat1 === '상가사무실' ? window.registerCommercialPhase.occupancy : undefined,
       deposit:        gv('deposit'),
       monthlyRent:    gv('monthlyRent'),
       managementFee:  gv('managementFee'),
@@ -1036,13 +1040,10 @@
       return (v && isFinite(v)) ? (v * 3.30579).toFixed(2) : "";
     }
 
-    // 만원 단위 → 원 단위 변환 후 천단위 쉼표 문자열
-    // buildings 테이블의 가격 필드는 만원 단위지만, 1억 이상이면 이미 원 단위로 저장된 것으로 판단
+    // 호실자료는 만원 단위, 일반 매물창은 원 단위.
     function fmtPrice(v) {
-      let n = Number(v);
-      if (!n || !isFinite(n)) return "";
-      if (n < 100000000) n = n * 10000; // 만원 단위 → 원 단위
-      return n.toLocaleString("ko-KR");
+      const n=CommercialPriceCore.number(v);
+      return n===null?'':(n*10000).toLocaleString('ko-KR');
     }
 
     // 호수에서 층 문자열 생성
@@ -1105,8 +1106,8 @@
       const supplyM2    = unit ? (unit.분양_m2 || py2m2(unit.분양_평))  : "";
 
       // 5) 가격
-      const deposit = unit ? fmtPrice(unit.현_보증금 || unit.보증금) : "";
-      const rent    = unit ? fmtPrice(unit.현_월세   || unit.월차임) : "";
+      const deposit = unit ? fmtPrice(CommercialPriceCore.first(unit.현_보증금,unit.보증금)) : "";
+      const rent    = unit ? fmtPrice(CommercialPriceCore.first(unit.현_월세,unit.월차임)) : "";
       const presale = unit ? fmtPrice(unit.분양금액)                 : "";
       const sale    = unit ? fmtPrice(unit.현_매매가격)              : "";
 
@@ -1118,6 +1119,7 @@
       if (!hasRent && !hasDeposit && hasSale) autoDealtType = "매매";
       else if (hasDeposit || hasRent)         autoDealtType = "월세";
 
+      if(unit && CommercialPriceCore.status(unit,true)==="분양중")autoDealtType="매매";
       if (unit && ["매매", "전세", "월세"].includes(unit.거래구분)) autoDealtType = unit.거래구분;
       if (unit?.listing_id) {
         location.replace('detail.html?id=' + encodeURIComponent(unit.listing_id));
@@ -1177,6 +1179,7 @@
       if (rent)    { document.getElementById("monthlyRent").value  = rent;     syncRegisterPricePreview("monthlyRent"); }
       if (presale) { document.getElementById("presalePrice").value = presale;  syncRegisterPricePreview("presalePrice"); }
       if (sale)    { document.getElementById("salePrice").value    = sale;     syncRegisterPricePreview("salePrice"); }
+      if(window.registerCommercialPhase)window.registerCommercialPhase.set({salePrice:sale,presalePrice:presale,presaleStatus:qp.get("presaleStatus")||undefined});
 
       if (exclusiveM2) {
         document.getElementById("exclusiveAreaM2").value = exclusiveM2;
@@ -1355,8 +1358,10 @@
   })();
 
 </script>
+<script>window.registerCommercialPhase=CommercialPresaleUI.setup({host:document.getElementById("salePrice").closest(".field").parentElement,item:{presaleStatus:"분양중"}});</script>
 </body>
 </html>
+
 
 
 
