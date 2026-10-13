@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261008-sale-type"></script>
+<script src="assets/js/storage.js?v=20261013-phase1"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -115,6 +115,8 @@
 })();
 </script>
 
+<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261013-phase1"></script>
 </head>
 <body data-nav-active="properties">
 
@@ -916,6 +918,8 @@ function closeHomepageTab(tab) {
     _editNewImagePublicFlags = [];
     renderEditImagePreview();
     updateEditLandUnitPrice();
+    if(!window.editCommercialPhase)window.editCommercialPhase=CommercialPresaleUI.setup({prefix:"edit_",host:document.getElementById("edit_salePrice").closest(".field").parentElement,item});
+    else window.editCommercialPhase.set(item);
     document.getElementById("editModal").style.display = "flex";
   }
 
@@ -1393,19 +1397,20 @@ function closeHomepageTab(tab) {
     const profileCondPairs = [...profile.cond, ...strayKeys].map(k => cells[k]);
 
     // 가격은 거래유형에 맞는 항목만 보여준다(매매면 매매가, 전세면 전세금, 월세·임대면 보증금+월세).
-    const saleText = firstDetailValue(formatWonOrText(item.salePrice), profileKey === "land" ? formatManWon(item.land_price) : "");
+    const commercialPrice=CommercialPriceCore.commercial(item)?CommercialPriceCore.price(item):null;
+    const saleText = firstDetailValue(formatWonOrText(commercialPrice?commercialPrice.amount:item.salePrice), profileKey === "land" ? formatManWon(item.land_price) : "");
     const depositText = formatWonOrText(item.deposit);
     const rentText = formatWonOrText(item.monthlyRent);
     let priceCore, priceCond;
     if (dealType === "매매") {
-      priceCore = [["매매가", saleText]];
+      priceCore = [[commercialPrice?commercialPrice.label+"가":"매매가", saleText]];
       priceCond = [["보증금", depositText], ["월세", rentText]];
     } else if (dealType === "전세") {
       priceCore = [["전세금", depositText]];
-      priceCond = [["매매가", saleText], ["월세", rentText]];
+      priceCond = [[commercialPrice?commercialPrice.label+"가":"매매가", saleText], ["월세", rentText]];
     } else if (dealType === "월세" || dealType === "임대") {
       priceCore = [["보증금", depositText], ["월세", rentText]];
-      priceCond = [["매매가", saleText]];
+      priceCond = [[commercialPrice?commercialPrice.label+"가":"매매가", saleText]];
     } else {
       priceCore = [["보증금", depositText], ["월세/매매가", firstDetailValue(rentText, saleText)]];
       priceCond = [];
@@ -1429,7 +1434,8 @@ function closeHomepageTab(tab) {
 
     // 핵심표에 없는 나머지 필드들. 실제 값이 있는 것만 packRows가 걸러서 보여준다.
     const extraPairs = [
-      ["분양가", formatWonOrText(item.presalePrice)],
+      ["최초 분양가", formatWonOrText(item.presalePrice)],
+      ...(commercialPrice ? [["분양상태",commercialPrice.status]] : []),
       ["관리비", item.type === "apartment" ? "" : formatWonOrText(item.managementFee)],
       ["권리금", item.type === "apartment" ? "" : formatWonOrText(item.premium)],
       ["상가 보증금", formatManWon(item.shop_deposit)],
@@ -1853,6 +1859,8 @@ function closeHomepageTab(tab) {
             return dt ? dt + " " + fmt : fmt;
           })(),
           presalePrice:       gv("edit_presalePrice"),
+          presaleStatus: category1 === "상가사무실" ? window.editCommercialPhase.status : item.presaleStatus,
+          occupancy: category1 === "상가사무실" ? window.editCommercialPhase.occupancy : item.occupancy,
           deposit:            gv("edit_deposit"),
           monthlyRent:        gv("edit_monthlyRent"),
           managementFee:      gv("edit_managementFee"),
@@ -1926,6 +1934,7 @@ function closeHomepageTab(tab) {
 </script>
 </body>
 </html>
+
 
 
 
