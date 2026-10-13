@@ -91,6 +91,14 @@
   }
   function passes(p) { return (activeCat === 'all' || p.key === activeCat) && passesNonCat(p); }
 
+  function syncCategoryLinks() {
+    var url = new URL(location.href);
+    url.searchParams.set('category', activeCat);
+    history.replaceState(null, '', url.href);
+    $('lkBackLink').href = OfficeConfig.urlFor('property-main.html?category=' + activeCat);
+    $('lkListLink').href = OfficeConfig.urlFor('properties.html?mainCategory=' + activeCat);
+  }
+
   function renderCatButtons() {
     var box = $('lkCats');
     box.textContent = '';
@@ -100,7 +108,7 @@
       counts.all++;
       counts[p.key] = (counts[p.key] || 0) + 1;
     });
-    var list = [{ key: 'all', label: '전체', color: '#e5bf35' }].concat(Core.CATEGORIES);
+    var list = [{ key: 'all', label: '전체매물', color: '#e5bf35' }].concat(Core.CATEGORIES);
     list.forEach(function (c) {
       var btn = el('button', 'btn');
       btn.type = 'button';
@@ -109,7 +117,7 @@
       btn.appendChild(dot);
       btn.appendChild(document.createTextNode(c.label));
       btn.appendChild(el('span', 'lk-count', String(counts[c.key] || 0)));
-      btn.addEventListener('click', function () { activeCat = c.key; infoWindow.close(); render(true); });
+      btn.addEventListener('click', function () { activeCat = c.key; selectedKey = ''; syncCategoryLinks(); infoWindow.close(); render(true); });
       box.appendChild(btn);
     });
   }
@@ -314,7 +322,7 @@
     var back = $('lkBackLink');
     if (back && window.OfficeConfig) {
       back.href = OfficeConfig.urlFor('property-main.html' + (activeCat !== 'all' ? '?category=' + activeCat : ''));
-      $('lkListLink').href = OfficeConfig.urlFor('properties.html');
+      syncCategoryLinks();
     }
     var key = String(window.HITOP_KAKAO_JS_KEY || '').trim();
     if (!key) { $('kakaoSetupNotice').hidden = false; setStatus('카카오맵 키가 설정되면 지도가 표시됩니다.'); return; }
