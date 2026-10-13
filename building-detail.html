@@ -593,6 +593,7 @@
 </script>
 
 <style>.units-tbl .profit-recommended-row td{background:rgba(212,175,55,.11)}.units-tbl .profit-recommended-row td:first-child{box-shadow:inset 3px 0 #d4af37}.units-tbl .profit-recommended-row:hover td{background:rgba(212,175,55,.17)}</style>
+<style>#unitModal #unitAdditionalNotes #u_추가메모{min-height:140px;height:140px;resize:vertical}.sbadge.미확인{background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.35)}</style>
 </head>
 <body>
 <div class="page">
@@ -823,8 +824,9 @@
         <div class="um-section-title">📊 현재 현황</div>
         <div class="umgrid">
           <div class="umfield g3">
-            <label>상태 *</label>
-            <select id="u_공실여부">
+            <label>임대현황 (공실 여부)</label>
+            <select id="u_공실여부" aria-label="임대현황 공실 여부">
+              <option value="미확인">미확인</option>
               <option value="임차중">임차중</option>
               <option value="공실">공실</option>
               <option value="매매가능">매매가능</option>
@@ -2152,8 +2154,8 @@ async function deleteBFile(id) {
     if (residentialUnitMode()) renderResidentialTable(filtered);
     else { if (!$("unitSelectAll")) $("unitsTableHead").querySelector("tr").insertAdjacentHTML("afterbegin", '<th class="unit-select-cell"><input type="checkbox" id="unitSelectAll" aria-label="현재 목록 전체선택"></th>'); tbody.innerHTML = filtered.map(u => {
       const ri     = units.indexOf(u);
-      const status = u.공실여부 || "공실";
-      const bc     = status === "임차중" ? "임차중" : status === "공실" ? "공실" : "매매가능";
+      const status = u.공실여부 || "미확인";
+      const bc     = ["임차중","공실","매매가능"].includes(status) ? status : "미확인";
       return `<tr class="${u.추천등록일 ? 'profit-recommended-row' : ''}">
         ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
         <td>${u.현업종 || "-"}</td>
@@ -2234,7 +2236,7 @@ async function deleteBFile(id) {
     $("u_월차임").value   = u.월차임    || "";
 
     // 현재 현황
-    $("u_공실여부").value   = u.공실여부    || "임차중";
+    $("u_공실여부").value   = u.공실여부    || "미확인";
     $("u_현매매가격").value = u.현_매매가격 || "";
     $("u_현보증금").value   = u.현_보증금   || "";
     $("u_현월세").value     = u.현_월세     || "";
@@ -2646,7 +2648,7 @@ async function deleteBFile(id) {
 })();
 </script>
 <script src="assets/js/price-room-import.js?v=20261013-history4"></script>
-<script src="assets/js/building-sales-contact.js?v=20261013-contact1"></script>
+<script src="assets/js/building-sales-contact.js?v=20261013-contact2"></script>
 </body>
 </html>
 
