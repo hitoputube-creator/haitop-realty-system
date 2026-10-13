@@ -2018,10 +2018,10 @@ async function deleteBFile(id) {
       // 상가·사무실: 호실에 연결된 매물 중 거래상태가 진행중인 것만 세기 위해 매물 상태를 읽어둔다(읽기 전용).
       try {
         const rows = await getListings();
-        activeListingIds = {};
-        rows.forEach(l => { if (isActiveListing(l)) activeListingIds[String(l.id)] = true; });
+        activeListingIds = {}; commercialListings = {};
+        rows.forEach(l => { commercialListings[String(l.id)] = l; if (isActiveListing(l)) activeListingIds[String(l.id)] = true; });
         activeListingLoaded = true;
-      } catch (error) { activeListingIds = {}; activeListingLoaded = false; }
+      } catch (error) { activeListingIds = {}; commercialListings = {}; activeListingLoaded = false; }
     }
     renderAll();
     if (location.hash === '#unitStatus') $('unitStatus').scrollIntoView({ block: 'start' });
@@ -2037,13 +2037,23 @@ async function deleteBFile(id) {
   }
 
   // 매물진행중: 거래상태가 진행중이고 보관용 명단이 아닌 매물
-  let activeListingIds = {}, activeListingLoaded = false;
+  let activeListingIds = {}, commercialListings = {}, activeListingLoaded = false;
   function isActiveListing(l) { return !!l && listingProgressStatus(l) === "진행중" && l.listingKind !== "명단"; }
   function activeListingCount() {
     if (residentialUnitMode()) {
       return listingLookupLoaded ? units.filter(u => linkedUnitListings(u).some(isActiveListing)).length : null;
     }
-    return activeListingLoaded ? units.filter(u => activeListingIds[String(u.listing_id || "").trim()]).length : null;
+    return activeListingLoaded ? commercialLinkedIds(units).filter(id => isActiveListing(commercialListings[id])).length : null;
+  }
+
+  function commercialLinkedIds(rows) {
+    return [...new Set(rows.flatMap(u => [u.listing_id, ...(u.묶음매물연결 || []).map(link => link.id)]).filter(Boolean).map(String))];
+  }
+  function commercialSaleCount() {
+    return activeListingLoaded ? commercialLinkedIds(units).filter(id => {
+      const listing = commercialListings[id];
+      return isActiveListing(listing) && String(listing.dealType || listing.deal_type || '').includes('매매');
+    }).length : null;
   }
 
   function commercialOccupancy(u) {
@@ -2054,17 +2064,19 @@ async function deleteBFile(id) {
   function renderSummary() {
     const occ  = units.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "임차중").length;
     const vac  = units.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length;
-    const sale = units.filter(u => residentialUnitMode() ? String(unitDeal(u)).includes("매매") : u.공실여부 === "매매가능").length;
+    const sale = residentialUnitMode() ? units.filter(u => String(unitDeal(u)).includes("매매")).length : commercialSaleCount();
     const listedActive = activeListingCount();
     $("sumOccupied").textContent = occ;
     $("sumVacant").textContent   = vac;
-    $("sumForSale").textContent  = sale;
+    $("sumForSale").textContent  = sale === null ? "-" : sale;
+    $("sumForSale").closest(".sum-card").title = "진행중인 매매 매물 건수 · 묶음매물은 1건";
+    $("sumListed").closest(".sum-card").title = "진행중인 매물 건수 · 묶음매물은 1건";
     $("sumListed").textContent   = listedActive === null ? "-" : listedActive;
 
     // 주거(세대별 자료): 매매·전세·월세는 세대의 '거래구분', 자가는 '세입자현황=자가거주' 기준으로 센다.
     // '매매·임대'처럼 둘 이상이면 각각 집계된다.
     const resi = residentialUnitMode();
-    $("sumForSale").closest(".sum-card").hidden = !resi;
+
     $("residentialSummaryGrid").style.display = resi ? "" : "none";
     $("residentialSummaryNote").style.display = resi ? "" : "none";
     $("commercialSummaryGrid").style.display  = resi ? "none" : "";
@@ -2140,7 +2152,7 @@ async function deleteBFile(id) {
     const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped.filter(u => matchesUnitDealFilter(u, filterUnitDeal))) : grouped;
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
-    const listed = filtered.filter(u => residentialUnitMode() && listingLookupLoaded ? linkedUnitListings(u).length > 0 : String(u.listing_id || '').trim()).length;
+    const listed = residentialUnitMode() ? filtered.filter(u => listingLookupLoaded ? linkedUnitListings(u).length > 0 : String(u.listing_id || '').trim()).length : commercialLinkedIds(filtered).filter(id => commercialListings[id]).length;
     $("unitCounts").textContent = `${floorLabel(filterFloor)}${residentialUnitMode() && filterUnitDeal ? " · " + filterUnitDeal : ""} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
     const tbody = $("unitsTbody");
     const empty = $("unitsEmpty");
@@ -2306,6 +2318,8 @@ async function deleteBFile(id) {
     };
     if (existing) await updateListing(id, data); else await addListing(data);
     unit.listing_id = id;
+    commercialListings[String(id)] = data;
+    activeListingIds[String(id)] = isActiveListing(data);
     delete unit.pending_listing_id;
   }
 
@@ -2444,7 +2458,7 @@ async function deleteBFile(id) {
       if (registerNow) {
         await registerCommercialUnit(unit);
         await saveBuildingUnits(bName, bName, next);
-        activeListingIds[unit.listing_id] = true;
+        activeListingIds[unit.listing_id] = isActiveListing(commercialListings[unit.listing_id]);
       }
       selectedUnitRows.clear();
       renderAll();
