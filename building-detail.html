@@ -826,10 +826,8 @@
           <div class="umfield g3">
             <label>임대현황 (공실 여부)</label>
             <select id="u_공실여부" aria-label="임대현황 공실 여부">
-              <option value="미확인">미확인</option>
               <option value="임차중">임차중</option>
               <option value="공실">공실</option>
-              <option value="매매가능">매매가능</option>
             </select>
           </div>
           <div class="umfield g3"><label>(현)매매가격 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /><span class="amt-hint" id="h_현매매가격"></span></div>
@@ -2048,9 +2046,14 @@ async function deleteBFile(id) {
     return activeListingLoaded ? units.filter(u => activeListingIds[String(u.listing_id || "").trim()]).length : null;
   }
 
+  function commercialOccupancy(u) {
+    const industry = String(u.현업종 || '').trim();
+    return (industry && !['-','공실','없음','미확인'].includes(industry)) || u.공실여부 === '임차중' ? '임차중' : '공실';
+  }
+
   function renderSummary() {
-    const occ  = units.filter(u => u.공실여부 === "임차중").length;
-    const vac  = units.filter(u => u.공실여부 === "공실").length;
+    const occ  = units.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "임차중").length;
+    const vac  = units.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length;
     const sale = units.filter(u => residentialUnitMode() ? String(unitDeal(u)).includes("매매") : u.공실여부 === "매매가능").length;
     const listedActive = activeListingCount();
     $("sumOccupied").textContent = occ;
@@ -2061,6 +2064,7 @@ async function deleteBFile(id) {
     // 주거(세대별 자료): 매매·전세·월세는 세대의 '거래구분', 자가는 '세입자현황=자가거주' 기준으로 센다.
     // '매매·임대'처럼 둘 이상이면 각각 집계된다.
     const resi = residentialUnitMode();
+    $("sumForSale").closest(".sum-card").hidden = !resi;
     $("residentialSummaryGrid").style.display = resi ? "" : "none";
     $("residentialSummaryNote").style.display = resi ? "" : "none";
     $("commercialSummaryGrid").style.display  = resi ? "none" : "";
@@ -2137,7 +2141,7 @@ async function deleteBFile(id) {
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
     const listed = filtered.filter(u => residentialUnitMode() && listingLookupLoaded ? linkedUnitListings(u).length > 0 : String(u.listing_id || '').trim()).length;
-    $("unitCounts").textContent = `${floorLabel(filterFloor)}${residentialUnitMode() && filterUnitDeal ? " · " + filterUnitDeal : ""} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => u.공실여부 === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
+    $("unitCounts").textContent = `${floorLabel(filterFloor)}${residentialUnitMode() && filterUnitDeal ? " · " + filterUnitDeal : ""} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
     const tbody = $("unitsTbody");
     const empty = $("unitsEmpty");
 
@@ -2154,8 +2158,8 @@ async function deleteBFile(id) {
     if (residentialUnitMode()) renderResidentialTable(filtered);
     else { if (!$("unitSelectAll")) $("unitsTableHead").querySelector("tr").insertAdjacentHTML("afterbegin", '<th class="unit-select-cell"><input type="checkbox" id="unitSelectAll" aria-label="현재 목록 전체선택"></th>'); tbody.innerHTML = filtered.map(u => {
       const ri     = units.indexOf(u);
-      const status = u.공실여부 || "미확인";
-      const bc     = ["임차중","공실","매매가능"].includes(status) ? status : "미확인";
+      const status = commercialOccupancy(u);
+      const bc     = status;
       return `<tr class="${u.추천등록일 ? 'profit-recommended-row' : ''}">
         ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
         <td>${u.현업종 || "-"}</td>
@@ -2236,7 +2240,7 @@ async function deleteBFile(id) {
     $("u_월차임").value   = u.월차임    || "";
 
     // 현재 현황
-    $("u_공실여부").value   = u.공실여부    || "미확인";
+    $("u_공실여부").value   = commercialOccupancy(u);
     $("u_현매매가격").value = u.현_매매가격 || "";
     $("u_현보증금").value   = u.현_보증금   || "";
     $("u_현월세").value     = u.현_월세     || "";
