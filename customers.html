@@ -138,6 +138,22 @@ html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .btn
 html[data-office-theme='ktop'] .customer-management-page .page-btn{background:#f2f6fc!important;color:#315b91!important;border-color:#d2def0!important}
 html[data-office-theme='ktop'] .customer-management-page .page-btn:disabled{opacity:.4}
 </style>
+
+<!-- The integrated customer tab reuses this canonical customer screen. -->
+<script>
+if (new URLSearchParams(location.search).get('embed') === 'customer' && window.parent !== window) {
+  document.documentElement.classList.add('customer-embedded');
+  var customerBase = document.createElement('base');
+  customerBase.target = '_top';
+  document.head.appendChild(customerBase);
+}
+</script>
+<style>
+.customer-embedded body{background:transparent!important}
+.customer-embedded .page{width:100%;max-width:none;margin:0;padding:0;box-sizing:border-box}
+.customer-embedded .page>.header,.customer-embedded .page>.header-line,.customer-embedded .customer-page-heading{display:none}
+.customer-embedded #tabCustomer>.card{margin-top:0}
+</style>
 </head>
 <body class="customer-management-page">
 <div class="page">
