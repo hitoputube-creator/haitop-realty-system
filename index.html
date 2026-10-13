@@ -1511,7 +1511,7 @@ if (tab === "done")       renderDoneList();
     // 업무일지의 "고객보기" 버튼 등에서 ?tab=customer&customerId=...로 들어오면 상세를 바로 연다
     const qp = new URLSearchParams(location.search);
     const wantCustomerId = qp.get("customerId");
-    if (wantCustomerId) {
+    if (wantCustomerId && !document.getElementById("sharedCustomerFrame")) {
       openCustomerDetail(wantCustomerId);
       const url = new URL(location.href);
       url.searchParams.delete("customerId");
