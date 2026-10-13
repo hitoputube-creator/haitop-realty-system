@@ -11,8 +11,8 @@ Deno.serve(async req=>{
     if(error||!ctx)return json({error:'로그인이 필요합니다.'},401);
     const admin=await ctx.supabase.rpc('is_admin');
     if(admin.error||!admin.data)return json({error:'관리자 권한이 필요합니다.'},403);
-    const key=Deno.env.get('ANTHROPIC_API_KEY');
-    if(!key)return json({error:'가격표 AI 분석 키가 설정되지 않았습니다.'},503);
+    const key=Deno.env.get('GEMINI_API_KEY') || Deno.env.get('GOOGLE_API_KEY');
+    if(!key)return json({error:'Gemini API 키가 없습니다. Supabase Edge Functions → Secrets에 GEMINI_API_KEY를 저장해주세요.'},503);
     if(Number(req.headers.get('content-length')||0)>12000000)return json({error:'분석할 이미지가 너무 큽니다. 페이지를 나눠주세요.'},413);
     const body=await req.json();
     if(!Array.isArray(body.images)||!body.images.length||body.images.length>8)return json({error:'이미지 1~8장을 선택하세요.'},400);
@@ -20,14 +20,20 @@ Deno.serve(async req=>{
     const images=body.images.map((image:{data:string})=>{
       if(typeof image.data!=='string'||!image.data.length||!/^[A-Za-z0-9+/=]+$/.test(image.data))throw new Error('이미지 형식이 올바르지 않습니다.');
       size+=image.data.length;
-      return {type:'image',source:{type:'base64',media_type:'image/jpeg',data:image.data}};
+      return {inlineData:{mimeType:'image/jpeg',data:image.data}};
     });
     if(size>10000000)return json({error:'분석 이미지 용량이 큽니다. 페이지를 나눠주세요.'},413);
-    const result=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:16000,system:prompt,messages:[{role:'user',content:[...images,{type:'text',text:'가격표의 모든 개별 호실을 추출하세요.'}]}]}),signal:AbortSignal.timeout(100000)});
+    const result=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key.trim()},body:JSON.stringify({systemInstruction:{parts:[{text:prompt}]},contents:[{role:'user',parts:[...images,{text:'가격표의 모든 개별 호실을 추출하세요.'}]}],generationConfig:{responseMimeType:'application/json',temperature:0,maxOutputTokens:16000}}),signal:AbortSignal.timeout(100000)});
     const data=await result.json();
-    if(!result.ok)return json({error:data?.error?.message||'AI 분석 요청에 실패했습니다.'},502);
-    if(data.stop_reason==='max_tokens')return json({error:'가격표가 길어 분석이 중단됐습니다. 페이지를 나누어 다시 분석하세요.'},422);
-    const text=(data.content||[]).filter((x:{type:string})=>x.type==='text').map((x:{text:string})=>x.text).join('\n');
+    if(!result.ok){
+      const status=result.status;
+      const message=status===429 ? 'Gemini 무료 사용 한도에 도달했습니다. 잠시 후 다시 시도해주세요.' : status===401||status===403 ? 'Gemini API 키 또는 접근 권한을 확인해주세요.' : data?.error?.message||'Gemini 분석 요청에 실패했습니다.';
+      return json({error:message},status===429?429:502);
+    }
+    const candidate=data.candidates?.[0];
+    if(candidate?.finishReason==='MAX_TOKENS')return json({error:'가격표가 길어 분석이 중단됐습니다. 페이지를 나누어 다시 분석하세요.'},422);
+    if(!candidate?.content?.parts)return json({error:'Gemini가 분석 결과를 반환하지 않았습니다. 가격표를 확인해주세요.'},422);
+    const text=candidate.content.parts.filter((x:{text?:string;thought?:boolean})=>x.text&&!x.thought).map((x:{text:string})=>x.text).join('\n');
     let parsed;try{parsed=JSON.parse(text.replace(/^\s*```(?:json)?\s*/,'').replace(/\s*```\s*$/,''));}catch{return json({error:'분석 결과를 읽지 못했습니다. 다시 시도해주세요.'},422);}
     if(!Array.isArray(parsed.rows)||parsed.rows.length>300)return json({error:'호실 분석 결과를 확인할 수 없습니다.'},422);
     const keys=['호수','층','전용_평','분양_평','평당가','분양금액','현_매매가격','보증금','월차임','분양_VAT','review','note'];
