@@ -514,6 +514,7 @@ async function saveOverview() {
   }
   const memo = buildMemo();
   try {
+    if (window.BuildingSalesContact) await window.BuildingSalesContact.save();
     await updateDriveResource(buildingId, { memo });
     buildingData.memo = memo;
     renderReadOnlyViews();
@@ -536,7 +537,7 @@ function togglePreview() {
 
 init();
 </script>
-<script src="assets/js/building-sales-contact.js?v=20261013-contact1"></script>
+<script src="assets/js/building-sales-contact.js?v=20261013-contact2"></script>
 </body>
 </html>
 
