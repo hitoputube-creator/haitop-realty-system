@@ -100,7 +100,7 @@
       getAllBuildingFloors(),
       fetchWithTimeout(SUPABASE_URL + '/rest/v1/buildings?select=local_id,name,units', { headers: headers }),
       getDriveCategories(),
-      residential ? getListings() : Promise.resolve([])
+      getListings()
     ]);
     var resources = results[0], floors = results[1], recordsRes = results[2];
     if (!recordsRes.ok) throw new Error('건물 호실 자료를 불러오지 못했습니다.');
@@ -129,7 +129,17 @@
         lat: null, lng: null, overlay: null, el: null
       };
     });
-    return residential ? mergeResidentialListings(mapped, results[4]) : mapped;
+    if (residential) return mergeResidentialListings(mapped, results[4]);
+    mapped.forEach(function (it) {
+      var ids = new Set();
+      (results[4] || []).forEach(function (listing) {
+        if (['거래완료','계약완료','완료','보류','종료'].includes(String(listing.status || '').trim())) return;
+        var linked = String(listing.resource_id || listing.building_id || '');
+        if (linked === String(it.id) || it.unitListingIds.includes(String(listing.id))) ids.add(String(listing.id));
+      });
+      it.listed = ids.size;
+    });
+    return mapped;
   }
 
   // ---------- 지오코딩 ----------
@@ -274,7 +284,7 @@
   // ---------- 지도 표시 ----------
   function stateText(it) { return !it.total ? '호실 미등록' : '공실 ' + it.vacant + '/' + it.total; }
 
-  function countsText(it) { return residential ? '연락처 ' + it.contacts + ' · 매물 ' + it.listed : '공실등록 ' + it.vacant + ' · 연락처 확보 ' + it.contacts + ' · 매물등록 ' + it.listed; }
+  function countsText(it) { return residential ? '연락처 ' + it.contacts + ' · 매물 ' + it.listed : '내 매물 ' + it.listed + '개 · 공실 ' + it.vacant + '개'; }
 
   function unitListUrl(it) {
     if (it.listingOnly && it.listings[0]) return OfficeConfig.urlFor('detail.html?id=' + encodeURIComponent(it.listings[0].id));
@@ -447,7 +457,12 @@
       counts.title = it.name + ' · 세대 목록 보기';
       counts.setAttribute('aria-label', it.name + ' · ' + counts.textContent + ' · 세대 목록 보기');
       body.append(counts);
-    } else body.append(name, sub, counts);
+    } else {
+      counts.textContent = countsText(it);
+      counts.title = it.name + ' · 진행 중인 내 매물 / 공실로 등록된 호실';
+      counts.setAttribute('aria-label', it.name + ' · ' + counts.textContent + ' · 층별 리스트 보기');
+      body.append(name, counts);
+    }
     el.appendChild(body);
     el.title = it.name + ' · ' + it.address;
     el.addEventListener('click', function () { if (editing) selectForEdit(it); else openInfo(it); });
@@ -511,7 +526,6 @@
       var small = document.createElement('small');
       small.textContent = countsText(it) + (it.lat === null ? ' · 지도 위치 없음' : it.manual ? ' · 위치 직접 지정' : '');
       button.appendChild(small);
-      if (!residential) { var total = document.createElement('small'); total.textContent = '등록 호실 ' + it.total + '개'; button.appendChild(total); }
       button.addEventListener('click', function () {
         if (editing) {
           if (it.lat !== null) { map.setLevel(3); map.setCenter(new kakao.maps.LatLng(it.lat, it.lng)); }
@@ -543,7 +557,6 @@
     var title = document.createElement('b'); title.textContent = it.name; root.appendChild(title);
     function line(text) { var s = document.createElement('span'); s.className = 'row'; s.textContent = text; root.appendChild(s); }
     line(it.address || '주소 없음');
-    if (!residential) line(it.total ? '호실 ' + it.total + '개 · 공실 ' + it.vacant + '개' : '호실이 아직 등록되지 않았습니다.');
     line(countsText(it));
     var links = document.createElement('div'); links.className = 'links';
     function link(label, href) {
