@@ -592,6 +592,7 @@
 })();
 </script>
 
+<style>.units-tbl .profit-recommended-row td{background:rgba(212,175,55,.11)}.units-tbl .profit-recommended-row td:first-child{box-shadow:inset 3px 0 #d4af37}.units-tbl .profit-recommended-row:hover td{background:rgba(212,175,55,.17)}</style>
 </head>
 <body>
 <div class="page">
@@ -677,6 +678,8 @@
     <div class="unit-sec-head">
       <h3 id="unitStatusTitle">🏬 호실 현황</h3>
       <div id="unitBulkActions" style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-left:auto;">
+        <button type="button" class="btn-unit-add" id="unitProfitRegister" disabled>수익성 추천등록</button>
+        <a class="btn-unit-ghost" id="unitProfitView" href="profit-recommendations.html">추천매물 모아보기</a>
         <button type="button" class="btn-unit-add" id="unitBundleRegister" disabled>묶음매물 등록</button>
         <button type="button" class="btn-unit-ghost" id="unitSelectPrint" disabled>선택인쇄</button>
         <button type="button" class="btn-unit-del" id="unitSelectDelete" disabled>선택삭제</button>
@@ -1654,6 +1657,10 @@ async function deleteBFile(id) {
   const selectedUnitRows = new Set();
   function unitBulkState() {
     const count = selectedUnitRows.size;
+    $('unitProfitRegister').hidden = residentialUnitMode() || OfficeConfig.id !== 'hitop';
+    $('unitProfitView').hidden = residentialUnitMode() || OfficeConfig.id !== 'hitop';
+    $('unitProfitRegister').disabled = !count;
+    $('unitProfitRegister').textContent = '수익성 추천등록 (' + count + ')';
     $('unitBundleRegister').hidden = residentialUnitMode();
     $('unitBundleRegister').disabled = count < 2;
     $("unitSelectPrint").disabled = !count;
@@ -2147,8 +2154,8 @@ async function deleteBFile(id) {
       const ri     = units.indexOf(u);
       const status = u.공실여부 || "공실";
       const bc     = status === "임차중" ? "임차중" : status === "공실" ? "공실" : "매매가능";
-      return `<tr>
-        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
+      return `<tr class="${u.추천등록일 ? 'profit-recommended-row' : ''}">
+        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
         <td>${u.현업종 || "-"}</td>
         <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
@@ -2295,6 +2302,23 @@ async function deleteBFile(id) {
     unit.listing_id = id;
     delete unit.pending_listing_id;
   }
+
+  let profitRegisterBusy = false;
+  $('unitProfitRegister').addEventListener('click', async () => {
+    if (profitRegisterBusy || residentialUnitMode() || OfficeConfig.id !== 'hitop') return;
+    const selected = units.filter((u,i)=>selectedUnitRows.has(i));
+    if (!selected.length) { showToast('추천할 호실을 선택하세요.'); return; }
+    const reason = prompt('추천 사유를 입력하세요. (선택 · 500자까지)', '');
+    if (reason === null) return;
+    profitRegisterBusy = true; $('unitProfitRegister').disabled = true;
+    try {
+      const {data,error} = await hitopAuthClient.rpc('register_profit_recommendations', {p_name:bName,p_resource_id:buildingId,p_address:buildingAddress,p_expected:selected,p_reason:reason.trim()});
+      if (error) throw error;
+      selectedUnitRows.clear(); await loadUnits();
+      showToast(data.count + '개 호실이 수익성상가 추천매물로 등록되었습니다.', 6000);
+    } catch(e) { showToast('추천등록 실패: '+e.message, 9000); }
+    finally { profitRegisterBusy = false; unitBulkState(); }
+  });
 
   let bundleRows = [], bundleSaving = false;
   $('unitBundleRegister').addEventListener('click', () => {
@@ -2622,8 +2646,10 @@ async function deleteBFile(id) {
 })();
 </script>
 <script src="assets/js/price-room-import.js?v=20261013-history4"></script>
+<script src="assets/js/building-sales-contact.js?v=20261013-contact1"></script>
 </body>
 </html>
+
 
 
 
