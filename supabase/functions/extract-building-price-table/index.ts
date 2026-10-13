@@ -24,17 +24,28 @@ Deno.serve(async req=>{
     });
     if(size>10000000)return json({error:'분석 이미지 용량이 큽니다. 페이지를 나눠주세요.'},413);
     let result:Response|undefined, data:any;
-    const models=['gemini-2.5-flash','gemini-2.5-flash','gemini-2.5-flash-lite'];
+    let timedOut=false;
+    const models=['gemini-2.5-flash','gemini-2.5-flash-lite'];
     for(let attempt=0;attempt<models.length;attempt++){
       if(attempt===1)await new Promise(resolve=>setTimeout(resolve,1500));
-      result=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[attempt]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key.trim()},body:JSON.stringify({systemInstruction:{parts:[{text:prompt}]},contents:[{role:'user',parts:[...images,{text:'가격표의 모든 개별 호실을 추출하세요. 비고란의 업종과 상호도 빠짐없이 읽으세요.'}]}],generationConfig:{responseMimeType:'application/json',temperature:0,maxOutputTokens:16000}}),signal:AbortSignal.timeout(40000)});
+      try {
+      result=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[attempt]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key.trim()},body:JSON.stringify({systemInstruction:{parts:[{text:prompt}]},contents:[{role:'user',parts:[...images,{text:'가격표의 모든 개별 호실을 추출하세요. 비고란의 업종과 상호도 빠짐없이 읽으세요.'}]}],generationConfig:{responseMimeType:'application/json',temperature:0,maxOutputTokens:16000,thinkingConfig:{thinkingBudget:0}}}),signal:AbortSignal.timeout(55000)});
       data=await result.json();
+      }catch(e){
+        result=undefined;
+        data=undefined;
+        if(e instanceof Error && ['TimeoutError','AbortError'].includes(e.name)){
+          timedOut=true;
+          continue;
+        }
+        throw e;
+      }
       if(result.ok)break;
       if(![500,502,503,504].includes(result.status))break;
     }
     if(!result || !result.ok){
       const status=result?.status||502;
-      const message=status===429 ? 'Gemini 무료 사용 한도에 도달했습니다. 잠시 후 다시 시도해주세요.' : [500,502,503,504].includes(status) ? 'Gemini 서버 혼잡으로 재시도와 대체 모델도 응답하지 않았습니다. 잠시 후 다시 분석해주세요.' : status===401||status===403 ? 'Gemini API 키 또는 접근 권한을 확인해주세요.' : data?.error?.message||'Gemini 분석 요청에 실패했습니다.';
+      const message=!result && timedOut ? '가격표 분석 시간이 초과되었습니다. PDF는 1페이지씩 선택하고, 이미지가 여러 장이면 나누어 다시 분석해주세요. 기존에 올린 자료를 다시 선택하면 됩니다.' : status===429 ? 'Gemini 무료 사용 한도에 도달했습니다. 잠시 후 다시 시도해주세요.' : [500,502,503,504].includes(status) ? 'Gemini 서버 혼잡으로 재시도와 대체 모델도 응답하지 않았습니다. 잠시 후 다시 분석해주세요.' : status===401||status===403 ? 'Gemini API 키 또는 접근 권한을 확인해주세요.' : data?.error?.message||'Gemini 분석 요청에 실패했습니다.';
       return json({error:message},status===429?429:502);
     }
     const candidate=data.candidates?.[0];
