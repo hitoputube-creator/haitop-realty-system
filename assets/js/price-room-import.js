@@ -12,7 +12,19 @@
       if(row.전용_평!=null&&row.분양_평!=null&&row.전용_평>row.분양_평)throw new Error(room+'호 전용면적이 분양면적보다 큽니다.');
     });return rows;
   }
-  root.PriceRoomImportCore={normalizeRoom,validate};
+
+  const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const revisionDate=f=>f.price_received_date || String(f.created_at||'').slice(0,10) || '날짜 미상';
+  function revisions(files){
+    const seen=new Set();
+    return files.filter(f=>String(f.file_name).startsWith('[가격표] ')).sort((a,b)=>revisionDate(b).localeCompare(revisionDate(a))||String(b.created_at||'').localeCompare(String(a.created_at||''))).filter(f=>{
+      const key=f.file_sha256 || ('legacy:'+f.file_name+':'+revisionDate(f));if(seen.has(key))return false;seen.add(key);return true;
+    });
+  }
+  function changedFields(row,old={}){
+    return fields.map(([key])=>key).filter(key=>row[key]!=null && String(row[key]).trim()!=='' && String(row[key]).trim()!==String(old[key]??'').trim());
+  }
+  root.PriceRoomImportCore={normalizeRoom,validate,revisions,changedFields};
   if(typeof document==='undefined')return;
   let dialog,source,rows=[],existing=[],busy=false;
   const el=id=>document.getElementById(id);
@@ -24,14 +36,14 @@
       <p id="priSource"></p><p>원본 가격표와 비교한 후 선택한 호실만 반영하세요. 기존 소유주·연락처·메모는 유지합니다.</p>
       <div class="pri-toolbar"><a id="priOriginal" target="_blank" rel="noopener">원본 가격표 보기</a><label id="priPdfRange" hidden>PDF 페이지 <input id="priStart" type="number" min="1" value="1"> ~ <input id="priEnd" type="number" min="1" value="1"> (한 번에 최대 8쪽)</label><button type="button" id="priAnalyze">Gemini로 가격표 읽기</button></div>
       <p id="priMessage" role="status" aria-live="polite"></p><div id="priWarnings"></div>
-      <div id="priReview" hidden><div class="pri-toolbar"><label><input type="checkbox" id="priAll"> 전체 선택</label><label><input type="checkbox" id="priOverwrite"> 기존 값도 선택한 항목으로 변경</label></div>
+      <div id="priReview" hidden><div class="pri-toolbar"><label><input type="checkbox" id="priAll"> 전체 선택</label><label><input type="checkbox" id="priOverwrite" checked> 선택한 변경값으로 기존 자료 업데이트</label><span id="priDiffSummary"></span></div>
       <details><summary>반영할 항목 선택</summary><div id="priFields"></div></details><div class="pri-table-wrap"><table><thead><tr><th>선택</th><th>호수</th><th>처리</th>${fields.map(([,label])=>'<th>'+label+'</th>').join('')}<th>확인사항</th></tr></thead><tbody id="priRows"></tbody></table></div>
-      <p>금액은 만원, 면적은 평 단위입니다. 빈 값은 기존 값을 지우지 않습니다. 공실·임차 상태와 일반 매물 등록은 별도로 지정하세요.</p>
+      <p>금액은 만원, 면적은 평 단위입니다. 강조된 칸은 기존과 다른 값이며, 각 칸의 체크로 반영 항목을 선택합니다. 빈 값은 기존 값을 지우지 않습니다. 공실·임차 상태와 일반 매물 등록은 별도로 지정하세요.</p>
       <button type="button" id="priSave">선택한 호실에 반영</button></div>`;
     document.body.appendChild(dialog);
     const uploadBar=document.createElement('div');uploadBar.className='pri-toolbar';
-    uploadBar.innerHTML='<label>가격표 파일 <input type="file" id="priUpload" accept="image/jpeg,image/png,image/webp,.pdf"></label><button type="button" id="priUploadBtn">가격표 올리기</button>';
-    el('priSource').after(uploadBar);el('priUploadBtn').onclick=uploadPriceFile;
+    uploadBar.innerHTML='<label>받은 날짜 <input type="date" id="priReceived"></label><label>가격표 파일 <input type="file" id="priUpload" accept="image/jpeg,image/png,image/webp,.pdf"></label><button type="button" id="priUploadBtn">가격표 올리기</button>';
+    el('priSource').after(uploadBar);el('priUploadBtn').onclick=uploadPriceFile;el('priReceived').value=today();
     const sourceSelect=document.createElement('select');sourceSelect.id='priSourceSelect';sourceSelect.setAttribute('aria-label','등록된 가격표 선택');el('priOriginal').before(sourceSelect);sourceSelect.onchange=()=>open(sourceSelect.value);
     el('priClose').onclick=()=>{if(!busy)dialog.close();};dialog.addEventListener('cancel',e=>{if(busy)e.preventDefault();});
     el('priAnalyze').onclick=analyze;el('priSave').onclick=save;
@@ -45,16 +57,16 @@
     try{
       const files=await getBuildingFiles(buildingId);
       const floors=await getBuildingFloors(buildingId);
-      const choices=files.filter(f=>String(f.file_name).startsWith('[가격표] ')).map(f=>({...f,choiceId:'file:'+f.id,floor_number:'가격표'}))
+      const choices=revisions(files).map(f=>({...f,choiceId:'file:'+f.id,floor_number:'가격표'}))
         .concat(floors.filter(f=>/가격|price|분양표|임대료/i.test(f.floor_number+' '+f.file_name)).map(f=>({...f,choiceId:'floor:'+f.id})));
-      source=id ? choices.find(f=>f.choiceId===id) : choices[choices.length-1];
-      el('priSourceSelect').innerHTML='<option value="">등록한 가격표 선택</option>'+choices.map(f=>'<option value="'+esc(f.choiceId)+'">'+esc(f.file_name)+'</option>').join('');
+      source=id ? choices.find(f=>f.choiceId===id) : choices[0];
+      el('priSourceSelect').innerHTML='<option value="">등록한 가격표 선택</option>'+choices.map(f=>'<option value="'+esc(f.choiceId)+'">'+esc(revisionDate(f)+' · '+f.file_name.replace('[가격표] ',''))+'</option>').join('');
       if(source)el('priSourceSelect').value=source.choiceId;
       const name=el('buildingName').textContent.trim();const rec=await getBuildingRecord(name);existing=Array.isArray(rec?.units)?rec.units:[];
       el('priSource').textContent=name+' · '+(source ? source.file_name : '새 가격표를 올려주세요.');
       el('priOriginal').hidden=!source;el('priOriginal').href=source?.cloudinary_url||'#';
       el('priPdfRange').hidden=!source || !isPdf(source.cloudinary_url,source.file_name);
-      el('priStart').value='1';el('priEnd').value='1';el('priOverwrite').checked=false;
+      el('priStart').value='1';el('priEnd').value='1';el('priOverwrite').checked=true;
       el('priMessage').textContent=source?'가격표를 선택하거나 새 파일을 올린 후 가격표 읽기를 누르세요.':'가격표 파일을 선택하고 가격표 올리기를 눌러주세요.';
     }catch(e){el('priMessage').textContent=e.message;source=null;}
   }
@@ -66,10 +78,27 @@
     lock(true);
     try{
       el('priMessage').textContent='가격표 원본을 저장하는 중입니다.';
+      const received=el('priReceived').value;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(received))throw new Error('가격표를 받은 날짜를 입력하세요.');
+      const digest=await crypto.subtle.digest('SHA-256',await file.arrayBuffer());
+      const hash=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const registered=await getBuildingFiles(buildingId);
+      let prior=registered.find(f=>f.file_sha256===hash);
+      if(!prior){
+        const legacy=revisions(registered).filter(f=>!f.file_sha256 && f.file_name==='[가격표] '+file.name);
+        for(const candidate of legacy){
+          const response=await fetch(candidate.cloudinary_url);if(!response.ok)continue;
+          const blob=await response.blob();if(blob.size!==file.size)continue;
+          const bytes=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer());
+          const legacyHash=Array.from(new Uint8Array(bytes)).map(b=>b.toString(16).padStart(2,'0')).join('');
+          if(legacyHash===hash){prior=candidate;break;}
+        }
+      }
+      if(prior){lock(false);await open('file:'+prior.id);el('priMessage').textContent='동일한 가격표가 이미 있습니다. 기존 원본을 선택했습니다.';return;}
       const url=await cloudinaryUpload(file,'haitop/files');
-      await addBuildingFile({building_id:buildingId,file_name:'[가격표] '+file.name,cloudinary_url:url,drive_link:null});
+      await addBuildingFile({building_id:buildingId,file_name:'[가격표] '+file.name,cloudinary_url:url,drive_link:null,price_received_date:received,file_sha256:hash});
       const files=await getBuildingFiles(buildingId);
-      const saved=[...files].reverse().find(f=>f.file_name==='[가격표] '+file.name);
+      const saved=[...files].reverse().find(f=>f.file_sha256===hash);
       if(!saved)throw new Error('저장된 가격표를 찾지 못했습니다. 다시 열어주세요.');
       el('priUpload').value='';await loadFiles();await refreshPriceFiles();
       lock(false);await open('file:'+saved.id);
@@ -79,12 +108,12 @@
   async function refreshPriceFiles(){
     const box=el('unitPriceFiles');if(!box || box.hidden)return;
     try{
-      const files=(await getBuildingFiles(buildingId)).filter(f=>String(f.file_name).startsWith('[가격표] '));
+      const files=revisions(await getBuildingFiles(buildingId));
       box.replaceChildren();
-      files.forEach(f=>{
+      files.forEach((f,index)=>{
         const row=document.createElement('div');row.style.cssText='display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0';
-        const link=document.createElement('a');link.href=f.cloudinary_url;link.target='_blank';link.rel='noopener';link.textContent=f.file_name.replace('[가격표] ','');link.style.color='var(--gold)';
-        const button=document.createElement('button');button.type='button';button.className='btn-unit-ghost';button.textContent='호실자료로 정리';button.onclick=()=>open('file:'+f.id);
+        const link=document.createElement('a');link.href=f.cloudinary_url;link.target='_blank';link.rel='noopener';link.textContent=(index===0?'최신 · ':'')+revisionDate(f)+' · '+f.file_name.replace('[가격표] ','');link.style.color='var(--gold)';
+        const button=document.createElement('button');button.type='button';button.className='btn-unit-ghost';button.textContent='비교·업데이트';button.onclick=()=>open('file:'+f.id);
         row.append(link,button);box.appendChild(row);
       });
     }catch(e){box.textContent='가격표 목록 조회 실패: '+e.message;}
@@ -125,22 +154,27 @@
   function render(warnings){
     el('priWarnings').textContent=warnings.map(String).join(' · ');el('priWarnings').className='pri-warning';el('priAll').checked=false;
     const counts=new Map();rows.forEach(r=>{const key=normalizeRoom(r.호수);counts.set(key,(counts.get(key)||0)+1);});
+    let fresh=0,updates=0,unchanged=0;
+    rows.forEach(row=>{const old=existing.find(u=>normalizeRoom(u.호수)===normalizeRoom(row.호수));if(!old)fresh++;else if(changedFields(row,old).length)updates++;else unchanged++;});
+    el('priDiffSummary').textContent='신규 '+fresh+'개 · 변경 '+updates+'개 · 동일 '+unchanged+'개';
     el('priRows').innerHTML=rows.map((row,i)=>{
-      const room=normalizeRoom(row.호수),old=existing.find(u=>normalizeRoom(u.호수)===room);const doubtful=row.review||!room||counts.get(room)>1;
-      return '<tr data-row="'+i+'"><td><input type="checkbox" data-selected '+(!doubtful?'checked':'')+' aria-label="'+esc(room)+'호 선택"></td><td><input data-key="호수" value="'+esc(room)+'" aria-label="호수"></td><td>'+ (old?'기존 호실':'신규 호실')+'</td>'+fields.map(([key,label])=>'<td><input data-key="'+key+'" type="'+(['층','분양_VAT','현업종','가격표비고'].includes(key)?'text':'number')+'" '+(!['층','분양_VAT','현업종','가격표비고'].includes(key)?'min="0" step="any"':'')+' value="'+esc(row[key]??'')+'" aria-label="'+label+'">'+(old&&old[key]!=null?'<div>기존: '+esc(old[key])+'</div>':'')+'</td>').join('')+'<td class="pri-warning">'+esc([doubtful?'확인 필요':'',counts.get(room)>1?'중복 호실':'',row.note].filter(Boolean).join(' · '))+'</td></tr>';
+      const room=normalizeRoom(row.호수),old=existing.find(u=>normalizeRoom(u.호수)===room);const changed=changedFields(row,old);const doubtful=row.review||!room||counts.get(room)>1;
+      return '<tr data-row="'+i+'"><td><input type="checkbox" data-selected '+(!doubtful&&(!old||changed.length)?'checked':'')+' aria-label="'+esc(room)+'호 선택"></td><td><input data-key="호수" value="'+esc(room)+'" aria-label="호수"></td><td>'+ (old?(changed.length?'변경 '+changed.length+'개':'동일'):'신규 호실')+'</td>'+fields.map(([key,label])=>'<td'+(changed.includes(key)?' style="background:rgba(216,184,74,.12)"':'')+'><label><input type="checkbox" data-apply="'+key+'" '+(changed.includes(key)?'checked':'')+' aria-label="'+label+' 반영"></label><input data-key="'+key+'" type="'+(['층','분양_VAT','현업종','가격표비고'].includes(key)?'text':'number')+'" '+(!['층','분양_VAT','현업종','가격표비고'].includes(key)?'min="0" step="any"':'')+' value="'+esc(row[key]??'')+'" aria-label="'+label+'">'+(old&&old[key]!=null?'<div>기존: '+esc(old[key])+'</div>':'')+'</td>').join('')+'<td class="pri-warning">'+esc([doubtful?'확인 필요':'',counts.get(room)>1?'중복 호실':'',row.note].filter(Boolean).join(' · '))+'</td></tr>';
     }).join('');el('priReview').hidden=!rows.length;
   }
   function selected(){
     const keys=new Set([...dialog.querySelectorAll('[data-field]:checked')].map(n=>n.dataset.field));
     return [...dialog.querySelectorAll('tr[data-row]')].filter(tr=>tr.querySelector('[data-selected]').checked).map(tr=>{
       const row={호수:normalizeRoom(tr.querySelector('[data-key="호수"]').value)};
-      tr.querySelectorAll('[data-key]').forEach(input=>{const key=input.dataset.key;if(key==='호수'||!keys.has(key)||input.value.trim()==='')return;row[key]=['층','분양_VAT','현업종','가격표비고'].includes(key)?input.value.trim():Number(input.value);});return row;
+      tr.querySelectorAll('[data-key]').forEach(input=>{const key=input.dataset.key;if(key==='호수'||!keys.has(key)||input.value.trim()===''||!tr.querySelector('[data-apply="'+key+'"]').checked)return;row[key]=['층','분양_VAT','현업종','가격표비고'].includes(key)?input.value.trim():Number(input.value);});const old=existing.find(u=>normalizeRoom(u.호수)===row.호수)||{};
+      row._expected=Object.fromEntries(Object.keys(row).filter(k=>k!=='호수').map(k=>[k,old[k]??null]));
+      return row;
     });
   }
   async function save(){
     if(busy)return;let chosen;try{chosen=validate(selected());}catch(e){el('priMessage').textContent=e.message;return;}
     lock(true);try{
-      const {data,error}=await hitopAuthClient.rpc('import_building_price_rows',{p_name:el('buildingName').textContent.trim(),p_rows:chosen,p_source:source.floor_number+' / '+source.file_name,p_overwrite:el('priOverwrite').checked});
+      const {data,error}=await hitopAuthClient.rpc('import_building_price_rows',{p_name:el('buildingName').textContent.trim(),p_rows:chosen,p_source:revisionDate(source)+' / '+source.file_name,p_overwrite:el('priOverwrite').checked});
       if(error)throw new Error(error.message);
       await root._loadBuildingUnits();el('priMessage').textContent='저장 완료: 신규 '+data.added+'개 · 업데이트 '+data.updated+'개 · 유지 '+data.unchanged+'개';
       el('priReview').hidden=true;showToast('가격표 호실자료가 반영되었습니다.');
