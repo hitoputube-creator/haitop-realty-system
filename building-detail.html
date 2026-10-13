@@ -681,9 +681,11 @@
         <button type="button" class="btn-unit-ghost" id="unitSelectPrint" disabled>선택인쇄</button>
         <button type="button" class="btn-unit-del" id="unitSelectDelete" disabled>선택삭제</button>
       </div>
+      <button type="button" class="btn-unit-add" id="unitPriceUpload" hidden>가격표 자료 올리기</button>
       <button class="btn-unit-add" id="btnAddUnit">+ 호실 추가</button>
     </div>
 
+    <div id="unitPriceFiles" hidden></div>
     <!-- 요약 카드 -->
     <div class="summary-grid" id="residentialSummaryGrid" style="display:none;">
       <button type="button" class="sum-card forsale unit-summary-filter" data-unit-deal="매매" aria-pressed="false" title="매매 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumDealSale">-</span><span class="sum-label">매매</span></button>
@@ -1391,7 +1393,6 @@ function renderFloors(floors) {
         ${image && !apartmentBuildingMode ? `<a class="floor-status-link" href="floor-status.html?id=${encodeURIComponent(buildingId)}&floorId=${encodeURIComponent(f.id)}">현황보기</a>` : ''}
         <button type="button" class="floor-edit-btn" data-floor-id="${esc(f.id)}">수정</button>
         <input type="file" class="floor-replacement" data-floor-id="${esc(f.id)}" accept="image/*,.pdf" aria-label="${badge} 평면도 교체 파일 선택" hidden>
-        ${OfficeConfig.id==='hitop' && !apartmentBuildingMode && /가격|price|분양표|임대료/i.test(f.floor_number+' '+f.file_name) ? `<button type="button" class="floor-status-link" onclick="PriceRoomImport.open('${esc(f.id)}')">호실자료 자동입력</button>` : ''}
         <button class="btn-icon" title="삭제" onclick="deleteFloor('${f.id}')">🗑</button>
       </div>
     </div>`;
@@ -1564,6 +1565,7 @@ async function loadFiles() {
 }
 
 function renderFiles(files) {
+  files=files.filter(f=>!String(f.file_name).startsWith('[가격표] '));
   const el = document.getElementById('fileList');
   if (!files.length) {
     el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">등록된 자료가 없습니다.</div>';
@@ -2619,7 +2621,7 @@ async function deleteBFile(id) {
 
 })();
 </script>
-<script src="assets/js/price-room-import.js?v=20261013-import1"></script>
+<script src="assets/js/price-room-import.js?v=20261013-separate2"></script>
 </body>
 </html>
 
