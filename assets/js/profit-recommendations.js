@@ -1,0 +1,26 @@
+(function(root){
+ 'use strict';
+ const first=(...v)=>v.find(x=>x!==null&&x!==undefined&&String(x).trim()!=='');
+ const number=v=>{if(v===null||v===undefined||String(v).trim()==='')return null;const s=String(v).replace(/,/g,'').trim();return /^\d+(\.\d+)?$/.test(s)?Number(s):null;};
+ const date=v=>{if(!v)return '';const d=new Date(v);return Number.isNaN(+d)?'':new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(d);};
+ const today=()=>date(new Date());
+ const shift=(day,n)=>{const d=new Date(day+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
+ function range(kind,day=today()){return kind==='today'?[day,day]:kind==='week'?[shift(day,-6),day]:kind==='month'?[day.slice(0,7)+'-01',day]:['',''];}
+ function economics(u){const sale=number(first(u.현_매매가격,u.매매가격)),deposit=number(first(u.현_보증금,u.보증금)),rent=number(first(u.현_월세,u.월차임));return {sale,deposit,rent,annual:rent===null?null:rent*12,yield:sale!==null&&deposit!==null&&rent!==null&&sale>deposit?rent*12/(sale-deposit)*100:null};}
+ const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ root.ProfitRecommendationCore={date,range,economics,escape};
+ if(typeof document==='undefined')return;
+ async function all(table,select){const rows=[];for(let offset=0;;offset+=500){const response=await fetchWithTimeout(SUPABASE_URL+'/rest/v1/'+table+'?select='+select+'&order=id.asc&limit=500&offset='+offset,{headers});if(!response.ok)throw new Error('추천매물 자료를 불러오지 못했습니다.');const part=await response.json();rows.push(...part);if(part.length<500)return rows;}}
+ async function init(){if(!document.getElementById('profitRows'))return;if(!await root.hitopAuthReady)return;
+ if(OfficeConfig.id!=='hitop'){document.getElementById('profitNotice').textContent='하이탑 전용 추천매물 화면입니다.';return;}
+ const status=document.getElementById('profitNotice');let rows=[];
+ const amount=v=>v===null?'미입력':v.toLocaleString('ko-KR',{maximumFractionDigits:2})+'만원';
+ function render(){const from=document.getElementById('profitFrom').value,to=document.getElementById('profitTo').value;
+ if(from&&to&&from>to){status.textContent='시작일이 종료일보다 늦습니다.';return;}
+ const visible=rows.filter(r=>(!from&&!to)||r.day&&(!from||r.day>=from)&&(!to||r.day<=to));status.textContent='추천매물 '+visible.length+'개'+(rows.some(r=>!r.day)?' · 등록일 미확인 자료는 전체에서 확인할 수 있습니다.':'');
+ document.getElementById('profitRows').innerHTML=visible.length?visible.map(r=>{const e=economics(r.unit);return '<tr class="profit-recommended-row"><td>'+escape(r.day||'미확인')+'</td><td>'+escape(r.building)+'</td><td>'+escape(r.unit.호수)+'</td><td>'+escape(r.unit.현업종||'미확인')+'</td><td>'+amount(e.sale)+'</td><td>'+amount(e.deposit)+'</td><td>'+amount(e.rent)+'</td><td>'+amount(e.annual)+'</td><td>'+(e.yield===null?'계산 불가':e.yield.toFixed(2)+'%')+'</td><td>'+escape(r.unit.공실여부||'미확인')+'</td><td>'+escape(r.unit.추천사유||'')+'</td><td><a href="'+escape(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(r.id)))+'">매물보기</a> '+(r.resource?'<a href="'+escape(OfficeConfig.urlFor('building-detail.html?id='+encodeURIComponent(r.resource)))+'">호실자료</a>':'')+'</td></tr>';}).join(''):'<tr><td colspan="12">선택한 기간의 추천매물이 없습니다.</td></tr>';}
+ async function load(){status.textContent='추천매물을 불러오는 중…';document.getElementById('profitRefresh').disabled=true;try{const [buildings,listings]=await Promise.all([all('buildings','id,name,units'),all('listings','id,title,resource_id,status,data,stickers')]);const map=new Map(listings.map(l=>[l.id,l]));rows=[];const seen=new Set();for(const b of buildings)for(const u of Array.isArray(b.units)?b.units:[]){const l=map.get(u.listing_id),meta=l?.data?.profitRecommendation;if(!l||!meta||seen.has(l.id))continue;rows.push({id:l.id,unit:u,building:b.name,day:date(meta.registered_at||u.추천등록일),resource:meta.resource_id||l.resource_id});seen.add(l.id);}for(const l of listings){if(seen.has(l.id)||!l.data?.profitRecommendation)continue;const meta=l.data.profitRecommendation;rows.push({id:l.id,unit:{호수:meta.room,공실여부:'원본 미확인'},building:l.data.complexName||l.title,day:date(meta.registered_at),resource:meta.resource_id||l.resource_id});}rows.sort((a,b)=>b.day.localeCompare(a.day)||a.building.localeCompare(b.building,'ko',{numeric:true})||String(a.unit.호수).localeCompare(String(b.unit.호수),'ko',{numeric:true}));render();}catch(e){status.textContent=e.message;}finally{document.getElementById('profitRefresh').disabled=false;}}
+ document.querySelectorAll('[data-profit-period]').forEach(btn=>btn.addEventListener('click',()=>{const [from,to]=range(btn.dataset.profitPeriod);document.getElementById('profitFrom').value=from;document.getElementById('profitTo').value=to;document.querySelectorAll('[data-profit-period]').forEach(b=>{b.classList.toggle('active',b===btn);b.setAttribute('aria-pressed',String(b===btn));});render();}));
+ for(const id of ['profitFrom','profitTo'])document.getElementById(id).addEventListener('change',()=>{document.querySelectorAll('[data-profit-period]').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false');});render();});document.getElementById('profitRefresh').onclick=load;await load();}
+ init();
+})(typeof window==='undefined'?globalThis:window);
