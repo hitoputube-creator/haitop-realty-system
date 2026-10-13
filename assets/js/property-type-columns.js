@@ -76,6 +76,11 @@
     if (actions) actions.style.gridArea='auto';
     card.replaceChildren(select,...nodes,actions);
     card.classList.add('typed-property-row');
+    if (item.profitRecommendation) {
+      card.classList.add('profit-recommended-row');
+      const target=card.querySelector('.listing-cell-building,.listing-cell-name,.listing-cell-address');
+      if(target){const badge=document.createElement('small');badge.className='profit-recommended-badge';badge.textContent='수익성 추천';target.appendChild(badge);}
+    }
     card.style.setProperty('--typed-columns',template(cols));
     return card;
   };
@@ -100,7 +105,7 @@
     const body=table.querySelector('tbody');
     items.forEach(item=>{
       const card=makeCard(item);
-      const tr=document.createElement('tr');tr.className=getStatusClass(item);
+      const tr=document.createElement('tr');tr.className=getStatusClass(item)+(item.profitRecommendation?' profit-recommended-row':'');
       tr.addEventListener('click',card.onclick);
       Array.from(card.children).forEach(n=>{const td=document.createElement('td');td.appendChild(n);tr.appendChild(td);});
       body.appendChild(tr);
@@ -128,6 +133,9 @@
     .properties-page .typed-property-row .listing-cell {min-width:0;font-size:13px;overflow-wrap:anywhere;}
     .properties-page .typed-property-row .lc-no {display:block;font-size:11px;color:var(--text-muted);}
     .typed-list-table-wrap {overflow:auto;}
+    html body.properties-page .listing-card.profit-recommended-row,.typed-list-table .profit-recommended-row td{background:rgba(212,175,55,.10)!important;}
+    .typed-list-table .profit-recommended-row td:first-child{box-shadow:inset 3px 0 #d4af37;}
+    .profit-recommended-badge{display:block;color:var(--gold);font-size:11px;margin-top:5px;font-weight:700;}
     .typed-list-table {width:100%;min-width:1100px;border-collapse:collapse;font-size:13px;}
     .typed-list-table th,.typed-list-table td {padding:12px 8px;border-bottom:1px solid var(--border-slate);text-align:left;}
     .typed-list-table th {white-space:nowrap;color:var(--gold);}
@@ -143,3 +151,4 @@
   document.head.appendChild(style);
   if (allListings.length) renderList();
 })();
+
