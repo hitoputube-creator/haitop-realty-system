@@ -286,7 +286,7 @@
   <div class="header-line"></div>
   <nav class="property-main-return no-print" aria-label="매물관리 복귀">
     <a class="btn btn-ghost" id="propertyMainReturn" href="property-main.html">← 매물관리 메인</a>
-    <a class="btn btn-ghost" id="propertyKakaoMap" href="residential-kakao.html">카카오맵</a>
+    <a class="btn btn-ghost" id="propertyKakaoMap" href="listings-kakao.html">카카오맵으로 보기</a>
     <a class="btn btn-ghost" id="propertyCustomers" href="customers.html">고객관리</a>
   </nav>
   <div id="globalPropertySearch" class="no-print"></div>
@@ -303,7 +303,20 @@
       }
       if (!keys.includes(category)) category = 'all';
       document.getElementById('propertyMainReturn').href = 'property-main.html?category=' + category;
-      document.getElementById('propertyKakaoMap').href = OfficeConfig.urlFor('residential-kakao.html');
+      const mapLink = document.getElementById('propertyKakaoMap');
+      const majorToMapCategory = {'':'all', '상가사무실':'shop', '토지':'land', '주거용':'home', '공장창고':'factory', '건물빌딩':'other'};
+      function updateMapLink(key) {
+        mapLink.href = OfficeConfig.urlFor('listings-kakao.html?category=' + key);
+      }
+      updateMapLink(category);
+      document.addEventListener('click', function (event) {
+        const filter = event.target.closest('#filterRow .filter-btn[data-major]');
+        if (filter) updateMapLink(majorToMapCategory[filter.dataset.major] || 'all');
+      });
+      mapLink.addEventListener('click', function () {
+        const active = document.querySelector('#filterRow .filter-btn.active[data-major]');
+        if (active) updateMapLink(majorToMapCategory[active.dataset.major] || 'all');
+      });
       document.getElementById('propertyCustomers').href = OfficeConfig.urlFor('customers.html');
     })();
   </script>
