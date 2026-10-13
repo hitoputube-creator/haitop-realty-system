@@ -596,6 +596,7 @@
 <style>#unitModal #unitAdditionalNotes #u_추가메모{min-height:140px;height:140px;resize:vertical}.sbadge.미확인{background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.35)}</style>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
 <style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#16233d;color:#e6edf7;cursor:pointer}.presale-switch button.active{background:#80651f;border-color:#d4af37;color:#fff3c2}.presale-hidden{display:none!important}</style>
+<style>.unit-phase-label{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.76rem;font-weight:700}.unit-phase-label.ongoing{color:#edcf79;background:rgba(212,175,55,.12)}.unit-phase-label.completed{color:#88d8b2;background:rgba(52,180,130,.12)}</style>
 </head>
 <body>
 <div class="page">
@@ -732,7 +733,8 @@
             <th>업종</th>
             <th>소유주</th>
             <th>연락처</th>
-            <th>분양/매매가</th>
+            <th>분양상태</th>
+            <th>가격</th>
             <th>보증금</th>
             <th>월세</th>
             <th>상태</th>
@@ -1697,12 +1699,12 @@ async function deleteBFile(id) {
     const rows=units.filter((u,i)=>selectedUnitRows.has(i));
     if(!rows.length)return;
     const residential=residentialUnitMode();
-    const columns=residential?["동·호수","면적·타입","거래구분","매매가","보증금/월세","소유주","연락처","옵션"]:["호수","업종","소유주","연락처","매매가","보증금","월세","상태","옵션"];
+    const columns=residential?["동·호수","면적·타입","거래구분","매매가","보증금/월세","소유주","연락처","옵션"]:["호수","업종","소유주","연락처","분양상태","가격","보증금","월세","임대현황","옵션"];
     const displayOption=u=>String(u.옵션내역 || u.옵션 || "").trim() || "-";
     const price=n=>toKorAmt(n) || "-";
     const cells=u=>residential
       ? [roomParts(u).dong+"동 "+roomParts(u).room+"호",residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||"-"),unitDeal(u)+(u.매매유형==="세안고매매" && String(unitDeal(u)).includes("매매") ? "\n세안고매매" : ""),price(u.현_매매가격),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임)+(u.매매유형==="세안고매매"&&u.승계보증금!=null?"\\n승계 "+price(u.승계보증금):""),u.소유주||"-",u.연락처||"-",displayOption(u)]
-      : [u.호수||"-",u.현업종||"-",u.소유주||"-",u.연락처||"-",currentRentPrice(u.현_매매가격,u.매매가격),currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
+      : [u.호수||"-",u.현업종||"-",u.소유주||"-",u.연락처||"-",CommercialPriceCore.status(u,true),commercialPriceText(u),currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
     const printable=document.createElement("div");
     printable.id="unitPrintSheet";
     printable.innerHTML='<div class="unit-print-header"><h2>'+esc(bName)+' · 선택 '+rows.length+'건</h2><span>출력일 '+new Date().toLocaleDateString("ko-KR")+'</span></div><table><thead><tr>'+columns.map(v=>"<th>"+esc(v)+"</th>").join("")+"</tr></thead><tbody>"+rows.map(u=>"<tr>"+cells(u).map(v=>"<td>"+esc(v??"")+"</td>").join("")+"</tr>").join("")+"</tbody></table>";
@@ -2072,7 +2074,7 @@ async function deleteBFile(id) {
 
   function commercialPriceText(u) {
     const p=CommercialPriceCore.price(u,true);
-    return p.amount!==null ? esc(p.label)+' · '+toKorAmt(p.amount) : p.original!==null ? '최초분양가 '+toKorAmt(p.original)+'<small style="display:block;color:var(--muted)">참고 · 현재 매매가 미입력</small>' : '-';
+    return p.amount!==null ? toKorAmt(p.amount) : '-';
   }
   function commercialOccupancy(u) {
     const industry = String(u.현업종 || '').trim();
@@ -2195,6 +2197,7 @@ async function deleteBFile(id) {
         <td>${u.현업종 || "-"}</td>
         <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
+        <td><span class="unit-phase-label ${CommercialPriceCore.status(u,true)==='분양중' ? 'ongoing' : 'completed'}">${esc(CommercialPriceCore.status(u,true))}</span></td>
         <td style="text-align:right">${commercialPriceText(u)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
