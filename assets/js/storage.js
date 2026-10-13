@@ -1093,6 +1093,20 @@ function buildListingPayload(item) {
   const category1 = category.category1;
   const category2 = category.category2;
   const type = data.type || getTypeFromCategory(category1, category2, 'etc');
+  const commercialCore=window.CommercialPriceCore;
+  if(commercialCore && commercialCore.commercial({...data,category1,type})){
+    data.presaleStatus=commercialCore.status(data);
+    const recommend=commercialCore.recommendation({...data,category1,type});
+    if(recommend){
+      const registered=data.profitRecommendation?.registered_at||data.profitRecommendationRegisteredAt||new Date().toISOString();
+      data.profitRecommendationRegisteredAt=registered;
+      data.profitRecommendation={...data.profitRecommendation,registered_at:registered,manual:!data.profitRecommendation?.building_record_id};
+    }else if(data.profitRecommendation){
+      data.profitRecommendationRegisteredAt=data.profitRecommendation.registered_at;
+      delete data.profitRecommendation;
+    }
+  }
+
   const title = data.title;
   const address = data.address;
   const status = data.status;
@@ -1902,3 +1916,4 @@ function customerRelatedEntries(context,customer){
     .sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.created_at).localeCompare(String(a.created_at)));
   return {properties,history,failed:context.failed};
 }
+
