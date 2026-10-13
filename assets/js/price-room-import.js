@@ -29,6 +29,9 @@
       <p>금액은 만원, 면적은 평 단위입니다. 빈 값은 기존 값을 지우지 않습니다. 공실·임차 상태와 일반 매물 등록은 별도로 지정하세요.</p>
       <button type="button" id="priSave">선택한 호실에 반영</button></div>`;
     document.body.appendChild(dialog);
+    const uploadBar=document.createElement('div');uploadBar.className='pri-toolbar';
+    uploadBar.innerHTML='<label>가격표 파일 <input type="file" id="priUpload" accept="image/jpeg,image/png,image/webp,.pdf"></label><button type="button" id="priUploadBtn">가격표 올리기</button>';
+    el('priSource').after(uploadBar);el('priUploadBtn').onclick=uploadPriceFile;
     const sourceSelect=document.createElement('select');sourceSelect.id='priSourceSelect';sourceSelect.setAttribute('aria-label','등록된 가격표 선택');el('priOriginal').before(sourceSelect);sourceSelect.onchange=()=>open(sourceSelect.value);
     el('priClose').onclick=()=>{if(!busy)dialog.close();};dialog.addEventListener('cancel',e=>{if(busy)e.preventDefault();});
     el('priAnalyze').onclick=analyze;el('priSave').onclick=save;
@@ -40,17 +43,53 @@
     setup();if(busy)return;
     rows=[];el('priReview').hidden=true;el('priWarnings').textContent='';el('priMessage').textContent='가격표 자료를 확인하는 중입니다.';if(!dialog.open)dialog.showModal();
     try{
-      const floors=await getBuildingFloors(buildingId);source=floors.find(f=>String(f.id)===String(id)) || (!id && (floors.find(f=>/가격|price|분양표|임대료/i.test(f.floor_number+' '+f.file_name)) || floors[0]));
-      el('priSourceSelect').innerHTML=floors.map(f=>'<option value="'+esc(f.id)+'">'+esc(f.floor_number+' · '+f.file_name)+'</option>').join('');if(source)el('priSourceSelect').value=source.id;
-      if(!source)throw new Error('가격표를 찾지 못했습니다. 새로고침해주세요.');
+      const files=await getBuildingFiles(buildingId);
+      const floors=await getBuildingFloors(buildingId);
+      const choices=files.filter(f=>String(f.file_name).startsWith('[가격표] ')).map(f=>({...f,choiceId:'file:'+f.id,floor_number:'가격표'}))
+        .concat(floors.filter(f=>/가격|price|분양표|임대료/i.test(f.floor_number+' '+f.file_name)).map(f=>({...f,choiceId:'floor:'+f.id})));
+      source=id ? choices.find(f=>f.choiceId===id) : choices[choices.length-1];
+      el('priSourceSelect').innerHTML='<option value="">등록한 가격표 선택</option>'+choices.map(f=>'<option value="'+esc(f.choiceId)+'">'+esc(f.file_name)+'</option>').join('');
+      if(source)el('priSourceSelect').value=source.choiceId;
       const name=el('buildingName').textContent.trim();const rec=await getBuildingRecord(name);existing=Array.isArray(rec?.units)?rec.units:[];
-      el('priSource').textContent=name+' · '+source.floor_number+' · '+source.file_name;
-      el('priOriginal').href=source.cloudinary_url;el('priPdfRange').hidden=!isPdf(source.cloudinary_url,source.file_name);
+      el('priSource').textContent=name+' · '+(source ? source.file_name : '새 가격표를 올려주세요.');
+      el('priOriginal').hidden=!source;el('priOriginal').href=source?.cloudinary_url||'#';
+      el('priPdfRange').hidden=!source || !isPdf(source.cloudinary_url,source.file_name);
       el('priStart').value='1';el('priEnd').value='1';el('priOverwrite').checked=false;
-      el('priMessage').textContent='가격표 읽기를 누르면 호실별 자료를 분석합니다.';
+      el('priMessage').textContent=source?'가격표를 선택하거나 새 파일을 올린 후 가격표 읽기를 누르세요.':'가격표 파일을 선택하고 가격표 올리기를 눌러주세요.';
     }catch(e){el('priMessage').textContent=e.message;source=null;}
   }
-  function lock(value){busy=value;['priAnalyze','priSave','priClose','priSourceSelect'].forEach(id=>el(id).disabled=value);dialog.querySelectorAll('input').forEach(input=>input.disabled=value);}
+  async function uploadPriceFile(){
+    if(busy)return;const file=el('priUpload').files[0];
+    if(!file){el('priMessage').textContent='가격표 사진이나 PDF 파일을 선택하세요.';return;}
+    if(!/\.(pdf|jpe?g|png|webp)$/i.test(file.name)){el('priMessage').textContent='가격표는 사진 또는 PDF로 올려주세요.';return;}
+    if(file.size>30*1024*1024){el('priMessage').textContent='가격표는 30MB 이하로 올려주세요.';return;}
+    lock(true);
+    try{
+      el('priMessage').textContent='가격표 원본을 저장하는 중입니다.';
+      const url=await cloudinaryUpload(file,'haitop/files');
+      await addBuildingFile({building_id:buildingId,file_name:'[가격표] '+file.name,cloudinary_url:url,drive_link:null});
+      const files=await getBuildingFiles(buildingId);
+      const saved=[...files].reverse().find(f=>f.file_name==='[가격표] '+file.name);
+      if(!saved)throw new Error('저장된 가격표를 찾지 못했습니다. 다시 열어주세요.');
+      el('priUpload').value='';await loadFiles();await refreshPriceFiles();
+      lock(false);await open('file:'+saved.id);
+      el('priMessage').textContent='가격표가 저장되었습니다. Gemini로 가격표 읽기를 눌러 호실자료를 정리하세요.';
+    }catch(e){el('priMessage').textContent='가격표 저장 실패: '+e.message;}finally{lock(false);}
+  }
+  async function refreshPriceFiles(){
+    const box=el('unitPriceFiles');if(!box || box.hidden)return;
+    try{
+      const files=(await getBuildingFiles(buildingId)).filter(f=>String(f.file_name).startsWith('[가격표] '));
+      box.replaceChildren();
+      files.forEach(f=>{
+        const row=document.createElement('div');row.style.cssText='display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0';
+        const link=document.createElement('a');link.href=f.cloudinary_url;link.target='_blank';link.rel='noopener';link.textContent=f.file_name.replace('[가격표] ','');link.style.color='var(--gold)';
+        const button=document.createElement('button');button.type='button';button.className='btn-unit-ghost';button.textContent='호실자료로 정리';button.onclick=()=>open('file:'+f.id);
+        row.append(link,button);box.appendChild(row);
+      });
+    }catch(e){box.textContent='가격표 목록 조회 실패: '+e.message;}
+  }
+  function lock(value){busy=value;['priAnalyze','priSave','priClose','priSourceSelect','priUploadBtn'].forEach(id=>el(id).disabled=value);dialog.querySelectorAll('input').forEach(input=>input.disabled=value);}
   function encodeCanvas(canvas){return {data:canvas.toDataURL('image/jpeg',.94).split(',')[1]};}
   async function images(){
     const response=await fetch(source.cloudinary_url);if(!response.ok)throw new Error('가격표 원본을 읽지 못했습니다. 자료를 다시 열어주세요.');
@@ -108,4 +147,13 @@
     }catch(e){el('priMessage').textContent='저장 실패: '+e.message;}finally{lock(false);}
   }
   root.PriceRoomImport={open};
+  const uploadButton=el('unitPriceUpload');
+  if(uploadButton){
+    const commercial=OfficeConfig.id==='hitop' && !apartmentBuildingMode;
+    uploadButton.hidden=!commercial;el('unitPriceFiles').hidden=!commercial;
+    uploadButton.onclick=()=>open();
+    if(commercial)refreshPriceFiles();
+  }
+  const originalLoad=root._loadBuildingUnits;
+  if(originalLoad)root._loadBuildingUnits=async function(){await originalLoad();await refreshPriceFiles();};
 })(typeof window==='undefined'?globalThis:window);
