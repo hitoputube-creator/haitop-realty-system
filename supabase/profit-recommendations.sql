@@ -3,7 +3,7 @@ alter table public.buildings add column if not exists sales_agent_phone text;
 
 create or replace function public.register_profit_recommendations(p_name text,p_resource_id uuid,p_address text,p_expected jsonb,p_reason text default '')
 returns jsonb language plpgsql security invoker set search_path = public, pg_temp as $$
-declare b public.buildings%rowtype; l public.listings%rowtype; u jsonb; expected jsonb; next_units jsonb; d jsonb; stamp text; lid text; room text; idx int; matches int; total int:=0; tags text[]; sale text; dep text; rent text;
+declare b public.buildings%rowtype; l public.listings%rowtype; u jsonb; expected jsonb; next_units jsonb; d jsonb; stamp text; lid text; room text; idx int; matches int; total int:=0; tags text[]; sale text; dep text; rent text; presale text; phase text;
 begin
  if auth.uid() is null or not public.is_admin() then raise exception '관리자 로그인이 필요합니다.'; end if;
  if jsonb_typeof(p_expected) is distinct from 'array' or jsonb_array_length(p_expected) not between 1 and 300 then raise exception '추천할 호실을 선택하세요.'; end if;
@@ -30,7 +30,10 @@ begin
   if coalesce(dep,'') ~ '^[0-9]+([.][0-9]+)?$' then dep:=(dep::numeric*10000)::text; else dep:=''; end if;
   if coalesce(rent,'') ~ '^[0-9]+([.][0-9]+)?$' then rent:=(rent::numeric*10000)::text; else rent:=''; end if;
   select array_agg(distinct t) into tags from (select jsonb_array_elements_text(case when jsonb_typeof(l.data->'stickers')='array' then l.data->'stickers' else '[]'::jsonb end) t union all select unnest(coalesce(l.stickers,'{}'::text[])) union all select '추천매물' union all select '수익형') s;
-  d:=coalesce(l.data,'{}'::jsonb)||jsonb_build_object('category1','상가사무실','category2','상가','complexName',b.name,'ho',u->>'호수','listingKind','매물','dealType',coalesce(nullif(l.data->>'dealType',''),'매매'),'salePrice',sale,'deposit',dep,'monthlyRent',rent,'stickers',to_jsonb(tags),'exclusiveAreaPy',u->'전용_평','supplyAreaPy',u->'분양_평','owner_name',coalesce(u->>'소유주',''),'owner_phone1',coalesce(u->>'연락처',''),'owner_memo',coalesce(u->>'비고',''),'현업종',u->'현업종','import_unit_snapshot',u,'profitRecommendation',jsonb_build_object('registered_at',stamp,'building_record_id',b.id,'resource_id',p_resource_id,'room',u->>'호수'));
+  presale:=u->>'분양금액';
+  if coalesce(presale,'') ~ '^[0-9]+([.][0-9]+)?$' then presale:=(presale::numeric*10000)::text;else presale:='';end if;
+  phase:=public.commercial_unit_presale_status(u);
+  d:=coalesce(l.data,'{}'::jsonb)||jsonb_build_object('category1','상가사무실','category2','상가','complexName',b.name,'ho',u->>'호수','listingKind','매물','dealType',coalesce(nullif(l.data->>'dealType',''),'매매'),'salePrice',sale,'presalePrice',presale,'presaleStatus',phase,'deposit',dep,'monthlyRent',rent,'stickers',to_jsonb(tags),'exclusiveAreaPy',u->'전용_평','supplyAreaPy',u->'분양_평','owner_name',coalesce(u->>'소유주',''),'owner_phone1',coalesce(u->>'연락처',''),'owner_memo',coalesce(u->>'비고',''),'현업종',u->'현업종','import_unit_snapshot',u,'profitRecommendation',jsonb_build_object('registered_at',stamp,'building_record_id',b.id,'resource_id',p_resource_id,'room',u->>'호수'));
   insert into public.listings(id,type,title,address,status,resource_id,category1,category2,is_public,data,stickers)
   values(lid,coalesce(l.type,'shop'),coalesce(l.title,b.name||' '||(u->>'호수')||'호 상가'),coalesce(nullif(l.address,''),p_address,''),coalesce(l.status,'진행중'),coalesce(l.resource_id,p_resource_id),'상가사무실','상가',coalesce(l.is_public,false),d,tags)
   on conflict(id) do update set data=excluded.data,stickers=excluded.stickers,category1=excluded.category1,category2=excluded.category2,resource_id=excluded.resource_id;
@@ -61,3 +64,4 @@ begin
 end $$;
 revoke all on function public.save_building_sales_contact(uuid,text,jsonb,jsonb) from public,anon;
 grant execute on function public.save_building_sales_contact(uuid,text,jsonb,jsonb) to authenticated;
+
