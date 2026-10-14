@@ -929,7 +929,24 @@ const SharedReference = (() => {
       if(!response.ok)return response;
       const local=await response.json();
       const merged=new Map(shared.map(row=>[key(table,row),row]));
-      for(const row of local)merged.set(key(table,row),row);
+      for(const row of local) {
+        const source=merged.get(key(table,row));
+        if(table==='buildings' && source && Array.isArray(source.units)) {
+          const unitKey=u=>[u.동 || '',u.호수 || ('floor:'+String(u.층 || ''))].join('|');
+          const sharedFields=['층','호수','분양_m2','분양_평','전용_m2','전용_평','전용률','주용도','층고','분양상태','거래구분','평당가','분양금액','분양_VAT','보증금','월차임','현_매매가격','현_보증금','현_월세','수익률'];
+          const units=new Map(source.units.map(u=>[unitKey(u),{...u}]));
+          for(const unit of (Array.isArray(row.units)?row.units:[])) {
+            const shared=units.get(unitKey(unit));
+            const combined={...unit};
+            if(shared)for(const field of sharedFields) {
+              if((combined[field]===null || combined[field]===undefined || combined[field]==='') && Object.hasOwn(shared,field))combined[field]=shared[field];
+            }
+            if(shared?.plan_positions && !combined.plan_positions)combined.plan_positions=shared.plan_positions;
+            units.set(unitKey(unit),combined);
+          }
+          merged.set(key(table,row),{...source,...row,units:Array.from(units.values())});
+        } else merged.set(key(table,row),row);
+      }
       let result=Array.from(merged.values()).filter(row=>matches(row,target.searchParams));
       const order=target.searchParams.get('order');
       if(order)result.sort((a,b)=>{for(const term of order.split(',')){const [field,dir]=term.split('.');const av=a[field],bv=b[field];if(av==null||bv==null){if(av!==bv)return av==null?1:-1;continue;}const diff=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'ko',{numeric:true});if(diff)return dir==='desc'?-diff:diff;}return 0;});
