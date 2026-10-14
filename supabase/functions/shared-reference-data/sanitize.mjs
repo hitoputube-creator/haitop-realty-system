@@ -1,7 +1,7 @@
 export const tables = ['drive_resource_categories','drive_resources','buildings','building_floors','building_files','land_parcels','land_block_sources'];
 const memoKeys = new Set(['주소','지번주소','행정구역','주차대수','사용승인일','구조','토지면적','건축면적','연면적','동수','세대수','주택종류','분양구분','규모','자료기준일','자료출처','블럭','대상 블럭','필지·번지','건물 유무','면적(㎡/평)','공급금액','택지구분','분양면적(공급면적)','1층전체 전용면적','2~8층전체 전용면적']);
-const unitKeys = ['층','호수','분양_m2','분양_평','전용_m2','전용_평','전용률','주용도','층고'];
-const parcelKeys = ['address','area','landType','building','households','supplyPrice','buildingName','buildingPurpose','buildingFloors','buildingStructure','buildingApproval','buildingFootprint','buildingTotalArea','mapPositionUnavailable'];
+const unitKeys = ['층','호수','분양_m2','분양_평','전용_m2','전용_평','전용률','주용도','층고','아파트명','동','호','평형','타입','분양상태','거래구분','평당가','분양금액','분양_VAT','보증금','월차임','현_매매가격','현_보증금','현_월세','수익률'];
+const parcelKeys = ['address','area','landType','building','households','supplyPrice','auctionPrice','salePrice','buildingDeposit','buildingRent','buildingName','buildingPurpose','buildingFloors','buildingStructure','buildingApproval','buildingFootprint','buildingTotalArea','mapPositionUnavailable'];
 function scalar(value) { return typeof value === 'number' || typeof value === 'boolean' || value === null || (typeof value === 'string' && !/@|(?:01[016789][ -]?\d{3,4}[ -]?\d{4})|소유주\s*[:：]|연락처\s*[:：]/.test(value)); }
 function pick(row, keys) { return Object.fromEntries(keys.filter(k => Object.hasOwn(row || {},k) && scalar(row[k])).map(k => [k,row[k]])); }
 function position(value, depth=0) { if(depth>6)return null; if(typeof value==='number')return Number.isFinite(value)?value:null; if(Array.isArray(value))return value.map(v=>position(v,depth+1)); if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([k])=>/^[\w.-]+$/.test(k)&&!['__proto__','constructor','prototype'].includes(k)).map(([k,v])=>[k,position(v,depth+1)]));return null; }
