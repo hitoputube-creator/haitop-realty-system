@@ -41,9 +41,18 @@
       supply:[area(first(item.areaSupplyPy,item.supplyAreaPy,item.saleAreaPy,u.분양평수,u.평형),first(item.areaSupplyM2,item.supplyAreaM2)),first(item.apartmentType,item.unitType,item.areaType,u.타입)].filter(Boolean).join(' / ')
     };
   }
-  function columns() { return schemas[currentMajor] || schemas['']; }
+  function columns() {
+    const cols=(schemas[currentMajor] || schemas['']).filter(([key])=>key!=='deal');
+    if (!cols.some(([key])=>key==='type')) cols.unshift(['type','매물유형']);
+    return cols;
+  }
+  function shortType(item) {
+    const parts=String(originalValue(item,'type') || '').split(/\s*\/\s*/);
+    return parts[parts.length-1].replace(/\s*[·-]?\s*확인 필요/g,'').trim() || parts[0] || '-';
+  }
   const originalValue=listingColumnValue;
   listingColumnValue=function(item,key) {
+    if (key==='type') return shortType(item);
     const value=fields(item)[key];
     return value === undefined ? originalValue(item,key) : value;
   };
@@ -61,6 +70,25 @@
       if (key==='height' && num(node.textContent) && !/[a-z가-힣]/i.test(node.textContent)) node.textContent+='m';
       if (key==='name' || key==='building' || key==='address') {
         const no=document.createElement('span');no.className='lc-no';no.textContent='No. '+getListingNumber(item);node.appendChild(no);
+      }
+    }
+    if (key==='type') {
+      const badge=node.querySelector('.lc-type');
+      if(badge) badge.textContent=shortType(item);
+      const deal=original.querySelector('.listing-cell-deal .lc-deal-badge');
+      if(deal) {
+        const line=document.createElement('div');line.className='lc-type-deal';
+        if(badge) line.appendChild(badge);
+        line.appendChild(deal);node.prepend(line);
+      }
+    }
+    if (key==='price') {
+      const price=node.querySelector('.lc-price-text');
+      if(price) {
+        const lines=price.textContent.split(/\s*\/\s*(?=월세)/);
+        price.replaceChildren(...lines.map(text=>{
+          const line=document.createElement('span');line.className='lc-price-line';line.textContent=text;return line;
+        }));
       }
     }
     node.dataset.label=label;
@@ -86,14 +114,14 @@
     return card;
   };
   function template(cols) {
-    return '26px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(145px,1.5fr)':key==='price'?'minmax(145px,1.3fr)':key==='phone'?'minmax(115px,1fr)':'minmax(75px,1fr)').join(' ')+' 132px';
+    return '24px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' 124px';
   }
   makeListingColumnHeader=function() {
     const h=document.createElement('div');h.className='listing-column-header typed-property-row';
     h.style.setProperty('--typed-columns',template(columns()));
     const sort=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+label+' '+listingSortMark(key)+'</button>';
     const filter=(key,label)=>'<button type="button" class="listing-filter-btn'+(listingColumnFilters[key]?' active':'')+'" onclick="openColumnFilter(\''+key+'\',this,event)" aria-label="'+label+' 필터">▾</button>';
-    h.innerHTML='<div>선택</div>'+columns().map(([key,label])=>'<div>'+sort(key,label)+filter(key,label)+'</div>').join('')+'<div>'+(columnFilterCount()?'<button type="button" class="listing-filter-reset" onclick="clearColumnFilters()">필터 해제</button>':'관리')+'</div>';
+    h.innerHTML='<div>선택</div>'+columns().map(([key,label])=>'<div>'+sort(key,label)+filter(key,label)+(key==='type'?'<span class="lc-deal-filter">'+sort('deal','구분')+filter('deal','구분')+'</span>':'')+'</div>').join('')+'<div>'+(columnFilterCount()?'<button type="button" class="listing-filter-reset" onclick="clearColumnFilters()">필터 해제</button>':'관리')+'</div>';
     return h;
   };
   renderListView=function(items) {
@@ -102,7 +130,7 @@
     const wrap=document.createElement('div');wrap.className='typed-list-table-wrap';
     const table=document.createElement('table');table.className='typed-list-table';
     const header=makeListingColumnHeader();
-    table.innerHTML='<thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
+    table.innerHTML='<colgroup><col style="width:32px">'+cols.map(([key])=>'<col'+(key==='type'?' style="width:112px"':key==='price'?' style="width:138px"':key==='phone'?' style="width:118px"':'')+'>').join('')+'<col style="width:124px"></colgroup><thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
     const body=table.querySelector('tbody');
     items.forEach(item=>{
       const card=makeCard(item);
@@ -120,7 +148,7 @@
   };
   const originalRender=renderList;
   renderList=function() {
-    const visible=new Set(columns().map(([key])=>key));
+    const visible=new Set([...columns().map(([key])=>key),'deal']);
     Object.keys(listingColumnFilters).forEach(key=>{if(!visible.has(key))delete listingColumnFilters[key];});
     listingColumnSort=listingColumnSort.filter(s=>visible.has(s.key));
     closeColumnFilterPopover();
@@ -130,18 +158,37 @@
   style.textContent=`
     .properties-page #listingContainer {overflow-x:auto;}
     html body.properties-page .listing-column-header.typed-property-row,
-    html body.properties-page .listing-card.typed-property-row {display:grid;grid-template-columns:var(--typed-columns);grid-template-areas:none;min-width:1100px;gap:8px;}
+    html body.properties-page .listing-card.typed-property-row {display:grid;grid-template-columns:var(--typed-columns);grid-template-areas:none;min-width:0;width:100%;box-sizing:border-box;gap:6px;}
     .properties-page .typed-property-row .listing-cell {min-width:0;font-size:13px;overflow-wrap:anywhere;}
     .properties-page .typed-property-row .lc-no {display:block;font-size:11px;color:var(--text-muted);}
     .typed-list-table-wrap {overflow:auto;}
     html body.properties-page .listing-card.profit-recommended-row,.typed-list-table .profit-recommended-row td{background:rgba(212,175,55,.10)!important;}
     .typed-list-table .profit-recommended-row td:first-child{box-shadow:inset 3px 0 #d4af37;}
     .profit-recommended-badge{display:block;color:var(--gold);font-size:11px;margin-top:5px;font-weight:700;}
-    .typed-list-table {width:100%;min-width:1100px;border-collapse:collapse;font-size:13px;}
+    .typed-list-table {width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:13px;}
     .typed-list-table th,.typed-list-table td {padding:12px 8px;border-bottom:1px solid var(--border-slate);text-align:left;}
     .typed-list-table th {white-space:nowrap;color:var(--gold);}
     .typed-list-table td .listing-cell::before {display:none!important;}
+
+    .properties-page .lc-type-deal {display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+    .properties-page .typed-property-row .lc-type {font-size:12px;white-space:normal;width:auto;}
+    .properties-page .lc-price-line {display:block;line-height:1.5;}
+    .properties-page .typed-property-row .lc-price-text {font-size:13px;white-space:normal;overflow:visible;}
+    .properties-page .typed-property-row .listing-cell-phone > span {white-space:normal;overflow:visible;overflow-wrap:anywhere;}
+    .properties-page .typed-property-row .listing-actions {min-width:0;width:100%;box-sizing:border-box;}
+    .properties-page .typed-property-row .listing-actions .btn {padding:5px 4px;}
+    .properties-page .lc-deal-filter {display:inline-flex;margin-left:4px;}
+    .properties-page .typed-list-table td {overflow-wrap:anywhere;vertical-align:top;}
+    .properties-page .typed-list-table .listing-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;}
+    .properties-page .typed-list-table .lc-actions-main,.properties-page .typed-list-table .lc-actions-side {display:contents;}
+    .properties-page .typed-list-table .listing-actions .btn,.properties-page .typed-list-table .lc-status-chip {width:100%;min-width:0;box-sizing:border-box;padding:5px 4px;}
+    .properties-page .typed-list-table .lc-toggle {grid-column:1/-1;}
+    @media(min-width:801px) and (max-width:1200px) {
+      .properties-page .typed-property-row .listing-sort-btn {font-size:11px;}
+    }
     @media(max-width:800px){
+      .properties-page .typed-list-table {min-width:800px;}
+
       html body.properties-page .listing-column-header.typed-property-row {display:none;}
       html body.properties-page .listing-card.typed-property-row {min-width:0;grid-template-columns:26px minmax(0,1fr) minmax(0,1fr);gap:10px;}
       .properties-page .typed-property-row .listing-cell-select {grid-column:1;grid-row:1 / span 12;}
