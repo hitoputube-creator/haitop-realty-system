@@ -584,6 +584,17 @@ function setupApartmentListingForm(prefix, category2Id) {
     const apt = document.getElementById(category2Id).value === "아파트";
     host.hidden = !apt;
     document.getElementById(prefix + "nonApartmentFields").hidden = apt;
+    // Keep private contact notes and additional contacts visible for every property type.
+    for (const key of ["owner_name", "owner_phone1"]) {
+      const input = document.getElementById(prefix + key);
+      if (!input) continue;
+      input.hidden = apt;
+      const label = input.closest(".field").querySelector("label");
+      if (label) label.hidden = apt;
+    }
+    const memo = document.getElementById(prefix + "description");
+    if (memo) memo.closest(".field").hidden = apt;
+
     for (const id of ["complexName", "apartmentDong", "apartmentHo", "dealType", "title"]) {
       const el = document.getElementById(prefix + id);
       if (el) el.closest(".field").style.display = apt ? "none" : (id.startsWith("apartment") ? "none" : "");
