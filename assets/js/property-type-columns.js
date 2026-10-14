@@ -114,7 +114,7 @@
     return card;
   };
   function template(cols) {
-    return '24px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' 124px';
+    return '24px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' 174px';
   }
   makeListingColumnHeader=function() {
     const h=document.createElement('div');h.className='listing-column-header typed-property-row';
@@ -183,6 +183,14 @@
     .properties-page .typed-list-table .lc-actions-main,.properties-page .typed-list-table .lc-actions-side {display:contents;}
     .properties-page .typed-list-table .listing-actions .btn,.properties-page .typed-list-table .lc-status-chip {width:100%;min-width:0;box-sizing:border-box;padding:5px 4px;}
     .properties-page .typed-list-table .lc-toggle {grid-column:1/-1;}
+    @media(min-width:801px) {
+      html body.properties-page .typed-property-row .listing-actions {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:start;}
+      .properties-page .typed-property-row .lc-actions-main,.properties-page .typed-property-row .lc-actions-side,
+      .properties-page .typed-property-row .ktop-mobile-more,.properties-page .typed-property-row .ktop-mobile-more-body {display:contents;}
+      .properties-page .typed-property-row .ktop-mobile-more > summary {display:none;}
+      html body.properties-page .typed-property-row .listing-actions .btn {width:100%;min-height:30px;box-sizing:border-box;border-radius:6px;padding:5px 4px;font-size:12px;}
+      html body.properties-page .typed-property-row .lc-status-chip {grid-column:1/-1;width:100%;min-height:30px;box-sizing:border-box;border-radius:6px;}
+    }
     @media(min-width:801px) and (max-width:1200px) {
       .properties-page .typed-property-row .listing-sort-btn {font-size:11px;}
     }
