@@ -933,7 +933,7 @@ const SharedReference = (() => {
         const source=merged.get(key(table,row));
         if(table==='buildings' && source && Array.isArray(source.units)) {
           const unitKey=u=>[u.동 || '',u.호수 || ('floor:'+String(u.층 || ''))].join('|');
-          const sharedFields=['층','호수','분양_m2','분양_평','전용_m2','전용_평','전용률','주용도','층고','분양상태','거래구분','평당가','분양금액','분양_VAT','보증금','월차임','현_매매가격','현_보증금','현_월세','수익률'];
+          const sharedFields=['층','호수','분양_m2','분양_평','전용_m2','전용_평','전용률','주용도','층고','아파트명','동','호','평형','타입','분양상태','거래구분','평당가','분양금액','분양_VAT','보증금','월차임','현_매매가격','현_보증금','현_월세','수익률'];
           const units=new Map(source.units.map(u=>[unitKey(u),{...u}]));
           for(const unit of (Array.isArray(row.units)?row.units:[])) {
             const shared=units.get(unitKey(unit));
@@ -945,6 +945,12 @@ const SharedReference = (() => {
             units.set(unitKey(unit),combined);
           }
           merged.set(key(table,row),{...source,...row,units:Array.from(units.values())});
+        } else if(table==='land_parcels' && source) {
+          const data={...(row.data || {})};
+          for(const field of ['area','supplyPrice','auctionPrice','salePrice','buildingDeposit','buildingRent']) {
+            if((data[field]===null || data[field]===undefined || data[field]==='') && Object.hasOwn(source.data || {},field))data[field]=source.data[field];
+          }
+          merged.set(key(table,row),{...source,...row,data});
         } else merged.set(key(table,row),row);
       }
       let result=Array.from(merged.values()).filter(row=>matches(row,target.searchParams));
