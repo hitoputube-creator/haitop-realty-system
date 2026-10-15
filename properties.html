@@ -25,6 +25,9 @@
     #selectedViewTable tbody tr:hover td { background:rgba(212,175,55,0.05); }
     #selectedViewTable tbody tr.done-row td { color:#666; }
     #selectedViewTable .selected-print-unit { display:block; margin-top:2px; font-weight:700; }
+    #selectedViewTable .selected-print-subline { display:block; margin-top:2px; color:var(--text-muted); font-size:0.78rem; }
+    #selectedViewTable .selected-print-clip { overflow:hidden; white-space:nowrap; text-overflow:clip; }
+    #selectedViewTable .selected-print-clip + .selected-print-clip { margin-top:2px; }
     /* 선택매물 인쇄 전용: 화면 배치는 유지하고 A4 가로 표로 출력 */
     @page { size: A4 landscape; margin: 10mm; }
     @media print {
@@ -70,6 +73,9 @@
       }
       #selectedViewTable tbody td * { color: #111 !important; background: transparent !important; }
       #selectedViewTable .selected-print-unit { display: block !important; margin-top: 2px; font-weight: 700 !important; }
+      #selectedViewTable .selected-print-subline { display: block !important; margin-top: 2px; color: #555 !important; font-size: 8pt !important; }
+      #selectedViewTable .selected-print-clip { overflow: hidden !important; white-space: nowrap !important; text-overflow: clip !important; }
+      #selectedViewTable .selected-print-clip + .selected-print-clip { margin-top: 2px !important; }
       #selectedViewTable tbody tr.done-row td { color: #666 !important; background: #f5f5f5 !important; }
       #selectedViewTable tr { break-inside: avoid !important; page-break-inside: avoid !important; }
       #selectedViewTable thead { display: table-header-group !important; }

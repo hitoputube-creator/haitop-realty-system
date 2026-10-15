@@ -229,6 +229,13 @@ function printSelected() {
   renderPreview();
 }
 
+// "초롱꽃마을11단지 운정하우스디(리베르니아)"처럼 단지 뒤에 아파트 브랜드명이 붙어 있으면
+// 인쇄본 주소에는 "마을+단지"까지만 남기고 브랜드명은 생략한다.
+function shortenComplexName(name) {
+  const m = String(name || "").match(/^(.*?마을\s*\d+단지)/);
+  return m ? m[1] : name;
+}
+
 function formatSelectedPrintAddress(item) {
   let address = String(item.address || item.title || "");
   const escapeHtml = (value) => String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -243,8 +250,29 @@ function formatSelectedPrintAddress(item) {
   // 단지·아파트명은 윗줄, 동·호수는 아랫줄로 나눈다(미리보기·인쇄 공통). 동·호수가 없는 주소는 그대로 둔다.
   // 단지명 바로 뒤에 동이 붙은 "…(리베르니아)1101동 1401호" 형태도 나눌 수 있도록 공백은 있어도 없어도 된다.
   const match = address.match(/^(.*?)\s*(\d{1,5}\s*동\s*\d{1,5}\s*호)\s*$/);
-  if (!match || !match[1].trim()) return escapeHtml(address);
-  return `<span>${escapeHtml(match[1].trim())}</span><span class="selected-print-unit">${escapeHtml(match[2].replace(/\s+/g, " ").trim())}</span>`;
+  if (!match || !match[1].trim()) return escapeHtml(shortenComplexName(address));
+  return `<span>${escapeHtml(shortenComplexName(match[1].trim()))}</span><span class="selected-print-unit">${escapeHtml(match[2].replace(/\s+/g, " ").trim())}</span>`;
+}
+
+// 매매 거래에 현재 세입자의 보증금·월세(또는 전세금)가 남아 있으면 "세안고" 두 번째 줄로 보여준다.
+function formatSeanGoLine(item) {
+  const deal = item.dealType || getTransactionType(item);
+  if (deal !== "매매") return "";
+  const depositMan = Number(item.deposit) ? Math.round(Number(item.deposit) / 10000) : 0;
+  const rentMan = Number(item.monthlyRent) ? Math.round(Number(item.monthlyRent) / 10000) : 0;
+  if (!depositMan && !rentMan) return "";
+  if (depositMan && rentMan) return `세안고 월세(${depositMan}/${rentMan})`;
+  if (depositMan) return `세안고 전세 ${_fmtWon(item.deposit)}`;
+  return `세안고 월세 ${rentMan.toLocaleString("ko-KR")}만원`;
+}
+
+// 메모란: 아파트 옵션내역을 윗줄, 비고를 아랫줄로 보여준다. 둘 다 없으면 기존 빠른메모/내부메모로 대체한다.
+function formatMemoLines(item) {
+  const u = (typeof apartmentSource === "function") ? apartmentSource(item) : {};
+  const option = String(u.옵션내역 || "").trim();
+  const remark = String(u.비고 || "").trim();
+  if (option || remark) return { top: option, bottom: remark };
+  return { top: String(item.quick_memo || item.description || "").trim(), bottom: "" };
 }
 
 function renderPreview() {
@@ -252,8 +280,8 @@ function renderPreview() {
   document.getElementById("previewCount").textContent = `(${list.length}건)`;
   const rows = list.map((item, i) => {
     const isDone = item.status === "거래완료";
-    const memo = (item.quick_memo || item.description || "");
-    const memoShort = memo.length > 30 ? memo.substring(0, 30) + "…" : memo;
+    const seanGo = formatSeanGoLine(item);
+    const memoLines = formatMemoLines(item);
     const owner = item.owner_name || item.quick_owner || "";
     const contact = item.owner_phone1 || item.owner_contact || item.quick_contact || "";
     const chk = selectedIds.has(item.id) ? "checked" : "";
@@ -264,11 +292,14 @@ function renderPreview() {
       <td style="text-align:center;color:var(--text-muted);font-size:0.76rem;width:28px;">${i + 1}</td>
       <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getListingCategoryLabel(item)}</span></td>
       <td style="font-weight:500;">${formatSelectedPrintAddress(item)}</td>
-      <td style="font-size:0.82rem;">${formatPrice(item)}</td>
+      <td style="font-size:0.82rem;">${escapeHtml(formatPrice(item))}${seanGo ? `<span class="selected-print-subline">${escapeHtml(seanGo)}</span>` : ""}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${contact}</td>
       <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:${isDone?'rgba(238,136,136,0.15)':'rgba(82,197,100,0.12)'};color:${isDone?'#e88':'#52c564'};">${isDone?"완료":getStatusLabel(item)}</span></td>
-      <td style="font-size:0.78rem;color:var(--text-muted);">${memoShort}</td>
+      <td style="font-size:0.78rem;color:var(--text-muted);">
+        <div class="selected-print-clip">${escapeHtml(memoLines.top)}</div>
+        ${memoLines.bottom ? `<div class="selected-print-clip">${escapeHtml(memoLines.bottom)}</div>` : ""}
+      </td>
     </tr>`;
   }).join("");
   document.getElementById("selectedViewTableWrap").innerHTML = `
