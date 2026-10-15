@@ -84,7 +84,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 /* 등록 페이지 그리드 정렬 · 세로폭 최적화 (register.html 전용) */
 #registerPage .form-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px;}
 #registerPage .form-grid-3 .field-span2{grid-column:span 2;}
-#registerPage .form-grid-5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 14px;}
+#registerPage .form-grid-5{display:flex;flex-wrap:wrap;gap:10px 14px;}
+#registerPage .form-grid-5 .field{flex:1 1 180px;min-width:0;}
 #registerPage .card{padding:16px;margin-bottom:12px;}
 #registerPage .card-title{margin-bottom:10px;}
 #registerPage #owner_memo{min-height:64px;}
@@ -92,15 +93,10 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 #registerPage #detailDescription{min-height:80px;}
 @media(max-width:900px){
   #registerPage .form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}
-  #registerPage .form-grid-5{grid-template-columns:repeat(3,minmax(0,1fr));}
 }
 @media(max-width:720px){
   #registerPage .form-grid-3{grid-template-columns:1fr;}
   #registerPage .form-grid-3 .field-span2{grid-column:1/-1;}
-  #registerPage .form-grid-5{grid-template-columns:repeat(2,minmax(0,1fr));}
-}
-@media(max-width:480px){
-  #registerPage .form-grid-5{grid-template-columns:1fr;}
 }
 </style>
 </head>

@@ -28,12 +28,12 @@
       if (!res.ok) return;
       const data = await res.json();
       complexes = (data.records || []).map(r => {
-        const m = String(r.name || '').match(/^(.*?마을\s*\d+단지)\s*(.*)$/);
+        const m = String(r.name || '').match(/^(.*?마을)\s*(\d+단지)\s*(.*)$/);
         const addr = typeof apartmentResourceAddresses === 'function' ? apartmentResourceAddresses(r) : {};
         return {
           id: r.id, name: r.name,
           village: m ? m[1] : OTHER_VILLAGE,
-          apt: m ? (m[2] || r.name) : r.name,
+          apt: m ? (m[2] + (m[3] ? ' ' + m[3] : '')) : r.name,
           road: addr.roadAddress || '', jibun: addr.jibunAddress || ''
         };
       });
