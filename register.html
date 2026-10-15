@@ -223,16 +223,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <input id="monthlyRent" type="text" placeholder="예: 300만" />
         <div class="price-preview" id="monthlyRent_preview"></div>
       </div>
-      <div class="field">
-        <label>관리비</label>
-        <input id="managementFee" type="text" placeholder="예: 15만" />
-        <div class="price-preview" id="managementFee_preview"></div>
-      </div>
-      <div class="field">
-        <label>권리금</label>
-        <input id="premium" type="text" placeholder="예: 없음 또는 2,000만" />
-        <div class="price-preview" id="premium_preview"></div>
-      </div>
+      <div class="field" style="display:none" aria-hidden="true"><input id="managementFee" type="hidden" /><div id="managementFee_preview"></div></div>
+      <div class="field" style="display:none" aria-hidden="true"><input id="premium" type="hidden" /><div id="premium_preview"></div></div>
     </div>
   </section>
 
@@ -330,7 +322,11 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       </div>
       <div class="field">
         <label>연락처1</label>
-        <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
+        <div class="owner-quick-actions">
+          <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
+          <button type="button" class="btn btn-ghost" onclick="window.open('https://www.iros.go.kr/','_blank','noopener,noreferrer')">대법원 등기부</button>
+          <button type="button" class="btn btn-ghost" onclick="window.open('https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098','_blank','noopener,noreferrer')">건축물대장</button>
+        </div>
         <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addContactRow()">+ 연락처 추가</button>
       </div>
       <div id="additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
@@ -422,7 +418,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 </div>
 <div id="toast"></div>
 
-<script src="assets/js/register-picker.js?v=20261009-picker"></script>
+<script src="assets/js/register-picker.js?v=20261015-address-v2"></script>
 <script>
   // ── 카테고리 ──────────────────────────────────────
   const AREA_MAP = {
