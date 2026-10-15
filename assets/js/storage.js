@@ -498,7 +498,7 @@ function setupApartmentListingForm(prefix, category2Id) {
   const saleType=document.getElementById(prefix+"apt_매매유형");
   const saleDeposit=document.getElementById(prefix+"apt_승계보증금");
   const saleDeal=document.getElementById(prefix+"apt_거래구분");
-  function toggleSaleType(){const isSale=saleDeal.value==="매매";saleType.disabled=!isSale;saleDeposit.disabled=!isSale||saleType.value!=="세안고매매";saleDeposit.closest(".umfield").hidden=!isSale||saleType.value!=="세안고매매";}
+  function toggleSaleType(){const isSale=saleDeal.value==="매매";saleType.disabled=!isSale;saleDeposit.disabled=!isSale||saleType.value!=="세안고매매";}
   saleDeal.addEventListener("change",toggleSaleType);saleType.addEventListener("change",toggleSaleType);
   host._toggleSaleType=toggleSaleType;
   const rights = document.getElementById(prefix + "apt_권리구분");
