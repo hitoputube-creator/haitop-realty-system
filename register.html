@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261014-private-form"></script>
+  <script src="assets/js/storage.js?v=20261015-compact-v1"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -453,6 +453,26 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     updateDynamicSections();
   }
 
+  // 아파트 등록 시 연락처 추가/목록을 실제 소유자 정보 구역으로 이동한다.
+  function alignOwnerContacts() {
+    const button=document.getElementById('addOwnerPhone2Btn');
+    const extra=document.getElementById('additionalContactsWrap');
+    const internalPhone=document.getElementById('owner_phone1')?.closest('.field');
+    const aptPhone=document.getElementById('apt_연락처')?.closest('.umfield');
+    const aptGrid=aptPhone?.parentElement;
+    if(!button||!extra||!internalPhone||!aptPhone||!aptGrid)return;
+    if(cat2El.value==='아파트'){
+      aptPhone.querySelector('.owner-phone-row')?.appendChild(button);
+      aptGrid.appendChild(extra);
+      extra.style.gridColumn='1 / -1';
+      extra.hidden=false;
+    }else{
+      internalPhone.appendChild(button);
+      internalPhone.parentElement.insertBefore(extra,internalPhone.nextSibling);
+      extra.hidden=false;
+    }
+  }
+
   function updateDynamicSections() {
     const cat1 = cat1El.value;
     const cat2 = cat2El.value;
@@ -470,6 +490,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     document.querySelector('.commercial-section').style.display =
       COMMERCIAL_CATS.includes(storageCat1) ? '' : 'none';
     syncApartmentListingForm();
+    alignOwnerContacts();
     if (window.RegisterUi) RegisterUi.sync();
   }
 
