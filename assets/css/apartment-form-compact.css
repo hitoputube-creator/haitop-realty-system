@@ -61,3 +61,18 @@
 .reg-compact-basic,.reg-compact-price{display:grid!important;grid-template-columns:minmax(0,1fr)!important}
 .reg-compact-basic>.field,.reg-compact-price>.field{grid-column:1/-1!important}
 }
+
+/* 2026-10-15 final: fill the entire available registration width. */
+.reg-compact-basic{display:grid!important;width:100%!important;box-sizing:border-box;align-items:start}
+.reg-compact-basic>.field{width:auto!important;min-width:0}
+.reg-compact-basic>.field input,.reg-compact-basic>.field select{max-width:100%;box-sizing:border-box}
+.owner-quick-actions{display:grid;grid-template-columns:minmax(145px,1fr) auto auto;align-items:center;gap:7px}
+.owner-quick-actions input{width:100%;min-width:0;box-sizing:border-box}
+.owner-quick-actions .btn{white-space:nowrap;padding:7px 10px;font-size:.76rem}
+@media(min-width:1050px){.reg-compact-basic{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.reg-compact-basic>.field:has(#publicAddress){grid-column:1/span 2!important}
+.reg-compact-basic>.field:has(#mapAddress){grid-column:3/span 3!important}
+.reg-compact-basic>.field:has(#privateDetailAddress){grid-column:1/span 3!important}
+.reg-compact-basic>.field:has(#complexName){grid-column:4/span 2!important}
+}
+@media(max-width:650px){.owner-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.owner-quick-actions input{grid-column:1/-1}}
