@@ -327,7 +327,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
           <button type="button" class="btn btn-ghost" onclick="window.open('https://www.iros.go.kr/','_blank','noopener,noreferrer')">대법원 등기부</button>
           <button type="button" class="btn btn-ghost" onclick="window.open('https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098','_blank','noopener,noreferrer')">건축물대장</button>
         </div>
-        <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addContactRow()">+ 연락처 추가</button>
+        <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost owner-add-contact-btn" style="font-size:0.74rem;padding:6px 8px;white-space:nowrap;" onclick="addContactRow()">+ 연락처 추가</button>
       </div>
       <div id="additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field">
@@ -458,12 +458,17 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     const aptGrid=aptPhone?.parentElement;
     if(!button||!extra||!internalPhone||!aptPhone||!aptGrid)return;
     if(cat2El.value==='아파트'){
-      aptPhone.querySelector('.owner-phone-row')?.appendChild(button);
+      const phoneRow=aptPhone.querySelector('.owner-phone-row');
+      const registryButton=phoneRow?.querySelector('button');
+      if(phoneRow)phoneRow.insertBefore(button,registryButton||null);
       aptGrid.appendChild(extra);
       extra.style.gridColumn='1 / -1';
       extra.hidden=false;
     }else{
-      internalPhone.appendChild(button);
+      const actionRow=internalPhone.querySelector('.owner-quick-actions');
+      const registryButton=actionRow?.querySelector('button');
+      if(actionRow)actionRow.insertBefore(button,registryButton||null);
+      else internalPhone.appendChild(button);
       internalPhone.parentElement.insertBefore(extra,internalPhone.nextSibling);
       extra.hidden=false;
     }
