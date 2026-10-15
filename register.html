@@ -145,7 +145,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         </select>
       </div>
       <div class="field">
-        <label>등록구분 <span style="font-size:0.78rem;color:#888;">명단은 매물 목록에 섞이지 않고 [명단] 탭에서 따로 봅니다</span></label>
+        <label>등록구분</label>
         <select id="listingKind">
           <option value="매물">매물 (시장에 나온 매물)</option>
           <option value="명단">명단 (보관·관리용)</option>
@@ -159,15 +159,15 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         </select>
       </div>
       <div class="field" style="grid-column:1 / -1;">
-        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
+        <label>건물 선택</label>
         <select id="quickBuildingSelect"></select>
       </div>
       <div class="field">
-        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
+        <label>공개주소</label>
         <input id="publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
       </div>
       <div class="field">
-        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
+        <label>지도검색주소</label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
           <button type="button" id="lookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
@@ -175,7 +175,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <span id="lookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
       <div class="field">
-        <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
+        <label>상세주소·동호수</label>
         <input id="privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호, B동 203호" />
       </div>
       <div class="field" style="display:none;">
@@ -187,7 +187,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <input id="apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
       </div>
       <div class="field">
-        <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
+        <label>단지명</label>
         <input id="complexName" type="text" placeholder="예) 힐스테이트더운정" />
       </div>
     </div>
@@ -202,7 +202,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   <!-- ② 가격정보 -->
   <section class="card">
     <div class="card-title"><span>💰 가격정보</span></div>
-    <div class="form-grid-2">
+    <div class="form-grid-2 reg-compact-price">
       <div class="field">
         <label>매매가</label>
         <input id="salePrice" type="text" placeholder="예: 12억 5,000만" />
