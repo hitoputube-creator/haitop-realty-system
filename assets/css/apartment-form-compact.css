@@ -37,3 +37,27 @@
   .apartment-listing-form .owner-phone-row .btn{grid-column:span 1!important}
   .apartment-listing-form .um-section.current:has([id$="apt_소유자"])>.umgrid>.umfield.span-3{grid-column:span 2}
 }
+
+/* General registration form: aligned labels and compact responsive layout */
+.reg-compact-basic>.field{min-width:0;align-self:start}
+.reg-compact-basic>.field>label{display:block;min-height:20px;line-height:20px;margin-bottom:6px;font-size:.81rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reg-compact-basic>.field>select,.reg-compact-basic>.field>input{width:100%;min-width:0;box-sizing:border-box}
+.reg-compact-price>.field{min-width:0}
+.reg-compact-price .price-preview:empty{display:none}
+@media(min-width:1050px){
+.reg-compact-basic>.field:has(#publicAddress){grid-column:span 2!important}
+.reg-compact-basic>.field:has(#mapAddress){grid-column:span 3!important}
+.reg-compact-basic>.field:has(#privateDetailAddress){grid-column:span 3!important}
+.reg-compact-basic>.field:has(#complexName){grid-column:span 2!important}
+.reg-compact-basic>.field:has(#quickBuildingSelect){grid-column:1/-1!important}
+.reg-compact-price{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
+.reg-compact-price>.field{grid-column:auto!important}
+}
+@media(min-width:650px) and (max-width:1049px){
+.reg-compact-basic{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.reg-compact-price{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:649px){
+.reg-compact-basic,.reg-compact-price{display:grid!important;grid-template-columns:minmax(0,1fr)!important}
+.reg-compact-basic>.field,.reg-compact-price>.field{grid-column:1/-1!important}
+}
