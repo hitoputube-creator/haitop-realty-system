@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261015-align-v2"></script>
+  <script src="assets/js/storage.js?v=20261014-private-form"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -78,8 +78,7 @@ html[data-office-theme="ktop"] .apartment-listing-form summary {color:#193c70!im
 <style>
 #owner_name[hidden],#owner_phone1[hidden],#edit_owner_name[hidden],#edit_owner_phone1[hidden],.field>label[hidden],.field[hidden] {display:none!important;}
 html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;color:#193c70;padding:10px 12px;border-radius:7px;}
-</style><link rel="stylesheet" href="assets/css/apartment-form-compact.css?v=20261015-grid-v5" />
-</head>
+</style></head>
 <body data-nav-active="properties">
 <div class="page">
 
@@ -115,7 +114,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   <!-- ① 기본정보 -->
   <section class="card">
     <div class="card-title"><span>📋 기본정보</span></div>
-    <div class="form-grid-2 reg-compact-basic">
+    <div class="form-grid-2">
       <div class="field">
         <label>1차구분 <span style="color:var(--gold)">*</span></label>
         <select id="category1Select">
@@ -145,7 +144,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         </select>
       </div>
       <div class="field">
-        <label>등록구분</label>
+        <label>등록구분 <span style="font-size:0.78rem;color:#888;">명단은 매물 목록에 섞이지 않고 [명단] 탭에서 따로 봅니다</span></label>
         <select id="listingKind">
           <option value="매물">매물 (시장에 나온 매물)</option>
           <option value="명단">명단 (보관·관리용)</option>
@@ -159,15 +158,15 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         </select>
       </div>
       <div class="field" style="grid-column:1 / -1;">
-        <label>건물 선택</label>
+        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
         <select id="quickBuildingSelect"></select>
       </div>
       <div class="field">
-        <label>공개주소</label>
+        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
         <input id="publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
       </div>
       <div class="field">
-        <label>지도검색주소</label>
+        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
           <button type="button" id="lookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
@@ -175,7 +174,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <span id="lookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
       <div class="field">
-        <label>상세주소·동호수</label>
+        <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호, B동 203호" />
       </div>
       <div class="field" style="display:none;">
@@ -187,7 +186,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <input id="apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
       </div>
       <div class="field">
-        <label>단지명</label>
+        <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
         <input id="complexName" type="text" placeholder="예) 힐스테이트더운정" />
       </div>
     </div>
@@ -202,7 +201,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   <!-- ② 가격정보 -->
   <section class="card">
     <div class="card-title"><span>💰 가격정보</span></div>
-    <div class="form-grid-2 reg-compact-price">
+    <div class="form-grid-2">
       <div class="field">
         <label>매매가</label>
         <input id="salePrice" type="text" placeholder="예: 12억 5,000만" />
@@ -223,8 +222,16 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <input id="monthlyRent" type="text" placeholder="예: 300만" />
         <div class="price-preview" id="monthlyRent_preview"></div>
       </div>
-      <div class="field" style="display:none" aria-hidden="true"><input id="managementFee" type="hidden" /><div id="managementFee_preview"></div></div>
-      <div class="field" style="display:none" aria-hidden="true"><input id="premium" type="hidden" /><div id="premium_preview"></div></div>
+      <div class="field">
+        <label>관리비</label>
+        <input id="managementFee" type="text" placeholder="예: 15만" />
+        <div class="price-preview" id="managementFee_preview"></div>
+      </div>
+      <div class="field">
+        <label>권리금</label>
+        <input id="premium" type="text" placeholder="예: 없음 또는 2,000만" />
+        <div class="price-preview" id="premium_preview"></div>
+      </div>
     </div>
   </section>
 
@@ -322,12 +329,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       </div>
       <div class="field">
         <label>연락처1</label>
-        <div class="owner-quick-actions">
-          <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
-          <button type="button" class="btn btn-ghost" onclick="window.open('https://www.iros.go.kr/','_blank','noopener,noreferrer')">대법원 등기부</button>
-          <button type="button" class="btn btn-ghost" onclick="window.open('https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098','_blank','noopener,noreferrer')">건축물대장</button>
-        </div>
-        <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost owner-add-contact-btn" style="font-size:0.74rem;padding:6px 8px;white-space:nowrap;" onclick="addContactRow()">+ 연락처 추가</button>
+        <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
+        <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addContactRow()">+ 연락처 추가</button>
       </div>
       <div id="additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field">
@@ -418,7 +421,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 </div>
 <div id="toast"></div>
 
-<script src="assets/js/register-picker.js?v=20261015-address-v2"></script>
+<script src="assets/js/register-picker.js?v=20261009-picker"></script>
 <script>
   // ── 카테고리 ──────────────────────────────────────
   const AREA_MAP = {
@@ -449,31 +452,6 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     updateDynamicSections();
   }
 
-  // 아파트 등록 시 연락처 추가/목록을 실제 소유자 정보 구역으로 이동한다.
-  function alignOwnerContacts() {
-    const button=document.getElementById('addOwnerPhone2Btn');
-    const extra=document.getElementById('additionalContactsWrap');
-    const internalPhone=document.getElementById('owner_phone1')?.closest('.field');
-    const aptPhone=document.getElementById('apt_연락처')?.closest('.umfield');
-    const aptGrid=aptPhone?.parentElement;
-    if(!button||!extra||!internalPhone||!aptPhone||!aptGrid)return;
-    if(cat2El.value==='아파트'){
-      const phoneRow=aptPhone.querySelector('.owner-phone-row');
-      const registryButton=phoneRow?.querySelector('button');
-      if(phoneRow)phoneRow.insertBefore(button,registryButton||null);
-      aptGrid.appendChild(extra);
-      extra.style.gridColumn='1 / -1';
-      extra.hidden=false;
-    }else{
-      const actionRow=internalPhone.querySelector('.owner-quick-actions');
-      const registryButton=actionRow?.querySelector('button');
-      if(actionRow)actionRow.insertBefore(button,registryButton||null);
-      else internalPhone.appendChild(button);
-      internalPhone.parentElement.insertBefore(extra,internalPhone.nextSibling);
-      extra.hidden=false;
-    }
-  }
-
   function updateDynamicSections() {
     const cat1 = cat1El.value;
     const cat2 = cat2El.value;
@@ -491,10 +469,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     document.querySelector('.commercial-section').style.display =
       COMMERCIAL_CATS.includes(storageCat1) ? '' : 'none';
     syncApartmentListingForm();
-    alignOwnerContacts();
     if (window.RegisterUi) RegisterUi.sync();
-    const headGrid=document.querySelector('.reg-compact-basic');
-    if(headGrid)headGrid.dataset.compactCols=cat2==='아파트'?'4':'5';
   }
 
   cat1El.addEventListener('change', renderCat2);
