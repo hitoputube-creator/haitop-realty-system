@@ -29,7 +29,11 @@
       const data = await res.json();
       complexes = (data.records || []).map(r => {
         const m = String(r.name || '').match(/^(.*?마을\s*\d+단지)\s*(.*)$/);
-        const addr = typeof apartmentResourceAddresses === 'function' ? apartmentResourceAddresses(r) : {};
+        const memo = String(r.memo || '').split('---추가메모---')[0];
+        const matchAddress = label => (memo.match(new RegExp('(?:^|\\n)' + label + ':\\s*([^\\n\\r]+)')) || [,''])[1].trim();
+        const addr = typeof apartmentResourceAddresses === 'function'
+          ? apartmentResourceAddresses(r)
+          : {roadAddress:matchAddress('주소'),jibunAddress:matchAddress('지번주소')};
         return {
           id: r.id, name: r.name,
           village: m ? m[1] : OTHER_VILLAGE,
