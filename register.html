@@ -34,11 +34,12 @@
 .apartment-listing-form .apt-more{padding:10px 14px}
 .apartment-listing-form .apt-more>summary{cursor:pointer;color:#d4af37;font-size:.85rem}
 .apartment-listing-form .apt-more>.um-section{margin:10px -14px 0}
+.apartment-listing-form .price-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
 .homepage-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:transparent;border:1px dashed rgba(212,175,55,.45);border-radius:10px;padding:12px 14px;color:var(--text-main,inherit);font-size:.92rem;font-weight:700;cursor:pointer}
 .homepage-toggle-hint{font-size:.78rem;font-weight:400;color:var(--text-muted)}
 @media(max-width:650px){.apartment-listing-form .apt-picker-row{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}}
-@media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}}
+@media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}.apartment-listing-form .price-grid-5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}.apartment-listing-form .price-grid-5{grid-template-columns:minmax(0,1fr)}}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-ktop-v3">
 <script>
@@ -60,8 +61,8 @@
 /* Matching registration and edit form sections */
 #apartmentListingForm .um-section, #edit_apartmentListingForm .um-section {border:1px solid var(--border-slate);box-shadow:0 2px 6px rgba(0,0,0,.08);}
 .apartment-listing-form .um-section-title {padding:10px 14px;font-size:.9rem;}
-.apartment-listing-form .owner-phone-row {grid-template-columns:88px minmax(0,1fr); }
-.apartment-listing-form .owner-phone-row .btn {grid-column:1/-1;}
+.apartment-listing-form .owner-phone-row {grid-template-columns:88px minmax(0,1fr) auto auto auto;align-items:center;}
+@media(max-width:650px){.apartment-listing-form .owner-phone-row {grid-template-columns:1fr;}}
 #owner_memo,#edit_owner_memo {min-height:110px;resize:vertical;}
 html[data-office-theme="ktop"] #apartmentListingForm .um-section,
 html[data-office-theme="ktop"] #edit_apartmentListingForm .um-section {background:#fff;border-color:#ccd9e8;}
@@ -78,9 +79,33 @@ html[data-office-theme="ktop"] .apartment-listing-form summary {color:#193c70!im
 <style>
 #owner_name[hidden],#owner_phone1[hidden],#edit_owner_name[hidden],#edit_owner_phone1[hidden],.field>label[hidden],.field[hidden] {display:none!important;}
 html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;color:#193c70;padding:10px 12px;border-radius:7px;}
-</style></head>
+</style>
+<style>
+/* 등록 페이지 그리드 정렬 · 세로폭 최적화 (register.html 전용) */
+#registerPage .form-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px;}
+#registerPage .form-grid-3 .field-span2{grid-column:span 2;}
+#registerPage .form-grid-5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 14px;}
+#registerPage .card{padding:16px;margin-bottom:12px;}
+#registerPage .card-title{margin-bottom:10px;}
+#registerPage #owner_memo{min-height:64px;}
+#registerPage #description{min-height:70px;}
+#registerPage #detailDescription{min-height:80px;}
+@media(max-width:900px){
+  #registerPage .form-grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #registerPage .form-grid-5{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(max-width:720px){
+  #registerPage .form-grid-3{grid-template-columns:1fr;}
+  #registerPage .form-grid-3 .field-span2{grid-column:1/-1;}
+  #registerPage .form-grid-5{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:480px){
+  #registerPage .form-grid-5{grid-template-columns:1fr;}
+}
+</style>
+</head>
 <body data-nav-active="properties">
-<div class="page">
+<div class="page" id="registerPage">
 
   <header class="header">
     <div class="logo-icon"></div>
@@ -114,7 +139,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   <!-- ① 기본정보 -->
   <section class="card">
     <div class="card-title"><span>📋 기본정보</span></div>
-    <div class="form-grid-2">
+    <div class="form-grid-5">
       <div class="field">
         <label>1차구분 <span style="color:var(--gold)">*</span></label>
         <select id="category1Select">
@@ -144,11 +169,12 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         </select>
       </div>
       <div class="field">
-        <label>등록구분 <span style="font-size:0.78rem;color:#888;">명단은 매물 목록에 섞이지 않고 [명단] 탭에서 따로 봅니다</span></label>
+        <label>등록구분</label>
         <select id="listingKind">
           <option value="매물">매물 (시장에 나온 매물)</option>
           <option value="명단">명단 (보관·관리용)</option>
         </select>
+        <span style="font-size:0.72rem;color:#888;">명단은 [명단] 탭에서 따로 봅니다</span>
       </div>
       <div class="field">
         <label>거래상태</label>
@@ -157,6 +183,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
           <option value="거래완료">거래완료</option>
         </select>
       </div>
+    </div>
+    <div class="form-grid-3" style="margin-top:10px;">
       <div class="field" style="grid-column:1 / -1;">
         <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
         <select id="quickBuildingSelect"></select>
@@ -165,7 +193,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
         <input id="publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
       </div>
-      <div class="field">
+      <div class="field field-span2">
         <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
@@ -201,7 +229,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   <!-- ② 가격정보 -->
   <section class="card">
     <div class="card-title"><span>💰 가격정보</span></div>
-    <div class="form-grid-2">
+    <div class="form-grid-3">
       <div class="field">
         <label>매매가</label>
         <input id="salePrice" type="text" placeholder="예: 12억 5,000만" />
@@ -322,23 +350,25 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   <!-- ⑦ 내부전용 -->
   <section class="card" style="border-top:3px solid #bd913e;background:var(--bg-card);">
     <div class="card-title"><span>🔒 내부전용</span></div>
-    <div class="form-grid-2">
+    <div class="form-grid-3">
       <div class="field">
         <label>소유주명</label>
         <input id="owner_name" type="text" placeholder="예) 홍길동" />
       </div>
       <div class="field">
         <label>연락처1</label>
-        <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
-        <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:3px 10px;align-self:flex-start;" onclick="addContactRow()">+ 연락처 추가</button>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input id="owner_phone1" type="tel" placeholder="010-0000-0000" style="flex:1;" />
+          <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:6px 10px;white-space:nowrap;flex-shrink:0;" onclick="addContactRow()">+ 연락처 추가</button>
+        </div>
       </div>
-      <div id="additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field">
         <label>드라이브 자료 연결</label>
         <select id="resource_id">
           <option value="">-- 연결 안함 --</option>
         </select>
       </div>
+      <div id="additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field" style="grid-column:1 / -1;">
         <label>소유주 메모 / 특이사항</label>
         <textarea id="owner_memo" rows="2" placeholder="예) 통화 가능 시간, 특이사항 등"></textarea>
@@ -350,7 +380,6 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     </div>
   </section>
 
-  </div><!-- nonApartmentFields -->
   <!-- ⑧ 이미지 -->
   <section class="card">
     <div class="card-title"><span>📷 이미지 (최대 5장)</span></div>
