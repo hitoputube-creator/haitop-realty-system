@@ -78,7 +78,7 @@ html[data-office-theme="ktop"] .apartment-listing-form summary {color:#193c70!im
 <style>
 #owner_name[hidden],#owner_phone1[hidden],#edit_owner_name[hidden],#edit_owner_phone1[hidden],.field>label[hidden],.field[hidden] {display:none!important;}
 html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;color:#193c70;padding:10px 12px;border-radius:7px;}
-</style><link rel="stylesheet" href="assets/css/apartment-form-compact.css?v=20261015-contact-v4" />
+</style><link rel="stylesheet" href="assets/css/apartment-form-compact.css?v=20261015-grid-v5" />
 </head>
 <body data-nav-active="properties">
 <div class="page">
@@ -493,6 +493,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     syncApartmentListingForm();
     alignOwnerContacts();
     if (window.RegisterUi) RegisterUi.sync();
+    const headGrid=document.querySelector('.reg-compact-basic');
+    if(headGrid)headGrid.dataset.compactCols=cat2==='아파트'?'4':'5';
   }
 
   cat1El.addEventListener('change', renderCat2);
