@@ -87,3 +87,32 @@
 .owner-quick-actions{grid-template-columns:minmax(125px,1fr) auto auto auto}
 .owner-add-contact-btn{white-space:nowrap!important;min-height:34px;padding:6px 8px!important;align-self:center}
 @media(max-width:1049px){.owner-quick-actions,.apartment-listing-form .owner-phone-row{display:flex;flex-wrap:wrap;align-items:center}.owner-quick-actions input,.apartment-listing-form .owner-phone-row input{flex:1 1 170px}}
+
+/* Keep category header evenly distributed when apartment mode hides deal type. */
+@media(min-width:1050px){
+.reg-compact-basic{grid-template-columns:repeat(20,minmax(0,1fr))!important}
+.reg-compact-basic>.field:has(#category1Select),
+.reg-compact-basic>.field:has(#category2Select),
+.reg-compact-basic>.field:has(#listingKind),
+.reg-compact-basic>.field:has(#status){grid-column:span 5!important}
+.reg-compact-basic>.field:has(#dealType){grid-column:span 4!important}
+.reg-compact-basic:not(:has(>.field:has(#dealType):not([style*="display: none"])))>.field:has(#category1Select),
+.reg-compact-basic:not(:has(>.field:has(#dealType):not([style*="display: none"])))>.field:has(#category2Select),
+.reg-compact-basic:not(:has(>.field:has(#dealType):not([style*="display: none"])))>.field:has(#listingKind),
+.reg-compact-basic:not(:has(>.field:has(#dealType):not([style*="display: none"])))>.field:has(#status){grid-column:span 5!important}
+.reg-compact-basic>.field:has(#quickBuildingSelect){grid-column:1/-1!important}
+.reg-compact-basic>.field:has(#publicAddress){grid-column:span 8!important}
+.reg-compact-basic>.field:has(#mapAddress){grid-column:span 12!important}
+.reg-compact-basic>.field:has(#privateDetailAddress){grid-column:span 12!important}
+.reg-compact-basic>.field:has(#complexName){grid-column:span 8!important}
+}
+/* Four visible header fields in apartment mode, five in other categories. */
+.reg-compact-basic[data-compact-cols="4"]{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.reg-compact-basic[data-compact-cols="4"]>.field:has(#category1Select),
+.reg-compact-basic[data-compact-cols="4"]>.field:has(#category2Select),
+.reg-compact-basic[data-compact-cols="4"]>.field:has(#listingKind),
+.reg-compact-basic[data-compact-cols="4"]>.field:has(#status){grid-column:span 1!important}
+@media(min-width:1050px){
+.reg-compact-basic[data-compact-cols="5"]{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.reg-compact-basic[data-compact-cols="5"]>.field:nth-child(-n+5){grid-column:span 1!important}
+}
