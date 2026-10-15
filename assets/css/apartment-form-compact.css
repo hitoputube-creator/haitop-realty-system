@@ -1,0 +1,39 @@
+/* 2026-10-15: shared registration and editing layout, HT/KT */
+@media(min-width:1050px){
+  .apartment-listing-form .um-section.sale:first-child .umgrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .apartment-listing-form .um-section.sale:first-child .area-dual.span-2{grid-column:span 2}
+  .apartment-listing-form .um-section.current:has([id$="apt_매매유형"])>.umgrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .apartment-listing-form .um-section.current:has([id$="apt_매매유형"])>.umgrid>.umfield:nth-child(1){order:1}
+  .apartment-listing-form .um-section.current:has([id$="apt_매매유형"])>.umgrid>.umfield:nth-child(2){order:2}
+  .apartment-listing-form .um-section.current:has([id$="apt_매매유형"])>.umgrid>.umfield:nth-child(3){order:6}
+  .apartment-listing-form .um-section.current:has([id$="apt_매매유형"])>.umgrid>.umfield:nth-child(4){order:3}
+  .apartment-listing-form .um-section.current:has([id$="apt_매매유형"])>.umgrid>.umfield:nth-child(5){order:4}
+  .apartment-listing-form .um-section.current:has([id$="apt_매매유형"])>.umgrid>.umfield:nth-child(6){order:5}
+  .apartment-listing-form .um-section.current:has([id$="apt_소유자"])>.umgrid{grid-template-columns:minmax(130px,1fr) minmax(0,4fr)}
+  .apartment-listing-form .um-section.current:has([id$="apt_소유자"])>.umgrid>.umfield.span-3{grid-column:auto}
+  .apartment-listing-form .owner-phone-row{display:grid;grid-template-columns:95px minmax(135px,1fr) auto auto;align-items:center}
+  .apartment-listing-form .owner-phone-row .btn{grid-column:auto!important;white-space:nowrap;min-height:36px}
+  .apartment-listing-form .owner-phone-row .btn:nth-of-type(1){grid-column:3!important}
+  .apartment-listing-form .owner-phone-row .btn:nth-of-type(2){grid-column:4!important}
+}
+.apartment-listing-form .um-section{margin:7px 0}
+.apartment-listing-form .umgrid{gap:7px 9px;padding:9px 11px}
+.apartment-listing-form .um-section-title{padding:8px 12px}
+.apartment-listing-form .umfield[hidden]{display:none!important}
+.apartment-listing-form .owner-phone-row{gap:7px}
+.apartment-listing-form .owner-phone-row .btn{font-size:.73rem!important;padding:7px 9px!important}
+.apartment-listing-form .area-dual .area-row{flex-wrap:nowrap}
+.apartment-listing-form .area-dual .area-unit{flex-shrink:0}
+.apartment-listing-form .umfield textarea{min-height:100px;resize:vertical}
+.apartment-listing-form [id$="apt_추가메모"]{min-height:180px}
+@media(min-width:1050px){.reg-compact-basic{grid-template-columns:repeat(5,minmax(0,1fr))!important}.reg-compact-basic>.field:nth-child(-n+5){grid-column:auto!important}}
+@media(max-width:1049px) and (min-width:650px){
+  .apartment-listing-form .um-section.current:has([id$="apt_매매유형"])>.umgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .apartment-listing-form .owner-phone-row{grid-template-columns:90px minmax(0,1fr);display:grid}
+  .apartment-listing-form .owner-phone-row .btn{grid-column:auto!important}
+}
+@media(max-width:649px){
+  .apartment-listing-form .owner-phone-row{grid-template-columns:90px minmax(0,1fr);display:grid}
+  .apartment-listing-form .owner-phone-row .btn{grid-column:span 1!important}
+  .apartment-listing-form .um-section.current:has([id$="apt_소유자"])>.umgrid>.umfield.span-3{grid-column:span 2}
+}
