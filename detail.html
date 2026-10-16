@@ -1479,6 +1479,11 @@ function closeHomepageTab(tab) {
       ["관계자 연락처", relatedContacts],
       ["추가 연락처", extraContact],
       ["소유주 메모", item.owner_memo],
+      ["옵션내역", item.optionDetails],
+      ["비고", item.remarks],
+      ...(Array.isArray(item.additionalMemos) ? item.additionalMemos.slice().reverse().map(memo =>
+        ["추가메모", (memo.created_at ? new Date(memo.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }) + " · " : "") + memo.text]
+      ) : []),
     ];
     const extraRows = packRows(extraPairs, 3);
     return `<section class="detail-section listing-info-section">
