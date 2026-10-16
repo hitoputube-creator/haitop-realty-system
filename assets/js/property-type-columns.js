@@ -3,7 +3,7 @@
   'use strict';
   const common = [['deal','구분'],['price','가격'],['owner','소유주'],['phone','연락처']];
   const schemas = {
-    '': [['type','매물유형'],['name','매물명'],['address','소재지'],...common],
+    '': [['type','매물유형'],['name','매물명'],...common],
     '상가사무실': [['presaleStatus','분양상태'],['building','건물명'],['address','소재지'],['floorRoom','층/호실'],['exclusive','전용면적'],['maintenance','관리비'],['premium','권리금'],...common],
     '토지': [['address','소재지'],['parcel','블럭/필지'],['landArea','토지면적'],['landUse','지목'],['zoning','용도지역'],['unitPrice','평당가'],...common],
     '주거용': [['village','마을'],['apartment','단지명'],['dong','동'],['room','호수'],['supply','분양평형/타입'],...common],
@@ -22,7 +22,7 @@
     const sale=first(item.salePrice, num(first(item.land_price,item.factory_price,item.biz_price))*10000);
     return {
       presaleStatus:window.CommercialPriceCore?.commercial(item)?CommercialPriceCore.status(item):'',
-      name:first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address),
+      name:u.동 && u.호 ? [shortenComplexName(first(u.아파트명,item.complexName,item.buildingName)),u.동+'동 '+u.호+'호'].filter(Boolean).join('\n') : first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address),
       building:first(item.buildingName,item.building_name,item.complexName,item.shop_building,item.biz_building),
       address:first(item.roadAddress,item.jibunAddress,item.address,item.publicAddress,item.mapAddress,item.quick_location),
       floorRoom:[first(item.floor,item.floorInfo,item.shop_floor),first(item.roomNumber,item.shop_room,item.unitNumber,item.ho)].filter(v=>v !== '').join(' / '),
@@ -80,6 +80,16 @@
         const line=document.createElement('div');line.className='lc-type-deal';
         if(badge) line.appendChild(badge);
         line.appendChild(deal);node.prepend(line);
+      }
+    }
+    if (key==='name') {
+      const raw=String(listingColumnValue(item,key) || '-');
+      if (raw.includes('\n')) {
+        const no=node.querySelector('.lc-no');
+        node.replaceChildren(...raw.split('\n').map(text=>{
+          const line=document.createElement('span');line.className='lc-name-line';line.textContent=text;return line;
+        }));
+        if (no) node.appendChild(no);
       }
     }
     if (key==='price') {
@@ -170,6 +180,7 @@
     .typed-list-table th {white-space:nowrap;color:var(--gold);}
     .typed-list-table td .listing-cell::before {display:none!important;}
 
+    .properties-page .lc-name-line {display:block;}
     .properties-page .lc-type-deal {display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
     .properties-page .typed-property-row .lc-type {font-size:12px;white-space:normal;width:auto;}
     .properties-page .lc-price-line {display:block;line-height:1.5;}
