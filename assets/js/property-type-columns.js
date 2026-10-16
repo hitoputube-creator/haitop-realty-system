@@ -23,7 +23,10 @@
     return {
       presaleStatus:window.CommercialPriceCore?.commercial(item)?CommercialPriceCore.status(item):'',
       name:(()=>{
-        const village=listingColumnValue(item,'village'),dong=listingColumnValue(item,'dong'),room=listingColumnValue(item,'room');
+        const complexName=u.아파트명 || item.complexName || item.buildingName || '';
+        const village=(complexName.match(/^(.*?마을\s*\d+단지)/)||[])[1]||'';
+        const dong=u.동||item.apartmentDong||item.dong||'';
+        const room=u.호||item.apartmentHo||item.ho||'';
         return village && dong && room ? [village,dong+'동 '+room+'호'].join('\n') : first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address);
       })(),
       building:first(item.buildingName,item.building_name,item.complexName,item.shop_building,item.biz_building),
