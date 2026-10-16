@@ -22,7 +22,10 @@
     const sale=first(item.salePrice, num(first(item.land_price,item.factory_price,item.biz_price))*10000);
     return {
       presaleStatus:window.CommercialPriceCore?.commercial(item)?CommercialPriceCore.status(item):'',
-      name:u.동 && u.호 ? [shortenComplexName(first(u.아파트명,item.complexName,item.buildingName)),u.동+'동 '+u.호+'호'].filter(Boolean).join('\n') : first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address),
+      name:(()=>{
+        const village=listingColumnValue(item,'village'),dong=listingColumnValue(item,'dong'),room=listingColumnValue(item,'room');
+        return village && dong && room ? [village,dong+'동 '+room+'호'].join('\n') : first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address);
+      })(),
       building:first(item.buildingName,item.building_name,item.complexName,item.shop_building,item.biz_building),
       address:first(item.roadAddress,item.jibunAddress,item.address,item.publicAddress,item.mapAddress,item.quick_location),
       floorRoom:[first(item.floor,item.floorInfo,item.shop_floor),first(item.roomNumber,item.shop_room,item.unitNumber,item.ho)].filter(v=>v !== '').join(' / '),
