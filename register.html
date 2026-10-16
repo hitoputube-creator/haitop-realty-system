@@ -98,26 +98,31 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   #registerPage .form-grid-3{grid-template-columns:1fr;}
   #registerPage .form-grid-3 .field-span2{grid-column:1/-1;}
 }
-/* 상단·하단 포인트 컬러 (매물관리 메인 화면과 동일한 네이비 그라데이션) */
+/* 상단·하단 포인트 컬러 (매물관리 메인 화면과 동일한 네이비 그라데이션)
+   케이탑 테마의 전역 규칙(.header/.card를 흰색으로 강제하는 !important)보다
+   우선하도록 이 블록도 !important로 맞춘다. */
 html[data-office-theme="ktop"] #registerPage > .header{
-  background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba);
+  background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;
+  background-image:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;
   border-radius:16px;padding:20px 24px;margin-top:8px;
-  box-shadow:0 7px 24px rgba(31,75,139,.13);
+  border:0!important;
+  box-shadow:0 7px 24px rgba(31,75,139,.13)!important;
 }
-html[data-office-theme="ktop"] #registerPage > .header .logo-main{color:#fff;}
-html[data-office-theme="ktop"] #registerPage > .header .logo-sub{color:#dbe7f8;}
-html[data-office-theme="ktop"] #registerPage > .header .logo-icon{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);}
+html[data-office-theme="ktop"] #registerPage > .header .logo-main{color:#fff!important;}
+html[data-office-theme="ktop"] #registerPage > .header .logo-sub{color:#dbe7f8!important;}
+html[data-office-theme="ktop"] #registerPage > .header .logo-icon{background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.4)!important;}
 html[data-office-theme="ktop"] #registerPage > .header .logo-icon::before,
-html[data-office-theme="ktop"] #registerPage > .header .logo-icon::after{background:#fff;}
-html[data-office-theme="ktop"] #registerPage > .header .nav-link{background:rgba(255,255,255,.1);color:#eef5ff;border-color:rgba(255,255,255,.25);}
-html[data-office-theme="ktop"] #registerPage > .header .nav-link.active{background:#fff;color:#1956a3;border-color:#fff;}
-html[data-office-theme="ktop"] #registerPage > .header .nav-link:hover{background:rgba(255,255,255,.2);color:#fff;}
-html[data-office-theme="ktop"] #registerPage > .header .nav-logout-btn{background:rgba(255,255,255,.1);color:#eef5ff;border-color:rgba(255,255,255,.25);}
-html[data-office-theme="ktop"] #registerPage > .header .nav-logout-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+html[data-office-theme="ktop"] #registerPage > .header .logo-icon::after{background:#fff!important;}
+html[data-office-theme="ktop"] #registerPage > .header .nav-link{background:rgba(255,255,255,.1)!important;color:#eef5ff!important;border-color:rgba(255,255,255,.25)!important;}
+html[data-office-theme="ktop"] #registerPage > .header .nav-link.active{background:#fff!important;color:#1956a3!important;border-color:#fff!important;}
+html[data-office-theme="ktop"] #registerPage > .header .nav-link:hover{background:rgba(255,255,255,.2)!important;color:#fff!important;}
+html[data-office-theme="ktop"] #registerPage > .header .nav-logout-btn{background:rgba(255,255,255,.1)!important;color:#eef5ff!important;border-color:rgba(255,255,255,.25)!important;}
+html[data-office-theme="ktop"] #registerPage > .header .nav-logout-btn:hover{background:rgba(255,255,255,.2)!important;color:#fff!important;}
 html[data-office-theme="ktop"] #registerPage > .header-line{display:none;}
 html[data-office-theme="ktop"] #registerPage #saveSection{
-  background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba);
-  border:0;box-shadow:0 7px 24px rgba(31,75,139,.13);
+  background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;
+  background-image:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;
+  border:0!important;box-shadow:0 7px 24px rgba(31,75,139,.13)!important;
 }
 </style>
 </head>
