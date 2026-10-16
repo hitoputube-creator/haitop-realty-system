@@ -296,12 +296,12 @@ function renderPreview() {
         <input type="checkbox" ${chk} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="togglePreviewCheck('${item.id}',this.checked)" />
       </td>
       <td style="text-align:center;color:var(--text-muted);font-size:0.76rem;width:28px;">${i + 1}</td>
-      <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getListingCategoryLabel(item)}</span></td>
+      <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${escapeHtml(normalizeListingCategory(item).subLabel || getListingCategoryLabel(item))}</span></td>
       <td style="font-weight:500;">${formatSelectedPrintAddress(item)}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(getListingTypeText(item))}</td>
       <td style="font-size:0.82rem;">${escapeHtml(formatPrice(item))}${seanGo ? `<span class="selected-print-subline">${escapeHtml(seanGo)}</span>` : ""}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
-      <td style="font-size:0.8rem;color:var(--text-muted);">${contact}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap;">${contact}</td>
       <td style="font-size:0.78rem;color:var(--text-muted);">
         <div class="selected-print-clip">${escapeHtml(memoLines.top)}</div>
         ${memoLines.bottom ? `<div class="selected-print-clip">${escapeHtml(memoLines.bottom)}</div>` : ""}
@@ -318,7 +318,7 @@ function renderPreview() {
         <th style="width:68px;">타입</th>
         <th style="width:128px;">가격</th>
         <th style="width:68px;">소유주</th>
-        <th style="width:104px;">연락처</th>
+        <th style="width:120px;">연락처</th>
         <th>메모</th>
       </tr></thead>
       <tbody>${rows}</tbody>
