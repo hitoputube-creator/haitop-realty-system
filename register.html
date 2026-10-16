@@ -395,9 +395,13 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   <!-- ⑦-3 추가메모 -->
   <section class="card">
     <div class="card-title"><span>💬 추가메모</span></div>
+    <div class="field" style="margin-bottom:10px;max-width:200px;">
+      <label>메모 날짜</label>
+      <input id="newMemoDate" type="date" />
+    </div>
     <div class="field">
       <label>새 메모</label>
-      <textarea id="newMemo" rows="4" placeholder="상담 내용이나 변경사항을 추가하세요. 저장 시 기존 메모에 날짜별로 누적됩니다."></textarea>
+      <textarea id="newMemo" rows="4" placeholder="상담 내용이나 변경사항을 추가하세요. 저장 시 선택한 날짜로 기존 메모에 누적됩니다."></textarea>
     </div>
   </section>
   </div>
@@ -493,6 +497,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   const syncApartmentListingForm = setupApartmentListingForm("", "category2Select");
   RegisterUi.init();
   setupListingDescriptionEmojiToolbar('detailDescription');
+  document.getElementById('newMemoDate').value = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
 
   function renderCat2() {
     const opts = CATEGORY_OPTIONS[cat1El.value] || [];
@@ -1025,7 +1030,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       owner_memo:   gv('owner_memo'),
       optionDetails: gv('optionDetails'),
       remarks:       gv('remarks'),
-      additionalMemos: gv('newMemo') ? [{ id: crypto.randomUUID(), text: gv('newMemo'), created_at: new Date().toISOString() }] : [],
+      additionalMemos: gv('newMemo') ? [{ id: crypto.randomUUID(), text: gv('newMemo'), created_at: (gv('newMemoDate') ? new Date(gv('newMemoDate') + 'T00:00:00+09:00') : new Date()).toISOString() }] : [],
       stickers,
     };
 
