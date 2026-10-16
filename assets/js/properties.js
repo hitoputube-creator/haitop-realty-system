@@ -266,6 +266,12 @@ function formatSeanGoLine(item) {
   return `세안고 월세 ${rentMan.toLocaleString("ko-KR")}만원`;
 }
 
+// 타입란: 아파트 타입(예: 55A/AS)이 있으면 그 값을, 없으면 평형을 보여준다.
+function getListingTypeText(item) {
+  const u = (typeof apartmentSource === "function") ? apartmentSource(item) : {};
+  return String(u.타입 || u.평형 || "").trim();
+}
+
 // 메모란: 아파트 옵션내역을 윗줄, 비고를 아랫줄로 보여준다. 둘 다 없으면 기존 빠른메모/내부메모로 대체한다.
 function formatMemoLines(item) {
   const u = (typeof apartmentSource === "function") ? apartmentSource(item) : {};
@@ -292,6 +298,7 @@ function renderPreview() {
       <td style="text-align:center;color:var(--text-muted);font-size:0.76rem;width:28px;">${i + 1}</td>
       <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${getListingCategoryLabel(item)}</span></td>
       <td style="font-weight:500;">${formatSelectedPrintAddress(item)}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(getListingTypeText(item))}</td>
       <td style="font-size:0.82rem;">${escapeHtml(formatPrice(item))}${seanGo ? `<span class="selected-print-subline">${escapeHtml(seanGo)}</span>` : ""}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${contact}</td>
@@ -307,13 +314,14 @@ function renderPreview() {
       <thead><tr>
         <th style="width:36px;"></th>
         <th style="width:28px;text-align:center;">No</th>
-        <th style="width:72px;">유형</th>
+        <th style="width:64px;">유형</th>
         <th>주소</th>
-        <th style="width:140px;">가격</th>
-        <th style="width:76px;">소유주</th>
-        <th style="width:110px;">연락처</th>
-        <th style="width:60px;">상태</th>
-        <th style="width:160px;">메모</th>
+        <th style="width:68px;">타입</th>
+        <th style="width:128px;">가격</th>
+        <th style="width:68px;">소유주</th>
+        <th style="width:104px;">연락처</th>
+        <th style="width:54px;">상태</th>
+        <th style="width:200px;">메모</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;

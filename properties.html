@@ -26,7 +26,7 @@
     #selectedViewTable tbody tr.done-row td { color:#666; }
     #selectedViewTable .selected-print-unit { display:block; margin-top:2px; font-weight:700; }
     #selectedViewTable .selected-print-subline { display:block; margin-top:2px; color:var(--text-muted); font-size:0.78rem; }
-    #selectedViewTable .selected-print-clip { overflow:hidden; white-space:nowrap; text-overflow:clip; max-width:140px; }
+    #selectedViewTable .selected-print-clip { overflow:hidden; white-space:nowrap; text-overflow:clip; max-width:180px; }
     #selectedViewTable .selected-print-clip + .selected-print-clip { margin-top:2px; }
     /* 선택매물 인쇄 전용: 화면 배치는 유지하고 A4 가로 표로 출력 */
     @page { size: A4 landscape; margin: 10mm; }
@@ -54,13 +54,14 @@
       }
       #selectedViewTable th:first-child, #selectedViewTable td:first-child { display: none !important; }
       #selectedViewTable th:nth-child(2), #selectedViewTable td:nth-child(2) { width: 4% !important; text-align: center !important; }
-      #selectedViewTable th:nth-child(3), #selectedViewTable td:nth-child(3) { width: 9% !important; }
-      #selectedViewTable th:nth-child(4), #selectedViewTable td:nth-child(4) { width: 29% !important; }
-      #selectedViewTable th:nth-child(5), #selectedViewTable td:nth-child(5) { width: 14% !important; }
-      #selectedViewTable th:nth-child(6), #selectedViewTable td:nth-child(6) { width: 8% !important; }
-      #selectedViewTable th:nth-child(7), #selectedViewTable td:nth-child(7) { width: 13% !important; }
-      #selectedViewTable th:nth-child(8), #selectedViewTable td:nth-child(8) { width: 6% !important; }
-      #selectedViewTable th:nth-child(9), #selectedViewTable td:nth-child(9) { width: 17% !important; }
+      #selectedViewTable th:nth-child(3), #selectedViewTable td:nth-child(3) { width: 7% !important; }
+      #selectedViewTable th:nth-child(4), #selectedViewTable td:nth-child(4) { width: 23% !important; }
+      #selectedViewTable th:nth-child(5), #selectedViewTable td:nth-child(5) { width: 8% !important; }
+      #selectedViewTable th:nth-child(6), #selectedViewTable td:nth-child(6) { width: 13% !important; }
+      #selectedViewTable th:nth-child(7), #selectedViewTable td:nth-child(7) { width: 7% !important; }
+      #selectedViewTable th:nth-child(8), #selectedViewTable td:nth-child(8) { width: 11% !important; }
+      #selectedViewTable th:nth-child(9), #selectedViewTable td:nth-child(9) { width: 5% !important; }
+      #selectedViewTable th:nth-child(10), #selectedViewTable td:nth-child(10) { width: 22% !important; }
       #selectedViewTable thead th {
         background: #1a2a4a !important; color: #fff !important;
         padding: 7px 5px !important; border: 1px solid #d6dce6 !important;
