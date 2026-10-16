@@ -302,7 +302,6 @@ function renderPreview() {
       <td style="font-size:0.82rem;">${escapeHtml(formatPrice(item))}${seanGo ? `<span class="selected-print-subline">${escapeHtml(seanGo)}</span>` : ""}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${contact}</td>
-      <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:${isDone?'rgba(238,136,136,0.15)':'rgba(82,197,100,0.12)'};color:${isDone?'#e88':'#52c564'};">${isDone?"완료":getStatusLabel(item)}</span></td>
       <td style="font-size:0.78rem;color:var(--text-muted);">
         <div class="selected-print-clip">${escapeHtml(memoLines.top)}</div>
         ${memoLines.bottom ? `<div class="selected-print-clip">${escapeHtml(memoLines.bottom)}</div>` : ""}
@@ -315,13 +314,12 @@ function renderPreview() {
         <th style="width:36px;"></th>
         <th style="width:28px;text-align:center;">No</th>
         <th style="width:64px;">유형</th>
-        <th>주소</th>
+        <th style="width:128px;">주소</th>
         <th style="width:68px;">타입</th>
         <th style="width:128px;">가격</th>
         <th style="width:68px;">소유주</th>
         <th style="width:104px;">연락처</th>
-        <th style="width:54px;">상태</th>
-        <th style="width:200px;">메모</th>
+        <th>메모</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
