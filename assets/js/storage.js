@@ -603,6 +603,8 @@ function setupApartmentListingForm(prefix, category2Id) {
     if (pageAddContactBtn) pageAddContactBtn.hidden = apt;
     const memo = document.getElementById(prefix + "description");
     if (memo) memo.closest(".field").hidden = apt;
+    const genericMemoSection = document.getElementById(prefix + "genericMemoSection");
+    if (genericMemoSection) genericMemoSection.hidden = apt;
 
     for (const id of ["complexName", "apartmentDong", "apartmentHo", "dealType", "title"]) {
       const el = document.getElementById(prefix + id);

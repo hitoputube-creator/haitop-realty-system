@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261016-carrier-mvno"></script>
+  <script src="assets/js/storage.js?v=20261016-generic-memo"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -375,6 +375,32 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       </div>
     </div>
   </section>
+
+  <div id="genericMemoSection">
+  <!-- ⑦-2 옵션·비고 -->
+  <section class="card">
+    <div class="card-title"><span>📝 옵션·비고</span></div>
+    <div class="form-grid-2">
+      <div class="field">
+        <label>옵션내역</label>
+        <textarea id="optionDetails" rows="2" placeholder="시스템에어컨, 붙박이장 등"></textarea>
+      </div>
+      <div class="field">
+        <label>비고</label>
+        <textarea id="remarks" rows="2" placeholder="매물 특이사항"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑦-3 추가메모 -->
+  <section class="card">
+    <div class="card-title"><span>💬 추가메모</span></div>
+    <div class="field">
+      <label>새 메모</label>
+      <textarea id="newMemo" rows="4" placeholder="상담 내용이나 변경사항을 추가하세요. 저장 시 기존 메모에 날짜별로 누적됩니다."></textarea>
+    </div>
+  </section>
+  </div>
 
   <!-- ⑧ 이미지 -->
   <section class="card">
@@ -997,6 +1023,9 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       additional_contacts: _additionalContacts,
       owner_phone2: _additionalContacts.length ? _additionalContacts[0].phone : '',
       owner_memo:   gv('owner_memo'),
+      optionDetails: gv('optionDetails'),
+      remarks:       gv('remarks'),
+      additionalMemos: gv('newMemo') ? [{ id: crypto.randomUUID(), text: gv('newMemo'), created_at: new Date().toISOString() }] : [],
       stickers,
     };
 
