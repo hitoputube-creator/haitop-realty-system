@@ -1959,12 +1959,6 @@ function officeDecorateLinks(root) {
 }
 document.addEventListener('DOMContentLoaded', () => {
   officeDecorateLinks(document);
-  if (OfficeConfig.id === 'ktop' && /(?:resources|building-detail|building-overview|floor-status|land-resource)\.html$/.test(location.pathname)) {
-    const notice = document.createElement('div');
-    notice.textContent = '하이탑 기본자료 함께 보기 · 소유주·연락처·고객·업무일지는 사무소별로 관리합니다.';
-    notice.style.cssText = 'padding:10px 16px;background:#183b36;color:#d0efe5;font-size:13px;text-align:center';
-    document.body.prepend(notice);
-  }
   new MutationObserver(records => {
     for (const record of records) for (const node of record.addedNodes) {
       if (node.nodeType === 1 && node.isConnected) {
