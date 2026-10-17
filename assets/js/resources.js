@@ -20,7 +20,6 @@ function openDriveBuilding(page, id) {
 let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
 let residentialSearch = '';
 let driveGlobalSearch = '';   // 상단 검색창: 모든 폴더에서 이름·주소·메모로 검색
-let residentialVillage = '';
 
 // ===== 공통 유틸 =====
 function showToast(msg, duration = 2000) {
@@ -330,9 +329,25 @@ function apartmentVillageName(item) {
 function buildDriveResourceResults(items, category) {
   return _buildDriveItemsHtml(items, category);
 }
-function selectedResidentialItems(items,category) {
-  const matches=searchResidentialItems(items);
-  return category==='아파트' && residentialVillage ? matches.filter(item=>apartmentVillageName(item)===residentialVillage) : matches;
+function buildVillageGroupsHtml(items, category) {
+  const byVillage = new Map();
+  items.forEach(item => {
+    const village = apartmentVillageName(item);
+    if (!byVillage.has(village)) byVillage.set(village, []);
+    byVillage.get(village).push(item);
+  });
+  const villages = [...byVillage.keys()].sort((a, b) => a === '기타 단지' ? 1 : b === '기타 단지' ? -1 : a.localeCompare(b, 'ko'));
+  const singleGroup = villages.length <= 1;
+  return villages.map(village => {
+    const groupItems = byVillage.get(village);
+    return `<details class="village-group" style="margin-bottom:10px;border:1px solid rgba(212,175,55,0.2);border-radius:10px;overflow:hidden;"${singleGroup ? ' open' : ''}>
+      <summary style="cursor:pointer;padding:10px 14px;font-weight:700;color:var(--gold);background:rgba(212,175,55,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span>🏘️ ${escapeCategory(village)}</span>
+        <span style="font-size:.78rem;font-weight:500;opacity:.75;">${groupItems.length}개</span>
+      </summary>
+      <div class="listing-grid" style="padding:12px 14px;">${buildDriveResourceResults(groupItems, category)}</div>
+    </details>`;
+  }).join('');
 }
 
 function renderDriveTab() {
@@ -396,21 +411,18 @@ function renderDriveTab() {
   const cat = activeDriveCat;
   const items = sortedByCatOrder(cat, grouped[cat]);
   const isApartment=driveResourceScope==='residential' && cat==='아파트';
-  const villageCounts=new Map();
-  if(isApartment)items.forEach(item=>{const village=apartmentVillageName(item);villageCounts.set(village,(villageCounts.get(village)||0)+1);});
-  if(isApartment && residentialVillage && !villageCounts.has(residentialVillage))residentialVillage='';
-  const villages=[...villageCounts.keys()].sort((a,b)=>a==='기타 단지'?1:b==='기타 단지'?-1:a.localeCompare(b,'ko'));
-  const villageHtml=isApartment ? '<div style="margin-bottom:12px;"><select id="residentialVillageSelect" aria-label="마을 선택" style="width:260px;max-width:100%;color-scheme:dark;"><option value="">전체 마을 ('+items.length+')</option>'+villages.map(v=>'<option value="'+escapeCategory(v)+'"'+(residentialVillage===v?' selected':'')+'>'+escapeCategory(v)+' ('+villageCounts.get(v)+')</option>').join('')+'</select></div>' : '';
-  const shown = driveResourceScope === 'residential' ? selectedResidentialItems(items,cat) : items;
+  const shown = driveResourceScope === 'residential' ? searchResidentialItems(items) : items;
   const searchHtml = driveResourceScope === 'residential' ? `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
     <input id="residentialResourceSearch" type="search" aria-label="주거자료 검색" placeholder="단지명 · 마을명 · 주소 검색" value="${escapeCategory(residentialSearch)}" style="flex:1;min-width:180px;">
     <span id="residentialSearchCount" style="font-size:.8rem;color:var(--text-muted);">${shown.length} / ${items.length}개</span>
   </div>` : '';
+  const resultsHtml = shown.length
+    ? (isApartment ? buildVillageGroupsHtml(shown, cat) : buildDriveResourceResults(shown, cat))
+    : `<div class="loading">${driveResourceScope === 'residential' && residentialSearch ? '검색 결과가 없습니다.' : '표시할 자료가 없습니다.'}</div>`;
   const sectionHtml = `
     <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
-      ${villageHtml}
       ${searchHtml}
-      <div class="listing-grid" id="driveResourceResults">${shown.length ? buildDriveResourceResults(shown, cat) : '<div class="loading">표시할 자료가 없습니다.</div>'}</div>
+      <div class="${isApartment ? '' : 'listing-grid'}" id="driveResourceResults">${resultsHtml}</div>
     </div>`;
 
   container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
@@ -425,21 +437,15 @@ function renderDriveTab() {
   const searchInput = document.getElementById('residentialResourceSearch');
   if (searchInput) searchInput.addEventListener('input', () => {
     residentialSearch = searchInput.value;
-    const filtered = selectedResidentialItems(items,cat);
-    document.getElementById('driveResourceResults').innerHTML = filtered.length ? buildDriveResourceResults(filtered, cat) : '<div class="loading">검색 결과가 없습니다.</div>';
+    const filtered = searchResidentialItems(items);
+    document.getElementById('driveResourceResults').innerHTML = filtered.length
+      ? (isApartment ? buildVillageGroupsHtml(filtered, cat) : buildDriveResourceResults(filtered, cat))
+      : '<div class="loading">검색 결과가 없습니다.</div>';
     document.getElementById('residentialSearchCount').textContent = `${filtered.length} / ${items.length}개`;
-  });
-  const villageSelect=document.getElementById('residentialVillageSelect');
-  if(villageSelect)villageSelect.addEventListener('change',()=>{
-    residentialVillage=villageSelect.value;
-    const filtered=selectedResidentialItems(items,cat);
-    document.getElementById('driveResourceResults').innerHTML=filtered.length?buildDriveResourceResults(filtered,cat):'<div class="loading">검색 결과가 없습니다.</div>';
-    document.getElementById('residentialSearchCount').textContent=filtered.length+' / '+items.length+'개';
   });
   // innerHTML 완료 후 버튼 이벤트 바인딩
   container.querySelectorAll("[data-cidx]").forEach(btn => {
     btn.addEventListener("click", () => {
-      if(activeDriveCat!==categories[+btn.dataset.cidx])residentialVillage='';
       activeDriveCat = categories[+btn.dataset.cidx];
       renderDriveTab();
     });
