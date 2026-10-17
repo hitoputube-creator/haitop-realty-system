@@ -2215,7 +2215,7 @@ async function deleteBFile(id) {
           ${u.listing_id
             ? `<span class="sbadge 임차중">매물등록</span> <a class="btn-listing-view" href="detail.html?id=${u.listing_id}">매물보기</a>`
               + (OfficeConfig.id === "ktop" ? "" : `<a class="btn-listing-home" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html?id=${u.listing_id}" target="_blank">홈페이지</a>`)
-            : `<button class="btn-listing-reg" data-ri="${ri}">매물등록</button>`
+            : `<button class="btn-unit-del" data-ri="${ri}">삭제</button>`
           }
           ${(u.묶음매물연결 || []).map(link=>`<a class="btn-listing-view" href="detail.html?id=${encodeURIComponent(link.id)}" title="${esc(link.title)}">묶음매물 보기</a>`).join('')}
         </td>
@@ -2239,6 +2239,9 @@ async function deleteBFile(id) {
         const u = units[Number(btn.dataset.ri)];
         location.href = buildRegisterUrl(u);
       });
+    });
+    tbody.querySelectorAll(".btn-unit-del[data-ri]").forEach(btn => {
+      btn.addEventListener("click", () => deleteUnit(Number(btn.dataset.ri)));
     });
   }
 
@@ -2507,17 +2510,18 @@ async function deleteBFile(id) {
     }
   }
 
-  async function deleteUnit() {
-    if (editIdx < 0) return;
-    const u = units[editIdx];
+  async function deleteUnit(idx) {
+    const target = idx === undefined ? editIdx : idx;
+    if (target < 0 || !units[target]) return;
+    const u = units[target];
     if (!confirm(`'${u.호수}' 호실을 삭제하시겠습니까?`)) return;
-    const next = units.filter((_, i) => i !== editIdx);
+    const next = units.filter((_, i) => i !== target);
     $("umDelete").disabled = true;
     try {
       await saveBuildingUnits(bName, bName, next);
       units = next;
       selectedUnitRows.clear();
-      closeModal();
+      if (target === editIdx) closeModal();
       renderAll();
       if (typeof showToast === "function") showToast("삭제 완료되었습니다.");
     } catch(e) {
