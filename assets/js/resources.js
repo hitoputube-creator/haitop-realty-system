@@ -154,6 +154,7 @@ function saveDriveOrder(obj) {
 }
 // 카테고리별 items 배열을 localStorage 순서에 맞게 정렬
 function sortedByCatOrder(cat, items) {
+  if (cat === '아파트') return [...items].sort(compareApartmentComplexes);
   const order = getDriveOrder()[cat];
   if (!order) return items;
   return [...items].sort((a, b) => {
@@ -326,6 +327,23 @@ function apartmentVillageName(item) {
   const memoMatch = String(item.memo || '').match(/(?:마을명|마을)\s*[:：]\s*([가-힣]+마을)/);
   return memoMatch ? memoMatch[1] : '기타 단지';
 }
+// Apartment cards follow village and numeric complex order, independent of import time.
+function compareApartmentComplexes(a, b) {
+  const villageA = apartmentVillageName(a), villageB = apartmentVillageName(b);
+  if (villageA !== villageB) {
+    if (villageA === '기타 단지') return 1;
+    if (villageB === '기타 단지') return -1;
+    return villageA.localeCompare(villageB, 'ko', {numeric:true});
+  }
+  const number = item => {
+    const match = String(item.name || '').normalize('NFKC').match(/(\d+)\s*단지/);
+    return match ? Number(match[1]) : Infinity;
+  };
+  const numberA = number(a), numberB = number(b);
+  if (numberA !== numberB) return numberA < numberB ? -1 : 1;
+  return String(a.name || '').localeCompare(String(b.name || ''), 'ko', {numeric:true})
+    || String(a.id || '').localeCompare(String(b.id || ''));
+}
 function buildDriveResourceResults(items, category) {
   return _buildDriveItemsHtml(items, category);
 }
@@ -339,7 +357,7 @@ function buildVillageGroupsHtml(items, category) {
   const villages = [...byVillage.keys()].sort((a, b) => a === '기타 단지' ? 1 : b === '기타 단지' ? -1 : a.localeCompare(b, 'ko'));
   const singleGroup = villages.length <= 1;
   return villages.map(village => {
-    const groupItems = byVillage.get(village);
+    const groupItems = [...byVillage.get(village)].sort(compareApartmentComplexes);
     return `<details class="village-group" style="margin-bottom:10px;border:1px solid rgba(212,175,55,0.2);border-radius:10px;overflow:hidden;"${singleGroup ? ' open' : ''}>
       <summary style="cursor:pointer;padding:10px 14px;font-weight:700;color:var(--gold);background:rgba(212,175,55,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;">
         <span>🏘️ ${escapeCategory(village)}</span>
