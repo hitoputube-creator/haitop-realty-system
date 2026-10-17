@@ -196,6 +196,18 @@
 /* KTOP property mobile layout · 2026-10-10 */
 .ktop-mobile-unit, .ktop-mobile-more, .ktop-mobile-more-body { display:contents; }
 .ktop-mobile-more > summary { display:none; }
+/* Desktop KTOP cards: keep the three actions on one row and the status below. */
+@media screen and (min-width:801px) {
+ html[data-office-theme="ktop"] body.properties-page .listing-row-card .listing-actions {
+   grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+ html[data-office-theme="ktop"] body.properties-page .listing-row-card .lc-status-chip {
+   grid-column:1/-1; min-height:30px;
+ }
+}
+html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-status-chip:not(.done) {
+ border-color:#c96368!important; color:#b54850!important; background:#fff7f7!important; font-weight:700;
+}
 @media screen and (max-width:800px) {
  html[data-office-theme="ktop"] .properties-page .page { width:100%; padding:12px; box-sizing:border-box; }
  html[data-office-theme="ktop"] .properties-page #tabProperty > .card { padding:14px; border-radius:14px; }
