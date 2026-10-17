@@ -160,8 +160,8 @@
   };
   function template(cols) {
     if (isKtopResidential()) {
-      const widths={type:'.78fr',village:'.78fr',apartment:'1.45fr',dong:'.64fr',room:'.64fr',supply:'.82fr',price:'1.14fr',owner:'.72fr',phone:'1.18fr'};
-      return '24px '+cols.map(([key])=>`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 146px';
+      const widths={type:'.78fr',village:'.78fr',apartment:'1.16fr',dong:'.64fr',room:'.64fr',supply:'.82fr',price:'1.14fr',owner:'.72fr',phone:'1.18fr'};
+      return '24px '+cols.map(([key])=>`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
     }
     return '24px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' 174px';
   }
@@ -237,11 +237,11 @@
     .properties-page .typed-list-table .lc-toggle {grid-column:1/-1;}
     @media(min-width:801px) {
       html body.properties-page .typed-property-row .listing-actions {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:start;}
-      .properties-page .typed-property-row .lc-actions-main,.properties-page .typed-property-row .lc-actions-side,
-      .properties-page .typed-property-row .ktop-mobile-more,.properties-page .typed-property-row .ktop-mobile-more-body {display:contents;}
+      .properties-page .typed-property-row .lc-actions-main,.properties-page .typed-property-row .lc-actions-side {display:contents!important;}
+      .properties-page .typed-property-row .ktop-mobile-more[hidden] {display:none!important;}
       .properties-page .typed-property-row .ktop-mobile-more > summary {display:none;}
       html body.properties-page .typed-property-row .listing-actions .btn {width:100%;min-height:30px;box-sizing:border-box;border-radius:6px;padding:5px 4px;font-size:12px;}
-      html body.properties-page .typed-property-row .lc-status-chip {grid-column:1/-1;width:100%;min-height:30px;box-sizing:border-box;border-radius:6px;}
+      html body.properties-page .typed-property-row .lc-status-chip {grid-column:1/-1!important;width:100%!important;min-width:0;min-height:30px;box-sizing:border-box;border-radius:6px;padding:5px 18px 5px 8px;font-size:12px;line-height:1.3;text-align:center;}
     }
     @media(min-width:801px) and (max-width:1200px) {
       .properties-page .typed-property-row .listing-sort-btn {font-size:11px;}
