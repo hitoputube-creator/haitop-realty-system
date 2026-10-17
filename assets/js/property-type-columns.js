@@ -5,7 +5,7 @@
   const schemas = {
     '': [['type','매물유형'],['name','매물명'],...common],
     '상가사무실': [['building','건물명'],['address','소재지'],['floorRoom','층/호실'],['exclusive','전용면적'],...common],
-    '토지': [['address','소재지'],['parcel','블럭/필지'],['landArea','토지면적'],['landUse','지목'],['zoning','용도지역'],['unitPrice','평당가'],...common],
+    '토지': [['address','소재지'],['parcel','블럭/필지'],['landArea','토지면적'],['unitPrice','평당가'],...common],
     '주거용': [['village','마을'],['apartment','단지명'],['dong','동'],['room','호수'],['supply','분양평형/타입'],...common],
     '공장창고': [['address','소재지'],['landArea','대지면적'],['buildingArea','건축면적'],['totalArea','연면적'],...common],
     '건물빌딩': [['building','건물명'],['address','소재지'],['landArea','대지면적'],['totalArea','연면적'],['floors','층수'],...common]
@@ -193,7 +193,7 @@
     const table=document.createElement('table');table.className='typed-list-table';
     if (isKtopResidential()) table.classList.add('residential-property-table');
     const header=makeListingColumnHeader();
-    table.innerHTML='<colgroup><col style="width:32px">'+cols.map(([key])=>'<col'+(key==='type'?' style="width:112px"':key==='price'?' style="width:138px"':key==='phone'?' style="width:150px"':'')+'>').join('')+'<col style="width:'+actionsColWidth(true)+'px"></colgroup><thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
+    table.innerHTML='<colgroup><col style="width:32px">'+cols.map(([key])=>'<col'+(key==='type'?' style="width:112px"':key==='price'?' style="width:138px"':key==='phone'?' style="width:172px"':'')+'>').join('')+'<col style="width:'+actionsColWidth(true)+'px"></colgroup><thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
     const body=table.querySelector('tbody');
     items.forEach(item=>{
       const card=makeCard(item);
