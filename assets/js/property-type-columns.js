@@ -4,7 +4,7 @@
   const common = [['deal','구분'],['price','가격'],['owner','소유주'],['phone','연락처']];
   const schemas = {
     '': [['type','매물유형'],['name','매물명'],...common],
-    '상가사무실': [['presaleStatus','분양상태'],['building','건물명'],['address','소재지'],['floorRoom','층/호실'],['exclusive','전용면적'],['maintenance','관리비'],['premium','권리금'],...common],
+    '상가사무실': [['presaleStatus','분양상태'],['building','건물명'],['address','소재지'],['floorRoom','층/호실'],['exclusive','전용면적'],...common],
     '토지': [['address','소재지'],['parcel','블럭/필지'],['landArea','토지면적'],['landUse','지목'],['zoning','용도지역'],['unitPrice','평당가'],...common],
     '주거용': [['village','마을'],['apartment','단지명'],['dong','동'],['room','호수'],['supply','분양평형/타입'],...common],
     '공장창고': [['address','소재지'],['landArea','대지면적'],['buildingArea','건축면적'],['totalArea','연면적'],...common],
