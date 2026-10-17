@@ -186,7 +186,7 @@
       box-shadow: 0 0 60px rgba(0,0,0,0.8);
       touch-action: none; user-select: none;
       transform-origin: center center;
-      will-change: transform;
+      will-change: auto;
     }
     #lightbox-close {
       position: fixed; top: 18px; right: 22px;
@@ -1055,6 +1055,7 @@ function goOverview(){ window.location.href = HitopResourceRooms.detailUrl('buil
 const LB_MIN_SCALE = 1, LB_MAX_SCALE = 5, LB_STEP = 0.5;
 let lbScale = 1, lbX = 0, lbY = 0;
 let lbRotation = 0;
+let lbVectorSize = null, lbIsVector = false;
 let lbMaterial = null, lbSaving = false;
 let lbDragging = false, lbLastX = 0, lbLastY = 0;
 let lbPinchStartDist = 0, lbPinchStartScale = 1;
@@ -1064,9 +1065,26 @@ const lbImg = () => document.getElementById('lightbox-img');
 function lbApplyTransform() {
   const img = lbImg();
   const sideways = lbRotation % 180 !== 0;
-  img.style.maxWidth = sideways ? 'calc(90vh - 100px)' : '94vw';
-  img.style.maxHeight = sideways ? '94vw' : 'calc(90vh - 100px)';
-  img.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale}) rotate(${lbRotation}deg)`;
+  // SVG must be laid out at the requested display size so the browser rerenders
+  // its geometry, rather than magnifying a cached compositing-layer bitmap.
+  if (lbIsVector && lbVectorSize) {
+    const maxW = sideways ? window.innerHeight * 0.9 - 100 : window.innerWidth * 0.94;
+    const maxH = sideways ? window.innerWidth * 0.94 : window.innerHeight * 0.9 - 100;
+    const fit = Math.min(maxW / lbVectorSize.width, maxH / lbVectorSize.height, 1);
+    img.style.maxWidth = 'none';
+    img.style.maxHeight = 'none';
+    img.style.width = Math.max(1, lbVectorSize.width * fit * lbScale) + 'px';
+    img.style.height = Math.max(1, lbVectorSize.height * fit * lbScale) + 'px';
+    img.style.flexShrink = '0';
+    img.style.transform = `translate(${lbX}px, ${lbY}px) rotate(${lbRotation}deg)`;
+  } else {
+    img.style.width = '';
+    img.style.height = '';
+    img.style.flexShrink = '';
+    img.style.maxWidth = sideways ? 'calc(90vh - 100px)' : '94vw';
+    img.style.maxHeight = sideways ? '94vw' : 'calc(90vh - 100px)';
+    img.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale}) rotate(${lbRotation}deg)`;
+  }
   img.style.cursor = lbScale > 1 ? (lbDragging ? 'grabbing' : 'grab') : 'default';
   const label = document.getElementById('lb-zoom-reset');
   if (label) label.textContent = Math.round(lbScale * 100) + '%';
@@ -1098,6 +1116,14 @@ function openLightbox(url, caption, material = null) {
   lbMaterial = material;
   document.getElementById('lb-save-rotation').hidden = !material;
   const img = lbImg();
+  lbVectorSize = null;
+  lbIsVector = /\.svg(?:[?#]|$)/i.test(url);
+  img.onload = () => {
+    if (lbIsVector && img.naturalWidth && img.naturalHeight) {
+      lbVectorSize = { width: img.naturalWidth, height: img.naturalHeight };
+      lbApplyTransform();
+    }
+  };
   img.src = url;
   document.getElementById('lightbox-caption').textContent = caption || '';
   lbX = 0; lbY = 0; lbScale = 1; lbRotation = 0;
