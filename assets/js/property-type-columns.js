@@ -13,10 +13,21 @@
   const first = (...values) => values.find(v => v !== undefined && v !== null && String(v).trim() !== '') ?? '';
   const num = v => Number(String(v ?? '').replace(/[^0-9.-]/g,'')) || 0;
   const area = (py,m2) => first(py) !== '' ? String(py)+'평' : first(m2) !== '' ? String(m2)+'㎡' : '';
+  const isKtopResidential = () => document.documentElement.dataset.officeTheme === 'ktop' && currentMajor === '주거용';
+  const shortArea = value => {
+    const text=String(value).trim().replace(/,/g,'');
+    const match=text.match(/^(-?\d+)(?:\.(\d+))?/);
+    return match ? match[1]+(match[2] ? '.'+match[2].slice(0,2) : '') : text;
+  };
   const won = v => num(v) ? num(v).toLocaleString('ko-KR')+'원' : '';
   const man = v => num(v) ? num(v).toLocaleString('ko-KR')+'만원' : (String(v ?? '').trim() || '');
   function fields(item) {
     const u=item.apartmentUnitData || {};
+    const supplyPy=first(item.areaSupplyPy,item.supplyAreaPy,item.saleAreaPy,u.분양평수,u.평형);
+    const supplyM2=first(item.areaSupplyM2,item.supplyAreaM2);
+    const supplySize=isKtopResidential()
+      ? (supplyPy !== '' ? shortArea(supplyPy)+'평' : supplyM2 !== '' ? shortArea(supplyM2)+'㎡' : '')
+      : area(supplyPy,supplyM2);
     const landPy=first(item.landAreaPy,item.land_area_py,item.land_py,item.areaPy);
     const landM2=first(item.landAreaM2,item.land_area_sqm,item.areaM2);
     const sale=first(item.salePrice, num(first(item.land_price,item.factory_price,item.biz_price))*10000);
@@ -44,7 +55,7 @@
       totalArea:area(first(item.totalFloorAreaPy,item.factory_totalArea_py,item.grossFloorAreaPy),first(item.totalFloorAreaM2,item.factory_totalArea_sqm,item.grossFloorAreaM2)),
       height:first(item.ceilingHeight,item.floorHeight,item.height,item.factory_height),
       floors:first(item.totalFloors,item.floorInfo,item.floor),
-      supply:[area(first(item.areaSupplyPy,item.supplyAreaPy,item.saleAreaPy,u.분양평수,u.평형),first(item.areaSupplyM2,item.supplyAreaM2)),first(item.apartmentType,item.unitType,item.areaType,u.타입)].filter(Boolean).join(' / ')
+      supply:[supplySize,first(item.apartmentType,item.unitType,item.areaType,u.타입)].filter(Boolean).join(' / ')
     };
   }
   function columns() {
@@ -98,9 +109,26 @@
         if (no) node.appendChild(no);
       }
     }
+    if (key==='apartment' && isKtopResidential()) {
+      const name=Array.from(node.childNodes).filter(child=>child.nodeType===Node.TEXT_NODE).map(child=>child.textContent).join('').trim();
+      const parts=name.match(/^(.+?)\s*(\([^()]+\))$/);
+      if (parts) {
+        const no=node.querySelector('.lc-no');
+        const main=document.createElement('span');main.className='lc-apartment-main';main.textContent=parts[1];
+        const sub=document.createElement('span');sub.className='lc-apartment-sub';sub.textContent=parts[2];
+        node.replaceChildren(main,sub,...(no ? [no] : []));
+      }
+    }
+    if (key==='supply' && isKtopResidential()) {
+      const [size,...typeParts]=String(listingColumnValue(item,key) || '').split(' / ');
+      const sizeLine=document.createElement('span');sizeLine.className='lc-supply-size';sizeLine.textContent=size || '-';
+      const typeLine=document.createElement('span');typeLine.className='lc-supply-type';typeLine.textContent=typeParts.join(' / ') || '-';
+      node.replaceChildren(sizeLine,typeLine);
+    }
     if (key==='price') {
       const price=node.querySelector('.lc-price-text');
       if(price) {
+        if (isKtopResidential() && price.textContent.trim() !== '-') node.classList.add('has-price');
         const lines=price.textContent.split(/\s*\/\s*(?=월세)/);
         price.replaceChildren(...lines.map(text=>{
           const line=document.createElement('span');line.className='lc-price-line';line.textContent=text;return line;
@@ -121,6 +149,7 @@
     if (actions) actions.style.gridArea='auto';
     card.replaceChildren(select,...nodes,actions);
     card.classList.add('typed-property-row');
+    if (isKtopResidential()) card.classList.add('residential-property-row');
     if (item.profitRecommendation || window.CommercialPriceCore?.recommendation(item)) {
       card.classList.add('profit-recommended-row');
       const target=card.querySelector('.listing-cell-building,.listing-cell-name,.listing-cell-address');
@@ -130,12 +159,17 @@
     return card;
   };
   function template(cols) {
+    if (isKtopResidential()) {
+      const widths={type:'.78fr',village:'.78fr',apartment:'1.45fr',dong:'.64fr',room:'.64fr',supply:'.82fr',price:'1.14fr',owner:'.72fr',phone:'1.18fr'};
+      return '24px '+cols.map(([key])=>`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 146px';
+    }
     return '24px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' 174px';
   }
   makeListingColumnHeader=function() {
     const h=document.createElement('div');h.className='listing-column-header typed-property-row';
+    if (isKtopResidential()) h.classList.add('residential-property-row');
     h.style.setProperty('--typed-columns',template(columns()));
-    const sort=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+label+' '+listingSortMark(key)+'</button>';
+    const sort=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+(key==='supply' && isKtopResidential() ? '분양평형<br>타입' : label)+' '+listingSortMark(key)+'</button>';
     const filter=(key,label)=>'<button type="button" class="listing-filter-btn'+(listingColumnFilters[key]?' active':'')+'" onclick="openColumnFilter(\''+key+'\',this,event)" aria-label="'+label+' 필터">▾</button>';
     h.innerHTML='<div>선택</div>'+columns().map(([key,label])=>'<div>'+sort(key,label)+filter(key,label)+(key==='type'?'<span class="lc-deal-filter">'+sort('deal','구분')+filter('deal','구분')+'</span>':'')+'</div>').join('')+'<div>'+(columnFilterCount()?'<button type="button" class="listing-filter-reset" onclick="clearColumnFilters()">필터 해제</button>':'관리')+'</div>';
     return h;
@@ -145,6 +179,7 @@
     const cols=columns();
     const wrap=document.createElement('div');wrap.className='typed-list-table-wrap';
     const table=document.createElement('table');table.className='typed-list-table';
+    if (isKtopResidential()) table.classList.add('residential-property-table');
     const header=makeListingColumnHeader();
     table.innerHTML='<colgroup><col style="width:32px">'+cols.map(([key])=>'<col'+(key==='type'?' style="width:112px"':key==='price'?' style="width:138px"':key==='phone'?' style="width:118px"':'')+'>').join('')+'<col style="width:124px"></colgroup><thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
     const body=table.querySelector('tbody');
@@ -219,6 +254,23 @@
       .properties-page .typed-property-row .listing-cell-select {grid-column:1;grid-row:1 / span 12;}
       .properties-page .typed-property-row .listing-cell-actions {grid-column:2 / -1;}
       .properties-page .typed-property-row .listing-cell:not(.listing-cell-select):not(.listing-cell-actions)::before {display:block;content:attr(data-label);font-size:11px;color:var(--text-muted);margin-bottom:3px;}
+    }
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-main,
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-sub {display:block;line-height:1.3;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-main {font-weight:750;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-sub {color:#4c6582;font-weight:650;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-supply {display:flex;flex-direction:column;gap:3px;line-height:1.25;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-supply-size {font-weight:750;white-space:nowrap;font-variant-numeric:tabular-nums;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-supply-type {color:#526b88;white-space:nowrap;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-dong,
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-room {font-size:14px;font-weight:750;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-price.has-price {padding:5px 6px;border-left:3px solid #1767d2;border-radius:5px;background:#eaf2ff;overflow:visible;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-price.has-price .lc-price-text {font-size:14px;font-weight:800;color:#1459b2;line-height:1.4;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-sort-btn[aria-label='분양평형/타입 정렬'] {line-height:1.2;white-space:normal;}
+    @media(min-width:801px) {
+      html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-phone {overflow:visible;}
+      html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-phone > span {font-size:12px;white-space:nowrap;overflow:visible;text-overflow:clip;overflow-wrap:normal;}
+      html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-actions .btn {padding-left:2px;padding-right:2px;}
     }
   `;
   document.head.appendChild(style);
