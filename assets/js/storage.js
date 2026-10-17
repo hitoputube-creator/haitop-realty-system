@@ -303,9 +303,11 @@ function apartmentStaticUnit(key, dong, ho) {
   const number = Number(normalizeApartmentUnit(ho, "호"));
   if (!rule || !Number.isInteger(number)) return miss;
   const floor = Math.floor(number / 100), line = number % 100;
-  if (floor < 1 || floor > rule.maxFloor || (rule.exclude || []).includes(number)) return miss;
-  if (rule.lineMaxFloor && rule.lineMaxFloor[line] && floor > rule.lineMaxFloor[line]) return miss;
-  const type = rule.lines && rule.lines[String(line)];
+  if (floor < 1 || floor > rule.maxFloor) return miss;
+  const override = rule.floorOverrides && rule.floorOverrides[String(number)];
+  if (!override && (rule.exclude || []).includes(number)) return miss;
+  if (!override && rule.lineMaxFloor && rule.lineMaxFloor[line] && floor > rule.lineMaxFloor[line]) return miss;
+  const type = override || (rule.lines && rule.lines[String(line)]);
   if (!type) return miss;
   const info = (complex.types && complex.types[type]) || {};
   const positive = v => v != null && Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null;
