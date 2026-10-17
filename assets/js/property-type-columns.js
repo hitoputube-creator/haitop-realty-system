@@ -190,7 +190,7 @@
     const table=document.createElement('table');table.className='typed-list-table';
     if (isKtopResidential()) table.classList.add('residential-property-table');
     const header=makeListingColumnHeader();
-    table.innerHTML='<colgroup><col style="width:32px">'+cols.map(([key])=>'<col'+(key==='type'?' style="width:112px"':key==='price'?' style="width:138px"':key==='phone'?' style="width:118px"':'')+'>').join('')+'<col style="width:124px"></colgroup><thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
+    table.innerHTML='<colgroup><col style="width:32px">'+cols.map(([key])=>'<col'+(key==='type'?' style="width:112px"':key==='price'?' style="width:138px"':key==='phone'?' style="width:150px"':'')+'>').join('')+'<col style="width:92px"></colgroup><thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
     const body=table.querySelector('tbody');
     items.forEach(item=>{
       const card=makeCard(item);
@@ -235,14 +235,14 @@
     .properties-page .typed-property-row .lc-type {font-size:12px;white-space:normal;width:auto;}
     .properties-page .lc-price-line {display:block;line-height:1.5;}
     .properties-page .typed-property-row .lc-price-text {font-size:13px;white-space:normal;overflow:visible;}
-    .properties-page .typed-property-row .listing-cell-phone > span {white-space:normal;overflow:visible;overflow-wrap:anywhere;}
+    .properties-page .typed-property-row .listing-cell-phone > span {white-space:nowrap;overflow:visible;overflow-wrap:normal;word-break:normal;}
     .properties-page .typed-property-row .listing-actions {min-width:0;width:100%;box-sizing:border-box;}
     .properties-page .typed-property-row .listing-actions .btn {padding:5px 4px;}
     .properties-page .lc-deal-filter {display:inline-flex;margin-left:4px;}
     .properties-page .typed-list-table td {overflow-wrap:anywhere;vertical-align:top;}
-    .properties-page .typed-list-table .listing-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;}
+    .properties-page .typed-list-table .listing-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;}
     .properties-page .typed-list-table .lc-actions-main,.properties-page .typed-list-table .lc-actions-side {display:contents;}
-    .properties-page .typed-list-table .listing-actions .btn,.properties-page .typed-list-table .lc-status-chip {width:100%;min-width:0;box-sizing:border-box;padding:5px 4px;}
+    .properties-page .typed-list-table .listing-actions .btn,.properties-page .typed-list-table .lc-status-chip {width:100%;min-width:0;box-sizing:border-box;padding:3px 2px;font-size:11px;}
     .properties-page .typed-list-table .lc-toggle {grid-column:1/-1;}
     @media(min-width:801px) {
       html body.properties-page .typed-property-row .listing-actions {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:start;}
