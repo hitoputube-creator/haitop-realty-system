@@ -56,6 +56,17 @@ Deno.serve(async req=>{
     if(!Array.isArray(parsed.rows)||parsed.rows.length>300)return json({error:'호실 분석 결과를 확인할 수 없습니다.'},422);
     const keys=['호수','층','전용_평','분양_평','평당가','분양금액','현_매매가격','보증금','월차임','분양_VAT','현업종','가격표비고','review','note'];
     const rows=parsed.rows.map((r:Record<string,unknown>)=>Object.fromEntries(keys.map(k=>[k,r[k]??null])));
-    return json({rows,warnings:Array.isArray(parsed.warnings)?parsed.warnings.slice(0,30):[]});
+    const warnings:string[]=Array.isArray(parsed.warnings)?parsed.warnings.slice(0,30):[];
+    // Gemini가 금액을 "원 단위 그대로"로 반환해 만원 변환을 빠뜨리는 경우가 있어,
+    // 평당가×면적과 비교해 10000배 어긋난 값은 자동으로 만원 단위로 되돌린다.
+    const num=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)?v:null;
+    for(const row of rows as Record<string,unknown>[]){
+      const presale=num(row.분양금액),pg=num(row.평당가),area=num(row.분양_평)??num(row.전용_평);
+      if(presale!==null&&pg!==null&&pg>0&&area!==null&&area>0){
+        const ratio=presale/(pg*area);
+        if(ratio>=3000&&ratio<=30000){row.분양금액=Math.round(presale/10000*100)/100;warnings.push((row.호수||'?')+'호 분양금액을 원 단위로 읽어 자동으로 만원 단위로 보정했습니다. 꼭 다시 확인하세요.');}
+      }
+    }
+    return json({rows,warnings});
   }catch(e){return json({error:e instanceof Error?e.message:'가격표 분석 실패'},500);}
 });

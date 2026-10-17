@@ -151,6 +151,13 @@
       rows=data.rows;render(data.warnings||[]);el('priMessage').textContent=rows.length?rows.length+'개 호실을 읽었습니다. 원본과 비교하고 숫자를 확인해주세요.':'호실을 읽지 못했습니다. 선명한 원본 가격표를 사용해주세요.';
     }catch(e){el('priMessage').textContent='분석 실패: '+e.message;}finally{lock(false);}
   }
+  // 평당가×면적 대비 금액이 10000배 가량 부풀려진(=원 단위를 만원으로 못 바꾼) 값인지 확인
+  function scaleDoubtful(row){
+    const pg=Number(row.평당가),area=Number(row.분양_평)||Number(row.전용_평);
+    if(!(pg>0)||!(area>0))return false;
+    const check=v=>{if(!(v>0))return false;const ratio=v/(pg*area);return ratio>=3000&&ratio<=30000;};
+    return check(Number(row.분양금액))||check(Number(row.현_매매가격));
+  }
   function render(warnings){
     el('priWarnings').textContent=warnings.map(String).join(' · ');el('priWarnings').className='pri-warning';el('priAll').checked=false;
     const counts=new Map();rows.forEach(r=>{const key=normalizeRoom(r.호수);counts.set(key,(counts.get(key)||0)+1);});
@@ -158,7 +165,7 @@
     rows.forEach(row=>{const old=existing.find(u=>normalizeRoom(u.호수)===normalizeRoom(row.호수));if(!old)fresh++;else if(changedFields(row,old).length)updates++;else unchanged++;});
     el('priDiffSummary').textContent='신규 '+fresh+'개 · 변경 '+updates+'개 · 동일 '+unchanged+'개';
     el('priRows').innerHTML=rows.map((row,i)=>{
-      const room=normalizeRoom(row.호수),old=existing.find(u=>normalizeRoom(u.호수)===room);const changed=changedFields(row,old);const doubtful=row.review||!room||counts.get(room)>1;
+      const room=normalizeRoom(row.호수),old=existing.find(u=>normalizeRoom(u.호수)===room);const changed=changedFields(row,old);const doubtful=row.review||!room||counts.get(room)>1||scaleDoubtful(row);
       return '<tr data-row="'+i+'"><td><input type="checkbox" data-selected '+(!doubtful&&(!old||changed.length)?'checked':'')+' aria-label="'+esc(room)+'호 선택"></td><td><input data-key="호수" value="'+esc(room)+'" aria-label="호수"></td><td>'+ (old?(changed.length?'변경 '+changed.length+'개':'동일'):'신규 호실')+'</td>'+fields.map(([key,label])=>'<td'+(changed.includes(key)?' style="background:rgba(216,184,74,.12)"':'')+'><label><input type="checkbox" data-apply="'+key+'" '+(changed.includes(key)?'checked':'')+' aria-label="'+label+' 반영"></label><input data-key="'+key+'" type="'+(['층','분양_VAT','현업종','가격표비고'].includes(key)?'text':'number')+'" '+(!['층','분양_VAT','현업종','가격표비고'].includes(key)?'min="0" step="any"':'')+' value="'+esc(row[key]??'')+'" aria-label="'+label+'">'+(old&&old[key]!=null?'<div>기존: '+esc(old[key])+'</div>':'')+'</td>').join('')+'<td class="pri-warning">'+esc([doubtful?'확인 필요':'',counts.get(room)>1?'중복 호실':'',row.note].filter(Boolean).join(' · '))+'</td></tr>';
     }).join('');el('priReview').hidden=!rows.length;
   }
