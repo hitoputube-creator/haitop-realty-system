@@ -867,6 +867,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
       body.appendChild(side);
       more.append(summary, body);
       actions.appendChild(more);
+      syncCardActions(card);
     }
     var checkbox = card.querySelector('input[data-sel]');
     var title = card.querySelector('.listing-cell-apartment');
@@ -874,8 +875,27 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
     return card;
   }
   var mobileMedia = window.matchMedia('(max-width:800px)');
+  function syncCardActions(card) {
+    var actions = card.querySelector('.listing-actions');
+    var main = card.querySelector('.lc-actions-main');
+    var more = card.querySelector('.ktop-mobile-more');
+    var body = more && more.querySelector('.ktop-mobile-more-body');
+    var side = card.querySelector('.lc-actions-side');
+    var deleteBtn = card.querySelector('.lc-delete-btn');
+    if (!actions || !main || !more || !body || !side) return;
+    if (mobileMedia.matches) {
+      if (deleteBtn) body.prepend(deleteBtn);
+      body.appendChild(side);
+      more.hidden = false;
+    } else {
+      if (deleteBtn) main.appendChild(deleteBtn);
+      actions.appendChild(side);
+      more.open = false;
+      more.hidden = true;
+    }
+  }
   mobileMedia.addEventListener('change', function (event) {
-    document.querySelectorAll('.ktop-mobile-more').forEach(function (more) { more.open = !event.matches; });
+    document.querySelectorAll('#listingContainer .listing-row-card').forEach(syncCardActions);
   });
   var originalMakeCard = makeCard;
   makeCard = function (item, options) { return arrangeMobileCard(originalMakeCard(item, options)); };
@@ -891,7 +911,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   });
 })();
 </script>
-<script src="assets/js/property-type-columns.js?v=20261017-ktop-residential-layout"></script>
+<script src="assets/js/property-type-columns.js?v=20261017-ktop-status-width"></script>
 <script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
 <script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
 </body>
