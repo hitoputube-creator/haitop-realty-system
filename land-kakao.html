@@ -11,15 +11,17 @@
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
-<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261008-ktop-v3">
+<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261017-ktop-all-maps">
 <script>(function(){var office=typeof OfficeConfig!=='undefined'?OfficeConfig.id:(new URLSearchParams(location.search).get('office')||sessionStorage.getItem('realty_selected_office')||'hitop');document.documentElement.dataset.officeTheme=office;if(office!=='ktop'){var link=document.querySelector('link[href*="white-navy-workspace.css"]');if(link)link.disabled=true;}})();</script>
 </head>
-<body>
+<body class="land-map-page">
 <main class="page land-kakao-page">
   <header class="header">
     <div class="logo-icon" aria-hidden="true"></div>
     <div class="logo-text"><div class="logo-main">하이탑부동산 실제 지도 보기</div><div class="logo-sub">카카오맵</div></div>
     <nav class="main-nav" aria-label="페이지 이동">
+      <a class="nav-link" href="listings-kakao.html?category=home">주거 매물 지도</a>
+      <a class="nav-link" href="shop-kakao.html">상가 자료 지도</a>
       <a class="nav-link" id="kakaoBackLink" href="land-location.html">택지 위치도로</a>
       <a class="nav-link" href="land-resources.html">택지자료 목록으로</a>
       <a class="nav-link" href="property-main.html?category=land">매물관리 메인으로</a>

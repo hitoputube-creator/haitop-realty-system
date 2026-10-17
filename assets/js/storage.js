@@ -545,6 +545,33 @@ function setupApartmentListingForm(prefix, category2Id) {
   autoStatus.style.cssText="font-size:.78rem;padding:0 10px 8px;color:var(--gold)";
   autoStatus.setAttribute("role","status");host.firstElementChild.appendChild(autoStatus);
   host._autoStatus=autoStatus;
+  const duplicateHint=document.createElement("div");
+  duplicateHint.setAttribute("role","alert");
+  duplicateHint.style.cssText="display:none;grid-column:1/-1;padding:9px 12px;border:1px solid #e7a49e;border-radius:8px;background:#fff0ee;color:#9c2921;font-size:.83rem;font-weight:700";
+  hoInput.closest(".umgrid").appendChild(duplicateHint);
+  let duplicateTimer, duplicateRequest=0;
+  const checkDuplicate=()=>{
+    clearTimeout(duplicateTimer);
+    const request=++duplicateRequest;
+    duplicateHint.style.display="none";
+    if(document.getElementById(category2Id).value!=="아파트")return;
+    const value=key=>document.getElementById(prefix+"apt_"+key).value.trim();
+    const item={category2:"아파트",complexName:value("아파트명"),dong:value("동"),ho:value("호수")};
+    if(!item.complexName||!item.dong||!item.ho)return;
+    duplicateTimer=setTimeout(async()=>{
+      try{await assertUniqueApartmentUnit(item,host._apartmentItem?.id);}
+      catch(error){
+        if(request!==duplicateRequest)return;
+        duplicateHint.textContent=error.code==="DUPLICATE_APARTMENT_UNIT" ? "⚠ "+error.message : "중복 확인에 실패했습니다. 저장할 때 다시 확인합니다.";
+        duplicateHint.style.display="block";
+      }
+    },450);
+  };
+  for(const key of ["아파트명","동","호수"]){
+    const input=document.getElementById(prefix+"apt_"+key);
+    input.addEventListener("input",checkDuplicate);
+    input.addEventListener("change",checkDuplicate);
+  }
   autoButton.addEventListener("click",async()=>{
     const p=key=>document.getElementById(prefix+"apt_"+key);
     if(p("권리구분").value==='분양권'){autoStatus.textContent="준공 전 분양권은 분양자료 기준으로 면적과 타입을 직접 입력해 저장하세요.";return;}
@@ -1248,6 +1275,42 @@ async function getListingsRaw() {
     if (rows.length < PAGE) break;
   }
   return all;
+}
+
+// 등록·수정 화면에서 같은 아파트 동·호수를 다시 저장하지 않도록 확인한다.
+// 사무소별 Supabase 프로젝트의 전체 행을 페이지별로 읽어 오래된 매물도 빠뜨리지 않는다.
+async function assertUniqueApartmentUnit(item, excludeId = null) {
+  if (item.category2 !== "아파트") return;
+  const normalize = value => String(value || "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();
+  const unit = (value, suffix) => normalize(value).replace(new RegExp(suffix + "$"), "");
+  const fields = listing => {
+    const source = listing.apartmentUnitData || listing.import_unit_snapshot || {};
+    return {
+      name: listing.complexName || source.아파트명 || listing.buildingName,
+      dong: listing.dong || source.동,
+      ho: listing.ho || source.호 || source.호수
+    };
+  };
+  const current = fields(item);
+  const name = normalize(current.name);
+  const dong = unit(current.dong, "동");
+  const ho = unit(current.ho, "호");
+  if (!name || !dong || !ho) return;
+  const rows = await getListingsRaw();
+  const duplicate = rows.find(row => {
+    if (String(row.id) === String(excludeId)) return false;
+    const existing = normalizeListingRow(row);
+    if (existing.category2 !== "아파트") return false;
+    const previous = fields(existing);
+    return normalize(previous.name) === name
+      && unit(previous.dong, "동") === dong
+      && unit(previous.ho, "호") === ho;
+  });
+  if (duplicate) {
+    const error = new Error(`${current.name} ${dong}동 ${ho}호는 이미 등록된 매물입니다. 기존 매물을 확인해 주세요.`);
+    error.code = "DUPLICATE_APARTMENT_UNIT";
+    throw error;
+  }
 }
 
 async function getListingById(id) {
