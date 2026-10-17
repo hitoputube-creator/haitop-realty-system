@@ -168,8 +168,7 @@
     return card;
   };
   function actionsColWidth(table) {
-    if (currentMajor === '공장창고') return table ? 78 : 148;
-    return table ? 92 : 174;
+    return table ? 78 : 148;
   }
   function template(cols) {
     if (isKtopResidential()) {
