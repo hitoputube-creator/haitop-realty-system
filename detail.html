@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261016-carrier-mvno"></script>
+<script src="assets/js/storage.js?v=20261017-unique-apartment-unit"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1918,6 +1918,7 @@ function closeHomepageTab(tab) {
 
         Object.assign(updated, apartmentFields);
         try {
+          await assertUniqueApartmentUnit(updated, id);
           if (newImageFiles.length) {
             const uploadedUrls = await uploadListingImages(newImageFiles, id, _editImageUrls.length);
             const allUrls = _editImageUrls.concat(uploadedUrls).slice(0, MAX_LISTING_IMAGES);
@@ -1940,6 +1941,7 @@ function closeHomepageTab(tab) {
           setTimeout(() => location.reload(), 1000);
         } catch(e) {
           showToast("❌ 수정 실패: " + e.message);
+          if (e.code === "DUPLICATE_APARTMENT_UNIT") alert(e.message);
           btn.disabled = false; btn.textContent = "저장";
         }
       });

@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-  <script src="assets/js/storage.js?v=20261016-generic-memo"></script>
+  <script src="assets/js/storage.js?v=20261017-unique-apartment-unit"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1070,6 +1070,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     btn.disabled = true; btn.textContent = '저장 중...';
 
     try {
+      await assertUniqueApartmentUnit(item);
       if (_selectedImages.length) {
         const urls = await uploadListingImages(_selectedImages, item.id);
         const importedUrls = uniqueRegisterUrls(_importedImageUrls);
@@ -1113,6 +1114,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       setTimeout(() => location.href = 'properties.html', 1000);
     } catch(e) {
       showToast('❌ 저장 실패: ' + e.message);
+      if (e.code === 'DUPLICATE_APARTMENT_UNIT') alert(e.message);
       btn.disabled = false; btn.textContent = '저장하기';
     }
   });
