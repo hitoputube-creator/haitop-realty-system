@@ -1256,22 +1256,35 @@ textarea { resize: vertical; min-height: 120px; }
 .listing-cell-owner,
 .listing-cell-phone {
   color: #d7deea;
-  overflow: hidden;
+  overflow: visible;
   word-break: keep-all;
 }
 .listing-cell-owner {
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.lc-owner-main {
+  display: block;
+}
+.lc-owner-sub {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.listing-cell-phone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
 }
 .listing-cell-phone > span {
-  display: block;
+  display: inline;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .lc-phone-secondary {
-  margin-top: 2px;
   color: var(--text-muted);
   font-size: 11px;
 }

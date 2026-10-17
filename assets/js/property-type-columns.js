@@ -109,6 +109,15 @@
         if (no) node.appendChild(no);
       }
     }
+    if (key==='owner') {
+      const name=String(listingColumnValue(item,key) || '').trim();
+      const parts=name.match(/^(.+?)\s*(\([^()]+\))$/);
+      if (parts) {
+        const main=document.createElement('span');main.className='lc-owner-main';main.textContent=parts[1];
+        const sub=document.createElement('span');sub.className='lc-owner-sub';sub.textContent=parts[2];
+        node.replaceChildren(main,sub);
+      }
+    }
     if (key==='apartment' && isKtopResidential()) {
       const name=Array.from(node.childNodes).filter(child=>child.nodeType===Node.TEXT_NODE).map(child=>child.textContent).join('').trim();
       const parts=name.match(/^(.+?)\s*(\([^()]+\))$/);
