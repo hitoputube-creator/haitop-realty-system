@@ -2082,7 +2082,7 @@ async function deleteBFile(id) {
 
   function commercialPriceText(u) {
     const p=CommercialPriceCore.price(u,true);
-    return p.amount!==null ? toKorAmt(p.amount) : '-';
+    return p.amount!==null ? toPlainWon(p.amount) : '-';
   }
   function commercialOccupancy(u) {
     const industry = String(u.현업종 || '').trim();
@@ -2523,6 +2523,15 @@ async function deleteBFile(id) {
     } catch(e) {
       if (typeof showToast === "function") showToast("삭제 실패: " + e.message);
     } finally { $("umDelete").disabled = false; }
+  }
+
+  // 입력: 만원 단위 숫자, 출력: "880,000,000원" (쉼표 구분 원 단위 숫자)
+  function toPlainWon(val) {
+    if (val === null || val === undefined || String(val).trim() === '') return '';
+    const n = Number(String(val).replace(/,/g, ''));
+    const won = Math.round(n * 10000);
+    if (!Number.isSafeInteger(won) || won < 0) return '';
+    return won.toLocaleString('ko-KR') + '원';
   }
 
   // ── 한글 금액 변환 ──
