@@ -1921,7 +1921,7 @@ async function deleteBFile(id) {
     const head=$('unitsTableHead');
     head.closest('table').classList.add('residential-unit-table');
     if(!head.dataset.sortReady){
-      const columns=[['dong','동'],['room','호수'],['sizeType','분양면적·타입'],['deal','거래구분'],['sale','매매가(만)'],['rent','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['received','접수일자'],['listed','관리']];
+      const columns=[['dong','동'],['room','호수'],['sizeType','분양면적·타입'],['deal','거래구분'],['sale','매매가(만)'],['rent','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['listed','관리']];
       head.innerHTML='<tr><th class="unit-select-cell"><input type="checkbox" id="unitSelectAll" aria-label="현재 목록 전체선택"></th>'+columns.map(([key,label])=>'<th><button type="button" class="unit-sort" data-unit-sort="'+key+'" aria-label="'+label+' 정렬"><span>'+label+'</span><span class="unit-sort-arrow" aria-hidden="true">↕</span></button></th>').join('')+'</tr>';
       head.dataset.sortReady='true';
       head.querySelectorAll('.unit-sort').forEach(button=>{
@@ -1965,7 +1965,7 @@ async function deleteBFile(id) {
       const sale = currentRentPrice(u.현_매매가격, null);
       const tenant = u.세입자현황 || u.공실여부 || '미확인';
       const area=residentialUnitArea(u);
-      return `<tr>${unitCheckbox(u)}<td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(area.size)}${area.supply ? '<br><small>'+area.supply.toLocaleString('ko-KR',{maximumFractionDigits:2})+'㎡</small>' : ''}<br>${esc(area.type)}</td><td>${esc(unitDeal(u) || '-')}${u.매매유형 === "세안고매매" && String(unitDeal(u)).includes("매매") ? '<span class="unit-sale-subtype">세안고매매</span>' : ""}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td>${esc(u.접수일자 || '-')}</td><td class="tbl-actions">${residentialUnitActions(u,ri)}</td></tr>`;
+      return `<tr>${unitCheckbox(u)}<td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(area.size)}${area.supply ? '<br><small>'+area.supply.toLocaleString('ko-KR',{maximumFractionDigits:2})+'㎡</small>' : ''}<br>${esc(area.type)}</td><td>${esc(unitDeal(u) || '-')}${u.매매유형 === "세안고매매" && String(unitDeal(u)).includes("매매") ? '<span class="unit-sale-subtype">세안고매매</span>' : ""}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td class="tbl-actions">${residentialUnitActions(u,ri)}</td></tr>`;
     }).join('');
   }
 
