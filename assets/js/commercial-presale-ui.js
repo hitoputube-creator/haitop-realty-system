@@ -21,9 +21,15 @@
    [['originalDeposit','보증금'],['originalMonthlyRent','월차임']].forEach(([id,key])=>{const value=data[id]??(snapshot[key]!=null&&snapshot[key]!==''?Number(snapshot[key])*10000:'');get(id).value=value===''?'':String(value).replace(/,/g,'');});
    occupancy.value=data.occupancy||snapshot.공실여부||'공실';
   }
+  const priceStart=prefix?switcher.previousElementSibling:host.closest('section');
+  const areaBlocks=prefix
+   ? ['area_land','area_exclusive','area_building','commercial_section'].map(id=>get(id)).filter(Boolean)
+   : [...document.querySelectorAll('.area-section,.commercial-section')];
+  const areaAnchors=areaBlocks.map(block=>{const anchor=document.createComment('original-area-position');block.before(anchor);return anchor;});
   function render(){
    const enabled=category.value==='상가사무실';
    switcher.hidden=!enabled;host.classList.toggle('commercial-price-compare',enabled);
+   areaBlocks.forEach((block,index)=>{if(enabled&&priceStart)priceStart.before(block);else areaAnchors[index].after(block);});
    headings.forEach(el=>el.hidden=!enabled);
    switcher.querySelectorAll('[data-phase]').forEach(b=>{b.classList.toggle('active',b.dataset.phase===phase);b.setAttribute('aria-pressed',String(b.dataset.phase===phase));});
    Object.entries(positions).forEach(([id,[row,col]])=>{const field=get(id)?.closest('.field');if(!field)return;field.classList.remove('presale-hidden');field.style.gridRow=enabled?String(row):'';field.style.gridColumn=enabled?String(col):'';if(id.startsWith('original'))field.hidden=!enabled;});
