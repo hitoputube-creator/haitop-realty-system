@@ -154,6 +154,10 @@ function saveDriveOrder(obj) {
 }
 // 카테고리별 items 배열을 localStorage 순서에 맞게 정렬
 function sortedByCatOrder(cat, items) {
+  // 상가 건물은 저장 순서와 관계없이 이름순으로 표시한다.
+  if (driveResourceScope === 'commercial' || (items.length > 0 && items.every(item => HitopResourceRooms.resourceRoom(item) === 'commercial'))) {
+    return [...items].sort((a, b) => String(a.name || '').trim().localeCompare(String(b.name || '').trim(), 'ko', { numeric: true, sensitivity: 'base' }));
+  }
   if (cat === '아파트') return [...items].sort(compareApartmentComplexes);
   const order = getDriveOrder()[cat];
   if (!order) return items;
