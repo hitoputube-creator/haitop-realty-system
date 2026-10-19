@@ -276,12 +276,17 @@
     function update() {
       const open = !panel.hidden;
       btn.setAttribute('aria-expanded', String(open));
-      hint.textContent = open ? '접기 ▴' : (filled() ? '입력된 내용 있음 · 펼치기 ▾' : '홈페이지에 올릴 때만 · 펼치기 ▾');
+      btn.checked = open;
+      hint.textContent = open ? '설명·홍보스티커 입력 후 저장하세요' : '선택할 때만 설명·홍보스티커 입력';
     }
-    btn.addEventListener('click', () => { panel.hidden = !panel.hidden; update(); });
+    btn.addEventListener('change', () => {
+      panel.hidden = !btn.checked;
+      if ($('is_public')) $('is_public').checked = btn.checked;
+      update();
+    });
     panel.addEventListener('input', update);
     panel.addEventListener('change', update);
-    window.refreshHomepagePanel = () => { if (filled()) panel.hidden = false; update(); };
+    window.refreshHomepagePanel = () => { update(); };
     update();
   }
 
