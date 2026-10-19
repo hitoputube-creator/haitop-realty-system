@@ -144,7 +144,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     <h1 id="registerPageTitle" class="page-title" style="margin:0;">📝 상세저장 — 매물 등록</h1>
   </div>
   <div id="registerPageIntro" style="font-size:0.82rem;color:rgba(212,175,55,0.6);margin-bottom:16px;padding:10px 14px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:10px;">
-    매물 정보를 등록해주세요. 홈페이지에 올릴 매물은 맨 아래 「홈페이지용 상세 입력」을 눌러 입력하세요.
+    매물 정보를 등록해주세요. 홈페이지에 올릴 매물은 맨 아래 「홈페이지 등록」을 체크해 입력하세요.
   </div>
   <!-- 빠른저장 전환 참고 정보 (sessionStorage 데이터가 있을 때만 표시) -->
   <div id="prefillRefBox" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;padding:10px 14px;background:rgba(80,180,100,0.07);border:1px solid rgba(80,180,100,0.2);border-radius:10px;">
@@ -450,10 +450,10 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
 
   <!-- ⑨ 홈페이지용 상세 입력 (기본 접힘, 모든 매물 유형 공통) -->
   <section class="card" id="homepageCard">
-    <button type="button" id="homepageToggleBtn" class="homepage-toggle" aria-expanded="false" aria-controls="homepagePanel">
-      <span>🌐 홈페이지용 상세 입력</span>
-      <span id="homepageToggleHint" class="homepage-toggle-hint">홈페이지에 올릴 때만 · 펼치기 ▾</span>
-    </button>
+    <label class="homepage-toggle">
+      <span style="display:flex;align-items:center;gap:10px;"><input type="checkbox" id="homepageToggleBtn" style="width:auto;accent-color:var(--gold);" aria-expanded="false" aria-controls="homepagePanel" /> 🌐 홈페이지 등록</span>
+      <span id="homepageToggleHint" class="homepage-toggle-hint">선택할 때만 설명·홍보스티커 입력</span>
+    </label>
     <div id="homepagePanel" hidden>
       <div class="field" style="margin-top:14px;">
         <label>🏷️ 홍보스티커</label>
@@ -502,7 +502,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
 </div>
 <div id="toast"></div>
 
-<script src="assets/js/register-picker.js?v=20261009-picker"></script>
+<script src="assets/js/register-picker.js?v=20261019-homepage-choice"></script>
 <script>
   // ── 카테고리 ──────────────────────────────────────
   const AREA_MAP = {
