@@ -1525,6 +1525,33 @@ function closeHomepageTab(tab) {
     return text && text !== detailText(base) ? text : "";
   }
 
+
+  // 상가정보 표에 이미 표시한 항목과 정확히 같은 메모 행만 화면에서 생략한다.
+  function commercialAdditionalMemo(item, text) {
+    const normalize = value => String(value ?? '').normalize('NFKC').replace(/[\s,]/g, '').toLowerCase();
+    const known = new Set(formatLegacyDesc({...item, description:''}).split('\n').map(normalize).filter(Boolean));
+    const add = (labels, values) => labels.forEach(label => values.filter(v => v !== null && v !== undefined && String(v).trim() !== '').forEach(value => known.add(normalize(label + ': ' + value))));
+    add(['건물명','건물','상가명'], [item.complexName, item.buildingName]);
+    add(['호실','호수'], [item.ho, item.unit, item.roomNo, item.ho && item.ho+'호']);
+    add(['주소','소재지'], [item.address, item.publicAddress, item.mapAddress]);
+    add(['상세주소','동호수'], [item.privateDetailAddress, item.detailAddress]);
+    add(['층','층수','층정보'], [item.floorInfo,item.floor,item.shop_floor]);
+    add(['업종','현업종'], [item.currentBiz,item.shop_biz,item.industry]);
+    add(['거래유형','거래구분'], [item.dealType,item.shop_dealType]);
+    add(['임대상태','공실여부'], [item.shop_status,item.occupancy]);
+    add(['입주가능일'], [item.availableDate,item.moveInDate,item.shop_available]);
+    add(['전용면적'], [item.exclusiveAreaPy,item.shop_area_py].filter(v=>v!=null).flatMap(v=>[v+'평']));
+    add(['분양면적','공급면적'], [item.supplyAreaPy].filter(v=>v!=null).map(v=>v+'평'));
+    const money = (labels, values) => add(labels, values.filter(v=>v!==null&&v!==undefined&&v!=='').flatMap(v=>[v,Number(v).toLocaleString('ko-KR')+'만원',formatWonOrText(v)]));
+    money(['보증금'],[item.deposit,item.shop_deposit]);
+    money(['월세'],[item.monthlyRent,item.shop_monthlyRent]);
+    money(['매매가','매매금액'],[item.salePrice]);
+    money(['분양가','분양금액'],[item.presalePrice]);
+    money(['관리비'],[item.managementFee,item.shop_maintenance]);
+    money(['권리금'],[item.premium,item.shop_premium]);
+    return String(text || '').split(/\r?\n/).filter(line => !known.has(normalize(line))).join('\n').trim();
+  }
+
   function renderDetail(item) {
     const html = renderDetailContent(item);
     const ids = Array.from(new Set([...(item.owner_customer_ids || []), ...(item.apartmentUnitData?.owner_customer_ids || [])]));
@@ -1576,12 +1603,17 @@ function closeHomepageTab(tab) {
     html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
 
     const isApartmentDetail = category.category2 === "아파트" || item.type === "apartment";
-    if (!isApartmentDetail) html += detailSection("설명·메모", [
-      detailField("공개 매물설명", item.detailDescription, { wide: true, pre: true }),
-      detailField("비공개 내부메모", item.description, { wide: true, pre: true }),
-      detailField("빠른등록 메모", differentValue(item.quick_memo, item.description), { wide: true, pre: true }),
-      detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true }),
-    ], { extraClass: "description-section" });
+    const isCommercialDetail = category.category1 === "상가사무실" || category.category1 === "상가/사무실" || ["shop", "office", "bizcenter"].includes(item.type);
+    if (!isApartmentDetail) {
+      const description = isCommercialDetail ? commercialAdditionalMemo(item, item.description) : item.description;
+      const quickMemo = isCommercialDetail ? commercialAdditionalMemo(item, item.quick_memo) : item.quick_memo;
+      html += detailSection(isCommercialDetail ? "추가 메모" : "설명·메모", [
+        ...(!isCommercialDetail ? [detailField("공개 매물설명", item.detailDescription, { wide: true, pre: true })] : []),
+        detailField("비공개 내부메모", description, { wide: true, pre: true }),
+        detailField("빠른등록 메모", differentValue(quickMemo, description), { wide: true, pre: true }),
+        ...(!isCommercialDetail ? [detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true })] : []),
+      ], { extraClass: "description-section" });
+    }
 
     if (isApartmentDetail) html += detailSection("특징·태그", [detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true })]);
 
