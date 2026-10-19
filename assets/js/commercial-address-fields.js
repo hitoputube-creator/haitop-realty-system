@@ -3,7 +3,7 @@
  const base=root.setupQuickBuildingSelect;
  if(typeof base!=='function')return;
  const style=document.createElement('style');
- style.textContent='.commercial-address-field{grid-column:1 / -1!important}.commercial-address-parts{display:grid;grid-template-columns:minmax(0,2fr) minmax(100px,1fr);gap:12px;margin-top:10px}.commercial-address-parts>.field{grid-column:auto!important;margin:0!important;min-width:0}.commercial-address-parts input{width:100%;box-sizing:border-box}.commercial-old-building-picker{display:none!important}';
+ style.textContent='.commercial-address-parts[hidden]{display:none!important}.commercial-address-field{grid-column:1 / -1!important}.commercial-address-parts{display:grid;grid-template-columns:minmax(0,2fr) minmax(100px,1fr);gap:12px;margin-top:10px}.commercial-address-parts>.field{grid-column:auto!important;margin:0!important;min-width:0}.commercial-address-parts input{width:100%;box-sizing:border-box}.commercial-old-building-picker{display:none!important}';
  document.head.appendChild(style);
  root.setupQuickBuildingSelect=function(selectId,publicId,mapId,complexId,cat1Id,cat2Id){
   const original=base.apply(this,arguments);
