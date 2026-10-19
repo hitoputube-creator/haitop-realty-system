@@ -1012,7 +1012,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       status:      gv('status') || '진행중',
       listingKind: gv('listingKind') === '명단' ? '명단' : '매물',
       description: gv('description'),
-      is_public:   OfficeConfig.id !== 'ktop' && gv('listingKind') !== '명단' && g('is_public').checked,
+      is_public:   OfficeConfig.id !== 'ktop' && gv('listingKind') !== '명단' && g('homepageToggleBtn').checked && g('is_public').checked,
       resource_id: gv('resource_id') || null,
       image_urls:  [],
       imageUrls:   [],
