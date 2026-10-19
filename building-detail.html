@@ -531,7 +531,17 @@
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px; gap: 10px;
     }
-    .unit-sec-head h3 { margin: 0; font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.92); }
+    .unit-sec-head h3 { margin: 0; font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.92); white-space: nowrap; }
+    /* 호실 현황 머리줄: 1줄 제목 + 자주 쓰는 버튼, 2줄 선택 후 쓰는 버튼(왼쪽) · 상가 전용 버튼(오른쪽 끝) */
+    .unit-sec-head { flex-wrap: wrap; row-gap: 10px; }
+    .unit-head-main { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+    .unit-head-main .btn-unit-add, #unitBulkActions .btn-unit-add, #unitBulkActions .btn-unit-ghost, #unitBulkActions .btn-unit-del {
+      display: inline-flex; align-items: center; justify-content: center; height: 38px; box-sizing: border-box;
+      padding: 0 16px; font-size: 0.86rem; font-weight: 800; white-space: nowrap; border-radius: 10px; text-decoration: none;
+    }
+    #unitBulkActions { flex: 1 1 100%; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    #unitBulkActions [hidden], .unit-head-main [hidden] { display: none !important; }
+    #unitBulkActions .unit-bulk-extra { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
   
     .unit-dong-cell,.unit-room-cell{white-space:nowrap}
     .unit-dong-cell strong,.unit-room-cell strong{font-size:.94rem;font-variant-numeric:tabular-nums}
@@ -689,16 +699,20 @@
   <div class="card" id="unitStatus" style="scroll-margin-top:20px;">
     <div class="unit-sec-head">
       <h3 id="unitStatusTitle">🏬 호실 현황</h3>
-      <div id="unitBulkActions" style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-left:auto;">
-        <button type="button" class="btn-unit-add" id="unitProfitRegister" disabled>수익성 추천등록</button>
-        <a class="btn-unit-ghost" id="unitProfitView" href="profit-recommendations.html">추천매물 모아보기</a>
-        <button type="button" class="btn-unit-add" id="unitBundleRegister" disabled>묶음매물 등록</button>
+      <div class="unit-head-main">
+        <button type="button" class="btn-unit-add" id="unitPriceUpload" hidden>가격표 자료 올리기</button>
+        <button class="btn-unit-add" id="btnAddUnit">+ 호실 추가</button>
+      </div>
+      <div id="unitBulkActions">
         <button type="button" class="btn-unit-add" id="unitListingSend" hidden disabled>선택 항목 매물리스트로 보내기</button>
         <button type="button" class="btn-unit-ghost" id="unitSelectPrint" disabled>선택인쇄</button>
         <button type="button" class="btn-unit-del" id="unitSelectDelete" disabled>선택삭제</button>
+        <div class="unit-bulk-extra">
+          <button type="button" class="btn-unit-add" id="unitProfitRegister" disabled>수익성 추천등록</button>
+          <a class="btn-unit-ghost" id="unitProfitView" href="profit-recommendations.html">추천매물 모아보기</a>
+          <button type="button" class="btn-unit-add" id="unitBundleRegister" disabled>묶음매물 등록</button>
+        </div>
       </div>
-      <button type="button" class="btn-unit-add" id="unitPriceUpload" hidden>가격표 자료 올리기</button>
-      <button class="btn-unit-add" id="btnAddUnit">+ 호실 추가</button>
     </div>
 
     <div id="unitPriceFiles" hidden></div>
