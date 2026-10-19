@@ -693,6 +693,7 @@
         <button type="button" class="btn-unit-add" id="unitProfitRegister" disabled>수익성 추천등록</button>
         <a class="btn-unit-ghost" id="unitProfitView" href="profit-recommendations.html">추천매물 모아보기</a>
         <button type="button" class="btn-unit-add" id="unitBundleRegister" disabled>묶음매물 등록</button>
+        <button type="button" class="btn-unit-add" id="unitListingSend" hidden disabled>선택 항목 매물리스트로 보내기</button>
         <button type="button" class="btn-unit-ghost" id="unitSelectPrint" disabled>선택인쇄</button>
         <button type="button" class="btn-unit-del" id="unitSelectDelete" disabled>선택삭제</button>
       </div>
@@ -1704,8 +1705,12 @@ async function deleteBFile(id) {
   $('unitOriginalPrices').addEventListener('click',()=>{unitOriginalOpen=!unitOriginalOpen;renderUnitPhase();});
   let units       = [];
   const selectedUnitRows = new Set();
+  let unitListingSendBusy = false;
   function unitBulkState() {
     const count = selectedUnitRows.size;
+    $("unitListingSend").hidden = !residentialUnitMode();
+    $("unitListingSend").disabled = !count || unitListingSendBusy;
+    $("unitListingSend").textContent = unitListingSendBusy ? "매물 등록 중…" : "선택 항목 매물리스트로 보내기 (" + count + ")";
     $('unitProfitRegister').hidden = residentialUnitMode() || OfficeConfig.id !== 'hitop';
     $('unitProfitView').hidden = residentialUnitMode() || OfficeConfig.id !== 'hitop';
     $('unitProfitRegister').disabled = !count;
@@ -1717,6 +1722,65 @@ async function deleteBFile(id) {
     $("unitSelectPrint").textContent = "선택인쇄 (" + count + ")";
     $("unitSelectDelete").textContent = "선택삭제 (" + count + ")";
   }
+  $('unitListingSend').addEventListener('click', async () => {
+    if (unitListingSendBusy || !residentialUnitMode()) return;
+    const rows = units.filter((u,i) => selectedUnitRows.has(i));
+    if (!rows.length) return;
+    unitListingSendBusy = true; unitBulkState();
+    let added = 0, linked = 0;
+    try {
+      // Read every page in the current office before deciding whether to create a listing.
+      apartmentListings = (await getListingsRaw()).map(normalizeListingRow);
+      listingLookupLoaded = true;
+      for (const unit of rows) {
+        const matches = linkedUnitListings(unit);
+        if (matches.length || (unit.listing_id && await getListingById(unit.listing_id))) {
+          if (matches.length === 1) unit.listing_id = matches[0].id;
+          linked++; continue;
+        }
+        const parts = roomParts(unit);
+        if (!parts.dong || !parts.room) throw new Error('동·호수가 없는 세대는 수정 후 등록하세요.');
+        const id = unit.pending_listing_id || crypto.randomUUID();
+        unit.pending_listing_id = id;
+        // Persist the retry ID before creating so an interrupted request cannot create a duplicate.
+        await saveBuildingUnits(bName, bName, units);
+        let data = await getListingById(id);
+        if (!data) {
+          const won = value => value == null || value === '' ? '' : String(Number(value) * 10000);
+          const supply = residentialUnitArea(unit).supply;
+          const exclusive = unit.전용_m2 ?? (unit.전용_평 == null ? null : Number(unit.전용_평)*(400/121));
+          data = {id, type:'apartment', category1:'주거용', category2:'아파트',
+            resource_id:buildingId, listingKind:'매물', status:'진행중', is_public:false,
+            title:bName+' · '+parts.dong+'동 '+parts.room+'호', complexName:bName, buildingName:bName,
+            dong:parts.dong, ho:parts.room, privateDetailAddress:parts.dong+'동 '+parts.room+'호',
+            address:buildingAddress || '', mapAddress:buildingAddress || '',
+            dealType:unit.거래구분 || '', salePrice:won(unit.현_매매가격),
+            deposit:won(unit.현_보증금 ?? unit.보증금), monthlyRent:won(unit.현_월세 ?? unit.월차임),
+            supplyAreaM2:supply, supplyAreaPy:supply == null ? null : supply/(400/121),
+            exclusiveAreaM2:exclusive, exclusiveAreaPy:exclusive == null ? null : exclusive/(400/121),
+            apartmentSize:unit.평형 || '', apartmentType:unit.타입 || '',
+            owner_name:unit.소유주 || '', owner_phone1:unit.연락처 || '', ownerCarrier:unit.소유자통신사 || '',
+            description:unit.비고 || '', floorInfo:unit.층 == null ? '' : unit.층+'층',
+            apartmentUnitData:{...unit}, import_unit_snapshot:{...unit}};
+          await assertUniqueApartmentUnit(data);
+          await addListing(data);
+          added++;
+        } else linked++;
+        apartmentListings.push(data);
+        unit.listing_id = id;
+        delete unit.pending_listing_id;
+        await saveBuildingUnits(bName, bName, units);
+      }
+      await saveBuildingUnits(bName, bName, units);
+      selectedUnitRows.clear();
+      showToast('매물 등록 '+added+'건 · 기존 등록 '+linked+'건 (중복 제외)', 7000);
+    } catch (error) {
+      showToast('등록 '+added+'건 완료. 나머지 항목은 다시 시도하세요: '+error.message, 10000);
+    } finally {
+      unitListingSendBusy = false; renderAll(); unitBulkState();
+    }
+  });
+
   function unitCheckbox(u) { const idx=units.indexOf(u); return '<td class="unit-select-cell"><input type="checkbox" class="unit-select-row" data-ri="'+idx+'" aria-label="세대 선택" '+(selectedUnitRows.has(idx)?"checked":"")+'></td>'; }
   function bindUnitSelection() {
     $("unitsTbody").querySelectorAll(".unit-select-row").forEach(box => box.addEventListener("change", () => {
