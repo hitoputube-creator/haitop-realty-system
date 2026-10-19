@@ -847,13 +847,31 @@
           <div class="umfield g3"><label>(현)매매가격 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /><span class="amt-hint" id="h_현매매가격"></span></div>
           <div class="umfield g3"><label>(현)보증금 (만원)</label><input id="u_현보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_현보증금"></span></div>
           <div class="umfield g3"><label>(현)월세 (만원)</label><input id="u_현월세" type="number" placeholder="0" /><span class="amt-hint" id="h_현월세"></span></div>
-          <div class="umfield g4"><label>소유주</label><input id="u_소유주" placeholder="소유주 성명" /></div>
-          <div class="umfield g4"><label>연락처</label><input id="u_연락처" placeholder="010-0000-0000" /></div>
+          <div class="umfield g3">
+            <label>거래유형</label>
+            <select id="u_거래구분" aria-label="거래유형">
+              <option value="">선택하세요</option>
+              <option value="매매">매매</option>
+              <option value="전세">전세</option>
+              <option value="월세">월세</option>
+              <option value="임대">임대</option>
+            </select>
+          </div>
+          <div class="umfield g3"><label>관리비</label><input id="u_관리비" placeholder="예: 15만" /></div>
+          <div class="umfield g3"><label>권리금</label><input id="u_권리금" placeholder="예: 없음 또는 2,000만" /></div>
+          <div class="umfield g3"><label>층정보</label><input id="u_층정보" placeholder="예: 지상 1층" /></div>
+          <div class="umfield g3"><label>용도지역</label><input id="u_용도지역" placeholder="예: 준공업지역" /></div>
+          <div class="umfield g3"><label>주차대수</label><input id="u_주차대수" placeholder="예: 10대" /></div>
+          <div class="umfield g3"><label>사용승인일</label><input id="u_사용승인일" placeholder="예: 2010-03-15" /></div>
+          <div class="umfield g4"><label>소유주명</label><input id="u_소유주" placeholder="예) 홍길동" /></div>
+          <div class="umfield g4"><label>연락처1</label><input id="u_연락처" placeholder="010-0000-0000" /></div>
           <div class="umfield g4"><label>수익률 (%)</label><input id="u_수익률" placeholder="예: 5.2" /></div>
-          <div class="umfield umcheck g3"><label for="u_매물등록"><input id="u_매물등록" type="checkbox" /> 매물 등록</label></div>
           <div class="umfield umcheck g3"><label for="u_추천매물"><input id="u_추천매물" type="checkbox" /> ⭐ 추천매물</label></div>
           <div class="umfield umcheck g3"><label for="u_수익성매물"><input id="u_수익성매물" type="checkbox" /> 💰 수익성매물</label></div>
-          <div class="umfield g3 umhint" style="font-size:.7rem;color:var(--muted);align-self:center">매물 등록을 선택하면 입력한 정보로 바로 등록됩니다.</div>
+          <div class="umfield g3 umhint" style="font-size:.7rem;color:var(--muted);align-self:center">매물관리로는 목록에서 호실을 체크한 뒤 [선택 항목 매물리스트로 보내기]로 보냅니다. 보낸 뒤에는 서로 연동됩니다.</div>
+          <div class="umfield full"><label>소유주 메모 / 특이사항</label><textarea id="u_소유주메모" rows="2" placeholder="예) 통화 가능 시간, 특이사항 등"></textarea></div>
+          <div class="umfield full"><label>내부 메모 (비공개)</label><textarea id="u_내부메모" rows="2" placeholder="관리용 메모 / 특이사항"></textarea></div>
+          <div class="umfield full"><label>옵션내역</label><textarea id="u_옵션내역" rows="2" placeholder="시스템에어컨, 붙박이장 등"></textarea></div>
           <div class="umfield full" id="u_비고_wrap"><label>비고</label><textarea id="u_비고" placeholder="특이사항 등 자유 입력"></textarea></div>
         </div>
       </div>
@@ -917,7 +935,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261017-notice-removed"></script>
+<script src="assets/js/storage.js?v=20261019-commercial-unit-sync"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1708,7 +1726,7 @@ async function deleteBFile(id) {
   let unitListingSendBusy = false;
   function unitBulkState() {
     const count = selectedUnitRows.size;
-    $("unitListingSend").hidden = !residentialUnitMode();
+    $("unitListingSend").hidden = false;
     $("unitListingSend").disabled = !count || unitListingSendBusy;
     $("unitListingSend").textContent = unitListingSendBusy ? "매물 등록 중…" : "선택 항목 매물리스트로 보내기 (" + count + ")";
     $('unitProfitRegister').hidden = residentialUnitMode() || OfficeConfig.id !== 'hitop';
@@ -1722,10 +1740,44 @@ async function deleteBFile(id) {
     $("unitSelectPrint").textContent = "선택인쇄 (" + count + ")";
     $("unitSelectDelete").textContent = "선택삭제 (" + count + ")";
   }
+  // 상가·사무실: 선택한 호실(분양중·분양완료 모두)을 매물관리(매물리스트)로 보낸다.
+  // 이미 보낸 호실은 다시 만들지 않고(중복 제외) 연동 상태를 유지한다.
+  async function sendCommercialUnitsToListing(rows) {
+    unitListingSendBusy = true; unitBulkState();
+    let added = 0, linked = 0;
+    try {
+      const all = (await getListingsRaw()).map(normalizeListingRow);
+      commercialListings = {}; activeListingIds = {};
+      all.forEach(l => { commercialListings[String(l.id)] = l; if (isActiveListing(l)) activeListingIds[String(l.id)] = true; });
+      activeListingLoaded = true;
+      const roomKey = value => String(value || '').replace(/\s+/g, '').replace(/호$/, '');
+      for (const unit of rows) {
+        if (!roomKey(unit.호수)) throw new Error('호수가 없는 호실은 수정 후 보내세요.');
+        if (unit.listing_id && commercialListings[String(unit.listing_id)]) { linked++; continue; }
+        // 같은 건물·같은 호수로 이미 등록된 매물이 있으면 새로 만들지 않고 연결만 한다.
+        const same = all.find(l => l.category1 === '상가사무실' && String(l.resource_id || '') === String(buildingId)
+          && roomKey(l.ho) === roomKey(unit.호수));
+        if (same) { unit.listing_id = same.id; delete unit.pending_listing_id; await saveBuildingUnits(bName, bName, units); linked++; continue; }
+        if (!unit.listing_id && !unit.pending_listing_id) unit.pending_listing_id = crypto.randomUUID();
+        // 재시도해도 중복 등록되지 않도록 먼저 ID를 저장한다.
+        await saveBuildingUnits(bName, bName, units);
+        await registerCommercialUnit(unit);
+        await saveBuildingUnits(bName, bName, units);
+        added++;
+      }
+      selectedUnitRows.clear();
+      showToast('매물 등록 ' + added + '건 · 기존 등록 ' + linked + '건 (중복 제외)', 7000);
+    } catch (error) {
+      showToast('등록 ' + added + '건 완료. 나머지 항목은 다시 시도하세요: ' + error.message, 10000);
+    } finally {
+      unitListingSendBusy = false; renderAll(); unitBulkState();
+    }
+  }
   $('unitListingSend').addEventListener('click', async () => {
-    if (unitListingSendBusy || !residentialUnitMode()) return;
+    if (unitListingSendBusy) return;
     const rows = units.filter((u,i) => selectedUnitRows.has(i));
     if (!rows.length) return;
+    if (!residentialUnitMode()) { await sendCommercialUnitsToListing(rows); return; }
     unitListingSendBusy = true; unitBulkState();
     let added = 0, linked = 0;
     try {
@@ -2383,12 +2435,24 @@ async function deleteBFile(id) {
     $("u_연락처").value     = u.연락처      || "";
     $("u_수익률").value     = u.수익률      || "";
     $("u_추천매물").checked   = isFlagOn(u.추천매물);
-    $('u_매물등록').checked = !!u.listing_id || isFlagOn(u.매물등록요청) || isFlagOn(u.추천매물);
-    $('u_매물등록').disabled = !!u.listing_id;
     $('umListingView').hidden = !u.listing_id;
     $('umListingView').href = u.listing_id ? 'detail.html?id=' + encodeURIComponent(u.listing_id) : '#';
     $("u_수익성매물").checked = isFlagOn(u.수익성매물);
-    $("u_비고").value       = u.비고        || "";
+    // 매물관리(상가) 입력 항목과 같은 항목
+    // 이미 매물관리로 보낸 호실이면, 자료실에 아직 없는 항목은 매물관리 값을 가져와 채운다(저장 시 덮어써 지우지 않도록).
+    const linked = u.listing_id ? commercialListings[String(u.listing_id)] : null;
+    const fromListing = (unitKey, listingKey) => Object.hasOwn(u, unitKey) ? (u[unitKey] || "") : (linked?.[listingKey] || "");
+    $("u_거래구분").value   = u.거래구분 || linked?.dealType || "";
+    $("u_관리비").value     = fromListing("관리비", "managementFee");
+    $("u_권리금").value     = fromListing("권리금", "premium");
+    $("u_층정보").value     = fromListing("층정보", "floorInfo");
+    $("u_용도지역").value   = fromListing("용도지역", "zoning");
+    $("u_주차대수").value   = fromListing("주차대수", "parkingCount");
+    $("u_사용승인일").value = fromListing("사용승인일", "approvalDate");
+    $("u_소유주메모").value = fromListing("소유주메모", "owner_memo");
+    $("u_내부메모").value   = fromListing("내부메모", "description");
+    $("u_옵션내역").value   = u.옵션내역 || u.옵션 || linked?.optionDetails || "";
+    $("u_비고").value       = fromListing("비고", "remarks");
 
     refreshHints(u);
     unitModalDirty = false;
@@ -2414,6 +2478,19 @@ async function deleteBFile(id) {
     const presale = money(unit.분양금액);
     const deposit = money(unit.현_보증금 ?? unit.보증금);
     const rent = money(unit.현_월세 ?? unit.월차임);
+    // 자료실 항목이 비어 있으면(예전에 저장된 호실) 매물관리에 이미 있는 값을 지우지 않는다.
+    const keep = (unitKey, listingKey) => Object.hasOwn(unit, unitKey) ? (unit[unitKey] || '') : (existing?.[listingKey] || '');
+    const mergeMemos = (listingMemos, unitMemos) => {
+      const seen = new Set(), out = [];
+      for (const memo of [...(Array.isArray(listingMemos) ? listingMemos : []), ...(Array.isArray(unitMemos) ? unitMemos : [])]) {
+        const text = String(memo?.text || '').trim();
+        if (!text) continue;
+        const key = memo.id || text + '|' + (memo.created_at || '');
+        if (seen.has(key)) continue;
+        seen.add(key); out.push(memo);
+      }
+      return out;
+    };
     const stickers = (existing?.stickers || []).filter(s => s !== '추천매물' && s !== '수익형');
     if (isFlagOn(unit.추천매물)) stickers.push('추천매물');
     if (isFlagOn(unit.수익성매물)) stickers.push('수익형');
@@ -2431,12 +2508,17 @@ async function deleteBFile(id) {
       is_public:existing?.is_public === true,
       dealType:unit.거래구분 || existing?.dealType || (CommercialPriceCore.status(unit,true)==='분양중' || sale ? '매매' : '월세'),
       salePrice:sale, presalePrice:presale, presaleStatus:CommercialPriceCore.status(unit,true), deposit, monthlyRent:rent,
+      managementFee:keep('관리비','managementFee'), premium:keep('권리금','premium'),
+      floorInfo:keep('층정보','floorInfo'), zoning:keep('용도지역','zoning'),
+      parkingCount:keep('주차대수','parkingCount'), approvalDate:keep('사용승인일','approvalDate'),
+      owner_memo:keep('소유주메모','owner_memo'), description:keep('내부메모','description'),
+      optionDetails:keep('옵션내역','optionDetails'), remarks:keep('비고','remarks'),
+      additionalMemos:mergeMemos(existing?.additionalMemos, unit.추가메모),
       exclusiveAreaPy:Number(unit.전용_평) || null,
       exclusiveAreaM2:unit.전용_평 ? Math.round(Number(unit.전용_평) * 3.30579 * 100) / 100 : null,
       supplyAreaPy:Number(unit.분양_평) || null,
       supplyAreaM2:unit.분양_평 ? Math.round(Number(unit.분양_평) * 3.30579 * 100) / 100 : null,
       owner_name:unit.소유주 || '', owner_phone1:unit.연락처 || '', stickers,
-      owner_memo:unit.비고 || '',
       detailDescription:unit.bundle_details ? '묶음 호실: '+unit.bundle_details.rooms.join(' · ')+'\n거래 조건: '+unit.bundle_details.terms : existing?.detailDescription || unit.현업종 || '',
       import_unit_snapshot:{...unit}
     };
@@ -2547,8 +2629,17 @@ async function deleteBFile(id) {
       현_월세:     $("u_현월세").value === "" ? null : Number($("u_현월세").value),
       수익률:      $("u_수익률").value.trim()    || null,
       추천매물:    $("u_추천매물").checked   ? true : null,
-      매물등록요청: $('u_매물등록').checked ? true : null,
       수익성매물:  $("u_수익성매물").checked ? true : null,
+      거래구분:    $("u_거래구분").value         || null,
+      관리비:      $("u_관리비").value.trim()    || null,
+      권리금:      $("u_권리금").value.trim()    || null,
+      층정보:      $("u_층정보").value.trim()    || null,
+      용도지역:    $("u_용도지역").value.trim()  || null,
+      주차대수:    $("u_주차대수").value.trim()  || null,
+      사용승인일:  $("u_사용승인일").value.trim() || null,
+      소유주메모:  $("u_소유주메모").value.trim() || null,
+      내부메모:    $("u_내부메모").value.trim()  || null,
+      옵션내역:    $("u_옵션내역").value.trim()  || null,
       비고:        $("u_비고").value.trim()      || null,
       updated_at:  new Date().toISOString()
     };
@@ -2566,8 +2657,10 @@ async function deleteBFile(id) {
     const newMemo = $('u_추가메모').value.trim();
     unit.추가메모 = [...unitMemos(original)];
     if (newMemo) unit.추가메모.push({id:crypto.randomUUID(),text:newMemo,created_at:new Date().toISOString()});
-    const registerNow = !options.keepOpen && !residentialUnitMode() && unit.매물등록요청;
-    if (registerNow && !unit.listing_id && !unit.pending_listing_id) unit.pending_listing_id = crypto.randomUUID();
+    // 자료실에는 등록만 하고, 매물관리로는 [선택 항목 매물리스트로 보내기]로 보낸다.
+    // 이미 보낸(연결된) 호실은 저장할 때마다 매물관리 쪽도 같은 내용으로 갱신해 계속 연동한다.
+    delete unit.매물등록요청;
+    const registerNow = !options.keepOpen && !residentialUnitMode() && !!unit.listing_id;
     const wasNew = editIdx < 0;
     const savedIndex = wasNew ? units.length : editIdx;
     const next = [...units];
@@ -2589,7 +2682,7 @@ async function deleteBFile(id) {
       renderAll();
       if (options.keepOpen) { openModal(savedIndex); $('u_추가메모').focus(); }
       else closeModal();
-      if (typeof showToast === "function") showToast(registerNow ? '매물이 등록되었습니다.' : newMemo ? '추가메모가 저장되었습니다.' : wasNew ? '자료가 추가되었습니다.' : '수정 완료되었습니다.');
+      if (typeof showToast === "function") showToast(registerNow ? '수정 완료 · 연동된 매물관리에도 반영되었습니다.' : newMemo ? '추가메모가 저장되었습니다.' : wasNew ? '자료가 추가되었습니다.' : '수정 완료되었습니다.');
     } catch(e) {
       if (typeof showToast === "function") showToast("저장 실패: " + e.message);
       console.error("[호실현황] 저장 실패:", e);
@@ -2744,12 +2837,6 @@ async function deleteBFile(id) {
     saveUnit({keepOpen:true});
   });
   $("btnAddUnit").addEventListener("click", () => openModal(-1));
-  $('u_추천매물').addEventListener('change', () => {
-    if ($('u_추천매물').checked) $('u_매물등록').checked = true;
-  });
-  $('u_매물등록').addEventListener('change', () => {
-    if (!$('u_매물등록').checked) $('u_추천매물').checked = false;
-  });
   $("umSave").addEventListener("click", saveUnit);
   $("umDelete").addEventListener("click", deleteUnit);
   $("umRegistry").addEventListener("click", () => {

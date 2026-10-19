@@ -1906,6 +1906,58 @@ async function saveBuildingUnits(localId, name, units) {
   if (!res.ok) throw new Error("호실 저장 실패: " + await res.text());
 }
 
+// 상가·사무실 매물을 매물관리에서 수정하면, 연결(listing_id)된 자료실 호실에도 같은 항목을 반영한다.
+// 가격·분양상태·공실은 DB 트리거(commercial-presale-state.sql)가 맡으므로 여기서는 나머지 항목만 맞춘다.
+// 자료실 쪽 저장은 building-detail.html의 registerCommercialUnit()이 매물관리로 반영한다(양방향 연동).
+async function syncCommercialUnitFromListing(listing) {
+  try {
+    if (!listing || !listing.id || (listing.category1 || '') !== '상가사무실') return;
+    const name = listing.complexName || listing.buildingName;
+    if (!name) return;
+    const res = await fetchWithTimeout(
+      SUPABASE_URL + "/rest/v1/buildings?name=eq." + encodeURIComponent(name) + "&select=local_id,name,units",
+      { headers }
+    );
+    if (!res.ok) return;
+    const text = value => String(value ?? '').trim() || null;
+    const py = value => { const n = Number(value); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null; };
+    for (const record of await res.json()) {
+      const units = Array.isArray(record.units) ? record.units : [];
+      const index = units.findIndex(unit => String(unit.listing_id || '') === String(listing.id));
+      if (index < 0) continue;
+      const unit = units[index];
+      const patch = {
+        거래구분: text(listing.dealType), 관리비: text(listing.managementFee), 권리금: text(listing.premium),
+        층정보: text(listing.floorInfo), 용도지역: text(listing.zoning), 주차대수: text(listing.parkingCount),
+        사용승인일: text(listing.approvalDate), 소유주: text(listing.owner_name), 연락처: text(listing.owner_phone1),
+        소유주메모: text(listing.owner_memo), 내부메모: text(listing.description),
+        옵션내역: text(listing.optionDetails), 비고: text(listing.remarks)
+      };
+      if (py(listing.exclusiveAreaPy) !== null) patch.전용_평 = py(listing.exclusiveAreaPy);
+      if (py(listing.supplyAreaPy) !== null) patch.분양_평 = py(listing.supplyAreaPy);
+      if (Array.isArray(listing.stickers)) {
+        patch.추천매물 = listing.stickers.includes('추천매물') ? true : null;
+        patch.수익성매물 = listing.stickers.includes('수익형') ? true : null;
+      }
+      // 추가메모는 양쪽 내용을 합친다(같은 id·같은 글은 한 번만).
+      const seen = new Set(), memos = [];
+      for (const memo of [...(Array.isArray(unit.추가메모) ? unit.추가메모 : []), ...(Array.isArray(listing.additionalMemos) ? listing.additionalMemos : [])]) {
+        const body = String(memo?.text || '').trim();
+        const key = memo?.id || body + '|' + (memo?.created_at || '');
+        if (!body || seen.has(key)) continue;
+        seen.add(key); memos.push(memo);
+      }
+      patch.추가메모 = memos;
+      const next = { ...unit, ...patch };
+      if (JSON.stringify(next) === JSON.stringify(unit)) continue;
+      units[index] = next;
+      await saveBuildingUnits(record.local_id, record.name || name, units);
+    }
+  } catch (error) {
+    console.warn("[연동] 매물 → 자료실 호실 반영 실패:", error.message);
+  }
+}
+
 // 고객 화면과 업무일지는 같은 원본을 사용한다. 다른 필드는 덮어쓰지 않는다.
 async function updateCustomerDiaryEntry(customerId, original, changes) {
   const params = new URLSearchParams({
