@@ -55,7 +55,7 @@
 })();
 </script>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261013-phase1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261019-price-compare"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -208,7 +208,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     </div>
     <div class="form-grid-3" style="margin-top:10px;">
       <div class="field" style="grid-column:1 / -1;">
-        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
+        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 주소·건물명 자동입력</span></label>
         <select id="quickBuildingSelect"></select>
       </div>
       <div class="field">
@@ -860,7 +860,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
 
 
   // 가격 입력 미리보기
-  const REGISTER_PRICE_IDS = ["salePrice","presalePrice","deposit","monthlyRent","managementFee","premium"];
+  const REGISTER_PRICE_IDS = ["salePrice","presalePrice","deposit","monthlyRent","managementFee","premium","originalDeposit","originalMonthlyRent"];
   function registerPriceDigits(value) { return String(value || "").replace(/[^\d]/g, ""); }
   function registerFormatPriceInput(value) {
     const digits = registerPriceDigits(value);
@@ -977,7 +977,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     // 상가주택·다가구주택은 화면상 "주거용"에서 선택하지만, 실제 저장은 건물빌딩으로 통일한다.
     const cat1 = resolveStorageCategory1(cat1Raw, cat2);
     const title = document.getElementById('title').value.trim();
-    if (!title && cat2 !== '아파트') { showToast('제목을 입력하세요'); return; }
+    if (!title && cat2 !== '아파트' && cat1Raw !== '상가사무실') { showToast('제목을 입력하세요'); return; }
     if (!document.getElementById('dealType').value && cat2 !== '아파트') { showToast('거래유형을 선택하세요'); return; }
 
     const type = document.getElementById('propertyType').value || 'etc';
@@ -1000,7 +1000,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     const item = {
       id: 'HITOP-' + Date.now(),
       type, category1: cat1, category2: cat2,
-      title,
+      title: title || [gv('complexName'), gv('privateDetailAddress'), cat2].filter(Boolean).join(' ') || '상가 매물',
       address:            mapAddress || publicAddress,
       ...apartmentAddresses,
       publicAddress,
@@ -1023,6 +1023,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       // 가격정보
       salePrice:      gv('salePrice'),
       presalePrice:   gv('presalePrice'),
+      ...(cat1 === '상가사무실' ? window.registerCommercialPhase.originalValues : {}),
       presaleStatus: cat1 === '상가사무실' ? window.registerCommercialPhase.status : undefined,
       occupancy: cat1 === '상가사무실' ? window.registerCommercialPhase.occupancy : undefined,
       deposit:        gv('deposit'),
@@ -1290,7 +1291,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       if (rent)    { document.getElementById("monthlyRent").value  = rent;     syncRegisterPricePreview("monthlyRent"); }
       if (presale) { document.getElementById("presalePrice").value = presale;  syncRegisterPricePreview("presalePrice"); }
       if (sale)    { document.getElementById("salePrice").value    = sale;     syncRegisterPricePreview("salePrice"); }
-      if(window.registerCommercialPhase)window.registerCommercialPhase.set({salePrice:sale,presalePrice:presale,presaleStatus:qp.get("presaleStatus")||undefined});
+      if(window.registerCommercialPhase)window.registerCommercialPhase.set({salePrice:sale,presalePrice:presale,presaleStatus:qp.get("presaleStatus")||undefined,import_unit_snapshot:unit||{}});
 
       if (exclusiveM2) {
         document.getElementById("exclusiveAreaM2").value = exclusiveM2;
