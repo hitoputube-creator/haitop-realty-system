@@ -117,7 +117,7 @@
 </script>
 
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261013-phase1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261019-price-compare"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -269,7 +269,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <input id="edit_apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
       </div>
       <div class="field edit-quick-building-field">
-        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 공개주소·지도검색주소·단지명 자동입력</span></label>
+        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 주소·건물명 자동입력</span></label>
         <select id="edit_quickBuildingSelect"></select>
       </div>
       <div class="field">
@@ -581,7 +581,7 @@ function closeHomepageTab(tab) {
 
 
   // 가격 입력 미리보기
-  const EDIT_PRICE_IDS = ["edit_salePrice","edit_presalePrice","edit_deposit","edit_monthlyRent","edit_managementFee","edit_premium"];
+  const EDIT_PRICE_IDS = ["edit_salePrice","edit_presalePrice","edit_deposit","edit_monthlyRent","edit_managementFee","edit_premium","edit_originalDeposit","edit_originalMonthlyRent"];
   function editPriceDigits(value) { return String(value || "").replace(/[^\d]/g, ""); }
   function editFormatPriceInput(value) {
     const digits = editPriceDigits(value);
@@ -1464,11 +1464,14 @@ function closeHomepageTab(tab) {
 
     const rows = [
       iptRow([["1차구분", category.category1 || item.category1], ["2차구분", category.category2 || item.category2], ["거래유형", dealType]]),
-      iptRow([["제목", item.title]]),
-      iptRow([["공개주소", publicAddress], ["비공개주소", mapAddress]]),
-      iptRow(priceCore),
+      ...(profileKey === "commercial" ? [iptRow([["지도검색주소", mapAddress]])] : [iptRow([["제목", item.title]]), iptRow([["공개주소", publicAddress], ["비공개주소", mapAddress]])]),
+      ...(profileKey === "commercial" ? [
+        iptRow([["기존 분양가", formatWonOrText(item.presalePrice)], ["현재 매매가", formatWonOrText(item.salePrice)]]),
+        iptRow([["기존 보증금", formatWonOrText(item.originalDeposit ?? (item.import_unit_snapshot?.보증금 != null ? Number(item.import_unit_snapshot.보증금)*10000 : null))], ["현재 보증금", depositText]]),
+        iptRow([["기존 월세", formatWonOrText(item.originalMonthlyRent ?? (item.import_unit_snapshot?.월차임 != null ? Number(item.import_unit_snapshot.월차임)*10000 : null))], ["현재 월세", rentText]])
+      ] : [iptRow(priceCore)]),
       ...profileRows,
-      packRows([...priceCond, ...profileCondPairs], 3),
+      packRows([...(profileKey === "commercial" ? [] : priceCond), ...profileCondPairs], 3),
       iptRow([["소유주", ownerName], ["연락처1", contact], ["연락처2", item.owner_phone2]]),
     ].join("");
 
@@ -1480,14 +1483,14 @@ function closeHomepageTab(tab) {
 
     // 핵심표에 없는 나머지 필드들. 실제 값이 있는 것만 packRows가 걸러서 보여준다.
     const extraPairs = [
-      ["최초 분양가", formatWonOrText(item.presalePrice)],
+      ["최초 분양가", profileKey === "commercial" ? "" : formatWonOrText(item.presalePrice)],
       ...(commercialPrice ? [["분양상태",commercialPrice.status]] : []),
-      ["관리비", item.type === "apartment" ? "" : formatWonOrText(item.managementFee)],
-      ["권리금", item.type === "apartment" ? "" : formatWonOrText(item.premium)],
-      ["상가 보증금", formatManWon(item.shop_deposit)],
-      ["상가 월세", formatManWon(item.shop_monthlyRent)],
-      ["상가 관리비", formatManWon(item.shop_maintenance)],
-      ["상가 권리금", item.shop_premium],
+      ["관리비", item.type === "apartment" || profileKey === "commercial" ? "" : formatWonOrText(item.managementFee)],
+      ["권리금", item.type === "apartment" || profileKey === "commercial" ? "" : formatWonOrText(item.premium)],
+      ["상가 보증금", profileKey === "commercial" ? "" : formatManWon(item.shop_deposit)],
+      ["상가 월세", profileKey === "commercial" ? "" : formatManWon(item.shop_monthlyRent)],
+      ["상가 관리비", profileKey === "commercial" ? "" : formatManWon(item.shop_maintenance)],
+      ["상가 권리금", profileKey === "commercial" ? "" : item.shop_premium],
       ["오피스텔 금액", formatManWon(item.officetel_price)],
       // 토지 종류는 위 가격 칸(매매가)에 이미 합쳐서 보여준다.
       ["토지 매매가", profileKey === "land" ? "" : formatManWon(item.land_price)],
@@ -1942,6 +1945,7 @@ function closeHomepageTab(tab) {
             return dt ? dt + " " + fmt : fmt;
           })(),
           presalePrice:       gv("edit_presalePrice"),
+          ...(category1 === "상가사무실" ? window.editCommercialPhase.originalValues : {}),
           presaleStatus: category1 === "상가사무실" ? window.editCommercialPhase.status : item.presaleStatus,
           occupancy: category1 === "상가사무실" ? window.editCommercialPhase.occupancy : item.occupancy,
           deposit:            gv("edit_deposit"),
