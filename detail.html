@@ -373,6 +373,14 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       </div>
     </div>
 
+    <div class="field" style="margin:14px 0;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <input id="editHomepageEnabled" type="checkbox" style="width:auto;accent-color:var(--gold);" aria-controls="editHomepagePanel" aria-expanded="false" />
+        🌐 홈페이지 등록·수정
+      </label>
+      <small style="color:var(--text-muted);">선택하면 공개 매물설명과 홍보스티커를 입력할 수 있습니다.</small>
+    </div>
+    <div id="editHomepagePanel" hidden>
     <!-- 홍보스티커 -->
     <div class="modal-section-title">🏷️ 홍보스티커</div>
     <div class="sticker-grid edit-sticker-grid" style="margin-bottom:10px;">
@@ -405,6 +413,14 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       </div>
       <textarea id="edit_detailDescription" rows="7" placeholder="입지, 도로접근성, 추천업종, 임대조건 등" style="width:100%;box-sizing:border-box;"></textarea>
     </div>
+    <!-- 홈페이지 공개 -->
+    <div data-homepage-only class="field" style="margin-bottom:12px;">
+      <label>홈페이지 공개</label>
+      <label style="display:flex;align-items:center;gap:8px;color:var(--text-main);font-size:0.86rem;">
+        <input id="edit_is_public" type="checkbox" style="width:auto;accent-color:var(--gold);" /> 공개
+      </label>
+    </div>
+    </div><!-- /editHomepagePanel -->
     <div class="field" style="margin-bottom:10px;">
       <label>내부 메모 <span style="color:var(--text-muted);font-size:0.75rem;">(비공개)</span></label>
       <textarea id="edit_description" rows="3" placeholder="관리용 메모 / 특이사항" style="width:100%;box-sizing:border-box;"></textarea>
@@ -435,13 +451,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       </div>
     </div>
 
-    <!-- 홈페이지 공개 -->
-    <div data-homepage-only class="field" style="margin-bottom:12px;">
-      <label>홈페이지 공개</label>
-      <label style="display:flex;align-items:center;gap:8px;color:var(--text-main);font-size:0.86rem;">
-        <input id="edit_is_public" type="checkbox" style="width:auto;accent-color:var(--gold);" /> 공개
-      </label>
-    </div>
+
 
     <!-- 이미지 -->
     <div class="modal-section-title">📷 이미지·문서 (최대 5장)</div>
@@ -848,7 +858,19 @@ function closeHomepageTab(tab) {
   }
 
   // ── 수정 모달 ──
+  function setEditHomepageMode(enabled) {
+    const choice = document.getElementById("editHomepageEnabled");
+    choice.checked = enabled;
+    choice.setAttribute("aria-expanded", String(enabled));
+    document.getElementById("editHomepagePanel").hidden = !enabled;
+    document.getElementById("edit_is_public").checked = enabled ? true : _currentItem?.is_public === true;
+  }
+  document.getElementById("editHomepageEnabled").addEventListener("change", function () {
+    setEditHomepageMode(this.checked);
+  });
+
   function openEditModal(item) {
+    setEditHomepageMode(false);
     // 이전에 열었던 매물의 건축물대장 자동조회 상태(배너/상태문구)가 남아있지 않도록 초기화
     const lookupStatusEl = document.getElementById("editLookupBuildingStatus");
     if (lookupStatusEl) lookupStatusEl.textContent = "";
@@ -1541,7 +1563,7 @@ function closeHomepageTab(tab) {
 
     html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
     html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
-    if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "&#44277;&#44060; &#52712;&#49548;" : "&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;"}</button>`;
+    if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "공개 취소" : "🌐 홈페이지 등록"}</button>`;
     if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
     html += '<div class="detail-print-tools">';
     html += '<select id="detailProgressStatus" class="btn" aria-label="매물 거래상태">'+['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(listingProgressStatus(item)===status?' selected':'')+'>'+status+'</option>').join('')+'</select>';
@@ -1783,11 +1805,11 @@ function closeHomepageTab(tab) {
     if (sendHomeBtn) {
       sendHomeBtn.addEventListener("click", async () => {
         const nextPublic = _currentItem.is_public !== true;
-        if (nextPublic && getListingImageUrls(_currentItem).length > 0) {
+        if (nextPublic) {
           openEditModal(_currentItem);
-          document.getElementById("edit_is_public").checked = true;
-          showToast("공개할 사진을 체크한 뒤 저장하세요.", 3500);
-          document.getElementById("edit_image_preview")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          setEditHomepageMode(true);
+          showToast("홈페이지용 설명·스티커와 공개할 사진을 확인한 뒤 저장하세요.", 3500);
+          document.getElementById("editHomepagePanel").scrollIntoView({ behavior: "smooth", block: "start" });
           return;
         }
         sendHomeBtn.disabled = true;
@@ -1869,7 +1891,7 @@ function closeHomepageTab(tab) {
           complexName,
           description:        gv("edit_description"),
           resource_id:        gv("edit_resource_id") || null,
-          is_public:          gv("edit_listingKind") === "명단" ? false : (OfficeConfig.id === "ktop" ? _currentItem.is_public === true : document.getElementById("edit_is_public").checked),
+          is_public:          gv("edit_listingKind") === "명단" ? false : (OfficeConfig.id === "ktop" ? _currentItem.is_public === true : (document.getElementById("editHomepageEnabled").checked ? document.getElementById("edit_is_public").checked : _currentItem.is_public === true)),
           image_urls:         [],
           imageUrls:          _editImageUrls,
           allImageUrls:       _editImageUrls,
