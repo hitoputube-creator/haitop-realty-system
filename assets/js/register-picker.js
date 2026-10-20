@@ -1,8 +1,8 @@
-/* 매물 등록 화면 전용 도우미
+/* 매물 등록·수정 화면 공통 도우미
  * 1) 아파트: 마을 → 아파트 선택, 선택하면 새주소·구주소 자동 표시
  * 2) 아파트: 동·호수를 입력하면 타입·분양평형·면적 자동 입력 (data/apartment-units.json + 기존 단지 자료)
  * 3) 홈페이지용 입력(홍보스티커·공개 매물설명·공개 여부) 접기/펼치기 — 모든 매물 유형 공통
- * 입력칸 id는 그대로 두고 화면만 정리하므로 저장 로직(register.html)은 바뀌지 않는다.
+ * 등록과 수정 모두 같은 아파트 선택 UI를 사용하며 저장 로직은 기존 입력칸을 읽는다.
  */
 (function () {
   const SCRIPT_SRC = document.currentScript && document.currentScript.src;
@@ -11,7 +11,8 @@
     : 'data/unjeong-apartments-20260806.json';
   const CUSTOM = '__custom__';
   const OTHER_VILLAGE = '기타 단지';
-  const $ = id => document.getElementById(id);
+  const prefix = document.getElementById('edit_apartmentListingForm') ? 'edit_' : '';
+  const $ = id => document.getElementById(prefix + id);
   const norm = v => String(v || '').replace(/\s+/g, '');
 
   let complexes = [];
@@ -204,8 +205,8 @@
 
     const row = document.createElement('div');
     row.className = 'apt-picker-row';
-    villageSel = document.createElement('select'); villageSel.id = 'aptPickVillage'; villageSel.setAttribute('aria-label', '마을 선택');
-    aptSel = document.createElement('select'); aptSel.id = 'aptPickName'; aptSel.setAttribute('aria-label', '아파트 선택');
+    villageSel = document.createElement('select'); villageSel.id = prefix + 'aptPickVillage'; villageSel.setAttribute('aria-label', '마을 선택');
+    aptSel = document.createElement('select'); aptSel.id = prefix + 'aptPickName'; aptSel.setAttribute('aria-label', '아파트 선택');
     nameInput.placeholder = '아파트명을 직접 입력하세요';
     nameInput.hidden = true;
     row.append(villageSel, aptSel);
@@ -216,7 +217,7 @@
     const makeAddr = (id, label, placeholder) => {
       const f = document.createElement('div'); f.className = 'umfield span-2';
       const l = document.createElement('label'); l.innerHTML = label + ' <span class="apt-auto-note">아파트를 선택하면 자동 입력</span>';
-      const i = document.createElement('input'); i.id = id; i.type = 'text'; i.placeholder = placeholder;
+      const i = document.createElement('input'); i.id = prefix + id; i.type = 'text'; i.placeholder = placeholder;
       f.append(l, i); return { field: f, input: i };
     };
     const road = makeAddr('aptAddrRoad', '새주소 (도로명)', '예) 경기도 파주시 ○○로 123');
@@ -231,7 +232,7 @@
     nameInput.addEventListener('input', () => { const c = $('complexName'); if (c) c.value = nameInput.value; });
     ['apt_동', 'apt_호수'].forEach(id => $(id).addEventListener('input', () => scheduleAutoFill()));
     AUTO_IDS.forEach(id => { const el = $(id); if (el) el.addEventListener('input', () => { delete autoFilled[id]; }); });
-    $('saveBtn').addEventListener('click', () => linkResource(currentResourceId), true);
+    document.getElementById(prefix ? 'editSaveBtn' : 'saveBtn').addEventListener('click', () => linkResource(currentResourceId), true);
 
     // 세입자·옵션·추가메모는 필요할 때만 펼치도록 한 묶음으로 접는다.
     const extras = Array.from(host.children).filter(el => el.classList.contains('um-section') &&
@@ -248,7 +249,7 @@
     loadComplexes().then(() => { fillVillages(); syncFromFields(); });
   }
   function openExtrasIfFilled() {
-    const d = document.querySelector('#apartmentListingForm .apt-more');
+    const d = document.querySelector('#' + prefix + 'apartmentListingForm .apt-more');
     if (!d) return;
     const ids = ['apt_세입자이름', 'apt_세입자연락처', 'apt_세입자비고', 'apt_옵션', 'apt_비고', 'apt_계약시작'];
     const tenant = $('apt_세입자현황');
@@ -257,7 +258,7 @@
 
   // ── 카테고리에 따라 화면 정리 ─────────────────────────
   function sync() {
-    const apt = $('category2Select').value === '아파트';
+    const apt = $(prefix ? 'category2' : 'category2Select').value === '아파트';
     ['publicAddress', 'mapAddress'].forEach(id => {
       const f = $(id) && $(id).closest('.field');
       if (f) f.style.display = apt ? 'none' : '';
@@ -292,6 +293,10 @@
 
   window.RegisterUi = {
     init() { setupHomepagePanel(); buildApartmentUi(); sync(); },
+    sync
+  };
+  window.EditUi = {
+    init() { buildApartmentUi(); sync(); },
     sync
   };
 })();
