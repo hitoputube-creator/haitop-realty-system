@@ -143,3 +143,48 @@ html[data-office-theme='ktop'] .resources-page .listing-card button[onclick^="op
 html[data-office-theme='ktop'] .resources-page .listing-card button[onclick^="openDriveEdit"]{background:#fff5e6!important;color:#946111!important;border-color:#ecd7af!important}
 html[data-office-theme='ktop'] .resources-page .listing-card button[onclick^="deleteDriveItem"]{background:#fff0ee!important;color:#b42318!important;border-color:#efcbc5!important}
 }
+
+/* KTOP registration and edit surfaces use the property-management navy header. */
+@media screen {
+html[data-office-theme='ktop'] body.property-form-page{background:#f3f5f9!important}
+html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar){
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  margin-top:20px;padding:20px 24px;border:0!important;border-radius:16px;
+  background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;
+  box-shadow:0 7px 24px rgba(31,75,139,.13)!important
+}
+html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.logo-main,.brand-text h1){color:#fff!important}
+html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.logo-sub,.brand-text p){color:#dbe7f8!important}
+html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.logo-icon,.logo){
+  display:grid;place-items:center;width:40px;height:40px;flex:0 0 40px;
+  border:1px solid rgba(255,255,255,.35)!important;border-radius:10px;
+  background:rgba(255,255,255,.13)!important;color:#fff!important
+}
+html[data-office-theme='ktop'] .property-form-page .header .logo-icon::before{
+  content:"K";position:static;width:auto;height:auto;line-height:1;
+  background:none!important;color:#fff;font-size:24px;font-weight:800
+}
+html[data-office-theme='ktop'] .property-form-page .header .logo-icon::after{display:none}
+html[data-office-theme='ktop'] .property-form-page .topbar .logo::before{content:"K";color:#fff;font-size:24px;font-weight:800;line-height:1}
+html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.actions .btn:not(.danger),.customer-navigation .btn){
+  background:rgba(255,255,255,.1)!important;color:#eef5ff!important;
+  border-color:rgba(255,255,255,.25)!important
+}
+html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.nav-link.active,.customer-navigation .return-main){
+  background:#fff!important;color:#1956a3!important;border-color:#fff!important
+}
+html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.actions .btn:not(.danger),.customer-navigation .btn):hover{
+  background:rgba(255,255,255,.2)!important;color:#fff!important
+}
+html[data-office-theme='ktop'] .property-form-page .header-line{display:none}
+html[data-office-theme='ktop'] .property-form-page #editModal .edit-modal-header{
+  background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;border-bottom:0!important
+}
+html[data-office-theme='ktop'] .property-form-page #editModal .edit-modal-header .modal-title{color:#fff!important}
+html[data-office-theme='ktop'] .property-form-page #editModal .edit-modal-close{
+  background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.45)!important;color:#fff!important
+}
+@media(max-width:760px){
+  html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar){padding:18px 16px;margin-top:12px;flex-wrap:wrap}
+}
+}
