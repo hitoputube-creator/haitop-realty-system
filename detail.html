@@ -30,6 +30,13 @@
 .apartment-listing-form .area-row input{flex:1;width:0}
 .apartment-listing-form .owner-phone-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:6px}
 .apartment-listing-form .amt-hint{font-size:.72rem;color:var(--gold);display:block}
+.apartment-listing-form .apt-picker-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:8px}
+.apartment-listing-form .apt-picker-row [hidden]{display:none!important}
+.apartment-listing-form .apt-auto-note{font-weight:400;font-size:.72rem;color:var(--gold);margin-left:4px}
+.apartment-listing-form .apt-more{padding:10px 14px}
+.apartment-listing-form .apt-more>summary{cursor:pointer;color:#d4af37;font-size:.85rem}
+.apartment-listing-form .apt-more>.um-section{margin:10px -14px 0}
+@media(max-width:650px){.apartment-listing-form .apt-picker-row{grid-template-columns:minmax(0,1fr)}}
 .apartment-listing-form .price-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}.apartment-listing-form .price-grid-5{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}.apartment-listing-form .price-grid-5{grid-template-columns:minmax(0,1fr)}}
@@ -96,7 +103,7 @@
 @media (min-width: 901px) {
   #editModal #edit_basicInfoGrid { grid-template-columns:repeat(12,minmax(0,1fr)); }
   #editModal #edit_basicInfoGrid > .field { grid-column:span 4;min-width:0; }
-  #editModal #edit_basicInfoGrid > .field:nth-child(-n+4) { grid-column:span 3; }
+  #editModal #edit_basicInfoGrid > .field:nth-child(-n+5) { grid-column:span 3; }
   #editModal #edit_basicInfoGrid > .edit-quick-building-field { grid-column:span 8; }
   #editModal #edit_basicInfoGrid > .field[style*="1 / -1"] { grid-column:1 / -1; }
   #editModal #edit_internalInfoGrid { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -244,6 +251,10 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
           <option value="매물">매물 (시장에 나온 매물)</option>
           <option value="명단">명단 (보관·관리용)</option>
         </select>
+      </div>
+      <div class="field">
+        <label for="edit_progressStatus">거래상태</label>
+        <select id="edit_progressStatus"><option>진행중</option><option>보류</option><option>거래완료</option></select>
       </div>
       <div class="field">
         <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
@@ -431,7 +442,6 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     <!-- 내부전용 -->
     <div class="modal-section-title">🔒 내부전용</div>
     <div id="edit_internalInfoGrid" class="form-grid-2" style="margin-bottom:10px;">
-      <div class="field"><label for="edit_progressStatus">거래상태</label><select id="edit_progressStatus"><option>진행중</option><option>보류</option><option>거래완료</option></select></div>
 <div class="field">
         <label>소유주명</label>
         <input id="edit_owner_name" type="text" placeholder="예) 홍길동" />
@@ -491,6 +501,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     </div>
   </div>
 </div>
+
+<script src="assets/js/register-picker.js?v=20261020-edit-form-parity"></script>
 
 <script>
   let _allDriveResources = [];
@@ -578,6 +590,7 @@ function closeHomepageTab(tab) {
     const commercialEl = document.getElementById("edit_commercial_section");
     if (commercialEl) commercialEl.style.display = EDIT_COMMERCIAL_CATS.includes(storageCat1) ? "" : "none";
     if (typeof syncEditApartmentListingForm === "function") syncEditApartmentListingForm();
+    if (window.EditUi) EditUi.sync();
   }
 
 
@@ -904,6 +917,7 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_title").value              = item.title || "";
     fillApartmentListingForm("edit_", item);
     syncEditApartmentListingForm();
+    if (window.EditUi) EditUi.sync();
     // 가격정보
     document.getElementById("edit_salePrice").value     = item.salePrice || "";
     document.getElementById("edit_presalePrice").value  = item.presalePrice || "";
@@ -986,6 +1000,7 @@ function closeHomepageTab(tab) {
   const syncEditApartmentFields = setupApartmentUnitFields("edit_", "edit_category2");
   const syncEditQuickBuildingFields = setupQuickBuildingSelect('edit_quickBuildingSelect', 'edit_publicAddress', 'edit_mapAddress', 'edit_complexName', 'edit_category1', 'edit_category2');
   const syncEditApartmentListingForm = setupApartmentListingForm("edit_", "edit_category2");
+  EditUi.init();
   setupListingDescriptionEmojiToolbar('edit_detailDescription');
 
   // ── 공개주소 → 지도검색주소 자동복사 (번지는 직접 추가 입력) ──────────
