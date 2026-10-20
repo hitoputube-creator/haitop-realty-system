@@ -1883,7 +1883,8 @@ function closeHomepageTab(tab) {
 
       // 수정
       document.getElementById("editSaveBtn").addEventListener("click", async () => {
-        if (!document.getElementById("edit_dealType").value) { showToast("거래유형을 선택하세요"); return; }
+        const dealTypeId = document.getElementById("edit_category2").value === "아파트" ? "edit_apt_거래구분" : "edit_dealType";
+        if (!document.getElementById(dealTypeId).value.trim()) { showToast("거래유형을 선택하세요"); return; }
         const btn = document.getElementById("editSaveBtn");
         btn.disabled = true; btn.textContent = "저장 중...";
         updateEditDynamicSections();
