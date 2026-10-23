@@ -122,6 +122,7 @@
     .note-density-toggle button { height:32px; padding:0 16px; border:0; background:transparent; color:var(--text-muted); font-size:.8rem; font-weight:600; font-family:inherit; cursor:pointer; }
     .note-density-toggle button + button { border-left:1px solid var(--border-slate); }
     .note-density-toggle button.active { background:rgba(212,175,55,.2); color:var(--gold); }
+    html[data-office-theme="ktop"] .note-density-toggle button.active { background:#1769d1; color:#fff; }
     .note-rows { display:flex; flex-direction:column; border:1px solid var(--border-slate); border-radius:10px; overflow:hidden; background:var(--bg-card); }
     .note-row { display:grid; grid-template-columns:34px minmax(0,1.6fr) minmax(0,1fr) minmax(110px,.8fr) minmax(130px,.9fr); gap:10px; align-items:center; padding:9px 12px; border-bottom:1px solid rgba(255,255,255,.06); cursor:pointer; font-size:.82rem; }
     .note-row:last-child { border-bottom:0; }
@@ -901,7 +902,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 </div>
 
 <script src="assets/js/listings-shared.js?v=20261013-phase1"></script>
-<script src="assets/js/properties.js?v=20261023-note-density3"></script>
+<script src="assets/js/properties.js?v=20261023-note-density4"></script>
 <script>
 /* Reuse the original card controls and handlers; enhance KTOP only. */
 (function () {
