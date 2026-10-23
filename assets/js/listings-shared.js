@@ -392,7 +392,7 @@ function naverAdButtonHtml(listingNo) {
   const label = posId ? "네이버광고중" : "네이버광고";
   const title = posId ? "부동산포스 광고 목록 (포스 매물번호 " + posId + ")" : "부동산포스에 매물 등록";
   const style = posId ? "background:#2e7d32;color:#fff;border-color:#2e7d32;" : "";
-  return `<button type="button" class="btn btn-ghost lc-naver-btn" title="${title}" style="flex:1 1 0 !important;min-width:0 !important;width:auto !important;white-space:nowrap;font-size:11px;padding:6px 2px;${style}" onclick="event.stopPropagation();window.open('${url}','_blank','noopener')">${label}</button>`;
+  return `<button type="button" class="btn btn-ghost lc-naver-btn" title="${title}" style="flex:1 1 0 !important;min-width:0 !important;width:auto !important;white-space:normal;line-height:1.15;word-break:keep-all;font-size:11px;padding:4px 2px;${style}" onclick="event.stopPropagation();window.open('${url}','_blank','noopener')">${label}</button>`;
 }
 
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
