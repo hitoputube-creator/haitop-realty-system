@@ -268,6 +268,10 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         </div>
         <span id="editLookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
+      <div class="field" id="edit_roadField" style="display:none;">
+        <label>새주소 <span style="font-size:0.78rem;color:#888;">도로명 · 자동조회 시 채워짐</span></label>
+        <input id="edit_roadAddress" type="text" readonly placeholder="자동조회하면 새주소가 나옵니다" />
+      </div>
       <div class="field" data-hide-bld>
         <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="edit_privateDetailAddress" type="text" placeholder="예) 101호" />
@@ -516,6 +520,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 </div>
 
 <script src="assets/js/register-picker.js?v=20261020-edit-form-parity"></script>
+<script src="assets/js/kakao-config.js"></script>
+<script src="assets/js/road-address.js"></script>
 
 <script>
   let _allDriveResources = [];
@@ -607,6 +613,8 @@ function closeHomepageTab(tab) {
     // 호수 / 운정역 상가·오피스텔 / 단지명은 건물·빌딩, 토지, 공장·창고, 그리고 아파트·오피스텔이 아닌 주거용(단독·전원·상가주택·다가구)에서는 숨긴다.
     const hideUnitFields = cat1 === "건물빌딩" || cat1 === "토지" || cat1 === "공장창고" || (cat1 === "주거용" && cat2 !== "아파트" && cat2 !== "오피스텔");
     document.getElementById("editModal").classList.toggle("bld-edit", hideUnitFields);
+    const roadFieldEl = document.getElementById("edit_roadField");
+    if (roadFieldEl) roadFieldEl.style.display = hideUnitFields ? "" : "none";
     placeEditTitleField(cat2 === "아파트");
   }
 
@@ -942,6 +950,7 @@ function closeHomepageTab(tab) {
       document.getElementById("edit_mapAddress").value = apartmentDetailAddresses(item).jibunAddress || "";
     }
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
+    if (typeof fillRoadAddress === "function") fillRoadAddress(document.getElementById("edit_mapAddress").value);
     fillApartmentUnitFields("edit_", item);
     syncEditApartmentFields();
     // 레거시 type="hilsstate" 매물은 단지명 필드가 비어 있어도 "힐스테이트더운정"을 자동 표시한다(세부유형은 강제 선택하지 않음).
@@ -1036,6 +1045,37 @@ function closeHomepageTab(tab) {
   EditUi.init();
   setupListingDescriptionEmojiToolbar('edit_detailDescription');
 
+
+  // ── 새주소(도로명) 조회: 지번/주소로 카카오 주소검색을 호출해 새주소를 받아 채운다. ──
+  let _roadSeq = 0;
+  function lookupRoadAddressFull(address) {
+    const cleaned = String(address || '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim().replace(/-0$/, '');
+    if (!cleaned || !window.HitopRoadAddress) return Promise.resolve(null);
+    const base = cleaned.split(',')[0].trim();
+    const query = /파주|^경기/.test(base) ? base : '파주시 ' + base;
+    return window.HitopRoadAddress.loadServices().then(() => new Promise(resolve => {
+      const timer = setTimeout(() => resolve(null), 10000);
+      new window.kakao.maps.services.Geocoder().addressSearch(query, (result, status) => {
+        clearTimeout(timer);
+        if (status === window.kakao.maps.services.Status.OK && result[0]) resolve(result[0].road_address ? result[0].road_address.address_name : '');
+        else if (status === window.kakao.maps.services.Status.ZERO_RESULT) resolve('');
+        else resolve(null);
+      });
+    })).catch(() => null);
+  }
+  async function fillRoadAddress(address) {
+    const el = document.getElementById('edit_roadAddress');
+    if (!el) return;
+    const seq = ++_roadSeq;
+    if (!String(address || '').trim()) { el.value = ''; el.placeholder = '자동조회하면 새주소가 나옵니다'; return; }
+    el.value = '';
+    el.placeholder = '새주소 조회 중...';
+    const road = await lookupRoadAddressFull(address);
+    if (seq !== _roadSeq) return;
+    el.value = road || '';
+    el.placeholder = road === null ? '새주소를 조회하지 못했습니다' : '새주소가 없는 지번입니다';
+  }
+
   // ── 공개주소 → 지도검색주소 자동복사 (번지는 직접 추가 입력) ──────────
   (function setupEditPublicToMapAddressSync() {
     const publicEl = document.getElementById('edit_publicAddress');
@@ -1101,6 +1141,7 @@ function closeHomepageTab(tab) {
       const dongNm = extractDongNm(address) || extractDongNm(detailAddressVal);
 
       btn.disabled = true;
+      fillRoadAddress(address);
       if (statusEl) statusEl.textContent = '조회 중...';
       if (refBox) refBox.style.display = 'none';
 
