@@ -207,8 +207,8 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
         <span id="lookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
       <div class="field">
-        <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
-        <input id="privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호, B동 203호" />
+        <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
+        <input id="privateDetailAddress" type="text" placeholder="예) 101호" />
       </div>
       <div class="field" style="display:none;">
         <label>동 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
@@ -580,7 +580,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       return hoMatch ? hoMatch[1] : '';
     }
 
-    // "115동 1층, 상가 101호" 같은 상세주소·동호수 필드에서 호수만 추출한다.
+    // "115동 1층, 상가 101호" 같은 호수 필드에서 호수만 추출한다.
     // 동/층 등 다른 숫자와 섞여 있을 수 있어 "숫자+호" 패턴을 우선 찾는다.
     function extractHoNm(detailAddress) {
       const s = String(detailAddress || '');
@@ -604,7 +604,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
         return;
       }
       const detailAddressVal = document.getElementById('privateDetailAddress').value;
-      // 지도검색주소에 호수/동을 같이 적었으면 그걸 우선 쓰고, 없으면 상세주소·동호수
+      // 지도검색주소에 호수/동을 같이 적었으면 그걸 우선 쓰고, 없으면 호수
       // 필드를 대신 확인한다 (기존 방식과의 호환). 같은 호수가 여러 동에 있는
       // 대단지에서는 동 정보가 없으면 정확한 호실을 특정하지 못할 수 있다.
       const hoNm = extractHoFromAddress(address) || extractHoNm(detailAddressVal);
