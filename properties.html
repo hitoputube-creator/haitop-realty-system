@@ -225,7 +225,9 @@
 .properties-page .listing-top-row .property-main-return .btn { padding:7px 11px; white-space:nowrap; }
 .properties-page .filter-panel-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-start; gap:8px 10px; }
 .properties-page .filter-panel-row .filter-row { flex:0 1 auto; display:flex; flex-wrap:wrap; gap:6px; }
-.properties-page .filter-panel-row .deal-filter-wrap { grid-column:auto; display:flex; align-items:center; gap:8px; margin:0 0 0 6px; padding-left:14px; border-left:1px solid var(--border-slate); }
+.properties-page .filter-panel-row .deal-filter-wrap { grid-column:auto; display:flex; align-items:center; gap:8px; margin:0 0 0 auto; padding-left:14px; border-left:1px solid var(--border-slate); }
+.properties-page .filter-panel-card .deal-filter-wrap .filter-btn { border:1px solid var(--border-slate); border-radius:999px; padding:6px 16px; background:transparent; }
+.properties-page .filter-panel-card .deal-filter-wrap .filter-btn.active { background:rgba(143,191,243,.16); border-color:#8fbff3; color:#bcd9ff; }
 .properties-page .filter-panel-row .deal-filter-wrap .filter-row { flex-wrap:nowrap; }
 .properties-page .filter-panel-row .complex-filter-wrap { margin:0; }
 @media(max-width:800px) {
@@ -899,7 +901,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 </div>
 
 <script src="assets/js/listings-shared.js?v=20261013-phase1"></script>
-<script src="assets/js/properties.js?v=20261023-note-density2"></script>
+<script src="assets/js/properties.js?v=20261023-note-density3"></script>
 <script>
 /* Reuse the original card controls and handlers; enhance KTOP only. */
 (function () {
