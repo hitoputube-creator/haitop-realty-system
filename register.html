@@ -366,11 +366,11 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
             <input id="owner_name" type="text" placeholder="예) 홍길동" />
           </div>
           <div class="field" style="flex:0 0 170px;min-width:0;margin:0;">
-            <label>연락처1</label>
+            <label>소유주 연락처</label>
             <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
           </div>
           <div id="additionalContactsWrap" style="display:contents;"></div>
-          <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 auto;box-sizing:border-box;height:38px;padding:0 14px;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addContactRow()">+ 연락처 추가</button>
+          <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 auto;box-sizing:border-box;height:38px;padding:0 14px;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addContactRow()">+ 추가 연락처</button>
         </div>
       </div>
       <div class="field">
@@ -1002,7 +1002,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       if (seen.has(digits)) { dup = true; input.style.borderColor = 'var(--red,#e05252)'; }
       else { input.style.borderColor = ''; seen.add(digits); }
     });
-    if (dup) showToast('연락처1 또는 다른 추가 연락처와 번호가 중복되었습니다.');
+    if (dup) showToast('소유주 연락처 또는 다른 추가 연락처와 번호가 중복되었습니다.');
     return dup;
   }
   function collectAdditionalContacts() {
@@ -1019,7 +1019,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       seen.add(digits);
       result.push({ name, phone });
     });
-    if (hadDup) showToast('연락처1 또는 다른 추가 연락처와 중복된 번호는 저장하지 않았습니다.');
+    if (hadDup) showToast('소유주 연락처 또는 다른 추가 연락처와 중복된 번호는 저장하지 않았습니다.');
     return result;
   }
   document.addEventListener("DOMContentLoaded", () => {
