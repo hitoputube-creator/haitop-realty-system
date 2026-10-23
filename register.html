@@ -108,6 +108,10 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
   border:0!important;box-shadow:0 7px 24px rgba(31,75,139,.13)!important;
 }
 </style>
+<style>
+  /* 건물·빌딩, 토지, 공장·창고, 아파트·오피스텔 외 주거용: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
+  body.bld-reg [data-hide-bld] { display: none !important; }
+</style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
 <div class="page" id="registerPage">
@@ -190,13 +194,9 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       </div>
     </div>
     <div class="form-grid-3" style="margin-top:10px;">
-      <div class="field" style="grid-column:1 / -1;">
+      <div class="field" data-hide-bld style="grid-column:1 / -1;">
         <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 주소·건물명 자동입력</span></label>
         <select id="quickBuildingSelect"></select>
-      </div>
-      <div class="field">
-        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
-        <input id="publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
       </div>
       <div class="field field-span2">
         <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
@@ -206,7 +206,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
         </div>
         <span id="lookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
-      <div class="field">
+      <div class="field" data-hide-bld>
         <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="privateDetailAddress" type="text" placeholder="예) 101호" />
       </div>
@@ -218,14 +218,10 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
         <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
         <input id="apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
       </div>
-      <div class="field">
+      <div class="field" data-hide-bld>
         <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
         <input id="complexName" type="text" placeholder="예) 힐스테이트더운정" />
       </div>
-    </div>
-    <div class="field" style="margin-top:10px;">
-      <label>제목 <span style="color:var(--gold)">*</span></label>
-      <input id="title" type="text" placeholder="매물 제목 (최대 20자)" maxlength="20" />
     </div>
   </section>
 
@@ -438,6 +434,17 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       <span id="homepageToggleHint" class="homepage-toggle-hint">선택할 때만 설명·홍보스티커 입력</span>
     </label>
     <div id="homepagePanel" hidden>
+      <!-- 홈페이지 공개 시에만 입력: 제목 · 공개주소 -->
+      <div class="form-grid-3" style="margin-top:14px;">
+      <div class="field" id="titleField" style="grid-column:1 / -1;">
+        <label>제목 <span style="color:var(--gold)">*</span></label>
+        <input id="title" type="text" placeholder="매물 제목 (최대 20자)" maxlength="20" />
+      </div>
+      <div class="field">
+        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
+        <input id="publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
+      </div>
+      </div>
       <div class="field" style="margin-top:14px;">
         <label>🏷️ 홍보스티커</label>
         <div class="sticker-grid">
@@ -535,6 +542,10 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       COMMERCIAL_CATS.includes(storageCat1) ? '' : 'none';
     syncApartmentListingForm();
     if (window.RegisterUi) RegisterUi.sync();
+    // 호수 / 운정역 상가·오피스텔 / 단지명은 건물·빌딩, 토지, 공장·창고, 그리고 아파트·오피스텔이 아닌 주거용에서는 숨긴다.
+    const hideUnitFields = cat1 === '건물빌딩' || cat1 === '토지' || cat1 === '공장창고' ||
+      (cat1 === '주거용' && cat2 !== '아파트' && cat2 !== '오피스텔');
+    document.body.classList.toggle('bld-reg', hideUnitFields);
   }
 
   cat1El.addEventListener('change', renderCat2);
@@ -629,6 +640,18 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
             el.dispatchEvent(new Event('input'));
             filled.push('연면적');
           }
+        }
+
+        // 건물 유형(건물·빌딩, 공장·창고 등)은 연면적뿐 아니라 대지면적·건축면적도 함께 채운다.
+        if (variant === 'building') {
+          [[result.land_area_m2, 'landAreaM2', '대지면적'], [result.footprint_area_m2, 'buildingAreaM2', '건축면적']].forEach(([value, id, label]) => {
+            const el = document.getElementById(id);
+            if (el && value != null && Number(value) > 0) {
+              el.value = value;
+              el.dispatchEvent(new Event('input'));
+              filled.push(label);
+            }
+          });
         }
 
         if (result.floor_info) {
@@ -960,7 +983,8 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     // 상가주택·다가구주택은 화면상 "주거용"에서 선택하지만, 실제 저장은 건물빌딩으로 통일한다.
     const cat1 = resolveStorageCategory1(cat1Raw, cat2);
     const title = document.getElementById('title').value.trim();
-    if (!title && cat2 !== '아파트' && cat1Raw !== '상가사무실') { showToast('제목을 입력하세요'); return; }
+    // 제목은 "홈페이지 등록"을 체크했을 때만 입력받는다. 체크하지 않으면 자동 생성한다.
+    if (!title && cat2 !== '아파트' && cat1Raw !== '상가사무실' && document.getElementById('homepageToggleBtn').checked) { showToast('제목을 입력하세요'); return; }
     if (!document.getElementById('dealType').value && cat2 !== '아파트') { showToast('거래유형을 선택하세요'); return; }
 
     const type = document.getElementById('propertyType').value || 'etc';
@@ -983,7 +1007,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     const item = {
       id: 'HITOP-' + Date.now(),
       type, category1: cat1, category2: cat2,
-      title: title || [gv('complexName'), gv('privateDetailAddress'), cat2].filter(Boolean).join(' ') || '상가 매물',
+      title: title || [gv('complexName'), gv('privateDetailAddress')].filter(Boolean).join(' ') || [(mapAddress || publicAddress || '').slice(0, 14), cat2].filter(Boolean).join(' ') || '상가 매물',
       address:            mapAddress || publicAddress,
       ...apartmentAddresses,
       publicAddress,
