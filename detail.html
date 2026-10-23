@@ -459,19 +459,19 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     <div class="modal-section-title">🔒 내부전용</div>
     <div id="edit_internalInfoGrid" class="form-grid-2" style="margin-bottom:10px;">
 <div class="field" style="grid-column:1 / -1;margin-bottom:0;">
-        <div style="display:flex;gap:6px;align-items:flex-end;">
-          <div class="field" style="flex:0 0 160px;min-width:0;margin:0;">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;">
+          <div class="field" style="flex:0 0 130px;min-width:0;margin:0;">
             <label>소유주명</label>
             <input id="edit_owner_name" type="text" placeholder="예) 홍길동" />
           </div>
-          <div class="field" style="flex:1;min-width:0;margin:0;">
+          <div class="field" style="flex:0 0 170px;min-width:0;margin:0;">
             <label>연락처1</label>
             <input id="edit_owner_phone1" type="tel" placeholder="010-0000-0000" />
           </div>
-          <button type="button" id="editAddOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 104px;box-sizing:border-box;height:38px;padding:0;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addEditContactRow()">+ 연락처 추가</button>
+          <div id="edit_additionalContactsWrap" style="display:contents;"></div>
+          <button type="button" id="editAddOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 auto;box-sizing:border-box;height:38px;padding:0 14px;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addEditContactRow()">+ 연락처 추가</button>
         </div>
       </div>
-      <div id="edit_additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field">
         <label>드라이브 자료 연결</label>
         <select id="edit_resource_id"><option value="">-- 연결 안함 --</option></select>
@@ -727,10 +727,10 @@ function closeHomepageTab(tab) {
   // 추가 연락처(다중) — 이름(선택) + 연락처 + 삭제, 여러 명 추가 가능
   let _editContactRowSeq = 0;
   function makeEditContactRowHtml(idx) {
-    return `<div class="contact-row" data-idx="${idx}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-      <input type="text" class="contact-name-input" placeholder="이름 또는 관계자명(선택)" style="flex:0 0 160px;min-width:0;" />
-      <input type="tel" class="contact-phone-input" placeholder="010-0000-0000" style="flex:1;min-width:0;" />
-      <button type="button" class="btn btn-ghost" style="flex:0 0 104px;box-sizing:border-box;height:38px;padding:0;font-size:0.82rem;text-align:center;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeEditContactRow(this)">삭제</button>
+    return `<div class="contact-row" data-idx="${idx}" style="display:flex;gap:6px;align-items:flex-end;margin:0;">
+      <input type="text" class="contact-name-input" placeholder="이름(선택)" style="flex:0 0 110px;width:110px;min-width:0;" />
+      <input type="tel" class="contact-phone-input" placeholder="010-0000-0000" style="flex:0 0 170px;width:170px;min-width:0;" />
+      <button type="button" class="btn btn-ghost" title="삭제" style="flex:0 0 38px;box-sizing:border-box;height:38px;padding:0;font-size:0.9rem;text-align:center;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeEditContactRow(this)">✕</button>
     </div>`;
   }
   function addEditContactRow(name, phone) {
