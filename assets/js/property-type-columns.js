@@ -4,7 +4,7 @@
   const common = [['deal','구분'],['price','가격'],['owner','소유주'],['phone','연락처']];
   const schemas = {
     '': [['type','매물유형'],['name','매물명'],...common],
-    '상가사무실': [['building','건물명'],['address','소재지'],['floorRoom','층/호실'],['exclusive','전용면적'],...common],
+    '상가사무실': [['building','건물명'],['address','소재지'],['exclusive','전용면적'],...common],
     '토지': [['address','소재지'],['parcel','블럭/필지'],['landArea','토지면적'],['unitPrice','평당가'],...common],
     '주거용': [['village','마을'],['apartment','단지명'],['dong','동'],['room','호수'],['supply','분양평형/타입'],...common],
     '공장창고': [['address','소재지'],['landArea','대지면적'],['buildingArea','건축면적'],['totalArea','연면적'],...common],
@@ -31,6 +31,13 @@
     const landPy=first(item.landAreaPy,item.land_area_py,item.land_py,item.areaPy);
     const landM2=first(item.landAreaM2,item.land_area_sqm,item.areaM2);
     const sale=first(item.salePrice, num(first(item.land_price,item.factory_price,item.biz_price))*10000);
+    const address=first(item.roadAddress,item.jibunAddress,item.address,item.publicAddress,item.mapAddress,item.quick_location);
+    const rawUnit=String(first(item.roomNumber,item.shop_room,item.unitNumber,item.ho)).trim();
+    const unitMatch=rawUnit.match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호?/i) || String(address).match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호(?=\s|$|[,，])/i);
+    const unitText=unitMatch ? unitMatch[0].replace(/\s+/g,'') : '';
+    const unit=unitText && /호$/i.test(unitText) ? unitText : unitText ? unitText+'호' : '';
+    const addressBuilding=unit ? ((String(address).match(/,\s*([^,]+?)\s*\d{1,5}\s*호(?=\s|$|[,，])/i)||[])[1] || '').trim() : '';
+    const addressDisplay=addressBuilding ? String(address).replace(/[,，]\s*[^,，]+$/,'').trim() : String(address).replace(/[,，]?\s*(?:[A-Za-z]\s*)?\d{1,5}\s*호(?=\s*$)/i,'').trim();
     return {
       presaleStatus:window.CommercialPriceCore?.commercial(item)?CommercialPriceCore.status(item):'',
       name:(()=>{
@@ -40,8 +47,9 @@
         const room=u.호||item.apartmentHo||item.ho||'';
         return village && dong && room ? [village,dong+'동 '+room+'호'].join('\n') : first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address);
       })(),
-      building:first(item.buildingName,item.building_name,item.complexName,item.shop_building,item.biz_building),
-      address:first(item.roadAddress,item.jibunAddress,item.address,item.publicAddress,item.mapAddress,item.quick_location),
+      building:first(item.buildingName,item.building_name,item.complexName,item.shop_building,item.biz_building,addressBuilding),
+      unit,
+      address:addressDisplay,
       floorRoom:[first(item.floor,item.floorInfo,item.shop_floor),first(item.roomNumber,item.shop_room,item.unitNumber,item.ho)].filter(v=>v !== '').join(' / '),
       exclusive:area(first(item.areaExclusivePy,item.exclusiveAreaPy,item.shop_area_py,item.areaPy),first(item.areaExclusiveM2,item.exclusiveAreaM2,item.shop_area_sqm,item.areaM2)),
       maintenance:first(man(item.maintenanceFeeManwon),won(item.maintenanceFee),man(item.shop_maintenance)),
@@ -85,9 +93,6 @@
       node.className='listing-cell listing-cell-'+key;
       node.textContent=String(listingColumnValue(item,key) || '-');
       if (key==='height' && num(node.textContent) && !/[a-z가-힣]/i.test(node.textContent)) node.textContent+='m';
-      if (key==='name' || key==='building' || key==='address') {
-        const no=document.createElement('span');no.className='lc-no';no.textContent='No. '+getListingNumber(item);node.appendChild(no);
-      }
     }
     if (key==='type') {
       const badge=node.querySelector('.lc-type');
@@ -107,6 +112,14 @@
           const line=document.createElement('span');line.className='lc-name-line';line.textContent=text;return line;
         }));
         if (no) node.appendChild(no);
+      }
+    }
+    if (key==='building') {
+      const unit=fields(item).unit;
+      if (unit && node.textContent.trim() !== '-') {
+        const sub=document.createElement('span');sub.className='lc-building-unit';sub.textContent=unit;
+        sub.style.display='block';sub.style.marginTop='2px';sub.style.fontSize='12px';sub.style.color='#64748b';
+        node.appendChild(sub);
       }
     }
     if (key==='owner') {
@@ -144,6 +157,7 @@
         }));
       }
     }
+    node.querySelectorAll('.lc-no').forEach(no=>no.remove());
     node.dataset.label=label;
     node.style.gridArea='auto';
     return node;
