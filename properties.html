@@ -107,6 +107,35 @@
     .view-toggle-group button + button { border-left: 1px solid var(--border-slate); }
     .filter-divider { border-top: 1px solid var(--border-slate); margin: 12px 0; }
     .filter-panel-title { font-size: 0.85rem; color: var(--gold-soft); margin-bottom: 8px; }
+    .month-filter-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px solid var(--border-slate); }
+    .month-filter-label { color:var(--text-muted); font-size:.78rem; white-space:nowrap; }
+    .month-filter-row select { width:260px; flex:0 1 260px; height:34px; min-width:190px; padding:0 10px; border-radius:8px; }
+    .month-step-btn, .month-current-btn { height:34px; border:1px solid var(--border-slate); border-radius:8px; background:rgba(255,255,255,.04); color:var(--text-muted); cursor:pointer; font-family:inherit; }
+    .month-step-btn { width:36px; font-size:1.05rem; }
+    .month-current-btn { padding:0 12px; }
+    .month-filter-summary { margin-left:auto; color:var(--gold-soft); font-size:.78rem; }
+    .listing-note-view { display:flex; flex-direction:column; gap:18px; }
+    .note-view-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid rgba(212,175,55,.22); border-radius:12px; background:rgba(212,175,55,.06); }
+    .note-view-head strong { color:var(--gold-soft); font-size:1.05rem; }
+    .note-view-head span { color:var(--text-muted); font-size:.8rem; }
+    .note-day { border-left:3px solid rgba(212,175,55,.55); padding-left:14px; }
+    .note-day-title { display:flex; align-items:center; gap:8px; margin:0 0 9px; color:var(--gold-soft); font-size:.96rem; }
+    .note-day-title span { color:var(--text-muted); font-size:.76rem; font-weight:400; }
+    .note-items { display:flex; flex-direction:column; gap:8px; }
+    .note-item { display:grid; grid-template-columns:58px minmax(0,1.4fr) minmax(130px,.8fr) minmax(150px,1fr); gap:10px; align-items:start; padding:12px 14px; border:1px solid var(--border-slate); border-radius:10px; background:var(--bg-card); cursor:pointer; }
+    .note-item:hover { border-color:rgba(212,175,55,.5); background:rgba(212,175,55,.045); }
+    .note-number { color:var(--gold); font-weight:700; font-size:.82rem; }
+    .note-title { color:var(--text-main); font-weight:700; line-height:1.45; }
+    .note-address, .note-meta, .note-owner, .note-memo { margin-top:3px; color:var(--text-muted); font-size:.78rem; line-height:1.45; word-break:keep-all; overflow-wrap:anywhere; }
+    .note-memo { color:var(--text-main); white-space:pre-line; }
+    .note-status { display:inline-block; margin-left:6px; padding:2px 6px; border-radius:999px; background:rgba(255,255,255,.06); color:var(--text-muted); font-size:.7rem; font-weight:500; }
+    @media (max-width:720px) {
+      .month-filter-summary { width:100%; margin-left:0; }
+      .month-filter-row select { width:auto; flex:1; min-width:150px; }
+      .note-view-head { align-items:flex-start; flex-direction:column; }
+      .note-item { grid-template-columns:42px minmax(0,1fr); }
+      .note-price, .note-contact { grid-column:2; }
+    }
 
     /* 모바일: 상세등록 버튼 / 검색창을 각각 한 줄씩 쌓는다 */
     @media (max-width: 480px) {
@@ -146,12 +175,12 @@
 .properties-page .kind-tab + .kind-tab { border-left:1px solid var(--border-slate); }
 .properties-page .kind-tab.active { background:#263b50; color:#ffe29a; }
 .properties-page #detailRegisterBtn { padding:9px 16px; border-radius:8px; }
-.properties-page .toolbar-row { display:grid; grid-template-columns:minmax(180px,1fr) 64px 108px 108px 112px; gap:8px; align-items:center; }
+.properties-page .toolbar-row { display:grid; grid-template-columns:minmax(180px,1fr) 64px 108px 108px 132px; gap:8px; align-items:center; }
 .properties-page .toolbar-row .search-field { width:100%; margin:0; }
 .properties-page .toolbar-row #searchBtn, .properties-page .toolbar-row .sort-select { width:100%; border-radius:8px; }
 .properties-page .toolbar-row input { border-radius:8px; }
 .properties-page .view-toggle-group { width:100%; }
-.properties-page .view-toggle-group button { flex:1; padding:0 10px; }
+.properties-page .view-toggle-group button { flex:1; min-width:0; padding:0 6px; white-space:nowrap; }
 .properties-page .filter-panel-row { display:grid; grid-template-columns:68px minmax(0,1fr) auto; gap:10px; align-items:center; }
 .properties-page .filter-group-label { color:var(--text-muted); font-size:.78rem; white-space:nowrap; }
 .properties-page #filterRow, .properties-page #dealFilterRow, .properties-page #subFilterRow { gap:6px; margin:0; }
@@ -366,7 +395,19 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
         <div class="view-toggle-group">
           <button id="viewToggleCard" onclick="setViewMode('card')">카드</button>
           <button id="viewToggleList" onclick="setViewMode('list')">목록</button>
+          <button id="viewToggleNote" onclick="setViewMode('note')">노트</button>
         </div>
+      </div>
+
+      <div class="month-filter-row" aria-label="등록월 필터">
+        <span class="month-filter-label">등록월</span>
+        <button type="button" class="month-step-btn" id="monthPrevBtn" title="이전 달">‹</button>
+        <select id="registrationMonthFilter" aria-label="매물 등록월 선택">
+          <option value="">전체 기간</option>
+        </select>
+        <button type="button" class="month-step-btn" id="monthNextBtn" title="다음 달">›</button>
+        <button type="button" class="month-current-btn" id="currentMonthBtn">이번 달</button>
+        <span class="month-filter-summary" id="monthFilterSummary">등록일 기준 전체 매물</span>
       </div>
 
       <div class="filter-divider"></div>
@@ -830,7 +871,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 </div>
 
 <script src="assets/js/listings-shared.js?v=20261013-phase1"></script>
-<script src="assets/js/properties.js?v=20261016-print-cols"></script>
+<script src="assets/js/properties.js?v=20261023-month-note"></script>
 <script>
 /* Reuse the original card controls and handlers; enhance KTOP only. */
 (function () {
