@@ -901,6 +901,1000 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   </div>
 </div>
 
+<script src="assets/js/listings-shared.js?v=20261023-naver-ad"></script>
+<script src="assets/js/properties.js?v=20261023-note-density4"></script>
+<script>
+/* Reuse the original card controls and handlers; enhance KTOP only. */
+(function () {
+  if (document.documentElement.dataset.officeTheme !== 'ktop' || typeof makeCard !== 'function') return;
+  function arrangeMobileCard(card) {
+    var dong = card.querySelector('.listing-cell-dong');
+    var room = card.querySelector('.listing-cell-room');
+    var unit = document.createElement('div');
+    unit.className = 'ktop-mobile-unit';
+    if (dong && room) {
+      dong.before(unit);
+      unit.append(dong, room);
+      [dong, room].forEach(function (cell) {
+        if (!cell.textContent.trim() || cell.textContent.trim() === '-') cell.classList.add('ktop-mobile-empty');
+      });
+      if (Array.from(unit.children).every(function (cell) { return cell.classList.contains('ktop-mobile-empty'); })) unit.classList.add('ktop-mobile-empty');
+    }
+    var village = card.querySelector('.listing-cell-village');
+    if (village && village.textContent.trim() === '-') village.classList.add('ktop-mobile-empty');
+    var actions = card.querySelector('.listing-actions');
+    var deleteBtn = card.querySelector('.lc-delete-btn');
+    var side = card.querySelector('.lc-actions-side');
+    if (actions && side) {
+      var more = document.createElement('details');
+      more.className = 'ktop-mobile-more';
+      more.open = !window.matchMedia('(max-width:800px)').matches;
+      more.addEventListener('click', function (event) { event.stopPropagation(); });
+      var summary = document.createElement('summary');
+      summary.textContent = '더보기';
+      summary.setAttribute('aria-label', '매물 삭제 및 상태 관리');
+      var body = document.createElement('div');
+      body.className = 'ktop-mobile-more-body';
+      if (deleteBtn) body.appendChild(deleteBtn);
+      body.appendChild(side);
+      more.append(summary, body);
+      actions.appendChild(more);
+      syncCardActions(card);
+    }
+    var checkbox = card.querySelector('input[data-sel]');
+    var title = card.querySelector('.listing-cell-apartment');
+    if (checkbox) checkbox.setAttribute('aria-label', (title ? title.textContent.trim() : '매물') + ' 선택');
+    return card;
+  }
+  var mobileMedia = window.matchMedia('(max-width:800px)');
+  function syncCardActions(card) {
+    var actions = card.querySelector('.listing-actions');
+    var main = card.querySelector('.lc-actions-main');
+    var more = card.querySelector('.ktop-mobile-more');
+    var body = more && more.querySelector('.ktop-mobile-more-body');
+    var side = card.querySelector('.lc-actions-side');
+    var deleteBtn = card.querySelector('.lc-delete-btn');
+    if (!actions || !main || !more || !body || !side) return;
+    if (mobileMedia.matches) {
+      if (deleteBtn) body.prepend(deleteBtn);
+      body.appendChild(side);
+      more.hidden = false;
+    } else {
+      if (deleteBtn) main.appendChild(deleteBtn);
+      actions.appendChild(side);
+      more.open = false;
+      more.hidden = true;
+    }
+  }
+  mobileMedia.addEventListener('change', function (event) {
+    document.querySelectorAll('#listingContainer .listing-row-card').forEach(syncCardActions);
+  });
+  var originalMakeCard = makeCard;
+  makeCard = function (item, options) { return arrangeMobileCard(originalMakeCard(item, options)); };
+  document.querySelectorAll('#listingContainer .listing-row-card').forEach(arrangeMobileCard);
+  document.addEventListener('click', function (event) {
+    if (!mobileMedia.matches) return;
+    document.querySelectorAll('.ktop-mobile-more[open]').forEach(function (more) {
+      if (!more.contains(event.target)) more.removeAttribute('open');
+    });
+  });
+  document.addEventListener('keydown', function (event) {
+    if (mobileMedia.matches && event.key === 'Escape') document.querySelectorAll('.ktop-mobile-more[open]').forEach(function (more) { more.removeAttribute('open'); });
+  });
+})();
+</script>
+<script src="assets/js/property-type-columns.js?v=20261023-actions-width"></script>
+<script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
+<script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
+</body>
+</html>
+
+
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>HITOP 부동산 매물관리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20261017-owner-phone-wrap" />
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="assets/js/storage.js?v=20261013-phase1"></script>
+<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+  <script src="assets/js/nav.js?v=20261007-ktop-internal"></script>
+  <style>
+    .property-main-return { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+    .property-main-return a { text-decoration:none; }
+    @media (max-width:480px) { .property-main-return a { width:100%; text-align:center; } }
+    /* 목록보기 테이블: 세부 스타일은 assets/css/style.css?v=20261006-brand-layout에서 관리 */
+    /* 선택매물보기 테이블 */
+    #selectedViewTableWrap { overflow-x: auto; }
+    #selectedViewTable { width:100%; table-layout:fixed; border-collapse:collapse; font-size:0.83rem; }
+    #selectedViewTable thead th { padding:9px 10px; text-align:left; font-weight:600; color:var(--text-muted); border-bottom:2px solid rgba(212,175,55,0.25); }
+    #selectedViewTable tbody td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; }
+    #selectedViewTable tbody tr:hover td { background:rgba(212,175,55,0.05); }
+    #selectedViewTable tbody tr.done-row td { color:#666; }
+    #selectedViewTable .selected-print-unit { display:block; margin-top:2px; font-weight:700; }
+    #selectedViewTable .selected-print-subline { display:block; margin-top:2px; color:var(--text-muted); font-size:0.78rem; }
+    #selectedViewTable .selected-print-clip { overflow:hidden; white-space:nowrap; text-overflow:clip; max-width:520px; }
+    #selectedViewTable .selected-print-clip + .selected-print-clip { margin-top:2px; }
+    /* 선택매물 인쇄 전용: 화면 배치는 유지하고 A4 가로 표로 출력 */
+    @page { size: A4 landscape; margin: 10mm; }
+    @media print {
+      html, body { width: auto !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+      body * { visibility: hidden; }
+      #selectedPrintArea, #selectedPrintArea * { visibility: visible; }
+      #selectedPreviewSection { display: block !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+      #selectedPrintArea {
+        position: absolute !important; top: 0; left: 0;
+        width: 100% !important; margin: 0 !important; padding: 0 !important;
+        box-sizing: border-box; background: #fff !important;
+      }
+      #selectedPrintHeader { display: flex !important; margin-bottom: 9px !important; }
+      #selectedViewTableWrap { width: 100% !important; overflow: visible !important; }
+      #selectedViewTable {
+        width: 100% !important; table-layout: fixed !important;
+        border-collapse: collapse !important; font-size: 9pt !important;
+        line-height: 1.4 !important; color: #111 !important;
+      }
+      #selectedViewTable th, #selectedViewTable td {
+        box-sizing: border-box !important; min-width: 0 !important;
+        white-space: normal !important; word-break: keep-all !important;
+        overflow-wrap: anywhere !important;
+      }
+      #selectedViewTable th:first-child, #selectedViewTable td:first-child { display: none !important; }
+      #selectedViewTable th:nth-child(2), #selectedViewTable td:nth-child(2) { width: 4% !important; text-align: center !important; }
+      #selectedViewTable th:nth-child(3), #selectedViewTable td:nth-child(3) { width: 7% !important; }
+      #selectedViewTable th:nth-child(4), #selectedViewTable td:nth-child(4) { width: 13% !important; }
+      #selectedViewTable th:nth-child(5), #selectedViewTable td:nth-child(5) { width: 8% !important; }
+      #selectedViewTable th:nth-child(6), #selectedViewTable td:nth-child(6) { width: 13% !important; }
+      #selectedViewTable th:nth-child(7), #selectedViewTable td:nth-child(7) { width: 7% !important; }
+      #selectedViewTable th:nth-child(8), #selectedViewTable td:nth-child(8) { width: 12% !important; }
+      #selectedViewTable th:nth-child(9), #selectedViewTable td:nth-child(9) { width: 36% !important; }
+      #selectedViewTable thead th {
+        background: #1a2a4a !important; color: #fff !important;
+        padding: 7px 5px !important; border: 1px solid #d6dce6 !important;
+        font-weight: 700 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      }
+      #selectedViewTable tbody td {
+        padding: 7px 5px !important; border: 1px solid #d6dce6 !important;
+        color: #111 !important; vertical-align: top !important;
+      }
+      #selectedViewTable tbody td * { color: #111 !important; background: transparent !important; }
+      #selectedViewTable .selected-print-unit { display: block !important; margin-top: 2px; font-weight: 700 !important; }
+      #selectedViewTable .selected-print-subline { display: block !important; margin-top: 2px; color: #555 !important; font-size: 8pt !important; }
+      #selectedViewTable .selected-print-clip { overflow: hidden !important; white-space: nowrap !important; text-overflow: clip !important; max-width: 100% !important; width: 100% !important; }
+      #selectedViewTable .selected-print-clip + .selected-print-clip { margin-top: 2px !important; }
+      #selectedViewTable tbody tr.done-row td { color: #666 !important; background: #f5f5f5 !important; }
+      #selectedViewTable tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+      #selectedViewTable thead { display: table-header-group !important; }
+      #selectedViewTable tbody { display: table-row-group !important; }
+    }
+    @media screen {
+      #printHeader { display: none; }
+      #selectedPrintHeader { display: none; }
+    }
+    /* 카드 더보기/접기 공통 */
+    .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
+    .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:linear-gradient(transparent,var(--bg-card)); pointer-events:none; }
+    .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(212,175,55,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
+    /* ══════════════════════════════════════════
+       2단계: 검색·정렬·필터 영역 정리
+       (상단 내비게이션 CSS는 assets/css/style.css?v=20261006-brand-layout로 공통화됨)
+    ══════════════════════════════════════════ */
+
+    /* ── 검색·정렬·필터 통합 카드 ── */
+    .filter-panel-card { padding: 14px 16px; }
+    .toolbar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .toolbar-row .search-field { flex: 1 1 200px; margin-bottom: 0; }
+    .toolbar-row input, .toolbar-row select { height: 36px; padding: 0 12px; }
+    .toolbar-row #searchBtn { height: 36px; padding: 0 18px; }
+    .include-done-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+    .sort-select { width: auto; min-width: 100px; flex: 0 0 auto; }
+    .view-toggle-group { display: flex; border: 1px solid var(--border-slate); border-radius: 8px; overflow: hidden; flex-shrink: 0; height: 36px; }
+    .view-toggle-group button { height: 100%; padding: 0 16px; font-size: 0.78rem; font-weight: 600; background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-family: inherit; }
+    .view-toggle-group button + button { border-left: 1px solid var(--border-slate); }
+    .filter-divider { border-top: 1px solid var(--border-slate); margin: 12px 0; }
+    .filter-panel-title { font-size: 0.85rem; color: var(--gold-soft); margin-bottom: 8px; }
+    .month-filter-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px solid var(--border-slate); }
+    .month-filter-label { color:var(--text-muted); font-size:.78rem; white-space:nowrap; }
+    .month-filter-row select { width:260px; flex:0 1 260px; height:34px; min-width:190px; padding:0 10px; border-radius:8px; }
+    .month-step-btn, .month-current-btn { height:34px; border:1px solid var(--border-slate); border-radius:8px; background:rgba(255,255,255,.04); color:var(--text-muted); cursor:pointer; font-family:inherit; }
+    .month-step-btn { width:36px; font-size:1.05rem; }
+    .month-current-btn { padding:0 12px; }
+    .month-filter-summary { margin-left:auto; color:var(--gold-soft); font-size:.78rem; }
+    .listing-note-view { display:flex; flex-direction:column; gap:18px; }
+    .note-view-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid rgba(212,175,55,.22); border-radius:12px; background:rgba(212,175,55,.06); }
+    .note-view-head strong { display:block; color:var(--gold-soft); font-size:1.05rem; }
+    .note-view-head span { color:var(--text-muted); font-size:.8rem; }
+    .note-density-toggle { display:flex; flex-shrink:0; border:1px solid var(--border-slate); border-radius:8px; overflow:hidden; }
+    .note-density-toggle button { height:32px; padding:0 16px; border:0; background:transparent; color:var(--text-muted); font-size:.8rem; font-weight:600; font-family:inherit; cursor:pointer; }
+    .note-density-toggle button + button { border-left:1px solid var(--border-slate); }
+    .note-density-toggle button.active { background:rgba(212,175,55,.2); color:var(--gold); }
+    html[data-office-theme="ktop"] .note-density-toggle button.active { background:#1769d1 !important; color:#fff !important; }
+    .note-rows { display:flex; flex-direction:column; border:1px solid var(--border-slate); border-radius:10px; overflow:hidden; background:var(--bg-card); }
+    .note-row { display:grid; grid-template-columns:34px minmax(0,1.6fr) minmax(0,1fr) minmax(110px,.8fr) minmax(130px,.9fr); gap:10px; align-items:center; padding:9px 12px; border-bottom:1px solid rgba(255,255,255,.06); cursor:pointer; font-size:.82rem; }
+    .note-row:last-child { border-bottom:0; }
+    .note-row:hover { background:rgba(212,175,55,.06); }
+    .note-row-no { color:var(--gold); font-weight:700; font-size:.78rem; }
+    .note-row-title { color:var(--text-main); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .note-row-meta, .note-row-owner { color:var(--text-muted); font-size:.76rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .note-row-price { color:var(--text-main); font-weight:600; white-space:nowrap; }
+    .note-day { border-left:3px solid rgba(212,175,55,.55); padding-left:14px; }
+    .note-day-title { display:flex; align-items:center; gap:8px; margin:0 0 9px; color:var(--gold-soft); font-size:.96rem; }
+    .note-day-title span { color:var(--text-muted); font-size:.76rem; font-weight:400; }
+    .note-items { display:flex; flex-direction:column; gap:8px; }
+    .note-item { display:grid; grid-template-columns:58px minmax(0,1.4fr) minmax(130px,.8fr) minmax(150px,1fr); gap:10px; align-items:start; padding:12px 14px; border:1px solid var(--border-slate); border-radius:10px; background:var(--bg-card); cursor:pointer; }
+    .note-item:hover { border-color:rgba(212,175,55,.5); background:rgba(212,175,55,.045); }
+    .note-number { color:var(--gold); font-weight:700; font-size:.82rem; }
+    .note-title { color:var(--text-main); font-weight:700; line-height:1.45; }
+    .note-address, .note-meta, .note-owner, .note-memo { margin-top:3px; color:var(--text-muted); font-size:.78rem; line-height:1.45; word-break:keep-all; overflow-wrap:anywhere; }
+    .note-memo { color:var(--text-main); white-space:pre-line; }
+    .note-status { display:inline-block; margin-left:6px; padding:2px 6px; border-radius:999px; background:rgba(255,255,255,.06); color:var(--text-muted); font-size:.7rem; font-weight:500; }
+    @media (max-width:720px) {
+      .month-filter-summary { width:100%; margin-left:0; }
+      .month-filter-row select { width:auto; flex:1; min-width:150px; }
+      .note-view-head { align-items:flex-start; flex-direction:column; }
+      .note-item { grid-template-columns:42px minmax(0,1fr); }
+      .note-price, .note-contact { grid-column:2; }
+      .note-row { grid-template-columns:30px minmax(0,1fr); row-gap:3px; }
+      .note-row-meta, .note-row-price, .note-row-owner { grid-column:2; white-space:normal; }
+    }
+
+    /* 모바일: 상세등록 버튼 / 검색창을 각각 한 줄씩 쌓는다 */
+    @media (max-width: 480px) {
+      .toolbar-row { flex-direction: column; align-items: stretch; }
+      .toolbar-row #detailRegisterBtn { width: 100%; }
+      .toolbar-row #searchBtn { width: 100%; }
+      .toolbar-row .field { width: 100%; }
+      .toolbar-row .include-done-label { width: 100%; }
+      .toolbar-row .sort-select { width: 100%; }
+      .view-toggle-group { width: 100%; }
+      .view-toggle-group button { flex: 1; }
+    }
+
+    /* 유형별 필터 박스 — 매물유형 버튼(왼쪽) + 단지 필터 드롭다운(오른쪽) */
+    .filter-panel-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .filter-panel-row .filter-row { flex: 1 1 auto; }
+    .complex-filter-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+    .complex-filter-wrap select { width: auto; min-width: 150px; max-width: 320px; padding: 5px 8px; font-size: 0.8rem; text-overflow: ellipsis; }
+    /* 거래유형 필터 — 유형별 필터 오른쪽에 별도로 노출 (주거용 선택 시 전세·월세로 교체) */
+    .deal-filter-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+    .deal-filter-wrap .filter-row { flex-wrap: nowrap; }
+    /* 모바일에서는 같은 박스 내부 하단에 전체 폭으로 배치 */
+    @media (max-width: 480px) {
+      .complex-filter-wrap { width: 100%; margin-top: 8px; }
+      .complex-filter-wrap select { flex: 1; min-width: 0; }
+      .deal-filter-wrap { width: 100%; margin-top: 8px; }
+      .deal-filter-wrap .filter-row { flex-wrap: wrap; }
+    }
+  .apartment-deal-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}.apartment-deal-summary[hidden]{display:none}.apartment-deal-total{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:12px;border:1px solid currentColor;background:rgba(255,255,255,.03);cursor:pointer;font:inherit}.apartment-deal-total strong{font-size:1.55rem}.apartment-deal-total span{font-size:.8rem}.apartment-deal-0{color:#e5bf46}.apartment-deal-1{color:#8fbff3}.apartment-deal-2{color:#48d68b}.apartment-deal-3{color:#baa6ff}.apartment-deal-total.active{background:rgba(212,175,55,.18);box-shadow:inset 0 0 0 2px currentColor}
+
+/* 매물관리 상단 도구 정리 */
+.properties-page .property-main-return { margin:12px 0; gap:8px; }
+.properties-page .property-main-return .btn { width:auto; padding:7px 12px; border-radius:8px; font-size:.8rem; color:var(--text-muted); border-color:var(--border-slate); background:transparent; }
+.properties-page .listing-top-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.properties-page .kind-tab-row { display:flex; gap:0; margin:0; border:1px solid var(--border-slate); border-radius:8px; overflow:hidden; }
+.properties-page .kind-tab { margin:0; border:0; border-radius:0; background:transparent; padding:8px 16px; color:var(--text-muted); }
+.properties-page .kind-tab + .kind-tab { border-left:1px solid var(--border-slate); }
+.properties-page .kind-tab.active { background:#263b50; color:#ffe29a; }
+.properties-page #detailRegisterBtn { padding:9px 16px; border-radius:8px; }
+.properties-page .toolbar-row { display:grid; grid-template-columns:minmax(180px,1fr) 64px 108px 108px 132px; gap:8px; align-items:center; }
+.properties-page .toolbar-row .search-field { width:100%; margin:0; }
+.properties-page .toolbar-row #searchBtn, .properties-page .toolbar-row .sort-select { width:100%; border-radius:8px; }
+.properties-page .toolbar-row input { border-radius:8px; }
+.properties-page .view-toggle-group { width:100%; }
+.properties-page .view-toggle-group button { flex:1; min-width:0; padding:0 6px; white-space:nowrap; }
+.properties-page .filter-panel-row { display:grid; grid-template-columns:68px minmax(0,1fr) auto; gap:10px; align-items:center; }
+.properties-page .filter-group-label { color:var(--text-muted); font-size:.78rem; white-space:nowrap; }
+.properties-page #filterRow, .properties-page #dealFilterRow, .properties-page #subFilterRow { gap:6px; margin:0; }
+.properties-page .filter-panel-card .filter-btn { border:1px solid transparent; border-radius:6px; padding:6px 11px; background:rgba(255,255,255,.04); color:var(--text-muted); }
+.properties-page .filter-panel-card .filter-btn.active { background:#263b50; border-color:#8f793e; color:#ffe29a; }
+.properties-page .complex-filter-wrap { margin:0; }
+.properties-page .complex-filter-wrap select { height:32px; border-radius:6px; min-width:160px; max-width:260px; }
+.properties-page .deal-filter-wrap { grid-column:1/-1; display:grid; grid-template-columns:68px minmax(0,1fr); margin:0; gap:10px; }
+.properties-page #subFilterRow { padding-left:78px; }
+@media(max-width:800px) {
+ .properties-page .filter-panel-row { grid-template-columns:68px minmax(0,1fr); }
+ .properties-page .complex-filter-wrap { grid-column:1/-1; display:grid; grid-template-columns:68px minmax(0,1fr); gap:10px; width:100%; }
+ .properties-page .complex-filter-wrap select { width:100%; max-width:none; }
+}
+@media(max-width:600px) {
+ .properties-page .listing-top-row { flex-wrap:wrap; }
+ .properties-page .kind-tab { padding:8px 12px; }
+ .properties-page .toolbar-row { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .properties-page .toolbar-row .search-field { grid-column:1/3; }
+ .properties-page .toolbar-row #searchBtn { grid-column:3; }
+ .properties-page .filter-panel-row { grid-template-columns:1fr; }
+ .properties-page .complex-filter-wrap, .properties-page .deal-filter-wrap { grid-column:1; grid-template-columns:68px minmax(0,1fr); }
+ .properties-page #subFilterRow { padding-left:0; }
+}
+/* 한 줄 정리: 바로가기 버튼은 매물/명단/전체 탭 옆, 매물유형·거래유형은 한 줄 */
+.properties-page .listing-top-row .property-main-return { display:flex; flex:1 1 auto; justify-content:flex-end; align-items:center; gap:6px; margin:0; }
+.properties-page .listing-top-row .property-main-return [hidden] { display:none!important; }
+.properties-page .listing-top-row .property-main-return .btn { padding:7px 11px; white-space:nowrap; }
+.properties-page .filter-panel-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-start; gap:8px 10px; }
+.properties-page .filter-panel-row .filter-row { flex:0 1 auto; display:flex; flex-wrap:wrap; gap:6px; }
+.properties-page .filter-panel-row .deal-filter-wrap { grid-column:auto; display:flex; align-items:center; gap:8px; margin:0 0 0 auto; padding-left:14px; border-left:1px solid var(--border-slate); }
+.properties-page .filter-panel-card .deal-filter-wrap .filter-btn { border:1px solid var(--border-slate); border-radius:999px; padding:6px 16px; background:transparent; }
+.properties-page .filter-panel-card .deal-filter-wrap .filter-btn.active { background:rgba(143,191,243,.16); border-color:#8fbff3; color:#bcd9ff; }
+.properties-page .filter-panel-row .deal-filter-wrap .filter-row { flex-wrap:nowrap; }
+.properties-page .filter-panel-row .complex-filter-wrap { margin:0; }
+@media(max-width:800px) {
+ .properties-page .listing-top-row .property-main-return { order:3; flex:1 1 100%; justify-content:flex-start; flex-wrap:wrap; }
+ .properties-page .filter-panel-row .deal-filter-wrap { width:100%; margin:0; padding-left:0; border-left:0; flex-wrap:wrap; }
+ .properties-page .filter-panel-row .deal-filter-wrap .filter-row { flex-wrap:wrap; }
+}
+</style>
+<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-brand-layout">
+<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261009-ktop-v4">
+<script>
+(function(){
+  var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+  document.documentElement.dataset.officeTheme=office;
+  if(office!=='ktop'){
+    var link=document.querySelector('link[href*="white-navy-workspace.css"]');
+    if(link)link.disabled=true;
+    var building=document.getElementById('ktop-building-light');
+    if(building)building.disabled=true;
+  }
+})();
+</script>
+<style>
+
+/* KTOP property mobile layout · 2026-10-10 */
+.ktop-mobile-unit, .ktop-mobile-more, .ktop-mobile-more-body { display:contents; }
+.ktop-mobile-more > summary { display:none; }
+/* Desktop KTOP cards: keep the three actions on one row and the status below. */
+@media screen and (min-width:801px) {
+ html[data-office-theme="ktop"] body.properties-page .listing-row-card .listing-actions {
+   grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+ html[data-office-theme="ktop"] body.properties-page .listing-row-card .lc-status-chip {
+   grid-column:1/-1; min-height:30px;
+ }
+}
+html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-status-chip:not(.done) {
+ border-color:#c96368!important; color:#b54850!important; background:#fff7f7!important; font-weight:700;
+}
+@media screen and (max-width:800px) {
+ html[data-office-theme="ktop"] .properties-page .page { width:100%; padding:12px; box-sizing:border-box; }
+ html[data-office-theme="ktop"] .properties-page #tabProperty > .card { padding:14px; border-radius:14px; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-title { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; position:relative; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-title::before { display:none; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-heading { justify-content:space-between; width:100%; gap:8px!important; flex-wrap:nowrap!important; font-size:15px; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-heading > span { white-space:nowrap; }
+ html[data-office-theme="ktop"] .properties-page #cardSelectAll { width:20px; height:20px; margin:0; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-actions { width:100%; gap:6px; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-actions .btn { min-height:40px; padding:8px 10px; font-size:12px!important; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-actions > button:disabled { display:none; }
+ html[data-office-theme="ktop"] .properties-page .listing-tools-actions > .btn:last-child { margin-left:auto; }
+ html[data-office-theme="ktop"] .properties-page #listingContainer { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; overflow:visible; }
+ html[data-office-theme="ktop"] .properties-page .listing-card.listing-row-card {
+   display:grid; min-width:0; min-height:0; padding:14px; gap:8px;
+   grid-template-columns:28px minmax(0,1fr) minmax(0,1fr);
+   grid-template-areas:"select apartment apartment" "select village village" "select unit unit" "deal price price" "owner owner phone" "type type type" "actions actions actions";
+   align-items:start; border-radius:12px; overflow:visible;
+ }
+ html[data-office-theme="ktop"] .properties-page .listing-cell { min-width:0; font-size:14px; line-height:1.45; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell::before { display:none; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-select { align-self:start; padding-top:3px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-select input { width:22px; height:22px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-apartment { font-size:17px; font-weight:750; gap:3px; overflow-wrap:anywhere; }
+ html[data-office-theme="ktop"] .properties-page .lc-no { font-size:11px; font-weight:400; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-village { font-size:13px; color:#617286; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-unit { grid-area:unit; display:flex; gap:12px; flex-wrap:wrap; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-unit > .listing-cell { display:block; font-size:15px; font-weight:700; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-dong::after { content:"동"; margin-left:2px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-room::after { content:"호"; margin-left:2px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-empty { display:none!important; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-deal { align-self:center; }
+ html[data-office-theme="ktop"] .properties-page .lc-deal-badge { font-size:12px; padding:4px 6px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-price { align-self:center; overflow:visible; }
+ html[data-office-theme="ktop"] .properties-page .lc-price-text { display:block; font-size:18px; line-height:1.4; color:#193860; overflow:visible; overflow-wrap:anywhere; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-owner,
+ html[data-office-theme="ktop"] .properties-page .listing-cell-phone { font-size:13px; white-space:normal; overflow-wrap:anywhere; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-owner::before,
+ html[data-office-theme="ktop"] .properties-page .listing-cell-phone::before { display:block; content:attr(data-label); font-size:11px; margin-bottom:3px; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-phone > span { white-space:normal; overflow:visible; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-type { display:flex; flex-direction:row; gap:6px; flex-wrap:wrap; }
+ html[data-office-theme="ktop"] .properties-page .listing-cell-type > span { max-width:100%; width:auto; padding:3px 7px; border-radius:5px; font-size:11px; }
+ html[data-office-theme="ktop"] .properties-page .listing-row-card .listing-actions {
+   display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start;
+   gap:7px; padding-top:10px; margin-top:2px; border-top:1px solid #e3eaf3;
+ }
+ html[data-office-theme="ktop"] .properties-page .listing-row-card .lc-actions-main { display:contents; }
+ html[data-office-theme="ktop"] .properties-page .listing-row-card .lc-actions-main .btn,
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary {
+   box-sizing:border-box; width:100%; min-height:42px; padding:10px 4px; border-radius:8px; font-size:13px; line-height:1.4; text-align:center;
+ }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more { display:block; position:relative; min-width:0; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary { display:block; border:1px solid #cbd5e1; background:#fff; color:#294867; cursor:pointer; list-style:none; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary::-webkit-details-marker { display:none; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary:focus-visible { outline:2px solid #1767d2; outline-offset:2px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body { display:none; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more[open] .ktop-mobile-more-body {
+   display:grid; gap:8px; position:absolute; top:calc(100% + 6px); right:0; width:180px;
+   padding:10px; border:1px solid #dce5ef; border-radius:10px; background:#fff; box-shadow:0 6px 20px #19386022; z-index:20;
+ }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .btn { width:100%; min-height:42px; font-size:13px; padding:8px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .lc-actions-side { display:grid; gap:8px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .lc-status-chip { width:100%; min-height:42px; font-size:13px; padding:8px; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .lc-toggle { display:flex; }
+ html[data-office-theme="ktop"] .properties-page .filter-panel-row { grid-template-columns:minmax(0,1fr); }
+ html[data-office-theme="ktop"] .properties-page #filterRow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; gap:6px; }
+ html[data-office-theme="ktop"] .properties-page #filterRow .filter-btn { padding:8px 3px; min-height:38px; font-size:12px; white-space:nowrap; }
+ html[data-office-theme="ktop"] .properties-page .complex-filter-wrap,
+ html[data-office-theme="ktop"] .properties-page .deal-filter-wrap { grid-column:1; grid-template-columns:60px minmax(0,1fr); margin:0; }
+ html[data-office-theme="ktop"] .properties-page .listing-top-row { gap:8px; }
+ html[data-office-theme="ktop"] .properties-page .kind-tab-row { flex:1; }
+ html[data-office-theme="ktop"] .properties-page .kind-tab { flex:1; padding:8px 6px; font-size:12px; white-space:nowrap; }
+ html[data-office-theme="ktop"] .properties-page #detailRegisterBtn { width:auto; padding:9px 10px; font-size:12px; }
+ html[data-office-theme="ktop"] .properties-page .toolbar-row input { font-size:16px; }
+ html[data-office-theme="ktop"] .properties-page .property-main-return { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+ html[data-office-theme="ktop"] .properties-page .property-main-return .btn { width:auto; text-align:center; padding:8px 3px; font-size:11px; }
+}
+
+</style>
+<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
+</head>
+<body class="properties-page" data-nav-active="properties">
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="gps-heading-row"><div class="logo-main">HITOP 부동산 매물관리</div><div id="globalPropertySearchToolbar" class="gps-toolbar no-print"></div></div>
+      <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
+    </div>
+    <nav class="main-nav" id="mainNav"></nav>
+  </header>
+  <div class="header-line"></div>
+  <div id="globalPropertySearch" class="no-print"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const keys = ['all', 'shop', 'land', 'home', 'factory', 'other'];
+      let category = new URLSearchParams(location.search).get('mainCategory');
+      if (!keys.includes(category)) {
+        try {
+          const state = JSON.parse(OfficeStorage.session.getItem('hitop_properties_filter_state') || '{}') || {};
+          const majorToCategory = {'':'all', '상가사무실':'shop', '토지':'land', '주거용':'home', '공장창고':'factory', '건물빌딩':'other'};
+          category = majorToCategory[state.currentMajor];
+        } catch (_) {}
+      }
+      if (!keys.includes(category)) category = 'all';
+      document.getElementById('propertyMainReturn').href = 'property-main.html?category=' + category;
+      const mapLink = document.getElementById('propertyKakaoMap');
+      const majorToMapCategory = {'':'all', '상가사무실':'shop', '토지':'land', '주거용':'home', '공장창고':'factory', '건물빌딩':'other'};
+      function updateMapLink(key) {
+        mapLink.href = OfficeConfig.urlFor('listings-kakao.html?category=' + key);
+      }
+      updateMapLink(category);
+      document.addEventListener('click', function (event) {
+        const filter = event.target.closest('#filterRow .filter-btn[data-major]');
+        if (filter) updateMapLink(majorToMapCategory[filter.dataset.major] || 'all');
+      });
+      mapLink.addEventListener('click', function () {
+        const active = document.querySelector('#filterRow .filter-btn.active[data-major]');
+        if (active) updateMapLink(majorToMapCategory[active.dataset.major] || 'all');
+      });
+      document.getElementById('propertyProfitRecommendations').hidden = OfficeConfig.id !== 'hitop';
+      document.getElementById('propertyCustomers').href = OfficeConfig.urlFor('customers.html');
+    });
+  </script>
+
+  <!-- ===== 매물관리 ===== -->
+  <div id="tabProperty">
+
+    <!-- ===== 검색·정렬·필터 통합 영역 ===== -->
+    <section class="card filter-panel-card">
+      <div class="listing-top-row"><div class="kind-tab-row" id="kindTabRow">
+        <button type="button" class="kind-tab active" data-kind="매물">매물<span class="kind-count" id="kindCountListing"></span></button>
+        <button type="button" class="kind-tab" data-kind="명단">명단<span class="kind-count" id="kindCountRoster"></span></button>
+        <button type="button" class="kind-tab" data-kind="전체">전체<span class="kind-count" id="kindCountAll"></span></button>
+      </div>
+      <nav class="property-main-return no-print" aria-label="바로가기">
+        <a class="btn btn-ghost" id="propertyMainReturn" href="property-main.html" hidden>← 매물관리 메인</a>
+        <a class="btn btn-ghost" id="propertyKakaoMap" href="listings-kakao.html">카카오맵</a>
+        <a class="btn btn-ghost" id="propertyProfitRecommendations" href="profit-recommendations.html">수익성상가 추천</a>
+        <a class="btn btn-ghost" id="propertyCustomers" href="customers.html">고객관리</a>
+      </nav>
+      <button class="btn btn-primary" id="detailRegisterBtn" style="flex:0 0 auto;white-space:nowrap;">+ 새 매물 등록</button></div>
+      <div class="toolbar-row" id="toolbarRow">
+        <div class="field search-field">
+          <input id="searchInput" type="text" placeholder="매물번호·주소·매물명·메모·단지명 검색" />
+        </div>
+        <button class="btn btn-ghost" id="searchBtn" style="flex:0 0 auto;white-space:nowrap;">검색</button>
+        <input type="checkbox" id="includeCompletedChk" hidden /><select id="listingStatusFilter" class="sort-select" title="진행중·보류·거래완료로 필터링" aria-label="매물 거래상태 필터"><option value="진행중">진행중</option><option value="보류">보류</option><option value="거래완료">거래완료</option><option value="전체">전체 상태</option></select>
+        <select id="sortSelect" class="sort-select">
+          <option value="newest">최신순</option>
+          <option value="oldest">오래된순</option>
+        </select>
+        <div class="view-toggle-group">
+          <button id="viewToggleCard" onclick="setViewMode('card')">카드</button>
+          <button id="viewToggleList" onclick="setViewMode('list')">목록</button>
+          <button id="viewToggleNote" onclick="setViewMode('note')">노트</button>
+        </div>
+      </div>
+
+      <div class="month-filter-row" aria-label="등록월 필터">
+        <span class="month-filter-label">등록월</span>
+        <button type="button" class="month-step-btn" id="monthPrevBtn" title="이전 달">‹</button>
+        <select id="registrationMonthFilter" aria-label="매물 등록월 선택">
+          <option value="">전체 기간</option>
+        </select>
+        <button type="button" class="month-step-btn" id="monthNextBtn" title="다음 달">›</button>
+        <button type="button" class="month-current-btn" id="currentMonthBtn">이번 달</button>
+        <span class="month-filter-summary" id="monthFilterSummary">등록일 기준 전체 매물</span>
+      </div>
+
+      <div class="filter-divider"></div>
+
+
+      <div class="filter-panel-row" id="filterPanelRow">
+        <span class="filter-group-label">매물유형</span>
+        <div class="filter-row" id="filterRow">
+          <button class="filter-btn active" data-major="">전체</button>
+          <button class="filter-btn" data-major="공장창고">공장·창고</button>
+          <button class="filter-btn" data-major="상가사무실">상가·사무실</button>
+          <button class="filter-btn" data-major="토지">토지</button>
+          <button class="filter-btn" data-major="주거용">주거용</button>
+          <button class="filter-btn" data-major="건물빌딩">건물·빌딩</button>
+        </div>
+        <!-- 단지 필터(예: 힐스테이트더운정) — 주거용 전체/아파트/오피스텔에서만 노출, 매물유형 필터와 함께 적용됨 -->
+        <div class="complex-filter-wrap" id="complexFilterWrap" style="display:none;">
+          <label for="complexFilterSelect">단지</label>
+          <select id="complexFilterSelect">
+            <option value="">전체 단지</option>
+            <option value="힐스테이트더운정">힐스테이트더운정</option>
+          </select>
+        </div>
+        <!-- 거래유형 필터 — 유형별 필터와 독립적 OR로 결합. 주거용 선택 시 전세·월세로 교체됨 -->
+        <div class="deal-filter-wrap" id="dealFilterWrap">
+          <span class="filter-group-label">거래유형</span>
+          <div class="filter-row" id="dealFilterRow"></div>
+        </div>
+      </div>
+      <div class="filter-row" id="subFilterRow" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(212,175,55,0.12);"></div>
+    </section>
+
+    <!-- 목록 -->
+    <section class="card"><div id="apartmentDealSummary" class="apartment-deal-summary no-print" hidden aria-label="단지별 거래구분 필터"></div>
+      <div class="card-title no-print listing-tools-title" style="flex-wrap:wrap;gap:8px;">
+        <div class="listing-tools-heading" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span>등록된 매물 <span id="countBadge" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+          <label id="cardSelectBar" style="display:none;align-items:center;gap:5px;cursor:pointer;font-size:0.78rem;color:var(--text-muted);user-select:none;">
+            <input type="checkbox" id="cardSelectAll" style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="toggleSelectAll(_currentCardItems,this.checked)" />
+            전체선택
+          </label>
+        </div>
+        <div class="listing-tools-actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">📋 선택매물보기</button>
+          <button class="btn btn-ghost btn-select-delete" id="deleteSelectedBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">선택삭제 (0건)</button>
+          <button class="btn btn-ghost" onclick="downloadExcel()" title="화면 필터와 관계없이 전체 매물(거래완료 포함)을 엑셀과 JSON 백업 파일로 받습니다" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
+        </div>
+      </div>
+      <div id="printArea">
+        <!-- 인쇄 헤더 (화면에선 숨김) -->
+        <div id="printHeader" style="justify-content:space-between;align-items:flex-end;margin-bottom:6px;">
+          <div>
+            <div data-office-brand style="font-size:15px;font-weight:800;color:#000;">🏢 하이탑부동산 매물목록</div>
+            <div id="printKeyword" style="font-size:10px;color:#555;margin-top:2px;"></div>
+          </div>
+          <div style="font-size:10px;color:#666;text-align:right;" id="printDate"></div>
+        </div>
+        <!-- 통합검색: 현재매물 섹션 헤더 -->
+        <div id="unifiedPropertyLabel" style="display:none;font-weight:600;font-size:0.88rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(212,175,55,0.2);">현재매물 <span id="unifiedPropertyCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+        <div id="listingContainer" class="listing-grid"></div>
+        <div id="emptyMessage" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
+          등록된 매물이 없습니다.
+        </div>
+        <div id="pagination" class="pagination"></div>
+        <!-- 통합검색: 거래완료 섹션 -->
+        <div id="unifiedDoneSection" style="display:none;">
+          <div style="font-weight:600;font-size:0.88rem;color:#e88;margin-top:16px;margin-bottom:8px;padding-top:14px;padding-bottom:6px;border-top:1px solid rgba(238,136,136,0.2);border-bottom:1px solid rgba(238,136,136,0.2);">거래완료 <span id="unifiedDoneCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+          <div id="unifiedDoneContainer" class="listing-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 선택매물보기 (2단계) ===== -->
+    <section id="selectedPreviewSection" class="card" style="display:none;">
+      <div class="card-title no-print">
+        <span>선택된 매물 <span id="previewCount" style="font-size:0.78rem;color:var(--text-muted);"></span></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="goBackToList()">← 목록으로</button>
+          <button class="btn btn-primary" onclick="doPrint()">🖨️ 인쇄</button>
+        </div>
+      </div>
+      <!-- 인쇄 영역 -->
+      <div id="selectedPrintArea">
+        <div id="selectedPrintHeader" style="justify-content:space-between;align-items:flex-end;margin-bottom:8px;">
+          <div>
+            <div data-office-brand style="font-size:15px;font-weight:800;color:#000;">🏢 하이탑부동산 매물목록</div>
+            <div id="selectedPrintKeyword" style="font-size:10px;color:#555;margin-top:2px;"></div>
+          </div>
+          <div id="selectedPrintDate" style="font-size:10px;color:#666;text-align:right;"></div>
+        </div>
+        <div id="selectedViewTableWrap"></div>
+      </div>
+    </section>
+
+  </div>
+
+</div>
+
+<!-- 📅 일정 추가 모달 -->
+<div id="calModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-title">📅 구글 캘린더 일정 추가</div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>일정 유형</label>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="cal-type-btn active" data-type="잔금일정">잔금 일정</button>
+        <button class="cal-type-btn" data-type="손님미팅">손님 미팅</button>
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:12px;">
+      <div class="field">
+        <label>날짜</label>
+        <input id="cal_date" type="date" />
+      </div>
+      <div class="field">
+        <label>시간</label>
+        <input id="cal_time" type="time" value="10:00" />
+      </div>
+    </div>
+    <div id="cal_preview" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('calModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="calConfirmBtn">📅 캘린더 열기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- 전역 에러 오버레이 -->
+<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+  <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
+  <div style="font-size:1.1rem;font-weight:700;color:#e0e0e0;margin-bottom:8px;">연결 오류가 발생했습니다</div>
+  <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
+  <button onclick="location.reload()" style="background:#d4af37;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
+</div>
+
+<script>
+  function showAppError(msg) {
+    const el = document.getElementById("appErrorOverlay");
+    if (!el) return;
+    document.getElementById("appErrorMsg").textContent = msg || "새로고침 해주세요.";
+    el.style.display = "flex";
+  }
+  window.onerror = function(msg, src, line, col, err) {
+    showAppError((err && err.message) || msg || "알 수 없는 오류가 발생했습니다.");
+  };
+  window.onunhandledrejection = function(e) {
+    const msg = (e.reason && e.reason.message) || String(e.reason) || "비동기 오류가 발생했습니다.";
+    if (msg.includes("저장 실패") || msg.includes("수정 실패") || msg.includes("삭제 실패")) return;
+    showAppError(msg);
+  };
+
+  function showToast(msg, duration = 2000) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), duration);
+  }
+</script>
+
+<!-- ===== 계약문자 모달 ===== -->
+<style>
+#contractModal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(2,3,10,0.88);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 20px 12px;
+  overflow-y: auto;
+}
+.cm-wrap {
+  background: radial-gradient(circle at top left, #182853 0, #0b1a33 45%, #050914 100%);
+  border: 1px solid rgba(212,175,55,0.45);
+  border-radius: 18px;
+  width: 100%; max-width: 700px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  margin-bottom: 20px;
+}
+.cm-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(212,175,55,0.25);
+}
+.cm-header h2 { font-size: 1.1rem; color: var(--gold); margin: 0; }
+.cm-close {
+  background: transparent; border: none; color: var(--text-muted);
+  font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0 4px;
+}
+.cm-close:hover { color: var(--text-main); }
+.cm-section { margin-bottom: 14px; }
+.cm-section-title {
+  font-size: 0.75rem; color: var(--gold-soft); font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
+}
+.cm-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cm-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 520px) {
+  .cm-grid2, .cm-grid3 { grid-template-columns: 1fr; }
+}
+.cm-field label {
+  display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px;
+}
+.cm-field input[type=text],
+.cm-field input[type=number],
+.cm-field input[type=date],
+.cm-field input[type=time],
+.cm-field select,
+.cm-field textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color-scheme: dark;
+}
+.cm-field input:focus,
+.cm-field textarea:focus { outline: none; border-color: rgba(212,175,55,0.6); }
+.cm-toggle-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.cm-toggle {
+  padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; cursor: pointer;
+  border: 1px solid rgba(212,175,55,0.35); background: transparent; color: var(--text-muted);
+  transition: 0.15s;
+}
+.cm-toggle.active {
+  background: linear-gradient(135deg, #f3d27b, #d4af37);
+  color: #201608; font-weight: bold; border-color: transparent;
+}
+.cm-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 14px 0; }
+.cm-calc-box {
+  font-size: 0.83rem; color: var(--gold-soft);
+  background: rgba(212,175,55,0.07);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 8px; padding: 8px 12px;
+  margin-top: 4px;
+}
+.cm-output {
+  width: 100%;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(212,175,55,0.3);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 0.84rem;
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  line-height: 1.7;
+  padding: 14px;
+  min-height: 320px;
+  resize: vertical;
+}
+.cm-checkbox-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.cm-checkbox-row input[type=checkbox] {
+  width: auto; accent-color: var(--gold); cursor: pointer; transform: scale(1.15);
+}
+.cm-checkbox-row label {
+  font-size: 0.85rem; color: var(--text-muted); cursor: pointer; margin: 0;
+}
+</style>
+
+<div id="contractModal" style="display:none;">
+  <div class="cm-wrap">
+
+    <div class="cm-header">
+      <h2>📨 계약문자 생성</h2>
+      <button class="cm-close" onclick="closeContractModal()">✕</button>
+    </div>
+
+    <!-- 단지명 + 용도 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>단지명</label>
+          <input id="cm_complex" type="text" placeholder="예) 더퍼스트레지던스">
+        </div>
+        <div class="cm-field">
+          <label>용도</label>
+          <div class="cm-toggle-group" style="margin-top:4px;">
+            <button class="cm-toggle active" data-group="cm_usage" data-val="업무용" onclick="cmToggle(this)">업무용</button>
+            <button class="cm-toggle" data-group="cm_usage" data-val="주거용" onclick="cmToggle(this)">주거용</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 동 / 호수 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>동</label>
+          <input id="cm_dong" type="text" placeholder="예) 101">
+        </div>
+        <div class="cm-field">
+          <label>호수</label>
+          <input id="cm_ho" type="text" placeholder="예) 305">
+        </div>
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 보증금 / 월차임 / 선후불 -->
+    <div class="cm-section">
+      <div class="cm-section-title">계약 조건</div>
+      <div class="cm-grid2" style="margin-bottom:10px;">
+        <div class="cm-field">
+          <label>보증금 (만원)</label>
+          <input id="cm_deposit" type="number" placeholder="1000" oninput="cmCalc()">
+        </div>
+        <div class="cm-field">
+          <label>월차임 (만원)</label>
+          <input id="cm_monthly" type="number" placeholder="100">
+        </div>
+      </div>
+      <div class="cm-field">
+        <label>선불 / 후불</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_pay_timing" data-val="선불" onclick="cmToggle(this)">선불</button>
+          <button class="cm-toggle" data-group="cm_pay_timing" data-val="후불" onclick="cmToggle(this)">후불</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 계약금 -->
+    <div class="cm-section">
+      <div class="cm-section-title">계약금</div>
+      <div class="cm-field" style="margin-bottom:10px;">
+        <label>계약금 전액 (만원)</label>
+        <input id="cm_earnest" type="number" placeholder="100" oninput="cmCalc()">
+      </div>
+      <div class="cm-field" style="margin-bottom:8px;">
+        <label>입금방식</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_pay_method" data-val="전액입금" onclick="cmToggle(this);cmTogglePartial()">전액입금</button>
+          <button class="cm-toggle" data-group="cm_pay_method" data-val="일부입금" onclick="cmToggle(this);cmTogglePartial()">일부입금</button>
+        </div>
+      </div>
+      <div id="cm_partial_section" style="display:none;">
+        <div class="cm-field" style="margin-bottom:6px;">
+          <label>오늘 입금액 (만원)</label>
+          <input id="cm_partial_amount" type="number" placeholder="50" oninput="cmCalc()">
+        </div>
+        <div class="cm-calc-box" id="cm_remaining_display">잔여계약금: — 만원</div>
+      </div>
+    </div>
+
+    <!-- 잔금 + 잔금일 -->
+    <div class="cm-section">
+      <div class="cm-grid2">
+        <div class="cm-field">
+          <label>잔금 (자동계산)</label>
+          <div class="cm-calc-box" id="cm_balance_display" style="min-height:36px;display:flex;align-items:center;">— 만원</div>
+        </div>
+        <div class="cm-field">
+          <label>잔금일</label>
+          <input id="cm_balance_date" type="date" onchange="cmCalcEndDate()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 계약서 작성일 + 계약기간 -->
+    <div class="cm-section">
+      <div class="cm-grid2" style="margin-bottom:10px;">
+        <div class="cm-field">
+          <label>계약서 작성일</label>
+          <input id="cm_contract_date" type="date">
+        </div>
+        <div class="cm-field">
+          <label>계약서 작성 시간</label>
+          <input id="cm_contract_time" type="time" value="14:00">
+        </div>
+      </div>
+      <div class="cm-field" style="margin-bottom:8px;">
+        <label>계약기간</label>
+        <div class="cm-toggle-group" style="margin-top:4px;">
+          <button class="cm-toggle active" data-group="cm_period" data-val="12" onclick="cmToggle(this);cmCalcEndDate()">12개월</button>
+          <button class="cm-toggle" data-group="cm_period" data-val="24" onclick="cmToggle(this);cmCalcEndDate()">24개월</button>
+        </div>
+      </div>
+      <div class="cm-calc-box" id="cm_period_display">계약기간: —</div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 근저당 / 공동중개 -->
+    <div class="cm-section">
+      <div class="cm-checkbox-row">
+        <input type="checkbox" id="cm_mortgage_chk" onchange="cmToggleMortgage()">
+        <label for="cm_mortgage_chk">근저당 있음</label>
+      </div>
+      <div id="cm_mortgage_section" style="display:none;margin-bottom:10px;" class="cm-field">
+        <label>채권최고액 (원)</label>
+        <input id="cm_mortgage_amount" type="text" placeholder="예) 120,000,000">
+      </div>
+
+      <div class="cm-checkbox-row">
+        <input type="checkbox" id="cm_coop_chk" onchange="cmToggleCoop()">
+        <label for="cm_coop_chk">공동중개</label>
+      </div>
+      <div id="cm_coop_section" style="display:none;" class="cm-field">
+        <label>상대 부동산명</label>
+        <input id="cm_coop_name" type="text" placeholder="예) ○○부동산">
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 임대인 계좌 -->
+    <div class="cm-section">
+      <div class="cm-section-title">임대인 계좌</div>
+      <div class="cm-grid3">
+        <div class="cm-field">
+          <label>소유자명</label>
+          <input id="cm_owner" type="text" placeholder="홍길동">
+        </div>
+        <div class="cm-field">
+          <label>은행명</label>
+          <input id="cm_bank" type="text" placeholder="국민은행">
+        </div>
+        <div class="cm-field">
+          <label>계좌번호</label>
+          <input id="cm_account" type="text" placeholder="123-456-789012">
+        </div>
+      </div>
+    </div>
+
+    <!-- 특약사항 -->
+    <div class="cm-section">
+      <div class="cm-field">
+        <label>추가 특약사항 (자유입력)</label>
+        <textarea id="cm_special" rows="3" placeholder="추가 특약이 있으면 입력하세요&#10;여러 줄 입력 가능합니다"></textarea>
+      </div>
+    </div>
+
+    <!-- 문자발송일 -->
+    <div class="cm-section">
+      <div class="cm-field" style="max-width:220px;">
+        <label>문자발송일</label>
+        <input id="cm_send_date" type="date">
+      </div>
+    </div>
+
+    <hr class="cm-divider">
+
+    <!-- 액션 버튼 -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-primary" style="flex:1;font-size:0.9rem;" onclick="cmGenerate()">📨 문자 생성</button>
+      <button class="btn btn-ghost" style="font-size:0.9rem;" onclick="cmCopy()">📋 복사하기</button>
+    </div>
+
+    <!-- 출력 영역 -->
+    <div class="cm-field">
+      <label>생성된 문자 (직접 수정 가능)</label>
+      <textarea id="cm_output" class="cm-output" placeholder="'문자 생성' 버튼을 클릭하면 완성된 계약 문자가 여기에 표시됩니다."></textarea>
+    </div>
+
+  </div>
+</div>
+
 <script src="assets/js/listings-shared.js?v=20261013-phase1"></script>
 <script src="assets/js/properties.js?v=20261023-note-density4"></script>
 <script>
