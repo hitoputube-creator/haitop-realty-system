@@ -352,24 +352,26 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
   <section class="card" style="border-top:3px solid #bd913e;background:var(--bg-card);">
     <div class="card-title"><span>🔒 내부전용</span></div>
     <div class="form-grid-3">
-      <div class="field">
-        <label>소유주명</label>
-        <input id="owner_name" type="text" placeholder="예) 홍길동" />
-      </div>
-      <div class="field">
-        <label>연락처1</label>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <input id="owner_phone1" type="tel" placeholder="010-0000-0000" style="flex:1;" />
-          <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="font-size:0.76rem;padding:6px 10px;white-space:nowrap;flex-shrink:0;" onclick="addContactRow()">+ 연락처 추가</button>
+      <div class="field" style="grid-column:1 / -1;margin-bottom:0;">
+        <div style="display:flex;gap:6px;align-items:flex-end;">
+          <div class="field" style="flex:0 0 160px;min-width:0;margin:0;">
+            <label>소유주명</label>
+            <input id="owner_name" type="text" placeholder="예) 홍길동" />
+          </div>
+          <div class="field" style="flex:1;min-width:0;margin:0;">
+            <label>연락처1</label>
+            <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
+          </div>
+          <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 104px;box-sizing:border-box;height:38px;padding:0;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addContactRow()">+ 연락처 추가</button>
         </div>
       </div>
+      <div id="additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field">
         <label>드라이브 자료 연결</label>
         <select id="resource_id">
           <option value="">-- 연결 안함 --</option>
         </select>
       </div>
-      <div id="additionalContactsWrap" class="field" style="grid-column:1 / -1;"></div>
       <div class="field" style="grid-column:1 / -1;">
         <label>소유주 메모 / 특이사항</label>
         <textarea id="owner_memo" rows="2" placeholder="예) 통화 가능 시간, 특이사항 등"></textarea>
@@ -918,9 +920,9 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
   let _contactRowSeq = 0;
   function makeContactRowHtml(idx) {
     return `<div class="contact-row" data-idx="${idx}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-      <input type="text" class="contact-name-input" placeholder="이름 또는 관계자명(선택)" style="flex:0 0 140px;" />
-      <input type="tel" class="contact-phone-input" placeholder="010-0000-0000" style="flex:1;" />
-      <button type="button" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeContactRow(this)">삭제</button>
+      <input type="text" class="contact-name-input" placeholder="이름 또는 관계자명(선택)" style="flex:0 0 160px;min-width:0;" />
+      <input type="tel" class="contact-phone-input" placeholder="010-0000-0000" style="flex:1;min-width:0;" />
+      <button type="button" class="btn btn-ghost" style="flex:0 0 104px;box-sizing:border-box;height:38px;padding:0;font-size:0.82rem;text-align:center;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeContactRow(this)">삭제</button>
     </div>`;
   }
   function addContactRow(name, phone) {
