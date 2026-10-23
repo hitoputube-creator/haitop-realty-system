@@ -583,15 +583,9 @@ function closeHomepageTab(tab) {
     const isFactoryWarehouse = cat1 === "공장창고";
     document.getElementById("editModal").classList.toggle("factory-warehouse-edit", isFactoryWarehouse);
     document.getElementById("edit_complexName").closest(".field").style.display = (isFactoryWarehouse || cat1 === "토지") ? "none" : "";
-    // 주거용은 매매가·보증금·월세만 보인다. 분양가는 아파트·오피스텔에서만 보이고, 관리비·권리금은 숨긴다.
-    const isResidential = cat1 === "주거용";
-    const showPresale = !isResidential || cat2 === "아파트" || cat2 === "오피스텔";
     ["edit_presalePrice", "edit_managementFee", "edit_premium"].forEach(id => {
-      const hide = cat1 === "토지" || (isResidential && (id !== "edit_presalePrice" || !showPresale));
-      document.getElementById(id).closest(".field").style.display = hide ? "none" : "";
+      document.getElementById(id).closest(".field").style.display = cat1 === "토지" ? "none" : "";
     });
-    const priceGrid = document.getElementById("edit_salePrice").closest(".edit-grid-3");
-    if (priceGrid) priceGrid.style.gridTemplateColumns = isResidential ? "repeat(" + (showPresale ? 4 : 3) + ", minmax(0, 1fr))" : "";
     updateEditLandUnitPrice();
     if (typeof syncEditApartmentFields === "function") syncEditApartmentFields();
     // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
@@ -618,6 +612,16 @@ function closeHomepageTab(tab) {
     if (window.EditUi) EditUi.sync();
     // 호수 / 운정역 상가·오피스텔 / 단지명은 건물·빌딩, 토지, 공장·창고, 그리고 아파트·오피스텔이 아닌 주거용(단독·전원·상가주택·다가구)에서는 숨긴다.
     const hideUnitFields = cat1 === "건물빌딩" || cat1 === "토지" || cat1 === "공장창고" || (cat1 === "주거용" && cat2 !== "아파트" && cat2 !== "오피스텔");
+    // 주거용은 매매가·보증금·월세만 보인다. 분양가는 아파트·오피스텔에서만 보이고, 관리비·권리금은 숨긴다.
+    // (syncEditApartmentFields가 관리비·권리금 표시를 되돌리므로 반드시 그 호출 뒤에 적용한다.)
+    const isResidential = cat1 === "주거용";
+    const showPresale = !isResidential || cat2 === "아파트" || cat2 === "오피스텔";
+    if (isResidential) {
+      document.getElementById("edit_presalePrice").closest(".field").style.display = showPresale ? "" : "none";
+      ["edit_managementFee", "edit_premium"].forEach(id => { document.getElementById(id).closest(".field").style.display = "none"; });
+    }
+    const priceGrid = document.getElementById("edit_salePrice").closest(".edit-grid-3");
+    if (priceGrid) priceGrid.style.gridTemplateColumns = isResidential ? "repeat(" + (showPresale ? 4 : 3) + ", minmax(0, 1fr))" : "";
     document.getElementById("editModal").classList.toggle("bld-edit", hideUnitFields);
     const roadFieldEl = document.getElementById("edit_roadField");
     if (roadFieldEl) roadFieldEl.style.display = hideUnitFields ? "" : "none";
