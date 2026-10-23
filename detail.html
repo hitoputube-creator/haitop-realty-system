@@ -152,6 +152,9 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 </style><style>
   /* 건물·빌딩, 토지, 아파트·오피스텔 외 주거용: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
   #editModal.bld-edit [data-hide-bld] { display: none !important; }
+  /* 주거용: 관리비·권리금 숨김, 아파트·오피스텔 외에는 분양가도 숨김 */
+  #editModal.resi-edit [data-price-fee] { display: none !important; }
+  #editModal.resi-nopresale [data-price-presale] { display: none !important; }
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -301,15 +304,15 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     <div class="edit-grid-3">
       <div class="field"><label>매매가</label><input id="edit_salePrice" type="text" placeholder="예: 12억 5,000만" />
         <div class="price-preview" id="edit_salePrice_preview"></div></div>
-      <div class="field"><label>분양가</label><input id="edit_presalePrice" type="text" placeholder="예: 8억 9,000만" />
+      <div class="field" data-price-presale><label>분양가</label><input id="edit_presalePrice" type="text" placeholder="예: 8억 9,000만" />
         <div class="price-preview" id="edit_presalePrice_preview"></div></div>
       <div class="field"><label>보증금</label><input id="edit_deposit" type="text" placeholder="예: 5,000만" />
         <div class="price-preview" id="edit_deposit_preview"></div></div>
       <div class="field"><label>월세</label><input id="edit_monthlyRent" type="text" placeholder="예: 300만" />
         <div class="price-preview" id="edit_monthlyRent_preview"></div></div>
-      <div class="field"><label>관리비</label><input id="edit_managementFee" type="text" placeholder="예: 15만" />
+      <div class="field" data-price-fee><label>관리비</label><input id="edit_managementFee" type="text" placeholder="예: 15만" />
         <div class="price-preview" id="edit_managementFee_preview"></div></div>
-      <div class="field"><label>권리금</label><input id="edit_premium" type="text" placeholder="예: 없음 또는 2,000만" />
+      <div class="field" data-price-fee><label>권리금</label><input id="edit_premium" type="text" placeholder="예: 없음 또는 2,000만" />
         <div class="price-preview" id="edit_premium_preview"></div></div>
     </div>
 
@@ -613,13 +616,12 @@ function closeHomepageTab(tab) {
     // 호수 / 운정역 상가·오피스텔 / 단지명은 건물·빌딩, 토지, 공장·창고, 그리고 아파트·오피스텔이 아닌 주거용(단독·전원·상가주택·다가구)에서는 숨긴다.
     const hideUnitFields = cat1 === "건물빌딩" || cat1 === "토지" || cat1 === "공장창고" || (cat1 === "주거용" && cat2 !== "아파트" && cat2 !== "오피스텔");
     // 주거용은 매매가·보증금·월세만 보인다. 분양가는 아파트·오피스텔에서만 보이고, 관리비·권리금은 숨긴다.
-    // (syncEditApartmentFields가 관리비·권리금 표시를 되돌리므로 반드시 그 호출 뒤에 적용한다.)
+    // (다른 스크립트가 관리비·권리금 표시를 되돌리므로 CSS 클래스로 숨긴다.)
     const isResidential = cat1 === "주거용";
     const showPresale = !isResidential || cat2 === "아파트" || cat2 === "오피스텔";
-    if (isResidential) {
-      document.getElementById("edit_presalePrice").closest(".field").style.display = showPresale ? "" : "none";
-      ["edit_managementFee", "edit_premium"].forEach(id => { document.getElementById(id).closest(".field").style.display = "none"; });
-    }
+    const editModalEl = document.getElementById("editModal");
+    editModalEl.classList.toggle("resi-edit", isResidential);
+    editModalEl.classList.toggle("resi-nopresale", isResidential && !showPresale);
     const priceGrid = document.getElementById("edit_salePrice").closest(".edit-grid-3");
     if (priceGrid) priceGrid.style.gridTemplateColumns = isResidential ? "repeat(" + (showPresale ? 4 : 3) + ", minmax(0, 1fr))" : "";
     document.getElementById("editModal").classList.toggle("bld-edit", hideUnitFields);

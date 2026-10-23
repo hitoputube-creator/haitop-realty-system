@@ -111,6 +111,9 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
 <style>
   /* 건물·빌딩, 토지, 공장·창고, 아파트·오피스텔 외 주거용: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
   body.bld-reg [data-hide-bld] { display: none !important; }
+  /* 주거용: 관리비·권리금 숨김, 아파트·오피스텔 외에는 분양가도 숨김 */
+  body.resi-reg [data-price-fee] { display: none !important; }
+  body.resi-nopresale [data-price-presale] { display: none !important; }
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -240,7 +243,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
         <input id="salePrice" type="text" placeholder="예: 12억 5,000만" />
         <div class="price-preview" id="salePrice_preview"></div>
       </div>
-      <div class="field">
+      <div class="field" data-price-presale>
         <label>분양가</label>
         <input id="presalePrice" type="text" placeholder="예: 8억 9,000만" />
         <div class="price-preview" id="presalePrice_preview"></div>
@@ -255,12 +258,12 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
         <input id="monthlyRent" type="text" placeholder="예: 300만" />
         <div class="price-preview" id="monthlyRent_preview"></div>
       </div>
-      <div class="field">
+      <div class="field" data-price-fee>
         <label>관리비</label>
         <input id="managementFee" type="text" placeholder="예: 15만" />
         <div class="price-preview" id="managementFee_preview"></div>
       </div>
-      <div class="field">
+      <div class="field" data-price-fee>
         <label>권리금</label>
         <input id="premium" type="text" placeholder="예: 없음 또는 2,000만" />
         <div class="price-preview" id="premium_preview"></div>
@@ -556,10 +559,8 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     // 주거용은 매매가·보증금·월세만 보인다. 분양가는 아파트·오피스텔에서만 보이고, 관리비·권리금은 숨긴다.
     const isResidential = cat1 === '주거용';
     const showPresale = !isResidential || cat2 === '아파트' || cat2 === '오피스텔';
-    ['presalePrice', 'managementFee', 'premium'].forEach(id => {
-      const field = document.getElementById(id)?.closest('.field');
-      if (field) field.style.display = (isResidential && (id !== 'presalePrice' || !showPresale)) ? 'none' : '';
-    });
+    document.body.classList.toggle('resi-reg', isResidential);
+    document.body.classList.toggle('resi-nopresale', isResidential && !showPresale);
     const priceGrid = document.getElementById('salePrice')?.closest('.form-grid-3');
     if (priceGrid) priceGrid.style.gridTemplateColumns = isResidential ? 'repeat(' + (showPresale ? 4 : 3) + ', minmax(0, 1fr))' : '';
     document.body.classList.toggle('bld-reg', hideUnitFields);
