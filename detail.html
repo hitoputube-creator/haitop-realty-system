@@ -620,11 +620,11 @@ function closeHomepageTab(tab) {
     const isResidential = cat1 === "주거용";
     const showPresale = !isResidential || cat2 === "아파트" || cat2 === "오피스텔";
     const editModalEl = document.getElementById("editModal");
-    const isLandCat = cat1 === "토지";
-    editModalEl.classList.toggle("resi-edit", isResidential || isLandCat);
-    editModalEl.classList.toggle("resi-nopresale", (isResidential && !showPresale) || isLandCat);
+    const simplePrice = cat1 === "토지" || cat1 === "공장창고"; // 토지·공장창고: 매매가·보증금·월세만
+    editModalEl.classList.toggle("resi-edit", isResidential || simplePrice);
+    editModalEl.classList.toggle("resi-nopresale", (isResidential && !showPresale) || simplePrice);
     const priceGrid = document.getElementById("edit_salePrice").closest(".edit-grid-3");
-    if (priceGrid) priceGrid.style.gridTemplateColumns = (isResidential || isLandCat) ? "repeat(" + (showPresale && !isLandCat ? 4 : 3) + ", minmax(0, 1fr))" : "";
+    if (priceGrid) priceGrid.style.gridTemplateColumns = (isResidential || simplePrice) ? "repeat(" + (showPresale && !simplePrice ? 4 : 3) + ", minmax(0, 1fr))" : "";
     document.getElementById("editModal").classList.toggle("bld-edit", hideUnitFields);
     const roadFieldEl = document.getElementById("edit_roadField");
     if (roadFieldEl) roadFieldEl.style.display = hideUnitFields ? "" : "none";
@@ -1608,8 +1608,8 @@ function closeHomepageTab(tab) {
     const dispCat1 = resolveDisplayCategory1(cat1Raw, category.category2 || item.category2);
     const dispCat2 = category.category2 || item.category2;
     const priceAllow = {
-      presale: dispCat1 === "주거용" ? (dispCat2 === "오피스텔" || dispCat2 === "아파트") : dispCat1 !== "토지",
-      fee: dispCat1 !== "주거용" && dispCat1 !== "토지",
+      presale: dispCat1 === "주거용" ? (dispCat2 === "오피스텔" || dispCat2 === "아파트") : (dispCat1 !== "토지" && dispCat1 !== "공장창고"),
+      fee: dispCat1 !== "주거용" && dispCat1 !== "토지" && dispCat1 !== "공장창고",
     };
     let priceCore, priceCond;
     if (dealType === "매매") {
