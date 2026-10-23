@@ -1594,7 +1594,7 @@ function closeHomepageTab(tab) {
     const _isAllowedPrice = ([label]) => !(label === "분양가" && !priceAllow.presale);
     priceCore = priceCore.filter(_isAllowedPrice); priceCond = priceCond.filter(_isAllowedPrice);
     const rows = [
-      iptRow([["1차구분", resolveDisplayCategory1(cat1Raw || item.category1, category.category2 || item.category2)], ["2차구분", category.category2 || item.category2], ["거래유형", dealType]]),
+      iptRow([["1차구분", (c => ({ "공장창고": "공장·창고", "상가사무실": "상가·사무실", "건물빌딩": "건물·빌딩" })[c] || c)(resolveDisplayCategory1(cat1Raw || item.category1, category.category2 || item.category2))], ["2차구분", category.category2 || item.category2], ["거래유형", dealType]]),
       ...(profileKey === "commercial"
         ? [iptRow([["지도검색주소", mapAddress]])]
         : [...(item.is_public === true ? [iptRow([["제목", item.title]]), iptRow([["공개주소", publicAddress]])] : []), iptRow([["지도검색주소", mapAddress]])]),
