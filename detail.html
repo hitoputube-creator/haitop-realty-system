@@ -1540,10 +1540,10 @@ function closeHomepageTab(tab) {
     //  - 오피스텔(주거용): 건물명·호수 + 전용·공급면적 / 단독·전원주택: 대지·건축·연면적
     const PROFILES = {
       land:        { core: [["landArea"]], cond: [] },
-      factory:     { core: [["siteArea", "buildArea", "totalFloor"], ["floor", "zoning", "parking", "approval"]], cond: [] },
-      building:    { core: [["siteArea", "buildArea", "totalFloor"], ["floor", "zoning", "parking", "approval"]], cond: [] },
+      factory:     { core: [["siteArea", "buildArea", "totalFloor"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
+      building:    { core: [["siteArea", "buildArea", "totalFloor"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
       house:       { core: [["siteArea", "buildArea", "totalFloor"]], cond: [] },
-      commercial:  { core: [["buildingName", "detailAddr"], ["exclusive", "supply"], ["floor", "zoning", "parking", "approval"]], cond: [] },
+      commercial:  { core: [["buildingName", "detailAddr"], ["exclusive", "supply"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
       residential: { core: [["buildingName", "detailAddr"], ["exclusive", "supply"]], cond: [] },
       // 종류를 알 수 없는("확인 필요") 매물은 예전처럼 모든 항목을 보여준다.
       default:     { core: [["exclusive", "landArea", "supply"], ["buildingName", "detailAddr", "totalFloor"], ["parking", "approval", "structure"],
@@ -1605,7 +1605,8 @@ function closeHomepageTab(tab) {
       ] : [iptRow(priceCore)]),
       ...profileRows,
       packRows([...(profileKey === "commercial" ? [] : priceCond), ...profileCondPairs], 3),
-      iptRow([["소유주", ownerName], ["소유주 연락처", contact], ["추가 연락처", additionalContactText]]),
+      iptRow([["소유주", ownerName], ["소유주 연락처", contact]]),
+      ...(additionalContactText ? [iptRow([["추가 연락처", additionalContactText]])] : []),
     ].join("");
 
     // 예전에 한 칸에 문장으로 적어둔 연락처는, 그 안의 번호가 이미 소유주 연락처·추가 연락처에 모두 있으면 중복이라 숨긴다.
@@ -1638,6 +1639,9 @@ function closeHomepageTab(tab) {
       ["전입", item.officetel_resident],
       ["임대상태", item.shop_status],
       ["예상수익률", withSuffix(item.shop_yield, "%")],
+    ];
+    // 연락처 문장·메모처럼 긴 글은 한 줄 전체를 써서 항목과 내용이 어긋나지 않게 한다.
+    const longPairs = [
       ["기존 연락처", legacyContactText],
       ["소유주 메모", item.owner_memo],
       ["옵션내역", item.optionDetails],
@@ -1646,7 +1650,9 @@ function closeHomepageTab(tab) {
         ["추가메모", (memo.created_at ? new Date(memo.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }) + " · " : "") + memo.text]
       ) : []),
     ];
-    const extraRows = packRows(extraPairs, 3);
+    const extraRows = packRows(extraPairs, 3) + longPairs
+      .filter(([, value]) => hasDetailValue(detailText(value)))
+      .map(pair => iptRow([pair])).join("");
     return `<section class="detail-section listing-info-section">
       <div class="detail-section-title">매물 상세정보</div>
       <div class="listing-info-table">${rows}${extraRows}</div>
