@@ -940,8 +940,6 @@ function closeHomepageTab(tab) {
   // 옛 매물은 금액이 가격 칸이 아니라 가격 메모("매매_18억", "월세 1000/50")에만 있을 수 있다.
   // 메모를 읽어 {매매가|보증금|월세}를 원 단위 숫자 문자열로 돌려준다. 읽을 수 없으면 null.
   function parseLegacyPriceMemo(memo) {
-    const head = String(memo || "").trim().match(/^(매매|전세|월세|임대)[\s_:\-·.]*(.+)$/);
-    if (!head) return null;
     const UNIT = { "억": 1e8, "천만": 1e7, "천": 1e7, "백만": 1e6, "백": 1e6, "만": 1e4, "": 1e4 };
     const toWon = text => {
       const s = String(text || "").replace(/[,\s원]/g, "");
@@ -950,12 +948,20 @@ function closeHomepageTab(tab) {
       for (const m of s.matchAll(/(\d+(?:\.\d+)?)(억|천만|천|백만|백|만)?/g)) total += parseFloat(m[1]) * UNIT[m[2] || ""];
       return total > 0 ? String(Math.round(total)) : "";
     };
-    const kind = head[1], body = head[2].trim();
-    if (kind === "매매") { const v = toWon(body); return v ? { sale: v } : null; }
-    if (kind === "전세") { const v = toWon(body); return v ? { deposit: v } : null; }
-    const parts = body.split("/");
-    if (parts.length === 2) { const d = toWon(parts[0]), r = toWon(parts[1]); return d && r ? { deposit: d, rent: r } : null; }
-    return null;
+    // "매매_10억5천, 월세_4천/400"처럼 여러 항목이 쉼표로 이어진 메모도 읽는다(숫자 안의 쉼표는 나누지 않는다).
+    const result = {};
+    String(memo || "").trim().split(/[,，;]\s*(?=(?:매매|전세|월세|임대))/).forEach(segment => {
+      const head = segment.trim().match(/^(매매|전세|월세|임대)[\s_:\-·.]*(.+)$/);
+      if (!head) return;
+      const kind = head[1], body = head[2].trim();
+      if (kind === "매매") { const v = toWon(body); if (v) result.sale = v; }
+      else if (kind === "전세") { const v = toWon(body); if (v) result.deposit = v; }
+      else {
+        const parts = body.split("/");
+        if (parts.length === 2) { const d = toWon(parts[0]), r = toWon(parts[1]); if (d && r) { result.deposit = d; result.rent = r; } }
+      }
+    });
+    return Object.keys(result).length ? result : null;
   }
 
   function openEditModal(item) {
