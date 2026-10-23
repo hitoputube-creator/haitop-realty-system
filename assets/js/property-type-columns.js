@@ -168,7 +168,7 @@
     return card;
   };
   function actionsColWidth(table) {
-    return table ? 78 : 148;
+    return 148;
   }
   function template(cols) {
     if (isKtopResidential()) {
@@ -245,7 +245,7 @@
     .properties-page .typed-list-table td {overflow-wrap:anywhere;vertical-align:top;}
     .properties-page .typed-list-table .listing-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;}
     .properties-page .typed-list-table .lc-actions-main,.properties-page .typed-list-table .lc-actions-side {display:contents;}
-    .properties-page .typed-list-table .listing-actions .btn,.properties-page .typed-list-table .lc-status-chip {width:100%;min-width:0;box-sizing:border-box;padding:3px 2px;font-size:11px;}
+    .properties-page .typed-list-table .listing-actions .btn,.properties-page .typed-list-table .lc-status-chip {width:100%;min-width:0;box-sizing:border-box;padding:5px 2px;font-size:12px;white-space:nowrap;border-radius:6px;}
     .properties-page .typed-list-table .lc-toggle {grid-column:1/-1;}
     @media(min-width:801px) {
       html body.properties-page .typed-property-row .listing-actions {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;align-items:start;}
