@@ -118,7 +118,7 @@
       const unit=fields(item).unit;
       if (unit && node.textContent.trim() !== '-') {
         const sub=document.createElement('span');sub.className='lc-building-unit';sub.textContent=unit;
-        sub.style.display='block';sub.style.marginTop='2px';sub.style.fontSize='12px';sub.style.color='#64748b';
+        sub.style.display='table';sub.style.marginTop='4px';sub.style.padding='2px 8px';sub.style.borderRadius='6px';sub.style.border='1px solid rgba(212,175,55,.55)';sub.style.background='rgba(212,175,55,.16)';sub.style.fontSize='14px';sub.style.fontWeight='800';sub.style.lineHeight='1.35';sub.style.color='#f3d56b';
         node.appendChild(sub);
       }
     }
