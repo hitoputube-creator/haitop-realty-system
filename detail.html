@@ -156,6 +156,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   @media (min-width: 900px) {
     #editModal #edit_basicInfoGrid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
     #editModal #edit_basicInfoGrid > .field { grid-column: span 2; }
+    #editModal #edit_basicInfoGrid > .field:nth-child(-n+5) { grid-column: span 2; }
     #editModal #edit_basicInfoGrid > .field:has(#edit_mapAddress) { grid-column: span 4; }
     #editModal #edit_basicInfoGrid > #edit_roadField { grid-column: span 4; }
     #editModal #edit_basicInfoGrid > .edit-quick-building-field { grid-column: span 6; }
