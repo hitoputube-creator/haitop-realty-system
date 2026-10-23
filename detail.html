@@ -269,8 +269,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <span id="editLookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
       <div class="field">
-        <label>상세주소·동호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
-        <input id="edit_privateDetailAddress" type="text" placeholder="예) 115동 1층, 상가 101호" />
+        <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
+        <input id="edit_privateDetailAddress" type="text" placeholder="예) 101호" />
       </div>
       <div class="field" style="display:none;">
         <label>동 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
@@ -1041,7 +1041,7 @@ function closeHomepageTab(tab) {
       return hoMatch ? hoMatch[1] : '';
     }
 
-    // "115동 1층, 상가 101호" 같은 상세주소·동호수 필드에서 호수만 추출한다.
+    // "115동 1층, 상가 101호" 같은 호수 필드에서 호수만 추출한다.
     function extractHoNm(detailAddress) {
       const s = String(detailAddress || '');
       const hoMatch = s.match(/(\d+)\s*호/);
@@ -1406,7 +1406,7 @@ function closeHomepageTab(tab) {
     );
     const cells = {
       buildingName: ["건물명", complexName],
-      detailAddr: ["상세주소·동호수", firstDetailValue(item.privateDetailAddress, item.detailAddress)],
+      detailAddr: ["호수", firstDetailValue(item.privateDetailAddress, item.detailAddress)],
       landArea: ["토지면적", landAreaMain],
       siteArea: ["대지면적", siteAreaPair],
       buildArea: ["건축면적", buildAreaPair],
