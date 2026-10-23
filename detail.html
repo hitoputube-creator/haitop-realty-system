@@ -260,6 +260,14 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <label for="edit_progressStatus">거래상태</label>
         <select id="edit_progressStatus"><option>진행중</option><option>보류</option><option>거래완료</option></select>
       </div>
+      <div class="field">
+        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="edit_mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
+          <button type="button" id="editLookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
+        </div>
+        <span id="editLookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
+      </div>
       <div class="field" data-hide-bld>
         <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="edit_privateDetailAddress" type="text" placeholder="예) 101호" />
@@ -381,7 +389,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       <small style="color:var(--text-muted);">선택하면 공개 매물설명과 홍보스티커를 입력할 수 있습니다.</small>
     </div>
     <div id="editHomepagePanel" hidden>
-    <!-- 홈페이지 공개 시에만 입력: 제목 · 공개주소 · 지도검색주소 -->
+    <!-- 홈페이지 공개 시에만 입력: 제목 · 공개주소 -->
     <div id="editHomepageBasicFields">
       <div class="field" id="edit_titleField" style="margin-bottom:10px;">
         <label>제목</label>
@@ -391,14 +399,6 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       <div class="field">
         <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
         <input id="edit_publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
-      </div>
-      <div class="field">
-        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input id="edit_mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
-          <button type="button" id="editLookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
-        </div>
-        <span id="editLookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
       </div>
       </div>
     </div>
