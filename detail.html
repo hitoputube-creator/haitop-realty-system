@@ -1119,6 +1119,18 @@ function closeHomepageTab(tab) {
           }
         }
 
+        // 건물 유형(건물·빌딩, 공장·창고 등)은 연면적뿐 아니라 대지면적·건축면적도 함께 채운다.
+        if (variant === 'building') {
+          [[result.land_area_m2, 'edit_landAreaM2', '대지면적'], [result.footprint_area_m2, 'edit_buildingAreaM2', '건축면적']].forEach(([value, id, label]) => {
+            const el = document.getElementById(id);
+            if (el && value != null && Number(value) > 0) {
+              el.value = value;
+              el.dispatchEvent(new Event('input'));
+              filled.push(label);
+            }
+          });
+        }
+
         if (result.floor_info) {
           const el = document.getElementById('edit_floorInfo');
           if (el) { el.value = result.floor_info; filled.push('층수'); }
