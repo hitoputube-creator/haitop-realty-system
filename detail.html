@@ -150,7 +150,7 @@ html[data-office-theme="ktop"] .apartment-listing-form summary {color:#193c70!im
 #owner_name[hidden],#owner_phone1[hidden],#edit_owner_name[hidden],#edit_owner_phone1[hidden],.field>label[hidden],.field[hidden] {display:none!important;}
 html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;color:#193c70;padding:10px 12px;border-radius:7px;}
 </style><style>
-  /* 건물·빌딩, 토지: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
+  /* 건물·빌딩, 토지, 아파트·오피스텔 외 주거용: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
   #editModal.bld-edit [data-hide-bld] { display: none !important; }
 </style>
 </head>
@@ -600,7 +600,9 @@ function closeHomepageTab(tab) {
     if (commercialEl) commercialEl.style.display = EDIT_COMMERCIAL_CATS.includes(storageCat1) ? "" : "none";
     if (typeof syncEditApartmentListingForm === "function") syncEditApartmentListingForm();
     if (window.EditUi) EditUi.sync();
-    document.getElementById("editModal").classList.toggle("bld-edit", cat1 === "건물빌딩" || cat1 === "토지");
+    // 호수 / 운정역 상가·오피스텔 / 단지명은 건물·빌딩, 토지, 그리고 아파트·오피스텔이 아닌 주거용(단독·전원·상가주택·다가구)에서는 숨긴다.
+    const hideUnitFields = cat1 === "건물빌딩" || cat1 === "토지" || (cat1 === "주거용" && cat2 !== "아파트" && cat2 !== "오피스텔");
+    document.getElementById("editModal").classList.toggle("bld-edit", hideUnitFields);
     placeEditTitleField(cat2 === "아파트");
   }
 
