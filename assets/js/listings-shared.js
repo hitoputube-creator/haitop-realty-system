@@ -392,7 +392,7 @@ function naverAdButtonHtml(listingNo) {
   const label = posId ? "네이버광고중" : "네이버광고";
   const title = posId ? "부동산포스 광고 목록 (포스 매물번호 " + posId + ")" : "부동산포스에 매물 등록";
   const style = posId ? "background:#2e7d32;color:#fff;border-color:#2e7d32;" : "";
-  return `<button type="button" class="btn btn-ghost lc-naver-btn" title="${title}" style="flex:0 0 auto;white-space:nowrap;font-size:12px;padding:6px 8px;${style}" onclick="event.stopPropagation();window.open('${url}','_blank','noopener')">${label}</button>`;
+  return `<button type="button" class="btn btn-ghost lc-naver-btn" title="${title}" style="flex:0 0 auto;white-space:nowrap;font-size:11px;padding:6px 4px;${style}" onclick="event.stopPropagation();window.open('${url}','_blank','noopener')">${label}</button>`;
 }
 
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
@@ -463,8 +463,8 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
         ${deleteButton}
       </div>
       <div class="lc-actions-side">
-        <div class="lc-status-row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <select class="lc-status-chip" style="flex:1 1 80px !important;min-width:80px;width:auto !important;" aria-label="매물 거래상태" onclick="event.stopPropagation()" onchange="event.stopPropagation();handleListingProgressChange('${idArg}',this)">${isRoster && getStatusLabel(item)==='진행중' ? '<option value="" selected disabled>상태 선택</option>' : ''}${['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(getStatusLabel(item)===status && !(isRoster && status==='진행중')?' selected':'')+'>'+status+'</option>').join('')}</select>
+        <div class="lc-status-row" style="display:flex;gap:6px;align-items:center;grid-column:1 / -1;">
+        <select class="lc-status-chip" style="flex:0 0 66px !important;width:66px !important;min-width:0 !important;" aria-label="매물 거래상태" onclick="event.stopPropagation()" onchange="event.stopPropagation();handleListingProgressChange('${idArg}',this)">${isRoster && getStatusLabel(item)==='진행중' ? '<option value="" selected disabled>상태 선택</option>' : ''}${['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(getStatusLabel(item)===status && !(isRoster && status==='진행중')?' selected':'')+'>'+status+'</option>').join('')}</select>
         ${naverAdBtn}
         </div>
         <div class="lc-toggle" data-homepage-only onclick="event.stopPropagation()">
