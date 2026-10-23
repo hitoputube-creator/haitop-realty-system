@@ -152,6 +152,15 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 </style><style>
   /* 건물·빌딩, 토지, 아파트·오피스텔 외 주거용: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
   #editModal.bld-edit [data-hide-bld] { display: none !important; }
+  /* 기본정보 첫 줄: 1차구분·2차구분·거래유형·등록구분·거래상태를 한 줄(5칸)에 배치 */
+  @media (min-width: 900px) {
+    #editModal #edit_basicInfoGrid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+    #editModal #edit_basicInfoGrid > .field { grid-column: span 2; }
+    #editModal #edit_basicInfoGrid > .field:has(#edit_mapAddress) { grid-column: span 4; }
+    #editModal #edit_basicInfoGrid > #edit_roadField { grid-column: span 4; }
+    #editModal #edit_basicInfoGrid > .edit-quick-building-field { grid-column: span 6; }
+    #editModal #edit_basicInfoGrid > .field:has(#edit_complexName) { grid-column: span 4; }
+  }
   /* 주거용·토지: 관리비·권리금 숨김, 아파트·오피스텔 외에는 분양가도 숨김 */
   #editModal.resi-edit [data-price-fee] { display: none !important; }
   #editModal.resi-nopresale [data-price-presale] { display: none !important; }
@@ -255,8 +264,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       <div class="field">
         <label>등록구분</label>
         <select id="edit_listingKind">
-          <option value="매물">매물 (시장에 나온 매물)</option>
-          <option value="명단">명단 (보관·관리용)</option>
+          <option value="매물">매물</option>
+          <option value="명단">명단</option>
         </select>
       </div>
       <div class="field">
@@ -1858,7 +1867,7 @@ function closeHomepageTab(tab) {
     html += `<section class="detail-section"><div class="detail-section-title">이미지·자료</div><div class="detail-read-grid">${materialHtml}</div></section>`;
 
     html += detailSection("등록상태", [
-      detailField("등록구분", item.listingKind === "명단" ? "명단 (보관·관리용)" : "매물", { required: true }),
+      detailField("등록구분", item.listingKind === "명단" ? "명단" : "매물", { required: true }),
       detailField("거래상태", listingProgressStatus(item), { required: true }),
       ...(OfficeConfig.id === "ktop" ? [] : [detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true })]),
       detailField("등록일", formatDateValue(item.created_at)),
