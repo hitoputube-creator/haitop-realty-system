@@ -957,7 +957,7 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_dealType").value           = item.dealType || "";
     document.getElementById("edit_listingKind").value        = item.listingKind === "명단" ? "명단" : "매물";
     document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
-    document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || "";
+    document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || item.address || "";
     if (category.category2 === "아파트" || item.type === "apartment") {
       document.getElementById("edit_publicAddress").value = apartmentDetailAddresses(item).roadAddress || "";
       document.getElementById("edit_mapAddress").value = apartmentDetailAddresses(item).jibunAddress || "";
