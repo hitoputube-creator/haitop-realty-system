@@ -46,6 +46,7 @@ let includeCompleted = false;
 let currentStatusFilter = "진행중";
 let currentKindTab = "매물"; // "매물" | "명단" | "전체" — 등록구분 탭
 let viewMode = "card"; // "card" | "list" | "note"
+let noteDensity = "detail"; // 노트보기 안에서 "detail"(메모 전문) | "compact"(한 줄 목록)
 let selectedIds = new Set(); // 선택된 매물 ID 집합
 let deletingSelected = false;
 const ITEMS_PER_PAGE = 10;
@@ -397,6 +398,7 @@ function renderNoteView(items) {
     grouped.get(dateKey).push({ item, index });
   });
   const title = currentRegistrationMonth ? `${registrationMonthLabel(currentRegistrationMonth)} 등록매물` : "전체 기간 등록매물";
+  const compact = noteDensity === "compact";
   const sections = [...grouped.entries()].map(([dateKey, entries]) => {
     const dayLabel = dateKey === "날짜 미상" ? dateKey : registrationDayLabel(dateKey);
     const rows = entries.map(({ item, index }) => {
@@ -407,7 +409,16 @@ function renderNoteView(items) {
       const memo = [memoLines.top, memoLines.bottom].filter(Boolean).join("\n");
       const owner = item.owner_name || item.quick_owner || "";
       const contact = item.owner_phone1 || item.owner_contact || item.quick_contact || "";
-      const meta = [getListingCategoryLabel(item), getDealTypeLabel(item), getAreaText(item)].filter(Boolean).join(" · ");
+      const meta = [getListingCategoryLabel(item), getDealTypeLabel(item), getAreaText(item)].filter(v => v && v !== "-").join(" · ");
+      if (compact) {
+        return `<article class="note-row" onclick="location.href='detail.html?id=${idArg}'">
+          <span class="note-row-no">${String(index + 1).padStart(2, "0")}</span>
+          <span class="note-row-title">${escapeHtml(titleText)}<span class="note-status">${escapeHtml(getStatusLabel(item))}</span></span>
+          <span class="note-row-meta">${escapeHtml(meta)}</span>
+          <span class="note-row-price">${escapeHtml(formatPrice(item) || "가격 미입력")}</span>
+          <span class="note-row-owner">${escapeHtml([owner, contact].filter(Boolean).join(" ") || "-")}</span>
+        </article>`;
+      }
       return `<article class="note-item" onclick="location.href='detail.html?id=${idArg}'">
         <div class="note-number">${String(index + 1).padStart(2, "0")}</div>
         <div class="note-main">
@@ -426,9 +437,19 @@ function renderNoteView(items) {
         </div>
       </article>`;
     }).join("");
-    return `<section class="note-day"><h3 class="note-day-title">${escapeHtml(dayLabel)} <span>${entries.length}건</span></h3><div class="note-items">${rows}</div></section>`;
+    return `<section class="note-day"><h3 class="note-day-title">${escapeHtml(dayLabel)} <span>${entries.length}건</span></h3><div class="${compact ? "note-rows" : "note-items"}">${rows}</div></section>`;
   }).join("");
-  listingContainer.innerHTML = `<div class="note-view-head"><strong>${escapeHtml(title)}</strong><span>등록일 기준 · 총 ${items.length}건 · 매물을 누르면 상세화면으로 이동합니다.</span></div>${sections}`;
+  const densityToggle = `<div class="note-density-toggle" role="group" aria-label="노트 보기 방식">
+    <button type="button" class="${compact ? "" : "active"}" onclick="setNoteDensity('detail')">상세</button>
+    <button type="button" class="${compact ? "active" : ""}" onclick="setNoteDensity('compact')">목록</button>
+  </div>`;
+  listingContainer.innerHTML = `<div class="note-view-head"><div><strong>${escapeHtml(title)}</strong><span>등록일 기준 · 총 ${items.length}건 · 매물을 누르면 상세화면으로 이동합니다.</span></div>${densityToggle}</div>${sections}`;
+}
+
+function setNoteDensity(mode) {
+  noteDensity = mode === "compact" ? "compact" : "detail";
+  renderList();
+  saveFilterState();
 }
 
 function renderListView(items) {
@@ -1677,7 +1698,7 @@ function saveFilterState() {
   try {
     OfficeStorage.session.setItem(FILTER_STATE_KEY, JSON.stringify({
       searchKeyword, currentMajor, currentSub, currentTag, currentDealFilter,
-      includeCompleted, currentStatusFilter, currentKindTab, currentSort, currentRegistrationMonth, viewMode, columnFilters: listingColumnFilters,
+      includeCompleted, currentStatusFilter, currentKindTab, currentSort, currentRegistrationMonth, viewMode, noteDensity, columnFilters: listingColumnFilters,
       scrollY: window.scrollY
     }));
   } catch (e) { /* 세션스토리지 사용 불가 시 조용히 무시 */ }
@@ -1695,6 +1716,7 @@ function restoreFilterState() {
     currentSort = saved.currentSort === "oldest" ? "oldest" : "newest";
     document.getElementById("sortSelect").value = currentSort;
     currentRegistrationMonth = /^\d{4}-\d{2}$/.test(saved.currentRegistrationMonth || "") ? saved.currentRegistrationMonth : "";
+    noteDensity = saved.noteDensity === "compact" ? "compact" : "detail";
 
     listingColumnFilters = {};
     if (saved.columnFilters && typeof saved.columnFilters === "object") {
