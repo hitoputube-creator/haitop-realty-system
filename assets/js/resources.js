@@ -441,8 +441,12 @@ function renderDriveTab() {
   const resultsHtml = shown.length
     ? (isApartment ? buildVillageGroupsHtml(shown, cat) : buildDriveResourceResults(shown, cat))
     : `<div class="loading">${driveResourceScope === 'residential' && residentialSearch ? '검색 결과가 없습니다.' : '표시할 자료가 없습니다.'}</div>`;
+  const addResourceLabel = driveResourceScope === 'commercial' ? '+ 빌딩 추가' : (driveResourceScope === 'residential' ? '+ 단지 추가' : '+ 자료 추가');
   const sectionHtml = `
     <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+        <button type="button" class="btn btn-primary" id="driveCategoryResourceAddBtn">${addResourceLabel}</button>
+      </div>
       ${searchHtml}
       <div class="${isApartment ? '' : 'listing-grid'}" id="driveResourceResults">${resultsHtml}</div>
     </div>`;
@@ -466,6 +470,20 @@ function renderDriveTab() {
     document.getElementById('residentialSearchCount').textContent = `${filtered.length} / ${items.length}개`;
   });
   // innerHTML 완료 후 버튼 이벤트 바인딩
+  const categoryResourceAddBtn = document.getElementById('driveCategoryResourceAddBtn');
+  if (categoryResourceAddBtn) categoryResourceAddBtn.addEventListener('click', () => {
+    const card = document.getElementById('driveRegisterCard');
+    const toggle = document.getElementById('driveRegisterToggleBtn');
+    const categorySelect = document.getElementById('drive_cat_select');
+    const categoryInput = document.getElementById('drive_category');
+    const nameInput = document.getElementById('drive_name');
+    if (card) card.style.display = '';
+    if (toggle) toggle.textContent = '📁 자료 등록 접기';
+    if (categorySelect && [...categorySelect.options].some(option => option.value === cat)) categorySelect.value = cat;
+    if (categoryInput) categoryInput.value = cat;
+    if (nameInput) nameInput.focus();
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   container.querySelectorAll("[data-cidx]").forEach(btn => {
     btn.addEventListener("click", () => {
       activeDriveCat = categories[+btn.dataset.cidx];
