@@ -32,8 +32,8 @@
     const landM2=first(item.landAreaM2,item.land_area_sqm,item.areaM2);
     const sale=first(item.salePrice, num(first(item.land_price,item.factory_price,item.biz_price))*10000);
     const address=first(item.roadAddress,item.jibunAddress,item.address,item.publicAddress,item.mapAddress,item.quick_location);
-    const rawUnit=String(first(item.roomNumber,item.shop_room,item.unitNumber,item.ho)).trim();
-    const unitMatch=rawUnit.match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호?/i) || String(address).match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호(?=\s|$|[,，])/i);
+    const rawUnit=String(first(item.privateDetailAddress,item.detailAddress,item.detail_address,item.roomNumber,item.shop_room,item.unitNumber,item.ho)).trim();
+    const unitMatch=rawUnit.match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호/i) || rawUnit.match(/^\s*(?:[A-Za-z]-?\s*)?\d{1,5}\s*$/) || String(address).match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호(?=\s|$|[,，])/i);
     const unitText=unitMatch ? unitMatch[0].replace(/\s+/g,'') : '';
     const unit=unitText && /호$/i.test(unitText) ? unitText : unitText ? unitText+'호' : '';
     const addressBuilding=unit ? ((String(address).match(/,\s*([^,]+?)\s*\d{1,5}\s*호(?=\s|$|[,，])/i)||[])[1] || '').trim() : '';
