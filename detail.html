@@ -937,6 +937,27 @@ function closeHomepageTab(tab) {
     setEditHomepageMode(this.checked);
   });
 
+  // 옛 매물은 금액이 가격 칸이 아니라 가격 메모("매매_18억", "월세 1000/50")에만 있을 수 있다.
+  // 메모를 읽어 {매매가|보증금|월세}를 원 단위 숫자 문자열로 돌려준다. 읽을 수 없으면 null.
+  function parseLegacyPriceMemo(memo) {
+    const head = String(memo || "").trim().match(/^(매매|전세|월세|임대)[\s_:\-·.]*(.+)$/);
+    if (!head) return null;
+    const UNIT = { "억": 1e8, "천만": 1e7, "천": 1e7, "백만": 1e6, "백": 1e6, "만": 1e4, "": 1e4 };
+    const toWon = text => {
+      const s = String(text || "").replace(/[,\s원]/g, "");
+      if (!s || !/^(\d+(?:\.\d+)?(?:억|천만|천|백만|백|만)?)+$/.test(s)) return "";
+      let total = 0;
+      for (const m of s.matchAll(/(\d+(?:\.\d+)?)(억|천만|천|백만|백|만)?/g)) total += parseFloat(m[1]) * UNIT[m[2] || ""];
+      return total > 0 ? String(Math.round(total)) : "";
+    };
+    const kind = head[1], body = head[2].trim();
+    if (kind === "매매") { const v = toWon(body); return v ? { sale: v } : null; }
+    if (kind === "전세") { const v = toWon(body); return v ? { deposit: v } : null; }
+    const parts = body.split("/");
+    if (parts.length === 2) { const d = toWon(parts[0]), r = toWon(parts[1]); return d && r ? { deposit: d, rent: r } : null; }
+    return null;
+  }
+
   function openEditModal(item) {
     setEditHomepageMode(false);
     // 이전에 열었던 매물의 건축물대장 자동조회 상태(배너/상태문구)가 남아있지 않도록 초기화
@@ -983,6 +1004,15 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_monthlyRent").value   = item.monthlyRent || "";
     document.getElementById("edit_managementFee").value = item.managementFee || "";
     document.getElementById("edit_premium").value       = item.premium || "";
+    // 가격 칸이 모두 비어 있고 가격 메모에만 금액이 있는 옛 매물은, 메모를 읽어 가격 칸에 미리 채워 둔다(저장 전까지는 화면에만 반영).
+    if (!item.salePrice && !item.deposit && !item.monthlyRent) {
+      const legacyPrice = parseLegacyPriceMemo(item.quick_price);
+      if (legacyPrice) {
+        if (legacyPrice.sale) document.getElementById("edit_salePrice").value = legacyPrice.sale;
+        if (legacyPrice.deposit) document.getElementById("edit_deposit").value = legacyPrice.deposit;
+        if (legacyPrice.rent) document.getElementById("edit_monthlyRent").value = legacyPrice.rent;
+      }
+    }
     refreshEditPricePreviews();
     // 면적
     const sv = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
