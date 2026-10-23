@@ -1563,7 +1563,7 @@ function closeHomepageTab(tab) {
     const depositText = formatWonOrText(item.deposit);
     const rentText = formatWonOrText(item.monthlyRent);
     // 등록·수정 화면의 가격 입력 항목과 같게 맞춘다(토지·주거용은 관리비·권리금 없음, 분양가는 오피스텔·건물·공장만).
-    const dispCat1 = ({ "공장/창고": "공장창고", "상가/사무실": "상가사무실" })[category.category1] || category.category1;
+    const dispCat1 = resolveDisplayCategory1(cat1Raw, category.category2 || item.category2);
     const dispCat2 = category.category2 || item.category2;
     const priceAllow = {
       presale: dispCat1 === "주거용" ? (dispCat2 === "오피스텔" || dispCat2 === "아파트") : dispCat1 !== "토지",
@@ -1594,7 +1594,7 @@ function closeHomepageTab(tab) {
     const _isAllowedPrice = ([label]) => !(label === "분양가" && !priceAllow.presale);
     priceCore = priceCore.filter(_isAllowedPrice); priceCond = priceCond.filter(_isAllowedPrice);
     const rows = [
-      iptRow([["1차구분", category.category1 || item.category1], ["2차구분", category.category2 || item.category2], ["거래유형", dealType]]),
+      iptRow([["1차구분", resolveDisplayCategory1(cat1Raw || item.category1, category.category2 || item.category2)], ["2차구분", category.category2 || item.category2], ["거래유형", dealType]]),
       ...(profileKey === "commercial"
         ? [iptRow([["지도검색주소", mapAddress]])]
         : [...(item.is_public === true ? [iptRow([["제목", item.title]]), iptRow([["공개주소", publicAddress]])] : []), iptRow([["지도검색주소", mapAddress]])]),
