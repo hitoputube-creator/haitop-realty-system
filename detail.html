@@ -149,7 +149,11 @@ html[data-office-theme="ktop"] .apartment-listing-form summary {color:#193c70!im
 <style>
 #owner_name[hidden],#owner_phone1[hidden],#edit_owner_name[hidden],#edit_owner_phone1[hidden],.field>label[hidden],.field[hidden] {display:none!important;}
 html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;color:#193c70;padding:10px 12px;border-radius:7px;}
-</style></head>
+</style><style>
+  /* 건물·빌딩: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
+  #editModal.bld-edit [data-hide-bld] { display: none !important; }
+</style>
+</head>
 <body class="property-form-page" data-nav-active="properties">
 
 <div class="page">
@@ -256,19 +260,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <label for="edit_progressStatus">거래상태</label>
         <select id="edit_progressStatus"><option>진행중</option><option>보류</option><option>거래완료</option></select>
       </div>
-      <div class="field">
-        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
-        <input id="edit_publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
-      </div>
-      <div class="field">
-        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input id="edit_mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
-          <button type="button" id="editLookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
-        </div>
-        <span id="editLookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
-      </div>
-      <div class="field">
+      <div class="field" data-hide-bld>
         <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
         <input id="edit_privateDetailAddress" type="text" placeholder="예) 101호" />
       </div>
@@ -280,17 +272,13 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
         <input id="edit_apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
       </div>
-      <div class="field edit-quick-building-field">
+      <div class="field edit-quick-building-field" data-hide-bld>
         <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 주소·건물명 자동입력</span></label>
         <select id="edit_quickBuildingSelect"></select>
       </div>
-      <div class="field">
+      <div class="field" data-hide-bld>
         <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
         <input id="edit_complexName" type="text" placeholder="예) 힐스테이트더운정" />
-      </div>
-      <div class="field" style="grid-column:1 / -1;">
-        <label>제목</label>
-        <input id="edit_title" type="text" placeholder="매물 제목" maxlength="20" />
       </div>
     </div>
 
@@ -393,6 +381,27 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       <small style="color:var(--text-muted);">선택하면 공개 매물설명과 홍보스티커를 입력할 수 있습니다.</small>
     </div>
     <div id="editHomepagePanel" hidden>
+    <!-- 홈페이지 공개 시에만 입력: 제목 · 공개주소 · 지도검색주소 -->
+    <div id="editHomepageBasicFields">
+      <div class="field" id="edit_titleField" style="margin-bottom:10px;">
+        <label>제목</label>
+        <input id="edit_title" type="text" placeholder="매물 제목" maxlength="20" />
+      </div>
+      <div id="edit_addrRow" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:10px;">
+      <div class="field">
+        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
+        <input id="edit_publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
+      </div>
+      <div class="field">
+        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="edit_mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
+          <button type="button" id="editLookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
+        </div>
+        <span id="editLookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
+      </div>
+      </div>
+    </div>
     <!-- 홍보스티커 -->
     <div class="modal-section-title">🏷️ 홍보스티커</div>
     <div class="sticker-grid edit-sticker-grid" style="margin-bottom:10px;">
@@ -591,6 +600,24 @@ function closeHomepageTab(tab) {
     if (commercialEl) commercialEl.style.display = EDIT_COMMERCIAL_CATS.includes(storageCat1) ? "" : "none";
     if (typeof syncEditApartmentListingForm === "function") syncEditApartmentListingForm();
     if (window.EditUi) EditUi.sync();
+    document.getElementById("editModal").classList.toggle("bld-edit", cat1 === "건물빌딩");
+    placeEditTitleField(cat2 === "아파트");
+  }
+
+  // 제목은 홈페이지 등록·수정 패널을 펼쳤을 때만 보인다.
+  // 아파트는 홈페이지 패널이 없으므로 기본정보 영역에 그대로 둔다.
+  function placeEditTitleField(isApartment) {
+    const field = document.getElementById("edit_titleField");
+    const grid = document.getElementById("edit_basicInfoGrid");
+    const row = document.getElementById("editHomepageBasicFields");
+    if (!field || !grid || !row) return;
+    if (isApartment) {
+      field.style.gridColumn = "1 / -1";
+      if (field.parentElement !== grid) grid.appendChild(field);
+    } else if (field.parentElement !== row) {
+      field.style.gridColumn = "";
+      row.insertBefore(field, row.firstChild);
+    }
   }
 
 
