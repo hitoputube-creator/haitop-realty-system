@@ -219,6 +219,20 @@
  .properties-page .complex-filter-wrap, .properties-page .deal-filter-wrap { grid-column:1; grid-template-columns:68px minmax(0,1fr); }
  .properties-page #subFilterRow { padding-left:0; }
 }
+/* 한 줄 정리: 바로가기 버튼은 매물/명단/전체 탭 옆, 매물유형·거래유형은 한 줄 */
+.properties-page .listing-top-row .property-main-return { display:flex; flex:1 1 auto; justify-content:flex-end; align-items:center; gap:6px; margin:0; }
+.properties-page .listing-top-row .property-main-return [hidden] { display:none!important; }
+.properties-page .listing-top-row .property-main-return .btn { padding:7px 11px; white-space:nowrap; }
+.properties-page .filter-panel-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-start; gap:8px 10px; }
+.properties-page .filter-panel-row .filter-row { flex:0 1 auto; display:flex; flex-wrap:wrap; gap:6px; }
+.properties-page .filter-panel-row .deal-filter-wrap { grid-column:auto; display:flex; align-items:center; gap:8px; margin:0 0 0 6px; padding-left:14px; border-left:1px solid var(--border-slate); }
+.properties-page .filter-panel-row .deal-filter-wrap .filter-row { flex-wrap:nowrap; }
+.properties-page .filter-panel-row .complex-filter-wrap { margin:0; }
+@media(max-width:800px) {
+ .properties-page .listing-top-row .property-main-return { order:3; flex:1 1 100%; justify-content:flex-start; flex-wrap:wrap; }
+ .properties-page .filter-panel-row .deal-filter-wrap { width:100%; margin:0; padding-left:0; border-left:0; flex-wrap:wrap; }
+ .properties-page .filter-panel-row .deal-filter-wrap .filter-row { flex-wrap:wrap; }
+}
 </style>
 <link rel="stylesheet" href="assets/css/global-property-search.css?v=20261006-brand-layout">
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261009-ktop-v4">
@@ -346,15 +360,9 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
     <nav class="main-nav" id="mainNav"></nav>
   </header>
   <div class="header-line"></div>
-  <nav class="property-main-return no-print" aria-label="매물관리 복귀">
-    <a class="btn btn-ghost" id="propertyMainReturn" href="property-main.html">← 매물관리 메인</a>
-    <a class="btn btn-ghost" id="propertyKakaoMap" href="listings-kakao.html">카카오맵으로 보기</a>
-    <a class="btn btn-ghost" id="propertyProfitRecommendations" href="profit-recommendations.html">수익성상가 추천매물</a>
-    <a class="btn btn-ghost" id="propertyCustomers" href="customers.html">고객관리</a>
-  </nav>
   <div id="globalPropertySearch" class="no-print"></div>
   <script>
-    (function () {
+    document.addEventListener('DOMContentLoaded', function () {
       const keys = ['all', 'shop', 'land', 'home', 'factory', 'other'];
       let category = new URLSearchParams(location.search).get('mainCategory');
       if (!keys.includes(category)) {
@@ -382,7 +390,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
       });
       document.getElementById('propertyProfitRecommendations').hidden = OfficeConfig.id !== 'hitop';
       document.getElementById('propertyCustomers').href = OfficeConfig.urlFor('customers.html');
-    })();
+    });
   </script>
 
   <!-- ===== 매물관리 ===== -->
@@ -395,6 +403,12 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
         <button type="button" class="kind-tab" data-kind="명단">명단<span class="kind-count" id="kindCountRoster"></span></button>
         <button type="button" class="kind-tab" data-kind="전체">전체<span class="kind-count" id="kindCountAll"></span></button>
       </div>
+      <nav class="property-main-return no-print" aria-label="바로가기">
+        <a class="btn btn-ghost" id="propertyMainReturn" href="property-main.html" hidden>← 매물관리 메인</a>
+        <a class="btn btn-ghost" id="propertyKakaoMap" href="listings-kakao.html">카카오맵</a>
+        <a class="btn btn-ghost" id="propertyProfitRecommendations" href="profit-recommendations.html">수익성상가 추천</a>
+        <a class="btn btn-ghost" id="propertyCustomers" href="customers.html">고객관리</a>
+      </nav>
       <button class="btn btn-primary" id="detailRegisterBtn" style="flex:0 0 auto;white-space:nowrap;">+ 새 매물 등록</button></div>
       <div class="toolbar-row" id="toolbarRow">
         <div class="field search-field">
@@ -885,7 +899,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 </div>
 
 <script src="assets/js/listings-shared.js?v=20261013-phase1"></script>
-<script src="assets/js/properties.js?v=20261023-note-density"></script>
+<script src="assets/js/properties.js?v=20261023-note-density2"></script>
 <script>
 /* Reuse the original card controls and handlers; enhance KTOP only. */
 (function () {
