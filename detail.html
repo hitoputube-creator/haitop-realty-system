@@ -1498,7 +1498,10 @@ function closeHomepageTab(tab) {
         '<div class="apartment-details-column">'+left+'</div>'+
         '<div class="apartment-details-column">'+right+'</div></div>';
     }
-    const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "");
+    // 옛 매물은 거래유형·금액이 가격 메모("매매_18억")에만 있을 수 있어, 가격 칸이 비어 있으면 메모에서 읽어 가격 칸에 보여준다.
+    const legacyPrice = (!item.salePrice && !item.deposit && !item.monthlyRent) ? parseLegacyPriceMemo(item.quick_price) : null;
+    const legacyDeal = (String(item.quick_price || "").trim().match(/^(매매|전세|월세|임대)/) || [])[1] || "";
+    const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "", legacyDeal);
     const exclusiveArea = formatAreaPair(
       item.exclusiveAreaM2 || item.shop_area_sqm || item.officetel_area_sqm || item.biz_privArea_sqm,
       item.exclusiveAreaPy || item.shop_area_py || item.officetel_area_py || item.biz_privArea_py
@@ -1592,9 +1595,9 @@ function closeHomepageTab(tab) {
 
     // 가격은 거래유형에 맞는 항목만 보여준다(매매면 매매가, 전세면 전세금, 월세·임대면 보증금+월세).
     const commercialPrice=CommercialPriceCore.commercial(item)?CommercialPriceCore.price(item):null;
-    const saleText = firstDetailValue(formatWonOrText(commercialPrice?commercialPrice.amount:item.salePrice), profileKey === "land" ? formatManWon(item.land_price) : "");
-    const depositText = formatWonOrText(item.deposit);
-    const rentText = formatWonOrText(item.monthlyRent);
+    const saleText = firstDetailValue(formatWonOrText(commercialPrice?commercialPrice.amount:item.salePrice), profileKey === "land" ? formatManWon(item.land_price) : "", legacyPrice && legacyPrice.sale ? formatWonOrText(legacyPrice.sale) : "");
+    const depositText = firstDetailValue(formatWonOrText(item.deposit), legacyPrice && legacyPrice.deposit ? formatWonOrText(legacyPrice.deposit) : "");
+    const rentText = firstDetailValue(formatWonOrText(item.monthlyRent), legacyPrice && legacyPrice.rent ? formatWonOrText(legacyPrice.rent) : "");
     // 등록·수정 화면의 가격 입력 항목과 같게 맞춘다(토지·주거용은 관리비·권리금 없음, 분양가는 오피스텔·건물·공장만).
     const dispCat1 = resolveDisplayCategory1(cat1Raw, category.category2 || item.category2);
     const dispCat2 = category.category2 || item.category2;
