@@ -559,10 +559,11 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     // 주거용은 매매가·보증금·월세만 보인다. 분양가는 아파트·오피스텔에서만 보이고, 관리비·권리금은 숨긴다.
     const isResidential = cat1 === '주거용';
     const showPresale = !isResidential || cat2 === '아파트' || cat2 === '오피스텔';
-    document.body.classList.toggle('resi-reg', isResidential);
-    document.body.classList.toggle('resi-nopresale', isResidential && !showPresale);
+    const isLandCat = cat1 === '토지';
+    document.body.classList.toggle('resi-reg', isResidential || isLandCat);
+    document.body.classList.toggle('resi-nopresale', (isResidential && !showPresale) || isLandCat);
     const priceGrid = document.getElementById('salePrice')?.closest('.form-grid-3');
-    if (priceGrid) priceGrid.style.gridTemplateColumns = isResidential ? 'repeat(' + (showPresale ? 4 : 3) + ', minmax(0, 1fr))' : '';
+    if (priceGrid) priceGrid.style.gridTemplateColumns = (isResidential || isLandCat) ? 'repeat(' + (showPresale && !isLandCat ? 4 : 3) + ', minmax(0, 1fr))' : '';
     document.body.classList.toggle('bld-reg', hideUnitFields);
     const roadFieldEl = document.getElementById('roadField');
     if (roadFieldEl) roadFieldEl.style.display = hideUnitFields ? '' : 'none';

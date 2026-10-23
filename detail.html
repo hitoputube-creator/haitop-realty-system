@@ -152,7 +152,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 </style><style>
   /* 건물·빌딩, 토지, 아파트·오피스텔 외 주거용: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
   #editModal.bld-edit [data-hide-bld] { display: none !important; }
-  /* 주거용: 관리비·권리금 숨김, 아파트·오피스텔 외에는 분양가도 숨김 */
+  /* 주거용·토지: 관리비·권리금 숨김, 아파트·오피스텔 외에는 분양가도 숨김 */
   #editModal.resi-edit [data-price-fee] { display: none !important; }
   #editModal.resi-nopresale [data-price-presale] { display: none !important; }
 </style>
@@ -620,10 +620,11 @@ function closeHomepageTab(tab) {
     const isResidential = cat1 === "주거용";
     const showPresale = !isResidential || cat2 === "아파트" || cat2 === "오피스텔";
     const editModalEl = document.getElementById("editModal");
-    editModalEl.classList.toggle("resi-edit", isResidential);
-    editModalEl.classList.toggle("resi-nopresale", isResidential && !showPresale);
+    const isLandCat = cat1 === "토지";
+    editModalEl.classList.toggle("resi-edit", isResidential || isLandCat);
+    editModalEl.classList.toggle("resi-nopresale", (isResidential && !showPresale) || isLandCat);
     const priceGrid = document.getElementById("edit_salePrice").closest(".edit-grid-3");
-    if (priceGrid) priceGrid.style.gridTemplateColumns = isResidential ? "repeat(" + (showPresale ? 4 : 3) + ", minmax(0, 1fr))" : "";
+    if (priceGrid) priceGrid.style.gridTemplateColumns = (isResidential || isLandCat) ? "repeat(" + (showPresale && !isLandCat ? 4 : 3) + ", minmax(0, 1fr))" : "";
     document.getElementById("editModal").classList.toggle("bld-edit", hideUnitFields);
     const roadFieldEl = document.getElementById("edit_roadField");
     if (roadFieldEl) roadFieldEl.style.display = hideUnitFields ? "" : "none";
