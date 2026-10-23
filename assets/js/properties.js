@@ -40,11 +40,12 @@ let currentTag = "";     // "" = 없음, 그 외 COMPLEX_TAG_MATCHERS의 키(예
 let currentDealFilter = ""; // "" = 없음, 그 외 "매매"/"임대"/"전세"/"월세" — 유형별 필터와는 독립적 OR로 결합
 let searchKeyword = "";
 let currentSort = "newest";
+let currentRegistrationMonth = ""; // "" = 전체 기간, "YYYY-MM" = 해당 등록월
 let currentPage = 1;
 let includeCompleted = false;
 let currentStatusFilter = "진행중";
 let currentKindTab = "매물"; // "매물" | "명단" | "전체" — 등록구분 탭
-let viewMode = "card"; // "card" | "list"
+let viewMode = "card"; // "card" | "list" | "note"
 let selectedIds = new Set(); // 선택된 매물 ID 집합
 let deletingSelected = false;
 const ITEMS_PER_PAGE = 10;
@@ -63,6 +64,7 @@ function pruneSelectedIds() {
 }
 
 function updateVisibleSelectAllState() {
+  if (viewMode === "note") return;
   const selectAll = viewMode === "list"
     ? document.getElementById("listSelectAll")
     : document.getElementById("cardSelectAll");
@@ -353,27 +355,80 @@ window.addEventListener("afterprint", () => {
 });
 
 function setViewMode(mode, opts = {}) {
-  viewMode = mode;
-  const cardBtn = document.getElementById("viewToggleCard");
-  const listBtn = document.getElementById("viewToggleList");
+  viewMode = ["card", "list", "note"].includes(mode) ? mode : "card";
+  const buttons = {
+    card: document.getElementById("viewToggleCard"),
+    list: document.getElementById("viewToggleList"),
+    note: document.getElementById("viewToggleNote")
+  };
   const gold = "rgba(212,175,55,0.2)", goldTxt = "var(--gold)";
   const none = "transparent", noneTxt = "var(--text-muted)";
+  Object.entries(buttons).forEach(([key, btn]) => {
+    if (!btn) return;
+    btn.style.background = key === viewMode ? gold : none;
+    btn.style.color = key === viewMode ? goldTxt : noneTxt;
+  });
   const cardSelectBar = document.getElementById("cardSelectBar");
-  if (mode === "card") {
-    cardBtn.style.background = gold; cardBtn.style.color = goldTxt;
-    listBtn.style.background = none; listBtn.style.color = noneTxt;
+  if (viewMode === "card") {
     listingContainer.className = "listing-grid";
+  } else if (viewMode === "note") {
+    listingContainer.className = "listing-note-view";
+    if (cardSelectBar) cardSelectBar.style.display = "none";
   } else {
-    listBtn.style.background = gold; listBtn.style.color = goldTxt;
-    cardBtn.style.background = none; cardBtn.style.color = noneTxt;
     listingContainer.className = "";
-    cardSelectBar.style.display = "none";
+    if (cardSelectBar) cardSelectBar.style.display = "none";
   }
   if (opts.skipRender) return; // 상태 복원 시 데이터 로딩 전 중복 렌더 방지용
   currentPage = 1;
   renderList();
   updatePrintBtn();
   saveFilterState();
+}
+
+function renderNoteView(items) {
+  if (!items.length) {
+    listingContainer.innerHTML = `<div style="font-size:0.82rem;color:var(--text-muted);padding:20px 0;text-align:center;">등록된 매물이 없습니다.</div>`;
+    return;
+  }
+  const grouped = new Map();
+  items.forEach((item, index) => {
+    const dateKey = getRegistrationDateKey(item) || "날짜 미상";
+    if (!grouped.has(dateKey)) grouped.set(dateKey, []);
+    grouped.get(dateKey).push({ item, index });
+  });
+  const title = currentRegistrationMonth ? `${registrationMonthLabel(currentRegistrationMonth)} 등록매물` : "전체 기간 등록매물";
+  const sections = [...grouped.entries()].map(([dateKey, entries]) => {
+    const dayLabel = dateKey === "날짜 미상" ? dateKey : registrationDayLabel(dateKey);
+    const rows = entries.map(({ item, index }) => {
+      const idArg = encodeURIComponent(item.id || "");
+      const name = getListingName(item);
+      const titleText = name && name !== "-" ? name : (item.address || "매물명 미입력");
+      const memoLines = typeof formatMemoLines === "function" ? formatMemoLines(item) : { top: item.quick_memo || item.description || "", bottom: "" };
+      const memo = [memoLines.top, memoLines.bottom].filter(Boolean).join("\n");
+      const owner = item.owner_name || item.quick_owner || "";
+      const contact = item.owner_phone1 || item.owner_contact || item.quick_contact || "";
+      const meta = [getListingCategoryLabel(item), getDealTypeLabel(item), getAreaText(item)].filter(Boolean).join(" · ");
+      return `<article class="note-item" onclick="location.href='detail.html?id=${idArg}'">
+        <div class="note-number">${String(index + 1).padStart(2, "0")}</div>
+        <div class="note-main">
+          <div class="note-title">${escapeHtml(titleText)}<span class="note-status">${escapeHtml(getStatusLabel(item))}</span></div>
+          <div class="note-address">${escapeHtml(item.address || "주소 미입력")} · No. ${escapeHtml(getListingNumber(item))}</div>
+          <div class="note-meta">${escapeHtml(meta)}</div>
+          ${memo ? `<div class="note-memo">${escapeHtml(memo)}</div>` : ""}
+        </div>
+        <div class="note-price">
+          <div class="note-title">${escapeHtml(formatPrice(item) || "가격 미입력")}</div>
+          <div class="note-meta">등록 ${escapeHtml(formatRegistrationDate(item))}</div>
+        </div>
+        <div class="note-contact">
+          <div class="note-owner">${owner ? `소유주 ${escapeHtml(owner)}` : "소유주 미입력"}</div>
+          <div class="note-owner">${contact ? escapeHtml(contact) : "연락처 미입력"}</div>
+        </div>
+      </article>`;
+    }).join("");
+    return `<section class="note-day"><h3 class="note-day-title">${escapeHtml(dayLabel)} <span>${entries.length}건</span></h3><div class="note-items">${rows}</div></section>`;
+  }).join("");
+  listingContainer.innerHTML = `<div class="note-view-head"><strong>${escapeHtml(title)}</strong><span>등록일 기준 · 총 ${items.length}건 · 매물을 누르면 상세화면으로 이동합니다.</span></div>${sections}`;
 }
 
 function renderListView(items) {
@@ -692,9 +747,94 @@ function updateKindTabCounts() {
   document.querySelectorAll("#kindTabRow .kind-tab").forEach(b => b.classList.toggle("active", b.dataset.kind === currentKindTab));
 }
 
+const KOREAN_REGISTRATION_DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit"
+});
+
+function koreanDateKey(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = KOREAN_REGISTRATION_DATE_FORMATTER.formatToParts(date);
+  const part = type => (parts.find(x => x.type === type) || {}).value || "";
+  const year = part("year").replace(/\D/g, "");
+  const month = part("month").replace(/\D/g, "").padStart(2, "0");
+  const day = part("day").replace(/\D/g, "").padStart(2, "0");
+  return year && month && day ? `${year}-${month}-${day}` : "";
+}
+
+function getRegistrationDateKey(item) {
+  return item && item.created_at ? koreanDateKey(item.created_at) : "";
+}
+
+function formatRegistrationDate(item) {
+  const key = getRegistrationDateKey(item);
+  if (!key) return "날짜 미상";
+  const [year, month, day] = key.split("-");
+  return `${year}.${month}.${day}`;
+}
+
+function registrationMonthLabel(monthKey) {
+  if (!/^\d{4}-\d{2}$/.test(monthKey || "")) return "전체 기간";
+  const [year, month] = monthKey.split("-");
+  return `${year}년 ${Number(month)}월`;
+}
+
+function registrationDayLabel(dateKey) {
+  const [, month, day] = dateKey.split("-");
+  return `${Number(month)}월 ${Number(day)}일`;
+}
+
+function currentKoreanMonthKey() {
+  return koreanDateKey(new Date()).slice(0, 7);
+}
+
+function refreshRegistrationMonthOptions() {
+  const select = document.getElementById("registrationMonthFilter");
+  if (!select) return;
+  const counts = new Map();
+  (Array.isArray(allListings) ? allListings : []).forEach(item => {
+    const month = getRegistrationDateKey(item).slice(0, 7);
+    if (month) counts.set(month, (counts.get(month) || 0) + 1);
+  });
+  if (currentRegistrationMonth && !counts.has(currentRegistrationMonth)) counts.set(currentRegistrationMonth, 0);
+  const dataMonths = [...counts.keys()].sort();
+  const newestMonth = [currentKoreanMonthKey(), currentRegistrationMonth, dataMonths[dataMonths.length - 1]].filter(Boolean).sort().pop();
+  const oldestMonth = dataMonths[0] || newestMonth;
+  const months = [];
+  if (newestMonth && oldestMonth) {
+    let [year, month] = newestMonth.split("-").map(Number);
+    const oldestIndex = Number(oldestMonth.slice(0, 4)) * 12 + Number(oldestMonth.slice(5, 7));
+    while (year * 12 + month >= oldestIndex) {
+      months.push(`${year}-${String(month).padStart(2, "0")}`);
+      month -= 1;
+      if (month === 0) { year -= 1; month = 12; }
+    }
+  }
+  select.innerHTML = `<option value="">전체 기간</option>` + months.map(month =>
+    `<option value="${month}">${registrationMonthLabel(month)} (${counts.get(month) || 0}건)</option>`
+  ).join("");
+  select.value = currentRegistrationMonth;
+}
+
+function setRegistrationMonth(monthKey) {
+  currentRegistrationMonth = /^\d{4}-\d{2}$/.test(monthKey || "") ? monthKey : "";
+  currentPage = 1;
+  refreshRegistrationMonthOptions();
+  renderList();
+  saveFilterState();
+}
+
+function stepRegistrationMonth(delta) {
+  const base = currentRegistrationMonth || currentKoreanMonthKey();
+  const [year, month] = base.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1 + delta, 1));
+  setRegistrationMonth(`${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`);
+}
+
 function getBaseFilteredListings() {
   let filtered = allListings.filter(item => {
     if (!matchesKindTab(item)) return false;
+    if (currentRegistrationMonth && getRegistrationDateKey(item).slice(0, 7) !== currentRegistrationMonth) return false;
     if(currentStatusFilter!=="전체" && listingProgressStatus(item)!==currentStatusFilter)return false;
     return matchesAllFilters(item);
   });
@@ -823,6 +963,7 @@ function renderApartmentDealSummary(){
 
 function renderList() {
   pruneSelectedIds();
+  refreshRegistrationMonthOptions();
   refreshComplexFilterOptions();
   updateKindTabCounts();
   renderApartmentDealSummary();
@@ -834,6 +975,10 @@ function renderList() {
 
   const filtered = getFilteredListings();
   countBadge.textContent = filtered.length ? `(${filtered.length}건)` : "";
+  const monthSummary = document.getElementById("monthFilterSummary");
+  if (monthSummary) monthSummary.textContent = currentRegistrationMonth
+    ? `${registrationMonthLabel(currentRegistrationMonth)} · ${filtered.length}건`
+    : `등록일 기준 전체 · ${filtered.length}건`;
 
   if (!filtered.length) {
     const cardSelectBar = document.getElementById("cardSelectBar");
@@ -846,6 +991,15 @@ function renderList() {
     return;
   }
   emptyMessage.style.display = "none";
+
+  if (viewMode === "note") {
+    const cardSelectBar = document.getElementById("cardSelectBar");
+    if (cardSelectBar) cardSelectBar.style.display = "none";
+    renderNoteView(filtered);
+    paginationEl.innerHTML = "";
+    updatePrintBtn();
+    return;
+  }
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   if (currentPage > totalPages) currentPage = totalPages;
@@ -915,6 +1069,11 @@ document.getElementById("sortSelect").addEventListener("change", (e) => {
   renderList();
   saveFilterState();
 });
+
+document.getElementById("registrationMonthFilter")?.addEventListener("change", (e) => setRegistrationMonth(e.target.value));
+document.getElementById("monthPrevBtn")?.addEventListener("click", () => stepRegistrationMonth(-1));
+document.getElementById("monthNextBtn")?.addEventListener("click", () => stepRegistrationMonth(1));
+document.getElementById("currentMonthBtn")?.addEventListener("click", () => setRegistrationMonth(currentKoreanMonthKey()));
 
 function renderSubFilterRow() {
   const standard = PROPERTY_CATEGORY_STANDARD[currentMajor];
@@ -1518,7 +1677,7 @@ function saveFilterState() {
   try {
     OfficeStorage.session.setItem(FILTER_STATE_KEY, JSON.stringify({
       searchKeyword, currentMajor, currentSub, currentTag, currentDealFilter,
-      includeCompleted, currentStatusFilter, currentKindTab, currentSort, viewMode, columnFilters: listingColumnFilters,
+      includeCompleted, currentStatusFilter, currentKindTab, currentSort, currentRegistrationMonth, viewMode, columnFilters: listingColumnFilters,
       scrollY: window.scrollY
     }));
   } catch (e) { /* 세션스토리지 사용 불가 시 조용히 무시 */ }
@@ -1535,6 +1694,7 @@ function restoreFilterState() {
 
     currentSort = saved.currentSort === "oldest" ? "oldest" : "newest";
     document.getElementById("sortSelect").value = currentSort;
+    currentRegistrationMonth = /^\d{4}-\d{2}$/.test(saved.currentRegistrationMonth || "") ? saved.currentRegistrationMonth : "";
 
     listingColumnFilters = {};
     if (saved.columnFilters && typeof saved.columnFilters === "object") {
@@ -1568,7 +1728,7 @@ function restoreFilterState() {
       complexFilterSelect.value = currentTag;
     }
 
-    setViewMode(saved.viewMode === "list" ? "list" : "card", { skipRender: true });
+    setViewMode(["list", "note"].includes(saved.viewMode) ? saved.viewMode : "card", { skipRender: true });
 
     if (typeof saved.scrollY === "number") _restoredScrollY = saved.scrollY;
   } else {
