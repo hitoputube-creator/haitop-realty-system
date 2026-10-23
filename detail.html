@@ -1637,7 +1637,8 @@ function closeHomepageTab(tab) {
       ["토지 매매가", profileKey === "land" ? "" : formatManWon(item.land_price)],
       ["공장·창고 금액", formatManWon(item.factory_price)],
       ["지식산업센터 금액", formatManWon(item.biz_price)],
-      ["가격 메모", item.quick_price],
+      // 가격 메모는 저장할 때 매매가·거래유형으로 자동 생성되는 요약이라 수정창에는 입력칸이 없다. 가격 항목이 비어 있는 옛 매물일 때만 보여준다.
+      ["가격 메모", (hasDetailValue(saleText) || hasDetailValue(depositText) || hasDetailValue(rentText)) ? "" : item.quick_price],
       ["일반사업자", item.officetel_biz],
       ["전입", item.officetel_resident],
       ["임대상태", item.shop_status],
