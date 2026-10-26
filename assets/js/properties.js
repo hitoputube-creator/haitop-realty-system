@@ -751,6 +751,7 @@ function matchesDealFilter(item) {
 function matchesAllFilters(item) {
   if (currentMajor && !matchesCategoryFilter(item)) return false;
   if (currentDealFilter && !matchesDealFilter(item)) return false;
+  if (currentPresaleSub && currentDealFilter === "회사분양" && !matchesPresaleSub(item)) return false;
   return true;
 }
 
@@ -1124,6 +1125,49 @@ function renderSubFilterRow() {
 
 // 거래유형 필터 — 기본은 [매매][임대], "주거용" 선택 시에는 [매매][전세][월세]로 교체된다.
 // 유형별 필터와 별개로 클릭 시 즉시 재조회되며, 이미 활성화된 버튼을 다시 누르면 선택 해제된다.
+// 회사분양(분양매물) 세부 필터: 공실 / 임차 / 추천매물 (자료실 임대현황·추천 스티커 기준)
+let currentPresaleSub = "";
+function presaleVacancyOf(item) {
+  const unit = item.apartmentUnitData || {};
+  const v = String(item.shop_status || item.occupancy || item.임대현황 || unit.임대현황 || item.공실여부 || unit.공실여부 || "");
+  if (/공실/.test(v)) return "공실";
+  if (/임차|임대중|세입/.test(v)) return "임차";
+  return "";
+}
+function matchesPresaleSub(item) {
+  if (currentPresaleSub === "공실") return presaleVacancyOf(item) === "공실";
+  if (currentPresaleSub === "임차") return presaleVacancyOf(item) === "임차";
+  if (currentPresaleSub === "추천") return !!(window.CommercialPriceCore && CommercialPriceCore.recommendation(item));
+  return true;
+}
+function renderPresaleSubRow() {
+  let row = document.getElementById("presaleSubRow");
+  const subRow = document.getElementById("subFilterRow");
+  if (!row && subRow) {
+    row = document.createElement("div");
+    row.id = "presaleSubRow";
+    row.className = "filter-row";
+    row.style.cssText = "margin-top:6px;";
+    subRow.parentElement.insertBefore(row, subRow.nextSibling);
+  }
+  if (!row) return;
+  if (!(currentMajor === "상가사무실" && currentDealFilter === "회사분양")) {
+    row.style.display = "none";
+    currentPresaleSub = "";
+    return;
+  }
+  row.style.display = "";
+  const opts = [["", "전체"], ["공실", "공실"], ["임차", "임차 맞춤"], ["추천", "추천매물"]];
+  row.innerHTML = opts.map(([v, l]) => '<button class="filter-btn presale-sub' + (v === currentPresaleSub ? " active" : "") + '" data-sub="' + v + '">' + l + '</button>').join("");
+  row.querySelectorAll(".filter-btn.presale-sub").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentPresaleSub = btn.dataset.sub;
+      currentPage = 1;
+      renderPresaleSubRow();
+      renderList();
+    });
+  });
+}
 function renderDealFilterRow() {
   const options = currentMajor === "주거용" ? ["매매", "전세", "월세"] : currentMajor === "상가사무실" ? ["매매", "임대", "회사분양", "회사임대"] : ["매매", "임대"];
   if (currentDealFilter && !options.includes(currentDealFilter)) currentDealFilter = "";
@@ -1137,10 +1181,12 @@ function renderDealFilterRow() {
         b.classList.toggle("active", b.dataset.deal === currentDealFilter)
       );
       currentPage = 1;
+      renderPresaleSubRow();
       renderList();
       saveFilterState();
     });
   });
+  renderPresaleSubRow();
 }
 
 // 단지(예: 힐스테이트더운정) 드롭다운은 "주거용" 전체/아파트/오피스텔에서만 노출한다.
