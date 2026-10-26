@@ -1175,8 +1175,7 @@ async function loadPresaleUnitRows() {
     const units = Array.isArray(b.units) ? b.units : [];
     units.forEach(u => {
       if (!u || typeof u !== "object") return;
-      const phase = window.CommercialPriceCore && CommercialPriceCore.status ? CommercialPriceCore.status(u, true) : (u.분양상태 || "");
-      if (phase !== "분양중") return;
+      if (u.분양상태 !== "분양중") return;
       out.push({ building: b.name || b.local_id || "", localId: b.local_id || "", ho: u.호수 || "", unit: u });
     });
   }
