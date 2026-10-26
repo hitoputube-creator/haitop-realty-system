@@ -1137,6 +1137,7 @@ function presaleVacancyOf(item) {
 function matchesPresaleSub(item) {
   if (currentPresaleSub === "공실") return presaleVacancyOf(item) === "공실";
   if (currentPresaleSub === "임차") return presaleVacancyOf(item) === "임차";
+  if (currentPresaleSub === "임대") return Number(item.deposit || 0) > 0 || Number(item.monthlyRent || 0) > 0;
   if (currentPresaleSub === "수익형") return (item.stickers || []).includes("수익형");
   if (currentPresaleSub === "추천") return !!(window.CommercialPriceCore && CommercialPriceCore.recommendation(item));
   return true;
@@ -1158,7 +1159,7 @@ function renderPresaleSubRow() {
     return;
   }
   row.style.display = "";
-  const opts = [["", "전체"], ["공실", "공실"], ["임차", "임차 맞춤"], ["수익형", "수익성매물"], ["추천", "추천매물"]];
+  const opts = [["", "전체"], ["공실", "공실"], ["임차", "임차 맞춤"], ["임대", "임대 내놓음"], ["수익형", "수익성매물"], ["추천", "추천매물"]];
   row.innerHTML = opts.map(([v, l]) => '<button class="filter-btn presale-sub' + (v === currentPresaleSub ? " active" : "") + '" data-sub="' + v + '">' + l + '</button>').join("");
   row.querySelectorAll(".filter-btn.presale-sub").forEach(btn => {
     btn.addEventListener("click", () => {
