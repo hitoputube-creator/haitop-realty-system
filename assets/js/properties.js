@@ -740,7 +740,7 @@ function matchesDealFilter(item) {
   const deals=String(unit.거래구분 || item.dealType || item.shop_dealType || item.officetel_dealType || getTransactionType(item));
   if(["매매","전세","월세"].includes(currentDealFilter))return deals.includes(currentDealFilter);
   const t = getTransactionType(item);
-  if (currentDealFilter === "임대") return t === "월세" || t === "전세";
+  if (currentDealFilter === "임대") return ["월세", "전세", "임대"].includes(t);
   return t === currentDealFilter;
 }
 
@@ -1123,10 +1123,10 @@ function renderSubFilterRow() {
 // 거래유형 필터 — 기본은 [매매][임대], "주거용" 선택 시에는 [매매][전세][월세]로 교체된다.
 // 유형별 필터와 별개로 클릭 시 즉시 재조회되며, 이미 활성화된 버튼을 다시 누르면 선택 해제된다.
 function renderDealFilterRow() {
-  const options = currentMajor === "주거용" ? ["매매", "전세", "월세"] : ["매매", "임대"];
+  const options = currentMajor === "주거용" ? ["매매", "전세", "월세"] : currentMajor === "상가사무실" ? ["매매", "임대", "회사분양", "회사임대"] : ["매매", "임대"];
   if (currentDealFilter && !options.includes(currentDealFilter)) currentDealFilter = "";
   dealFilterRow.innerHTML = options.map(v =>
-    `<button class="filter-btn deal${v === currentDealFilter ? " active" : ""}" data-deal="${v}">${v}</button>`
+    `<button class="filter-btn deal${v === currentDealFilter ? " active" : ""}" data-deal="${v}">${v === "회사분양" ? "(회사)분양" : v === "회사임대" ? "(회사)임대" : v}</button>`
   ).join("");
   dealFilterRow.querySelectorAll(".filter-btn.deal").forEach(btn => {
     btn.addEventListener("click", () => {
