@@ -742,7 +742,7 @@ function matchesDealFilter(item) {
   if(["매매","전세","월세"].includes(currentDealFilter))return deals.includes(currentDealFilter);
   const t = getTransactionType(item);
   if (currentDealFilter === "회사분양") return t === "회사분양" || isPresaleListingActive(item);
-  if (currentDealFilter === "임대") return ["월세", "전세", "임대"].includes(t);
+  if (currentDealFilter === "임대") return ["월세", "전세", "임대", "회사임대"].includes(t);
   return t === currentDealFilter;
 }
 
