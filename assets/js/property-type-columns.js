@@ -34,8 +34,8 @@
     const address=first(item.roadAddress,item.jibunAddress,item.address,item.publicAddress,item.mapAddress,item.quick_location);
     const rawUnit=String(first(item.privateDetailAddress,item.detailAddress,item.detail_address,item.roomNumber,item.shop_room,item.unitNumber,item.ho)).trim();
     const unitMatch=rawUnit.match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호/i) || rawUnit.match(/^\s*(?:[A-Za-z]-?\s*)?\d{1,5}\s*$/) || String(address).match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호(?=\s|$|[,，])/i);
-    const unitText=unitMatch ? unitMatch[0].replace(/\s+/g,'') : '';
-    const unit=unitText && /호$/i.test(unitText) ? unitText : unitText ? unitText+'호' : '';
+    const unitText=(/\d{1,5}\s*호/.test(rawUnit) && /[+,，]/.test(rawUnit)) ? rawUnit.replace(/\s+/g,'') : (unitMatch ? unitMatch[0].replace(/\s+/g,'') : '');
+    const unit=unitText && /호/.test(unitText) ? unitText : unitText ? unitText+'호' : '';
     const addressBuilding=unit ? ((String(address).match(/,\s*([^,]+?)\s*\d{1,5}\s*호(?=\s|$|[,，])/i)||[])[1] || '').trim() : '';
     const addressDisplay=addressBuilding ? String(address).replace(/[,，]\s*[^,，]+$/,'').trim() : String(address).replace(/[,，]?\s*(?:[A-Za-z]\s*)?\d{1,5}\s*호(?=\s*$)/i,'').trim();
     return {
