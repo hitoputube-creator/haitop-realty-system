@@ -733,6 +733,7 @@ function matchesCategoryFilter(item) {
 }
 
 // "임대"는 전세·월세를 모두 포함하는 상위 개념(구조화 데이터에 "임대"라는 값 자체는 존재하지 않음)
+function isPresaleListingActive(item) { try { if (window.CommercialPriceCore && typeof CommercialPriceCore.status === "function" && CommercialPriceCore.status(item) === "분양중") return true; } catch (e) {} return item.presaleStatus === "분양중" || item.presaleStatus === "분양"; }
 function matchesDealFilter(item) {
   if (!currentDealFilter) return false;
   if(currentDealFilter==="자가")return isOwnerOccupiedListing(item);
@@ -740,6 +741,7 @@ function matchesDealFilter(item) {
   const deals=String(unit.거래구분 || item.dealType || item.shop_dealType || item.officetel_dealType || getTransactionType(item));
   if(["매매","전세","월세"].includes(currentDealFilter))return deals.includes(currentDealFilter);
   const t = getTransactionType(item);
+  if (currentDealFilter === "회사분양") return t === "회사분양" || isPresaleListingActive(item);
   if (currentDealFilter === "임대") return ["월세", "전세", "임대"].includes(t);
   return t === currentDealFilter;
 }
