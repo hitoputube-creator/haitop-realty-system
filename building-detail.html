@@ -617,6 +617,7 @@
 <style>.unit-phase-label{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.76rem;font-weight:700}.unit-phase-label.ongoing{color:#edcf79;background:rgba(212,175,55,.12)}.unit-phase-label.completed{color:#88d8b2;background:rgba(52,180,130,.12)}</style>
 </head>
 <body class="resources-page">
+<script>if (new URLSearchParams(location.search).get('unit')) { var __s = document.createElement('style'); __s.id = 'unitOnlyStyle'; __s.textContent = '.page{visibility:hidden}#unitModal{visibility:visible}'; document.head.appendChild(__s); setTimeout(function(){ var m = document.getElementById('unitModal'); if (!m || !m.classList.contains('open')) { var st = document.getElementById('unitOnlyStyle'); if (st) st.remove(); } }, 10000); }</script>
 <div class="page">
 
   <!-- TOPBAR -->
@@ -2210,9 +2211,24 @@ async function deleteBFile(id) {
       if (!want || window.__unitAutoOpened) return;
       const norm = v => String(v ?? '').replace(/\s+/g, '').replace(/호$/, '');
       const idx = units.findIndex(u => norm(u.호수) === norm(want));
-      if (idx < 0) return;
+      if (idx < 0) { const st = document.getElementById('unitOnlyStyle'); if (st) st.remove(); return; }
       window.__unitAutoOpened = true;
-      setTimeout(() => { try { $('unitStatus')?.scrollIntoView({ block: 'start' }); openModal(idx); } catch (e) {} }, 300);
+      window.__unitOnly = true;
+      const origClose = closeModal;
+      closeModal = function () {
+        origClose();
+        if (!window.__unitOnly) return;
+        try { window.close(); } catch (e) {}
+        setTimeout(() => {
+          if (document.getElementById('unitOnlyDone')) return;
+          const d = document.createElement('div');
+          d.id = 'unitOnlyDone';
+          d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b1a2a;color:#fff;font-size:1.05rem;visibility:visible;';
+          d.innerHTML = '<div>호실 정보 창을 닫았습니다. 이 탭을 닫아 주세요.</div><button type="button" style="padding:8px 18px;border-radius:8px;border:1px solid #e0b84c;background:transparent;color:#e0b84c;cursor:pointer;" onclick="window.close()">탭 닫기</button>';
+          document.body.appendChild(d);
+        }, 400);
+      };
+      setTimeout(() => { try { openModal(idx); } catch (e) {} }, 300);
     })();
   }
 
