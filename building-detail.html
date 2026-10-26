@@ -2404,11 +2404,7 @@ async function deleteBFile(id) {
         <td><span class="sbadge ${bc}">${status}</span></td>
         <td class="tbl-actions">
           <button class="btn-unit-edit" data-ri="${ri}">수정</button>
-          ${u.listing_id
-            ? `<span class="sbadge 임차중">매물등록</span> <a class="btn-listing-view" href="detail.html?id=${u.listing_id}">매물보기</a>`
-              + (OfficeConfig.id === "ktop" ? "" : `<a class="btn-listing-home" href="https://hitoputube-creator.github.io/hitop-property-platform/listings.html?id=${u.listing_id}" target="_blank">홈페이지</a>`)
-            : `<button class="btn-unit-del" data-ri="${ri}">삭제</button>`
-          }
+          <button class="btn-unit-del" data-ri="${ri}">삭제</button>
           ${(u.묶음매물연결 || []).map(link=>`<a class="btn-listing-view" href="detail.html?id=${encodeURIComponent(link.id)}" title="${esc(link.title)}">묶음매물 보기</a>`).join('')}
         </td>
       </tr>`;
