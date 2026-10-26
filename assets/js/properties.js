@@ -1223,7 +1223,16 @@ function presaleMakeBundleRow(g) {
   const flag = k => g.some(r => isUnitFlagOn(r.unit[k]));
   const first = sorted[0];
   const unit = { 분양상태: "분양중", 분양금액: amt == null ? null : Math.round(amt * 100) / 100, 보증금: dep == null ? null : Math.round(dep * 100) / 100, 월차임: rent == null ? null : Math.round(rent * 100) / 100, 공실여부: first.unit.공실여부, 현업종: first.unit.현업종, 수익성매물: flag("수익성매물") ? true : null, 추천매물: flag("추천매물") ? true : null };
-  return { isBundle: true, building: first.building, localId: first.localId, bKey: first.bKey, ho: first.ho, linkHo: first.ho, hoLabel, hoNum: nums[0], groupCount: g.length, members: sorted, unit };
+  const spObj = g.map(r => r.unit.묶음특가).find(Boolean) || null;
+  let listPrice = null;
+  const sums = { amt: unit.분양금액, dep: unit.보증금, rent: unit.월차임 };
+  if (spObj) {
+    listPrice = spObj.정가 != null ? spObj.정가 : unit.분양금액;
+    if (spObj.할인가 != null) unit.분양금액 = spObj.할인가;
+    if (spObj.보증금 != null) unit.보증금 = spObj.보증금;
+    if (spObj.월세 != null) unit.월차임 = spObj.월세;
+  }
+  return { special: spObj, listPrice, sums, bundleId: first.unit.묶음ID, isBundle: true, building: first.building, localId: first.localId, bKey: first.bKey, ho: first.ho, linkHo: first.ho, hoLabel, hoNum: nums[0], groupCount: g.length, members: sorted, unit };
 }
 function presaleBuildBundles() {
   const map = {}, order = [];
@@ -1319,7 +1328,7 @@ function presaleRowsView() {
   if (presaleGroupMode) rows = presaleInsertBundles(rows);
   return rows;
 }
-function presaleRowHtml(r) {
+function presaleRowHtml(r, idx) {
   const u = r.unit;
   const selKeys = (r.members || [r]).map(m => m.bKey + "|" + m.ho);
   const selChecked = selKeys.every(k => presaleSel.has(k));
@@ -1328,7 +1337,45 @@ function presaleRowHtml(r) {
   const tags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(224,184,76,.15);color:#e0b84c;margin-right:4px;">' + t + '</span>').join("") || '<span style="color:var(--text-muted);">-</span>';
   const rent = presaleMan(u.현_보증금 ?? u.보증금) + " / " + presaleMan(u.현_월세 ?? u.월차임);
   const td = "padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;";
-  return '<tr' + (r.isBundle ? ' style="background:rgba(224,184,76,.09);"' : '') + '><td style="' + td + 'width:28px;"><input type="checkbox" data-sel="' + selKeys.join(",") + '"' + (selChecked ? " checked" : "") + ' style="width:auto;min-width:0;height:auto;padding:0;margin:0;"></td><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.hoLabel || ((r.ho || "-") + "호")) + (r.groupCount > 1 ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(224,184,76,.18);color:#e0b84c;">' + r.groupCount + '호실 합계</span>' : "") + '</td><td style="' + td + '">' + (u.현업종 ? String(u.현업종).replace(/</g, '&lt;') : '<span style="color:var(--text-muted);">-</span>') + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleWon(u.분양금액) + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleYieldText(u) + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.linkHo || r.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
+  return '<tr' + (r.isBundle ? ' style="background:rgba(224,184,76,.09);"' : '') + '><td style="' + td + 'width:28px;"><input type="checkbox" data-sel="' + selKeys.join(",") + '"' + (selChecked ? " checked" : "") + ' style="width:auto;min-width:0;height:auto;padding:0;margin:0;"></td><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.hoLabel || ((r.ho || "-") + "호")) + (r.groupCount > 1 ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(224,184,76,.18);color:#e0b84c;">' + r.groupCount + '호실 합계</span>' : "") + (r.special ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(229,115,115,.2);color:#ef9a9a;">특별할인</span>' : "") + (r.special && r.special.특약 ? '<div style="font-size:.72rem;font-weight:400;color:var(--text-muted);white-space:normal;max-width:240px;">' + String(r.special.특약).replace(/</g, "&lt;") + '</div>' : "") + '</td><td style="' + td + '">' + (u.현업종 ? String(u.현업종).replace(/</g, '&lt;') : '<span style="color:var(--text-muted);">-</span>') + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleWon(u.분양금액) + (r.special && r.listPrice != null && r.listPrice !== u.분양금액 ? '<div style="font-size:.7rem;font-weight:400;color:var(--text-muted);text-decoration:line-through;">' + presaleWon(r.listPrice) + '</div>' : "") + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleYieldText(u) + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;">' + (r.isBundle ? '<button type="button" class="btn btn-ghost" data-special="' + idx + '" style="padding:4px 10px;font-size:.76rem;margin-right:6px;">특별가</button>' : "") + '<a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.linkHo || r.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
+}
+function presaleOpenSpecial(b) {
+  if (!b) return;
+  const old = document.getElementById("presaleSpecialDlg");
+  if (old) old.remove();
+  const sp0 = b.special || {};
+  const won = v => v == null ? "" : String(Math.round(Number(v) * 10000));
+  const d = document.createElement("div");
+  d.id = "presaleSpecialDlg";
+  d.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;";
+  const inp = "width:100%;box-sizing:border-box;height:34px;padding:0 10px;border-radius:8px;border:1px solid #36516b;background:#071625;color:#fff;font-size:.9rem;";
+  const lab = "display:block;font-size:.78rem;color:#9fb3c8;margin:10px 0 4px;";
+  d.innerHTML = '<div style="width:min(460px,92vw);max-height:90vh;overflow:auto;background:#112437;border:1px solid #36516b;border-radius:14px;padding:20px;color:#f1f5f9;">' +
+    '<div style="font-weight:700;color:#e0b84c;">특별가 입력 · ' + b.building + ' ' + b.hoLabel + '</div>' +
+    '<div style="font-size:.76rem;color:#9fb3c8;margin-top:4px;">호실 합계: 분양 ' + presaleWon(b.sums.amt) + ' · 보증금 ' + presaleMan(b.sums.dep) + ' · 월세 ' + presaleMan(b.sums.rent) + '</div>' +
+    '<label style="' + lab + '">할인분양가 (원)</label><input id="spDisc" type="number" style="' + inp + '" value="' + won(sp0.할인가) + '">' +
+    '<label style="' + lab + '">정가 (원, 취소선으로 표시)</label><input id="spList" type="number" style="' + inp + '" value="' + won(sp0.정가 != null ? sp0.정가 : b.sums.amt) + '">' +
+    '<label style="' + lab + '">보증금 (원)</label><input id="spDep" type="number" style="' + inp + '" value="' + won(sp0.보증금 != null ? sp0.보증금 : b.sums.dep) + '">' +
+    '<label style="' + lab + '">월세 (원)</label><input id="spRent" type="number" style="' + inp + '" value="' + won(sp0.월세 != null ? sp0.월세 : b.sums.rent) + '">' +
+    '<label style="' + lab + '">특약사항 (예: 10년 계약, 2년마다 2% 인상)</label><textarea id="spMemo" style="' + inp + 'height:70px;padding:8px 10px;resize:vertical;">' + String(sp0.특약 || "").replace(/</g, "&lt;") + '</textarea>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" id="spDel" class="btn btn-ghost" style="padding:6px 12px;">특별가 삭제</button><button type="button" id="spCancel" class="btn btn-ghost" style="padding:6px 12px;">취소</button><button type="button" id="spSave" class="btn btn-ghost" style="padding:6px 14px;background:#e0b84c;color:#071625;font-weight:700;">저장</button></div></div>';
+  document.body.appendChild(d);
+  const q = id => d.querySelector("#" + id);
+  const num = id => { const v = q(id).value.replace(/[^0-9.]/g, ""); return v === "" ? null : Math.round(Number(v) / 10000 * 100) / 100; };
+  const apply = async (obj) => {
+    try {
+      await presaleSaveFlags(b.bKey, units => units.forEach(u => { if (u.묶음ID === b.bundleId) { if (obj) u.묶음특가 = obj; else delete u.묶음특가; u.updated_at = new Date().toISOString(); } }));
+      d.remove();
+      await presaleReloadAfterSave();
+    } catch (e) { alert("저장 실패: " + e.message); }
+  };
+  q("spCancel").onclick = () => d.remove();
+  q("spDel").onclick = () => apply(null);
+  q("spSave").onclick = () => {
+    const obj = { 할인가: num("spDisc"), 정가: num("spList"), 보증금: num("spDep"), 월세: num("spRent"), 특약: q("spMemo").value.trim() };
+    if (obj.할인가 == null && obj.보증금 == null && obj.월세 == null && !obj.특약) { apply(null); return; }
+    apply(obj);
+  };
 }
 function updatePresaleTbody() {
   const tb = document.getElementById("presaleTbody");
@@ -1336,6 +1383,7 @@ function updatePresaleTbody() {
   const rows = presaleRowsView();
   tb.innerHTML = rows.length ? rows.map(presaleRowHtml).join("") : '<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--text-muted);">해당하는 분양중 호실이 없습니다.</td></tr>';
   tb.querySelectorAll("input[data-sel]").forEach(cb => cb.addEventListener("change", () => { cb.dataset.sel.split(",").forEach(k => { if (cb.checked) presaleSel.add(k); else presaleSel.delete(k); }); }));
+  tb.querySelectorAll("button[data-special]").forEach(btn => btn.addEventListener("click", () => presaleOpenSpecial(rows[Number(btn.dataset.special)])));
   const c = document.getElementById("presaleCount");
   if (c) c.textContent = rows.filter(r => !r.isBundle).length + "건" + (rows.some(r => r.isBundle) ? " · 묶음 합계 " + rows.filter(r => r.isBundle).length + "개" : "");
   document.querySelectorAll("#presaleUnitPanel th[data-key]").forEach(th => {
