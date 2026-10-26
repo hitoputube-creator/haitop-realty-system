@@ -2214,10 +2214,7 @@ async function deleteBFile(id) {
       if (idx < 0) { const st = document.getElementById('unitOnlyStyle'); if (st) st.remove(); return; }
       window.__unitAutoOpened = true;
       window.__unitOnly = true;
-      const origClose = closeModal;
-      closeModal = function () {
-        origClose();
-        if (!window.__unitOnly) return;
+      const finishUnitOnly = function () {
         try { window.close(); } catch (e) {}
         setTimeout(() => {
           if (document.getElementById('unitOnlyDone')) return;
@@ -2228,6 +2225,11 @@ async function deleteBFile(id) {
           document.body.appendChild(d);
         }, 400);
       };
+      new MutationObserver(() => {
+        const open = $('unitModal').classList.contains('open');
+        if (open) { window.__unitOnlyFinished = false; return; }
+        if (window.__unitOnly && !window.__unitOnlyFinished) { window.__unitOnlyFinished = true; finishUnitOnly(); }
+      }).observe($('unitModal'), { attributes: true, attributeFilter: ['class'] });
       setTimeout(() => { try { openModal(idx); } catch (e) {} }, 300);
     })();
   }
