@@ -2205,6 +2205,15 @@ async function deleteBFile(id) {
     }
     renderAll();
     if (location.hash === '#unitStatus') $('unitStatus').scrollIntoView({ block: 'start' });
+    (function openUnitFromUrl() {
+      const want = new URLSearchParams(location.search).get('unit');
+      if (!want || window.__unitAutoOpened) return;
+      const norm = v => String(v ?? '').replace(/\s+/g, '').replace(/호$/, '');
+      const idx = units.findIndex(u => norm(u.호수) === norm(want));
+      if (idx < 0) return;
+      window.__unitAutoOpened = true;
+      setTimeout(() => { try { $('unitStatus')?.scrollIntoView({ block: 'start' }); openModal(idx); } catch (e) {} }, 300);
+    })();
   }
 
   // init() 완료 후 외부에서 호출
