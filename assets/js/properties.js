@@ -1170,13 +1170,19 @@ async function loadPresaleUnitRows() {
   const res = await fetch(SUPABASE_URL + "/rest/v1/buildings?select=local_id,name,units", { headers });
   if (!res.ok) throw new Error("자료실 호실을 불러오지 못했습니다. (" + res.status + ")");
   const rows = await res.json();
+  let resMap = {}, resById = {};
+  try {
+    const rr = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?select=id,name", { headers });
+    if (rr.ok) (await rr.json()).forEach(x => { resById[x.id] = true; if (x.name && !resMap[x.name]) resMap[x.name] = x.id; });
+  } catch (e) {}
   const out = [];
   for (const b of rows) {
     const units = Array.isArray(b.units) ? b.units : [];
     units.forEach(u => {
       if (!u || typeof u !== "object") return;
       if (u.분양상태 !== "분양중") return;
-      out.push({ building: b.name || b.local_id || "", localId: b.local_id || "", ho: u.호수 || "", unit: u });
+      const resId = resById[b.local_id] ? b.local_id : (resMap[b.name] || resMap[b.local_id] || b.local_id || "");
+      out.push({ building: b.name || b.local_id || "", localId: resId, ho: u.호수 || "", unit: u });
     });
   }
   presaleUnitRowsCache = out;
