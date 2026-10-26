@@ -1204,6 +1204,7 @@ function matchesPresaleUnitSub(r) {
   if (currentPresaleSub === "추천") return isUnitFlagOn(u.추천매물) && isUnitFlagOn(u.수익성매물);
   return true;
 }
+function presaleWon(v) { const n = Number(v); return v === null || v === undefined || v === "" || !Number.isFinite(n) ? "-" : Math.round(n * 10000).toLocaleString("ko-KR") + "원"; }
 function presaleMan(v) { const n = Number(v); return v === null || v === undefined || v === "" || !Number.isFinite(n) ? "-" : n.toLocaleString("ko-KR") + "만원"; }
 var presaleColFilter = { building: "", ho: "", vac: "", tag: "", minYield: "", maxPrice: "" };
 var presaleSort = { key: "", dir: 1 };
@@ -1219,7 +1220,7 @@ function presaleRowsView() {
     if (f.tag === "추천" && !isUnitFlagOn(u.추천매물)) return false;
     if (f.tag === "없음" && (isUnitFlagOn(u.수익성매물) || isUnitFlagOn(u.추천매물))) return false;
     if (f.minYield !== "" && !((presaleYieldValue(u) ?? -1) >= Number(f.minYield))) return false;
-    if (f.maxPrice !== "" && !(Number(u.분양금액) <= Number(f.maxPrice))) return false;
+    if (f.maxPrice !== "" && !(Math.round(Number(u.분양금액) * 10000) <= Number(f.maxPrice))) return false;
     return true;
   });
   const key = presaleSort.key, dir = presaleSort.dir;
@@ -1238,7 +1239,7 @@ function presaleRowHtml(r) {
   const tags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(224,184,76,.15);color:#e0b84c;margin-right:4px;">' + t + '</span>').join("") || '<span style="color:var(--text-muted);">-</span>';
   const rent = presaleMan(u.현_보증금 ?? u.보증금) + " / " + presaleMan(u.현_월세 ?? u.월차임);
   const td = "padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;";
-  return '<tr><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.ho || "-") + '호</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleMan(u.분양금액) + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleYieldText(u) + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.ho) + '#unitStatus" target="_blank" rel="noopener">자료실 열기</a></td></tr>';
+  return '<tr><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.ho || "-") + '호</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleWon(u.분양금액) + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleYieldText(u) + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.ho) + '#unitStatus" target="_blank" rel="noopener">자료실 열기</a></td></tr>';
 }
 function updatePresaleTbody() {
   const tb = document.getElementById("presaleTbody");
@@ -1261,7 +1262,7 @@ function buildPresaleFrame(panel, all) {
   const filterCells = [
     '<select data-f="building" style="' + inS + '">' + opt("", "전체") + buildings.map(b => opt(b, b)).join("") + '</select>',
     '<input data-f="ho" placeholder="호수" style="' + inS + '">',
-    '<input data-f="maxPrice" type="number" placeholder="이하(만원)" style="' + inS + '">',
+    '<input data-f="maxPrice" type="number" placeholder="이하(원)" style="' + inS + '">',
     '<select data-f="vac" style="' + inS + '">' + opt("", "전체") + opt("공실", "공실") + opt("임차중", "임차중") + '</select>',
     "",
     '<input data-f="minYield" type="number" step="0.1" placeholder="이상 %" style="' + inS + '">',
