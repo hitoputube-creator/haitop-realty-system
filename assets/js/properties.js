@@ -1123,7 +1123,7 @@ function renderSubFilterRow() {
 // 거래유형 필터 — 기본은 [매매][임대], "주거용" 선택 시에는 [매매][전세][월세]로 교체된다.
 // 유형별 필터와 별개로 클릭 시 즉시 재조회되며, 이미 활성화된 버튼을 다시 누르면 선택 해제된다.
 function renderDealFilterRow() {
-  const options = currentMajor === "주거용" ? ["매매", "전세", "월세", "자가"] : ["매매", "임대"];
+  const options = currentMajor === "주거용" ? ["매매", "전세", "월세"] : ["매매", "임대"];
   if (currentDealFilter && !options.includes(currentDealFilter)) currentDealFilter = "";
   dealFilterRow.innerHTML = options.map(v =>
     `<button class="filter-btn deal${v === currentDealFilter ? " active" : ""}" data-deal="${v}">${v}</button>`
