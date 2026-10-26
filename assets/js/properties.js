@@ -751,7 +751,8 @@ function matchesDealFilter(item) {
 function matchesAllFilters(item) {
   if (currentMajor && !matchesCategoryFilter(item)) return false;
   if (currentDealFilter && !matchesDealFilter(item)) return false;
-  if (currentPresaleSub && currentDealFilter === "회사분양" && !matchesPresaleSub(item)) return false;
+  if (currentPresaleMode && !isPresaleListingActive(item)) return false;
+  if (currentPresaleSub && (currentDealFilter === "회사분양" || currentPresaleMode) && !matchesPresaleSub(item)) return false;
   return true;
 }
 
@@ -768,7 +769,7 @@ function updateKindTabCounts() {
   set("kindCountListing", live.length - roster);
   set("kindCountRoster", roster);
   set("kindCountAll", live.length);
-  document.querySelectorAll("#kindTabRow .kind-tab").forEach(b => b.classList.toggle("active", b.dataset.kind === currentKindTab));
+  document.querySelectorAll("#kindTabRow .kind-tab").forEach(b => b.classList.toggle("active", b.dataset.presale ? !!currentPresaleMode : (b.dataset.kind === currentKindTab && !currentPresaleMode)));
 }
 
 const KOREAN_REGISTRATION_DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
@@ -1072,10 +1073,28 @@ document.getElementById("searchBtn")?.addEventListener("click", doSearch);
 document.querySelectorAll("#kindTabRow .kind-tab").forEach(btn => {
   btn.addEventListener("click", () => {
     currentKindTab = btn.dataset.kind;
+    currentPresaleMode = false;
     currentPage = 1;
     renderList();
+    renderPresaleSubRow();
   });
 });
+(function addPresaleKindTab() {
+  const row = document.getElementById("kindTabRow");
+  if (!row || row.querySelector("[data-presale]")) return;
+  const pb = document.createElement("button");
+  pb.type = "button";
+  pb.className = "kind-tab";
+  pb.dataset.presale = "1";
+  pb.textContent = "분양";
+  pb.addEventListener("click", () => {
+    currentPresaleMode = !currentPresaleMode;
+    currentPage = 1;
+    renderList();
+    renderPresaleSubRow();
+  });
+  row.appendChild(pb);
+})();
 document.getElementById("listingStatusFilter").addEventListener("change",e=>{
   currentStatusFilter=e.target.value;includeCompleted=currentStatusFilter==="전체"||currentStatusFilter==="거래완료";
   document.getElementById("includeCompletedChk").checked=includeCompleted;currentPage=1;renderList();saveFilterState();
@@ -1127,6 +1146,7 @@ function renderSubFilterRow() {
 // 유형별 필터와 별개로 클릭 시 즉시 재조회되며, 이미 활성화된 버튼을 다시 누르면 선택 해제된다.
 // 회사분양(분양매물) 세부 필터: 공실 / 임차 / 추천매물 (자료실 임대현황·추천 스티커 기준)
 let currentPresaleSub = "";
+var currentPresaleMode = false;
 function presaleVacancyOf(item) {
   const unit = item.apartmentUnitData || {};
   const v = String(item.shop_status || item.occupancy || item.임대현황 || unit.임대현황 || item.공실여부 || unit.공실여부 || "");
@@ -1153,7 +1173,7 @@ function renderPresaleSubRow() {
     subRow.parentElement.insertBefore(row, subRow.nextSibling);
   }
   if (!row) return;
-  if (!(currentMajor === "상가사무실" && currentDealFilter === "회사분양")) {
+  if (!(currentMajor === "상가사무실" && (currentDealFilter === "회사분양" || currentPresaleMode))) {
     row.style.display = "none";
     currentPresaleSub = "";
     return;
