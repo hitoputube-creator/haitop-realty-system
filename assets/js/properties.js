@@ -1162,7 +1162,69 @@ function matchesPresaleSub(item) {
   if (currentPresaleSub === "추천") return !!(window.CommercialPriceCore && CommercialPriceCore.recommendation(item));
   return true;
 }
+// 자료실(buildings) 분양중 호실을 분양 보기에서 바로 보여준다 (읽기 전용, 매물관리 반영 없이)
+var presaleUnitRowsCache = null;
+function isUnitFlagOn(v) { if (v === true) return true; const s = String(v ?? "").trim(); return s !== "" && !["false", "0", "n", "no", "x", "아니오", "없음"].includes(s.toLowerCase()); }
+async function loadPresaleUnitRows() {
+  if (presaleUnitRowsCache) return presaleUnitRowsCache;
+  const res = await fetch(SUPABASE_URL + "/rest/v1/buildings?select=local_id,name,units", { headers });
+  if (!res.ok) throw new Error("자료실 호실을 불러오지 못했습니다. (" + res.status + ")");
+  const rows = await res.json();
+  const out = [];
+  for (const b of rows) {
+    const units = Array.isArray(b.units) ? b.units : [];
+    units.forEach(u => {
+      if (!u || typeof u !== "object") return;
+      const phase = window.CommercialPriceCore && CommercialPriceCore.status ? CommercialPriceCore.status(u, true) : (u.분양상태 || "");
+      if (phase !== "분양중") return;
+      out.push({ building: b.name || b.local_id || "", localId: b.local_id || "", ho: u.호수 || "", unit: u });
+    });
+  }
+  presaleUnitRowsCache = out;
+  return out;
+}
+function matchesPresaleUnitSub(r) {
+  const u = r.unit;
+  const vac = String(u.공실여부 || "");
+  if (currentPresaleSub === "공실") return vac === "공실";
+  if (currentPresaleSub === "임차") return vac === "임차중";
+  if (currentPresaleSub === "임대") return Number(u.현_보증금 ?? u.보증금 ?? 0) > 0 || Number(u.현_월세 ?? u.월차임 ?? 0) > 0;
+  if (currentPresaleSub === "수익형") return isUnitFlagOn(u.수익성매물);
+  if (currentPresaleSub === "추천") return isUnitFlagOn(u.추천매물) && isUnitFlagOn(u.수익성매물);
+  return true;
+}
+function presaleMan(v) { const n = Number(v); return v === null || v === undefined || v === "" || !Number.isFinite(n) ? "-" : n.toLocaleString("ko-KR") + "만원"; }
+async function renderPresaleUnitPanel() {
+  const anchor = document.getElementById("presaleSubRow");
+  let panel = document.getElementById("presaleUnitPanel");
+  if (!panel) {
+    if (!anchor) return;
+    panel = document.createElement("div");
+    panel.id = "presaleUnitPanel";
+    panel.style.cssText = "margin:12px 0;";
+    const host = anchor.closest("section, .card, .filter-panel") || anchor.parentElement;
+    host.parentElement.insertBefore(panel, host.nextSibling);
+  }
+  if (!currentPresaleMode) { panel.style.display = "none"; return; }
+  panel.style.display = "";
+  panel.innerHTML = '<div style="font-size:.85rem;color:var(--text-muted);padding:8px 0;">자료실 분양중 호실 불러오는 중…</div>';
+  try {
+    const rows = (await loadPresaleUnitRows()).filter(matchesPresaleUnitSub);
+    const body = rows.length ? rows.map(r => {
+      const u = r.unit;
+      const flags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).join(" · ") || "-";
+      const vac = u.공실여부 || "-";
+      const rent = (presaleMan(u.현_보증금 ?? u.보증금) === "-" ? "-" : presaleMan(u.현_보증금 ?? u.보증금)) + " / " + (presaleMan(u.현_월세 ?? u.월차임) === "-" ? "-" : presaleMan(u.현_월세 ?? u.월차임));
+      return '<tr><td>' + r.building + '</td><td>' + (r.ho || "-") + '</td><td>' + presaleMan(u.분양금액) + '</td><td>' + vac + '</td><td>' + rent + '</td><td>' + flags + '</td><td><a href="building-detail.html?id=' + encodeURIComponent(r.localId) + '" target="_blank" rel="noopener">자료실 열기</a></td></tr>';
+    }).join("") : '<tr><td colspan="7" style="text-align:center;padding:14px;">해당하는 분양중 호실이 없습니다.</td></tr>';
+    panel.innerHTML = '<div style="font-size:.85rem;color:var(--text-muted);margin-bottom:6px;">자료실 분양중 호실 ' + rows.length + '건 (매물관리 반영 없이 자료실 기준)</div>' +
+      '<div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;font-size:.82rem;"><thead><tr><th style="text-align:left;padding:6px;">건물</th><th style="text-align:left;padding:6px;">호수</th><th style="text-align:left;padding:6px;">분양금액</th><th style="text-align:left;padding:6px;">임대현황</th><th style="text-align:left;padding:6px;">보증금 / 월세</th><th style="text-align:left;padding:6px;">표시</th><th style="text-align:left;padding:6px;"></th></tr></thead><tbody>' + body + '</tbody></table></div>';
+  } catch (e) {
+    panel.innerHTML = '<div style="color:#e57373;padding:8px 0;">' + e.message + '</div>';
+  }
+}
 function renderPresaleSubRow() {
+  renderPresaleUnitPanel();
   let row = document.getElementById("presaleSubRow");
   const subRow = document.getElementById("subFilterRow");
   if (!row && subRow) {
