@@ -1206,7 +1206,7 @@ function matchesPresaleUnitSub(r) {
 }
 function presaleWon(v) { const n = Number(v); return v === null || v === undefined || v === "" || !Number.isFinite(n) ? "-" : Math.round(n * 10000).toLocaleString("ko-KR") + "원"; }
 function presaleMan(v) { const n = Number(v); return v === null || v === undefined || v === "" || !Number.isFinite(n) ? "-" : n.toLocaleString("ko-KR") + "만원"; }
-var presaleColFilter = { building: "", ho: "", vac: "", tag: "", minYield: "", maxPrice: "" };
+var presaleColFilter = { building: "", ho: "", biz: "", vac: "", tag: "", minYield: "", maxPrice: "" };
 var presaleSort = { key: "", dir: 1 };
 function presaleHoNum(h) { return parseInt(String(h || "").replace(/[^0-9]/g, ""), 10) || 0; }
 function presaleRowsView() {
@@ -1215,6 +1215,7 @@ function presaleRowsView() {
     const u = r.unit;
     if (f.building && r.building !== f.building) return false;
     if (f.ho && String(r.ho).indexOf(f.ho) < 0) return false;
+    if (f.biz && String(u.현업종 || "").indexOf(f.biz) < 0) return false;
     if (f.vac && (u.공실여부 || "-") !== f.vac) return false;
     if (f.tag === "수익성" && !isUnitFlagOn(u.수익성매물)) return false;
     if (f.tag === "추천" && !isUnitFlagOn(u.추천매물)) return false;
@@ -1225,7 +1226,7 @@ function presaleRowsView() {
   });
   const key = presaleSort.key, dir = presaleSort.dir;
   if (key) {
-    const val = r => key === "building" ? r.building : key === "ho" ? presaleHoNum(r.ho) : key === "price" ? (Number(r.unit.분양금액) || 0) : key === "vac" ? (r.unit.공실여부 || "") : (presaleYieldValue(r.unit) ?? -1);
+    const val = r => key === "building" ? r.building : key === "ho" ? presaleHoNum(r.ho) : key === "biz" ? (r.unit.현업종 || "") : key === "price" ? (Number(r.unit.분양금액) || 0) : key === "vac" ? (r.unit.공실여부 || "") : (presaleYieldValue(r.unit) ?? -1);
     rows = rows.slice().sort((a, b) => { const x = val(a), y = val(b); return (x < y ? -1 : x > y ? 1 : 0) * dir; });
   } else if (currentPresaleSub === "수익형" || currentPresaleSub === "추천") {
     rows = rows.slice().sort((a, b) => (presaleYieldValue(b.unit) ?? -1) - (presaleYieldValue(a.unit) ?? -1));
@@ -1239,13 +1240,13 @@ function presaleRowHtml(r) {
   const tags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(224,184,76,.15);color:#e0b84c;margin-right:4px;">' + t + '</span>').join("") || '<span style="color:var(--text-muted);">-</span>';
   const rent = presaleMan(u.현_보증금 ?? u.보증금) + " / " + presaleMan(u.현_월세 ?? u.월차임);
   const td = "padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;";
-  return '<tr><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.ho || "-") + '호</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleWon(u.분양금액) + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleYieldText(u) + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
+  return '<tr><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.ho || "-") + '호</td><td style="' + td + '">' + (u.현업종 ? String(u.현업종).replace(/</g, '&lt;') : '<span style="color:var(--text-muted);">-</span>') + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleWon(u.분양금액) + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleYieldText(u) + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
 }
 function updatePresaleTbody() {
   const tb = document.getElementById("presaleTbody");
   if (!tb) return;
   const rows = presaleRowsView();
-  tb.innerHTML = rows.length ? rows.map(presaleRowHtml).join("") : '<tr><td colspan="8" style="text-align:center;padding:18px;color:var(--text-muted);">해당하는 분양중 호실이 없습니다.</td></tr>';
+  tb.innerHTML = rows.length ? rows.map(presaleRowHtml).join("") : '<tr><td colspan="9" style="text-align:center;padding:18px;color:var(--text-muted);">해당하는 분양중 호실이 없습니다.</td></tr>';
   const c = document.getElementById("presaleCount");
   if (c) c.textContent = rows.length + "건";
   document.querySelectorAll("#presaleUnitPanel th[data-key]").forEach(th => {
@@ -1256,12 +1257,13 @@ function updatePresaleTbody() {
 function buildPresaleFrame(panel, all) {
   const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#e0b84c;font-size:.78rem;border-bottom:1px solid var(--border-slate,#2c4258);white-space:nowrap;cursor:pointer;user-select:none;";
   const inS = "width:100%;min-width:60px;height:28px;box-sizing:border-box;padding:0 6px;font-size:.76rem;border-radius:6px;border:1px solid var(--border-slate,#2c4258);background:#0b1a2a;color:#fff;";
-  const cols = [["building", "건물"], ["ho", "호수"], ["price", "분양금액"], ["vac", "임대현황"], ["", "보증금 / 월세"], ["yield", "수익률"], ["", "표시"], ["", ""]];
+  const cols = [["building", "건물"], ["ho", "호수"], ["biz", "업종"], ["price", "분양금액"], ["vac", "임대현황"], ["", "보증금 / 월세"], ["yield", "수익률"], ["", "표시"], ["", ""]];
   const buildings = Array.from(new Set(all.map(r => r.building))).sort();
   const opt = (v, l) => '<option value="' + v + '">' + l + '</option>';
   const filterCells = [
     '<select data-f="building" style="' + inS + '">' + opt("", "전체") + buildings.map(b => opt(b, b)).join("") + '</select>',
     '<input data-f="ho" placeholder="호수" style="' + inS + '">',
+    '<input data-f="biz" placeholder="업종" style="' + inS + '">',
     '<input data-f="maxPrice" type="number" placeholder="이하(원)" style="' + inS + '">',
     '<select data-f="vac" style="' + inS + '">' + opt("", "전체") + opt("공실", "공실") + opt("임차중", "임차중") + '</select>',
     "",
@@ -1285,7 +1287,7 @@ function buildPresaleFrame(panel, all) {
   });
   const rs = panel.querySelector("#presaleFilterReset");
   if (rs) rs.addEventListener("click", () => {
-    presaleColFilter = { building: "", ho: "", vac: "", tag: "", minYield: "", maxPrice: "" };
+    presaleColFilter = { building: "", ho: "", biz: "", vac: "", tag: "", minYield: "", maxPrice: "" };
     presaleSort = { key: "", dir: 1 };
     panel.querySelectorAll("[data-f]").forEach(el => { el.value = ""; });
     updatePresaleTbody();
