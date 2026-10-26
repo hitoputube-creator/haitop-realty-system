@@ -1227,7 +1227,7 @@ async function renderPresaleUnitPanel() {
       const flags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).join(" · ") || "-";
       const vac = u.공실여부 || "-";
       const rent = (presaleMan(u.현_보증금 ?? u.보증금) === "-" ? "-" : presaleMan(u.현_보증금 ?? u.보증금)) + " / " + (presaleMan(u.현_월세 ?? u.월차임) === "-" ? "-" : presaleMan(u.현_월세 ?? u.월차임));
-      return '<tr><td>' + r.building + '</td><td>' + (r.ho || "-") + '</td><td>' + presaleMan(u.분양금액) + '</td><td>' + vac + '</td><td>' + rent + '</td><td>' + flags + '</td><td><a href="building-detail.html?id=' + encodeURIComponent(r.localId) + '" target="_blank" rel="noopener">자료실 열기</a></td></tr>';
+      return '<tr><td>' + r.building + '</td><td>' + (r.ho || "-") + '</td><td>' + presaleMan(u.분양금액) + '</td><td>' + vac + '</td><td>' + rent + '</td><td>' + flags + '</td><td><a href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.ho) + '#unitStatus" target="_blank" rel="noopener">자료실 열기</a></td></tr>';
     }).join("") : '<tr><td colspan="7" style="text-align:center;padding:14px;">해당하는 분양중 호실이 없습니다.</td></tr>';
     const th = 'text-align:left;padding:8px 10px;font-weight:600;color:#e0b84c;font-size:.78rem;border-bottom:1px solid var(--border-slate,#2c4258);white-space:nowrap;';
     const head = ['건물','호수','분양금액','임대현황','보증금 / 월세','수익률','표시',''].map(h => '<th style="' + th + '">' + h + '</th>').join('');
