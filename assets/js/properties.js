@@ -1200,7 +1200,7 @@ async function renderPresaleUnitPanel() {
     if (!anchor) return;
     panel = document.createElement("div");
     panel.id = "presaleUnitPanel";
-    panel.style.cssText = "margin:12px 0;";
+    panel.style.cssText = "margin:14px 0;padding:14px 16px;border:1px solid var(--border-slate,#2c4258);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));";
     const host = anchor.closest("section, .card, .filter-panel") || anchor.parentElement;
     host.parentElement.insertBefore(panel, host.nextSibling);
   }
@@ -1216,8 +1216,19 @@ async function renderPresaleUnitPanel() {
       const rent = (presaleMan(u.현_보증금 ?? u.보증금) === "-" ? "-" : presaleMan(u.현_보증금 ?? u.보증금)) + " / " + (presaleMan(u.현_월세 ?? u.월차임) === "-" ? "-" : presaleMan(u.현_월세 ?? u.월차임));
       return '<tr><td>' + r.building + '</td><td>' + (r.ho || "-") + '</td><td>' + presaleMan(u.분양금액) + '</td><td>' + vac + '</td><td>' + rent + '</td><td>' + flags + '</td><td><a href="building-detail.html?id=' + encodeURIComponent(r.localId) + '" target="_blank" rel="noopener">자료실 열기</a></td></tr>';
     }).join("") : '<tr><td colspan="7" style="text-align:center;padding:14px;">해당하는 분양중 호실이 없습니다.</td></tr>';
-    panel.innerHTML = '<div style="font-size:.85rem;color:var(--text-muted);margin-bottom:6px;">자료실 분양중 호실 ' + rows.length + '건 (매물관리 반영 없이 자료실 기준)</div>' +
-      '<div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;font-size:.82rem;"><thead><tr><th style="text-align:left;padding:6px;">건물</th><th style="text-align:left;padding:6px;">호수</th><th style="text-align:left;padding:6px;">분양금액</th><th style="text-align:left;padding:6px;">임대현황</th><th style="text-align:left;padding:6px;">보증금 / 월세</th><th style="text-align:left;padding:6px;">표시</th><th style="text-align:left;padding:6px;"></th></tr></thead><tbody>' + body + '</tbody></table></div>';
+    const th = 'text-align:left;padding:8px 10px;font-weight:600;color:#e0b84c;font-size:.78rem;border-bottom:1px solid var(--border-slate,#2c4258);white-space:nowrap;';
+    const head = ['건물','호수','분양금액','임대현황','보증금 / 월세','표시',''].map(h => '<th style="' + th + '">' + h + '</th>').join('');
+    const bodyRows = rows.length ? rows.map(r => {
+      const u = r.unit;
+      const vac = u.공실여부 || '-';
+      const vacColor = vac === '공실' ? '#ffb74d' : vac === '임차중' ? '#81c784' : 'inherit';
+      const tags = [isUnitFlagOn(u.수익성매물) ? '수익성' : '', isUnitFlagOn(u.추천매물) ? '추천' : ''].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(224,184,76,.15);color:#e0b84c;margin-right:4px;">' + t + '</span>').join('') || '<span style="color:var(--text-muted);">-</span>';
+      const rent = presaleMan(u.현_보증금 ?? u.보증금) + ' / ' + presaleMan(u.현_월세 ?? u.월차임);
+      const td = 'padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;';
+      return '<tr><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.ho || '-') + '호</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleMan(u.분양금액) + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '" target="_blank" rel="noopener">자료실 열기</a></td></tr>';
+    }).join('') : '<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--text-muted);">해당하는 분양중 호실이 없습니다.</td></tr>';
+    panel.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">자료실 분양중 호실</strong><span style="color:#e0b84c;font-weight:600;">' + rows.length + '건</span><span style="font-size:.76rem;color:var(--text-muted);">매물관리 반영 없이 자료실 기준</span></div>' +
+      '<div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>' + head + '</tr></thead><tbody>' + bodyRows + '</tbody></table></div>';
   } catch (e) {
     panel.innerHTML = '<div style="color:#e57373;padding:8px 0;">' + e.message + '</div>';
   }
