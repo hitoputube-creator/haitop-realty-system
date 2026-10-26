@@ -2241,6 +2241,7 @@ async function deleteBFile(id) {
     return p.amount!==null ? toPlainWon(p.amount) : '-';
   }
   function commercialOccupancy(u) {
+    if (u.공실여부 === '공실') return '공실';
     const industry = String(u.현업종 || '').trim();
     return (industry && !['-','공실','없음','미확인'].includes(industry)) || u.공실여부 === '임차중' ? '임차중' : '공실';
   }
@@ -2520,7 +2521,7 @@ async function deleteBFile(id) {
       complexName:bName, ho:unit.호수,
       resource_id:buildingId, status:existing?.status || '진행중', listingKind:'매물',
       is_public:existing?.is_public === true,
-      shop_status:unit.공실여부 || existing?.shop_status || '', dealType:unit.거래구분 || existing?.dealType || (CommercialPriceCore.status(unit,true)==='분양중' || sale ? '매매' : '월세'),
+      shop_status:(unit.공실여부 === '공실' ? '공실' : unit.공실여부 === '임차중' ? '임차중' : (existing?.shop_status || '')), dealType:unit.거래구분 || existing?.dealType || (CommercialPriceCore.status(unit,true)==='분양중' || sale ? '매매' : '월세'),
       salePrice:sale, presalePrice:presale, presaleStatus:CommercialPriceCore.status(unit,true), deposit, monthlyRent:rent,
       managementFee:keep('관리비','managementFee'), premium:keep('권리금','premium'),
       floorInfo:keep('층정보','floorInfo'), zoning:keep('용도지역','zoning'),
