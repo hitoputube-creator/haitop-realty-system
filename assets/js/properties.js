@@ -1245,7 +1245,7 @@ function renderPresaleSubRow() {
     subRow.parentElement.insertBefore(row, subRow.nextSibling);
   }
   if (!row) return;
-  if (!(currentMajor === "상가사무실" && (currentDealFilter === "회사분양" || currentPresaleMode))) {
+  if (!(currentPresaleMode || (currentMajor === "상가사무실" && currentDealFilter === "회사분양"))) {
     row.style.display = "none";
     currentPresaleSub = "";
     return;
