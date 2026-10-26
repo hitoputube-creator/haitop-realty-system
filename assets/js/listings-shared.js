@@ -386,14 +386,33 @@ function villageResourceUrl(item, village) {
 }
 
 // 진행중 옆 네이버광고 버튼: 포스 등록 매물이면 "네이버광고중", 아니면 포스 등록 화면으로 연결
-function naverAdButtonHtml(listingNo) {
-  const posId = NAVER_POS_LISTING_MAP[String(listingNo)];
-  const url = posId ? "https://new.rfine.kr/Pos/Regi_list.php" : "https://new.rfine.kr/Pos/Regi.php";
-  const label = posId ? "네이버광고중" : "네이버광고";
-  const title = posId ? "부동산포스 광고 목록 (포스 매물번호 " + posId + ")" : "부동산포스에 매물 등록";
-  const style = posId ? "background:#2e7d32;color:#fff;border-color:#2e7d32;" : "";
-  return `<button type="button" class="btn btn-ghost lc-naver-btn" title="${title}" style="flex:0 0 56px !important;width:56px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 !important;line-height:26px !important;font-size:10px !important;white-space:nowrap !important;border-radius:6px;${style}" onclick="event.stopPropagation();window.open('${url}','_blank','noopener')">${label}</button>`;
+function naverAdIsOn(listingNo) {
+  const saved = localStorage.getItem("naverAdOn:" + String(listingNo));
+  if (saved === "1") return true;
+  if (saved === "0") return false;
+  return !!NAVER_POS_LISTING_MAP[String(listingNo)];
 }
+// 네이버광고 버튼: 누르면 부동산포스 광고 화면으로 가고, 옆 체크박스로 "광고중" 표시를 직접 켜고 끈다 (이 브라우저에 저장)
+const NAVER_AD_BTN_BASE_STYLE = "flex:0 0 56px !important;width:56px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 !important;line-height:26px !important;font-size:10px !important;white-space:nowrap !important;border-radius:6px;";
+function naverAdWrapHtml(listingNo) {
+  const no = String(listingNo).replace(/['"<>]/g, "");
+  const on = naverAdIsOn(no);
+  const posId = NAVER_POS_LISTING_MAP[no];
+  const url = on ? "https://new.rfine.kr/Pos/Regi_list.php" : "https://new.rfine.kr/Pos/Regi.php";
+  const label = on ? "네이버광고중" : "네이버광고";
+  const title = on ? "부동산포스 광고 목록" + (posId ? " (포스 매물번호 " + posId + ")" : "") : "부동산포스에 매물 등록";
+  const style = on ? "background:#2e7d32;color:#fff;border-color:#2e7d32;" : "";
+  return '<span class="lc-naver-wrap" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;">' +
+    '<button type="button" class="btn btn-ghost lc-naver-btn" title="' + title + '" style="flex:0 0 56px !important;width:56px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 !important;line-height:26px !important;font-size:10px !important;white-space:nowrap !important;border-radius:6px;' + style + '" onclick="event.stopPropagation();window.open(\'' + url + '\',\'_blank\',\'noopener\')">' + label + '</button>' +
+    '<label title="광고중 표시 켜기/끄기" style="display:inline-flex;align-items:center;gap:2px;font-size:10px;cursor:pointer;white-space:nowrap;"><input type="checkbox" ' + (on ? "checked" : "") + ' onchange="naverAdToggle(\'' + no + '\', this)" style="margin:0;">광고중</label>' +
+    '</span>';
+}
+function naverAdToggle(listingNo, input) {
+  localStorage.setItem("naverAdOn:" + String(listingNo), input.checked ? "1" : "0");
+  const wrap = input.closest(".lc-naver-wrap");
+  if (wrap) wrap.outerHTML = naverAdWrapHtml(listingNo);
+}
+function naverAdButtonHtml(listingNo) { return naverAdWrapHtml(listingNo); }
 
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
 function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
