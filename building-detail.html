@@ -2520,7 +2520,7 @@ async function deleteBFile(id) {
       complexName:bName, ho:unit.호수,
       resource_id:buildingId, status:existing?.status || '진행중', listingKind:'매물',
       is_public:existing?.is_public === true,
-      dealType:unit.거래구분 || existing?.dealType || (CommercialPriceCore.status(unit,true)==='분양중' || sale ? '매매' : '월세'),
+      shop_status:unit.공실여부 || existing?.shop_status || '', dealType:unit.거래구분 || existing?.dealType || (CommercialPriceCore.status(unit,true)==='분양중' || sale ? '매매' : '월세'),
       salePrice:sale, presalePrice:presale, presaleStatus:CommercialPriceCore.status(unit,true), deposit, monthlyRent:rent,
       managementFee:keep('관리비','managementFee'), premium:keep('권리금','premium'),
       floorInfo:keep('층정보','floorInfo'), zoning:keep('용도지역','zoning'),
