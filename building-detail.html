@@ -615,6 +615,14 @@
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
 <style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#16233d;color:#e6edf7;cursor:pointer}.presale-switch button.active{background:#80651f;border-color:#d4af37;color:#fff3c2}.presale-hidden{display:none!important}</style>
 <style>.unit-phase-label{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.76rem;font-weight:700}.unit-phase-label.ongoing{color:#edcf79;background:rgba(212,175,55,.12)}.unit-phase-label.completed{color:#88d8b2;background:rgba(52,180,130,.12)}</style>
+<style>
+/* 호실 현황 표: 매물 열 폭 고정 + 버튼 줄바꿈 (보증금·월세가 가려지지 않게) */
+.units-tbl th:last-child, .units-tbl td:last-child { width:146px; min-width:146px; max-width:146px; }
+.units-tbl td.tbl-actions { flex-wrap:wrap; align-content:center; gap:3px 4px; line-height:1.4; }
+.units-tbl td.tbl-actions > * { white-space:nowrap; word-break:keep-all; }
+.units-tbl td:nth-child(3) { max-width:132px; white-space:normal; word-break:keep-all; }
+.units-tbl th, .units-tbl td { padding-left:8px; padding-right:8px; }
+</style>
 </head>
 <body class="resources-page">
 <script>if (new URLSearchParams(location.search).get('unit')) { var __s = document.createElement('style'); __s.id = 'unitOnlyStyle'; __s.textContent = '.page{visibility:hidden}#unitModal{visibility:visible}'; document.head.appendChild(__s); setTimeout(function(){ var m = document.getElementById('unitModal'); if (!m || !m.classList.contains('open')) { var st = document.getElementById('unitOnlyStyle'); if (st) st.remove(); } }, 10000); }</script>
