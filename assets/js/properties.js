@@ -1325,7 +1325,6 @@ function presaleRowsView() {
   } else if (currentPresaleSub === "수익형" || currentPresaleSub === "추천") {
     rows = rows.slice().sort((a, b) => (presaleYieldValue(b.unit) ?? -1) - (presaleYieldValue(a.unit) ?? -1));
   }
-  if (presaleGroupMode) rows = presaleInsertBundles(rows);
   return rows;
 }
 function presaleRowHtml(r, idx) {
@@ -1377,6 +1376,52 @@ function presaleOpenSpecial(b) {
     apply(obj);
   };
 }
+async function presaleUnbundleBundle(b) {
+  if (!confirm(b.building + " " + b.hoLabel + " 묶음을 해제할까요?\n(호실 자료는 그대로 두고 묶음과 특별가만 지워요)")) return;
+  try {
+    await presaleSaveFlags(b.bKey, units => units.forEach(u => {
+      if (u.묶음ID === b.bundleId) {
+        delete u.묶음ID; delete u.묶음모드; delete u.묶음특가;
+        u.비고 = String(u.비고 || "").replace(/(^|\n)\[특별할인[^\]]*\][^\n]*/g, "").trim() || null;
+        u.updated_at = new Date().toISOString();
+      }
+    }));
+    await presaleReloadAfterSave();
+  } catch (e) { alert("묶음 해제 실패: " + e.message); }
+}
+function presaleRenderBundlePanel() {
+  const main = document.getElementById("presaleUnitPanel");
+  if (!main) return;
+  let box = document.getElementById("presaleBundlePanel");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "presaleBundlePanel";
+    box.style.cssText = main.style.cssText;
+    main.parentElement.insertBefore(box, main.nextSibling);
+  }
+  const bf = presaleColFilter.building;
+  const bundles = presaleBuildBundles().filter(b => !bf || b.building === bf);
+  if (!currentPresaleMode || !bundles.length) { box.style.display = "none"; return; }
+  box.style.display = "";
+  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#e0b84c;font-size:.78rem;border-bottom:1px solid var(--border-slate,#2c4258);white-space:nowrap;";
+  const td = "padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;";
+  const head = ["건물", "호수", "업종", "분양금액", "임대현황", "보증금 / 월세", "수익률", "표시", ""].map(h => '<th style="' + thS + '">' + h + '</th>').join("");
+  const body = bundles.map((b, i) => {
+    const u = b.unit;
+    const vac = u.공실여부 || "-";
+    const vacColor = vac === "공실" ? "#ffb74d" : vac === "임차중" ? "#81c784" : "inherit";
+    const tags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(224,184,76,.15);color:#e0b84c;margin-right:4px;">' + t + '</span>').join("") || '<span style="color:var(--text-muted);">-</span>';
+    const rent = presaleMan(u.현_보증금 ?? u.보증금) + " / " + presaleMan(u.현_월세 ?? u.월차임);
+    const yv = presaleYieldValue(u);
+    const yt = yv == null ? "-" : yv.toFixed(b.special ? 2 : 1) + "%";
+    const strike = b.special && b.listPrice != null && b.listPrice !== u.분양금액 ? '<div style="font-size:.7rem;font-weight:400;color:var(--text-muted);text-decoration:line-through;">' + presaleWon(b.listPrice) + '</div>' : "";
+    const badge = (b.special ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(229,115,115,.2);color:#ef9a9a;">특별할인</span>' : "");
+    return '<tr><td style="' + td + 'font-weight:600;">' + b.building + '</td><td style="' + td + '">' + b.hoLabel + ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(224,184,76,.18);color:#e0b84c;">' + b.groupCount + '호실</span>' + badge + '</td><td style="' + td + '">' + (u.현업종 ? String(u.현업종).replace(/</g, "&lt;") : "-") + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleWon(u.분양금액) + strike + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + yt + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><button type="button" class="btn btn-ghost" data-bsp="' + i + '" style="padding:4px 10px;font-size:.76rem;margin-right:6px;">특별가</button><button type="button" class="btn btn-ghost" data-bun="' + i + '" style="padding:4px 10px;font-size:.76rem;margin-right:6px;">묶음 해제</button><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(b.localId) + '&unit=' + encodeURIComponent(b.linkHo || b.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
+  }).join("");
+  box.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">묶음 매물</strong><span style="color:#e0b84c;font-weight:600;">' + bundles.length + '건</span><span style="font-size:.76rem;color:var(--text-muted);">위 목록에서 호실을 체크하고 "선택 묶기"로 만들어요</span></div><div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>';
+  box.querySelectorAll("button[data-bsp]").forEach(btn => btn.addEventListener("click", () => presaleOpenSpecial(bundles[Number(btn.dataset.bsp)])));
+  box.querySelectorAll("button[data-bun]").forEach(btn => btn.addEventListener("click", () => presaleUnbundleBundle(bundles[Number(btn.dataset.bun)])));
+}
 function updatePresaleTbody() {
   const tb = document.getElementById("presaleTbody");
   if (!tb) return;
@@ -1390,6 +1435,7 @@ function updatePresaleTbody() {
     const k = th.dataset.key;
     th.textContent = th.dataset.label + (presaleSort.key === k ? (presaleSort.dir > 0 ? " ▲" : " ▼") : "");
   });
+  presaleRenderBundlePanel();
 }
 function buildPresaleFrame(panel, all) {
   const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#e0b84c;font-size:.78rem;border-bottom:1px solid var(--border-slate,#2c4258);white-space:nowrap;cursor:pointer;user-select:none;";
@@ -1409,7 +1455,7 @@ function buildPresaleFrame(panel, all) {
     '<select data-f="tag" style="' + inS + '">' + opt("", "전체") + opt("수익성", "수익성") + opt("추천", "추천") + opt("없음", "표시 없음") + '</select>',
     '<button type="button" id="presaleFilterReset" class="btn btn-ghost" style="padding:3px 10px;font-size:.74rem;">초기화</button>'
   ];
-  panel.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">자료실 분양중 호실</strong><span id="presaleCount" style="color:#e0b84c;font-weight:600;"></span><span style="font-size:.76rem;color:var(--text-muted);">매물관리 반영 없이 자료실 기준 · 제목을 누르면 정렬</span><span style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button type="button" id="presaleBundleBtn" class="btn btn-ghost" style="padding:3px 10px;font-size:.76rem;">선택 묶기</button><button type="button" id="presaleUnbundleBtn" class="btn btn-ghost" style="padding:3px 10px;font-size:.76rem;">묶음 해제</button><label style="font-size:.8rem;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="presaleGroupToggle" style="width:auto;min-width:0;height:auto;padding:0;vertical-align:middle;margin:0 4px 0 0;display:inline-block;"> 합계 줄 보기</label></span></div>' +
+  panel.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">자료실 분양중 호실</strong><span id="presaleCount" style="color:#e0b84c;font-weight:600;"></span><span style="font-size:.76rem;color:var(--text-muted);">매물관리 반영 없이 자료실 기준 · 제목을 누르면 정렬</span><span style="margin-left:auto;display:flex;gap:8px;align-items:center;"><button type="button" id="presaleBundleBtn" class="btn btn-ghost" style="padding:3px 10px;font-size:.76rem;">선택 묶기</button></span></div>' +
     '<div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>' +
     cols.map(([k, l]) => k ? '<th data-key="' + k + '" data-label="' + l + '" style="' + thS + '">' + l + '</th>' : '<th style="' + thS + 'cursor:default;">' + l + '</th>').join("") +
     '</tr><tr>' + filterCells.map(c => '<td style="padding:4px 6px;border-bottom:1px solid var(--border-slate,#2c4258);">' + c + '</td>').join("") + '</tr></thead><tbody id="presaleTbody"></tbody></table></div>';
@@ -1446,7 +1492,7 @@ async function renderPresaleUnitPanel() {
     const host = anchor.closest("section, .card, .filter-panel") || anchor.parentElement;
     host.parentElement.insertBefore(panel, host.nextSibling);
   }
-  if (!currentPresaleMode) { panel.style.display = "none"; panel.dataset.ready = ""; presaleUnitRowsCache = null; return; }
+  if (!currentPresaleMode) { panel.style.display = "none"; panel.dataset.ready = ""; presaleUnitRowsCache = null; const bp0 = document.getElementById("presaleBundlePanel"); if (bp0) bp0.style.display = "none"; return; }
   panel.style.display = "";
   if (panel.dataset.ready === "1") { updatePresaleTbody(); return; }
   panel.innerHTML = '<div style="font-size:.85rem;color:var(--text-muted);padding:8px 0;">자료실 분양중 호실 불러오는 중…</div>';
