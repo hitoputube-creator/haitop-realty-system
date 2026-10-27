@@ -195,6 +195,60 @@
     }
   }
 
+  // ── 새주소 ⇄ 구주소 변환 (카카오 주소검색) ─────────────
+  let kakaoPromise = null;
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('스크립트를 불러오지 못했습니다.'));
+      document.head.appendChild(s);
+    });
+  }
+  function loadKakao() {
+    if (window.kakao && window.kakao.maps && window.kakao.maps.services) return Promise.resolve();
+    if (kakaoPromise) return kakaoPromise;
+    kakaoPromise = (async () => {
+      if (!window.HITOP_KAKAO_JS_KEY && SCRIPT_SRC) await loadScript(new URL('kakao-config.js', SCRIPT_SRC).href);
+      const key = String(window.HITOP_KAKAO_JS_KEY || '').trim();
+      if (!key) throw new Error('카카오맵 키가 설정되지 않았습니다.');
+      await loadScript('https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(key) + '&libraries=services&autoload=false');
+      await new Promise(resolve => window.kakao.maps.load(resolve));
+    })().catch(e => { kakaoPromise = null; throw e; });
+    return kakaoPromise;
+  }
+  function geocode(query) {
+    return loadKakao().then(() => new Promise((resolve, reject) => {
+      new window.kakao.maps.services.Geocoder().addressSearch(query, (result, status) => {
+        if (status === window.kakao.maps.services.Status.OK) resolve(result || []);
+        else if (status === window.kakao.maps.services.Status.ZERO_RESULT) resolve([]);
+        else reject(new Error('주소 검색 중 오류가 났어요. 잠시 후 다시 눌러 주세요.'));
+      });
+    }));
+  }
+  const fullAddr = v => String(v || '').trim().replace(/^경기\s/, '경기도 ');
+  let lastAddrEdited = '';
+  async function convertAddress(btn, statusEl) {
+    const road = roadInput.value.trim(), jibun = jibunInput.value.trim();
+    if (!road && !jibun) { statusEl.textContent = '새주소나 구주소 중 한쪽을 먼저 입력해 주세요.'; return; }
+    const from = road && jibun ? (lastAddrEdited || 'road') : (road ? 'road' : 'jibun');
+    const query = from === 'road' ? road : jibun;
+    btn.disabled = true; statusEl.textContent = '주소 찾는 중…';
+    try {
+      let list = await geocode(query);
+      if (!list.length) { statusEl.textContent = (from === 'road' ? '새주소' : '구주소') + '로 검색되는 주소가 없어요. 시·동까지 포함해 정확히 적어 주세요.'; return; }
+      let hit = list[0];
+      if (list.length > 1 && !/[가-힣]+(시|군|구)(\s|$)/.test(query)) hit = list.find(r => /파주/.test(r.address_name)) || list[0];
+      const target = from === 'road' ? (hit.address && hit.address.address_name) : (hit.road_address && hit.road_address.address_name);
+      if (!target) { statusEl.textContent = from === 'road' ? '이 새주소에 해당하는 구주소를 찾지 못했어요.' : '이 번지에는 아직 새주소(도로명)가 없어요.'; return; }
+      const value = fullAddr(target);
+      if (from === 'road') { jibunInput.value = value; $('mapAddress').value = value; }
+      else { roadInput.value = value; $('publicAddress').value = value; }
+      statusEl.textContent = (from === 'road' ? '구주소' : '새주소') + '를 채웠어요.' + (list.length > 1 ? ' (검색 결과 ' + list.length + '건 중 첫 번째예요. 맞는지 확인해 주세요)' : '');
+    } catch (e) {
+      statusEl.textContent = e.message || '주소 변환에 실패했어요.';
+    } finally { btn.disabled = false; }
+  }
+
   // ── 아파트 폼 화면 정리 ───────────────────────────────
   function buildApartmentUi() {
     const host = $('apartmentListingForm');
@@ -224,6 +278,16 @@
     const jibun = makeAddr('aptAddrJibun', '구주소 (지번)', '예) 경기도 파주시 동패동 1234');
     roadInput = road.input; jibunInput = jibun.input;
     dateField.after(road.field, jibun.field);
+    const conv = document.createElement('div'); conv.className = 'umfield span-2 apt-addr-convert';
+    conv.innerHTML = '<label>주소 변환 <span class="apt-auto-note">한쪽만 적고 누르세요</span></label>';
+    const convBtn = document.createElement('button'); convBtn.type = 'button'; convBtn.textContent = '새주소 ⇄ 구주소 변환';
+    convBtn.style.cssText = 'width:100%;padding:9px 12px;border-radius:8px;border:1px solid rgba(212,175,55,.55);background:rgba(212,175,55,.14);color:#e0b84c;font-weight:700;cursor:pointer;box-sizing:border-box;';
+    const convStatus = document.createElement('div'); convStatus.style.cssText = 'font-size:.74rem;margin-top:4px;opacity:.85;';
+    conv.append(convBtn, convStatus);
+    jibun.field.after(conv);
+    convBtn.addEventListener('click', () => convertAddress(convBtn, convStatus));
+    roadInput.addEventListener('input', () => { lastAddrEdited = 'road'; });
+    jibunInput.addEventListener('input', () => { lastAddrEdited = 'jibun'; });
     roadInput.addEventListener('input', () => { $('publicAddress').value = roadInput.value; });
     jibunInput.addEventListener('input', () => { $('mapAddress').value = jibunInput.value; });
 
