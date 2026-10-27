@@ -17,7 +17,9 @@ function openDriveBuilding(page, id) {
   if (HitopResourceRooms.resourceRoom(resource) === 'land') page = 'land-resource.html';
   location.href = HitopResourceRooms.detailUrl(page, id, driveResourceScope);
 }
-let activeDriveCat = null;   // 현재 열린 카테고리 (단일)
+const DRIVE_ACTIVE_CAT_KEY = 'driveActiveCat:' + location.pathname + ':' + (new URLSearchParams(location.search).get('scope') || 'default');
+let activeDriveCat = (() => { try { return localStorage.getItem(DRIVE_ACTIVE_CAT_KEY) || null; } catch (e) { return null; } })();   // 현재 열린 카테고리 (단일) · 건물 상세에서 돌아와도 마지막 카테고리를 유지
+function rememberActiveDriveCat() { try { if (activeDriveCat) localStorage.setItem(DRIVE_ACTIVE_CAT_KEY, activeDriveCat); } catch (e) {} }
 let residentialSearch = '';
 let driveGlobalSearch = '';   // 상단 검색창: 모든 폴더에서 이름·주소·메모로 검색
 
@@ -405,7 +407,7 @@ function renderDriveTab() {
   if (countEl) countEl.textContent = '';
 
   // 기본: 첫 번째 카테고리 선택
-  if (!activeDriveCat || !grouped[activeDriveCat]) activeDriveCat = categories[0];
+  if (!activeDriveCat || !grouped[activeDriveCat]) { activeDriveCat = categories[0]; rememberActiveDriveCat(); }
 
   // 카테고리 버튼 (index로 식별 — 한글 따옴표 문제 완전 회피)
   const catRowHtml = categories.map((c, i) => {
@@ -493,6 +495,7 @@ function renderDriveTab() {
   container.querySelectorAll("[data-cidx]").forEach(btn => {
     btn.addEventListener("click", () => {
       activeDriveCat = categories[+btn.dataset.cidx];
+      rememberActiveDriveCat();
       renderDriveTab();
     });
   });
