@@ -739,7 +739,7 @@ function matchesDealFilter(item) {
   if(currentDealFilter==="자가")return isOwnerOccupiedListing(item);
   const unit=item.apartmentUnitData || {};
   const deals=String(unit.거래구분 || item.dealType || item.shop_dealType || item.officetel_dealType || getTransactionType(item));
-  if(["매매","전세","월세"].includes(currentDealFilter))return deals.includes(currentDealFilter) || (currentDealFilter==="월세" && deals==="임대");
+  if(["매매","전세","월세"].includes(currentDealFilter))return deals.includes(currentDealFilter) || (currentDealFilter==="월세" && (deals==="임대" || deals==="회사임대"));
   const t = getTransactionType(item);
   if (currentDealFilter === "회사분양") return t === "회사분양" || isPresaleListingActive(item);
   if (currentDealFilter === "임대") return ["월세", "전세", "임대", "회사임대"].includes(t) || /^매매·(임대|전세|월세)$/.test(t);
@@ -1536,10 +1536,10 @@ function renderPresaleSubRow() {
   });
 }
 function renderDealFilterRow() {
-  const options = currentMajor === "주거용" ? ["매매", "전세", "월세"] : currentMajor === "상가사무실" ? ["매매", "전세", "월세", "회사분양", "회사임대"] : ["매매", "전세", "월세"];
+  const options = currentMajor === "주거용" ? ["매매", "전세", "월세"] : currentMajor === "상가사무실" ? ["매매", "전세", "월세", "회사분양"] : ["매매", "전세", "월세"];
   if (currentDealFilter && !options.includes(currentDealFilter)) currentDealFilter = "";
   dealFilterRow.innerHTML = options.map(v =>
-    `<button class="filter-btn deal${v === currentDealFilter ? " active" : ""}" data-deal="${v}">${v === "회사분양" ? "(회사)분양" : v === "회사임대" ? "(회사)임대" : v}</button>`
+    `<button class="filter-btn deal${v === currentDealFilter ? " active" : ""}" data-deal="${v}">${v === "회사분양" ? "(회사)분양" : v === "월세" ? "월세(임대)" : v}</button>`
   ).join("");
   dealFilterRow.querySelectorAll(".filter-btn.deal").forEach(btn => {
     btn.addEventListener("click", () => {
