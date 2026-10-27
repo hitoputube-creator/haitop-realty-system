@@ -63,7 +63,7 @@ function _fmtWon(v) {
 // 상세등록(register.html) 필드에서 가격 문자열 생성
 function _detailPrice(item) {
   const deal = item.dealType || "";
-  const sale  = item.salePrice   && Number(item.salePrice)   ? (deal || "매매") + " " + _fmtWon(item.salePrice)   : "";
+  const sale  = item.salePrice   && Number(item.salePrice)   ? (deal && deal.indexOf("·") < 0 ? deal : "매매") + " " + _fmtWon(item.salePrice)   : "";
   const dep   = item.deposit     && Number(item.deposit)     ? "보증금 " + _fmtWon(item.deposit)                  : "";
   const rent  = item.monthlyRent && Number(item.monthlyRent) ? "월세 "   + _fmtWon(item.monthlyRent)              : "";
   if (dep && rent) return `${dep} / ${rent}`;
@@ -118,6 +118,7 @@ function getDealTypeLabel(item) {
 function getTransactionType(item) {
   const structured = item.dealType || item.shop_dealType || item.officetel_dealType ||
     item.factory_dealType || item.biz_dealType || "";
+  if (/^매매·(임대|전세|월세)$/.test(structured)) return structured;
   if (structured.indexOf("전세") > -1) return "전세";
   if (structured.indexOf("월세") > -1) return "월세";
   if (structured.indexOf("매매") > -1) return "매매";
@@ -126,7 +127,7 @@ function getTransactionType(item) {
   return m ? m[0] : "";
 }
 
-const DEAL_BADGE_CLASS = { "매매": "deal-sale", "월세": "deal-monthly", "전세": "deal-jeonse" };
+const DEAL_BADGE_CLASS = { "매매": "deal-sale", "월세": "deal-monthly", "전세": "deal-jeonse", "매매·임대": "deal-sale", "매매·전세": "deal-sale", "매매·월세": "deal-sale" };
 
 function formatPyValue(value) {
   const n = Number(value);
