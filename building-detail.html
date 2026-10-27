@@ -877,7 +877,7 @@
               <option value="매매">매매</option>
               <option value="전세">전세</option>
               <option value="월세">월세(임대)</option>
-              <option value="매매·전세">매매·전세</option><option value="매매·월세">매매·월세(임대)</option><option value="회사분양">(회사)분양</option>
+              <option value="매매·전세">매매·전세</option><option value="매매·월세">매매·월세(임대)</option><option value="회사분양">(회사)분양</option><option value="회사임대">(회사)월세(임대)</option>
             </select>
           </div>
           <div class="umfield g3"><label>관리비</label><input id="u_관리비" placeholder="예: 15만" /></div>
@@ -2488,7 +2488,7 @@ async function deleteBFile(id) {
     // 이미 매물관리로 보낸 호실이면, 자료실에 아직 없는 항목은 매물관리 값을 가져와 채운다(저장 시 덮어써 지우지 않도록).
     const linked = u.listing_id ? commercialListings[String(u.listing_id)] : null;
     const fromListing = (unitKey, listingKey) => Object.hasOwn(u, unitKey) ? (u[unitKey] || "") : (linked?.[listingKey] || "");
-    $("u_거래구분").value   = ((v) => v === "임대" || v === "회사임대" ? "월세" : v)(u.거래구분 || linked?.dealType || "");
+    $("u_거래구분").value   = ((v) => v === "임대" ? "월세" : v)(u.거래구분 || linked?.dealType || "");
     $("u_관리비").value     = fromListing("관리비", "managementFee");
     $("u_권리금").value     = fromListing("권리금", "premium");
     $("u_층정보").value     = fromListing("층정보", "floorInfo");
