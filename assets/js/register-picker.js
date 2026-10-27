@@ -232,7 +232,7 @@
     if (!road && !jibun) { statusEl.textContent = '새주소나 구주소 중 한쪽을 먼저 입력해 주세요.'; return; }
     const from = road && jibun ? (lastAddrEdited || 'road') : (road ? 'road' : 'jibun');
     const query = from === 'road' ? road : jibun;
-    btn.disabled = true; statusEl.textContent = '주소 찾는 중…';
+    btn.disabled = true; statusEl.textContent = '';
     try {
       let list = await geocode(query);
       if (!list.length) { statusEl.textContent = (from === 'road' ? '새주소' : '구주소') + '로 검색되는 주소가 없어요. 시·동까지 포함해 정확히 적어 주세요.'; return; }
@@ -243,7 +243,7 @@
       const value = fullAddr(target);
       if (from === 'road') { jibunInput.value = value; $('mapAddress').value = value; }
       else { roadInput.value = value; $('publicAddress').value = value; }
-      statusEl.textContent = (from === 'road' ? '구주소' : '새주소') + '를 채웠어요.' + (list.length > 1 ? ' (검색 결과 ' + list.length + '건 중 첫 번째예요. 맞는지 확인해 주세요)' : '');
+      statusEl.textContent = list.length > 1 ? '검색 결과 ' + list.length + '건 중 첫 번째 주소예요. 맞는지 확인해 주세요.' : '';
     } catch (e) {
       statusEl.textContent = e.message || '주소 변환에 실패했어요.';
     } finally { btn.disabled = false; }
