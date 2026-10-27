@@ -17,7 +17,7 @@ function openDriveBuilding(page, id) {
   if (HitopResourceRooms.resourceRoom(resource) === 'land') page = 'land-resource.html';
   location.href = HitopResourceRooms.detailUrl(page, id, driveResourceScope);
 }
-const DRIVE_ACTIVE_CAT_KEY = 'driveActiveCat:' + location.pathname + ':' + (new URLSearchParams(location.search).get('scope') || 'default');
+const DRIVE_ACTIVE_CAT_KEY = 'driveActiveCat:' + location.pathname;
 let activeDriveCat = (() => { try { return localStorage.getItem(DRIVE_ACTIVE_CAT_KEY) || null; } catch (e) { return null; } })();   // 현재 열린 카테고리 (단일) · 건물 상세에서 돌아와도 마지막 카테고리를 유지
 function rememberActiveDriveCat() { try { if (activeDriveCat) localStorage.setItem(DRIVE_ACTIVE_CAT_KEY, activeDriveCat); } catch (e) {} }
 let residentialSearch = '';
