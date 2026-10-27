@@ -265,10 +265,13 @@
     #unitStatus .unit-head-main button, #unitStatus #unitBulkActions button, #unitStatus #unitBulkActions a { height:32px; padding:0 13px; font-size:.8rem; font-weight:700; border-radius:8px; }
     #unitStatus #btnAddUnit { height:34px; padding:0 18px; font-size:.86rem; font-weight:800; }
     #unitPriceUpload, #unitListingSend, #unitProfitRegister, #unitBundleRegister {
-      background:rgba(255,255,255,.05); color:rgba(255,255,255,.78); border:1px solid rgba(255,255,255,.16); font-weight:600; }
+      background:rgba(255,255,255,.05); color:#fff; border:1px solid rgba(255,255,255,.22); font-weight:600; }
     #unitPriceUpload:hover, #unitListingSend:hover:not(:disabled), #unitProfitRegister:hover:not(:disabled), #unitBundleRegister:hover:not(:disabled) { background:rgba(255,255,255,.10); opacity:1; }
-    #unitListingSend:not(:disabled), #unitProfitRegister:not(:disabled), #unitBundleRegister:not(:disabled) { border-color:rgba(212,175,55,.55); color:#edcf79; }
-    #unitBulkActions button:disabled { opacity:.4; cursor:default; }
+    #unitListingSend:not(:disabled), #unitProfitRegister:not(:disabled), #unitBundleRegister:not(:disabled) { border-color:rgba(212,175,55,.65); color:#fff; }
+    #unitBulkActions button:disabled { opacity:.6; cursor:default; }
+    #unitStatus .unit-head-main .btn-unit-ghost, #unitStatus #unitBulkActions .btn-unit-ghost, #unitOrigToggle { color:#fff; border-color:rgba(255,255,255,.22); }
+    .unit-filter-bar .ftab:not(.active) { color:rgba(255,255,255,.9); }
+    #unitKindTabs .kind-move button { color:#fff; }
     .unit-toolbar { display:flex; align-items:center; justify-content:space-between; gap:6px 12px; flex-wrap:wrap; margin:6px 0 8px; }
     .unit-toolbar #unitCounts { margin:0; flex:1 1 260px; }
     #unitOrigToggle { padding:4px 12px; font-size:.78rem; line-height:1.4; }
