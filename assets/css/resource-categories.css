@@ -7,6 +7,6 @@
 .drive-category-order-hint{font-size:.75rem;color:var(--text-muted,#b4c2d2);margin-bottom:10px}
 @media(pointer:coarse){.drive-category-grip{flex-basis:40px;min-height:44px}}
 
-.drive-category-grid{display:flex;flex-wrap:wrap;gap:8px}
-.drive-category-grid .drive-category-row{flex:0 1 auto;max-width:100%}
-.drive-category-grid .drive-category-row [data-cidx]{flex:0 1 auto!important;white-space:nowrap;min-width:0}
+.drive-category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.drive-category-grid .drive-category-row{max-width:100%}
+.drive-category-grid .drive-category-row [data-cidx]{white-space:nowrap}
