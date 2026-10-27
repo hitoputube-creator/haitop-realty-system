@@ -427,7 +427,7 @@ function renderDriveTab() {
         border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
         color:var(--text-muted);font-size:0.85rem;">✏️</button>
     </div>`;
-  }).join("");
+  });
   // 부동산 유형별로 묶어서 보여 준다(택지 → 토지, 상가·근생·점포 → 상가, 아파트·오피스텔 등 → 주거).
   const categoryTypeOf = name => /택지|토지/.test(name) ? '토지' : /상가|근생|점포/.test(name) ? '상가' : /아파트|오피스텔|힐스테이트|주거/.test(name) ? '주거' : '기타';
   const categoryTypeGroups = [['상가', '🏪 상가'], ['주거', '🏠 주거 (아파트·오피스텔)'], ['토지', '🌱 토지·택지'], ['기타', '📁 기타']]
