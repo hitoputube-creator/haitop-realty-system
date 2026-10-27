@@ -755,6 +755,7 @@
     <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.7;"></p>
     <div style="margin:2px 0 8px;"><button type="button" class="btn-unit-ghost" id="unitOrigToggle" hidden>원분양가 보기</button></div>
     <!-- 층 필터 탭 -->
+    <div class="floor-tabs" id="unitKindTabs" hidden></div>
     <div class="floor-tabs" id="unitFloorTabs"></div>
 
     <!-- 테이블 -->
@@ -872,6 +873,10 @@
           <div class="umfield g3"><label>(현)매매가격 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /><span class="amt-hint" id="h_현매매가격"></span></div>
           <div class="umfield g3"><label>(현)보증금 (만원)</label><input id="u_현보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_현보증금"></span></div>
           <div class="umfield g3"><label>(현)월세 (만원)</label><input id="u_현월세" type="number" placeholder="0" /><span class="amt-hint" id="h_현월세"></span></div>
+          <div class="umfield g3" id="u_구분_field" hidden>
+            <label>구분 (상가 / 오피스텔)</label>
+            <select id="u_구분" aria-label="구분"><option value="상가">상가</option><option value="오피스텔">오피스텔(주거)</option></select>
+          </div>
           <div class="umfield g3">
             <label>거래유형</label>
             <select id="u_거래구분" aria-label="거래유형">
@@ -1315,6 +1320,8 @@ async function init() {
     const building  = resources.find(r => r.id === buildingId);
     if (building) {
       apartmentBuildingMode = isApartmentBuilding(building);
+      window.__buildingCategory = String(building.category || '');
+      window.__unitKindFilter = /오피스텔상가/.test(window.__buildingCategory.replace(/\s+/g, '')) ? '상가' : '전체';
       if (!resourceScope) {
       await getDriveCategories();
       resourceScope = HitopResourceRooms.resourceRoom(building);
@@ -1764,6 +1771,7 @@ async function deleteBFile(id) {
     $("unitSelectDelete").disabled = !count;
     $("unitSelectPrint").textContent = "선택인쇄 (" + count + ")";
     $("unitSelectDelete").textContent = "선택삭제 (" + count + ")";
+    document.querySelectorAll("[data-kind-move]").forEach(b => { b.disabled = !count; });
   }
   // 상가·사무실: 선택한 호실(분양중·분양완료 모두)을 매물관리(매물리스트)로 보낸다.
   // 이미 보낸 호실은 다시 만들지 않고(중복 제외) 연동 상태를 유지한다.
@@ -2249,7 +2257,49 @@ async function deleteBFile(id) {
   // init() 완료 후 외부에서 호출
   window._loadBuildingUnits = loadUnits;
 
+  // 오피스텔 건물은 주거(오피스텔)와 상가가 한 건물에 같이 있어서, 호실마다 구분(상가/오피스텔)을 두고 버튼으로 나눠 본다.
+  function kindSplitEnabled() { return !residentialUnitMode() && /오피스텔/.test(String(window.__buildingCategory || '')); }
+  function unitKind(u) { return u && u.구분 === '오피스텔' ? '오피스텔' : '상가'; }
+  function scopedUnits() {
+    const f = window.__unitKindFilter || '전체';
+    return kindSplitEnabled() && f !== '전체' ? units.filter(u => unitKind(u) === f) : units;
+  }
+  function renderKindTabs() {
+    const box = $('unitKindTabs');
+    if (!box) return;
+    box.hidden = !kindSplitEnabled();
+    if (!kindSplitEnabled()) return;
+    const f = window.__unitKindFilter || '전체';
+    const count = kind => kind === '전체' ? units.length : units.filter(u => unitKind(u) === kind).length;
+    box.innerHTML = ['전체', '상가', '오피스텔'].map(kind =>
+      '<button type="button" class="ftab' + (kind === f ? ' active' : '') + '" data-kind="' + kind + '">' + (kind === '오피스텔' ? '🏠 오피스텔(주거)' : kind === '상가' ? '🏪 상가' : '전체') + ' ' + count(kind) + '</button>'
+    ).join('') + '<span style="margin-left:auto;display:flex;gap:6px;"><button type="button" class="btn-unit-ghost" data-kind-move="상가">선택 → 상가로</button><button type="button" class="btn-unit-ghost" data-kind-move="오피스텔">선택 → 오피스텔로</button></span>';
+    box.style.display = 'flex'; box.style.flexWrap = 'wrap'; box.style.alignItems = 'center';
+    box.querySelectorAll('[data-kind]').forEach(btn => btn.addEventListener('click', () => {
+      window.__unitKindFilter = btn.dataset.kind;
+      filterFloor = '전체';
+      renderAll();
+    }));
+    box.querySelectorAll('[data-kind-move]').forEach(btn => {
+      btn.disabled = !selectedUnitRows.size;
+      btn.addEventListener('click', async () => {
+        const kind = btn.dataset.kindMove;
+        const rows = units.filter((u, i) => selectedUnitRows.has(i));
+        if (!rows.length) return;
+        btn.disabled = true;
+        try {
+          rows.forEach(u => { u.구분 = kind; u.updated_at = new Date().toISOString(); });
+          await saveBuildingUnits(bName, bName, units);
+          selectedUnitRows.clear();
+          showToast(rows.length + '개 호실을 ' + kind + '로 옮겼습니다.');
+        } catch (error) { showToast('구분 변경 실패: ' + error.message); }
+        renderAll();
+      });
+    });
+  }
+
   function renderAll() {
+    renderKindTabs();
     renderSummary();
     renderFloorTabs();
     renderTable();
@@ -2306,8 +2356,8 @@ async function deleteBFile(id) {
   }
 
   function renderSummary() {
-    const occ  = units.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "임차중").length;
-    const vac  = units.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length;
+    const occ  = scopedUnits().filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "임차중").length;
+    const vac  = scopedUnits().filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length;
     const sale = residentialUnitMode() ? units.filter(u => String(unitDeal(u)).includes("매매")).length : commercialSaleCount();
     const listedActive = activeListingCount();
     $("sumOccupied").textContent = occ;
@@ -2346,7 +2396,7 @@ async function deleteBFile(id) {
   function renderFloorTabs() {
     const seen = {};
     const floors = [];
-    units.forEach(u => {
+    scopedUnits().forEach(u => {
       const f = unitGroup(u);
       if (f && !seen[f]) { seen[f] = true; floors.push(f); }
     });
@@ -2391,8 +2441,8 @@ async function deleteBFile(id) {
 
   function renderTable() {
     const grouped = filterFloor === "전체"
-      ? units
-      : units.filter(u => unitGroup(u) === filterFloor);
+      ? scopedUnits()
+      : scopedUnits().filter(u => unitGroup(u) === filterFloor);
     const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped.filter(u => matchesUnitDealFilter(u, filterUnitDeal))) : grouped;
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
@@ -2515,6 +2565,8 @@ async function deleteBFile(id) {
     const linked = u.listing_id ? commercialListings[String(u.listing_id)] : null;
     const fromListing = (unitKey, listingKey) => Object.hasOwn(u, unitKey) ? (u[unitKey] || "") : (linked?.[listingKey] || "");
     $("u_거래구분").value   = ((v) => v === "임대" ? "월세" : v)(u.거래구분 || linked?.dealType || "");
+    $("u_구분_field").hidden = !kindSplitEnabled();
+    $("u_구분").value = u.구분 || (kindSplitEnabled() && (window.__unitKindFilter || "전체") !== "전체" ? window.__unitKindFilter : "상가");
     $("u_관리비").value     = fromListing("관리비", "managementFee");
     $("u_권리금").value     = fromListing("권리금", "premium");
     $("u_층정보").value     = fromListing("층정보", "floorInfo");
@@ -2686,6 +2738,7 @@ async function deleteBFile(id) {
       ...(editIdx >= 0 ? units[editIdx] : {}),
       호수,
       분양상태:unitPhase,
+      ...(kindSplitEnabled() ? { 구분: $("u_구분").value } : {}),
       공실여부:    $("u_공실여부").value,
       현업종:      $("u_현업종").value.trim()    || null,
       소유주:      $("u_소유주").value.trim()    || null,
