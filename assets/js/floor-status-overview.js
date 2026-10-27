@@ -3,7 +3,10 @@
   const message = document.getElementById('message');
   const grid = document.getElementById('buildingGrid');
   const choice = document.getElementById('overviewFloor');
-  const requestedFloor = new URLSearchParams(location.search).get('floor') || '1';
+  const params = new URLSearchParams(location.search);
+  const requestedFloor = params.get('floor') || '1';
+  const requestedCategory = params.get('category') || '';
+  const categoryChoice = document.getElementById('overviewCategory');
   function floorKeys(label) {
     const text = String(label || '').trim();
     const basement = text.match(/(?:지하|[Bb])\s*(\d+)/);
@@ -27,18 +30,42 @@
       hitopApplyAuthHeader(data.session);
       const [buildings, floors] = await Promise.all([getDriveResources(), getAllBuildingFloors()]);
       const usable = floors.filter(isImage);
-      const keys = [...new Set(usable.flatMap(floor => floorKeys(floor.floor_number)))];
-      keys.sort((a, b) => (a.startsWith('B') ? -Number(a.slice(1)) : Number(a)) -
-        (b.startsWith('B') ? -Number(b.slice(1)) : Number(b)));
-      if (requestedFloor && !keys.includes(requestedFloor)) keys.push(requestedFloor);
-      keys.forEach(key => {
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = key + '층';
-        choice.appendChild(option);
+      const withFloors = new Set(usable.filter(floor => floorKeys(floor.floor_number).length).map(floor => floor.building_id));
+      const categoryNames = [];
+      buildings.forEach(building => {
+        const name = building.category || '기타';
+        if (withFloors.has(building.id) && !categoryNames.includes(name)) categoryNames.push(name);
       });
+      const preferred = categoryNames.indexOf('운정역 상가');
+      if (preferred > 0) categoryNames.unshift(categoryNames.splice(preferred, 1)[0]);
+      categoryNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        categoryChoice.appendChild(option);
+      });
+      let currentCategory = categoryNames.includes(requestedCategory) ? requestedCategory : (categoryNames[0] || '');
+      const sortKeys = list => list.sort((a, b) => (a.startsWith('B') ? -Number(a.slice(1)) : Number(a)) -
+        (b.startsWith('B') ? -Number(b.slice(1)) : Number(b)));
+      function categoryBuildings() {
+        return buildings.filter(building => (building.category || '기타') === currentCategory);
+      }
+      function fillFloors(wanted) {
+        const ids = new Set(categoryBuildings().map(building => building.id));
+        const keys = sortKeys([...new Set(usable.filter(floor => ids.has(floor.building_id)).flatMap(floor => floorKeys(floor.floor_number)))]);
+        choice.replaceChildren();
+        keys.forEach(key => {
+          const option = document.createElement('option');
+          option.value = key;
+          option.textContent = key + '층';
+          choice.appendChild(option);
+        });
+        if (!keys.length) return wanted;
+        return keys.includes(wanted) ? wanted : (keys.includes('1') ? '1' : keys[0]);
+      }
       function render(key) {
         grid.replaceChildren();
+        categoryChoice.value = currentCategory;
         choice.value = key;
         document.getElementById('pageTitle').textContent = `건물별 ${key}층 현황`;
         document.title = `하이탑부동산 | 건물별 ${key}층 현황`;
@@ -48,14 +75,14 @@
             matching.set(floor.building_id, floor);
         });
         let count = 0;
-        buildings.forEach(building => {
+        categoryBuildings().forEach(building => {
           const floor = matching.get(building.id);
           if (!floor) return;
           count++;
           const article = document.createElement('article');
           article.className = 'card';
           const link = document.createElement('a');
-          const query = new URLSearchParams({ id: building.id, floorId: floor.id, floor: key });
+          const query = new URLSearchParams({ id: building.id, floorId: floor.id, floor: key, category: currentCategory });
           link.href = 'floor-status.html?' + query.toString();
           link.setAttribute('aria-label', `${building.name} ${key}층 현황보기`);
           const image = document.createElement('img');
@@ -74,14 +101,23 @@
           article.appendChild(link);
           grid.appendChild(article);
         });
-        message.textContent = count ? `${count}개 건물의 ${key}층 평면도` : `${key}층 평면도가 등록된 건물이 없습니다.`;
+        message.textContent = count ? `[${currentCategory}] ${count}개 건물의 ${key}층 평면도` : `[${currentCategory}] ${key}층 평면도가 등록된 건물이 없습니다.`;
+      }
+      function saveState(key) {
+        history.replaceState(null, '', 'floor-status-overview.html?category=' + encodeURIComponent(currentCategory) + '&floor=' + encodeURIComponent(key));
       }
       choice.addEventListener('change', () => {
         const key = choice.value;
-        history.replaceState(null, '', 'floor-status-overview.html?floor=' + encodeURIComponent(key));
+        saveState(key);
         render(key);
       });
-      render(requestedFloor);
+      categoryChoice.addEventListener('change', () => {
+        currentCategory = categoryChoice.value;
+        const key = fillFloors(choice.value);
+        saveState(key);
+        render(key);
+      });
+      render(fillFloors(requestedFloor));
     } catch (error) { message.textContent = '목록을 불러오지 못했습니다: ' + error.message; }
   }
   init();
