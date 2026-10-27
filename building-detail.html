@@ -763,6 +763,7 @@
           <tr>
             <th>호수</th>
             <th>업종</th>
+            <th>전용면적</th>
             <th>소유주</th>
             <th>연락처</th>
             <th>분양상태</th>
@@ -1856,6 +1857,7 @@ async function deleteBFile(id) {
     }
   });
 
+  function unitAreaText(u) { const p = Number(u.전용_평); return Number.isFinite(p) && p > 0 ? p.toFixed(2) + "평 (" + (p * 3.30579).toFixed(2) + "㎡)" : "-"; }
   function unitCheckbox(u) { const idx=units.indexOf(u); return '<td class="unit-select-cell"><input type="checkbox" class="unit-select-row" data-ri="'+idx+'" aria-label="세대 선택" '+(selectedUnitRows.has(idx)?"checked":"")+'></td>'; }
   function bindUnitSelection() {
     $("unitsTbody").querySelectorAll(".unit-select-row").forEach(box => box.addEventListener("change", () => {
@@ -1872,12 +1874,12 @@ async function deleteBFile(id) {
     const rows=units.filter((u,i)=>selectedUnitRows.has(i));
     if(!rows.length)return;
     const residential=residentialUnitMode();
-    const columns=residential?["동·호수","면적·타입","거래구분","매매가","보증금/월세","소유주","연락처","옵션"]:["호수","업종","소유주","연락처","분양상태","가격","보증금","월세","임대현황","옵션"];
+    const columns=residential?["동·호수","면적·타입","거래구분","매매가","보증금/월세","소유주","연락처","옵션"]:["호수","업종","전용면적","소유주","연락처","분양상태","가격","보증금","월세","임대현황","옵션"];
     const displayOption=u=>String(u.옵션내역 || u.옵션 || "").trim() || "-";
     const price=n=>toKorAmt(n) || "-";
     const cells=u=>residential
       ? [roomParts(u).dong+"동 "+roomParts(u).room+"호",residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||"-"),unitDeal(u)+(u.매매유형==="세안고매매" && String(unitDeal(u)).includes("매매") ? "\n세안고매매" : ""),price(u.현_매매가격),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임)+(u.매매유형==="세안고매매"&&u.승계보증금!=null?"\\n승계 "+price(u.승계보증금):""),u.소유주||"-",u.연락처||"-",displayOption(u)]
-      : [u.호수||"-",u.현업종||"-",u.소유주||"-",u.연락처||"-",CommercialPriceCore.status(u,true),commercialPriceText(u),currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
+      : [u.호수||"-",u.현업종||"-",unitAreaText(u),u.소유주||"-",u.연락처||"-",CommercialPriceCore.status(u,true),commercialPriceText(u),currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
     const printable=document.createElement("div");
     printable.id="unitPrintSheet";
     printable.innerHTML='<div class="unit-print-header"><h2>'+esc(bName)+' · 선택 '+rows.length+'건</h2><span>출력일 '+new Date().toLocaleDateString("ko-KR")+'</span></div><table><thead><tr>'+columns.map(v=>"<th>"+esc(v)+"</th>").join("")+"</tr></thead><tbody>"+rows.map(u=>"<tr>"+cells(u).map(v=>"<td>"+esc(v??"")+"</td>").join("")+"</tr>").join("")+"</tbody></table>";
@@ -2395,6 +2397,7 @@ async function deleteBFile(id) {
       return `<tr class="${u.추천등록일 && isFlagOn(u.추천매물) && isFlagOn(u.수익성매물) ? 'profit-recommended-row' : ''}">
         ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
         <td>${u.현업종 || "-"}</td>
+        <td style="white-space:nowrap">${unitAreaText(u)}</td>
         <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
         <td><span class="unit-phase-label ${CommercialPriceCore.status(u,true)==='분양중' ? 'ongoing' : 'completed'}">${esc(CommercialPriceCore.status(u,true))}</span></td>
