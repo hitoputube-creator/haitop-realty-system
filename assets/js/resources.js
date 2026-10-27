@@ -161,13 +161,8 @@ function sortedByCatOrder(cat, items) {
     return [...items].sort((a, b) => String(a.name || '').trim().localeCompare(String(b.name || '').trim(), 'ko', { numeric: true, sensitivity: 'base' }));
   }
   if (cat === '아파트') return [...items].sort(compareApartmentComplexes);
-  const order = getDriveOrder()[cat];
-  if (!order) return items;
-  return [...items].sort((a, b) => {
-    const oa = order.indexOf(a.id);
-    const ob = order.indexOf(b.id);
-    return (oa === -1 ? 99999 : oa) - (ob === -1 ? 99999 : ob);
-  });
+  // 그 밖의 카테고리도 건물(단지) 이름 가나다순으로 정렬한다.
+  return [...items].sort((a, b) => String(a.name || '').trim().localeCompare(String(b.name || '').trim(), 'ko', { numeric: true, sensitivity: 'base' }));
 }
 // 순서 변경 함수
 function moveDriveOrder(id, direction, category) {
@@ -442,20 +437,18 @@ function renderDriveTab() {
   const items = sortedByCatOrder(cat, grouped[cat]);
   const isApartment=driveResourceScope==='residential' && cat==='아파트';
   const shown = driveResourceScope === 'residential' ? searchResidentialItems(items) : items;
-  const searchHtml = driveResourceScope === 'residential' ? `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
-    <input id="residentialResourceSearch" type="search" aria-label="주거자료 검색" placeholder="단지명 · 마을명 · 주소 검색" value="${escapeCategory(residentialSearch)}" style="flex:1;min-width:180px;">
-    <span id="residentialSearchCount" style="font-size:.8rem;color:var(--text-muted);">${shown.length} / ${items.length}개</span>
-  </div>` : '';
+  const searchHtml = driveResourceScope === 'residential' ? `<input id="residentialResourceSearch" type="search" aria-label="주거자료 검색" placeholder="단지명 · 마을명 · 주소 검색" value="${escapeCategory(residentialSearch)}">
+    <span id="residentialSearchCount" class="drive-section-count">${shown.length} / ${items.length}개</span>` : `<span class="drive-section-count">${items.length}개 · 이름순</span>`;
   const resultsHtml = shown.length
     ? (isApartment ? buildVillageGroupsHtml(shown, cat) : buildDriveResourceResults(shown, cat))
     : `<div class="loading">${driveResourceScope === 'residential' && residentialSearch ? '검색 결과가 없습니다.' : '표시할 자료가 없습니다.'}</div>`;
   const addResourceLabel = driveResourceScope === 'commercial' ? '+ 빌딩 추가' : (driveResourceScope === 'residential' ? '+ 단지 추가' : '+ 자료 추가');
   const sectionHtml = `
-    <div style="border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;margin-top:10px;">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+    <div class="drive-section">
+      <div class="drive-section-bar">
+        ${searchHtml}
         <button type="button" class="btn btn-primary" id="driveCategoryResourceAddBtn">${addResourceLabel}</button>
       </div>
-      ${searchHtml}
       <div class="${isApartment ? '' : 'listing-grid'}" id="driveResourceResults">${resultsHtml}</div>
     </div>`;
 
