@@ -36,7 +36,7 @@
   function roomLabel(r) { r = String(r || ''); return r.endsWith('호') ? r : r + '호'; }
   function yieldOf(u) {                  // 저장된 수익률이 있으면 그 값, 없으면 단순수익률 자동 계산
     const raw = String(u.수익률 ?? '').trim();                      // 전화번호 같은 숫자가 아닌 값은 무시하고 계산한다
-    if (/^\d{1,2}(\.\d+)?\s*%?$/.test(raw)) { const saved = parseFloat(raw); if (saved > 0 && saved <= 30) return { v: saved, calc: false }; }
+    if (/^\d{1,2}(\.\d+)?\s*%?$/.test(raw)) { let saved = parseFloat(raw); if (saved > 0 && saved < 1) saved *= 100; if (saved > 0 && saved <= 30) return { v: saved, calc: false }; }
     const p = price(u), m = rent(u), d = deposit(u) || 0;
     if (!p || !m) return null;
     const base = p - d;

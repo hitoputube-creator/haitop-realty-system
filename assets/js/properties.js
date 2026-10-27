@@ -1216,7 +1216,7 @@ function presaleRefreshBuildingOptions() {
 }
 function presaleYieldValue(u) {
   const manual = parseFloat(String(u.수익률 ?? "").replace(/[^0-9.\-]/g, ""));
-  if (Number.isFinite(manual) && manual > 0) return manual;
+  if (Number.isFinite(manual) && manual > 0) return manual < 1 ? manual * 100 : manual; // 0.0519처럼 소수(비율)로 저장된 값은 %로 환산
   try { const y = CommercialPriceCore.economics(u, true).yield; return Number.isFinite(y) ? y : null; } catch (e) { return null; }
 }
 function presaleYieldText(u) { const v = presaleYieldValue(u); return v === null ? "-" : v.toFixed(1) + "%"; }
