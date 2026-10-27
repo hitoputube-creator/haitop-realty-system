@@ -753,6 +753,7 @@
     </div>
 
     <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.7;"></p>
+    <div style="margin:2px 0 8px;"><button type="button" class="btn-unit-ghost" id="unitOrigToggle" hidden>원분양가 보기</button></div>
     <!-- 층 필터 탭 -->
     <div class="floor-tabs" id="unitFloorTabs"></div>
 
@@ -2278,6 +2279,26 @@ async function deleteBFile(id) {
     const p=CommercialPriceCore.price(u,true);
     return p.amount!==null ? toPlainWon(p.amount) : '-';
   }
+  function originalPriceLine(u) {
+    if (!window.__unitShowOrig || CommercialPriceCore.status(u, true) !== '분양완료') return '';
+    const original = Number(u.분양금액);
+    return Number.isFinite(original) && original > 0 ? '<br><span style="font-size:.72rem;opacity:.7;white-space:nowrap">원분양가 ' + toPlainWon(original) + '</span>' : '';
+  }
+  function syncOrigToggle() {
+    const button = $("unitOrigToggle");
+    if (!button) return;
+    button.hidden = residentialUnitMode();
+    button.textContent = window.__unitShowOrig ? '원분양가 숨기기' : '원분양가 보기';
+    button.setAttribute('aria-pressed', String(!!window.__unitShowOrig));
+  }
+  try { window.__unitShowOrig = localStorage.getItem('unitShowOriginalPrice') === '1'; } catch (e) { window.__unitShowOrig = false; }
+  document.addEventListener('click', event => {
+    const button = event.target.closest && event.target.closest('#unitOrigToggle');
+    if (!button) return;
+    window.__unitShowOrig = !window.__unitShowOrig;
+    try { localStorage.setItem('unitShowOriginalPrice', window.__unitShowOrig ? '1' : '0'); } catch (e) {}
+    renderTable();
+  });
   function commercialOccupancy(u) {
     if (u.공실여부 === '공실') return '공실';
     const industry = String(u.현업종 || '').trim();
@@ -2390,6 +2411,7 @@ async function deleteBFile(id) {
     }
     empty.style.display = "none";
 
+    syncOrigToggle();
     if (residentialUnitMode()) renderResidentialTable(filtered);
     else { if (!$("unitSelectAll")) $("unitsTableHead").querySelector("tr").insertAdjacentHTML("afterbegin", '<th class="unit-select-cell"><input type="checkbox" id="unitSelectAll" aria-label="현재 목록 전체선택"></th>'); tbody.innerHTML = filtered.map(u => {
       const ri     = units.indexOf(u);
@@ -2402,7 +2424,7 @@ async function deleteBFile(id) {
         <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
         <td><span class="unit-phase-label ${CommercialPriceCore.status(u,true)==='분양중' ? 'ongoing' : 'completed'}">${esc(CommercialPriceCore.status(u,true))}</span></td>
-        <td style="text-align:right">${commercialPriceText(u)}</td>
+        <td style="text-align:right">${commercialPriceText(u)}${originalPriceLine(u)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
         <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
         <td><span class="sbadge ${bc}">${status}</span></td>
