@@ -266,6 +266,34 @@
     box.appendChild(form);
   }
 
+  // 매물리스트와 연결된 호실이면 매물 쪽에도 같은 내용을 반영한다(자료실 호실 수정 저장과 같은 방식).
+  async function syncLinkedListing(unit) {
+    if (!unit.listing_id) return false;
+    const existing = await getListingById(unit.listing_id);
+    if (!existing) return false;
+    const money = value => {
+      const n = Number(value);
+      return n > 0 && Number.isFinite(n) ? (n * 10000).toLocaleString('ko-KR') : '';
+    };
+    const area = value => Number(value) ? Math.round(Number(value) * 100) / 100 : null;
+    const data = {
+      ...existing,
+      shop_status: unit.공실여부 === '공실' || unit.공실여부 === '임차중' ? unit.공실여부 : (existing.shop_status || ''),
+      deposit: money(unit.현_보증금 ?? unit.보증금),
+      monthlyRent: money(unit.현_월세 ?? unit.월차임),
+      owner_name: unit.소유주 || '',
+      owner_phone1: unit.연락처 || '',
+      exclusiveAreaPy: area(unit.전용_평),
+      exclusiveAreaM2: unit.전용_평 ? Math.round(Number(unit.전용_평) * squareMetersPerPyeong * 100) / 100 : null,
+      supplyAreaPy: area(unit.분양_평),
+      supplyAreaM2: unit.분양_평 ? Math.round(Number(unit.분양_평) * squareMetersPerPyeong * 100) / 100 : null,
+      detailDescription: existing.detailDescription || unit.현업종 || '',
+      import_unit_snapshot: { ...unit }
+    };
+    await updateListing(unit.listing_id, data);
+    return true;
+  }
+
   async function saveUnitDetails(original, form, saveButton) {
     const room = roomId(original);
     const data = Object.fromEntries(new FormData(form).entries());
@@ -316,7 +344,13 @@
       units = saved.units;
       detailEditing = false;
       render();
-      message(`${room}호 현황을 저장했습니다.`);
+      let listingNote = '';
+      if (savedUnit.listing_id) {
+        try { listingNote = (await syncLinkedListing(savedUnit)) ? ' 연동된 매물리스트에도 반영했습니다.' : ' (연결된 매물을 찾지 못해 매물리스트는 그대로입니다.)'; }
+        catch (error) { listingNote = ' 단, 매물리스트 반영에 실패했습니다: ' + error.message; }
+        render();
+      }
+      message(`${room}호 현황을 저장했습니다.${listingNote}`);
     } catch (error) { message('저장 실패: ' + error.message); }
     finally { saveButton.disabled = false; }
   }
@@ -333,6 +367,21 @@
     if (detailEditing) { renderEditForm(unit); return; }
     appendDetail('업종', businessOf(unit));
     appendDetail('상태', statusOf(unit));
+    const presale = window.CommercialPriceCore ? window.CommercialPriceCore.status(unit, true) : (unit.분양상태 || '—');
+    appendDetail('분양상태', presale);
+    const linkLine = document.createElement('div');
+    linkLine.className = 'line';
+    linkLine.textContent = '매물리스트: ' + (unit.listing_id ? '확인 중...' : '연결 없음');
+    box.appendChild(linkLine);
+    if (unit.listing_id) {
+      getListingById(unit.listing_id).then(listing => {
+        if (!linkLine.isConnected) return;
+        if (!listing) { linkLine.textContent = '매물리스트: 연결된 매물을 찾을 수 없음'; return; }
+        const vacancy = listing.shop_status || '—';
+        const differs = listing.shop_status && listing.shop_status !== statusOf(unit);
+        linkLine.textContent = `매물리스트: 연결됨 · ${listing.status || '—'} · ${vacancy}` + (differs ? ' (호실 상태와 다름)' : '');
+      }).catch(() => { if (linkLine.isConnected) linkLine.textContent = '매물리스트: 확인하지 못했습니다'; });
+    }
     appendDetail('소유주', unit.소유주 || '—');
     appendDetail('연락처', unit.연락처 || '—');
     appendDetail('전용면적', displayArea(unit.전용_평));

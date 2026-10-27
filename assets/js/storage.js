@@ -1459,6 +1459,33 @@ async function updateListing(id, item) {
     headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
     body: JSON.stringify(payload)
   }, payload, "Update failed: ");
+  await syncUnitOccupancyFromListing(Object.assign({}, item, { id }));
+}
+
+// 매물관리에서 상가·사무실 매물의 공실/임차중을 바꾸면, 연결된 자료실 호실의 임대현황도 같은 값으로 맞춘다.
+// (DB 트리거는 occupancy 값만 읽어서 shop_status 변경이 호실에 닿지 않았다.) 실패해도 매물 저장은 그대로 성공한다.
+async function syncUnitOccupancyFromListing(listing) {
+  try {
+    if (!listing || !listing.id || (listing.category1 || '') !== '상가사무실') return;
+    const status = listing.shop_status;
+    if (status !== '공실' && status !== '임차중') return;
+    const name = listing.complexName || listing.buildingName;
+    if (!name) return;
+    const res = await fetchWithTimeout(
+      SUPABASE_URL + "/rest/v1/buildings?name=eq." + encodeURIComponent(name) + "&select=local_id,name,units",
+      { headers }
+    );
+    if (!res.ok) return;
+    for (const record of await res.json()) {
+      const units = Array.isArray(record.units) ? record.units : [];
+      const index = units.findIndex(unit => String(unit.listing_id || '') === String(listing.id));
+      if (index < 0 || (units[index].공실여부 || '공실') === status) continue;
+      units[index] = { ...units[index], 공실여부: status, updated_at: new Date().toISOString() };
+      await saveBuildingUnits(record.local_id, record.name || name, units);
+    }
+  } catch (error) {
+    console.warn("[연동] 매물 → 자료실 호실 임대현황 반영 실패:", error.message);
+  }
 }
 
 async function updateListingPublic(id, isPublic) {
