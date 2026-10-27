@@ -1170,10 +1170,10 @@ async function loadPresaleUnitRows() {
   const res = await fetch(SUPABASE_URL + "/rest/v1/buildings?select=local_id,name,units", { headers });
   if (!res.ok) throw new Error("자료실 호실을 불러오지 못했습니다. (" + res.status + ")");
   const rows = await res.json();
-  let resMap = {}, resById = {};
+  let resMap = {}, resById = {}, resCat = {}, resCatByName = {};
   try {
-    const rr = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?select=id,name", { headers });
-    if (rr.ok) (await rr.json()).forEach(x => { resById[x.id] = true; if (x.name && !resMap[x.name]) resMap[x.name] = x.id; });
+    const rr = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?select=id,name,category", { headers });
+    if (rr.ok) (await rr.json()).forEach(x => { resById[x.id] = true; if (x.name && !resMap[x.name]) resMap[x.name] = x.id; resCat[x.id] = x.category || ""; if (x.name && resCatByName[x.name] === undefined) resCatByName[x.name] = x.category || ""; });
   } catch (e) {}
   const out = [];
   for (const b of rows) {
@@ -1182,11 +1182,37 @@ async function loadPresaleUnitRows() {
       if (!u || typeof u !== "object") return;
       if (u.분양상태 !== "분양중") return;
       const resId = resById[b.local_id] ? b.local_id : (resMap[b.name] || resMap[b.local_id] || b.local_id || "");
-      out.push({ building: b.name || b.local_id || "", localId: resId, bKey: b.local_id || b.name || "", bName: b.name || "", ho: u.호수 || "", unit: u });
+      out.push({ cat: resCat[b.local_id] ?? resCatByName[b.name] ?? resCatByName[b.local_id] ?? "", building: b.name || b.local_id || "", localId: resId, bKey: b.local_id || b.name || "", bName: b.name || "", ho: u.호수 || "", unit: u });
     });
   }
   presaleUnitRowsCache = out;
   return out;
+}
+// 분양 목록을 매물유형에 맞춘다: 상가·사무실이면 상가만, 주거용이면 주거(오피스텔·아파트)만, 전체면 모두. 그 외 유형은 목록을 숨긴다.
+function presaleKindOf(r) {
+  const g = r.unit && r.unit.구분;
+  if (g === "오피스텔") return "주거";
+  if (g === "상가") return "상가";
+  const c = String(r.cat || "");
+  if (/상가/.test(c)) return "상가";
+  if (/오피스텔|아파트|힐스테이트|주거/.test(c)) return "주거";
+  return "상가";
+}
+function presaleMajorAllowed() { return currentMajor === "" || currentMajor === "상가사무실" || currentMajor === "주거용"; }
+function presaleKindOk(r) {
+  const k = currentMajor === "상가사무실" ? "상가" : currentMajor === "주거용" ? "주거" : "";
+  return !k || presaleKindOf(r) === k;
+}
+function presaleRefreshBuildingOptions() {
+  const sel = document.querySelector('#presaleUnitPanel select[data-f="building"]');
+  if (!sel) return;
+  const names = Array.from(new Set((presaleUnitRowsCache || []).filter(presaleKindOk).map(r => r.building))).sort();
+  const sig = names.join("|");
+  if (sel.dataset.sig === sig) return;
+  sel.dataset.sig = sig;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">전체</option>' + names.map(b => '<option value="' + String(b).replace(/"/g, "&quot;") + '">' + String(b).replace(/</g, "&lt;") + '</option>').join("");
+  if (names.includes(cur)) sel.value = cur; else { sel.value = ""; presaleColFilter.building = ""; }
 }
 function presaleYieldValue(u) {
   const manual = parseFloat(String(u.수익률 ?? "").replace(/[^0-9.\-]/g, ""));
@@ -1237,6 +1263,7 @@ function presaleMakeBundleRow(g) {
 function presaleBuildBundles() {
   const map = {}, order = [];
   (presaleUnitRowsCache || []).forEach(r => {
+    if (!presaleKindOk(r)) return;
     const id = r.unit.묶음ID;
     if (!id) return;
     const key = r.bKey + "||" + id;
@@ -1305,7 +1332,7 @@ async function presaleUnbundleSelected() {
 }
 function presaleRowsView() {
   const f = presaleColFilter;
-  let rows = (presaleUnitRowsCache || []).filter(matchesPresaleUnitSub).filter(r => {
+  let rows = (presaleUnitRowsCache || []).filter(presaleKindOk).filter(matchesPresaleUnitSub).filter(r => {
     const u = r.unit;
     if (f.building && r.building !== f.building) return false;
     if (f.ho && String(r.ho).indexOf(f.ho) < 0) return false;
@@ -1402,7 +1429,7 @@ function presaleRenderBundlePanel() {
   }
   const bf = presaleColFilter.building;
   const bundles = presaleBuildBundles().filter(b => !bf || b.building === bf);
-  if (!currentPresaleMode || !bundles.length) { box.style.display = "none"; return; }
+  if (!currentPresaleMode || !presaleMajorAllowed() || !bundles.length) { box.style.display = "none"; return; }
   box.style.display = "";
   const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#e0b84c;font-size:.78rem;border-bottom:1px solid var(--border-slate,#2c4258);white-space:nowrap;";
   const td = "padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;";
@@ -1426,6 +1453,7 @@ function presaleRenderBundlePanel() {
 function updatePresaleTbody() {
   const tb = document.getElementById("presaleTbody");
   if (!tb) return;
+  presaleRefreshBuildingOptions();
   const rows = presaleRowsView();
   tb.innerHTML = rows.length ? rows.map(presaleRowHtml).join("") : '<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--text-muted);">해당하는 분양중 호실이 없습니다.</td></tr>';
   tb.querySelectorAll("input[data-sel]").forEach(cb => cb.addEventListener("change", () => { cb.dataset.sel.split(",").forEach(k => { if (cb.checked) presaleSel.add(k); else presaleSel.delete(k); }); }));
@@ -1494,6 +1522,7 @@ async function renderPresaleUnitPanel() {
     host.parentElement.insertBefore(panel, host.nextSibling);
   }
   if (!currentPresaleMode) { panel.style.display = "none"; panel.dataset.ready = ""; presaleUnitRowsCache = null; const bp0 = document.getElementById("presaleBundlePanel"); if (bp0) bp0.style.display = "none"; return; }
+  if (!presaleMajorAllowed()) { panel.style.display = "none"; const bp1 = document.getElementById("presaleBundlePanel"); if (bp1) bp1.style.display = "none"; return; }
   panel.style.display = "";
   if (panel.dataset.ready === "1") { updatePresaleTbody(); return; }
   panel.innerHTML = '<div style="font-size:.85rem;color:var(--text-muted);padding:8px 0;">자료실 분양중 호실 불러오는 중…</div>';
