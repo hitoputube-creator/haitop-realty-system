@@ -644,6 +644,22 @@
 .units-tbl td:nth-child(3) { max-width:132px; white-space:normal; word-break:keep-all; }
 .units-tbl th, .units-tbl td { padding-left:8px; padding-right:8px; }
 </style>
+<style id="unitBundleStyle">
+.unit-flag.bundle{background:rgba(212,175,55,.18);color:#e0b84c;border:1px solid rgba(212,175,55,.45)}
+.unit-flag.sale{background:rgba(229,115,115,.2);color:#ef9a9a;border:1px solid rgba(229,115,115,.45)}
+.unit-bundle-box{margin-top:16px;padding:14px 16px;border:1px solid rgba(212,175,55,.35);border-radius:14px;background:rgba(212,175,55,.05)}
+.unit-bundle-box[hidden]{display:none}
+.unit-bundle-box .ub-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.unit-bundle-box .ub-head strong{font-size:.95rem}
+.unit-bundle-box .ub-head .ub-cnt{color:#e0b84c;font-weight:700}
+.unit-bundle-box .ub-head .ub-hint{font-size:.76rem;opacity:.65}
+.unit-bundle-box table{width:100%;border-collapse:collapse;table-layout:auto}
+.unit-bundle-box th{text-align:left;padding:7px 8px;font-size:.76rem;font-weight:700;color:#e0b84c;border-bottom:1px solid rgba(255,255,255,.14)}
+.unit-bundle-box td{padding:9px 8px;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:middle}
+.unit-bundle-box td.ub-price{color:#e0b84c;font-weight:700}
+.unit-bundle-box td.ub-act{text-align:right;width:1%;white-space:nowrap}
+.unit-bundle-box .ub-strike{font-size:.7rem;font-weight:400;opacity:.6;text-decoration:line-through}
+</style>
 </head>
 <body class="resources-page">
 <script>if (new URLSearchParams(location.search).get('unit')) { var __s = document.createElement('style'); __s.id = 'unitOnlyStyle'; __s.textContent = '.page{visibility:hidden}#unitModal{visibility:visible}'; document.head.appendChild(__s); setTimeout(function(){ var m = document.getElementById('unitModal'); if (!m || !m.classList.contains('open')) { var st = document.getElementById('unitOnlyStyle'); if (st) st.remove(); } }, 10000); }</script>
@@ -741,6 +757,7 @@
           <button type="button" class="btn-unit-add" id="unitProfitRegister" disabled>수익성 추천</button>
           <a class="btn-unit-ghost" id="unitProfitView" href="profit-recommendations.html">추천매물 모아보기</a>
           <button type="button" class="btn-unit-add" id="unitBundleRegister" disabled>묶음 등록</button>
+          <button type="button" class="btn-unit-add" id="unitBundleRooms" disabled>호실 묶기</button>
         </div>
       </div>
     </div>
@@ -804,6 +821,7 @@
         <tbody id="unitsTbody"></tbody>
       </table>
     </div>
+    <div id="unitBundleBox" class="unit-bundle-box" hidden></div>
     <div id="unitsEmpty" class="units-empty" style="display:none;">
       등록된 호실이 없습니다. [+ 호실 추가]를 눌러 시작하세요.
     </div>
@@ -1792,6 +1810,8 @@ async function deleteBFile(id) {
     $('unitProfitRegister').textContent = '수익성 추천 (' + count + ')';
     $('unitBundleRegister').hidden = residentialUnitMode();
     $('unitBundleRegister').disabled = count < 2;
+    $('unitBundleRooms').hidden = residentialUnitMode();
+    $('unitBundleRooms').disabled = count < 2;
     $("unitSelectPrint").disabled = !count;
     $("unitSelectDelete").disabled = !count;
     $("unitSelectPrint").textContent = "선택인쇄 (" + count + ")";
@@ -2464,7 +2484,84 @@ async function deleteBFile(id) {
     return s !== "" && !["false", "0", "n", "no", "x", "아니오", "없음"].includes(s.toLowerCase());
   }
 
+  // ===== 호실 묶음 표시 (매물관리 분양 명단과 같은 묶음ID 사용) =====
+  let activeBundleIds = new Set();
+  const bundleRoomNum = h => parseInt(String(h || '').replace(/[^0-9]/g, ''), 10) || 0;
+  function unitBundleGroups() {
+    if (residentialUnitMode()) return [];
+    const map = new Map();
+    scopedUnits().forEach(u => {
+      const id = u.묶음ID;
+      if (!id || CommercialPriceCore.status(u, true) !== '분양중') return;
+      if (!map.has(id)) map.set(id, []);
+      map.get(id).push(u);
+    });
+    return [...map.values()].filter(g => g.length >= 2);
+  }
+  function bundleRoomLabel(g) {
+    const sorted = g.slice().sort((a, b) => bundleRoomNum(a.호수) - bundleRoomNum(b.호수));
+    const nums = sorted.map(u => bundleRoomNum(u.호수));
+    const consecutive = nums.length >= 3 && nums.every((n, i) => i === 0 || n === nums[i - 1] + 1);
+    return (consecutive ? nums[0] + '~' + nums[nums.length - 1] : sorted.map(u => u.호수).join('·')) + '호';
+  }
+  function bundleSum(g, pick) {
+    const vals = g.map(pick);
+    if (vals.some(v => v === null || v === undefined || !Number.isFinite(Number(v)))) return null;
+    return Math.round(vals.reduce((a, v) => a + Number(v), 0) * 100) / 100;
+  }
+  function renderUnitBundleBox() {
+    const box = $('unitBundleBox');
+    if (!box) return;
+    const groups = unitBundleGroups();
+    activeBundleIds = new Set(groups.map(g => g[0].묶음ID));
+    if (!groups.length) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    const rows = groups.map((g, i) => {
+      const sorted = g.slice().sort((a, b) => bundleRoomNum(a.호수) - bundleRoomNum(b.호수));
+      const sp = g.map(u => u.묶음특가).find(Boolean) || null;
+      const amt = bundleSum(g, u => CommercialPriceCore.price(u, true).amount);
+      const dep = bundleSum(g, u => CommercialPriceCore.economics(u, true).deposit);
+      const rent = bundleSum(g, u => CommercialPriceCore.economics(u, true).rent);
+      let shownAmt = amt, shownDep = dep, shownRent = rent, listPrice = null;
+      if (sp) {
+        listPrice = sp.정가 != null ? sp.정가 : amt;
+        if (sp.할인가 != null) shownAmt = sp.할인가;
+        if (sp.보증금 != null) shownDep = sp.보증금;
+        if (sp.월세 != null) shownRent = sp.월세;
+      }
+      const biz = (sorted.find(u => u.현업종) || {}).현업종 || '-';
+      const strike = sp && listPrice != null && listPrice !== shownAmt ? '<div class="ub-strike">' + toPlainWon(listPrice) + '</div>' : '';
+      return '<tr><td><strong>' + esc(bundleRoomLabel(g)) + '</strong> <span class="unit-flag bundle">' + g.length + '호실</span>' + (sp ? '<span class="unit-flag sale">특별할인</span>' : '') + '</td>'
+        + '<td>' + esc(biz) + '</td>'
+        + '<td class="ub-price">' + (shownAmt != null ? toPlainWon(shownAmt) : '-') + strike + '</td>'
+        + '<td>' + esc(commercialOccupancy(sorted[0])) + '</td>'
+        + '<td>' + (shownDep != null ? (toKorAmt(shownDep) || '-') : '-') + ' / ' + (shownRent != null ? (toKorAmt(shownRent) || '-') : '-') + '</td>'
+        + '<td class="ub-act"><button type="button" class="btn-unit-ghost" data-ub-open="' + i + '">묶음 해제</button></td></tr>';
+    }).join('');
+    box.innerHTML = '<div class="ub-head"><strong>묶음 매물</strong><span class="ub-cnt">' + groups.length + '건</span><span class="ub-hint">위 목록에서 호실을 체크하고 "호실 묶기"로 만들어요 · 특별가는 매물관리 분양 명단에서 입력해요</span></div>'
+      + '<table><thead><tr><th>호수</th><th>업종</th><th>분양금액</th><th>임대현황</th><th>보증금 / 월세</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    box.querySelectorAll('[data-ub-open]').forEach(btn => btn.addEventListener('click', () => unbundleUnits(groups[Number(btn.dataset.ubOpen)])));
+  }
+  async function unbundleUnits(g) {
+    if (!g) return;
+    if (!confirm(bundleRoomLabel(g) + ' 묶음을 해제할까요?\n(호실 자료는 그대로 두고 묶음과 특별가만 지워요)')) return;
+    try {
+      const id = g[0].묶음ID;
+      const next = units.map(u => {
+        if (u.묶음ID !== id) return u;
+        const c = { ...u };
+        delete c.묶음ID; delete c.묶음모드; delete c.묶음특가;
+        c.비고 = String(c.비고 || '').replace(/(^|\n)\[특별할인[^\]]*\][^\n]*/g, '').trim() || null;
+        c.updated_at = new Date().toISOString();
+        return c;
+      });
+      await saveBuildingUnits(bName, bName, next);
+      units = next; selectedUnitRows.clear(); renderAll();
+      showToast('묶음을 해제했습니다.');
+    } catch (e) { showToast('묶음 해제 실패: ' + e.message); }
+  }
   function renderTable() {
+    renderUnitBundleBox();
     const grouped = filterFloor === "전체"
       ? scopedUnits()
       : scopedUnits().filter(u => unitGroup(u) === filterFloor);
@@ -2493,7 +2590,7 @@ async function deleteBFile(id) {
       const status = commercialOccupancy(u);
       const bc     = status;
       return `<tr class="${u.추천등록일 && isFlagOn(u.추천매물) && isFlagOn(u.수익성매물) ? 'profit-recommended-row' : ''}">
-        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
+        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.묶음ID && activeBundleIds.has(u.묶음ID) ? '<span class="unit-flag bundle">묶음</span>' : ''}${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
         <td>${u.현업종 || "-"}</td>
         <td style="white-space:nowrap;line-height:1.3">${unitAreaHtml(u)}</td>
         <td>${u.소유주 || "-"}</td>
@@ -2752,6 +2849,24 @@ async function deleteBFile(id) {
       showToast('묶음매물이 등록되었습니다.');
     } catch(error) { showToast('묶음매물 등록 실패: '+error.message); }
     finally { bundleSaving=false; $('bundleSave').disabled=false; $('bundleSave').textContent='매물 등록'; }
+  });
+
+  $('unitBundleRooms').addEventListener('click', async () => {
+    const rows = units.filter((u, i) => selectedUnitRows.has(i));
+    if (residentialUnitMode() || rows.length < 2) return;
+    if (rows.some(u => CommercialPriceCore.status(u, true) !== '분양중')) { alert('분양중인 호실만 묶을 수 있어요. 분양완료 호실은 체크를 풀어 주세요.'); return; }
+    const label = bundleRoomLabel(rows);
+    if (!confirm(label + ' (' + rows.length + '개 호실)을 하나의 묶음으로 표시할까요?\n(호실 가격은 바꾸지 않고 묶음 표시만 저장해요)')) return;
+    const button = $('unitBundleRooms'); button.disabled = true;
+    try {
+      const id = 'bd-' + Date.now().toString(36);
+      const picked = new Set(rows);
+      const next = units.map(u => picked.has(u) ? { ...u, 묶음ID: id, 묶음모드: 'both', updated_at: new Date().toISOString() } : u);
+      await saveBuildingUnits(bName, bName, next);
+      units = next; selectedUnitRows.clear(); renderAll();
+      showToast('호실 ' + rows.length + '개를 묶음으로 표시했습니다.');
+    } catch (e) { showToast('호실 묶기 실패: ' + e.message); }
+    finally { unitBulkState(); }
   });
 
   async function saveUnit(options = {}) {
