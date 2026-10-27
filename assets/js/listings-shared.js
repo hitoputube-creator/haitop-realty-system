@@ -462,7 +462,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
       ${isRoster ? '<span class="lc-roster-badge">명단</span>' : ""}
     </div>
     <div class="listing-cell listing-cell-deal" data-label="거래유형">
-      ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType] || ""}">${escapeHtml(dealType === "월세" ? "월세(임대)" : dealType === "매매·월세" ? "매매·월세(임대)" : dealType)}</span>` : "<span>-</span>"}
+      ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType] || ""}">${escapeHtml(dealType === "회사임대" ? "(회사)월세(임대)" : dealType === "월세" ? "월세(임대)" : dealType === "매매·월세" ? "매매·월세(임대)" : dealType)}</span>` : "<span>-</span>"}
     </div>
     <div class="listing-cell listing-cell-village" data-label="마을단지">${village && villageUrl ? `<a class="listing-village-link" href="${escapeHtml(villageUrl)}" title="${escapeHtml(village)} 단지 자료 보기" onclick="event.stopPropagation()">${escapeHtml(village)}</a>` : escapeHtml(village || "-")}</div>
     <div class="listing-cell listing-cell-apartment" data-label="아파트명">${escapeHtml(apartmentName || (village ? "-" : addressText))}<span class="lc-no">No. ${escapeHtml(listingNo)}</span></div>
