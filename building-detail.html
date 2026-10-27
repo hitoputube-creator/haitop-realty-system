@@ -1858,6 +1858,7 @@ async function deleteBFile(id) {
   });
 
   function unitAreaText(u) { const p = Number(u.전용_평); return Number.isFinite(p) && p > 0 ? p.toFixed(2) + "평 (" + (p * 3.30579).toFixed(2) + "㎡)" : "-"; }
+  function unitAreaHtml(u) { const p = Number(u.전용_평); return Number.isFinite(p) && p > 0 ? p.toFixed(2) + "평<br><span style=\"font-size:.72rem;opacity:.65\">" + (p * 3.30579).toFixed(2) + "㎡</span>" : "-"; }
   function unitCheckbox(u) { const idx=units.indexOf(u); return '<td class="unit-select-cell"><input type="checkbox" class="unit-select-row" data-ri="'+idx+'" aria-label="세대 선택" '+(selectedUnitRows.has(idx)?"checked":"")+'></td>'; }
   function bindUnitSelection() {
     $("unitsTbody").querySelectorAll(".unit-select-row").forEach(box => box.addEventListener("change", () => {
@@ -2397,7 +2398,7 @@ async function deleteBFile(id) {
       return `<tr class="${u.추천등록일 && isFlagOn(u.추천매물) && isFlagOn(u.수익성매물) ? 'profit-recommended-row' : ''}">
         ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
         <td>${u.현업종 || "-"}</td>
-        <td style="white-space:nowrap">${unitAreaText(u)}</td>
+        <td style="white-space:nowrap;line-height:1.3">${unitAreaHtml(u)}</td>
         <td>${u.소유주 || "-"}</td>
         <td>${u.연락처 || "-"}</td>
         <td><span class="unit-phase-label ${CommercialPriceCore.status(u,true)==='분양중' ? 'ongoing' : 'completed'}">${esc(CommercialPriceCore.status(u,true))}</span></td>
