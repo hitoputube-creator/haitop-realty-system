@@ -417,7 +417,12 @@ async function lookupApartmentAutofill(item,onProgress) {
   let reference={matched:false};
   try{reference=await lookupApartmentUnitReference(item);}catch(error){reference.planWarning=error.message;}
   reference={...reference,planMatched:!!reference.matched,registryMatched:false};
-  const address=(reference.jibunAddress || item.jibunAddress || reference.roadAddress || item.roadAddress || item.mapAddress || "").replace(/\([^)]*\)/g,"").trim();
+  let address=(reference.jibunAddress || item.jibunAddress || reference.roadAddress || item.roadAddress || item.mapAddress || "").replace(/\([^)]*\)/g,"").trim();
+  // 지번주소에 시·군이 없으면(예: "검산동310") 도로명주소의 시·군을 앞에 붙인다.
+  if(address && !/[가-힣]+(?:시|군)\s/.test(address)){
+    const cityMatch=String(reference.roadAddress || item.roadAddress || "").match(/([가-힣]+(?:시|군))\s/);
+    if(cityMatch)address=cityMatch[1]+" "+address;
+  }
   if(!address){reference.registryWarning="주소를 먼저 입력해주세요.";return reference;}
   if(onProgress)onProgress("건축물대장 동·호수 조회 중…");
   try{
@@ -1233,6 +1238,10 @@ function buildListingPayload(item) {
 // hoNm(호수)을 넘기면 집합건물의 경우 표제부(건물 전체 연면적) 대신 전유부의
 // 해당 호실 전유면적을 우선 반환한다. dongNm(동)은 대부분 상가/오피스텔이
 // 단일동이라 생략 가능.
+// "검산동310"처럼 동·리와 번지가 붙어 있으면 조회 서버가 지번을 읽지 못하므로 띄어 쓴다.
+function normalizeRegisterJibun(address) {
+  return String(address || "").replace(/([가-힣]+(?:동|리|가))\s*(산?\s*\d)/g, "$1 $2").replace(/\s+/g, " ").trim();
+}
 async function lookupBuildingRegister(address, opts) {
   opts = opts || {};
   // hoNm이 있으면 전유부를 여러 페이지 순회하며 찾을 수 있고, data.go.kr 게이트웨이가
@@ -1242,7 +1251,7 @@ async function lookupBuildingRegister(address, opts) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/functions/v1/lookup-building-register", {
     method: "POST",
     headers,
-    body: JSON.stringify({ address: String(address || "").replace(/\([^)]*\)/g, "").replace(/（[^）]*）/g, "").trim(), hoNm: opts.hoNm || "", dongNm: opts.dongNm || "", apartment: opts.apartment === true, scope:opts.scope || "", buildingName:opts.buildingName || "" })
+    body: JSON.stringify({ address: normalizeRegisterJibun(String(address || "").replace(/\([^)]*\)/g, "").replace(/（[^）]*）/g, "").trim()), hoNm: opts.hoNm || "", dongNm: opts.dongNm || "", apartment: opts.apartment === true, scope:opts.scope || "", buildingName:opts.buildingName || "" })
   }, timeout);
   let data = null;
   try { data = await res.json(); } catch (e) { /* 응답 본문이 JSON이 아닌 경우 무시 */ }
