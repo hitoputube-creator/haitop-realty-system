@@ -7,6 +7,8 @@
   const requestedFloor = params.get('floor') || '1';
   const requestedCategory = params.get('category') || '';
   const categoryChoice = document.getElementById('overviewCategory');
+  const searchBox = document.getElementById('overviewSearch');
+  const normalize = text => String(text || '').replace(/\s+/g, '').toLowerCase();
   function floorKeys(label) {
     const text = String(label || '').trim();
     const basement = text.match(/(?:지하|[Bb])\s*(\d+)/);
@@ -74,20 +76,19 @@
           if (floorKeys(floor.floor_number).includes(key) && !matching.has(floor.building_id))
             matching.set(floor.building_id, floor);
         });
+        const q = normalize(searchBox.value);
         let count = 0;
-        categoryBuildings().forEach(building => {
-          const floor = matching.get(building.id);
-          if (!floor) return;
+        function addCard(building, floor, floorKey, showCategory) {
           count++;
           const article = document.createElement('article');
           article.className = 'card';
           const link = document.createElement('a');
-          const query = new URLSearchParams({ id: building.id, floorId: floor.id, floor: key, category: currentCategory });
+          const query = new URLSearchParams({ id: building.id, floorId: floor.id, floor: floorKey, category: building.category || currentCategory });
           link.href = 'floor-status.html?' + query.toString();
-          link.setAttribute('aria-label', `${building.name} ${key}층 현황보기`);
+          link.setAttribute('aria-label', `${building.name} ${floorKey}층 현황보기`);
           const image = document.createElement('img');
           image.src = floor.cloudinary_url;
-          image.alt = `${building.name} ${key}층 평면도 미리보기`;
+          image.alt = `${building.name} ${floorKey}층 평면도 미리보기`;
           image.loading = 'lazy';
           const body = document.createElement('div');
           body.className = 'body';
@@ -95,13 +96,39 @@
           name.textContent = building.name;
           const address = document.createElement('p');
           const line = String(building.memo || '').split('\n').find(value => /^주소\s*:/.test(value));
-          address.textContent = line ? line.replace(/^주소\s*:/, '').trim() : `${key}층 현황보기 →`;
+          const addr = line ? line.replace(/^주소\s*:/, '').trim() : `${floorKey}층 현황보기 →`;
+          address.textContent = showCategory ? `${building.category || '기타'} · ${floorKey}층 · ${addr}` : addr;
           body.append(name, address);
           link.append(image, body);
           article.appendChild(link);
           grid.appendChild(article);
-        });
-        message.textContent = count ? `[${currentCategory}] ${count}개 건물의 ${key}층 평면도` : `[${currentCategory}] ${key}층 평면도가 등록된 건물이 없습니다.`;
+        }
+        if (q) {
+          // 검색 중에는 분류와 상관없이 모든 건물에서 찾는다. 고른 층이 없으면 가장 낮은 층 평면도를 보여 준다.
+          const firstFloor = new Map();
+          const order = k => (k.startsWith('B') ? -Number(k.slice(1)) : Number(k));
+          usable.forEach(floor => {
+            const ks = floorKeys(floor.floor_number);
+            if (!ks.length) return;
+            const low = ks.slice().sort((x, y) => order(x) - order(y))[0];
+            const prev = firstFloor.get(floor.building_id);
+            if (!prev || order(low) < order(prev.key)) firstFloor.set(floor.building_id, { floor, key: low });
+          });
+          buildings.forEach(building => {
+            const addressLine = String(building.memo || '').split('\n').find(value => /^주소\s*:/.test(value)) || '';
+            if (!normalize(building.name + ' ' + addressLine).includes(q)) return;
+            const picked = matching.get(building.id);
+            if (picked) { addCard(building, picked, key, true); return; }
+            const fallback = firstFloor.get(building.id);
+            if (fallback) addCard(building, fallback.floor, fallback.key, true);
+          });
+          message.textContent = count ? `"${searchBox.value.trim()}" 검색 결과 ${count}건 (모든 분류)` : `"${searchBox.value.trim()}" 검색 결과가 없습니다.`;
+          return;
+        }
+        categoryBuildings().forEach(building => {
+          const floor = matching.get(building.id);
+          if (floor) addCard(building, floor, key, false);
+        });        message.textContent = count ? `[${currentCategory}] ${count}개 건물의 ${key}층 평면도` : `[${currentCategory}] ${key}층 평면도가 등록된 건물이 없습니다.`;
       }
       function saveState(key) {
         history.replaceState(null, '', 'floor-status-overview.html?category=' + encodeURIComponent(currentCategory) + '&floor=' + encodeURIComponent(key));
@@ -116,6 +143,11 @@
         const key = fillFloors(choice.value);
         saveState(key);
         render(key);
+      });
+      let searchTimer = null;
+      searchBox.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => render(choice.value), 150);
       });
       render(fillFloors(requestedFloor));
     } catch (error) { message.textContent = '목록을 불러오지 못했습니다: ' + error.message; }
