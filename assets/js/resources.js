@@ -408,7 +408,7 @@ function renderDriveTab() {
   if (!activeDriveCat || !grouped[activeDriveCat]) activeDriveCat = categories[0];
 
   // 카테고리 버튼 (index로 식별 — 한글 따옴표 문제 완전 회피)
-  const catGridHtml = categories.map((c, i) => {
+  const catRowHtml = categories.map((c, i) => {
     const isActive = c === activeDriveCat;
     return `<div class="drive-category-row" data-category-id="${visibleDriveCategories()[i].id}" draggable="true" style="display:flex;gap:4px;">
       <button type="button" class="drive-category-grip" data-category-grip aria-label="${escapeCategory(c)} 순서 변경: 끌기 또는 방향키" title="끌어서 순서 변경 · 방향키로 이동">⠿</button>
@@ -428,6 +428,12 @@ function renderDriveTab() {
         color:var(--text-muted);font-size:0.85rem;">✏️</button>
     </div>`;
   }).join("");
+  // 부동산 유형별로 묶어서 보여 준다(택지 → 토지, 상가·근생·점포 → 상가, 아파트·오피스텔 등 → 주거).
+  const categoryTypeOf = name => /택지|토지/.test(name) ? '토지' : /상가|근생|점포/.test(name) ? '상가' : /아파트|오피스텔|힐스테이트|주거/.test(name) ? '주거' : '기타';
+  const categoryTypeGroups = [['상가', '🏪 상가'], ['주거', '🏠 주거 (아파트·오피스텔)'], ['토지', '🌱 토지·택지'], ['기타', '📁 기타']]
+    .map(([key, label]) => ({ label, indexes: categories.map((c, i) => i).filter(i => categoryTypeOf(categories[i]) === key) }))
+    .filter(group => group.indexes.length);
+  const catGridHtml = categoryTypeGroups.map(group => `<div class="drive-category-group">${categoryTypeGroups.length > 1 ? `<div class="drive-category-group-title">${group.label} <span>(${group.indexes.length})</span></div>` : ''}<div class="drive-category-grid">${group.indexes.map(i => catRowHtml[i]).join("")}</div></div>`).join("");
 
   // 선택된 카테고리 목록 (전체 표시 — 페이지네이션 없음)
   const cat = activeDriveCat;
@@ -453,7 +459,7 @@ function renderDriveTab() {
 
   container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
     <div class="drive-category-order-hint">⠿ 손잡이를 끌어서 카테고리 순서를 바꿀 수 있습니다.</div>
-    <div class="drive-category-grid" style="margin-bottom:4px;">
+    <div style="margin-bottom:4px;">
       ${catGridHtml}
     </div>
     ${sectionHtml}
