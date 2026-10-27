@@ -453,7 +453,7 @@ function renderDriveTab() {
 
   container.innerHTML = `<div class="quick-card" style="margin-bottom:16px;">
     <div class="drive-category-order-hint">⠿ 손잡이를 끌어서 카테고리 순서를 바꿀 수 있습니다.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+    <div class="drive-category-grid" style="margin-bottom:4px;">
       ${catGridHtml}
     </div>
     ${sectionHtml}
