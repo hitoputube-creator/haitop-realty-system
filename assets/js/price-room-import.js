@@ -110,6 +110,10 @@
     try{
       const files=revisions(await getBuildingFiles(buildingId));
       box.replaceChildren();
+      const title=document.getElementById('unitStatusTitle');let stamp=document.getElementById('unitPriceLatest');
+      if(title&&!stamp){stamp=document.createElement('button');stamp.type='button';stamp.id='unitPriceLatest';stamp.style.cssText='background:none;border:0;padding:0 0 0 10px;font-size:13px;font-weight:400;color:var(--gold);cursor:pointer;text-decoration:underline dotted';title.appendChild(stamp);stamp.onclick=()=>{box.style.display=box.style.display==='none'?'':'none';};}
+      if(stamp)stamp.textContent=files.length?'가격표 최근 업데이트 '+revisionDate(files[0]):'';
+      if(!box.dataset.init){box.style.display='none';box.dataset.init='1';}
       files.forEach((f,index)=>{
         const row=document.createElement('div');row.style.cssText='display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0';
         const link=document.createElement('a');link.href=f.cloudinary_url;link.target='_blank';link.rel='noopener';link.textContent=(index===0?'최신 · ':'')+revisionDate(f)+' · '+f.file_name.replace('[가격표] ','');link.style.color='var(--gold)';
