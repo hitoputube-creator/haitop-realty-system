@@ -195,6 +195,19 @@
     }
   }
 
+  // 아래 아파트 기본정보의 동·호수 → 위(저장에 쓰는) 동·호수 칸으로 복사. 아래가 비어 있고 위에만 값이 있으면 아래로 채운다.
+  function mirrorUnitFields() {
+    [['apt_동', 'apartmentDong'], ['apt_호수', 'apartmentHo']].forEach(([a, t]) => {
+      const A = $(a), T = $(t);
+      if (!A || !T) return;
+      const av = A.value.trim(), tv = T.value.trim();
+      if (av) {
+        if (tv !== av) { T.value = av; T.dispatchEvent(new Event('input', { bubbles: true })); }
+      } else if (tv) {
+        A.value = tv; A.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  }
   // ── 새주소 ⇄ 구주소 변환 (카카오 주소검색) ─────────────
   let kakaoPromise = null;
   function loadScript(src) {
@@ -295,8 +308,16 @@
     aptSel.addEventListener('change', onAptChange);
     nameInput.addEventListener('input', () => { const c = $('complexName'); if (c) c.value = nameInput.value; });
     ['apt_동', 'apt_호수'].forEach(id => $(id).addEventListener('input', () => scheduleAutoFill()));
+    // 위쪽(기본 정보 카드)의 동·호수 칸은 숨기고, 아래 아파트 기본정보의 동·호수 값을 그대로 옮겨 저장한다.
+    if (!document.getElementById('aptTopUnitHideStyle')) {
+      const st = document.createElement('style'); st.id = 'aptTopUnitHideStyle';
+      st.textContent = '.apt-top-unit-hidden{display:none!important}';
+      document.head.appendChild(st);
+    }
+    ['apartmentDong', 'apartmentHo'].forEach(id => { const f = $(id) && $(id).closest('.field'); if (f) f.classList.add('apt-top-unit-hidden'); });
+    ['apt_동', 'apt_호수'].forEach(id => $(id).addEventListener('input', mirrorUnitFields));
     AUTO_IDS.forEach(id => { const el = $(id); if (el) el.addEventListener('input', () => { delete autoFilled[id]; }); });
-    document.getElementById(prefix ? 'editSaveBtn' : 'saveBtn').addEventListener('click', () => linkResource(currentResourceId), true);
+    document.getElementById(prefix ? 'editSaveBtn' : 'saveBtn').addEventListener('click', () => { mirrorUnitFields(); linkResource(currentResourceId); }, true);
 
     // 세입자·옵션·추가메모는 필요할 때만 펼치도록 한 묶음으로 접는다.
     const extras = Array.from(host.children).filter(el => el.classList.contains('um-section') &&
@@ -327,7 +348,7 @@
       const f = $(id) && $(id).closest('.field');
       if (f) f.style.display = apt ? 'none' : '';
     });
-    if (apt) { syncFromFields(); openExtrasIfFilled(); }
+    if (apt) { syncFromFields(); openExtrasIfFilled(); mirrorUnitFields(); }
   }
 
   // ── 홈페이지용 입력 접기/펼치기 (모든 매물 유형 공통) ──

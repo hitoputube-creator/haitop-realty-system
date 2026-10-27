@@ -1392,11 +1392,13 @@ async function uploadListingImage(file, listingId) {
   const objectPath = `${safeListingId}/${safeName}`;
   const objectUrl = `${SUPABASE_URL}/storage/v1/object/${LISTING_IMAGES_BUCKET}/${objectPath}`;
 
+  // 로그인한 사용자 세션으로 올린다(보안 설정상 비로그인 키로는 업로드가 막혀 있음).
+  if (window.hitopAuthReady) { try { await window.hitopAuthReady; } catch (_) {} }
   const res = await fetchWithTimeout(objectUrl, {
     method: "POST",
     headers: {
       "apikey": SUPABASE_KEY,
-      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Authorization": headers.Authorization || ("Bearer " + SUPABASE_KEY),
       "Content-Type": file.type || "application/octet-stream",
       "Cache-Control": "3600",
       "x-upsert": "false"
