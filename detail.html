@@ -259,7 +259,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
           <option value="매매">매매</option>
           <option value="전세">전세</option>
           <option value="월세">월세</option>
-          <option value="임대">임대</option><option value="회사분양">(회사)분양</option><option value="회사임대">(회사)임대</option>
+          <option value="임대">임대</option><option value="매매·임대">매매·임대</option><option value="매매·전세">매매·전세</option><option value="매매·월세">매매·월세</option><option value="회사분양">(회사)분양</option><option value="회사임대">(회사)임대</option>
         </select>
       </div>
       <div class="field">
@@ -994,7 +994,7 @@ function closeHomepageTab(tab) {
     // 거래유형: 예전 매물은 dealType 대신 종류별 옛 필드나 가격 메모("매매 9억…")에만 들어 있을 수 있어, 상세정보 표와 같은 기준으로 찾는다.
     let _editDeal = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && String(item.type).startsWith("land") ? "매매" : "");
     if (!_editDeal) { const m = String(item.quick_price || "").trim().match(/^(매매|전세|월세|임대)/); if (m) _editDeal = m[1]; }
-    document.getElementById("edit_dealType").value           = ["매매", "전세", "월세", "임대"].includes(_editDeal) ? _editDeal : "";
+    document.getElementById("edit_dealType").value           = ["매매", "전세", "월세", "임대", "매매·임대", "매매·전세", "매매·월세", "회사분양", "회사임대"].includes(_editDeal) ? _editDeal : "";
     document.getElementById("edit_listingKind").value        = item.listingKind === "명단" ? "명단" : "매물";
     document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
     document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || item.address || "";
@@ -1622,7 +1622,11 @@ function closeHomepageTab(tab) {
       fee: dispCat1 !== "주거용" && dispCat1 !== "토지" && dispCat1 !== "공장창고",
     };
     let priceCore, priceCond;
-    if (dealType === "매매") {
+    if (/^매매·(임대|전세|월세)$/.test(String(dealType || ""))) {
+      const saleLabel = commercialPrice ? commercialPrice.label + "가" : "매매가";
+      if (dealType === "매매·전세") { priceCore = [[saleLabel, saleText], ["전세금", depositText]]; priceCond = [["월세", rentText]]; }
+      else { priceCore = [[saleLabel, saleText], ["보증금", depositText], ["월세", rentText]]; priceCond = []; }
+    } else if (dealType === "매매") {
       priceCore = [[commercialPrice?commercialPrice.label+"가":"매매가", saleText]];
       priceCond = [["보증금", depositText], ["월세", rentText]];
     } else if (dealType === "전세") {
