@@ -1173,7 +1173,7 @@ async function loadPresaleUnitRows() {
   let resMap = {}, resById = {}, resCat = {}, resCatByName = {};
   try {
     const rr = await fetch(SUPABASE_URL + "/rest/v1/drive_resources?select=id,name,category", { headers });
-    if (rr.ok) (await rr.json()).forEach(x => { resById[x.id] = true; if (x.name && !resMap[x.name]) resMap[x.name] = x.id; resCat[x.id] = x.category || ""; if (x.name && resCatByName[x.name] === undefined) resCatByName[x.name] = x.category || ""; });
+    if (rr.ok) (await rr.json()).forEach(x => { resById[x.id] = true; if (x.name && !resMap[x.name]) resMap[x.name] = x.id; resCat[x.id] = x.category || ""; if (x.name) resCatByName[x.name] = resCatByName[x.name] === undefined ? (x.category || "") : (resCatByName[x.name] + " " + (x.category || "")); // 같은 이름이 여러 분류(예: 오피스텔·오피스텔상가)에 있으면 모두 합쳐 판단 });
   } catch (e) {}
   const out = [];
   for (const b of rows) {
