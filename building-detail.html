@@ -261,6 +261,16 @@
 
     /* 층 필터 탭 */
     .floor-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .unit-toolbar { display:flex; align-items:center; justify-content:space-between; gap:6px 12px; flex-wrap:wrap; margin:6px 0 8px; }
+    .unit-toolbar #unitCounts { margin:0; flex:1 1 260px; }
+    #unitOrigToggle { padding:4px 12px; font-size:.78rem; line-height:1.4; }
+    .unit-filter-bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; margin-bottom:10px; }
+    .unit-filter-bar .floor-tabs { margin:0; gap:5px; }
+    .unit-filter-bar .ftab { padding:4px 12px; }
+    #unitKindTabs:not([hidden]) { padding-right:16px; border-right:1px solid var(--border); }
+    #unitKindTabs .kind-move { display:flex; gap:5px; margin-left:4px; }
+    #unitKindTabs .kind-move[hidden] { display:none; }
+    #unitKindTabs .kind-move button { padding:3px 10px; font-size:.75rem; }
     .ftab {
       border: 1px solid var(--border); background: rgba(5,10,30,0.65);
       padding: 6px 14px; border-radius: 999px; cursor: pointer;
@@ -752,11 +762,15 @@
       </div>
     </div>
 
-    <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.7;"></p>
-    <div style="margin:2px 0 8px;"><button type="button" class="btn-unit-ghost" id="unitOrigToggle" hidden>원분양가 보기</button></div>
-    <!-- 층 필터 탭 -->
-    <div class="floor-tabs" id="unitKindTabs" hidden></div>
-    <div class="floor-tabs" id="unitFloorTabs"></div>
+    <div class="unit-toolbar">
+      <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.5;"></p>
+      <button type="button" class="btn-unit-ghost" id="unitOrigToggle" hidden>원분양가 보기</button>
+    </div>
+    <!-- 구분(상가/오피스텔)·층 필터 탭: 한 줄로 -->
+    <div class="unit-filter-bar">
+      <div class="floor-tabs" id="unitKindTabs" hidden></div>
+      <div class="floor-tabs" id="unitFloorTabs"></div>
+    </div>
 
     <!-- 테이블 -->
     <div class="units-wrap">
@@ -1772,6 +1786,7 @@ async function deleteBFile(id) {
     $("unitSelectPrint").textContent = "선택인쇄 (" + count + ")";
     $("unitSelectDelete").textContent = "선택삭제 (" + count + ")";
     document.querySelectorAll("[data-kind-move]").forEach(b => { b.disabled = !count; });
+    document.querySelectorAll("#unitKindTabs .kind-move").forEach(s => { s.hidden = !count; });
   }
   // 상가·사무실: 선택한 호실(분양중·분양완료 모두)을 매물관리(매물리스트)로 보낸다.
   // 이미 보낸 호실은 다시 만들지 않고(중복 제외) 연동 상태를 유지한다.
@@ -2273,8 +2288,7 @@ async function deleteBFile(id) {
     const count = kind => kind === '전체' ? units.length : units.filter(u => unitKind(u) === kind).length;
     box.innerHTML = ['전체', '상가', '오피스텔'].map(kind =>
       '<button type="button" class="ftab' + (kind === f ? ' active' : '') + '" data-kind="' + kind + '">' + (kind === '오피스텔' ? '🏠 오피스텔(주거)' : kind === '상가' ? '🏪 상가' : '전체') + ' ' + count(kind) + '</button>'
-    ).join('') + '<span style="margin-left:auto;display:flex;gap:6px;"><button type="button" class="btn-unit-ghost" data-kind-move="상가">선택 → 상가로</button><button type="button" class="btn-unit-ghost" data-kind-move="오피스텔">선택 → 오피스텔로</button></span>';
-    box.style.display = 'flex'; box.style.flexWrap = 'wrap'; box.style.alignItems = 'center';
+    ).join('') + '<span class="kind-move"' + (selectedUnitRows.size ? '' : ' hidden') + '><button type="button" class="btn-unit-ghost" data-kind-move="상가">→ 상가로</button><button type="button" class="btn-unit-ghost" data-kind-move="오피스텔">→ 오피스텔로</button></span>';
     box.querySelectorAll('[data-kind]').forEach(btn => btn.addEventListener('click', () => {
       window.__unitKindFilter = btn.dataset.kind;
       filterFloor = '전체';
