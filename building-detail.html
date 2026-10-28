@@ -791,7 +791,7 @@
     </div>
 
     <div class="unit-toolbar">
-      <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.5;"></p>
+      <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.5;"></p><span style="font-size:.72rem;color:var(--text-muted,#9fb0c3);white-space:nowrap;margin-left:12px;" title="호실 옆 날짜는 마지막으로 수정한 날이에요">수정일 <span style="color:#66bb6a;">● 7일 이내</span> <span style="color:#ffd54f;">● 30일 이내</span> <span style="color:#78909c;">● 오래됨</span></span>
       <button type="button" class="btn-unit-ghost" id="unitOrigToggle" hidden>원분양가 보기</button>
     </div>
     <!-- 구분(상가/오피스텔)·층 필터 탭: 한 줄로 -->
@@ -2509,6 +2509,19 @@ async function deleteBFile(id) {
     if (vals.some(v => v === null || v === undefined || !Number.isFinite(Number(v)))) return null;
     return Math.round(vals.reduce((a, v) => a + Number(v), 0) * 100) / 100;
   }
+  function unitUpdTag(list) {
+  let best = 0;
+  (list || []).forEach(u => { [u && u.updated_at, u && u.가격표반영일].forEach(v => { const t = Date.parse(v); if (Number.isFinite(t) && t > best) best = t; }); });
+  const base = "display:inline-flex;align-items:center;gap:3px;margin-left:6px;font-size:.68rem;font-weight:400;white-space:nowrap;vertical-align:middle;";
+  if (!best) return '<span title="수정 기록 없음" style="' + base + 'color:#78909c;"><span style="width:8px;height:8px;border-radius:50%;border:1px solid #78909c;"></span>-</span>';
+  const days = Math.floor((Date.now() - best) / 86400000);
+  const color = days <= 7 ? "#66bb6a" : days <= 30 ? "#ffd54f" : "#78909c";
+  const iso = new Date(best + 9 * 3600000).toISOString();
+  const full = iso.slice(0, 10);
+  const sameYear = full.slice(0, 4) === new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 4);
+  const label = sameYear ? full.slice(5) : full.slice(2);
+  return '<span title="최근 수정 ' + full + (days <= 0 ? " (오늘)" : " (" + days + "일 전)") + '" style="' + base + 'color:' + color + ';"><span style="width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>' + label + '</span>';
+}
   function renderUnitBundleBox() {
     const box = $('unitBundleBox');
     if (!box) return;
@@ -2531,7 +2544,7 @@ async function deleteBFile(id) {
       }
       const biz = (sorted.find(u => u.현업종) || {}).현업종 || '-';
       const strike = sp && listPrice != null && listPrice !== shownAmt ? '<div class="ub-strike">' + toPlainWon(listPrice) + '</div>' : '';
-      return '<tr><td><strong>' + esc(bundleRoomLabel(g)) + '</strong> <span class="unit-flag bundle">' + g.length + '호실</span>' + (sp ? '<span class="unit-flag sale">특별할인</span>' : '') + '</td>'
+      return '<tr><td><strong>' + esc(bundleRoomLabel(g)) + '</strong>' + unitUpdTag(g) + ' <span class="unit-flag bundle">' + g.length + '호실</span>' + (sp ? '<span class="unit-flag sale">특별할인</span>' : '') + '</td>'
         + '<td>' + esc(biz) + '</td>'
         + '<td class="ub-price">' + (shownAmt != null ? toPlainWon(shownAmt) : '-') + strike + '</td>'
         + '<td>' + esc(commercialOccupancy(sorted[0])) + '</td>'
@@ -2590,7 +2603,7 @@ async function deleteBFile(id) {
       const status = commercialOccupancy(u);
       const bc     = status;
       return `<tr class="${u.추천등록일 && isFlagOn(u.추천매물) && isFlagOn(u.수익성매물) ? 'profit-recommended-row' : ''}">
-        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.묶음ID && activeBundleIds.has(u.묶음ID) ? '<span class="unit-flag bundle">묶음</span>' : ''}${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
+        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${unitUpdTag([u])}${u.묶음ID && activeBundleIds.has(u.묶음ID) ? '<span class="unit-flag bundle">묶음</span>' : ''}${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}</td>
         <td>${u.현업종 || "-"}</td>
         <td style="white-space:nowrap;line-height:1.3">${unitAreaHtml(u)}</td>
         <td>${u.소유주 || "-"}</td>
