@@ -1290,8 +1290,11 @@ async function getListingsRaw() {
 
 // 등록·수정 화면에서 같은 아파트 동·호수를 다시 저장하지 않도록 확인한다.
 // 사무소별 Supabase 프로젝트의 전체 행을 페이지별로 읽어 오래된 매물도 빠뜨리지 않는다.
+// excludeId는 수정 중인 매물 id(배열 가능). 오래된 매물은 data 안의 id가 DB 행 id와 달라
+// 화면에서 쓰는 id와 행 id가 어긋날 수 있어, 둘 다 자기 자신으로 보고 제외한다.
 async function assertUniqueApartmentUnit(item, excludeId = null) {
   if (item.category2 !== "아파트") return;
+  const excluded = new Set([].concat(excludeId).filter(v => v !== null && v !== undefined && v !== "").map(String));
   const normalize = value => String(value || "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();
   const unit = (value, suffix) => normalize(value).replace(new RegExp(suffix + "$"), "");
   const fields = listing => {
@@ -1309,8 +1312,9 @@ async function assertUniqueApartmentUnit(item, excludeId = null) {
   if (!name || !dong || !ho) return;
   const rows = await getListingsRaw();
   const duplicate = rows.find(row => {
-    if (String(row.id) === String(excludeId)) return false;
+    if (excluded.has(String(row.id))) return false;
     const existing = normalizeListingRow(row);
+    if (excluded.has(String(existing.id))) return false;
     if (existing.category2 !== "아파트") return false;
     const previous = fields(existing);
     return normalize(previous.name) === name
@@ -1320,6 +1324,7 @@ async function assertUniqueApartmentUnit(item, excludeId = null) {
   if (duplicate) {
     const error = new Error(`${current.name} ${dong}동 ${ho}호는 이미 등록된 매물입니다. 기존 매물을 확인해 주세요.`);
     error.code = "DUPLICATE_APARTMENT_UNIT";
+    error.duplicateId = duplicate.id;
     throw error;
   }
 }

@@ -2177,7 +2177,7 @@ function closeHomepageTab(tab) {
 
         Object.assign(updated, apartmentFields);
         try {
-          await assertUniqueApartmentUnit(updated, id);
+          await assertUniqueApartmentUnit(updated, [id, new URLSearchParams(location.search).get("id")]);
           if (newImageFiles.length) {
             const uploadedUrls = await uploadListingImages(newImageFiles, id, _editImageUrls.length);
             const allUrls = _editImageUrls.concat(uploadedUrls).slice(0, MAX_LISTING_IMAGES);
@@ -2201,8 +2201,12 @@ function closeHomepageTab(tab) {
           setTimeout(() => location.reload(), 1000);
         } catch(e) {
           showToast("❌ 수정 실패: " + e.message);
-          if (e.code === "DUPLICATE_APARTMENT_UNIT") alert(e.message);
           btn.disabled = false; btn.textContent = "저장";
+          if (e.code === "DUPLICATE_APARTMENT_UNIT") {
+            if (e.duplicateId && confirm(e.message + "\n\n기존 매물을 새 창으로 열까요?")) {
+              window.open(OfficeConfig.urlFor("detail.html?id=" + encodeURIComponent(e.duplicateId)), "_blank");
+            } else if (!e.duplicateId) alert(e.message);
+          }
         }
       });
 

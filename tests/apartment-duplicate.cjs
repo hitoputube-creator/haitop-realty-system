@@ -28,6 +28,13 @@ vm.runInContext(source.slice(start, end), context);
   const sameUnit = { category2: '아파트', complexName: ' 운정하우스디(리베르니아) ', dong: '1103동', ho: '304호' };
   await assert.rejects(context.assertUniqueApartmentUnit(sameUnit), error => error.code === 'DUPLICATE_APARTMENT_UNIT');
   await context.assertUniqueApartmentUnit(sameUnit, 'saved-1');
+  // 오래된 매물: data 안의 id가 행 id와 달라도 자기 자신은 중복으로 보지 않는다
+  rows = [{ id: 'row-uuid', category2: '아파트', data: { id: 'legacy-id', complexName: '운정하우스디(리베르니아)', dong: '1103', ho: '304' } }];
+  await assert.rejects(context.assertUniqueApartmentUnit(sameUnit), error => error.code === 'DUPLICATE_APARTMENT_UNIT' && error.duplicateId === 'row-uuid');
+  await context.assertUniqueApartmentUnit(sameUnit, 'legacy-id');
+  await context.assertUniqueApartmentUnit(sameUnit, ['legacy-id', 'row-uuid']);
+  await context.assertUniqueApartmentUnit(sameUnit, ['x', 'row-uuid']);
+  rows = [{ id: 'saved-1', category2: '아파트', data: { complexName: '운정하우스디(리베르니아)', dong: '1103', ho: '304' } }];
   await context.assertUniqueApartmentUnit({ ...sameUnit, ho: '305' });
   await context.assertUniqueApartmentUnit({ ...sameUnit, complexName: '다른 아파트' });
   await context.assertUniqueApartmentUnit({ ...sameUnit, category2: '상가' });
