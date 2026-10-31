@@ -481,7 +481,7 @@ function renderListView(items) {
       <td class="col-area">${escapeHtml(getAreaText(item))}</td>
       <td class="col-building">${escapeHtml(getBuildingName(item))}</td>
       <td class="col-updated">${escapeHtml(getUpdatedDateText(item))}</td>
-      <td class="col-confirm" onclick="event.stopPropagation()">${(() => { const ci = getListingConfirmInfo(item); return `<span class="${ci.cls}">${escapeHtml(ci.text)}</span>` + (item.status === "거래완료" ? "" : ` <button type="button" class="confirm-btn" onclick="event.stopPropagation();handleConfirmListing('${idArg}')">확인함</button>`); })()}</td>
+      <td class="col-confirm" onclick="event.stopPropagation()">${(() => { const ci = getListingConfirmInfo(item); const dt = escapeHtml(getListingConfirmDateLabel(item)); return item.status === "거래완료" ? `<span class="${ci.cls}">${dt}</span>` : `<span class="${ci.cls} confirm-date" title="누르면 오늘 날짜로 확인 처리" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="event.stopPropagation();handleConfirmListing('${idArg}')">${dt}</span>`; })()}</td>
     </tr>`;
   }).join("");
   listingContainer.innerHTML = `<div class="list-table-wrap"><table id="listViewTable">
