@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261017-owner-phone-wrap" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="assets/js/storage.js?v=20261013-phase1"></script>
+  <script src="assets/js/storage.js?v=20261031-confirm"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -348,6 +348,17 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 
 </style>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
+<style>
+#staleFilterBtn.on{border-color:#e0b84c;color:#e0b84c;background:rgba(224,184,76,.14);}
+#staleFilterBtn b{margin-left:4px;}
+.confirm-fresh{color:#6fd28f;}.confirm-stale{color:#ffb27a;}.confirm-old{color:#ff7b7b;font-weight:700;}.confirm-none{color:#8fa3ba;}
+.confirm-btn{border:1px solid #e0b84c;color:#e0b84c;background:transparent;border-radius:999px;padding:1px 8px;font-size:11px;cursor:pointer;margin-left:4px;white-space:nowrap;}
+.confirm-btn:hover{background:rgba(224,184,76,.18);}
+.lc-confirm{display:block;margin-top:4px;font-size:11px;white-space:nowrap;}
+#listViewTable col.col-confirm{width:132px;}
+#listViewTable td.col-confirm{white-space:nowrap;font-size:12px;}
+@media (max-width:760px){#listViewTable col.col-confirm,#listViewTable th.col-confirm,#listViewTable td.col-confirm{display:none;width:0;}}
+</style>
 </head>
 <body class="properties-page" data-nav-active="properties">
 
@@ -422,7 +433,9 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
         <select id="sortSelect" class="sort-select">
           <option value="newest">최신순</option>
           <option value="oldest">오래된순</option>
+          <option value="confirm_oldest">확인 오래된 순</option>
         </select>
+        <button type="button" class="btn btn-ghost" id="staleFilterBtn" title="최종확인일이 30일 넘은 매물만 모아 보기" style="flex:0 0 auto;white-space:nowrap;">⚠ 30일 넘게 확인 안 한 매물 <b id="staleCount">0</b></button>
         <div class="view-toggle-group">
           <button id="viewToggleCard" onclick="setViewMode('card')">카드</button>
           <button id="viewToggleList" onclick="setViewMode('list')">목록</button>
@@ -901,8 +914,8 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   </div>
 </div>
 
-<script src="assets/js/listings-shared.js?v=20261027-co-wolse"></script>
-<script src="assets/js/properties.js?v=20261028-upd-dot"></script>
+<script src="assets/js/listings-shared.js?v=20261031-confirm"></script>
+<script src="assets/js/properties.js?v=20261031-confirm"></script>
 <script>
 /* Reuse the original card controls and handlers; enhance KTOP only. */
 (function () {

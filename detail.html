@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
-<script src="assets/js/storage.js?v=20261027-registry-addr"></script>
+<script src="assets/js/storage.js?v=20261031-confirm"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261019-address-single-row"></script>
 <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
@@ -165,6 +165,11 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   /* 주거용·토지: 관리비·권리금 숨김, 아파트·오피스텔 외에는 분양가도 숨김 */
   #editModal.resi-edit [data-price-fee] { display: none !important; }
   #editModal.resi-nopresale [data-price-presale] { display: none !important; }
+</style>
+<style>
+.detail-confirm-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:14px;}
+.detail-confirm-row b{font-weight:700;}
+.confirm-fresh{color:#6fd28f;}.confirm-stale{color:#ffb27a;}.confirm-old{color:#ff7b7b;font-weight:700;}.confirm-none{color:#8fa3ba;}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -1800,6 +1805,11 @@ function closeHomepageTab(tab) {
     html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button></div>`;
     html += `</div>`;
 
+    if (typeof getListingConfirmInfo === "function") {
+      const ci = getListingConfirmInfo(item);
+      html += '<div class="detail-confirm-row">최종확인일 <b>' + escapeHtml(formatDateValue(getListingConfirmedAt(item)) || "-") + '</b> <span class="' + ci.cls + '">(' + escapeHtml(ci.text) + ')</span> <button type="button" class="btn btn-ghost" id="confirmListingBtn">오늘 확인함</button></div>';
+    }
+
     html += `<div class="detail-badges"><span data-homepage-only class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
 
     // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나의 "매물 상세정보" 표로 통합.
@@ -2005,6 +2015,17 @@ function closeHomepageTab(tab) {
       try{if(progressSelect.value==='거래완료')await markListingDone(_currentItem.id);else await updateListingStatus(_currentItem.id,progressSelect.value);
         _currentItem=await getListingById(_currentItem.id);document.getElementById('detailArea').innerHTML=renderDetail(_currentItem);rebindButtons();showToast('매물 상태를 저장했습니다.');
       }catch(e){progressSelect.value=old;progressSelect.disabled=false;showToast(e.message);}
+    });
+    const confirmBtn = document.getElementById("confirmListingBtn");
+    if (confirmBtn) confirmBtn.addEventListener("click", async () => {
+      confirmBtn.disabled = true;
+      try {
+        await confirmListing(_currentItem.id);
+        _currentItem = await getListingById(_currentItem.id);
+        document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+        rebindButtons();
+        showToast("오늘 확인한 매물로 저장했습니다.");
+      } catch (e) { confirmBtn.disabled = false; showToast(e.message); }
     });
     const doneBtn   = document.getElementById("doneBtn");
     const undoneBtn = document.getElementById("undoneBtn");
