@@ -1460,6 +1460,55 @@ async function markListingDone(id) {
   if (!res2.ok) throw new Error("거래완료 처리 실패: " + await res2.text());
   invalidateCustomerLinkContext();
 }
+// ===== 매물 최종확인일 =====
+// 최종확인일 = "확인함"을 누른 날(last_confirmed_at)과 매물 수정일 중 더 늦은 날. 둘 다 없으면 등록일.
+const LISTING_CONFIRM_STALE_DAYS = 30;
+const LISTING_CONFIRM_OLD_DAYS = 90;
+function getListingConfirmedAt(item) {
+  if (!item) return "";
+  const times = [item.last_confirmed_at, item.updated_at, item.updatedAt, item.updated_at_local]
+    .map(v => ({ v, t: Date.parse(v) })).filter(x => Number.isFinite(x.t));
+  if (times.length) return times.sort((a, b) => b.t - a.t)[0].v;
+  return item.created_at || "";
+}
+function getListingConfirmDays(item) {
+  const t = Date.parse(getListingConfirmedAt(item));
+  if (!Number.isFinite(t)) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const d = new Date(t);
+  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  return Math.max(0, Math.round((today - day) / 86400000));
+}
+function getListingConfirmInfo(item) {
+  const days = getListingConfirmDays(item);
+  if (days === null) return { days: null, text: "기록 없음", cls: "confirm-none" };
+  return {
+    days,
+    text: days === 0 ? "오늘" : days + "일 전",
+    cls: days >= LISTING_CONFIRM_OLD_DAYS ? "confirm-old" : days >= LISTING_CONFIRM_STALE_DAYS ? "confirm-stale" : "confirm-fresh"
+  };
+}
+function isListingStale(item) {
+  const days = getListingConfirmDays(item);
+  return days !== null && days >= LISTING_CONFIRM_STALE_DAYS;
+}
+// "확인함": 매물 data에 last_confirmed_at 한 칸만 넣는다. 다른 값은 바꾸지 않는다.
+async function confirmListing(id) {
+  const res1 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), { headers });
+  if (!res1.ok) throw new Error("조회 실패");
+  const rows = await res1.json();
+  if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
+  const at = new Date().toISOString();
+  const data = Object.assign({}, rows[0].data, { last_confirmed_at: at });
+  const res2 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+    body: JSON.stringify({ data })
+  });
+  if (!res2.ok) throw new Error("확인일 저장 실패: " + await res2.text());
+  return at;
+}
 async function deleteListing(id) {
   const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
     method: "DELETE",

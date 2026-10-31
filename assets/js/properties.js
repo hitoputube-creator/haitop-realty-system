@@ -40,6 +40,8 @@ let currentTag = "";     // "" = 없음, 그 외 COMPLEX_TAG_MATCHERS의 키(예
 let currentDealFilter = ""; // "" = 없음, 그 외 "매매"/"임대"/"전세"/"월세" — 유형별 필터와는 독립적 OR로 결합
 let searchKeyword = "";
 let currentSort = "newest";
+let staleOnly = false;            // "30일 넘게 확인 안 한 매물"만 보기
+let sortBeforeStale = "newest";   // 그 보기를 끌 때 되돌릴 정렬
 let currentRegistrationMonth = ""; // "" = 전체 기간, "YYYY-MM" = 해당 등록월
 let currentPage = 1;
 let includeCompleted = false;
@@ -479,6 +481,7 @@ function renderListView(items) {
       <td class="col-area">${escapeHtml(getAreaText(item))}</td>
       <td class="col-building">${escapeHtml(getBuildingName(item))}</td>
       <td class="col-updated">${escapeHtml(getUpdatedDateText(item))}</td>
+      <td class="col-confirm" onclick="event.stopPropagation()">${(() => { const ci = getListingConfirmInfo(item); return `<span class="${ci.cls}">${escapeHtml(ci.text)}</span>` + (item.status === "거래완료" ? "" : ` <button type="button" class="confirm-btn" onclick="event.stopPropagation();handleConfirmListing('${idArg}')">확인함</button>`); })()}</td>
     </tr>`;
   }).join("");
   listingContainer.innerHTML = `<div class="list-table-wrap"><table id="listViewTable">
@@ -493,6 +496,7 @@ function renderListView(items) {
       <col class="col-area" />
       <col class="col-building" />
       <col class="col-updated" />
+      <col class="col-confirm" />
     </colgroup>
     <thead><tr>
       <th class="col-select">
@@ -507,6 +511,7 @@ function renderListView(items) {
       <th class="col-area">면적</th>
       <th class="col-building">단지명</th>
       <th class="col-updated">수정일</th>
+      <th class="col-confirm">최종확인</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
@@ -859,7 +864,8 @@ function stepRegistrationMonth(delta) {
 function getBaseFilteredListings() {
   let filtered = allListings.filter(item => {
     if (!matchesKindTab(item)) return false;
-    if (currentRegistrationMonth && getRegistrationDateKey(item).slice(0, 7) !== currentRegistrationMonth) return false;
+    if (staleOnly && !isListingStale(item)) return false;
+    if (!staleOnly && currentRegistrationMonth && getRegistrationDateKey(item).slice(0, 7) !== currentRegistrationMonth) return false;
     if(currentStatusFilter!=="전체" && listingProgressStatus(item)!==currentStatusFilter)return false;
     return matchesAllFilters(item);
   });
@@ -874,6 +880,11 @@ function getBaseFilteredListings() {
 function sortListingsForDisplay(list) {
   const sorted = [...list];
   sorted.sort((a, b) => {
+    if (currentSort === "confirm_oldest") {
+      const ca = Date.parse(getListingConfirmedAt(a)) || 0;
+      const cb = Date.parse(getListingConfirmedAt(b)) || 0;
+      return ca - cb;
+    }
     const da = new Date(a.created_at || 0);
     const db = new Date(b.created_at || 0);
     return currentSort === "newest" ? db - da : da - db;
@@ -986,8 +997,33 @@ function renderApartmentDealSummary(){
   });
 }
 
+// "30일 넘게 확인 안 한 매물" 버튼: 개수 표시와 켜짐 표시
+function updateStaleButton() {
+  const btn = document.getElementById("staleFilterBtn");
+  if (!btn) return;
+  const n = allListings.filter(item => matchesKindTab(item)
+    && (currentStatusFilter === "전체" || listingProgressStatus(item) === currentStatusFilter)
+    && isListingStale(item)).length;
+  const cnt = document.getElementById("staleCount");
+  if (cnt) cnt.textContent = n;
+  btn.classList.toggle("on", staleOnly);
+}
+function setStaleOnly(on) {
+  if (on === staleOnly) return;
+  const sel = document.getElementById("sortSelect");
+  if (on) { sortBeforeStale = currentSort; currentSort = "confirm_oldest"; }
+  else if (currentSort === "confirm_oldest") { currentSort = sortBeforeStale === "confirm_oldest" ? "newest" : sortBeforeStale; }
+  staleOnly = on;
+  if (sel) sel.value = currentSort;
+  currentPage = 1;
+  renderList();
+  saveFilterState();
+}
+document.getElementById("staleFilterBtn")?.addEventListener("click", () => setStaleOnly(!staleOnly));
+
 function renderList() {
   pruneSelectedIds();
+  updateStaleButton();
   refreshRegistrationMonthOptions();
   refreshComplexFilterOptions();
   updateKindTabCounts();
@@ -1108,6 +1144,7 @@ document.getElementById("includeCompletedChk").addEventListener("change", (e) =>
 
 document.getElementById("sortSelect").addEventListener("change", (e) => {
   currentSort = e.target.value;
+  if (staleOnly && currentSort !== "confirm_oldest") staleOnly = false;
   currentPage = 1;
   renderList();
   saveFilterState();
@@ -2178,7 +2215,7 @@ function restoreFilterState() {
     searchKeyword = saved.searchKeyword || "";
     document.getElementById("searchInput").value = searchKeyword;
 
-    currentSort = saved.currentSort === "oldest" ? "oldest" : "newest";
+    currentSort = ["oldest", "confirm_oldest"].includes(saved.currentSort) ? saved.currentSort : "newest";
     document.getElementById("sortSelect").value = currentSort;
     currentRegistrationMonth = /^\d{4}-\d{2}$/.test(saved.currentRegistrationMonth || "") ? saved.currentRegistrationMonth : "";
     noteDensity = saved.noteDensity === "compact" ? "compact" : "detail";

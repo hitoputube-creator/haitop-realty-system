@@ -451,6 +451,9 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const phone1 = getListingPhone1(item);
   const phone2 = getListingPhone2(item);
   const noteText = getListingNoteText(item);
+  const confirmHtml = (typeof getListingConfirmInfo === "function" && !isDone)
+    ? (() => { const ci = getListingConfirmInfo(item); return `<span class="lc-confirm ${ci.cls}" onclick="event.stopPropagation()">확인 ${escapeHtml(ci.text)} <button type="button" class="confirm-btn" onclick="event.stopPropagation();handleConfirmListing('${idArg}')">확인함</button></span>`; })()
+    : "";
 
   card.innerHTML = `
     <div class="listing-cell listing-cell-select" data-label="선택" onclick="event.stopPropagation()">
@@ -460,6 +463,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
       <span class="lc-type">${escapeHtml(categoryLabel)}</span>
       <span class="lc-status ${statusClass}">${escapeHtml(statusLabel)}</span>
       ${isRoster ? '<span class="lc-roster-badge">명단</span>' : ""}
+      ${confirmHtml}
     </div>
     <div class="listing-cell listing-cell-deal" data-label="거래유형">
       ${dealType ? `<span class="lc-deal-badge ${DEAL_BADGE_CLASS[dealType] || ""}">${escapeHtml(dealType === "회사임대" ? "(회사)월세(임대)" : dealType === "월세" ? "월세(임대)" : dealType === "매매·월세" ? "매매·월세(임대)" : dealType)}</span>` : "<span>-</span>"}
@@ -499,6 +503,18 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     </div>
   `;
   return card;
+}
+
+// ===== 최종확인일: "확인함" 버튼 =====
+async function handleConfirmListing(id) {
+  const list = typeof allListings !== "undefined" ? allListings : [];
+  const item = list.find(x => String(x.id) === String(id));
+  try {
+    const at = await confirmListing(id);
+    if (item) item.last_confirmed_at = at;
+    showToast("✅ 오늘 확인한 매물로 저장했어요");
+    if (typeof renderList === "function") renderList();
+  } catch (e) { showToast("❌ 확인일 저장 실패: " + e.message); }
 }
 
 // ===== 매물 상태 변경 액션 (공개 전환 · 거래완료 처리 · 되돌리기) =====
