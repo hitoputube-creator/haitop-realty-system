@@ -1817,6 +1817,7 @@ function closeHomepageTab(tab) {
 
     // 나중에 알게 된 내용을 날짜와 함께 덧붙여 저장하는 칸 (모든 매물 공통, 기존 내용은 건드리지 않음)
     html += '<section class="detail-section"><div class="detail-section-title">추가메모 남기기</div>'
+      + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><label for="addMemoDate" style="font-size:13px;color:var(--text-muted)">날짜</label><input type="date" id="addMemoDate" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit"></div>'
       + '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
       + '<textarea id="addMemoText" rows="2" placeholder="나중에 알게 된 내용을 적고 저장을 누르세요 (오늘 날짜가 같이 저장돼요)" style="flex:1;min-width:220px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
       + '<button type="button" class="btn btn-primary" id="addMemoBtn">메모 저장</button></div></section>';
@@ -2034,7 +2035,11 @@ function closeHomepageTab(tab) {
         const rows = await res1.json();
         if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
         const old = Array.isArray(rows[0].data && rows[0].data.additionalMemos) ? rows[0].data.additionalMemos : [];
-        const memos = old.concat([{ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text, created_at: new Date().toISOString() }]);
+        const pickedDate = (document.getElementById("addMemoDate") || {}).value || "";
+        const todayKst = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+        const createdAt = (!pickedDate || pickedDate === todayKst) ? new Date().toISOString() : new Date(pickedDate + "T12:00:00+09:00").toISOString();
+        const memos = old.concat([{ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text, created_at: createdAt }])
+          .sort((a, b) => (Date.parse(a.created_at) || 0) - (Date.parse(b.created_at) || 0));
         const data = Object.assign({}, rows[0].data, { additionalMemos: memos });
         const res2 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(_currentItem.id), {
           method: "PATCH",
