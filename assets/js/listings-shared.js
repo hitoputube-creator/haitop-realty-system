@@ -452,7 +452,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const phone2 = getListingPhone2(item);
   const noteText = getListingNoteText(item);
   const confirmHtml = (typeof getListingConfirmInfo === "function" && !isDone)
-    ? (() => { const ci = getListingConfirmInfo(item); return `<span class="lc-confirm ${ci.cls}" onclick="event.stopPropagation()">확인 ${escapeHtml(ci.text)} <button type="button" class="confirm-btn" onclick="event.stopPropagation();handleConfirmListing('${idArg}')">확인함</button></span>`; })()
+    ? (() => { const ci = getListingConfirmInfo(item); return `<span class="lc-confirm ${ci.cls}" onclick="event.stopPropagation()">확인 <span class="confirm-date" title="누르면 오늘 날짜로 확인 처리" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px" onclick="event.stopPropagation();handleConfirmListing('${idArg}')">${escapeHtml(getListingConfirmDateLabel(item))}</span></span>`; })()
     : "";
 
   card.innerHTML = `
@@ -505,14 +505,24 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   return card;
 }
 
-// ===== 최종확인일: "확인함" 버튼 =====
+// 확인 날짜 표시: 올해면 10.27, 다른 해면 25.04.30
+function getListingConfirmDateLabel(item) {
+  const t = Date.parse(getListingConfirmedAt(item));
+  if (!Number.isFinite(t)) return "기록 없음";
+  const d = new Date(t);
+  const p = n => String(n).padStart(2, "0");
+  const md = p(d.getMonth() + 1) + "." + p(d.getDate());
+  return d.getFullYear() === new Date().getFullYear() ? md : String(d.getFullYear()).slice(2) + "." + md;
+}
+
+// ===== 최종확인일: 확인 날짜를 누르면 오늘 날짜로 변경 =====
 async function handleConfirmListing(id) {
   const list = typeof allListings !== "undefined" ? allListings : [];
   const item = list.find(x => String(x.id) === String(id));
   try {
     const at = await confirmListing(id);
     if (item) item.last_confirmed_at = at;
-    showToast("✅ 오늘 확인한 매물로 저장했어요");
+    showToast("✅ 오늘 날짜로 확인 처리했어요");
     if (typeof renderList === "function") renderList();
   } catch (e) { showToast("❌ 확인일 저장 실패: " + e.message); }
 }
