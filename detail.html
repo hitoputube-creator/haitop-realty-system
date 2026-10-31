@@ -23,6 +23,7 @@
 .apartment-listing-form input,.apartment-listing-form select,.apartment-listing-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:7px 9px}
 .apartment-listing-form textarea{min-height:46px;height:46px}
 .apartment-listing-form #apt_추가메모{min-height:92px;height:92px}
+.apartment-listing-form [data-apt-memos]{display:none}
 .apartment-listing-form .span-3{grid-column:span 3}
 .apartment-listing-form .span-2{grid-column:span 2}
 .apartment-listing-form .full{grid-column:1/-1}
@@ -470,6 +471,11 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     </div>
 
     </div><!-- edit_nonApartmentFields -->
+    <div class="field" id="edit_memoBlock" style="margin-bottom:10px;">
+      <label>추가메모 <span style="color:var(--text-muted);font-size:0.75rem;">(날짜별 · 고치거나 삭제할 수 있어요)</span></label>
+      <div id="edit_memoList"></div>
+      <button type="button" class="btn btn-ghost" id="edit_memoAddBtn" style="margin-top:6px;padding:4px 12px;font-size:0.8rem;">+ 추가메모 추가</button>
+    </div>
     <!-- 내부전용 -->
     <div class="modal-section-title">🔒 내부전용</div>
     <div id="edit_internalInfoGrid" class="form-grid-2" style="margin-bottom:10px;">
@@ -1091,6 +1097,7 @@ function closeHomepageTab(tab) {
     updateEditLandUnitPrice();
     if(!window.editCommercialPhase)window.editCommercialPhase=CommercialPresaleUI.setup({prefix:"edit_",host:document.getElementById("edit_salePrice").closest(".field").parentElement,item});
     else window.editCommercialPhase.set(item);
+    renderEditMemoList(item);
     document.getElementById("editModal").style.display = "flex";
   }
 
@@ -1454,7 +1461,6 @@ function closeHomepageTab(tab) {
       notes.push([label, (date ? new Date(date).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}) + ' · ' : '') + text]);
     }
     add('비고',u.비고);
-    (Array.isArray(u.추가메모) ? u.추가메모 : []).forEach(memo => add('추가메모',memo.text,memo.created_at));
     add('공개 설명',item.detailDescription);
     add('내부 메모',item.description);
     add('빠른등록 메모',item.quick_memo);
@@ -1709,9 +1715,6 @@ function closeHomepageTab(tab) {
       ["소유주 메모", item.owner_memo],
       ["옵션내역", item.optionDetails],
       ["비고", item.remarks],
-      ...(Array.isArray(item.additionalMemos) ? item.additionalMemos.slice().reverse().map(memo =>
-        ["추가메모", (memo.created_at ? new Date(memo.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }) + " · " : "") + memo.text]
-      ) : []),
     ];
     const extraRows = packRows(extraPairs, 3) + longPairs
       .filter(([, value]) => hasDetailValue(detailText(value)))
@@ -1720,6 +1723,132 @@ function closeHomepageTab(tab) {
       <div class="detail-section-title">매물 상세정보</div>
       <div class="listing-info-table">${rows}${extraRows}</div>
     </section>`;
+  }
+
+  // ===== 추가메모: 날짜별 목록 · 수정 · 삭제 (모든 매물 공통) =====
+  function memoKey(m) { return (m && m.id) || (String((m && m.text) || "").trim() + "|" + ((m && m.created_at) || "")); }
+  function memoTime(m) { return Date.parse(m && m.created_at) || 0; }
+  function sortMemosAsc(list) { return list.slice().sort((a, b) => memoTime(a) - memoTime(b)); }
+  function memoDateKst(m) { const t = memoTime(m); return t ? new Date(t).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) : ""; }
+  function memoDateLabel(m) { const t = memoTime(m); return t ? new Date(t).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }) : "날짜 없음"; }
+  function memoShownText(m) {
+    const raw = String((m && m.text) || "");
+    return typeof apartmentRemarksOnly === "function" ? apartmentRemarksOnly(raw) : raw;
+  }
+  // 매물의 추가메모 = data.additionalMemos + (아파트) apartmentUnitData.추가메모 를 같은 id끼리 합친 목록 (오래된 순)
+  function listingMemoList(item) {
+    const d = item || {};
+    const u = d.apartmentUnitData && Array.isArray(d.apartmentUnitData.추가메모) ? d.apartmentUnitData.추가메모 : [];
+    const a = Array.isArray(d.additionalMemos) ? d.additionalMemos : [];
+    const seen = new Set(), out = [];
+    for (const m of [...a, ...u]) {
+      if (!m || !String(m.text || "").trim()) continue;
+      const k = memoKey(m);
+      if (seen.has(k)) continue;
+      seen.add(k); out.push(m);
+    }
+    return sortMemosAsc(out);
+  }
+  function memoCreatedFor(dateStr, original) {
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+    if (original && dateStr === memoDateKst(original)) return original.created_at;
+    return dateStr === today ? new Date().toISOString() : new Date(dateStr + "T12:00:00+09:00").toISOString();
+  }
+  // 최신 매물 data를 다시 읽어 추가메모 목록만 바꿔 저장한다 (다른 값은 그대로)
+  async function saveListingMemos(id, mutate) {
+    const res1 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), { headers });
+    if (!res1.ok) throw new Error("조회 실패");
+    const rows = await res1.json();
+    if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
+    const data = Object.assign({}, rows[0].data);
+    const next = sortMemosAsc(mutate(listingMemoList(data)));
+    data.additionalMemos = next;
+    if (data.apartmentUnitData && typeof data.apartmentUnitData === "object") {
+      data.apartmentUnitData = Object.assign({}, data.apartmentUnitData, { 추가메모: next });
+    }
+    const res2 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
+      method: "PATCH",
+      headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+      body: JSON.stringify({ data })
+    });
+    if (!res2.ok) throw new Error("추가메모 저장 실패: " + await res2.text());
+  }
+  function renderMemoSection(item) {
+    const list = listingMemoList(item).filter(m => memoShownText(m).trim()).reverse();
+    const btnStyle = "flex:none;padding:2px 10px;font-size:12px";
+    const rows = list.map(m =>
+      '<div class="memo-row" data-key="' + escapeHtml(memoKey(m)) + '" style="padding:8px 0;border-top:1px dashed rgba(255,255,255,0.14)">'
+      + '<div style="display:flex;gap:10px;align-items:flex-start">'
+      + '<span style="flex:none;color:var(--text-muted);font-size:12px;min-width:88px">' + escapeHtml(memoDateLabel(m)) + '</span>'
+      + '<span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px">' + escapeHtml(memoShownText(m)) + '</span>'
+      + '<button type="button" class="btn btn-ghost memo-edit" style="' + btnStyle + '">수정</button>'
+      + '<button type="button" class="btn btn-ghost memo-del" style="' + btnStyle + '">삭제</button>'
+      + '</div></div>'
+    ).join("");
+    return '<section class="detail-section" id="memoSection"><div class="detail-section-title">추가메모 <span style="font-size:12px;font-weight:400;color:var(--text-muted)">' + list.length + '건 · 날짜순</span></div>'
+      + (rows || '<div style="font-size:13px;color:var(--text-muted);padding:2px 0 8px">아직 추가메모가 없어요.</div>')
+      + '<div style="display:flex;gap:8px;align-items:center;margin:12px 0 8px"><span style="font-size:13px;font-weight:700;color:var(--gold)">새 메모</span>'
+      + '<input type="date" id="addMemoDate" title="메모 날짜 선택" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:auto;flex:none;padding:2px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:12px"></div>'
+      + '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
+      + '<textarea id="addMemoText" rows="2" placeholder="나중에 알게 된 내용을 적고 저장을 누르세요 (위 날짜로 저장돼요)" style="flex:1;min-width:220px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
+      + '<button type="button" class="btn btn-primary" id="addMemoBtn">메모 저장</button></div></section>';
+  }
+  // 수정 화면의 추가메모 목록 (내용·날짜 수정, 삭제, 새 줄 추가)
+  function buildEditMemoRow(m) {
+    const row = document.createElement("div");
+    row.className = "edit-memo-row";
+    row.style.cssText = "display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px dashed rgba(255,255,255,0.14)";
+    if (m) { row.dataset.key = memoKey(m); row.dataset.origText = memoShownText(m); row.dataset.origDate = memoDateKst(m); }
+    const date = document.createElement("input");
+    date.type = "date"; date.className = "edit-memo-date";
+    date.value = m ? memoDateKst(m) : new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+    const ta = document.createElement("textarea");
+    ta.rows = 2; ta.className = "edit-memo-text"; ta.style.cssText = "width:100%;box-sizing:border-box;";
+    ta.value = m ? memoShownText(m) : "";
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "btn btn-ghost"; del.style.cssText = "padding:2px 10px;font-size:12px"; del.textContent = "삭제";
+    del.addEventListener("click", () => {
+      if (!row.dataset.key) { row.remove(); return; }
+      const on = row.dataset.del !== "1";
+      row.dataset.del = on ? "1" : "";
+      row.style.opacity = on ? "0.4" : "";
+      del.textContent = on ? "삭제 취소" : "삭제";
+    });
+    row.append(date, ta, del);
+    return row;
+  }
+  function renderEditMemoList(item) {
+    const host = document.getElementById("edit_memoList");
+    if (!host) return;
+    host.innerHTML = "";
+    for (const m of listingMemoList(item).filter(x => memoShownText(x).trim()).reverse()) host.appendChild(buildEditMemoRow(m));
+    const add = document.getElementById("edit_memoAddBtn");
+    if (add) add.onclick = () => host.insertBefore(buildEditMemoRow(null), host.firstChild);
+  }
+  function collectEditMemos(item) {
+    const host = document.getElementById("edit_memoList");
+    if (!host) return null;
+    const orig = listingMemoList(item);
+    const byKey = new Map(orig.map(m => [memoKey(m), m]));
+    const shown = new Set(), out = [];
+    for (const row of host.querySelectorAll(".edit-memo-row")) {
+      const key = row.dataset.key || "";
+      const o = key ? byKey.get(key) : null;
+      if (key) shown.add(key);
+      if (row.dataset.del === "1") continue;
+      const text = row.querySelector(".edit-memo-text").value.trim();
+      const date = row.querySelector(".edit-memo-date").value;
+      if (!text) continue;
+      if (o && text === String(row.dataset.origText || "").trim() && date === row.dataset.origDate) { out.push(o); continue; }
+      out.push(Object.assign({}, o || {}, {
+        id: (o && o.id) || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + out.length)),
+        text,
+        created_at: date ? memoCreatedFor(date, o) : (o ? o.created_at : new Date().toISOString())
+      }));
+    }
+    // 화면에 나오지 않는 메모(엑셀 원본처럼 내용이 비어 보이는 것)는 그대로 둔다
+    for (const m of orig) if (!shown.has(memoKey(m))) out.push(m);
+    return sortMemosAsc(out);
   }
 
   function detailChips(values) {
@@ -1815,11 +1944,8 @@ function closeHomepageTab(tab) {
     // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나의 "매물 상세정보" 표로 통합.
     html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
 
-    // 나중에 알게 된 내용을 날짜와 함께 덧붙여 저장하는 칸 (모든 매물 공통, 기존 내용은 건드리지 않음)
-    html += '<section class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;justify-content:flex-start;gap:10px">추가메모 남기기 <input type="date" id="addMemoDate" title="메모 날짜 선택" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:auto;flex:none;padding:2px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:12px;font-weight:400"></div>'
-      + '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
-      + '<textarea id="addMemoText" rows="2" placeholder="나중에 알게 된 내용을 적고 저장을 누르세요 (오늘 날짜가 같이 저장돼요)" style="flex:1;min-width:220px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
-      + '<button type="button" class="btn btn-primary" id="addMemoBtn">메모 저장</button></div></section>';
+    // 추가메모: 날짜별 목록 · 수정 · 삭제 · 새 메모 저장 (모든 매물 공통)
+    html += renderMemoSection(item);
 
     const isApartmentDetail = category.category2 === "아파트" || item.type === "apartment";
     const isCommercialDetail = category.category1 === "상가사무실" || category.category1 === "상가/사무실" || ["shop", "office", "bizcenter"].includes(item.type);
@@ -2027,31 +2153,60 @@ function closeHomepageTab(tab) {
       const box = document.getElementById("addMemoText");
       const text = (box.value || "").trim();
       if (!text) { showToast("메모 내용을 적어 주세요."); return; }
+      const picked = (document.getElementById("addMemoDate") || {}).value || new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
       addMemoBtn.disabled = true;
       try {
-        const res1 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(_currentItem.id), { headers });
-        if (!res1.ok) throw new Error("조회 실패");
-        const rows = await res1.json();
-        if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
-        const old = Array.isArray(rows[0].data && rows[0].data.additionalMemos) ? rows[0].data.additionalMemos : [];
-        const pickedDate = (document.getElementById("addMemoDate") || {}).value || "";
-        const todayKst = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
-        const createdAt = (!pickedDate || pickedDate === todayKst) ? new Date().toISOString() : new Date(pickedDate + "T12:00:00+09:00").toISOString();
-        const memos = old.concat([{ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text, created_at: createdAt }])
-          .sort((a, b) => (Date.parse(a.created_at) || 0) - (Date.parse(b.created_at) || 0));
-        const data = Object.assign({}, rows[0].data, { additionalMemos: memos });
-        const res2 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(_currentItem.id), {
-          method: "PATCH",
-          headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
-          body: JSON.stringify({ data })
-        });
-        if (!res2.ok) throw new Error("메모 저장 실패: " + await res2.text());
+        await saveListingMemos(_currentItem.id, list => list.concat([{
+          id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text, created_at: memoCreatedFor(picked, null)
+        }]));
         _currentItem = await getListingById(_currentItem.id);
         document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
         rebindButtons();
         showToast("추가메모를 저장했습니다.");
       } catch (e) { addMemoBtn.disabled = false; showToast(e.message); }
     });
+    // 추가메모 줄의 수정 · 삭제 · 저장 · 취소 (화면을 다시 그려도 한 번만 등록)
+    if (!window.__memoRowClicks) {
+      window.__memoRowClicks = true;
+      document.addEventListener("click", async (ev) => {
+        const t = ev.target && ev.target.closest ? ev.target.closest(".memo-edit,.memo-del,.memo-save,.memo-cancel") : null;
+        const row = t && t.closest(".memo-row");
+        if (!row) return;
+        const key = row.dataset.key;
+        const redraw = () => { document.getElementById("detailArea").innerHTML = renderDetail(_currentItem); rebindButtons(); };
+        try {
+          if (t.classList.contains("memo-edit")) {
+            const m = listingMemoList(_currentItem).find(x => memoKey(x) === key);
+            if (!m) return;
+            row.innerHTML = '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
+              + '<input type="date" class="memo-edit-date" value="' + escapeHtml(memoDateKst(m)) + '" style="width:auto;flex:none;padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
+              + '<textarea class="memo-edit-text" rows="3" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical">' + escapeHtml(memoShownText(m)) + '</textarea>'
+              + '<button type="button" class="btn btn-primary memo-save" style="flex:none;padding:4px 12px;font-size:13px">저장</button>'
+              + '<button type="button" class="btn btn-ghost memo-cancel" style="flex:none;padding:4px 12px;font-size:13px">취소</button></div>';
+          } else if (t.classList.contains("memo-cancel")) {
+            redraw();
+          } else if (t.classList.contains("memo-save")) {
+            const text = (row.querySelector(".memo-edit-text").value || "").trim();
+            const date = row.querySelector(".memo-edit-date").value;
+            if (!text) { showToast("내용을 적어 주세요. 지우려면 삭제를 눌러 주세요."); return; }
+            t.disabled = true;
+            await saveListingMemos(_currentItem.id, list => list.map(x => memoKey(x) === key
+              ? Object.assign({}, x, { id: x.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text, created_at: date ? memoCreatedFor(date, x) : x.created_at })
+              : x));
+            _currentItem = await getListingById(_currentItem.id);
+            redraw();
+            showToast("추가메모를 고쳤습니다.");
+          } else if (t.classList.contains("memo-del")) {
+            if (!confirm("이 추가메모를 삭제할까요?")) return;
+            t.disabled = true;
+            await saveListingMemos(_currentItem.id, list => list.filter(x => memoKey(x) !== key));
+            _currentItem = await getListingById(_currentItem.id);
+            redraw();
+            showToast("추가메모를 삭제했습니다.");
+          }
+        } catch (e) { showToast(e.message); }
+      });
+    }
     const confirmBtn = document.getElementById("confirmListingBtn");
     if (confirmBtn) confirmBtn.addEventListener("click", async () => {
       confirmBtn.disabled = true;
@@ -2233,6 +2388,17 @@ function closeHomepageTab(tab) {
         });
 
         Object.assign(updated, apartmentFields);
+        // 추가메모: 수정 화면에서 고친 목록으로 저장 (아파트는 새 메모 칸에 적은 것도 함께 유지)
+        const editedMemos = collectEditMemos(item);
+        if (editedMemos) {
+          let finalMemos = editedMemos;
+          if (updated.apartmentUnitData && Array.isArray(updated.apartmentUnitData.추가메모)) {
+            const oldKeys = new Set(listingMemoList(item).map(memoKey));
+            finalMemos = sortMemosAsc(editedMemos.concat(updated.apartmentUnitData.추가메모.filter(m => !oldKeys.has(memoKey(m)))));
+            updated.apartmentUnitData = Object.assign({}, updated.apartmentUnitData, { 추가메모: finalMemos });
+          }
+          updated.additionalMemos = finalMemos;
+        }
         try {
           await assertUniqueApartmentUnit(updated, [id, new URLSearchParams(location.search).get("id")]);
           if (newImageFiles.length) {
