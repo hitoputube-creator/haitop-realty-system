@@ -1815,6 +1815,12 @@ function closeHomepageTab(tab) {
     // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나의 "매물 상세정보" 표로 통합.
     html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
 
+    // 나중에 알게 된 내용을 날짜와 함께 덧붙여 저장하는 칸 (모든 매물 공통, 기존 내용은 건드리지 않음)
+    html += '<section class="detail-section"><div class="detail-section-title">추가메모 남기기</div>'
+      + '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
+      + '<textarea id="addMemoText" rows="2" placeholder="나중에 알게 된 내용을 적고 저장을 누르세요 (오늘 날짜가 같이 저장돼요)" style="flex:1;min-width:220px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
+      + '<button type="button" class="btn btn-primary" id="addMemoBtn">메모 저장</button></div></section>';
+
     const isApartmentDetail = category.category2 === "아파트" || item.type === "apartment";
     const isCommercialDetail = category.category1 === "상가사무실" || category.category1 === "상가/사무실" || ["shop", "office", "bizcenter"].includes(item.type);
     if (!isApartmentDetail) {
@@ -2015,6 +2021,32 @@ function closeHomepageTab(tab) {
       try{if(progressSelect.value==='거래완료')await markListingDone(_currentItem.id);else await updateListingStatus(_currentItem.id,progressSelect.value);
         _currentItem=await getListingById(_currentItem.id);document.getElementById('detailArea').innerHTML=renderDetail(_currentItem);rebindButtons();showToast('매물 상태를 저장했습니다.');
       }catch(e){progressSelect.value=old;progressSelect.disabled=false;showToast(e.message);}
+    });
+    const addMemoBtn = document.getElementById("addMemoBtn");
+    if (addMemoBtn) addMemoBtn.addEventListener("click", async () => {
+      const box = document.getElementById("addMemoText");
+      const text = (box.value || "").trim();
+      if (!text) { showToast("메모 내용을 적어 주세요."); return; }
+      addMemoBtn.disabled = true;
+      try {
+        const res1 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(_currentItem.id), { headers });
+        if (!res1.ok) throw new Error("조회 실패");
+        const rows = await res1.json();
+        if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
+        const old = Array.isArray(rows[0].data && rows[0].data.additionalMemos) ? rows[0].data.additionalMemos : [];
+        const memos = old.concat([{ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text, created_at: new Date().toISOString() }]);
+        const data = Object.assign({}, rows[0].data, { additionalMemos: memos });
+        const res2 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(_currentItem.id), {
+          method: "PATCH",
+          headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+          body: JSON.stringify({ data })
+        });
+        if (!res2.ok) throw new Error("메모 저장 실패: " + await res2.text());
+        _currentItem = await getListingById(_currentItem.id);
+        document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+        rebindButtons();
+        showToast("추가메모를 저장했습니다.");
+      } catch (e) { addMemoBtn.disabled = false; showToast(e.message); }
     });
     const confirmBtn = document.getElementById("confirmListingBtn");
     if (confirmBtn) confirmBtn.addEventListener("click", async () => {
