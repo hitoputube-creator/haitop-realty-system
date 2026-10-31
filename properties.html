@@ -355,7 +355,8 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 .confirm-fresh{color:#6fd28f;}.confirm-stale{color:#ffb27a;}.confirm-old{color:#ff7b7b;font-weight:700;}.confirm-none{color:#8fa3ba;}
 .confirm-btn{border:1px solid #e0b84c;color:#e0b84c;background:transparent;border-radius:999px;padding:1px 8px;font-size:11px;cursor:pointer;margin-left:4px;white-space:nowrap;}
 .confirm-btn:hover{background:rgba(224,184,76,.18);}
-.lc-confirm{display:block;margin-top:4px;font-size:11px;white-space:nowrap;}
+.lc-confirm{display:block;margin-top:4px;font-size:11px;line-height:1.5;white-space:normal;}
+.lc-confirm .confirm-btn{display:block;margin:2px 0 0 0;}
 #listViewTable col.col-confirm{width:132px;}
 #listViewTable td.col-confirm{white-space:nowrap;font-size:12px;}
 @media (max-width:760px){#listViewTable col.col-confirm,#listViewTable th.col-confirm,#listViewTable td.col-confirm{display:none;width:0;}}
@@ -436,7 +437,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
           <option value="oldest">오래된순</option>
           <option value="confirm_oldest">확인 오래된 순</option>
         </select>
-        <button type="button" class="btn btn-ghost" id="staleFilterBtn" title="최종확인일이 30일 넘은 매물만 모아 보기" style="flex:0 0 auto;white-space:nowrap;">⚠ 30일 넘게 확인 안 한 매물 <b id="staleCount">0</b></button>
+        <button type="button" class="btn btn-ghost" id="staleFilterBtn" title="최종확인일이 30일 넘은 매물만 모아 보기" style="flex:0 0 auto;white-space:nowrap;">⚠ 30일 미확인 <b id="staleCount">0</b></button>
         <div class="view-toggle-group">
           <button id="viewToggleCard" onclick="setViewMode('card')">카드</button>
           <button id="viewToggleList" onclick="setViewMode('list')">목록</button>
