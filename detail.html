@@ -1816,8 +1816,7 @@ function closeHomepageTab(tab) {
     html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
 
     // 나중에 알게 된 내용을 날짜와 함께 덧붙여 저장하는 칸 (모든 매물 공통, 기존 내용은 건드리지 않음)
-    html += '<section class="detail-section"><div class="detail-section-title">추가메모 남기기</div>'
-      + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><label for="addMemoDate" style="font-size:13px;color:var(--text-muted);white-space:nowrap">날짜</label><input type="date" id="addMemoDate" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:auto;flex:none;padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit"></div>'
+    html += '<section class="detail-section"><div class="detail-section-title" style="display:flex;align-items:center;gap:10px">추가메모 남기기 <input type="date" id="addMemoDate" title="메모 날짜 선택" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:auto;flex:none;padding:2px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:12px;font-weight:400"></div>'
       + '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
       + '<textarea id="addMemoText" rows="2" placeholder="나중에 알게 된 내용을 적고 저장을 누르세요 (오늘 날짜가 같이 저장돼요)" style="flex:1;min-width:220px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
       + '<button type="button" class="btn btn-primary" id="addMemoBtn">메모 저장</button></div></section>';
