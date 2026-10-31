@@ -1,0 +1,2459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>매물 상세 - 하이탑부동산</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
+<script src="assets/js/storage.js?v=20261031-confirm"></script>
+<script src="assets/js/commercial-address-fields.js?v=20261019-address-single-row"></script>
+<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+<script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/auth.js?v=20261006-office-login"></script>
+<script src="assets/js/nav.js?v=20261007-ktop-internal"></script>
+<style>
+.apartment-listing-form[hidden], [id$="nonApartmentFields"][hidden]{display:none!important}
+.apartment-listing-form .um-section{border-radius:10px;overflow:hidden;margin:10px 0;background:#0d1f3c}
+.apartment-listing-form .um-section-title{padding:6px 10px;font-weight:700;font-size:.82rem;background:#8b6914;color:#fff}
+.apartment-listing-form .sale .um-section-title{background:#1a3a6e}
+.apartment-listing-form .umgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;padding:10px}
+.apartment-listing-form .umfield{min-width:0}
+.apartment-listing-form label{display:block;font-size:.76rem;margin-bottom:4px;color:var(--text-muted)}
+.apartment-listing-form input,.apartment-listing-form select,.apartment-listing-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:7px 9px}
+.apartment-listing-form textarea{min-height:46px;height:46px}
+.apartment-listing-form #apt_추가메모{min-height:92px;height:92px}
+.apartment-listing-form [data-apt-memos]{display:none}
+.apartment-listing-form .span-3{grid-column:span 3}
+.apartment-listing-form .span-2{grid-column:span 2}
+.apartment-listing-form .full{grid-column:1/-1}
+.apartment-listing-form .area-row{display:flex;gap:7px;align-items:center}
+.apartment-listing-form .area-row input{flex:1;width:0}
+.apartment-listing-form .owner-phone-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:6px}
+.apartment-listing-form .amt-hint{font-size:.72rem;color:var(--gold);display:block}
+.apartment-listing-form .apt-picker-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:8px}
+.apartment-listing-form .apt-picker-row [hidden]{display:none!important}
+.apartment-listing-form .apt-auto-note{font-weight:400;font-size:.72rem;color:var(--gold);margin-left:4px}
+.apartment-listing-form .apt-more{padding:10px 14px}
+.apartment-listing-form .apt-more>summary{cursor:pointer;color:#d4af37;font-size:.85rem}
+.apartment-listing-form .apt-more>.um-section{margin:10px -14px 0}
+@media(max-width:650px){.apartment-listing-form .apt-picker-row{grid-template-columns:minmax(0,1fr)}}
+.apartment-listing-form .price-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}.apartment-listing-form .price-grid-5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}.apartment-listing-form .price-grid-5{grid-template-columns:minmax(0,1fr)}}
+
+/* 아파트 상세 */
+.apartment-details-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0;align-items:start}
+.apartment-details-layout>.apartment-info-section{grid-column:1/-1}
+.apartment-details-column{display:flex;flex-direction:column;gap:12px;min-width:0}
+.apartment-details-layout .detail-section{margin:0;padding:14px;min-width:0}
+.apartment-details-layout .detail-section-title{margin:0 0 10px;font-size:.92rem}
+.apartment-details-column .apartment-info-row{grid-template-columns:90px minmax(0,1fr)}
+.apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}
+.apartment-details-column .owner-contact-row .ipt-value{white-space:nowrap}
+.apartment-memo-section .ipt-value{max-height:120px;overflow-y:auto}
+.apartment-info-table{border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
+.apartment-info-row{display:grid;grid-template-columns:repeat(var(--pairs),minmax(96px,128px) minmax(0,1fr))}
+.apartment-info-row.apartment-unit-row{grid-template-columns:64px minmax(50px,.7fr) 68px minmax(155px,1.4fr) 60px minmax(70px,.8fr) 56px minmax(50px,.6fr)}
+.apartment-info-row>div{min-width:0;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.1);line-height:1.5;box-sizing:border-box}
+.apartment-info-row:last-child>div{border-bottom:0}
+.apartment-info-row .ipt-label{display:flex;align-items:center;color:var(--gold);background:#0f2032;font-size:.82rem;font-weight:700;border-right:1px solid rgba(255,255,255,.08)}
+.apartment-info-row .ipt-value{display:flex;align-items:center;background:#182c43;font-size:.88rem;overflow-wrap:anywhere;white-space:pre-wrap}
+.apartment-info-row[style="--pairs:1"] .ipt-value{display:block}
+.apartment-detail-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 24px}
+.apartment-title-name{line-height:1.4}
+.apartment-title-unit{display:inline-flex;align-items:baseline;gap:18px;color:var(--text-main,#e8eef7);white-space:nowrap;line-height:1.3}
+.apartment-unit-part{display:inline-flex;align-items:baseline;gap:4px}
+.apartment-unit-part strong{font-size:1.6rem;font-weight:750;letter-spacing:-.02em}
+.apartment-unit-part small{font-size:1rem;font-weight:600;color:var(--text-muted)}
+.apartment-unit-action{gap:8px;flex-wrap:wrap}
+.apartment-info-row .ipt-value.apartment-unit-action{padding-right:6px}
+.apartment-autofill-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;min-height:28px;padding:4px 8px;border:1px solid rgba(212,175,55,.28);border-radius:6px;background:rgba(212,175,55,.09);color:var(--gold);font-family:inherit;font-size:.74rem;font-weight:600;line-height:1.2;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.apartment-autofill-btn:hover{background:rgba(212,175,55,.17);border-color:rgba(212,175,55,.6)}
+.apartment-autofill-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.apartment-autofill-btn:disabled{opacity:.6;cursor:wait}
+.apartment-autofill-btn svg{width:13px;height:13px;flex-shrink:0}
+@media(max-width:850px){.apartment-info-row.apartment-unit-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-details-layout{grid-template-columns:minmax(0,1fr)}.apartment-info-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-info-row[style="--pairs:1"]{grid-template-columns:108px minmax(0,1fr)}.apartment-details-column .apartment-info-row{grid-template-columns:90px minmax(0,1fr)}.apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}}
+@media(max-width:580px){.apartment-info-row.apartment-unit-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row[style="--pairs:1"]{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row>div{padding:9px 10px}.apartment-details-column .owner-contact-row{grid-template-columns:74px minmax(0,1fr) 52px 48px}.apartment-details-column .owner-contact-row>div{padding:8px 6px}.apartment-detail-title{gap:8px 18px}.apartment-unit-part strong{font-size:1.45rem}}
+.detail-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.detail-print-tools{margin-left:auto;display:flex;align-items:center;gap:8px}.detail-actions #detailProgressStatus{width:108px;min-width:108px;max-width:108px;flex:0 0 108px;height:36px;margin:0;padding:6px 10px;font-size:.82rem;border:1px solid var(--border-slate);border-radius:18px;color-scheme:dark}.detail-print-tools #printBriefBtn{white-space:nowrap}
+
+/* 소유주 연결 고객 버튼 */
+.owner-customer-link, .owner-customer-link:visited {
+  display:inline-flex; align-items:center; justify-content:center;
+  margin:6px 8px 0 0; padding:8px 14px; border-radius:8px;
+  color:#ffe29a; background:#17263b; border:1px solid #c9a84c;
+  font-size:13px; font-weight:700; text-decoration:none;
+}
+.owner-customer-link:hover { color:#fff3cc; background:#263b55; border-color:#ffe29a; }
+.owner-customer-link:focus-visible { outline:2px solid #ffe29a; outline-offset:3px; }
+
+.tenant-info-section > summary { cursor:pointer; margin-bottom:0; }
+.tenant-info-section[open] > summary { margin-bottom:12px; }
+.tenant-info-section > summary::after { content:'펼치기 ▾'; float:right; font-size:12px; }
+.tenant-info-section[open] > summary::after { content:'접기 ▴'; }
+
+.apartment-basic-section .apartment-info-row { grid-template-columns:128px minmax(0,1fr) 128px minmax(0,1fr); }
+.apartment-basic-section .apartment-info-row[style="--pairs:1"] { grid-template-columns:128px minmax(0,1fr); }
+.apartment-basic-tools { display:flex; justify-content:flex-end; padding-top:10px; }
+@media(max-width:580px) {
+  .apartment-basic-section .apartment-info-row,
+  .apartment-basic-section .apartment-info-row[style="--pairs:1"] { grid-template-columns:110px minmax(0,1fr); }
+}
+
+/* 기본정보: 구분 네 칸, 주소 세 칸, 건물 선택·단지명 */
+@media (min-width: 901px) {
+  #editModal #edit_basicInfoGrid { grid-template-columns:repeat(12,minmax(0,1fr)); }
+  #editModal #edit_basicInfoGrid > .field { grid-column:span 4;min-width:0; }
+  #editModal #edit_basicInfoGrid > .field:nth-child(-n+5) { grid-column:span 3; }
+  #editModal #edit_basicInfoGrid > .edit-quick-building-field { grid-column:span 8; }
+  #editModal #edit_basicInfoGrid > .field[style*="1 / -1"] { grid-column:1 / -1; }
+  #editModal #edit_internalInfoGrid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  #editModal #edit_internalInfoGrid > .field { min-width:0; }
+}
+</style>
+<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261020-form-headers">
+<script>
+(function(){
+  var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+  document.documentElement.dataset.officeTheme=office;
+  if(office!=='ktop'){
+    var link=document.querySelector('link[href*="white-navy-workspace.css"]');
+    if(link)link.disabled=true;
+    var building=document.getElementById('ktop-building-light');
+    if(building)building.disabled=true;
+  }
+})();
+</script>
+
+<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261019-status-alignment"></script>
+
+<style>
+/* Matching registration and edit form sections */
+#apartmentListingForm .um-section, #edit_apartmentListingForm .um-section {border:1px solid var(--border-slate);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.apartment-listing-form .um-section-title {padding:10px 14px;font-size:.9rem;}
+.apartment-listing-form .owner-phone-row {grid-template-columns:88px minmax(0,1fr) auto auto auto;align-items:center;}
+@media(max-width:650px){.apartment-listing-form .owner-phone-row {grid-template-columns:1fr;}}
+#owner_memo,#edit_owner_memo {min-height:110px;resize:vertical;}
+html[data-office-theme="ktop"] #apartmentListingForm .um-section,
+html[data-office-theme="ktop"] #edit_apartmentListingForm .um-section {background:#fff;border-color:#ccd9e8;}
+html[data-office-theme="ktop"] .apartment-listing-form .um-section-title {background:#e7effb;color:#193c70;border-bottom:1px solid #c5d6ed;}
+html[data-office-theme="ktop"] .apartment-listing-form .sale .um-section-title {background:#dce9fa;color:#193c70;}
+html[data-office-theme="ktop"] .apartment-listing-form label {color:#344b66;font-weight:600;}
+html[data-office-theme="ktop"] .apartment-listing-form input,
+html[data-office-theme="ktop"] .apartment-listing-form select,
+html[data-office-theme="ktop"] .apartment-listing-form textarea {background:#fff;color:#172c46;border:1px solid #b5c6dc;border-radius:7px;color-scheme:light;}
+html[data-office-theme="ktop"] .apartment-listing-form summary {color:#193c70!important;}
+#owner_memo:focus,#edit_owner_memo:focus,.apartment-listing-form input:focus,.apartment-listing-form textarea:focus {outline:2px solid #6ca0e1;outline-offset:1px;}
+#edit_internalInfoGrid {padding:14px;border:1px solid var(--border-slate);border-radius:10px;background:rgba(190,145,60,.08);}
+</style>
+<style>
+#owner_name[hidden],#owner_phone1[hidden],#edit_owner_name[hidden],#edit_owner_phone1[hidden],.field>label[hidden],.field[hidden] {display:none!important;}
+html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;color:#193c70;padding:10px 12px;border-radius:7px;}
+</style><style>
+  /* 건물·빌딩, 토지, 아파트·오피스텔 외 주거용: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
+  #editModal.bld-edit [data-hide-bld] { display: none !important; }
+  /* 기본정보 첫 줄: 1차구분·2차구분·거래유형·등록구분·거래상태를 한 줄(5칸)에 배치 */
+  @media (min-width: 900px) {
+    #editModal #edit_basicInfoGrid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+    #editModal #edit_basicInfoGrid > .field { grid-column: span 2; }
+    #editModal #edit_basicInfoGrid > .field:nth-child(-n+5) { grid-column: span 2; }
+    #editModal #edit_basicInfoGrid > .field:has(#edit_mapAddress) { grid-column: span 4; }
+    #editModal #edit_basicInfoGrid > #edit_roadField { grid-column: span 4; }
+    #editModal #edit_basicInfoGrid > .edit-quick-building-field { grid-column: span 6; }
+    #editModal #edit_basicInfoGrid > .field:has(#edit_complexName) { grid-column: span 4; }
+  }
+  /* 주거용·토지: 관리비·권리금 숨김, 아파트·오피스텔 외에는 분양가도 숨김 */
+  #editModal.resi-edit [data-price-fee] { display: none !important; }
+  #editModal.resi-nopresale [data-price-presale] { display: none !important; }
+</style>
+<style>
+.detail-confirm-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:14px;}
+.detail-confirm-row b{font-weight:700;}
+.confirm-fresh{color:#6fd28f;}.confirm-stale{color:#ffb27a;}.confirm-old{color:#ff7b7b;font-weight:700;}.confirm-none{color:#8fa3ba;}
+</style>
+</head>
+<body class="property-form-page" data-nav-active="properties">
+
+<div class="page">
+
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="logo-main">HITOP 부동산 매물관리</div>
+      <div class="logo-sub">매물·자료 관리</div>
+    </div>
+    <nav class="main-nav" id="mainNav"></nav>
+  </header>
+  <div class="header-line"></div>
+
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <a class="btn btn-ghost back-to-properties" href="properties.html">← 매물관리로 돌아가기</a>
+  </div>
+
+  <div id="detailArea">
+    <div class="loading"><span class="spinner"></span>불러오는 중...</div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<!-- 전역 에러 오버레이 -->
+<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+  <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
+  <div style="font-size:1.1rem;font-weight:700;color:#e0e0e0;margin-bottom:8px;">연결 오류가 발생했습니다</div>
+  <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
+  <button onclick="location.reload()" style="background:#d4af37;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
+  <button onclick="location.href='index.html'" style="margin-top:10px;background:none;border:1px solid #555;border-radius:8px;padding:10px 24px;font-size:0.88rem;color:#aaa;cursor:pointer;">← 목록으로</button>
+</div>
+
+<script>
+  function showAppError(msg) {
+    const el = document.getElementById("appErrorOverlay");
+    if (!el) return;
+    document.getElementById("appErrorMsg").textContent = msg || "새로고침 해주세요.";
+    el.style.display = "flex";
+  }
+  window.onerror = function(msg, src, line, col, err) {
+    showAppError((err && err.message) || msg || "알 수 없는 오류가 발생했습니다.");
+  };
+  window.onunhandledrejection = function(e) {
+    const msg = (e.reason && e.reason.message) || String(e.reason) || "비동기 오류가 발생했습니다.";
+    if (msg.includes("저장 실패") || msg.includes("수정 실패") || msg.includes("삭제 실패")) return;
+    showAppError(msg);
+  };
+</script>
+
+<!-- 수정 모달 -->
+<div id="editModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="edit-modal-header">
+      <div class="modal-title">✏️ 매물 수정</div>
+      <button type="button" class="edit-modal-close" aria-label="닫기" onclick="document.getElementById('editModal').style.display='none'">✕</button>
+    </div>
+    <div class="edit-modal-body">
+
+    <!-- 건축물대장 자동조회 결과 참고 (자동조회 성공 시에만 표시) -->
+    <div id="editBuildingLookupRefBox" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;padding:10px 14px;background:rgba(80,180,100,0.07);border:1px solid rgba(80,180,100,0.2);border-radius:10px;">
+      <strong style="color:#5cb85c;">📐 건축물대장 자동입력 참고</strong><br />
+      <span id="editBuildingLookupRefText"></span>
+    </div>
+
+    <!-- 기본정보 -->
+    <div class="modal-section-title">📋 기본정보</div>
+    <div id="edit_basicInfoGrid" class="edit-grid-3">
+      <div class="field">
+        <label>1차구분</label>
+        <select id="edit_category1">
+          <option value="공장창고">공장·창고</option>
+          <option value="상가사무실">상가·사무실</option>
+          <option value="토지">토지</option>
+          <option value="주거용">주거용</option>
+          <option value="건물빌딩">건물·빌딩</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>2차구분</label>
+        <select id="edit_category2"></select>
+        <input id="edit_propertyType" type="hidden" value="" />
+      </div>
+      <div class="field">
+        <label>거래유형 <span style="color:var(--gold)">*</span></label>
+        <select id="edit_dealType">
+          <option value="">선택하세요</option>
+          <option value="매매">매매</option>
+          <option value="전세">전세</option>
+          <option value="월세">월세(임대)</option>
+          <option value="매매·전세">매매·전세</option><option value="매매·월세">매매·월세(임대)</option><option value="회사분양">(회사)분양</option><option value="회사임대">(회사)월세(임대)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>등록구분</label>
+        <select id="edit_listingKind">
+          <option value="매물">매물</option>
+          <option value="명단">명단</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="edit_progressStatus">거래상태</label>
+        <select id="edit_progressStatus"><option>진행중</option><option>보류</option><option>거래완료</option></select>
+      </div>
+      <div class="field">
+        <label>지도검색주소 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 지도 마커용</span></label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="edit_mapAddress" type="text" placeholder="예) 파주시 동패동 2075 / 호실 조회 시: 와동동 1471-2, 103동 4802호" style="flex:1;" />
+          <button type="button" id="editLookupBuildingBtn" class="btn btn-ghost" style="flex-shrink:0;font-size:0.82rem;padding:6px 12px;white-space:nowrap;">🔍 자동조회</button>
+        </div>
+        <span id="editLookupBuildingStatus" style="font-size:0.78rem;color:var(--text-muted);"></span>
+      </div>
+      <div class="field" id="edit_roadField" style="display:none;">
+        <label>새주소 <span style="font-size:0.78rem;color:#888;">도로명 · 자동조회 시 채워짐</span></label>
+        <input id="edit_roadAddress" type="text" readonly placeholder="자동조회하면 새주소가 나옵니다" />
+      </div>
+      <div class="field" data-hide-bld>
+        <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개 · 내부관리용</span></label>
+        <input id="edit_privateDetailAddress" type="text" placeholder="예) 101호" />
+      </div>
+      <div class="field" style="display:none;">
+        <label>동 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
+        <input id="edit_apartmentDong" type="text" placeholder="예) 1101" />
+      </div>
+      <div class="field" style="display:none;">
+        <label>호수 <span style="font-size:0.78rem;color:#888;">🔒 비공개</span></label>
+        <input id="edit_apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
+      </div>
+      <div class="field edit-quick-building-field" data-hide-bld>
+        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 주소·건물명 자동입력</span></label>
+        <select id="edit_quickBuildingSelect"></select>
+      </div>
+      <div class="field" data-hide-bld>
+        <label>단지명 <span style="font-size:0.78rem;color:#888;">선택 · 힐스테이트더운정 등 단지·건물 이름</span></label>
+        <input id="edit_complexName" type="text" placeholder="예) 힐스테이트더운정" />
+      </div>
+    </div>
+
+    <div class="apartment-listing-form" id="edit_apartmentListingForm" hidden></div>
+    <div id="edit_nonApartmentFields">
+    <!-- 가격정보 -->
+    <div class="modal-section-title">💰 가격정보</div>
+    <div class="edit-grid-3">
+      <div class="field"><label>매매가</label><input id="edit_salePrice" type="text" placeholder="예: 12억 5,000만" />
+        <div class="price-preview" id="edit_salePrice_preview"></div></div>
+      <div class="field" data-price-presale><label>분양가</label><input id="edit_presalePrice" type="text" placeholder="예: 8억 9,000만" />
+        <div class="price-preview" id="edit_presalePrice_preview"></div></div>
+      <div class="field"><label>보증금</label><input id="edit_deposit" type="text" placeholder="예: 5,000만" />
+        <div class="price-preview" id="edit_deposit_preview"></div></div>
+      <div class="field"><label>월세</label><input id="edit_monthlyRent" type="text" placeholder="예: 300만" />
+        <div class="price-preview" id="edit_monthlyRent_preview"></div></div>
+      <div class="field" data-price-fee><label>관리비</label><input id="edit_managementFee" type="text" placeholder="예: 15만" />
+        <div class="price-preview" id="edit_managementFee_preview"></div></div>
+      <div class="field" data-price-fee><label>권리금</label><input id="edit_premium" type="text" placeholder="예: 없음 또는 2,000만" />
+        <div class="price-preview" id="edit_premium_preview"></div></div>
+    </div>
+
+    <!-- 면적정보 (조건부) -->
+    <div id="edit_area_land" style="display:none;">
+      <div class="modal-section-title">📐 면적정보</div>
+      <div class="edit-area-flex">
+      <div class="area-row" style="margin-bottom:10px;">
+        <span class="area-label">토지면적</span>
+        <input id="edit_areaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_areaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      <div class="area-row">
+        <label class="area-label" for="edit_landUnitPrice">평당가격</label>
+        <input id="edit_landUnitPrice" type="text" readonly placeholder="자동계산" aria-label="토지 매매가 기준 평당가격" style="flex:1;width:180px;" />
+        <span class="area-unit">원/평</span>
+      </div>
+      </div>
+    </div>
+
+    <div id="edit_area_exclusive" style="display:none;">
+      <div class="modal-section-title">📐 면적정보</div>
+      <div class="edit-area-flex">
+      <div class="area-row"><span class="area-label">전용면적</span>
+        <input id="edit_exclusiveAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_exclusiveAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      <div class="area-row" style="margin-bottom:10px;"><span class="area-label">공급면적</span>
+        <input id="edit_supplyAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_supplyAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      </div>
+    </div>
+
+    <div id="edit_area_building" style="display:none;">
+      <div class="modal-section-title">📐 면적정보</div>
+      <div class="edit-area-flex">
+      <div class="area-row"><span class="area-label">대지면적</span>
+        <input id="edit_landAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_landAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      <div class="area-row"><span class="area-label">건축면적</span>
+        <input id="edit_buildingAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_buildingAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      <div class="area-row" style="margin-bottom:10px;"><span class="area-label">연면적</span>
+        <input id="edit_totalFloorAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
+        <span class="area-unit">㎡</span>
+        <input id="edit_totalFloorAreaPy" type="number" min="0" step="1" placeholder="0" />
+        <span class="area-unit">평</span>
+      </div>
+      </div>
+    </div>
+
+    <!-- 추가정보 (공장·상가·건물) -->
+    <div id="edit_commercial_section" style="display:none;">
+      <div class="modal-section-title">🏢 추가정보 <span style="color:var(--text-muted);font-size:0.75rem;">(공장·상가·건물)</span></div>
+      <div class="edit-grid-4">
+        <div class="field"><label>층정보</label><input id="edit_floorInfo" type="text" placeholder="예: 지상 1층" /></div>
+        <div class="field"><label>용도지역</label><input id="edit_zoning" type="text" placeholder="예: 준공업지역" /></div>
+        <div class="field"><label>주차대수</label><input id="edit_parkingCount" type="text" placeholder="예: 10대" /></div>
+        <div class="field"><label>사용승인일</label><input id="edit_approvalDate" type="text" placeholder="예: 2010-03-15" /></div>
+      </div>
+    </div>
+
+    <div class="field" style="margin:14px 0;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <input id="editHomepageEnabled" type="checkbox" style="width:auto;accent-color:var(--gold);" aria-controls="editHomepagePanel" aria-expanded="false" />
+        🌐 홈페이지 등록·수정
+      </label>
+      <small style="color:var(--text-muted);">선택하면 공개 매물설명과 홍보스티커를 입력할 수 있습니다.</small>
+    </div>
+    <div id="editHomepagePanel" hidden>
+    <!-- 홈페이지 공개 시에만 입력: 제목 · 공개주소 -->
+    <div id="editHomepageBasicFields">
+      <div class="field" id="edit_titleField" style="margin-bottom:10px;">
+        <label>제목</label>
+        <input id="edit_title" type="text" placeholder="매물 제목" maxlength="20" />
+      </div>
+      <div id="edit_addrRow" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:10px;">
+      <div class="field">
+        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
+        <input id="edit_publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
+      </div>
+      </div>
+    </div>
+    <!-- 홍보스티커 -->
+    <div class="modal-section-title">🏷️ 홍보스티커</div>
+    <div class="sticker-grid edit-sticker-grid" style="margin-bottom:10px;">
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="추천매물" /> 추천매물</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="급매물" /> 급매물</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="수익형" /> 수익형</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="역세권" /> 역세권</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="즉시입주" /> 즉시입주</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="단독공장" /> 단독공장</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="민원적음" /> 민원적음</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="추천업종" /> 추천업종</label>
+      <label class="sticker-chip"><input type="checkbox" name="edit_stickers" value="권리금없음" /> 권리금없음</label>
+    </div>
+
+    <!-- 매물설명 -->
+    <div class="modal-section-title">📝 매물설명</div>
+    <div class="field" style="margin-bottom:8px;">
+      <label>공개 매물설명 <span style="color:var(--text-muted);font-size:0.75rem;">(상세보기 표시)</span></label>
+      <div class="emoji-toolbar" data-emoji-target="edit_detailDescription" aria-label="매물설명 이모지">
+        <button type="button" class="emoji-btn" data-emoji="✅" title="체크">✅</button>
+        <button type="button" class="emoji-btn" data-emoji="📍" title="위치">📍</button>
+        <button type="button" class="emoji-btn" data-emoji="🚗" title="주차">🚗</button>
+        <button type="button" class="emoji-btn" data-emoji="🏭" title="공장">🏭</button>
+        <button type="button" class="emoji-btn" data-emoji="🏢" title="건물">🏢</button>
+        <button type="button" class="emoji-btn" data-emoji="🌿" title="환경">🌿</button>
+        <button type="button" class="emoji-btn" data-emoji="👍" title="추천">👍</button>
+        <button type="button" class="emoji-btn" data-emoji="⭐" title="강조">⭐</button>
+        <button type="button" class="emoji-btn" data-emoji="💰" title="가격">💰</button>
+        <button type="button" class="emoji-btn" data-emoji="🔹" title="항목">🔹</button>
+      </div>
+      <textarea id="edit_detailDescription" rows="7" placeholder="입지, 도로접근성, 추천업종, 임대조건 등" style="width:100%;box-sizing:border-box;"></textarea>
+    </div>
+    <!-- 홈페이지 공개 -->
+    <div data-homepage-only class="field" style="margin-bottom:12px;">
+      <label>홈페이지 공개</label>
+      <label style="display:flex;align-items:center;gap:8px;color:var(--text-main);font-size:0.86rem;">
+        <input id="edit_is_public" type="checkbox" style="width:auto;accent-color:var(--gold);" /> 공개
+      </label>
+    </div>
+    </div><!-- /editHomepagePanel -->
+    <div class="field" style="margin-bottom:10px;">
+      <label>내부 메모 <span style="color:var(--text-muted);font-size:0.75rem;">(비공개)</span></label>
+      <textarea id="edit_description" rows="3" placeholder="관리용 메모 / 특이사항" style="width:100%;box-sizing:border-box;"></textarea>
+    </div>
+
+    </div><!-- edit_nonApartmentFields -->
+    <div class="field" id="edit_memoBlock" style="margin-bottom:10px;">
+      <label>추가메모 <span style="color:var(--text-muted);font-size:0.75rem;">(날짜별 · 고치거나 삭제할 수 있어요)</span></label>
+      <div id="edit_memoList"></div>
+      <button type="button" class="btn btn-ghost" id="edit_memoAddBtn" style="margin-top:6px;padding:4px 12px;font-size:0.8rem;">+ 추가메모 추가</button>
+    </div>
+    <!-- 내부전용 -->
+    <div class="modal-section-title">🔒 내부전용</div>
+    <div id="edit_internalInfoGrid" class="form-grid-2" style="margin-bottom:10px;">
+<div class="field" style="grid-column:1 / -1;margin-bottom:0;">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;">
+          <div class="field" style="flex:0 0 130px;min-width:0;margin:0;">
+            <label>소유주명</label>
+            <input id="edit_owner_name" type="text" placeholder="예) 홍길동" />
+          </div>
+          <div class="field" style="flex:0 0 170px;min-width:0;margin:0;">
+            <label>소유주 연락처</label>
+            <input id="edit_owner_phone1" type="tel" placeholder="010-0000-0000" />
+          </div>
+          <div id="edit_additionalContactsWrap" style="display:contents;"></div>
+          <button type="button" id="editAddOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 auto;box-sizing:border-box;height:38px;padding:0 14px;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addEditContactRow()">+ 추가 연락처</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>드라이브 자료 연결</label>
+        <select id="edit_resource_id"><option value="">-- 연결 안함 --</option></select>
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <label>소유주 메모 / 특이사항</label>
+        <textarea id="edit_owner_memo" rows="2" placeholder="예) 통화 가능 시간, 특이사항 등"></textarea>
+      </div>
+    </div>
+
+
+
+    <!-- 이미지 -->
+    <div class="modal-section-title">📷 이미지·문서 (최대 5장)</div>
+    <div class="field" style="margin-bottom:14px;">
+      <div data-homepage-only style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;margin-bottom:8px;">
+        홈페이지에 공개할 사진만 체크하세요. 체크 해제한 사진은 내부 매물관리에서만 보관됩니다.
+        PDF 문서(등기부등본·건축물대장 등)는 홈페이지에 공개되지 않고 내부 매물관리에서만 보관됩니다.
+      </div>
+      <div id="edit_image_preview" class="image-preview-row"></div>
+      <div id="edit_image_slots" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+        <input class="edit-img-slot" type="file" accept="image/*,.pdf" multiple style="font-size:0.82rem;" />
+      </div>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:10px;">
+        <button type="button" id="editAddImageSlotBtn" class="btn btn-ghost" style="font-size:0.82rem;padding:4px 10px;">+ 추가</button>
+        <span id="editImageCount" style="font-size:0.78rem;color:var(--text-muted);">0 / 5</span>
+      </div>
+    </div>
+
+    </div><!-- /edit-modal-body -->
+
+    <div class="modal-btns edit-modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('editModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="editSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-title">🗑 매물을 삭제할까요?</div>
+    <div style="font-size:0.85rem;color:var(--text-muted);">삭제하면 복구가 어렵습니다.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('deleteModal').style.display='none'">취소</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/register-picker.js?v=20261027-addr-convert4"></script>
+<script src="assets/js/kakao-config.js"></script>
+<script src="assets/js/road-address.js"></script>
+
+<script>
+  let _allDriveResources = [];
+  let _editImageUrls = [];
+  let _editPublicImageUrls = [];
+  let _editNewImageFiles = [];
+  let _editNewImagePublicFlags = [];
+  const HOMEPAGE_LISTINGS_URL = "https://hitoputube-creator.github.io/hitop-property-platform/listings.html";
+function createHomepageTab() {
+  const tab = window.open("about:blank", "_blank");
+  if (tab) tab.opener = null;
+  return tab;
+}
+function getHomepageListingUrl(id) {
+  return HOMEPAGE_LISTINGS_URL + "?id=" + encodeURIComponent(id);
+}
+function openHomepageListings(tab, id) {
+  const url = id ? getHomepageListingUrl(id) : HOMEPAGE_LISTINGS_URL;
+  if (tab) tab.location.href = url;
+  else window.open(url, "_blank", "noopener,noreferrer");
+}
+function closeHomepageTab(tab) {
+  try { if (tab) tab.close(); } catch (_) {}
+}
+
+  // \uce74\ud14c\uace0\ub9ac \ud45c\uc900\u00b7\uc815\uaddc\ud654 \ud568\uc218\ub294 assets/js/storage.js?v=20261007-presale \uc804\uc5ed \uc815\uc758(CATEGORY_OPTIONS, getCategoryFromListing,
+  // getTypeFromCategory, resolveStorageCategory1/resolveDisplayCategory1, normalizeListingCategory)\ub97c \uadf8\ub300\ub85c \uc0ac\uc6a9\ud55c\ub2e4.
+  // \uc774 \ud30c\uc77c\uc5d0\uc11c \ubcc4\ub3c4\ub85c \ubcf5\uc81c \uc120\uc5b8\ud558\uc9c0 \uc54a\ub294\ub2e4(\uc911\ubcf5 \uae30\uc900 \ubc29\uc9c0 \u2014 1\ub2e8\uacc4 \uce74\ud14c\uace0\ub9ac \ud1b5\uc77c \uc791\uc5c5).
+
+  const EDIT_AREA_MAP = {
+    '공장창고':    'building',
+    '상가사무실':  'exclusive',
+    '토지':        'land',
+    '주거용':      'exclusive',
+    '단독전원주택':'building',
+    '건물빌딩':    'building',
+  };
+  const EDIT_COMMERCIAL_CATS = ['공장창고', '상가사무실', '건물빌딩'];
+
+  function renderEditCategory2Options(selectedValue = "") {
+    const cat1El = document.getElementById("edit_category1");
+    const cat2El = document.getElementById("edit_category2");
+    const opts = CATEGORY_OPTIONS[cat1El.value] || [];
+    const optsHtml = opts.map(v => `<option value="${v}">${v}</option>`).join("");
+    if (selectedValue && !opts.includes(selectedValue)) {
+      // 표준 세부구분과 일치하지 않는 레거시 값 — 임의로 다른 값으로 바꾸지 않고 원본값을 그대로 보존해 보여준다.
+      cat2El.innerHTML = `<option value="${selectedValue}">확인 필요 · 기존값: ${selectedValue}</option>` + optsHtml;
+      cat2El.value = selectedValue;
+    } else {
+      cat2El.innerHTML = `<option value="">선택하세요</option>` + optsHtml;
+      cat2El.value = selectedValue || "";
+    }
+    updateEditDynamicSections();
+  }
+
+  function updateEditDynamicSections() {
+    const cat1 = document.getElementById("edit_category1")?.value || "";
+    const cat2 = document.getElementById("edit_category2")?.value || "";
+    const isFactoryWarehouse = cat1 === "공장창고";
+    document.getElementById("editModal").classList.toggle("factory-warehouse-edit", isFactoryWarehouse);
+    document.getElementById("edit_complexName").closest(".field").style.display = (isFactoryWarehouse || cat1 === "토지") ? "none" : "";
+    ["edit_presalePrice", "edit_managementFee", "edit_premium"].forEach(id => {
+      document.getElementById(id).closest(".field").style.display = cat1 === "토지" ? "none" : "";
+    });
+    updateEditLandUnitPrice();
+    if (typeof syncEditApartmentFields === "function") syncEditApartmentFields();
+    // 상가주택·다가구주택은 화면상 "주거용" 아래 있지만, 입력 필드는 건물빌딩과 동일하게 노출한다.
+    const storageCat1 = resolveStorageCategory1(cat1, cat2);
+    const hidden = document.getElementById("edit_propertyType");
+    // 세부구분이 표준값과 일치할 때만 'type'을 재계산한다. "확인 필요"(레거시 원본값, 예: 힐스테이트더운정)
+    // 상태일 때는 openEditModal에서 채워둔 기존 type(예: "hilsstate")을 임의로 덮어쓰지 않고 그대로 보존한다.
+    if (hidden && (CATEGORY_OPTIONS[storageCat1] || []).includes(cat2)) {
+      hidden.value = getTypeFromCategory(storageCat1, cat2);
+    }
+
+    ["edit_area_land","edit_area_exclusive","edit_area_building"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+    const variant = EDIT_AREA_MAP[storageCat1];
+    if (variant) {
+      const el = document.getElementById("edit_area_" + variant);
+      if (el) el.style.display = "";
+    }
+    const commercialEl = document.getElementById("edit_commercial_section");
+    if (commercialEl) commercialEl.style.display = EDIT_COMMERCIAL_CATS.includes(storageCat1) ? "" : "none";
+    if (typeof syncEditApartmentListingForm === "function") syncEditApartmentListingForm();
+    if (window.EditUi) EditUi.sync();
+    // 호수 / 운정역 상가·오피스텔 / 단지명은 건물·빌딩, 토지, 공장·창고, 그리고 아파트·오피스텔이 아닌 주거용(단독·전원·상가주택·다가구)에서는 숨긴다.
+    const hideUnitFields = cat1 === "건물빌딩" || cat1 === "토지" || cat1 === "공장창고" || (cat1 === "주거용" && cat2 !== "아파트" && cat2 !== "오피스텔");
+    // 주거용은 매매가·보증금·월세만 보인다. 분양가는 아파트·오피스텔에서만 보이고, 관리비·권리금은 숨긴다.
+    // (다른 스크립트가 관리비·권리금 표시를 되돌리므로 CSS 클래스로 숨긴다.)
+    const isResidential = cat1 === "주거용";
+    const showPresale = !isResidential || cat2 === "아파트" || cat2 === "오피스텔";
+    const editModalEl = document.getElementById("editModal");
+    const simplePrice = cat1 === "토지" || cat1 === "공장창고"; // 토지·공장창고: 매매가·보증금·월세만
+    editModalEl.classList.toggle("resi-edit", isResidential || simplePrice);
+    editModalEl.classList.toggle("resi-nopresale", (isResidential && !showPresale) || simplePrice);
+    const priceGrid = document.getElementById("edit_salePrice").closest(".edit-grid-3");
+    if (priceGrid) priceGrid.style.gridTemplateColumns = (isResidential || simplePrice) ? "repeat(" + (showPresale && !simplePrice ? 4 : 3) + ", minmax(0, 1fr))" : "";
+    document.getElementById("editModal").classList.toggle("bld-edit", hideUnitFields);
+    const roadFieldEl = document.getElementById("edit_roadField");
+    if (roadFieldEl) roadFieldEl.style.display = hideUnitFields ? "" : "none";
+    placeEditTitleField(cat2 === "아파트");
+  }
+
+  // 제목은 홈페이지 등록·수정 패널을 펼쳤을 때만 보인다.
+  // 아파트는 홈페이지 패널이 없으므로 기본정보 영역에 그대로 둔다.
+  function placeEditTitleField(isApartment) {
+    const field = document.getElementById("edit_titleField");
+    const grid = document.getElementById("edit_basicInfoGrid");
+    const row = document.getElementById("editHomepageBasicFields");
+    if (!field || !grid || !row) return;
+    if (isApartment) {
+      field.style.gridColumn = "1 / -1";
+      if (field.parentElement !== grid) grid.appendChild(field);
+    } else if (field.parentElement !== row) {
+      field.style.gridColumn = "";
+      row.insertBefore(field, row.firstChild);
+    }
+  }
+
+
+  // 가격 입력 미리보기
+  const EDIT_PRICE_IDS = ["edit_salePrice","edit_presalePrice","edit_deposit","edit_monthlyRent","edit_managementFee","edit_premium","edit_originalDeposit","edit_originalMonthlyRent"];
+  function editPriceDigits(value) { return String(value || "").replace(/[^\d]/g, ""); }
+  function editFormatPriceInput(value) {
+    const digits = editPriceDigits(value);
+    return digits ? Number(digits).toLocaleString("ko-KR") : "";
+  }
+  function editFormatWonPreview(value) {
+    const digits = editPriceDigits(value);
+    if (!digits) return "";
+    const won = Number(digits);
+    if (!won) return "";
+    const eok = Math.floor(won / 100000000);
+    const man = Math.floor((won % 100000000) / 10000);
+    const rest = won % 10000;
+    const parts = [];
+    if (eok) parts.push(eok.toLocaleString("ko-KR") + "억");
+    if (man) parts.push(man.toLocaleString("ko-KR") + "만원");
+    if (!parts.length && rest) parts.push(rest.toLocaleString("ko-KR") + "원");
+    return parts.length ? "약 " + parts.join(" ") : "";
+  }
+  function formatWonKr(value) {
+    const digits = String(value || "").replace(/[^\d]/g, "");
+    if (!digits) return "";
+    const won = Number(digits);
+    if (!won) return "";
+    const eok = Math.floor(won / 100000000);
+    const man = Math.floor((won % 100000000) / 10000);
+    const parts = [];
+    if (eok) parts.push(eok.toLocaleString("ko-KR") + "억");
+    if (man) parts.push(man.toLocaleString("ko-KR") + "만원");
+    return parts.length ? parts.join(" ") : won.toLocaleString("ko-KR") + "원";
+  }
+
+  function escapeAttr(value) {
+    return String(value || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  }
+  function syncEditPricePreview(id) {
+    const input = document.getElementById(id);
+    const preview = document.getElementById(id + "_preview");
+    if (!input || !preview) return;
+    const formatted = editFormatPriceInput(input.value);
+    if (input.value && input.value !== formatted) input.value = formatted;
+    const text = editFormatWonPreview(input.value);
+    preview.textContent = text;
+    preview.classList.toggle("has-value", !!text);
+  }
+  function setupEditPricePreviews() {
+    EDIT_PRICE_IDS.forEach(id => {
+      const input = document.getElementById(id);
+      if (!input || input.dataset.pricePreviewBound === "1") return;
+      input.dataset.pricePreviewBound = "1";
+      input.addEventListener("input", () => syncEditPricePreview(id));
+      input.addEventListener("blur", () => syncEditPricePreview(id));
+      syncEditPricePreview(id);
+    });
+  }
+  function updateEditLandUnitPrice() {
+    const field = document.getElementById("edit_landUnitPrice");
+    if (!field) return;
+    const sale = Number(editPriceDigits(document.getElementById("edit_salePrice").value));
+    const py = Number(document.getElementById("edit_areaPy").value) || Number(document.getElementById("edit_areaM2").value) / 3.305785;
+    field.value = sale > 0 && py > 0 && Number.isFinite(sale / py)
+      ? Math.round(sale / py).toLocaleString("ko-KR") : "";
+  }
+  document.getElementById("editModal").addEventListener("input", updateEditLandUnitPrice);
+  function refreshEditPricePreviews() { EDIT_PRICE_IDS.forEach(syncEditPricePreview); updateEditLandUnitPrice(); }
+  function cleanEditPriceInputs() {
+    EDIT_PRICE_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = editPriceDigits(el.value);
+    });
+  }
+  document.addEventListener("DOMContentLoaded", setupEditPricePreviews);
+
+  // 소유주 연락처2 토글
+  // 추가 연락처(다중) — 이름(선택) + 연락처 + 삭제, 여러 명 추가 가능
+  let _editContactRowSeq = 0;
+  function makeEditContactRowHtml(idx) {
+    return `<div class="contact-row" data-idx="${idx}" style="display:flex;gap:6px;align-items:flex-end;margin:0;">
+      <input type="text" class="contact-name-input" placeholder="이름(선택)" style="flex:0 0 110px;width:110px;min-width:0;" />
+      <input type="tel" class="contact-phone-input" placeholder="010-0000-0000" style="flex:0 0 170px;width:170px;min-width:0;" />
+      <button type="button" class="btn btn-ghost" title="삭제" style="flex:0 0 38px;box-sizing:border-box;height:38px;padding:0;font-size:0.9rem;text-align:center;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeEditContactRow(this)">✕</button>
+    </div>`;
+  }
+  function addEditContactRow(name, phone) {
+    const wrap = document.getElementById('edit_additionalContactsWrap');
+    const idx = _editContactRowSeq++;
+    wrap.insertAdjacentHTML('beforeend', makeEditContactRowHtml(idx));
+    const row = wrap.querySelector(`.contact-row[data-idx="${idx}"]`);
+    const nameInput = row.querySelector('.contact-name-input');
+    const phoneInput = row.querySelector('.contact-phone-input');
+    nameInput.value = name || '';
+    phoneInput.value = phone || '';
+    setupPhoneAutoFormat(phoneInput);
+    phoneInput.addEventListener('blur', checkEditContactDuplicates);
+    if (!phone) nameInput.focus();
+  }
+  function removeEditContactRow(btn) {
+    btn.closest('.contact-row').remove();
+  }
+  function checkEditContactDuplicates() {
+    const p1 = phoneDigitsOnly(document.getElementById('edit_owner_phone1').value);
+    const seen = new Set(p1 ? [p1] : []);
+    let dup = false;
+    document.querySelectorAll('#edit_additionalContactsWrap .contact-phone-input').forEach(input => {
+      const digits = phoneDigitsOnly(input.value);
+      if (!digits) { input.style.borderColor = ''; return; }
+      if (seen.has(digits)) { dup = true; input.style.borderColor = 'var(--red,#e05252)'; }
+      else { input.style.borderColor = ''; seen.add(digits); }
+    });
+    if (dup) showToast('소유주 연락처 또는 다른 추가 연락처와 번호가 중복되었습니다.');
+    return dup;
+  }
+  function collectEditAdditionalContacts() {
+    const p1Digits = phoneDigitsOnly(document.getElementById('edit_owner_phone1').value);
+    const seen = new Set(p1Digits ? [p1Digits] : []);
+    const result = [];
+    let hadDup = false;
+    document.querySelectorAll('#edit_additionalContactsWrap .contact-row').forEach(row => {
+      const name = row.querySelector('.contact-name-input').value.trim();
+      const phone = row.querySelector('.contact-phone-input').value.trim();
+      if (!phone) return;
+      const digits = phoneDigitsOnly(phone);
+      if (seen.has(digits)) { hadDup = true; return; }
+      seen.add(digits);
+      result.push({ name, phone });
+    });
+    if (hadDup) showToast('소유주 연락처 또는 다른 추가 연락처와 중복된 번호는 저장하지 않았습니다.');
+    return result;
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    setupPhoneAutoFormat(document.getElementById("edit_owner_phone1"));
+    document.getElementById("edit_owner_phone1").addEventListener('blur', checkEditContactDuplicates);
+  });
+
+
+  // 면적 자동계산 (edit 모달용)
+  const EDIT_SQM_PY = [
+    ['edit_areaM2','edit_areaPy'],
+    ['edit_exclusiveAreaM2','edit_exclusiveAreaPy'],
+    ['edit_supplyAreaM2','edit_supplyAreaPy'],
+    ['edit_landAreaM2','edit_landAreaPy'],
+    ['edit_buildingAreaM2','edit_buildingAreaPy'],
+    ['edit_totalFloorAreaM2','edit_totalFloorAreaPy'],
+  ];
+  EDIT_SQM_PY.forEach(([sqmId, pyId]) => {
+    const sqmEl = document.getElementById(sqmId);
+    const pyEl  = document.getElementById(pyId);
+    if (sqmEl && pyEl) {
+      sqmEl.addEventListener("input", () => {
+        const v = parseFloat(sqmEl.value);
+        pyEl.value = v > 0 ? (v / 3.3058).toFixed(1) : "";
+      });
+    }
+  });
+
+  function renderEditImagePreview() {
+    const wrap = document.getElementById("edit_image_preview");
+    if (!wrap) return;
+    const existingHtml = _editImageUrls.map((url, idx) => {
+      const isDoc = !isListingImageFile(url);
+      return `
+      <span class="image-preview-thumb image-preview-thumb-selectable">
+        ${isDoc
+          ? `<div class="image-preview-thumb-doc" onclick="window.open('${escapeAttr(url)}','_blank')">📄<span>PDF 문서</span></div>`
+          : `<img src="${escapeAttr(url)}" alt="listing image ${idx + 1}" />`}
+        <button type="button" onclick="removeEditImage(${idx})">&times;</button>
+        ${isDoc || OfficeConfig.id === "ktop" ? "" : `
+        <label class="image-public-check">
+          <input type="checkbox" ${_editPublicImageUrls.includes(url) ? "checked" : ""} onchange="setEditImagePublic(${idx}, this.checked)" />
+          공개
+        </label>`}
+      </span>
+    `;
+    }).join("");
+    const newHtml = _editNewImageFiles.map((file, idx) => {
+      const isDoc = !file.type.startsWith("image/");
+      return `
+      <span class="image-preview-thumb image-preview-thumb-selectable">
+        ${isDoc
+          ? `<div class="image-preview-thumb-doc">📄<span>${escapeAttr(file.name || "PDF 문서")}</span></div>`
+          : `<img src="${URL.createObjectURL(file)}" alt="new listing image ${idx + 1}" />`}
+        <button type="button" onclick="removeEditNewImage(${idx})">&times;</button>
+        ${isDoc || OfficeConfig.id === "ktop" ? "" : `
+        <label class="image-public-check">
+          <input type="checkbox" ${_editNewImagePublicFlags[idx] !== false ? "checked" : ""} onchange="setEditNewImagePublic(${idx}, this.checked)" />
+          공개
+        </label>`}
+      </span>
+    `;
+    }).join("");
+    wrap.innerHTML = existingHtml + newHtml;
+    updateEditImageSlots();
+  }
+
+  function updateEditImageSlots() {
+    const total = _editImageUrls.length + _editNewImageFiles.length;
+    const countEl = document.getElementById("editImageCount");
+    if (countEl) countEl.textContent = `${total} / ${MAX_LISTING_IMAGES}`;
+    const addBtn = document.getElementById("editAddImageSlotBtn");
+    if (addBtn) addBtn.disabled = total >= MAX_LISTING_IMAGES;
+  }
+
+  function addEditImageSlot() {
+    const total = _editImageUrls.length + _editNewImageFiles.length;
+    if (total >= MAX_LISTING_IMAGES) {
+      showToast(`이미지는 최대 ${MAX_LISTING_IMAGES}장까지 업로드할 수 있습니다.`);
+      return;
+    }
+    const slots = document.getElementById("edit_image_slots");
+    if (!slots) return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*,.pdf";
+    input.multiple = true;
+    input.className = "edit-img-slot";
+    input.style.fontSize = "0.82rem";
+    slots.appendChild(input);
+    input.click();
+  }
+
+  function handleEditImageSlotChange(input) {
+    const files = Array.from(input.files || []).filter(f =>
+      f.type.startsWith("image/") || f.type === "application/pdf" || /\.pdf$/i.test(f.name || "")
+    );
+    const remaining = MAX_LISTING_IMAGES - _editImageUrls.length - _editNewImageFiles.length;
+    const toAdd = files.slice(0, remaining);
+    if (files.length > remaining) {
+      showToast(`이미지·문서는 최대 ${MAX_LISTING_IMAGES}개까지 업로드할 수 있습니다.`);
+    }
+    _editNewImageFiles = _editNewImageFiles.concat(toAdd);
+    // PDF 문서는 홈페이지에 노출할 수 없으므로 기본적으로 "공개" 대상에서 제외한다.
+    _editNewImagePublicFlags = _editNewImagePublicFlags.concat(toAdd.map(f => f.type.startsWith("image/")));
+    input.value = "";
+    renderEditImagePreview();
+  }
+
+  function setEditImagePublic(idx, checked) {
+    const url = _editImageUrls[idx];
+    if (!url) return;
+    if (checked) {
+      if (!_editPublicImageUrls.includes(url)) _editPublicImageUrls.push(url);
+    } else {
+      _editPublicImageUrls = _editPublicImageUrls.filter(v => v !== url);
+    }
+    renderEditImagePreview();
+  }
+
+  function setEditNewImagePublic(idx, checked) {
+    _editNewImagePublicFlags[idx] = checked === true;
+    renderEditImagePreview();
+  }
+
+  function removeEditImage(idx) {
+    const removed = _editImageUrls[idx];
+    _editImageUrls.splice(idx, 1);
+    _editPublicImageUrls = _editPublicImageUrls.filter(url => url !== removed);
+    renderEditImagePreview();
+  }
+
+  function removeEditNewImage(idx) {
+    _editNewImageFiles.splice(idx, 1);
+    _editNewImagePublicFlags.splice(idx, 1);
+    renderEditImagePreview();
+  }
+
+
+  async function loadDriveResourcesForSelect() {
+    try {
+      _allDriveResources = await getDriveResources();
+    } catch(e) { _allDriveResources = []; }
+    const sel = document.getElementById("edit_resource_id");
+    sel.innerHTML = `<option value="">-- 연결 안함 --</option>` +
+      _allDriveResources.map(r => `<option value="${r.id}">${r.category} · ${r.name}</option>`).join("");
+  }
+
+  // ── 수정 모달 ──
+  function setEditHomepageMode(enabled) {
+    const choice = document.getElementById("editHomepageEnabled");
+    choice.checked = enabled;
+    choice.setAttribute("aria-expanded", String(enabled));
+    document.getElementById("editHomepagePanel").hidden = !enabled;
+    document.getElementById("edit_is_public").checked = enabled ? true : _currentItem?.is_public === true;
+  }
+  document.getElementById("editHomepageEnabled").addEventListener("change", function () {
+    setEditHomepageMode(this.checked);
+  });
+
+  // 옛 매물은 금액이 가격 칸이 아니라 가격 메모("매매_18억", "월세 1000/50")에만 있을 수 있다.
+  // 메모를 읽어 {매매가|보증금|월세}를 원 단위 숫자 문자열로 돌려준다. 읽을 수 없으면 null.
+  function parseLegacyPriceMemo(memo) {
+    const UNIT = { "억": 1e8, "천만": 1e7, "천": 1e7, "백만": 1e6, "백": 1e6, "만": 1e4, "": 1e4 };
+    const toWon = text => {
+      const s = String(text || "").replace(/[,\s원]/g, "");
+      if (!s || !/^(\d+(?:\.\d+)?(?:억|천만|천|백만|백|만)?)+$/.test(s)) return "";
+      let total = 0;
+      for (const m of s.matchAll(/(\d+(?:\.\d+)?)(억|천만|천|백만|백|만)?/g)) total += parseFloat(m[1]) * UNIT[m[2] || ""];
+      return total > 0 ? String(Math.round(total)) : "";
+    };
+    // "매매_10억5천, 월세_4천/400"처럼 여러 항목이 쉼표로 이어진 메모도 읽는다(숫자 안의 쉼표는 나누지 않는다).
+    const result = {};
+    String(memo || "").trim().split(/[,，;]\s*(?=(?:매매|전세|월세|임대))/).forEach(segment => {
+      const head = segment.trim().match(/^(매매|전세|월세|임대)[\s_:\-·.]*(.+)$/);
+      if (!head) return;
+      const kind = head[1], body = head[2].trim();
+      if (kind === "매매") { const v = toWon(body); if (v) result.sale = v; }
+      else if (kind === "전세") { const v = toWon(body); if (v) result.deposit = v; }
+      else {
+        const parts = body.split("/");
+        if (parts.length === 2) { const d = toWon(parts[0]), r = toWon(parts[1]); if (d && r) { result.deposit = d; result.rent = r; } }
+      }
+    });
+    return Object.keys(result).length ? result : null;
+  }
+
+  function openEditModal(item) {
+    setEditHomepageMode(false);
+    // 이전에 열었던 매물의 건축물대장 자동조회 상태(배너/상태문구)가 남아있지 않도록 초기화
+    const lookupStatusEl = document.getElementById("editLookupBuildingStatus");
+    if (lookupStatusEl) lookupStatusEl.textContent = "";
+    const lookupRefBox = document.getElementById("editBuildingLookupRefBox");
+    if (lookupRefBox) lookupRefBox.style.display = "none";
+
+    const category = getCategoryFromListing(item);
+    // 세부구분이 표준값과 일치하지 않는 "확인 필요" 상태일 때 type을 임의로 덮어쓰지 않도록,
+    // 기존 원본 type 값을 먼저 채워둔다(updateEditDynamicSections가 표준 일치 시에만 재계산함).
+    document.getElementById("edit_propertyType").value = item.type || "";
+    // 기존 category1="건물빌딩"+category2="상가주택"/"다가구주택" 매물은 화면상 "주거용" 그룹으로 표시한다.
+    document.getElementById("edit_category1").value = resolveDisplayCategory1(category.category1, category.category2);
+    renderEditCategory2Options(category.category2);
+
+    // 기본정보
+    // 거래유형: 예전 매물은 dealType 대신 종류별 옛 필드나 가격 메모("매매 9억…")에만 들어 있을 수 있어, 상세정보 표와 같은 기준으로 찾는다.
+    let _editDeal = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && String(item.type).startsWith("land") ? "매매" : "");
+    if (!_editDeal) { const m = String(item.quick_price || "").trim().match(/^(매매|전세|월세|임대)/); if (m) _editDeal = m[1]; }
+    if (_editDeal === "임대") _editDeal = "월세";
+    document.getElementById("edit_dealType").value           = ["매매", "전세", "월세", "매매·전세", "매매·월세", "회사분양", "회사임대"].includes(_editDeal) ? _editDeal : "";
+    document.getElementById("edit_listingKind").value        = item.listingKind === "명단" ? "명단" : "매물";
+    document.getElementById("edit_publicAddress").value      = item.publicAddress || item.displayAddress || item.address || "";
+    document.getElementById("edit_mapAddress").value         = item.mapAddress || item.roadAddress || item.jibunAddress || item.locationAddress || item.privateAddress || item.address || "";
+    if (category.category2 === "아파트" || item.type === "apartment") {
+      document.getElementById("edit_publicAddress").value = apartmentDetailAddresses(item).roadAddress || "";
+      document.getElementById("edit_mapAddress").value = apartmentDetailAddresses(item).jibunAddress || "";
+    }
+    document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
+    if (typeof fillRoadAddress === "function") fillRoadAddress(document.getElementById("edit_mapAddress").value);
+    fillApartmentUnitFields("edit_", item);
+    syncEditApartmentFields();
+    // 레거시 type="hilsstate" 매물은 단지명 필드가 비어 있어도 "힐스테이트더운정"을 자동 표시한다(세부유형은 강제 선택하지 않음).
+    document.getElementById("edit_complexName").value        = item.complexName || (item.type === "hilsstate" ? "힐스테이트더운정" : "");
+    if (typeof syncEditQuickBuildingFields === "function") syncEditQuickBuildingFields();
+    document.getElementById("edit_title").value              = item.title || "";
+    fillApartmentListingForm("edit_", item);
+    syncEditApartmentListingForm();
+    if (window.EditUi) EditUi.sync();
+    // 가격정보
+    document.getElementById("edit_salePrice").value     = item.salePrice || "";
+    document.getElementById("edit_presalePrice").value  = item.presalePrice || "";
+    document.getElementById("edit_deposit").value       = item.deposit || "";
+    document.getElementById("edit_monthlyRent").value   = item.monthlyRent || "";
+    document.getElementById("edit_managementFee").value = item.managementFee || "";
+    document.getElementById("edit_premium").value       = item.premium || "";
+    // 가격 칸이 모두 비어 있고 가격 메모에만 금액이 있는 옛 매물은, 메모를 읽어 가격 칸에 미리 채워 둔다(저장 전까지는 화면에만 반영).
+    if (!item.salePrice && !item.deposit && !item.monthlyRent) {
+      const legacyPrice = parseLegacyPriceMemo(item.quick_price);
+      if (legacyPrice) {
+        if (legacyPrice.sale) document.getElementById("edit_salePrice").value = legacyPrice.sale;
+        if (legacyPrice.deposit) document.getElementById("edit_deposit").value = legacyPrice.deposit;
+        if (legacyPrice.rent) document.getElementById("edit_monthlyRent").value = legacyPrice.rent;
+      }
+    }
+    refreshEditPricePreviews();
+    // 면적
+    const sv = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
+    sv("edit_areaM2", item.areaM2); sv("edit_areaPy", item.areaPy);
+    sv("edit_exclusiveAreaM2", item.exclusiveAreaM2); sv("edit_exclusiveAreaPy", item.exclusiveAreaPy);
+    sv("edit_supplyAreaM2", item.supplyAreaM2);       sv("edit_supplyAreaPy", item.supplyAreaPy);
+    sv("edit_landAreaM2", item.landAreaM2);           sv("edit_landAreaPy", item.landAreaPy);
+    sv("edit_buildingAreaM2", item.buildingAreaM2);   sv("edit_buildingAreaPy", item.buildingAreaPy);
+    sv("edit_totalFloorAreaM2", item.totalFloorAreaM2); sv("edit_totalFloorAreaPy", item.totalFloorAreaPy);
+    // 추가정보
+    sv("edit_floorInfo", item.floorInfo); sv("edit_zoning", item.zoning);
+    sv("edit_parkingCount", item.parkingCount); sv("edit_approvalDate", item.approvalDate);
+    // 홍보스티커
+    const stickers = Array.isArray(item.stickers) ? item.stickers : [];
+    document.querySelectorAll("input[name='edit_stickers']").forEach(cb => {
+      cb.checked = stickers.includes(cb.value);
+    });
+    // 매물설명
+    document.getElementById("edit_detailDescription").value = item.detailDescription || "";
+    document.getElementById("edit_description").value       = item.description || item.quick_memo || "";
+    // 내부전용
+    document.getElementById("edit_progressStatus").value = listingProgressStatus(item);
+    document.getElementById("edit_owner_name").value   = item.owner_name || "";
+    document.getElementById("edit_owner_phone1").value = item.owner_phone1 || "";
+    // 추가 연락처: 신규 다중 목록이 있으면 그대로, 없으면 기존 연락처2를 1건으로 승계 표시
+    document.getElementById("edit_additionalContactsWrap").innerHTML = "";
+    _editContactRowSeq = 0;
+    const existingContacts = Array.isArray(item.additional_contacts) ? item.additional_contacts : [];
+    if (existingContacts.length) {
+      existingContacts.forEach(c => addEditContactRow(c && c.name, c && c.phone));
+    } else if (item.owner_phone2) {
+      addEditContactRow("", item.owner_phone2);
+    }
+    const _legacyContact = item.owner_contact || item.quick_contact || "";
+    let _ownerMemoVal = item.owner_memo || "";
+    if (!_ownerMemoVal && !item.owner_phone1 && _legacyContact) {
+      _ownerMemoVal = `[기존 연락처] ${_legacyContact}`;
+    }
+    document.getElementById("edit_owner_memo").value = _ownerMemoVal;
+    document.getElementById("edit_resource_id").value   = item.resource_id || "";
+    // 공개
+    document.getElementById("edit_is_public").checked = item.is_public === true;
+    // 이미지
+    const slots = document.getElementById("edit_image_slots");
+    if (slots) slots.innerHTML = '<input class="edit-img-slot" type="file" accept="image/*,.pdf" multiple style="font-size:0.82rem;" />';
+    _editImageUrls = getListingImageUrls(item);
+    _editPublicImageUrls = getPublicListingImageUrls(item).filter(url => _editImageUrls.includes(url));
+    if (item.is_public === true && !_editPublicImageUrls.length && _editImageUrls.length) {
+      _editPublicImageUrls = _editImageUrls.slice();
+    }
+    _editNewImageFiles = [];
+    _editNewImagePublicFlags = [];
+    renderEditImagePreview();
+    updateEditLandUnitPrice();
+    if(!window.editCommercialPhase)window.editCommercialPhase=CommercialPresaleUI.setup({prefix:"edit_",host:document.getElementById("edit_salePrice").closest(".field").parentElement,item});
+    else window.editCommercialPhase.set(item);
+    renderEditMemoList(item);
+    document.getElementById("editModal").style.display = "flex";
+  }
+
+  function showToast(msg, duration=2000) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), duration);
+  }
+
+  document.getElementById("edit_image_slots")?.addEventListener("change", function(e) {
+    if (e.target.classList.contains("edit-img-slot")) handleEditImageSlotChange(e.target);
+  });
+  document.getElementById("editAddImageSlotBtn")?.addEventListener("click", addEditImageSlot);
+  document.getElementById("edit_category1")?.addEventListener("change", () => renderEditCategory2Options());
+  document.getElementById("edit_category2")?.addEventListener("change", updateEditDynamicSections);
+
+  const syncEditApartmentFields = setupApartmentUnitFields("edit_", "edit_category2");
+  const syncEditQuickBuildingFields = setupQuickBuildingSelect('edit_quickBuildingSelect', 'edit_publicAddress', 'edit_mapAddress', 'edit_complexName', 'edit_category1', 'edit_category2');
+  const syncEditApartmentListingForm = setupApartmentListingForm("edit_", "edit_category2");
+  EditUi.init();
+  setupListingDescriptionEmojiToolbar('edit_detailDescription');
+
+
+  // ── 새주소(도로명) 조회: 지번/주소로 카카오 주소검색을 호출해 새주소를 받아 채운다. ──
+  let _roadSeq = 0;
+  function lookupRoadAddressFull(address) {
+    const cleaned = String(address || '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim().replace(/-0$/, '');
+    if (!cleaned || !window.HitopRoadAddress) return Promise.resolve(null);
+    const base = cleaned.split(',')[0].trim();
+    const query = /파주|^경기/.test(base) ? base : '파주시 ' + base;
+    return window.HitopRoadAddress.loadServices().then(() => new Promise(resolve => {
+      const timer = setTimeout(() => resolve(null), 10000);
+      new window.kakao.maps.services.Geocoder().addressSearch(query, (result, status) => {
+        clearTimeout(timer);
+        if (status === window.kakao.maps.services.Status.OK && result[0]) resolve(result[0].road_address ? result[0].road_address.address_name : '');
+        else if (status === window.kakao.maps.services.Status.ZERO_RESULT) resolve('');
+        else resolve(null);
+      });
+    })).catch(() => null);
+  }
+  async function fillRoadAddress(address) {
+    const el = document.getElementById('edit_roadAddress');
+    if (!el) return;
+    const seq = ++_roadSeq;
+    if (!String(address || '').trim()) { el.value = ''; el.placeholder = '자동조회하면 새주소가 나옵니다'; return; }
+    el.value = '';
+    el.placeholder = '새주소 조회 중...';
+    const road = await lookupRoadAddressFull(address);
+    if (seq !== _roadSeq) return;
+    el.value = road || '';
+    el.placeholder = road === null ? '새주소를 조회하지 못했습니다' : '새주소가 없는 지번입니다';
+  }
+
+  // ── 공개주소 → 지도검색주소 자동복사 (번지는 직접 추가 입력) ──────────
+  (function setupEditPublicToMapAddressSync() {
+    const publicEl = document.getElementById('edit_publicAddress');
+    const mapEl = document.getElementById('edit_mapAddress');
+    if (!publicEl || !mapEl) return;
+    let lastSynced = mapEl.value;
+
+    publicEl.addEventListener('input', () => {
+      if (document.getElementById("edit_category2").value === "아파트") return;
+      if (mapEl.value === '' || mapEl.value === lastSynced) {
+        mapEl.value = publicEl.value;
+        lastSynced = mapEl.value;
+      }
+    });
+  })();
+
+  // ── 건축물대장 자동조회 (지도검색주소 기준, 버튼 클릭 시에만 실행) ──────────
+  (function setupEditBuildingLookup() {
+    const btn = document.getElementById('editLookupBuildingBtn');
+    const statusEl = document.getElementById('editLookupBuildingStatus');
+    const refBox = document.getElementById('editBuildingLookupRefBox');
+    const refText = document.getElementById('editBuildingLookupRefText');
+    if (!btn) return;
+
+    // "20020531" → "2002-05-31" (approvalDate 필드가 기대하는 형식)
+    function formatAprDay(raw) {
+      const digits = String(raw || '').replace(/[^0-9]/g, '');
+      if (digits.length !== 8) return '';
+      return digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6, 8);
+    }
+
+    // 지도검색주소에 "와동동 1384, 914호"처럼 호수까지 같이 적었을 때만 추출한다.
+    // 번지 숫자(1384)를 호수로 착각하지 않도록 "호" 글자가 붙은 경우만 인정한다.
+    function extractHoFromAddress(address) {
+      const hoMatch = String(address || '').match(/(\d+)\s*호/);
+      return hoMatch ? hoMatch[1] : '';
+    }
+
+    // "115동 1층, 상가 101호" 같은 호수 필드에서 호수만 추출한다.
+    function extractHoNm(detailAddress) {
+      const s = String(detailAddress || '');
+      const hoMatch = s.match(/(\d+)\s*호/);
+      if (hoMatch) return hoMatch[1];
+      const anyDigits = s.match(/\d+/);
+      return anyDigits ? anyDigits[0] : '';
+    }
+
+    // "103동 4802호"처럼 동 번호가 같이 있으면 추출한다. 법정동 이름(예: "와동동")은
+    // 숫자 없이 한글+동이라 "숫자+동" 패턴과 겹치지 않는다.
+    function extractDongNm(text) {
+      const m = String(text || '').match(/(\d+)\s*동/);
+      return m ? m[1] : '';
+    }
+
+    btn.addEventListener('click', async () => {
+      const address = document.getElementById('edit_mapAddress').value.trim();
+      if (!address) {
+        showToast('❌ 지도검색주소를 먼저 입력해주세요.');
+        return;
+      }
+      const detailAddressVal = document.getElementById('edit_privateDetailAddress').value;
+      const hoNm = extractHoFromAddress(address) || extractHoNm(detailAddressVal);
+      const dongNm = extractDongNm(address) || extractDongNm(detailAddressVal);
+
+      btn.disabled = true;
+      fillRoadAddress(address);
+      if (statusEl) statusEl.textContent = '조회 중...';
+      if (refBox) refBox.style.display = 'none';
+
+      try {
+        const result = await lookupBuildingRegister(address, { hoNm, dongNm });
+        const filled = [];
+
+        // 연면적 → category1/category2에 따라 edit_areaM2 / edit_exclusiveAreaM2 / edit_totalFloorAreaM2 중 해당 필드
+        const cat1 = document.getElementById('edit_category1').value;
+        const cat2 = document.getElementById('edit_category2').value;
+        const storageCat1 = resolveStorageCategory1(cat1, cat2);
+        const variant = EDIT_AREA_MAP[storageCat1];
+        const areaFieldId = variant === 'land' ? 'edit_areaM2' : variant === 'exclusive' ? 'edit_exclusiveAreaM2' : variant === 'building' ? 'edit_totalFloorAreaM2' : null;
+        if (result.area_m2 && areaFieldId) {
+          const el = document.getElementById(areaFieldId);
+          if (el) {
+            el.value = result.area_m2;
+            el.dispatchEvent(new Event('input'));
+            filled.push('연면적');
+          }
+        }
+
+        // 건물 유형(건물·빌딩, 공장·창고 등)은 연면적뿐 아니라 대지면적·건축면적도 함께 채운다.
+        if (variant === 'building') {
+          [[result.land_area_m2, 'edit_landAreaM2', '대지면적'], [result.footprint_area_m2, 'edit_buildingAreaM2', '건축면적']].forEach(([value, id, label]) => {
+            const el = document.getElementById(id);
+            if (el && value != null && Number(value) > 0) {
+              el.value = value;
+              el.dispatchEvent(new Event('input'));
+              filled.push(label);
+            }
+          });
+        }
+
+        if (result.floor_info) {
+          const el = document.getElementById('edit_floorInfo');
+          if (el) { el.value = result.floor_info; filled.push('층수'); }
+        }
+
+        const aprDay = formatAprDay(result.use_apr_day);
+        if (aprDay) {
+          const el = document.getElementById('edit_approvalDate');
+          if (el) { el.value = aprDay; filled.push('사용승인일'); }
+        }
+
+        const extraParts = [
+          result.main_purpose ? `주용도: ${result.main_purpose}` : null,
+          result.structure ? `구조: ${result.structure}` : null,
+        ].filter(Boolean);
+        if (extraParts.length) {
+          const el = document.getElementById('edit_detailDescription');
+          if (el) {
+            const note = `[건축물대장 조회 결과]\n${extraParts.join('\n')}`;
+            el.value = el.value ? (el.value + '\n\n' + note) : note;
+            filled.push('상세설명 참고');
+          }
+        }
+
+        if (result.unit_area_warning) {
+          if (statusEl) statusEl.textContent = '⚠️ 건물 전체 면적으로 채워짐 — 확인 필요';
+          if (refBox && refText) {
+            refText.textContent = '⚠️ 호실(' + (hoNm || '?') + '호) 전유면적을 찾지 못해 건물 전체 면적으로 채워졌습니다. 연면적 값을 직접 확인 후 저장하세요.';
+            refBox.style.display = '';
+          }
+        } else {
+          if (statusEl) statusEl.textContent = '✅ 자동입력됨';
+          if (refBox && refText) {
+            refText.textContent = (filled.length ? filled.join(', ') + ' 항목이 ' : '') + '건축물대장 조회 결과로 자동 입력되었습니다. 값을 확인 후 저장하세요.';
+            refBox.style.display = '';
+          }
+        }
+      } catch (err) {
+        if (statusEl) statusEl.textContent = '';
+        let msg;
+        if (err && err.status === 404) {
+          msg = '건축물대장 정보를 찾을 수 없습니다';
+        } else if (err && (err.status === 502 || err.status === undefined)) {
+          msg = ((err && err.message) || String(err)) + ' — 국토부 API 일시 장애일 수 있습니다. 잠시 후 다시 시도해주세요.';
+        } else {
+          msg = (err && err.message) || String(err);
+        }
+        showToast('❌ ' + msg, 5000);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  })();
+
+  function getTypeLabel(type) {
+    const map = { shop:"상가", office:"사무실", officetel:"오피스텔", hilsstate:"힐스테이트더운정", factory:"공장/창고", bizcenter:"지식산업센터", etc:"기타" };
+    if (map[type]) return map[type];
+    if (type && type.startsWith("land")) return "토지";
+    return "기타";
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function hasDetailValue(value) {
+    if (value === null || value === undefined) return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === "object") return Object.keys(value).length > 0;
+    return String(value).trim() !== "";
+  }
+
+  function firstDetailValue(...values) {
+    return values.find(hasDetailValue) ?? "";
+  }
+
+  function detailText(value) {
+    if (!hasDetailValue(value)) return "";
+    if (Array.isArray(value)) return value.map(v => detailText(v)).filter(Boolean).join(", ");
+    if (typeof value === "object") return "";
+    return String(value).trim();
+  }
+
+  function formatWonOrText(value) {
+    const text = detailText(value);
+    if (!text) return "";
+    const formatted = formatWonKr(text);
+    return formatted || text;
+  }
+
+  function formatManWon(value) {
+    const text = detailText(value);
+    if (!text) return "";
+    const digits = text.replace(/[^\d.]/g, "");
+    if (!digits) return text;
+    const num = Number(digits);
+    if (!Number.isFinite(num)) return text;
+    return num.toLocaleString("ko-KR") + "만원";
+  }
+
+  function withSuffix(value, suffix) {
+    const text = detailText(value);
+    if (!text) return "";
+    return text.endsWith(suffix) ? text : text + suffix;
+  }
+
+  function formatApartmentArea(m2, py) {
+    const sqm = Number(m2), pyeong = Number(py);
+    const validM2 = Number.isFinite(sqm) && sqm > 0;
+    const validPy = Number.isFinite(pyeong) && pyeong > 0;
+    if (!validM2 && !validPy) return '';
+    return (validPy ? pyeong : sqm / 3.30579).toFixed(2) + '평 / ' +
+      (validM2 ? sqm : pyeong * 3.30579).toFixed(2) + '㎡';
+  }
+
+  function formatAreaPair(m2, py) {
+    const parts = [];
+    const m2Text = detailText(m2);
+    const pyText = detailText(py);
+    if (m2Text) parts.push(m2Text + "㎡");
+    if (pyText) parts.push(pyText + "평");
+    return parts.join(" / ");
+  }
+
+  function formatDateValue(value) {
+    const text = detailText(value);
+    if (!text) return "";
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) return text;
+    return date.toLocaleDateString("ko-KR");
+  }
+
+  function detailField(label, value, opts = {}) {
+    const raw = opts.raw === true ? value : detailText(value);
+    if (!hasDetailValue(raw) && opts.required !== true) return "";
+    const display = hasDetailValue(raw) ? String(raw) : "-";
+    const classes = ["detail-read-value"];
+    if (opts.pre) classes.push("pre-line");
+    if (opts.price) classes.push("price");
+    const itemClass = opts.wide ? "detail-read-item wide" : "detail-read-item";
+    return `<div class="${itemClass}">
+      <div class="detail-read-label">${escapeHtml(label)}</div>
+      <div class="${classes.join(" ")}">${opts.html ? display : escapeHtml(display)}</div>
+    </div>`;
+  }
+
+  function detailSection(title, rows, opts = {}) {
+    const body = rows.filter(Boolean).join("");
+    if (!body && opts.required !== true) return "";
+    let sectionClass = opts.private ? "detail-section private-section" : "detail-section";
+    if (opts.extraClass) sectionClass += " " + opts.extraClass;
+    return `<section class="${sectionClass}">
+      <div class="detail-section-title">${escapeHtml(title)}</div>
+      <div class="detail-read-grid">${body || detailField("등록 정보", "-", { required: true })}</div>
+    </section>`;
+  }
+
+  // 매물 상세정보 표의 한 항목(label+value)을 렌더링한다. 값이 없으면 항상 "—"로 표시한다
+  // (표 형태를 유지하기 위해 detailField와 달리 값이 비어도 행 자체는 생략하지 않는다).
+  // .listing-info-table은 표 전체가 하나의 고정 6열 grid이므로(행마다 독립 grid가 아님),
+  // 모든 행의 라벨·구분선이 항상 같은 위치에 온다. valueClass로 짧은 행의 마지막 값 칸만
+  // 남는 열까지 넓혀 채운다(중간 라벨의 시작 위치는 절대 건드리지 않는다).
+  function iptCell(label, value, valueClass) {
+    const text = detailText(value);
+    const cls = valueClass ? ` ${valueClass}` : "";
+    return `<div class="ipt-label">${escapeHtml(label)}</div><div class="ipt-value${cls}">${escapeHtml(text || "—")}</div>`;
+  }
+
+  // pairs(1~3쌍)를 표의 고정 6열(라벨·값 x3) 기준에 맞춰 셀로 펼친다.
+  // 3쌍이면 6열을 그대로 채우고, 2쌍/1쌍이면 마지막 값 칸만 남는 열까지 span해서
+  // 표 오른쪽 끝까지 채운다 - 이렇게 해야 다음 라벨의 시작 열이 항상 동일하게 유지된다.
+  // 모바일(720px 이하)에서는 CSS가 span을 해제해 모든 셀을 "항목 | 값" 1쌍씩 2열로 되돌린다.
+  function iptRow(pairs) {
+    const n = pairs.length;
+    return pairs.map(([label, value], i) => {
+      const isLastPair = i === n - 1;
+      let valueClass = "";
+      if (isLastPair && n === 1) valueClass = "ipt-value-span5";
+      else if (isLastPair && n === 2) valueClass = "ipt-value-span3";
+      return iptCell(label, value, valueClass);
+    }).join("");
+  }
+
+  // 값이 실제로 있는 [라벨, 값] 쌍만 남겨서 최대 maxPerRow개씩 행으로 묶는다.
+  // "추가 정보" 표처럼 항목 개수가 매물마다 달라지는 곳에 쓴다.
+  function packRows(pairs, maxPerRow = 3) {
+    const valid = pairs.filter(([, value]) => hasDetailValue(detailText(value)));
+    const rows = [];
+    for (let i = 0; i < valid.length; i += maxPerRow) {
+      rows.push(iptRow(valid.slice(i, i + maxPerRow)));
+    }
+    return rows.join("");
+  }
+
+  // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나로 합친 압축 표.
+  // 기존 필드를 그대로 읽어서 표시만 하며, 새 필드나 저장 구조 변경은 없다.
+
+  function apartmentNotes(item) {
+    const u = apartmentSource(item);
+    const clean = apartmentRemarksOnly;
+    const seen = new Set([String(u.옵션내역 || '').replace(/\s+/g,' ').trim()].filter(Boolean));
+    const notes = [];
+    function add(label,raw,date) {
+      const text = clean(raw);
+      const key = text.replace(/\s+/g,' ').trim();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      notes.push([label, (date ? new Date(date).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}) + ' · ' : '') + text]);
+    }
+    add('비고',u.비고);
+    add('공개 설명',item.detailDescription);
+    add('내부 메모',item.description);
+    add('빠른등록 메모',item.quick_memo);
+    return notes;
+  }
+
+  function apartmentDetailAddresses(item) {
+    const resource=apartmentReferenceResource(item,_allDriveResources);
+    const base=apartmentResourceAddresses(resource);
+    return {roadAddress:item.roadAddress || base.roadAddress,jibunAddress:item.jibunAddress || base.jibunAddress};
+  }
+
+  function renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact) {
+    if (category.category2 === "아파트" || item.type === "apartment") {
+      const u = apartmentSource(item);
+      const addresses=apartmentDetailAddresses(item);
+      const man = n => n == null || n === "" ? "" : Number(n).toLocaleString("ko-KR") + "만원";
+      const row = pairs => '<div class="apartment-info-row' + (pairs.length===2 && pairs[0][0]==='연락처' && pairs[1][0]==='통신사' ? ' owner-contact-row' : '') + '" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => iptCell(label,value)).join('') + '</div>';
+      const section = (title, rows) => '<section class="detail-section apartment-info-section' + (title==='옵션·메모' ? ' apartment-memo-section' : title==='기본정보' ? ' apartment-basic-section' : '') + '"><div class="detail-section-title">' + escapeHtml(title) + '</div><div class="apartment-info-table">' + rows.map(row).join('') + '</div>' + (title==='기본정보' ? '<div class="apartment-basic-tools"><button type="button" class="apartment-autofill-btn" id="autoFillApartmentBtn" title="건축물대장과 단지자료로 면적·타입·주소 자동입력" aria-label="건축물대장으로 자동입력"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 7a7 7 0 0 1 11.5-1L20 9M4 15l2.5 3A7 7 0 0 0 18 17"/></svg>건축물대장 조회</button></div>' : '') + (title==='소유자 정보' ? '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px;"><button type="button" class="apartment-autofill-btn" id="registryOwnerSearchBtn" title="인터넷등기소에서 소유자 표시 확인">대법원 인터넷등기소 확인</button><button type="button" class="apartment-autofill-btn" id="buildingOwnerSearchBtn" title="정부24 건축물대장 원문에서 소유주 확인">건축물대장 확인</button></div>' : '') + '</section>';
+      const memoRows = [
+        ...(u.옵션내역 ? [[["옵션내역",u.옵션내역]]] : []),
+        ...apartmentNotes(item).map(note => [note])
+      ];
+      const basic = section("기본정보", [
+        [["아파트명",u.아파트명]],
+        [["접수일자",u.접수일자],["매물 구분",u.권리구분 || "일반 아파트"]],
+        ...(u.권리구분 === "분양권" || u.입주예정월 ? [[["입주예정월",u.입주예정월]]] : []),
+        [["동",u.동],["호수",u.호]],
+        [["분양평형",u.평형],["타입",u.타입]],
+        [["분양면적(공급면적)",formatApartmentArea(u.분양_m2,u.분양_평)],["전용면적",formatApartmentArea(u.전용_m2,u.전용_평)]],
+        [["새주소(도로명주소)",addresses.roadAddress]],
+        [["구주소(지번주소)",addresses.jibunAddress]]
+      ]);
+      const left = [
+        section("가격정보", [
+          [["거래구분",u.거래구분],["매매가",man(u.현_매매가격)]],
+          [["보증금·전세가",man(u.현_보증금)],["월세",man(u.현_월세)]]
+        ]),
+        ...(u.권리구분 === "분양권" ? [section("분양권 정보",[
+          [["분양가",man(u.분양가)],["프리미엄",man(u.프리미엄)]],
+          [["납부금",man(u.납부금)],["잔금",man(u.잔금)]]
+        ])] : []),
+        ...(memoRows.length ? [section("옵션·메모",memoRows)] : [])
+      ].join("");
+      const right = [
+        section("소유자 정보", [
+          [["이름",u.소유주]],
+          [["연락처",u.연락처],["통신사",u.소유자통신사]]
+        ]),
+        (() => {
+          const hasTenant = u.세입자현황 === "임차중" || u.세입자현황 === "세입자 거주";
+          const status = hasTenant ? "있음" : !u.세입자현황 || u.세입자현황 === "미확인" ? "미확인" : "없음";
+          return '<details class="detail-section apartment-info-section tenant-info-section"' + (hasTenant ? ' open' : '') +
+            '><summary class="detail-section-title">세입자 정보 · ' + status + '</summary>' +
+            '<div class="apartment-info-table">' + [
+              [["이름",u.세입자이름]], [["연락처",u.세입자연락처]],
+              [["계약 시작일",u.계약시작],["계약 종료일",u.계약종료]],
+              [["비고",u.세입자비고]]
+            ].map(row).join('') + '</div></details>';
+        })()
+      ].join("");
+      return '<div class="apartment-details-layout">'+basic+
+        '<div class="apartment-details-column">'+left+'</div>'+
+        '<div class="apartment-details-column">'+right+'</div></div>';
+    }
+    // 옛 매물은 거래유형·금액이 가격 메모("매매_18억")에만 있을 수 있어, 가격 칸이 비어 있으면 메모에서 읽어 가격 칸에 보여준다.
+    const legacyPrice = (!item.salePrice && !item.deposit && !item.monthlyRent) ? parseLegacyPriceMemo(item.quick_price) : null;
+    const legacyDeal = (String(item.quick_price || "").trim().match(/^(매매|전세|월세|임대)/) || [])[1] || "";
+    const dealType = firstDetailValue(item.dealType, item.shop_dealType, item.officetel_dealType, item.factory_dealType, item.biz_dealType, item.type && item.type.startsWith("land") ? "매매" : "", legacyDeal);
+    const exclusiveArea = formatAreaPair(
+      item.exclusiveAreaM2 || item.shop_area_sqm || item.officetel_area_sqm || item.biz_privArea_sqm,
+      item.exclusiveAreaPy || item.shop_area_py || item.officetel_area_py || item.biz_privArea_py
+    );
+    const landArea = formatAreaPair(item.areaM2, item.areaPy);
+    const totalFloorArea = formatAreaPair(item.totalFloorAreaM2, item.totalFloorAreaPy);
+    const parking = firstDetailValue(item.parkingCount, item.shop_parking, item.officetel_parking, item.factory_parking, item.biz_parking);
+    const structure = firstDetailValue(item.buildingStructure, item.structure, item.officetel_structure);
+    const floorInfo = firstDetailValue(item.floorInfo, item.floor, item.floorTxt, item.shop_floor, item.officetel_floor, item.biz_floor);
+    const direction = firstDetailValue(item.direction, item.officetel_direction);
+    const availableDate = firstDetailValue(item.availableDate, item.moveInDate, item.shop_available, item.officetel_available, item.factory_available, item.biz_available);
+    const ownerName = firstDetailValue(item.owner_name, item.quick_owner);
+    const buildingUse = firstDetailValue(item.buildingUse, item.mainUse, item.useType, item.factory_kind, item.biz_kind, item.land_kind);
+    const zoning = firstDetailValue(item.zoning, item.land_zone);
+    const heightPower = [withSuffix(item.factory_height, "m"), withSuffix(item.factory_power, "kW")].filter(Boolean).join(" / ");
+
+    // ── 종류(1차구분)별로 상세정보 표에 보여줄 항목을 고른다 ──
+    // 수정 화면의 종류별 입력 항목(EDIT_AREA_MAP·EDIT_COMMERCIAL_CATS)과 같은 기준이다.
+    // core: 값이 비어 있어도 "—"로 항상 보여주는 핵심 항목(입력 누락을 바로 알아볼 수 있게).
+    // cond: 값이 있을 때만 보여주는 항목. 종류에 해당하지 않는 항목은 값이 있을 때만 맨 뒤에 붙으므로
+    //       비어 있는 건물 전용 항목이 토지 화면에 줄줄이 "—"로 나오지 않는다.
+    const cat1Raw = ({ "공장/창고": "공장창고", "상가/사무실": "상가사무실" })[category.category1] || category.category1;
+    const storageCat1 = resolveStorageCategory1(cat1Raw, category.category2);
+    const profileKey = ({
+      "토지": "land", "공장창고": "factory", "상가사무실": "commercial",
+      "주거용": "residential", "건물빌딩": "building", "단독전원주택": "house"
+    })[storageCat1] || "default";
+
+    const landAreaMain = firstDetailValue(landArea, formatAreaPair(item.land_area_sqm, item.land_area_py || item.land_py));
+    const siteAreaPair = formatAreaPair(
+      item.landAreaM2 || item.factory_siteArea_sqm,
+      item.landAreaPy || item.factory_siteArea_py || item.factory_land_py
+    );
+    const buildAreaPair = formatAreaPair(
+      item.buildingAreaM2 || item.factory_buildArea_sqm,
+      item.buildingAreaPy || item.factory_buildArea_py || item.factory_area_py
+    );
+    const cells = {
+      buildingName: ["건물명", complexName],
+      detailAddr: ["호수", firstDetailValue(item.privateDetailAddress, item.detailAddress)],
+      landArea: ["토지면적", landAreaMain],
+      siteArea: ["대지면적", siteAreaPair],
+      buildArea: ["건축면적", buildAreaPair],
+      totalFloor: ["연면적", totalFloorArea],
+      exclusive: ["전용면적", exclusiveArea],
+      supply: ["공급면적", formatAreaPair(item.supplyAreaM2, item.supplyAreaPy)],
+      floor: ["층수", floorInfo],
+      parking: ["주차대수", parking],
+      approval: ["사용승인일", item.approvalDate],
+      structure: ["구조", structure],
+      direction: ["방향", direction],
+      available: ["입주가능일", availableDate],
+      use: ["건축물용도", buildingUse],
+      zoning: ["용도지역", zoning],
+      jimok: ["지목", item.land_jimok],
+      coverage: ["건폐율", withSuffix(item.land_coverage, "%")],
+      far: ["용적률", withSuffix(item.land_far, "%")],
+      heightPower: ["층고/전력", heightPower],
+      road: ["도로조건", firstDetailValue(item.roadAccess, item.land_road)],
+      shape: ["형상", item.land_shape],
+      truck: ["대형차진입", item.factory_truck],
+    };
+    const consumedCells = new Set();
+    // 공장·건물은 대지면적 칸이 비어 있으면 예전 데이터가 담긴 토지면적으로 채운다(중복 표시 방지).
+    if ((profileKey === "factory" || profileKey === "building" || profileKey === "house") && !siteAreaPair && landAreaMain) {
+      cells.siteArea = ["대지면적", landAreaMain];
+      consumedCells.add("landArea");
+    }
+    // 등록·수정 화면의 입력 항목과 같은 기준으로 표시한다.
+    //  - 토지: 토지면적 / 공장·창고·건물·빌딩: 대지·건축·연면적 + 층정보·용도지역·주차대수·사용승인일
+    //  - 상가·사무실: 건물명·호수 + 전용·공급면적 + 층정보·용도지역·주차대수·사용승인일
+    //  - 오피스텔(주거용): 건물명·호수 + 전용·공급면적 / 단독·전원주택: 대지·건축·연면적
+    const PROFILES = {
+      land:        { core: [["landArea"]], cond: [] },
+      factory:     { core: [["siteArea", "buildArea", "totalFloor"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
+      building:    { core: [["siteArea", "buildArea", "totalFloor"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
+      house:       { core: [["siteArea", "buildArea", "totalFloor"]], cond: [] },
+      commercial:  { core: [["buildingName", "detailAddr"], ["exclusive", "supply"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
+      residential: { core: [["buildingName", "detailAddr"], ["exclusive", "supply"]], cond: [] },
+      // 종류를 알 수 없는("확인 필요") 매물은 예전처럼 모든 항목을 보여준다.
+      default:     { core: [["exclusive", "landArea", "supply"], ["buildingName", "detailAddr", "totalFloor"], ["parking", "approval", "structure"],
+                            ["floor", "direction", "available"], ["use", "zoning", "jimok"], ["coverage", "far", "heightPower"]],
+                     cond: ["siteArea", "buildArea", "road", "shape", "truck"] },
+    };
+    const profile = PROFILES[profileKey];
+    const listedKeys = new Set([...profile.core.flat(), ...profile.cond]);
+    // 종류에 안 맞는 항목이라도 값이 실제로 들어 있으면 숨기지 않고 맨 뒤에 보여준다(입력 데이터 보호).
+    const strayKeys = profileKey === "default" ? Object.keys(cells).filter(k => !listedKeys.has(k) && !consumedCells.has(k)) : [];
+    const profileRows = profile.core.map(keys => iptRow(keys.map(k => cells[k])));
+    const profileCondPairs = [...profile.cond, ...strayKeys].map(k => cells[k]);
+
+    // 가격은 거래유형에 맞는 항목만 보여준다(매매면 매매가, 전세면 전세금, 월세·임대면 보증금+월세).
+    const commercialPrice=CommercialPriceCore.commercial(item)?CommercialPriceCore.price(item):null;
+    const saleText = firstDetailValue(formatWonOrText(commercialPrice?commercialPrice.amount:item.salePrice), profileKey === "land" ? formatManWon(item.land_price) : "", legacyPrice && legacyPrice.sale ? formatWonOrText(legacyPrice.sale) : "");
+    const depositText = firstDetailValue(formatWonOrText(item.deposit), legacyPrice && legacyPrice.deposit ? formatWonOrText(legacyPrice.deposit) : "");
+    const rentText = firstDetailValue(formatWonOrText(item.monthlyRent), legacyPrice && legacyPrice.rent ? formatWonOrText(legacyPrice.rent) : "");
+    // 등록·수정 화면의 가격 입력 항목과 같게 맞춘다(토지·주거용은 관리비·권리금 없음, 분양가는 오피스텔·건물·공장만).
+    const dispCat1 = resolveDisplayCategory1(cat1Raw, category.category2 || item.category2);
+    const dispCat2 = category.category2 || item.category2;
+    const priceAllow = {
+      presale: dispCat1 === "주거용" ? (dispCat2 === "오피스텔" || dispCat2 === "아파트") : (dispCat1 !== "토지" && dispCat1 !== "공장창고"),
+      fee: dispCat1 !== "주거용" && dispCat1 !== "토지" && dispCat1 !== "공장창고",
+    };
+    let priceCore, priceCond;
+    if (/^매매·(전세|월세)$/.test(String(dealType || ""))) {
+      const saleLabel = commercialPrice ? commercialPrice.label + "가" : "매매가";
+      if (dealType === "매매·전세") { priceCore = [[saleLabel, saleText], ["전세금", depositText]]; priceCond = [["월세", rentText]]; }
+      else { priceCore = [[saleLabel, saleText], ["보증금", depositText], ["월세", rentText]]; priceCond = []; }
+    } else if (dealType === "매매") {
+      priceCore = [[commercialPrice?commercialPrice.label+"가":"매매가", saleText]];
+      priceCond = [["보증금", depositText], ["월세", rentText]];
+    } else if (dealType === "전세") {
+      priceCore = [["전세금", depositText]];
+      priceCond = [[commercialPrice?commercialPrice.label+"가":"매매가", saleText], ["월세", rentText]];
+    } else if (dealType === "월세" || dealType === "임대") {
+      priceCore = [["보증금", depositText], ["월세", rentText]];
+      priceCond = [[commercialPrice?commercialPrice.label+"가":"매매가", saleText]];
+    } else {
+      priceCore = [["보증금", depositText], ["월세/매매가", firstDetailValue(rentText, saleText)]];
+      priceCond = [];
+    }
+
+    const _phoneDigits = value => String(value || "").replace(/\D/g, "");
+    const _additionalList = (Array.isArray(item.additional_contacts) ? item.additional_contacts : [])
+      .filter(c => c && c.phone).map(c => ({ name: c.name || "", phone: c.phone }));
+    if (item.owner_phone2 && !_additionalList.some(c => _phoneDigits(c.phone) === _phoneDigits(item.owner_phone2))) {
+      _additionalList.push({ name: "", phone: item.owner_phone2 });
+    }
+    const additionalContactText = _additionalList.map(c => c.name ? c.name + " " + c.phone : c.phone).join(", ");
+    const _isAllowedPrice = ([label]) => !(label === "분양가" && !priceAllow.presale);
+    priceCore = priceCore.filter(_isAllowedPrice); priceCond = priceCond.filter(_isAllowedPrice);
+    const rows = [
+      iptRow([["1차구분", (c => ({ "공장창고": "공장·창고", "상가사무실": "상가·사무실", "건물빌딩": "건물·빌딩" })[c] || c)(resolveDisplayCategory1(cat1Raw || item.category1, category.category2 || item.category2))], ["2차구분", category.category2 || item.category2], ["거래유형", dealType === "회사임대" ? "(회사)월세(임대)" : dealType === "월세" ? "월세(임대)" : dealType === "매매·월세" ? "매매·월세(임대)" : dealType]]),
+      ...(profileKey === "commercial"
+        ? [iptRow([["지도검색주소", mapAddress]])]
+        : [...(item.is_public === true ? [iptRow([["제목", item.title]]), iptRow([["공개주소", publicAddress]])] : []), iptRow([["지도검색주소", mapAddress]])]),
+      ...(profileKey === "commercial" ? [
+        iptRow([["기존 분양가", formatWonOrText(item.presalePrice)], ["현재 매매가", formatWonOrText(item.salePrice)]]),
+        iptRow([["기존 보증금", formatWonOrText(item.originalDeposit ?? (item.import_unit_snapshot?.보증금 != null ? Number(item.import_unit_snapshot.보증금)*10000 : null))], ["현재 보증금", depositText]]),
+        iptRow([["기존 월세", formatWonOrText(item.originalMonthlyRent ?? (item.import_unit_snapshot?.월차임 != null ? Number(item.import_unit_snapshot.월차임)*10000 : null))], ["현재 월세", rentText]])
+      ] : [iptRow(priceCore)]),
+      ...profileRows,
+      packRows([...(profileKey === "commercial" ? [] : priceCond), ...profileCondPairs], 3),
+      iptRow([["소유주", ownerName], ["소유주 연락처", contact]]),
+      ...(additionalContactText ? [iptRow([["추가 연락처", additionalContactText]])] : []),
+    ].join("");
+
+    // 예전에 한 칸에 문장으로 적어둔 연락처는, 그 안의 번호가 이미 소유주 연락처·추가 연락처에 모두 있으면 중복이라 숨긴다.
+    const extraContact = differentValue(firstDetailValue(item.owner_contact, item.quick_contact), contact);
+    const _phonePattern = /0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{4}/g;
+    const _knownPhones = new Set([
+      ...(String(contact || "").match(_phonePattern) || []).map(_phoneDigits),
+      ..._additionalList.map(c => _phoneDigits(c.phone)),
+    ].filter(Boolean));
+    const _legacyPhones = (String(extraContact || "").match(_phonePattern) || []).map(_phoneDigits);
+    const legacyContactText = extraContact && !(_legacyPhones.length && _legacyPhones.every(p => _knownPhones.has(p))) ? extraContact : "";
+
+    // 핵심표에 없는 나머지 필드들. 실제 값이 있는 것만 packRows가 걸러서 보여준다.
+    const extraPairs = [
+      ["최초 분양가", profileKey === "commercial" || !priceAllow.presale ? "" : formatWonOrText(item.presalePrice)],
+      ...(commercialPrice ? [["분양상태",commercialPrice.status]] : []),
+      ["관리비", item.type === "apartment" || profileKey === "commercial" || !priceAllow.fee ? "" : formatWonOrText(item.managementFee)],
+      ["권리금", item.type === "apartment" || profileKey === "commercial" || !priceAllow.fee ? "" : formatWonOrText(item.premium)],
+      ["상가 보증금", profileKey === "commercial" ? "" : formatManWon(item.shop_deposit)],
+      ["상가 월세", profileKey === "commercial" ? "" : formatManWon(item.shop_monthlyRent)],
+      ["상가 관리비", profileKey === "commercial" ? "" : formatManWon(item.shop_maintenance)],
+      ["상가 권리금", profileKey === "commercial" ? "" : item.shop_premium],
+      ["오피스텔 금액", formatManWon(item.officetel_price)],
+      // 토지 종류는 위 가격 칸(매매가)에 이미 합쳐서 보여준다.
+      ["토지 매매가", profileKey === "land" ? "" : formatManWon(item.land_price)],
+      ["공장·창고 금액", formatManWon(item.factory_price)],
+      ["지식산업센터 금액", formatManWon(item.biz_price)],
+      // 가격 메모는 저장할 때 매매가·거래유형으로 자동 생성되는 요약이라 수정창에는 입력칸이 없다. 가격 항목이 비어 있는 옛 매물일 때만 보여준다.
+      ["가격 메모", (hasDetailValue(saleText) || hasDetailValue(depositText) || hasDetailValue(rentText)) ? "" : item.quick_price],
+      ["일반사업자", item.officetel_biz],
+      ["전입", item.officetel_resident],
+      ["임대상태", item.shop_status],
+      ["예상수익률", withSuffix(item.shop_yield, "%")],
+    ];
+    // 연락처 문장·메모처럼 긴 글은 한 줄 전체를 써서 항목과 내용이 어긋나지 않게 한다.
+    const longPairs = [
+      ["기존 연락처", legacyContactText],
+      ["소유주 메모", item.owner_memo],
+      ["옵션내역", item.optionDetails],
+      ["비고", item.remarks],
+    ];
+    const extraRows = packRows(extraPairs, 3) + longPairs
+      .filter(([, value]) => hasDetailValue(detailText(value)))
+      .map(pair => iptRow([pair])).join("");
+    return `<section class="detail-section listing-info-section">
+      <div class="detail-section-title">매물 상세정보</div>
+      <div class="listing-info-table">${rows}${extraRows}</div>
+    </section>`;
+  }
+
+  // ===== 추가메모: 날짜별 목록 · 수정 · 삭제 (모든 매물 공통) =====
+  function memoKey(m) { return (m && m.id) || (String((m && m.text) || "").trim() + "|" + ((m && m.created_at) || "")); }
+  function memoTime(m) { return Date.parse(m && m.created_at) || 0; }
+  function sortMemosAsc(list) { return list.slice().sort((a, b) => memoTime(a) - memoTime(b)); }
+  function memoDateKst(m) { const t = memoTime(m); return t ? new Date(t).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) : ""; }
+  function memoDateLabel(m) { const t = memoTime(m); return t ? new Date(t).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }) : "날짜 없음"; }
+  function memoShownText(m) {
+    const raw = String((m && m.text) || "");
+    return typeof apartmentRemarksOnly === "function" ? apartmentRemarksOnly(raw) : raw;
+  }
+  // 매물의 추가메모 = data.additionalMemos + (아파트) apartmentUnitData.추가메모 를 같은 id끼리 합친 목록 (오래된 순)
+  function listingMemoList(item) {
+    const d = item || {};
+    const u = d.apartmentUnitData && Array.isArray(d.apartmentUnitData.추가메모) ? d.apartmentUnitData.추가메모 : [];
+    const a = Array.isArray(d.additionalMemos) ? d.additionalMemos : [];
+    const seen = new Set(), out = [];
+    for (const m of [...a, ...u]) {
+      if (!m || !String(m.text || "").trim()) continue;
+      const k = memoKey(m);
+      if (seen.has(k)) continue;
+      seen.add(k); out.push(m);
+    }
+    return sortMemosAsc(out);
+  }
+  function memoCreatedFor(dateStr, original) {
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+    if (original && dateStr === memoDateKst(original)) return original.created_at;
+    return dateStr === today ? new Date().toISOString() : new Date(dateStr + "T12:00:00+09:00").toISOString();
+  }
+  // 최신 매물 data를 다시 읽어 추가메모 목록만 바꿔 저장한다 (다른 값은 그대로)
+  async function saveListingMemos(id, mutate) {
+    const res1 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), { headers });
+    if (!res1.ok) throw new Error("조회 실패");
+    const rows = await res1.json();
+    if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
+    const data = Object.assign({}, rows[0].data);
+    const next = sortMemosAsc(mutate(listingMemoList(data)));
+    data.additionalMemos = next;
+    if (data.apartmentUnitData && typeof data.apartmentUnitData === "object") {
+      data.apartmentUnitData = Object.assign({}, data.apartmentUnitData, { 추가메모: next });
+    }
+    const res2 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
+      method: "PATCH",
+      headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+      body: JSON.stringify({ data })
+    });
+    if (!res2.ok) throw new Error("추가메모 저장 실패: " + await res2.text());
+  }
+  function renderMemoSection(item) {
+    const list = listingMemoList(item).filter(m => memoShownText(m).trim()).reverse();
+    const btnStyle = "flex:none;padding:2px 10px;font-size:12px";
+    const rows = list.map(m =>
+      '<div class="memo-row" data-key="' + escapeHtml(memoKey(m)) + '" style="padding:8px 0;border-top:1px dashed rgba(255,255,255,0.14)">'
+      + '<div style="display:flex;gap:10px;align-items:flex-start">'
+      + '<span style="flex:none;color:var(--text-muted);font-size:12px;min-width:88px">' + escapeHtml(memoDateLabel(m)) + '</span>'
+      + '<span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px">' + escapeHtml(memoShownText(m)) + '</span>'
+      + '<button type="button" class="btn btn-ghost memo-edit" style="' + btnStyle + '">수정</button>'
+      + '<button type="button" class="btn btn-ghost memo-del" style="' + btnStyle + '">삭제</button>'
+      + '</div></div>'
+    ).join("");
+    return '<section class="detail-section" id="memoSection"><div class="detail-section-title">추가메모 <span style="font-size:12px;font-weight:400;color:var(--text-muted)">' + list.length + '건 · 날짜순</span></div>'
+      + (rows || '<div style="font-size:13px;color:var(--text-muted);padding:2px 0 8px">아직 추가메모가 없어요.</div>')
+      + '<div style="display:flex;gap:8px;align-items:center;margin:12px 0 8px"><span style="font-size:13px;font-weight:700;color:var(--gold)">새 메모</span>'
+      + '<input type="date" id="addMemoDate" title="메모 날짜 선택" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:auto;flex:none;padding:2px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:12px"></div>'
+      + '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
+      + '<textarea id="addMemoText" rows="2" placeholder="나중에 알게 된 내용을 적고 저장을 누르세요 (위 날짜로 저장돼요)" style="flex:1;min-width:220px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
+      + '<button type="button" class="btn btn-primary" id="addMemoBtn">메모 저장</button></div></section>';
+  }
+  // 수정 화면의 추가메모 목록 (내용·날짜 수정, 삭제, 새 줄 추가)
+  function buildEditMemoRow(m) {
+    const row = document.createElement("div");
+    row.className = "edit-memo-row";
+    row.style.cssText = "display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px dashed rgba(255,255,255,0.14)";
+    if (m) { row.dataset.key = memoKey(m); row.dataset.origText = memoShownText(m); row.dataset.origDate = memoDateKst(m); }
+    const date = document.createElement("input");
+    date.type = "date"; date.className = "edit-memo-date";
+    date.value = m ? memoDateKst(m) : new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+    const ta = document.createElement("textarea");
+    ta.rows = 2; ta.className = "edit-memo-text"; ta.style.cssText = "width:100%;box-sizing:border-box;";
+    ta.value = m ? memoShownText(m) : "";
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "btn btn-ghost"; del.style.cssText = "padding:2px 10px;font-size:12px"; del.textContent = "삭제";
+    del.addEventListener("click", () => {
+      if (!row.dataset.key) { row.remove(); return; }
+      const on = row.dataset.del !== "1";
+      row.dataset.del = on ? "1" : "";
+      row.style.opacity = on ? "0.4" : "";
+      del.textContent = on ? "삭제 취소" : "삭제";
+    });
+    row.append(date, ta, del);
+    return row;
+  }
+  function renderEditMemoList(item) {
+    const host = document.getElementById("edit_memoList");
+    if (!host) return;
+    host.innerHTML = "";
+    for (const m of listingMemoList(item).filter(x => memoShownText(x).trim()).reverse()) host.appendChild(buildEditMemoRow(m));
+    const add = document.getElementById("edit_memoAddBtn");
+    if (add) add.onclick = () => host.insertBefore(buildEditMemoRow(null), host.firstChild);
+  }
+  function collectEditMemos(item) {
+    const host = document.getElementById("edit_memoList");
+    if (!host) return null;
+    const orig = listingMemoList(item);
+    const byKey = new Map(orig.map(m => [memoKey(m), m]));
+    const shown = new Set(), out = [];
+    for (const row of host.querySelectorAll(".edit-memo-row")) {
+      const key = row.dataset.key || "";
+      const o = key ? byKey.get(key) : null;
+      if (key) shown.add(key);
+      if (row.dataset.del === "1") continue;
+      const text = row.querySelector(".edit-memo-text").value.trim();
+      const date = row.querySelector(".edit-memo-date").value;
+      if (!text) continue;
+      if (o && text === String(row.dataset.origText || "").trim() && date === row.dataset.origDate) { out.push(o); continue; }
+      out.push(Object.assign({}, o || {}, {
+        id: (o && o.id) || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + out.length)),
+        text,
+        created_at: date ? memoCreatedFor(date, o) : (o ? o.created_at : new Date().toISOString())
+      }));
+    }
+    // 화면에 나오지 않는 메모(엑셀 원본처럼 내용이 비어 보이는 것)는 그대로 둔다
+    for (const m of orig) if (!shown.has(memoKey(m))) out.push(m);
+    return sortMemosAsc(out);
+  }
+
+  function detailChips(values) {
+    const list = Array.isArray(values) ? values.map(detailText).filter(Boolean) : [];
+    if (!list.length) return "";
+    return `<div class="detail-chip-list">${list.map(v => `<span class="detail-chip">${escapeHtml(v)}</span>`).join("")}</div>`;
+  }
+
+  function differentValue(value, base) {
+    const text = detailText(value);
+    return text && text !== detailText(base) ? text : "";
+  }
+
+
+  // 상가정보 표에 이미 표시한 항목과 정확히 같은 메모 행만 화면에서 생략한다.
+  function commercialAdditionalMemo(item, text) {
+    const normalize = value => String(value ?? '').normalize('NFKC').replace(/[\s,]/g, '').toLowerCase();
+    const known = new Set(formatLegacyDesc({...item, description:''}).split('\n').map(normalize).filter(Boolean));
+    const add = (labels, values) => labels.forEach(label => values.filter(v => v !== null && v !== undefined && String(v).trim() !== '').forEach(value => known.add(normalize(label + ': ' + value))));
+    add(['건물명','건물','상가명'], [item.complexName, item.buildingName]);
+    add(['호실','호수'], [item.ho, item.unit, item.roomNo, item.ho && item.ho+'호']);
+    add(['주소','소재지'], [item.address, item.publicAddress, item.mapAddress]);
+    add(['상세주소','동호수'], [item.privateDetailAddress, item.detailAddress]);
+    add(['층','층수','층정보'], [item.floorInfo,item.floor,item.shop_floor]);
+    add(['업종','현업종'], [item.currentBiz,item.shop_biz,item.industry]);
+    add(['거래유형','거래구분'], [item.dealType,item.shop_dealType]);
+    add(['임대상태','공실여부'], [item.shop_status,item.occupancy]);
+    add(['입주가능일'], [item.availableDate,item.moveInDate,item.shop_available]);
+    add(['전용면적'], [item.exclusiveAreaPy,item.shop_area_py].filter(v=>v!=null).flatMap(v=>[v+'평']));
+    add(['분양면적','공급면적'], [item.supplyAreaPy].filter(v=>v!=null).map(v=>v+'평'));
+    const money = (labels, values) => add(labels, values.filter(v=>v!==null&&v!==undefined&&v!=='').flatMap(v=>[v,Number(v).toLocaleString('ko-KR')+'만원',formatWonOrText(v)]));
+    money(['보증금'],[item.deposit,item.shop_deposit]);
+    money(['월세'],[item.monthlyRent,item.shop_monthlyRent]);
+    money(['매매가','매매금액'],[item.salePrice]);
+    money(['분양가','분양금액'],[item.presalePrice]);
+    money(['관리비'],[item.managementFee,item.shop_maintenance]);
+    money(['권리금'],[item.premium,item.shop_premium]);
+    return String(text || '').split(/\r?\n/).filter(line => !known.has(normalize(line))).join('\n').trim();
+  }
+
+  function renderDetail(item) {
+    const html = renderDetailContent(item);
+    const ids = Array.from(new Set([...(item.owner_customer_ids || []), ...(item.apartmentUnitData?.owner_customer_ids || [])]));
+    if (!ids.length) return html;
+    return html + '<section class="detail-section"><div class="detail-section-title">소유주 고객 · 연락처 원본</div>' + ids.map((id,index) => '<a class="owner-customer-link" href="' + escapeHtml(OfficeConfig.urlFor('customers.html?customerId=' + encodeURIComponent(id))) + '" target="_blank" rel="noopener">연결 고객 ' + (index+1) + ' 보기</a>').join('') + '</section>';
+  }
+  function renderDetailContent(item) {
+    let html = "";
+    const category = getCategoryFromListing(item);
+    const imageUrls = getListingImageUrls(item);
+    const contact = firstDetailValue(item.owner_phone1, item.owner_contact, item.quick_contact);
+    const complexName = firstDetailValue(item.complexName, item.officetel_complex, item.buildingName, item.building_name, item.complex_name, item.shop_building, item.type === "hilsstate" ? "힐스테이트더운정" : "");
+    const publicAddress = firstDetailValue(item.publicAddress, item.displayAddress, item.quick_location, item.address);
+    const mapAddress = firstDetailValue(item.mapAddress, item.roadAddress, item.jibunAddress, item.locationAddress, item.privateAddress, item.address);
+
+    if (item.status === "거래완료") {
+      html += `<div class="deal-status">거래완료</div>`;
+    }
+
+    if (category.category2 === "아파트" || item.type === "apartment") {
+      const u=apartmentSource(item);
+      html += `<div class="detail-title apartment-detail-title"><span class="apartment-title-name">${escapeHtml(u.아파트명 || complexName || "아파트")}</span><span class="apartment-title-unit"><span class="apartment-unit-part"><strong>${escapeHtml(u.동 || "—")}</strong><small>동</small></span><span class="apartment-unit-part"><strong>${escapeHtml(u.호 || "—")}</strong><small>호</small></span></span></div>`;
+    } else html += `<div class="detail-title">${escapeHtml(item.title || getListingCategoryLabel(item))}</div>`;
+
+    html += `<div class="detail-actions">`;
+
+    if (contact) {
+      html += `<a class="contact-btn" href="tel:${escapeAttr(contact)}">📞 ${escapeHtml(contact)}</a>`;
+    }
+    if (item.resource_id) {
+      const res = _allDriveResources.find(r => r.id === item.resource_id);
+      if (res && res.url) {
+        html += `<a class="btn btn-ghost" href="${escapeAttr(res.url)}" target="_blank" rel="noopener" style="text-decoration:none;">📁 자료보기</a>`;
+      }
+    }
+
+    html += `<button class="btn btn-primary" id="editBtn">✏️ 수정</button>`;
+    html += `<button class="btn btn-danger" id="deleteBtn">🗑 삭제</button>`;
+    if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-primary" id="sendHomeBtn">${item.is_public === true ? "공개 취소" : "🌐 홈페이지 등록"}</button>`;
+    if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
+    html += '<div class="detail-print-tools">';
+    html += '<select id="detailProgressStatus" class="btn" aria-label="매물 거래상태">'+['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(listingProgressStatus(item)===status?' selected':'')+'>'+status+'</option>').join('')+'</select>';
+    html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button></div>`;
+    html += `</div>`;
+
+    if (typeof getListingConfirmInfo === "function") {
+      const ci = getListingConfirmInfo(item);
+      html += '<div class="detail-confirm-row">최종확인일 <b id="confirmListingBtn" class="' + ci.cls + '" title="누르면 오늘 날짜로 확인 처리" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px">' + escapeHtml(formatDateValue(getListingConfirmedAt(item)) || "-") + '</b> <span class="' + ci.cls + '">(' + escapeHtml(ci.text) + ')</span></div>';
+    }
+
+    html += `<div class="detail-badges"><span data-homepage-only class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
+
+    // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나의 "매물 상세정보" 표로 통합.
+    html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
+
+    // 추가메모: 날짜별 목록 · 수정 · 삭제 · 새 메모 저장 (모든 매물 공통)
+    html += renderMemoSection(item);
+
+    const isApartmentDetail = category.category2 === "아파트" || item.type === "apartment";
+    const isCommercialDetail = category.category1 === "상가사무실" || category.category1 === "상가/사무실" || ["shop", "office", "bizcenter"].includes(item.type);
+    if (!isApartmentDetail) {
+      const description = isCommercialDetail ? commercialAdditionalMemo(item, item.description) : item.description;
+      const quickMemo = isCommercialDetail ? commercialAdditionalMemo(item, item.quick_memo) : item.quick_memo;
+      html += detailSection(isCommercialDetail ? "추가 메모" : "설명·메모", [
+        ...(!isCommercialDetail ? [detailField("공개 매물설명", item.detailDescription, { wide: true, pre: true })] : []),
+        detailField("비공개 내부메모", description, { wide: true, pre: true }),
+        detailField("빠른등록 메모", differentValue(quickMemo, description), { wide: true, pre: true }),
+        ...(!isCommercialDetail ? [detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true })] : []),
+      ], { extraClass: "description-section" });
+    }
+
+    if (isApartmentDetail) html += detailSection("특징·태그", [detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true })]);
+
+    let materialHtml = "";
+    if (item.resource_id) {
+      const res = _allDriveResources.find(r => r.id === item.resource_id);
+      if (res) {
+        const memoHtml = !isApartmentDetail && res.memo ? `<div class="detail-read-value pre-line" style="margin-top:8px;color:var(--text-muted);">${escapeHtml(res.memo)}</div>` : "";
+        materialHtml += `<div class="detail-read-item wide">
+          <div class="detail-read-label">연결된 빌딩 자료</div>
+          <div class="detail-resource-row">
+            <div class="detail-read-value">${escapeHtml([res.category, res.name].filter(Boolean).join(" · ") || "빌딩 자료")}</div>
+            ${isApartmentDetail ? `<a href="building-overview.html?${new URLSearchParams({id:res.id,office:OfficeConfig.id})}" class="btn btn-ghost" style="font-size:0.78rem;padding:5px 14px;text-decoration:none;">단지 자료 보기</a>` : ""}
+            ${res.url ? `<a href="${escapeAttr(res.url)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.78rem;padding:5px 14px;text-decoration:none;">📁 빌딩자료 보기</a>` : ""}
+          </div>
+          ${memoHtml}
+        </div>`;
+      }
+    }
+
+    const links = Array.isArray(item.drive_links) ? item.drive_links : [];
+    materialHtml += `<div class="detail-read-item wide" id="driveLinksCard">
+      <div class="detail-section-title" style="margin:0 0 10px 0;">
+        <span>드라이브 링크</span>
+        <button class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;" onclick="showAddLinkForm()">+ 링크 추가</button>
+      </div>
+      <div id="driveLinksArea">
+        ${links.length ? links.map((l,i)=>`
+          <div class="detail-resource-row" style="margin-bottom:7px;">
+            <span class="detail-read-value" style="flex:1;color:var(--gold-soft);">📄 ${escapeHtml(l && l.name ? l.name : "링크")}</span>
+            ${l && l.url ? `<a href="${escapeAttr(l.url)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.75rem;padding:3px 12px;text-decoration:none;">열기</a>` : ""}
+            <button onclick="deleteDriveLink(${i})" style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1rem;padding:0 4px;">✕</button>
+          </div>`).join("")
+        : `<div class="detail-read-value" style="color:var(--text-muted);font-size:0.82rem;">등록된 링크가 없습니다</div>`}
+      </div>
+      <div id="addLinkForm" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,175,55,0.15);">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <input id="newLinkName" type="text" placeholder="이름 (예: 토지대장)" style="width:130px;flex-shrink:0;" />
+          <input id="newLinkUrl" type="text" placeholder="https://drive.google.com/..." style="flex:1;min-width:160px;" />
+          <button class="btn btn-primary" style="font-size:0.82rem;padding:5px 14px;flex-shrink:0;" onclick="addDriveLink()">저장</button>
+          <button class="btn btn-ghost" style="font-size:0.82rem;padding:5px 10px;flex-shrink:0;" onclick="document.getElementById('addLinkForm').style.display='none'">취소</button>
+        </div>
+      </div>
+    </div>`;
+
+    if (imageUrls.length) {
+      materialHtml += `<div class="detail-read-item wide">
+        <div class="detail-read-label">등록된 모든 매물 이미지</div>
+        <div class="detail-image-grid">
+          ${imageUrls.map((url, idx) => `<a class="detail-image-link" href="${escapeAttr(url)}" target="_blank" rel="noopener"><img src="${escapeAttr(url)}" alt="listing image ${idx + 1}" /></a>`).join("")}
+        </div>
+      </div>`;
+    }
+    html += `<section class="detail-section"><div class="detail-section-title">이미지·자료</div><div class="detail-read-grid">${materialHtml}</div></section>`;
+
+    html += detailSection("등록상태", [
+      detailField("등록구분", item.listingKind === "명단" ? "명단" : "매물", { required: true }),
+      detailField("거래상태", listingProgressStatus(item), { required: true }),
+      ...(OfficeConfig.id === "ktop" ? [] : [detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true })]),
+      detailField("등록일", formatDateValue(item.created_at)),
+      detailField("최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))),
+    ], { required: true });
+
+    return html;
+  }
+
+  // ── 드라이브 링크 추가 / 삭제 ──
+  let _currentItem = null;
+
+  function showAddLinkForm() {
+    document.getElementById("addLinkForm").style.display = "block";
+    document.getElementById("newLinkName").focus();
+  }
+
+  async function addDriveLink() {
+    const name = document.getElementById("newLinkName").value.trim();
+    const url  = document.getElementById("newLinkUrl").value.trim();
+    if (!url) { showToast("URL을 입력해주세요"); return; }
+    const links = [...(_currentItem.drive_links || []), { name: name || "링크", url }];
+    try {
+      await updateListing(_currentItem.id, Object.assign({}, _currentItem, { drive_links: links }));
+      _currentItem.drive_links = links;
+      showToast("✅ 링크가 추가되었습니다");
+      document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+      rebindButtons();
+    } catch(e) { showToast("❌ 실패: " + e.message); }
+  }
+
+  async function deleteDriveLink(idx) {
+    if (!confirm("이 링크를 삭제하시겠습니까?")) return;
+    const links = (_currentItem.drive_links || []).filter((_,i) => i !== idx);
+    try {
+      await updateListing(_currentItem.id, Object.assign({}, _currentItem, { drive_links: links }));
+      _currentItem.drive_links = links;
+      showToast("🗑 링크가 삭제되었습니다");
+      document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+      rebindButtons();
+    } catch(e) { showToast("❌ 실패: " + e.message); }
+  }
+
+  function mapPropertyType(type) {
+    const m = { shop:"상가", officetel:"오피스텔", apartment:"아파트", bizcenter:"지식산업센터",
+      factory:"공장/창고", land_dev:"토지(시행)", land_single:"토지(단독)", land_general:"토지(일반)" };
+    return m[type] || "상가";
+  }
+
+  function formatLegacyDesc(item) {
+    const lines = [];
+    if (item.address) lines.push("주소: " + item.address);
+    if (item.title) lines.push("제목: " + item.title);
+    if (item.type === "shop" || item.type === "office") {
+      if (item.shop_dealType) lines.push("거래유형: " + item.shop_dealType);
+      if (item.shop_floor) lines.push("층수: " + item.shop_floor);
+      if (item.shop_area_py) lines.push("전용면적: " + item.shop_area_py + "평");
+      if (item.shop_deposit) lines.push("보증금: " + Number(item.shop_deposit).toLocaleString("ko-KR") + "만원");
+      if (item.shop_monthlyRent) lines.push("월세: " + Number(item.shop_monthlyRent).toLocaleString("ko-KR") + "만원");
+      if (item.shop_maintenance) lines.push("관리비: " + item.shop_maintenance + "만원");
+      if (item.shop_premium) lines.push("권리금: " + item.shop_premium);
+      if (item.shop_status) lines.push("임대상태: " + item.shop_status);
+      if (item.shop_available) lines.push("입주가능일: " + item.shop_available);
+    }
+    if (item.type === "officetel" || item.type === "hilsstate") {
+      if (item.officetel_dealType) lines.push("거래유형: " + item.officetel_dealType);
+      if (item.officetel_floor) lines.push("층수: " + item.officetel_floor);
+      if (item.officetel_area_py) lines.push("전용면적: " + item.officetel_area_py + "평");
+      if (item.officetel_price) lines.push("금액: " + Number(item.officetel_price).toLocaleString("ko-KR") + "만원");
+      if (item.officetel_direction) lines.push("향: " + item.officetel_direction);
+      if (item.officetel_available) lines.push("입주가능일: " + item.officetel_available);
+    }
+    if (item.type && item.type.startsWith("land")) {
+      if (item.land_area_py) lines.push("면적: " + item.land_area_py + "평");
+      if (item.land_jimok) lines.push("지목: " + item.land_jimok);
+      if (item.land_zone) lines.push("용도지역: " + item.land_zone);
+      if (item.land_price) lines.push("매매가: " + Number(item.land_price).toLocaleString("ko-KR") + "만원");
+    }
+    if (item.type === "factory") {
+      if (item.factory_area_py) lines.push("건축면적: " + item.factory_area_py + "평");
+      if (item.factory_land_py) lines.push("대지면적: " + item.factory_land_py + "평");
+      if (item.factory_price) lines.push("가격: " + Number(item.factory_price).toLocaleString("ko-KR") + "만원");
+    }
+    if (item.description) lines.push("메모: " + item.description);
+    return lines.join("\n");
+  }
+
+  function buildHomepagePrefill(item) {
+    return {
+      propertyType: mapPropertyType(item.type),
+      title: item.title || "",
+      description: formatLegacyDesc(item)
+    };
+  }
+
+  function rebindButtons() {
+    const item = _currentItem;
+    const id   = item.id;
+    const buildingOwnerButton=document.getElementById("buildingOwnerSearchBtn");
+    if(buildingOwnerButton)buildingOwnerButton.addEventListener("click",()=>openApartmentRegistrySearch(item,message=>showToast(message,10000),"building"));
+    const registryOwnerButton=document.getElementById("registryOwnerSearchBtn");
+    if(registryOwnerButton)registryOwnerButton.addEventListener("click",()=>openApartmentRegistrySearch(item,message=>showToast(message,10000)));
+    const apartmentAutoButton=document.getElementById("autoFillApartmentBtn");
+    if(apartmentAutoButton)apartmentAutoButton.addEventListener("click",async()=>{
+      apartmentAutoButton.disabled=true;apartmentAutoButton.textContent="조회 중…";
+      try{
+        const reference=await lookupApartmentAutofill(item);
+        const updated=applyApartmentUnitReference(item,reference);
+        await updateListing(id,updated);
+        _currentItem=updated;
+        document.getElementById("detailArea").innerHTML=renderDetail(updated);
+        rebindButtons();
+        showToast(apartmentAutofillMessage(reference)+" 저장했습니다.",6000);
+      }catch(error){showToast("자동입력 실패: "+error.message,5000);apartmentAutoButton.disabled=false;apartmentAutoButton.textContent="건축물대장 조회";}
+    });
+    const extraInfoToggle = document.getElementById("extraInfoToggle");
+    const extraInfoTable  = document.getElementById("extraInfoTable");
+    if (extraInfoToggle && extraInfoTable) {
+      extraInfoToggle.addEventListener("click", () => {
+        const expanded = extraInfoToggle.getAttribute("aria-expanded") === "true";
+        extraInfoToggle.setAttribute("aria-expanded", String(!expanded));
+        extraInfoTable.hidden = expanded;
+        extraInfoToggle.querySelector("span").textContent = expanded ? "추가 정보 보기" : "추가 정보 닫기";
+      });
+    }
+    const progressSelect=document.getElementById("detailProgressStatus");
+    if(progressSelect)progressSelect.addEventListener('change',async()=>{
+      const old=listingProgressStatus(_currentItem);progressSelect.disabled=true;
+      try{if(progressSelect.value==='거래완료')await markListingDone(_currentItem.id);else await updateListingStatus(_currentItem.id,progressSelect.value);
+        _currentItem=await getListingById(_currentItem.id);document.getElementById('detailArea').innerHTML=renderDetail(_currentItem);rebindButtons();showToast('매물 상태를 저장했습니다.');
+      }catch(e){progressSelect.value=old;progressSelect.disabled=false;showToast(e.message);}
+    });
+    const addMemoBtn = document.getElementById("addMemoBtn");
+    if (addMemoBtn) addMemoBtn.addEventListener("click", async () => {
+      const box = document.getElementById("addMemoText");
+      const text = (box.value || "").trim();
+      if (!text) { showToast("메모 내용을 적어 주세요."); return; }
+      const picked = (document.getElementById("addMemoDate") || {}).value || new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+      addMemoBtn.disabled = true;
+      try {
+        await saveListingMemos(_currentItem.id, list => list.concat([{
+          id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text, created_at: memoCreatedFor(picked, null)
+        }]));
+        _currentItem = await getListingById(_currentItem.id);
+        document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+        rebindButtons();
+        showToast("추가메모를 저장했습니다.");
+      } catch (e) { addMemoBtn.disabled = false; showToast(e.message); }
+    });
+    // 추가메모 줄의 수정 · 삭제 · 저장 · 취소 (화면을 다시 그려도 한 번만 등록)
+    if (!window.__memoRowClicks) {
+      window.__memoRowClicks = true;
+      document.addEventListener("click", async (ev) => {
+        const t = ev.target && ev.target.closest ? ev.target.closest(".memo-edit,.memo-del,.memo-save,.memo-cancel") : null;
+        const row = t && t.closest(".memo-row");
+        if (!row) return;
+        const key = row.dataset.key;
+        const redraw = () => { document.getElementById("detailArea").innerHTML = renderDetail(_currentItem); rebindButtons(); };
+        try {
+          if (t.classList.contains("memo-edit")) {
+            const m = listingMemoList(_currentItem).find(x => memoKey(x) === key);
+            if (!m) return;
+            row.innerHTML = '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
+              + '<input type="date" class="memo-edit-date" value="' + escapeHtml(memoDateKst(m)) + '" style="width:auto;flex:none;padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
+              + '<textarea class="memo-edit-text" rows="3" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical">' + escapeHtml(memoShownText(m)) + '</textarea>'
+              + '<button type="button" class="btn btn-primary memo-save" style="flex:none;padding:4px 12px;font-size:13px">저장</button>'
+              + '<button type="button" class="btn btn-ghost memo-cancel" style="flex:none;padding:4px 12px;font-size:13px">취소</button></div>';
+          } else if (t.classList.contains("memo-cancel")) {
+            redraw();
+          } else if (t.classList.contains("memo-save")) {
+            const text = (row.querySelector(".memo-edit-text").value || "").trim();
+            const date = row.querySelector(".memo-edit-date").value;
+            if (!text) { showToast("내용을 적어 주세요. 지우려면 삭제를 눌러 주세요."); return; }
+            t.disabled = true;
+            await saveListingMemos(_currentItem.id, list => list.map(x => memoKey(x) === key
+              ? Object.assign({}, x, { id: x.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), text, created_at: date ? memoCreatedFor(date, x) : x.created_at })
+              : x));
+            _currentItem = await getListingById(_currentItem.id);
+            redraw();
+            showToast("추가메모를 고쳤습니다.");
+          } else if (t.classList.contains("memo-del")) {
+            if (!confirm("이 추가메모를 삭제할까요?")) return;
+            t.disabled = true;
+            await saveListingMemos(_currentItem.id, list => list.filter(x => memoKey(x) !== key));
+            _currentItem = await getListingById(_currentItem.id);
+            redraw();
+            showToast("추가메모를 삭제했습니다.");
+          }
+        } catch (e) { showToast(e.message); }
+      });
+    }
+    const confirmBtn = document.getElementById("confirmListingBtn");
+    if (confirmBtn) confirmBtn.addEventListener("click", async () => {
+      confirmBtn.disabled = true;
+      try {
+        await confirmListing(_currentItem.id);
+        _currentItem = await getListingById(_currentItem.id);
+        document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+        rebindButtons();
+        showToast("오늘 날짜로 확인 처리했습니다.");
+      } catch (e) { confirmBtn.disabled = false; showToast(e.message); }
+    });
+    const doneBtn   = document.getElementById("doneBtn");
+    const undoneBtn = document.getElementById("undoneBtn");
+    if (doneBtn) doneBtn.addEventListener("click", async () => {
+      doneBtn.disabled = true;
+      try { await updateListingStatus(id, "거래완료"); showToast("✅ 거래완료 처리됐어요!"); setTimeout(() => location.href = "properties.html", 1200); }
+      catch(e) { showToast("❌ 실패: "+e.message); doneBtn.disabled = false; }
+    });
+    if (undoneBtn) undoneBtn.addEventListener("click", async () => {
+      undoneBtn.disabled = true;
+      try { await updateListingStatus(id, "광고중"); showToast("↩ 진행중으로 변경됐어요!"); setTimeout(() => location.reload(), 1200); }
+      catch(e) { showToast("❌ 실패: "+e.message); undoneBtn.disabled = false; }
+    });
+    const printBriefBtn = document.getElementById("printBriefBtn");
+    if (printBriefBtn) {
+      printBriefBtn.addEventListener("click", () => {
+        location.href = `property-print.html?id=${item.id}`;
+      });
+    }
+    document.getElementById("editBtn").addEventListener("click", () => openEditModal(item));
+    document.getElementById("deleteBtn").addEventListener("click", () => { document.getElementById("deleteModal").style.display = "flex"; });
+    const viewHomeBtn = document.getElementById("viewHomeBtn");
+    if (viewHomeBtn) {
+      viewHomeBtn.addEventListener("click", () => {
+        if (_currentItem.is_public !== true) {
+          showToast("먼저 홈페이지 공개를 해주세요.");
+          return;
+        }
+        openHomepageListings(null, _currentItem.id);
+      });
+    }
+    const sendHomeBtn = document.getElementById("sendHomeBtn");
+    if (sendHomeBtn) {
+      sendHomeBtn.addEventListener("click", async () => {
+        const nextPublic = _currentItem.is_public !== true;
+        if (nextPublic) {
+          openEditModal(_currentItem);
+          setEditHomepageMode(true);
+          showToast("홈페이지용 설명·스티커와 공개할 사진을 확인한 뒤 저장하세요.", 3500);
+          document.getElementById("editHomepagePanel").scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+        sendHomeBtn.disabled = true;
+        try {
+          await updateListingPublic(id, nextPublic);
+          _currentItem.is_public = nextPublic;
+          showToast(nextPublic ? "Homepage listing is now public." : "Homepage listing is now private.");
+          document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
+          rebindButtons();
+        } catch(e) {
+          closeHomepageTab(homepageTab);
+          showToast("Public status update failed: " + e.message);
+          sendHomeBtn.disabled = false;
+        }
+      });
+    }
+  }
+
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+    if (!id) { document.getElementById("detailArea").innerHTML = "<div class='desc-card'>잘못된 접근입니다.</div>"; return; }
+
+    try {
+      await loadDriveResourcesForSelect();
+      const item = await getListingById(id);
+      if (!item) { document.getElementById("detailArea").innerHTML = "<div class='desc-card'>매물을 찾을 수 없습니다.</div>"; return; }
+
+      _currentItem = item;
+      document.getElementById("detailArea").innerHTML = renderDetail(item);
+      rebindButtons();
+      if (params.get("edit") === "1") {
+        setTimeout(() => openEditModal(item), 0);
+      }
+
+      // 수정
+      document.getElementById("editSaveBtn").addEventListener("click", async () => {
+        const dealTypeId = document.getElementById("edit_category2").value === "아파트" ? "edit_apt_거래구분" : "edit_dealType";
+        if (!document.getElementById(dealTypeId).value.trim()) { showToast("거래유형을 선택하세요"); return; }
+        const btn = document.getElementById("editSaveBtn");
+        btn.disabled = true; btn.textContent = "저장 중...";
+        updateEditDynamicSections();
+
+        cleanEditPriceInputs();
+        const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+        const gn = id => { const el = document.getElementById(id); return (el && el.value) ? el.value : null; };
+
+        // 상가주택·다가구주택은 화면상 "주거용"에서 선택하지만, 실제 저장은 건물빌딩으로 통일한다.
+        const category1          = resolveStorageCategory1(gv("edit_category1"), gv("edit_category2"));
+        const category2          = gv("edit_category2");
+        const type               = gv("edit_propertyType");
+        const apartmentAddresses = category2 === "아파트" ? readApartmentAddresses("edit_") : {};
+        const publicAddress = category2 === "아파트" ? apartmentAddresses.publicAddress : gv("edit_publicAddress");
+        const mapAddress = category2 === "아파트" ? apartmentAddresses.mapAddress : gv("edit_mapAddress");
+        const apartmentUnit = category2 === "아파트" ? readApartmentUnitFields("edit_") : {};
+        const privateDetailAddress = category2 === "아파트" ? apartmentUnit.privateDetailAddress : gv("edit_privateDetailAddress");
+        const complexName        = gv("edit_complexName");
+        const editTitle          = gv("edit_title");
+        const stickers           = Array.from(document.querySelectorAll("input[name='edit_stickers']:checked")).map(c => c.value);
+        const newImageFiles      = _editNewImageFiles;
+        const _editAdditionalContacts = collectEditAdditionalContacts();
+
+        let apartmentFields = {};
+        if (category2 === "아파트") {
+          try { apartmentFields = collectApartmentListingFields("edit_", item); }
+          catch(error) { showToast(error.message); btn.disabled = false; btn.textContent = "저장"; return; }
+        }
+        const updated = Object.assign({}, item, {
+          type, category1, category2,
+          status: gv("edit_progressStatus"),
+          ...(gv("edit_progressStatus")==="거래완료" && item.status!=="거래완료" ? {completed_at:new Date().toISOString()} : {}),
+          title:              editTitle || item.title || `${getTypeLabel(type)} · ${publicAddress || "주소미입력"}`,
+          address:            mapAddress || publicAddress || item.address,
+          ...apartmentAddresses,
+          publicAddress,
+          mapAddress,
+          privateDetailAddress,
+          dong: category2 === "아파트" ? apartmentUnit.dong : item.dong,
+          ho: category2 === "아파트" ? apartmentUnit.ho : item.ho,
+          complexName,
+          description:        gv("edit_description"),
+          resource_id:        gv("edit_resource_id") || null,
+          is_public:          gv("edit_listingKind") === "명단" ? false : (OfficeConfig.id === "ktop" ? _currentItem.is_public === true : (document.getElementById("editHomepageEnabled").checked ? document.getElementById("edit_is_public").checked : _currentItem.is_public === true)),
+          image_urls:         [],
+          imageUrls:          _editImageUrls,
+          allImageUrls:       _editImageUrls,
+          publicImageUrls:    _editPublicImageUrls.filter(url => _editImageUrls.includes(url)),
+          drive_links:        item.drive_links || [],
+          // 기본정보 추가
+          dealType:           gv("edit_dealType"),
+          listingKind:        gv("edit_listingKind") === "명단" ? "명단" : "매물",
+          // 가격정보
+          salePrice:          gv("edit_salePrice"),
+          quick_price: (() => {
+            const sp = gv("edit_salePrice");
+            if (!sp) return item.quick_price || "";
+            const dt = gv("edit_dealType");
+            const fmt = formatWonKr(sp);
+            return dt ? dt + " " + fmt : fmt;
+          })(),
+          presalePrice:       gv("edit_presalePrice"),
+          ...(category1 === "상가사무실" ? window.editCommercialPhase.originalValues : {}),
+          presaleStatus: category1 === "상가사무실" ? window.editCommercialPhase.status : item.presaleStatus,
+          occupancy: category1 === "상가사무실" ? window.editCommercialPhase.occupancy : item.occupancy,
+          deposit:            gv("edit_deposit"),
+          monthlyRent:        gv("edit_monthlyRent"),
+          managementFee:      gv("edit_managementFee"),
+          premium:            gv("edit_premium"),
+          // 면적
+          areaM2:             gn("edit_areaM2"),           areaPy:             gn("edit_areaPy"),
+          exclusiveAreaM2:    gn("edit_exclusiveAreaM2"),  exclusiveAreaPy:    gn("edit_exclusiveAreaPy"),
+          supplyAreaM2:       gn("edit_supplyAreaM2"),     supplyAreaPy:       gn("edit_supplyAreaPy"),
+          landAreaM2:         gn("edit_landAreaM2"),       landAreaPy:         gn("edit_landAreaPy"),
+          buildingAreaM2:     gn("edit_buildingAreaM2"),   buildingAreaPy:     gn("edit_buildingAreaPy"),
+          totalFloorAreaM2:   gn("edit_totalFloorAreaM2"), totalFloorAreaPy:   gn("edit_totalFloorAreaPy"),
+          // 추가정보
+          floorInfo:          gv("edit_floorInfo"),
+          zoning:             gv("edit_zoning"),
+          parkingCount:       gv("edit_parkingCount"),
+          approvalDate:       gv("edit_approvalDate"),
+          // 기타
+          detailDescription:  gv("edit_detailDescription"),
+          owner_name:         gv("edit_owner_name"),
+          owner_phone1:       gv("edit_owner_phone1"),
+          additional_contacts: _editAdditionalContacts,
+          owner_phone2:       _editAdditionalContacts.length ? _editAdditionalContacts[0].phone : "",
+          owner_memo:         gv("edit_owner_memo"),
+          stickers,
+        });
+
+        Object.assign(updated, apartmentFields);
+        // 추가메모: 수정 화면에서 고친 목록으로 저장 (아파트는 새 메모 칸에 적은 것도 함께 유지)
+        const editedMemos = collectEditMemos(item);
+        if (editedMemos) {
+          let finalMemos = editedMemos;
+          if (updated.apartmentUnitData && Array.isArray(updated.apartmentUnitData.추가메모)) {
+            const oldKeys = new Set(listingMemoList(item).map(memoKey));
+            finalMemos = sortMemosAsc(editedMemos.concat(updated.apartmentUnitData.추가메모.filter(m => !oldKeys.has(memoKey(m)))));
+            updated.apartmentUnitData = Object.assign({}, updated.apartmentUnitData, { 추가메모: finalMemos });
+          }
+          updated.additionalMemos = finalMemos;
+        }
+        try {
+          await assertUniqueApartmentUnit(updated, [id, new URLSearchParams(location.search).get("id")]);
+          if (newImageFiles.length) {
+            const uploadedUrls = await uploadListingImages(newImageFiles, id, _editImageUrls.length);
+            const allUrls = _editImageUrls.concat(uploadedUrls).slice(0, MAX_LISTING_IMAGES);
+            const publicUploadedUrls = uploadedUrls.filter((url, idx) => _editNewImagePublicFlags[idx] !== false);
+            const publicUrls = _editPublicImageUrls.concat(publicUploadedUrls).filter(url => allUrls.includes(url));
+            updated.allImageUrls = allUrls;
+            updated.imageUrls = allUrls;
+            updated.publicImageUrls = publicUrls;
+            updated.image_urls = updated.is_public ? publicUrls : [];
+          } else {
+            updated.allImageUrls = _editImageUrls.slice(0, MAX_LISTING_IMAGES);
+            updated.imageUrls = updated.allImageUrls;
+            updated.publicImageUrls = _editPublicImageUrls.filter(url => updated.allImageUrls.includes(url));
+            updated.image_urls = updated.is_public ? updated.publicImageUrls : [];
+          }
+          await updateListing(id, updated);
+          await syncCommercialUnitFromListing(updated);
+          _currentItem = updated;
+          showToast("✅ 수정완료!");
+          document.getElementById("editModal").style.display = "none";
+          setTimeout(() => location.reload(), 1000);
+        } catch(e) {
+          showToast("❌ 수정 실패: " + e.message);
+          btn.disabled = false; btn.textContent = "저장";
+          if (e.code === "DUPLICATE_APARTMENT_UNIT") {
+            if (e.duplicateId && confirm(e.message + "\n\n기존 매물을 새 창으로 열까요?")) {
+              window.open(OfficeConfig.urlFor("detail.html?id=" + encodeURIComponent(e.duplicateId)), "_blank");
+            } else if (!e.duplicateId) alert(e.message);
+          }
+        }
+      });
+
+      // 삭제 확인
+      document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+        try {
+          await deleteListing(id);
+          showToast("🗑 삭제됐어요");
+          setTimeout(() => location.href = "properties.html", 1000);
+        } catch(e) { showToast("❌ 삭제 실패: "+e.message); }
+      });
+
+    } catch(e) {
+      document.getElementById("detailArea").innerHTML = "";
+      showAppError(e.message || "데이터를 불러오지 못했습니다. 새로고침 해주세요.");
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
+
+
+
+
+
