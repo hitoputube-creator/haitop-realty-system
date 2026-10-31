@@ -1807,7 +1807,7 @@ function closeHomepageTab(tab) {
 
     if (typeof getListingConfirmInfo === "function") {
       const ci = getListingConfirmInfo(item);
-      html += '<div class="detail-confirm-row">최종확인일 <b>' + escapeHtml(formatDateValue(getListingConfirmedAt(item)) || "-") + '</b> <span class="' + ci.cls + '">(' + escapeHtml(ci.text) + ')</span> <button type="button" class="btn btn-ghost" id="confirmListingBtn">오늘 확인함</button></div>';
+      html += '<div class="detail-confirm-row">최종확인일 <b id="confirmListingBtn" class="' + ci.cls + '" title="누르면 오늘 날짜로 확인 처리" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px">' + escapeHtml(formatDateValue(getListingConfirmedAt(item)) || "-") + '</b> <span class="' + ci.cls + '">(' + escapeHtml(ci.text) + ')</span></div>';
     }
 
     html += `<div class="detail-badges"><span data-homepage-only class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
@@ -2024,7 +2024,7 @@ function closeHomepageTab(tab) {
         _currentItem = await getListingById(_currentItem.id);
         document.getElementById("detailArea").innerHTML = renderDetail(_currentItem);
         rebindButtons();
-        showToast("오늘 확인한 매물로 저장했습니다.");
+        showToast("오늘 날짜로 확인 처리했습니다.");
       } catch (e) { confirmBtn.disabled = false; showToast(e.message); }
     });
     const doneBtn   = document.getElementById("doneBtn");
