@@ -25,6 +25,7 @@
     #selectedViewTable tbody tr:hover td { background:rgba(212,175,55,0.05); }
     #selectedViewTable tbody tr.done-row td { color:#666; }
     #selectedViewTable .selected-print-unit { display:block; margin-top:2px; font-weight:700; }
+    #selectedViewTable .selected-print-date { display:block; margin-top:3px; font-size:0.65rem; color:var(--text-muted); white-space:nowrap; }
     #selectedViewTable .selected-print-subline { display:block; margin-top:2px; color:var(--text-muted); font-size:0.78rem; }
     #selectedViewTable .selected-print-clip { overflow:hidden; white-space:nowrap; text-overflow:clip; max-width:520px; }
     #selectedViewTable .selected-print-clip + .selected-print-clip { margin-top:2px; }
@@ -56,11 +57,11 @@
       #selectedViewTable th:nth-child(2), #selectedViewTable td:nth-child(2) { width: 4% !important; text-align: center !important; }
       #selectedViewTable th:nth-child(3), #selectedViewTable td:nth-child(3) { width: 7% !important; }
       #selectedViewTable th:nth-child(4), #selectedViewTable td:nth-child(4) { width: 13% !important; }
-      #selectedViewTable th:nth-child(5), #selectedViewTable td:nth-child(5) { width: 8% !important; }
+      #selectedViewTable th:nth-child(5), #selectedViewTable td:nth-child(5) { width: 4% !important; }
       #selectedViewTable th:nth-child(6), #selectedViewTable td:nth-child(6) { width: 13% !important; }
       #selectedViewTable th:nth-child(7), #selectedViewTable td:nth-child(7) { width: 7% !important; }
       #selectedViewTable th:nth-child(8), #selectedViewTable td:nth-child(8) { width: 12% !important; }
-      #selectedViewTable th:nth-child(9), #selectedViewTable td:nth-child(9) { width: 36% !important; }
+      #selectedViewTable th:nth-child(9), #selectedViewTable td:nth-child(9) { width: 40% !important; }
       #selectedViewTable thead th {
         background: #1a2a4a !important; color: #fff !important;
         padding: 7px 5px !important; border: 1px solid #d6dce6 !important;
@@ -73,6 +74,7 @@
       }
       #selectedViewTable tbody td * { color: #111 !important; background: transparent !important; }
       #selectedViewTable .selected-print-unit { display: block !important; margin-top: 2px; font-weight: 700 !important; }
+      #selectedViewTable .selected-print-date { display: block !important; margin-top: 3px; font-size: 7pt !important; color: #555 !important; white-space: nowrap !important; }
       #selectedViewTable .selected-print-subline { display: block !important; margin-top: 2px; color: #555 !important; font-size: 8pt !important; }
       #selectedViewTable .selected-print-clip { overflow: hidden !important; white-space: nowrap !important; text-overflow: clip !important; max-width: 100% !important; width: 100% !important; }
       #selectedViewTable .selected-print-clip + .selected-print-clip { margin-top: 2px !important; }
@@ -917,7 +919,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 </div>
 
 <script src="assets/js/listings-shared.js?v=20261102-green"></script>
-<script src="assets/js/properties.js?v=20261031-confirmdate"></script>
+<script src="assets/js/properties.js?v=20261102-print-date-width"></script>
 <script>
 /* Reuse the original card controls and handlers; enhance KTOP only. */
 (function () {
@@ -1003,6 +1005,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 <script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
 </body>
 </html>
+
 
 
 

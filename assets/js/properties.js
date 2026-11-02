@@ -301,7 +301,7 @@ function renderPreview() {
         <input type="checkbox" ${chk} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="togglePreviewCheck('${item.id}',this.checked)" />
       </td>
       <td style="text-align:center;color:var(--text-muted);font-size:0.76rem;width:28px;">${i + 1}</td>
-      <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${escapeHtml(normalizeListingCategory(item).subLabel || getListingCategoryLabel(item))}</span></td>
+      <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${escapeHtml(normalizeListingCategory(item).subLabel || getListingCategoryLabel(item))}</span><span class="selected-print-date">${escapeHtml(formatRegistrationDate(item))}</span></td>
       <td style="font-weight:500;">${formatSelectedPrintAddress(item)}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(getListingTypeText(item))}</td>
       <td style="font-size:0.82rem;">${escapeHtml(formatPrice(item))}${seanGo ? `<span class="selected-print-subline">${escapeHtml(seanGo)}</span>` : ""}</td>
@@ -320,7 +320,7 @@ function renderPreview() {
         <th style="width:28px;text-align:center;">No</th>
         <th style="width:64px;">유형</th>
         <th style="width:128px;">주소</th>
-        <th style="width:68px;">타입</th>
+        <th style="width:34px;">타입</th>
         <th style="width:128px;">가격</th>
         <th style="width:68px;">소유주</th>
         <th style="width:120px;">연락처</th>
@@ -2280,3 +2280,4 @@ loadListings().then(() => {
     _restoredScrollY = null;
   }
 });
+
