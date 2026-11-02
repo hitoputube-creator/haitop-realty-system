@@ -206,3 +206,6 @@ html,body,#root,.wd-app{background:#f3f5f9!important}
 
 /* 2026-11-02 스티커 선택 버튼: 선택된 "없음"도 글자가 보이게 */
 .wd-sticker-segmented-control .wd-sticker-btn.active{background:var(--sticker-color,#254767)!important;color:var(--sticker-active-text,#fff)!important}
+
+/* 2026-11-02 새 메모 작성창의 연결태그 입력줄 숨김 (하이탑 업무일지와 동일) */
+.wd-field-row--connection-tag{display:none!important}
