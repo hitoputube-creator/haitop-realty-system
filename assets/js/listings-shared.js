@@ -406,7 +406,7 @@ function naverAdWrapHtml(listingNo) {
   const url = isKtop ? "https://ma.serve.co.kr/main" : (on ? "https://new.rfine.kr/Pos/Regi_list.php" : "https://new.rfine.kr/Pos/Regi.php");
   const label = "네이버광고";
   const title = isKtop ? "써브 광고 화면 열기" : on ? "부동산포스 광고 목록" + (posId ? " (포스 매물번호 " + posId + ")" : "") : "부동산포스에 매물 등록";
-  const style = on ? "background:#2e7d32;color:#fff;border-color:#2e7d32;" : "";
+  const style = on ? "background:#2e7d32 !important;color:#fff !important;border-color:#2e7d32 !important;font-weight:700 !important;" : "";
   return '<span class="lc-naver-wrap" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;">' +
     '<button type="button" class="btn btn-ghost lc-naver-btn" title="' + title + '" style="flex:0 0 56px !important;width:56px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 !important;line-height:26px !important;font-size:10px !important;white-space:nowrap !important;border-radius:6px;' + style + '" onclick="event.stopPropagation();window.open(\'' + url + '\',\'_blank\',\'noopener\')">' + label + '</button>' +
     '<label title="체크하면 녹색으로 표시" style="display:inline-flex;align-items:center;cursor:pointer;margin:0;"><input type="checkbox" ' + (on ? "checked" : "") + ' onchange="naverAdToggle(\'' + no + '\', this)" style="margin:0;cursor:pointer;"></label>' +
