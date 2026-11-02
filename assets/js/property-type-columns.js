@@ -151,7 +151,7 @@
       const price=node.querySelector('.lc-price-text');
       if(price) {
         if (isKtopResidential() && price.textContent.trim() !== '-') node.classList.add('has-price');
-        const lines=price.textContent.split(/\s*\/\s*(?=월세)/);
+        const lines=price.textContent.split(/\s*\/\s*(?=월세)|\n/);
         price.replaceChildren(...lines.map(text=>{
           const line=document.createElement('span');line.className='lc-price-line';line.textContent=text;return line;
         }));
