@@ -476,7 +476,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     <div class="listing-cell listing-cell-dong" data-label="동">${escapeHtml(dong || "-")}</div>
     <div class="listing-cell listing-cell-room" data-label="호수">${escapeHtml(room || "-")}</div>
     <div class="listing-cell listing-cell-price" data-label="금액">
-      <span class="lc-price-text">${escapeHtml(priceText).replace(/\n/g, "<br>")}</span>
+      <span class="lc-price-text" style="white-space:pre-line">${escapeHtml(priceText)}</span>
     </div>
     <div class="listing-cell listing-cell-owner" data-label="소유주">${escapeHtml(ownerName)}</div>
     <div class="listing-cell listing-cell-phone" data-label="연락처">
