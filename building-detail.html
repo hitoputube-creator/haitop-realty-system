@@ -772,22 +772,10 @@
     </div>
     <p class="summary-note" id="residentialSummaryNote" style="display:none;"></p>
     <div class="summary-grid" id="commercialSummaryGrid">
-      <div class="sum-card occupied">
-        <div class="sum-num" id="sumOccupied">-</div>
-        <div class="sum-label">임차중</div>
-      </div>
-      <div class="sum-card vacant">
-        <div class="sum-num" id="sumVacant">-</div>
-        <div class="sum-label">공실</div>
-      </div>
-      <div class="sum-card forsale">
-        <div class="sum-num" id="sumForSale">-</div>
-        <div class="sum-label">매매가능</div>
-      </div>
-      <div class="sum-card revenue">
-        <div class="sum-num" id="sumListed">-</div>
-        <div class="sum-label">매물진행중</div>
-      </div>
+      <button type="button" class="sum-card occupied unit-summary-filter" data-unit-status="occ" aria-pressed="false" title="임차중 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumOccupied">-</span><span class="sum-label">임차중</span></button>
+      <button type="button" class="sum-card vacant unit-summary-filter" data-unit-status="vac" aria-pressed="false" title="공실 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumVacant">-</span><span class="sum-label">공실</span></button>
+      <button type="button" class="sum-card forsale unit-summary-filter" data-unit-status="sale" aria-pressed="false" title="진행중인 매매 매물 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumForSale">-</span><span class="sum-label">매매가능</span></button>
+      <button type="button" class="sum-card revenue unit-summary-filter" data-unit-status="listed" aria-pressed="false" title="진행중인 매물 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumListed">-</span><span class="sum-label">매물진행중</span></button>
     </div>
 
     <div class="unit-toolbar">
@@ -1953,7 +1941,7 @@ async function deleteBFile(id) {
   });
   let editIdx     = -1;
   let filterFloor = "전체";
-  let filterUnitDeal = "";
+  let filterUnitDeal = ""; let filterUnitStatus = "";
   let bName       = "";
   let apartmentListings = [];
   let listingLookupLoaded = false;
@@ -2428,9 +2416,14 @@ async function deleteBFile(id) {
     $("sumOccupied").textContent = occ;
     $("sumVacant").textContent   = vac;
     $("sumForSale").textContent  = sale === null ? "-" : sale;
-    $("sumForSale").closest(".sum-card").title = "진행중인 매매 매물 건수 · 묶음매물은 1건";
-    $("sumListed").closest(".sum-card").title = "진행중인 매물 건수 · 묶음매물은 1건";
+    $("sumForSale").closest(".sum-card").title = "진행중인 매매 매물 건수 · 묶음매물은 1건 · 누르면 해당 호실만 보기";
+    $("sumListed").closest(".sum-card").title = "진행중인 매물 건수 · 묶음매물은 1건 · 누르면 해당 호실만 보기";
     $("sumListed").textContent   = listedActive === null ? "-" : listedActive;
+    document.querySelectorAll('[data-unit-status]').forEach(button => {
+      const active = !residentialUnitMode() && filterUnitStatus === button.dataset.unitStatus;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
 
     // 주거(세대별 자료): 매매·전세·월세는 세대의 '거래구분', 자가는 '세입자현황=자가거주' 기준으로 센다.
     // '매매·임대'처럼 둘 이상이면 각각 집계된다.
@@ -2484,6 +2477,30 @@ async function deleteBFile(id) {
     });
   }
 
+  const unitStatusLabel = {occ:'임차중', vac:'공실', sale:'매매가능', listed:'매물진행중'};
+  function matchesUnitStatusFilter(u) {
+    const s = filterUnitStatus;
+    if (!s || residentialUnitMode()) return true;
+    if (s === 'occ') return commercialOccupancy(u) === '임차중';
+    if (s === 'vac') return commercialOccupancy(u) === '공실';
+    const ids = commercialLinkedIds([u]);
+    if (s === 'listed') return ids.some(id => isActiveListing(commercialListings[id]));
+    if (s === 'sale') return ids.some(id => {
+      const listing = commercialListings[id];
+      return isActiveListing(listing) && String(listing.dealType || listing.deal_type || '').includes('매매') && CommercialPriceCore.price(listing).amount !== null;
+    });
+    return true;
+  }
+  document.querySelectorAll('[data-unit-status]').forEach(button => {
+    button.addEventListener('click', () => {
+      const status = button.dataset.unitStatus;
+      if ((status === 'sale' || status === 'listed') && !activeListingLoaded) { showToast('매물 정보를 불러오는 중입니다. 잠시 후 다시 눌러주세요.'); return; }
+      filterUnitStatus = filterUnitStatus === status ? '' : status;
+      filterFloor = '전체';
+      renderAll();
+      const box = $('unitsTbody'); if (box && filterUnitStatus) box.closest('.units-wrap').scrollIntoView({block:'nearest', behavior:'smooth'});
+    });
+  });
   function matchesUnitDealFilter(unit, deal) {
     if (!deal) return true;
     if (deal === '자가') return (unit.세입자현황 || unit.공실여부 || '') === '자가거주';
@@ -2598,16 +2615,17 @@ async function deleteBFile(id) {
     const grouped = filterFloor === "전체"
       ? scopedUnits()
       : scopedUnits().filter(u => unitGroup(u) === filterFloor);
-    const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped.filter(u => matchesUnitDealFilter(u, filterUnitDeal))) : grouped;
+    const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped.filter(u => matchesUnitDealFilter(u, filterUnitDeal))) : grouped.filter(matchesUnitStatusFilter);
 
     const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
     const listed = residentialUnitMode() ? filtered.filter(u => listingLookupLoaded ? linkedUnitListings(u).length > 0 : String(u.listing_id || '').trim()).length : commercialLinkedIds(filtered).filter(id => commercialListings[id]).length;
-    $("unitCounts").textContent = `${floorLabel(filterFloor)}${residentialUnitMode() && filterUnitDeal ? " · " + filterUnitDeal : ""} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
+    $("unitCounts").textContent = `${floorLabel(filterFloor)}${residentialUnitMode() && filterUnitDeal ? " · " + filterUnitDeal : ""}${!residentialUnitMode() && filterUnitStatus ? " · " + unitStatusLabel[filterUnitStatus] : ""} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
     const tbody = $("unitsTbody");
     const empty = $("unitsEmpty");
 
     if (residentialUnitMode()) renderResidentialHeader();
     if (!filtered.length) {
+      if(!residentialUnitMode()) empty.textContent = filterUnitStatus ? "선택한 조건에 해당하는 호실이 없습니다." : "등록된 호실이 없습니다. [+ 호실 추가]를 눌러 시작하세요.";
       if(residentialUnitMode())empty.textContent=units.length ? "선택한 조건에 해당하는 세대가 없습니다." : "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.";
       tbody.innerHTML = "";
       empty.style.display = "";
