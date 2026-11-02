@@ -37,7 +37,7 @@ const STICKER_OPTIONS = [
 const PROPERTY_REGISTER_URL = 'https://hitoputube-creator.github.io/haitop-realty-system/register.html'
 const CUSTOMER_PAGE_URL = 'https://hitoputube-creator.github.io/haitop-realty-system/index.html'
 const LISTING_DETAIL_URL = 'https://hitoputube-creator.github.io/haitop-realty-system/detail.html'
-const NAVER_AD_URL = 'https://new.rfine.kr/Pos/index_afterLogin_new.php'
+const NAVER_AD_URL = 'https://ma.serve.co.kr/main'
 
 /* ===== 헬퍼 ===== */
 const TAG_REGEX = /#[\w가-힣]+/g
