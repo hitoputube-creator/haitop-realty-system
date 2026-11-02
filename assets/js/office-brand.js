@@ -1,5 +1,5 @@
 // 하이탑도 케이탑과 같은 화이트 바탕 + 블루 제목줄 화면으로 보이게 한다. (화면 색만 바뀜)
-if (OfficeConfig.id === 'hitop') {
+if (OfficeConfig.id === 'hitop' && !/\/(login|reset-password|property-print|profit-recommendations|recommended-units)\.html$/.test(location.pathname)) {
   document.documentElement.dataset.officeSkin = 'hitop-white';
   const skinLink = document.createElement('link');
   skinLink.rel = 'stylesheet';
