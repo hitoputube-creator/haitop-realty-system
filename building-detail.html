@@ -951,7 +951,7 @@
 
       <div class="um-section current" id="unitAdditionalNotes"><div class="um-section-title">💬 추가메모</div><div class="umgrid">
         <div class="umfield full memo-input"><label>새 메모</label><textarea id="u_추가메모" placeholder="상담 내용이나 변경사항을 추가하세요. 기존 메모에 날짜별로 누적됩니다."></textarea></div>
-        <div class="umfield full memo-actions"><button type="button" class="btn-unit-ghost" id="umAddMemo">메모 추가·저장</button><p style="font-size:.74rem;color:var(--muted);margin-top:7px;">현재 입력내용과 메모를 함께 저장합니다.</p></div>
+        <div class="umfield full memo-actions"><label for="u_추가메모일" style="margin:0 0 3px;font-size:.72rem">메모 날짜</label><input type="date" id="u_추가메모일" style="margin-bottom:6px"><button type="button" class="btn-unit-ghost" id="umAddMemo">메모 추가·저장</button><p style="font-size:.74rem;color:var(--muted);margin-top:7px;">현재 입력내용과 메모를 함께 저장합니다.</p></div>
         <div class="umfield full" id="unitMemoHistory" aria-live="polite"></div>
       </div></div>
 
@@ -1976,20 +1976,39 @@ async function deleteBFile(id) {
     const memos = Array.isArray(u.추가메모) ? u.추가메모 : u.추가메모 ? [{text:String(u.추가메모),created_at:u.updated_at || null}] : [];
     return residentialUnitMode() ? apartmentMemoEntries(memos, apartmentRemarksOnly(u.비고)) : memos;
   }
+  let memoDraft = null, memoRemarks = null, memoEditing = -1;
+  const memoDateKey = n => { const d = n && n.created_at ? new Date(n.created_at) : null; return d && !Number.isNaN(d.getTime()) ? d.toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}) : ''; };
+  const memoIso = d => d === todayInKorea() ? new Date().toISOString() : new Date(d + 'T12:00:00+09:00').toISOString();
   function renderMemoHistory(u) {
-    const notes = unitMemos(u);
+    memoDraft = unitMemos(u).map(n => ({...n}));
     const remarks = residentialUnitMode() ? apartmentRemarksOnly(u.비고) : String(u.비고 || "").trim();
-    const entries = [];
     // The original remarks are shown first; later saved memos follow in their original order.
-    if (remarks) entries.push({text:remarks,created_at:u.비고기록일 || u.비고작성일 || null, received_date:u.접수일자 || null});
-    notes.forEach(note => {
-      if (String(note.text || "").trim()) entries.push(note);
+    memoRemarks = remarks ? {text:remarks,created_at:u.비고기록일 || u.비고작성일 || null, received_date:u.접수일자 || null} : null;
+    memoEditing = -1;
+    drawMemoHistory();
+  }
+  function drawMemoHistory() {
+    const entries = [];
+    if (memoRemarks) entries.push({...memoRemarks, idx:-1});
+    (memoDraft || []).forEach((note,i) => {
+      if (String(note.text || "").trim() || i === memoEditing) entries.push({...note, idx:i});
     });
     $('unitMemoHistory').innerHTML = entries.length
       ? entries.map((note,index) => {
           const date = note.created_at ? new Date(note.created_at) : null;
           const dateText = date && !Number.isNaN(date.getTime()) ? ' · 기록일 '+date.toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}) : (note.received_date ? ' · 접수일 '+esc(note.received_date) : ' · 기록일 미상');
-          return '<div class="unit-memo-entry"><time>메모 '+(index+1)+esc(dateText)+'</time>'+esc(note.text || '').replace(/\\n/g,'<br>')+'</div>';
+          const head = '<time>메모 '+(index+1)+esc(dateText)+'</time>';
+          const small = 'style="margin-left:8px;padding:2px 9px;font-size:.72rem;min-height:0"';
+          if (note.idx >= 0 && note.idx === memoEditing) {
+            return '<div class="unit-memo-entry" data-memo-idx="'+note.idx+'">'+head
+              +'<textarea rows="3" style="width:100%;box-sizing:border-box;min-height:70px;height:auto">'+esc(note.text || '')+'</textarea>'
+              +'<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap"><label style="margin:0;font-size:.72rem">날짜</label>'
+              +'<input type="date" value="'+memoDateKey(note)+'" style="width:auto;min-width:130px">'
+              +'<button type="button" class="btn-unit-ghost" data-memo-act="save" '+small+'>수정 저장</button>'
+              +'<button type="button" class="btn-unit-ghost" data-memo-act="cancel" '+small+'>취소</button></div></div>';
+          }
+          return '<div class="unit-memo-entry" data-memo-idx="'+note.idx+'">'+head+esc(note.text || '').replace(/\\n/g,'<br>')
+            +(note.idx >= 0 ? '<button type="button" class="btn-unit-ghost" data-memo-act="edit" '+small+'>수정</button>' : '')+'</div>';
         }).join('')
       : '<p style="color:var(--muted);font-size:.8rem;">저장된 기존 메모가 없습니다.</p>';
   }
@@ -2664,7 +2683,7 @@ async function deleteBFile(id) {
       $('umTitle').textContent = isNew ? '세대 추가' : '세대 수정';
       openResidentialFields(u, isNew);
     }
-    $('u_추가메모').value = '';
+    $('u_추가메모').value = ''; if($('u_추가메모일'))$('u_추가메모일').value = todayInKorea();
     renderMemoHistory(u);
 
     // 분양 당시
@@ -2933,8 +2952,14 @@ async function deleteBFile(id) {
       if (matches.length === 1) unit.listing_id = matches[0].id;
     }
     const newMemo = $('u_추가메모').value.trim();
-    unit.추가메모 = [...unitMemos(original)];
-    if (newMemo) unit.추가메모.push({id:crypto.randomUUID(),text:newMemo,created_at:new Date().toISOString()});
+    unit.추가메모 = (memoDraft ? memoDraft : unitMemos(original)).map(m => ({...m}));
+    if (newMemo) {
+      const memoDate = ($('u_추가메모일') && $('u_추가메모일').value) || todayInKorea();
+      unit.추가메모.push({id:crypto.randomUUID(),text:newMemo,created_at:memoIso(memoDate)});
+    }
+    // 날짜를 고르거나 고친 메모도 날짜 순서로 보이게 (날짜 없는 예전 메모는 맨 앞 유지)
+    unit.추가메모 = unit.추가메모.map((m,i) => { const t = m.created_at ? Date.parse(m.created_at) : NaN; return {m,i,t:Number.isNaN(t) ? -Infinity : t}; })
+      .sort((a,b) => (a.t === b.t ? 0 : a.t < b.t ? -1 : 1) || (a.i - b.i)).map(x => x.m);
     // 자료실에는 등록만 하고, 매물관리로는 [선택 항목 매물리스트로 보내기]로 보낸다.
     // 이미 보낸(연결된) 호실은 저장할 때마다 매물관리 쪽도 같은 내용으로 갱신해 계속 연동한다.
     delete unit.매물등록요청;
@@ -3110,6 +3135,26 @@ async function deleteBFile(id) {
   bindAreaPair('ru_분양_평','ru_분양_m2');
   ['ru_분양_평','ru_분양_m2'].forEach(id=>$(id).addEventListener('input',()=>{$('ru_평형').value=Number($('ru_분양_평').value)>0 ? Number($('ru_분양_평').value).toFixed(2)+'평' : '';}));
   bindAreaPair('ru_전용_평','ru_전용_m2');
+  $('unitMemoHistory').addEventListener('click', e => {
+    const btn = e.target.closest('[data-memo-act]');
+    if (!btn) return;
+    const row = btn.closest('.unit-memo-entry');
+    const i = Number(row.dataset.memoIdx);
+    const act = btn.dataset.memoAct;
+    if (!memoDraft || !memoDraft[i]) return;
+    if (act === 'edit') { memoEditing = i; drawMemoHistory(); const ta = $('unitMemoHistory').querySelector('textarea'); if (ta) ta.focus(); }
+    else if (act === 'cancel') { memoEditing = -1; drawMemoHistory(); }
+    else if (act === 'save') {
+      const text = row.querySelector('textarea').value.trim();
+      if (!text) { showToast('메모 내용을 입력하세요.'); return; }
+      const picked = row.querySelector('input[type=date]').value;
+      const note = memoDraft[i];
+      note.text = text;
+      if (picked && picked !== memoDateKey(note)) note.created_at = memoIso(picked);
+      memoEditing = -1;
+      saveUnit({keepOpen:true});
+    }
+  });
   $('umAddMemo').addEventListener('click', () => {
     if (!$('u_추가메모').value.trim()) { showToast('추가메모를 입력하세요.'); return; }
     saveUnit({keepOpen:true});
