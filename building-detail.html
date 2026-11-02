@@ -1993,6 +1993,7 @@ async function deleteBFile(id) {
     (memoDraft || []).forEach((note,i) => {
       if (String(note.text || "").trim() || i === memoEditing) entries.push({...note, idx:i});
     });
+    $('unitMemoHistory').style.maxHeight = memoEditing >= 0 ? 'none' : '';
     $('unitMemoHistory').innerHTML = entries.length
       ? entries.map((note,index) => {
           const date = note.created_at ? new Date(note.created_at) : null;
