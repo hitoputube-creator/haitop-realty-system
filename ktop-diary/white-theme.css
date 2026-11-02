@@ -203,3 +203,6 @@ html,body,#root,.wd-app{background:#f3f5f9!important}
 .wd-month-calendar .wd-panel-header .wd-panel-title::before{background:#82b4ff}
 .wd-month-calendar .wd-panel-header .wd-panel-sub{color:#dbe7f8!important}
 @media(max-width:700px){.wd-weekly-header,.wd-month-memos-header{padding:16px}}
+
+/* 2026-11-02 스티커 선택 버튼: 선택된 "없음"도 글자가 보이게 */
+.wd-sticker-segmented-control .wd-sticker-btn.active{background:var(--sticker-color,#254767)!important;color:var(--sticker-active-text,#fff)!important}
