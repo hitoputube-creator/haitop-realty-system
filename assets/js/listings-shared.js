@@ -66,6 +66,8 @@ function _detailPrice(item) {
   const sale  = item.salePrice   && Number(item.salePrice)   ? (deal && deal.indexOf("·") < 0 ? deal : "매매") + " " + _fmtWon(item.salePrice)   : "";
   const dep   = item.deposit     && Number(item.deposit)     ? "보증금 " + _fmtWon(item.deposit)                  : "";
   const rent  = item.monthlyRent && Number(item.monthlyRent) ? "월세 "   + _fmtWon(item.monthlyRent)              : "";
+  // 매매·전세 복합 거래는 두 줄로 보여준다.
+  if (deal === "매매·전세" && sale && Number(item.deposit)) return sale + "\n전세 " + _fmtWon(item.deposit);
   if (dep && rent) return `${dep} / ${rent}`;
   if (sale) return sale;
   if (dep)  return dep;
@@ -439,7 +441,8 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const addressText = item.address || "(주소 미입력)";
   const listingNo = getListingNumber(item);
   const naverAdBtn = naverAdButtonHtml(listingNo);
-  const priceText = (formatPrice(item) || "-").replace(/^(?:매매|전세|월세|임대)\s+/, "");
+  const rawPriceText = formatPrice(item) || "-";
+  const priceText = rawPriceText.includes("\n") ? rawPriceText : rawPriceText.replace(/^(?:매매|전세|월세|임대)\s+/, "");
   const apartment = item.apartmentUnitData || {};
   const fullName = apartment.아파트명 || item.complexName || item.buildingName || "";
   const village = (fullName.match(/^(.*?마을\s*\d+단지)/) || [])[1] || "";
@@ -473,7 +476,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     <div class="listing-cell listing-cell-dong" data-label="동">${escapeHtml(dong || "-")}</div>
     <div class="listing-cell listing-cell-room" data-label="호수">${escapeHtml(room || "-")}</div>
     <div class="listing-cell listing-cell-price" data-label="금액">
-      <span class="lc-price-text">${escapeHtml(priceText)}</span>
+      <span class="lc-price-text">${escapeHtml(priceText).replace(/\n/g, "<br>")}</span>
     </div>
     <div class="listing-cell listing-cell-owner" data-label="소유주">${escapeHtml(ownerName)}</div>
     <div class="listing-cell listing-cell-phone" data-label="연락처">
