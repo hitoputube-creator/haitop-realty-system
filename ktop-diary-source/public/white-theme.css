@@ -209,3 +209,36 @@ html,body,#root,.wd-app{background:#f3f5f9!important}
 
 /* 2026-11-02 새 메모 작성창의 연결태그 입력줄 숨김 (하이탑 업무일지와 동일) */
 .wd-field-row--connection-tag{display:none!important}
+
+/* 2026-11-02 케이탑 업무일지 버튼 색상 (파스텔 + 외곽선) */
+html body .wd-sticker-bar.wd-sticker-segmented-control{gap:6px!important;background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}
+html body .wd-sticker-bar .wd-sticker-btn{font-weight:600!important;font-size:13px!important;white-space:nowrap!important;padding:0 4px!important;border:1.5px solid transparent!important;border-radius:10px!important;opacity:1!important;box-shadow:none!important;text-shadow:none!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(1){background:#e9edf2!important;color:#51606f!important;border-color:#c3cbd5!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(2){background:#fcf0cd!important;color:#8a6d1c!important;border-color:#ebd48a!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(3){background:#fadfdc!important;color:#b0463d!important;border-color:#f0b4ae!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(4){background:#dbe9f8!important;color:#3a6ba5!important;border-color:#a9c9ee!important}
+html body .wd-sticker-bar .wd-sticker-btn.active{font-weight:800!important;border-width:2.5px!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(1).active{border-color:#6b7b8c!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(2).active{border-color:#c9a02e!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(3).active{border-color:#d9685d!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(4).active{border-color:#5a93d3!important}
+html body .wd-attach-row{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:6px!important;width:100%!important;max-width:none!important;border:0!important;background:transparent!important;overflow:visible!important;height:auto!important}
+html body .wd-attach-row .wd-photo-uploader,.wd-attach-row .wd-photo-uploader-row,.wd-attach-row .wd-file-uploader,.wd-attach-row .wd-file-uploader-row{display:contents!important}
+html body .wd-attach-row .wd-photo-help,.wd-attach-row .wd-file-help{display:none!important}
+html body .wd-attach-row .wd-photo-add-btn,.wd-attach-row .wd-file-add-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;justify-self:stretch!important;box-sizing:border-box!important;width:auto!important;min-width:0!important;height:34px!important;min-height:34px!important;padding:0 1px!important;gap:2px!important;font-size:11.5px!important;font-weight:600!important;white-space:nowrap!important;border-radius:10px!important;box-shadow:none!important;cursor:pointer}
+html body .wd-attach-row .wd-photo-add-btn span,.wd-attach-row .wd-file-add-btn span{white-space:nowrap!important;color:inherit!important}
+html body .wd-attach-row .wd-file-add-btn span:first-child{display:none!important}
+html body .wd-photo-camera-btn{background:#d9f0e3!important;color:#2f7a55!important;border:1.5px solid #9ed4b6!important}
+html body .wd-photo-album-btn{background:#e0e8fa!important;color:#4565ad!important;border:1.5px solid #aebfee!important}
+html body .wd-file-add-btn{background:#fde8d3!important;color:#a5642a!important;border:1.5px solid #f0c79c!important}
+html body button.wd-action-btn[aria-pressed]{background:#fcf0cd!important;color:#7a5c0a!important;border:1.5px solid #d9b44a!important;font-weight:800!important;font-size:13px!important;padding:3px 12px!important}
+html body button.wd-action-btn[aria-pressed=true]{background:#f3d36b!important;color:#4d3a00!important;border-color:#c9a02e!important}
+html body button.wd-action-btn[title="진행 업무 화면으로 이동"]{background:#dbe9f8!important;color:#2a5a94!important;border:1.5px solid #7fa9d9!important;font-weight:800!important;font-size:13px!important;padding:3px 12px!important}
+html body .wd-sticker-bar .wd-sticker-btn:nth-child(1).active{border-color:#254767!important}
+.auth-home-link{position:static;display:block;margin:18px auto 0;max-width:320px;padding:11px 14px;text-align:center;font-size:.9rem;font-weight:700;color:#2a5a94;background:#dbe9f8;border:1.5px solid #7fa9d9;border-radius:10px;text-decoration:none}
+.auth-home-link:hover{background:#cfe1f6}
+/* 케이탑 로그인 안내 화면: 어두운 배경에 글자가 묻히지 않게 */
+.auth-overlay{background:#f5f8fc!important}
+.auth-overlay .auth-title{color:#254767!important}
+.auth-overlay .auth-brand p{color:#51606f!important}
+.auth-overlay .auth-logout-btn{color:#fff!important;background:#254767!important;border-color:#254767!important;padding:9px 18px!important;font-size:.9rem!important;text-decoration:none!important}
