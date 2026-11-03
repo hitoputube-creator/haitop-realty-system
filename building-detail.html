@@ -2317,6 +2317,15 @@ async function deleteBFile(id) {
             '#unitSavedDialog .usd-row.off .usd-ico{background:#e6e9e9;color:#8a9694}' +
             '#unitSavedDialog .usd-row b{flex:1;font-weight:700}' +
             '#unitSavedDialog .usd-row small{font-size:12px;color:#6b7b79}' +
+            '#unitSavedDialog .usd-toggle{width:100%;border:0;font:inherit;text-align:left;cursor:pointer;transition:background .15s,transform .12s;margin-bottom:8px}' +
+            '#unitSavedDialog .usd-toggle:hover{background:#e6f5f2;transform:translateY(-1px)}#unitSavedDialog .usd-toggle.off:hover{background:#ecefef}' +
+            '#unitSavedDialog .usd-toggle:focus-visible{outline:3px solid rgba(25,195,176,.45);outline-offset:2px}#unitSavedDialog .usd-toggle[disabled]{opacity:.6;cursor:wait;transform:none}' +
+            '#unitSavedDialog .usd-switch{flex:none;width:42px;height:24px;border-radius:999px;background:#c9d2d1;position:relative;transition:background .2s}' +
+            '#unitSavedDialog .usd-switch i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}' +
+            '#unitSavedDialog .usd-switch.on{background:linear-gradient(135deg,#19c3b0,#0b7a6b)}#unitSavedDialog .usd-switch.on i{left:21px}' +
+            '#unitSavedDialog .usd-row.warn{background:#fff3f1;color:#8a2c22;flex-wrap:wrap}' +
+            '#unitSavedDialog .usd-mini{appearance:none;border:1px solid #e7b9b3;background:#fff;color:#8a2c22;border-radius:999px;padding:5px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}' +
+            '#unitSavedDialog .usd-mini.danger{border:0;background:#d9534f;color:#fff}' +
             '#unitSavedDialog .usd-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}' +
             '#unitSavedDialog .usd-btn{appearance:none;border:1px solid #cfe0dd;background:#fff;color:#2a4a46;border-radius:999px;padding:9px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}' +
             '#unitSavedDialog .usd-btn:hover{background:#f1f8f7;transform:translateY(-1px)}' +
@@ -2337,15 +2346,55 @@ async function deleteBFile(id) {
           '<div class="usd-box">' +
             '<div class="usd-head"><div class="usd-badge">✓</div><div><div class="usd-title">저장했어요</div><div class="usd-sub"></div></div></div>' +
             '<div class="usd-row"><span class="usd-ico">✓</span><b>자료실 업데이트 완료</b><small>방금 저장됨</small></div>' +
-            '<div class="usd-row' + (hasListing ? '' : ' off') + '"><span class="usd-ico">' + (hasListing ? '✓' : '–') + '</span><b>' + (hasListing ? '매물관리 등록됨' : '매물관리 미등록') + '</b><small class="usd-lst"></small></div>' +
+            '<div id="usdListingSlot"></div>' +
             '<div class="usd-actions">' +
               '<button type="button" class="usd-btn" data-act="close">닫기</button>' +
-              (hasListing ? '<button type="button" class="usd-btn sub" data-act="listing">매물 보기</button>' : '') +
+              '<button type="button" class="usd-btn sub" data-act="listing" hidden>매물 보기</button>' +
               '<button type="button" class="usd-btn main" data-act="check">자료실에서 확인</button>' +
             '</div>' +
           '</div>';
         el.querySelector('.usd-sub').textContent = (bName || '') + ' ' + (info.ho || '') + '호';
-        el.querySelector('.usd-lst').textContent = hasListing ? ((L && L.status) || '') : '매물보내기로 등록할 수 있어요';
+        const slot = el.querySelector('#usdListingSlot');
+        const listingBtn = el.querySelector('[data-act="listing"]');
+        const roomKeyOf = v => String(v || '').replace(/\s+/g, '').replace(/호$/, '');
+        const findUnit = () => units.find(u => roomKeyOf(u.호수) === roomKeyOf(info.ho));
+        const paint = function (mode) {
+          const on = !!info.listingId;
+          const cur = on ? (commercialListings[String(info.listingId)] || null) : null;
+          listingBtn.hidden = !on;
+          if (mode === 'confirm') {
+            slot.innerHTML = '<div class="usd-row warn"><b>매물관리에서 지울까요?</b><small>이 매물이 삭제돼요</small><span style="display:flex;gap:6px;margin-left:auto"><button type="button" class="usd-mini danger" data-act="unreg-yes">지우기</button><button type="button" class="usd-mini" data-act="unreg-no">취소</button></span></div>';
+            return;
+          }
+          slot.innerHTML = '<button type="button" class="usd-row usd-toggle' + (on ? '' : ' off') + '" data-act="toggle"' + (mode === 'busy' ? ' disabled' : '') + '><span class="usd-ico">' + (on ? '✓' : '–') + '</span><b></b><small></small><span class="usd-switch' + (on ? ' on' : '') + '"><i></i></span></button>';
+          slot.querySelector('b').textContent = mode === 'busy' ? '처리 중…' : on ? '매물관리 등록됨' : '매물관리 미등록';
+          slot.querySelector('small').textContent = mode === 'busy' ? '' : on ? ((cur && cur.status) || '누르면 해제') : '누르면 등록';
+        };
+        paint('idle');
+        const registerNow = async function () {
+          const u = findUnit();
+          if (!u) { showToast('호실을 찾지 못했어요.'); return; }
+          paint('busy');
+          try { await sendCommercialUnitsToListing([u]); } catch (e) { showToast('등록 실패: ' + e.message); }
+          info.listingId = (u.listing_id && commercialListings[String(u.listing_id)]) ? u.listing_id : '';
+          paint('idle');
+        };
+        const unregisterNow = async function () {
+          const u = findUnit();
+          const id = info.listingId;
+          if (!u || !id) { paint('idle'); return; }
+          paint('busy');
+          try {
+            await deleteListing(id);
+            delete u.listing_id; delete u.pending_listing_id;
+            await saveBuildingUnits(bName, bName, units);
+            delete commercialListings[String(id)]; delete activeListingIds[String(id)];
+            info.listingId = '';
+            renderAll();
+            showToast('매물관리에서 지웠어요.');
+          } catch (e) { showToast('해제 실패: ' + e.message); }
+          paint('idle');
+        };
         el.addEventListener('click', function (ev) {
           const act = ev.target && ev.target.getAttribute ? ev.target.getAttribute('data-act') : null;
           if (act === 'close') {
@@ -2358,6 +2407,9 @@ async function deleteBFile(id) {
               document.body.appendChild(d);
             }, 400);
           }
+          if (act === 'toggle') { if (info.listingId) paint('confirm'); else registerNow(); }
+          if (act === 'unreg-no') paint('idle');
+          if (act === 'unreg-yes') unregisterNow();
           if (act === 'listing') {
             const u = 'detail.html?id=' + encodeURIComponent(info.listingId);
             window.open(typeof OfficeConfig !== 'undefined' && OfficeConfig.urlFor ? OfficeConfig.urlFor(u) : u, '_blank');
