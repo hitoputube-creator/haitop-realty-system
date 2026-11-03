@@ -1832,7 +1832,7 @@ function closeHomepageTab(tab) {
       + (rows || '<div style="font-size:13px;color:var(--text-muted);padding:2px 0 8px">아직 추가메모가 없어요.</div>')
       + '<div style="display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px">'
       + '<input type="date" id="addMemoDate" title="메모 날짜 (달력에서 고르거나 직접 입력)" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:140px;flex:none;padding:8px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
-      + '<textarea id="addMemoText" rows="2" placeholder="새 메모 — 나중에 알게 된 내용을 적고 저장을 누르세요 (왼쪽 날짜로 저장돼요)" style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
+      + '<textarea id="addMemoText" rows="4" placeholder="새 메모 — 나중에 알게 된 내용을 적고 저장을 누르세요 (왼쪽 날짜로 저장돼요)" style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
       + '<button type="button" class="btn btn-primary" id="addMemoBtn" style="flex:none">메모 저장</button></div></section>';
   }
   // 수정 화면의 추가메모 목록 (내용·날짜 수정, 삭제, 새 줄 추가)
