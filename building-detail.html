@@ -2519,7 +2519,7 @@ async function deleteBFile(id) {
     let html = '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:' + (buildingRecords.length ? "10px" : "0") + '"><div style="font-weight:800;font-size:1rem;color:#13201f">📌 특별 조건 · 홍보물 <span style="font-weight:400;font-size:12px;color:#6b7b79">진행 중 ' + activeAll + "건 " + floorNote + '</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><a class="hr-btn" style="text-decoration:none" href="' + esc(OfficeConfig.urlFor("special-promos.html")) + '" target="_blank" rel="noopener">특별 홍보물 전체 ›</a><button type="button" class="hr-btn main" id="recAddBtn">+ 기록 추가</button></div></div>';
     if (buildingRecords.length) {
       html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + chip(recShowEnded ? "종료 포함" : "진행중만", recShowEnded, "ended", "x") + ["전체"].concat(HR.KINDS).map(k => chip(k, recKind === k, "kind", k)).join("") + "</div>";
-      html += list.length ? '<div class="hr-grid">' + list.map(r => HR.cardHtml(r, recordUrlMap, {})).join("") + "</div>" : '<div style="padding:10px 2px;color:#6b7b79;font-size:13px">' + (recShowEnded ? "조건에 맞는 기록이 없어요." : "진행 중인 기록이 없어요. '종료 포함'을 누르면 지난 기록도 볼 수 있어요.") + "</div>";
+      html += list.length ? HR.tableHtml(list, recordUrlMap, {}) : '<div style="padding:10px 2px;color:#6b7b79;font-size:13px">' + (recShowEnded ? "조건에 맞는 기록이 없어요." : "진행 중인 기록이 없어요. '종료 포함'을 누르면 지난 기록도 볼 수 있어요.") + "</div>";
     }
     box.innerHTML = html;
     $("recAddBtn").addEventListener("click", () => HR.openForm({ buildingId, floors: recFloorList(), defaults: { floor: filterFloor !== "전체" ? filterFloor : "" }, onSaved: loadBuildingRecords }));
@@ -3334,7 +3334,7 @@ async function deleteBFile(id) {
 })();
 </script>
 <script src="assets/js/price-room-import.js?v=20261027-latest-only"></script>
-<script src="assets/js/building-records.js?v=20261103-records1"></script>
+<script src="assets/js/building-records.js?v=20261103-records3"></script>
 <script src="assets/js/building-sales-contact.js?v=20261013-contact2"></script>
 <style id="units-shadow-fix">.units-tbl th:last-child,.units-tbl td:last-child{box-shadow:none!important}.units-wrap.has-scroll .units-tbl td:last-child,.units-wrap.has-scroll .units-tbl th:last-child{box-shadow:-6px 0 8px -6px rgba(0,0,0,.28)!important}</style>
 <script>(function(){var w=document.querySelector('.units-wrap');if(!w)return;var t=w.querySelector('.units-tbl')||w;function u(){w.classList.toggle('has-scroll',w.scrollWidth>w.clientWidth+1)}addEventListener('resize',u);if(window.ResizeObserver){var ro=new ResizeObserver(u);ro.observe(w);ro.observe(t)}u()})();</script>
