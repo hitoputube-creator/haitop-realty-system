@@ -62,7 +62,7 @@
   </div>
 </div>
 
-<script src="assets/js/building-records.js?v=20261103-records1"></script>
+<script src="assets/js/building-records.js?v=20261103-records3"></script>
 <script>
 (function () {
   var HR = window.HitopRecords;
@@ -108,10 +108,10 @@
     list = HR.sortRecords(list, state.sort);
     if (!list.length) { $("spList").innerHTML = '<div class="sp-empty">' + (recs.length ? "조건에 맞는 기록이 없어요." : "아직 기록이 없어요. 위의 + 기록 추가나 카톡 붙여넣기로 시작해 보세요.") + "</div>"; }
     else {
-      $("spList").innerHTML = '<div class="hr-grid">' + list.map(function (r) {
+      $("spList").innerHTML = HR.tableHtml(list, state.urlMap, { showBuilding: true, info: function (r) {
         var b = state.byId[r._buildingId];
-        return HR.cardHtml(r, state.urlMap, { buildingName: b ? b.name : "(삭제된 건물)", link: b ? OfficeConfig.urlFor("building-detail.html?id=" + encodeURIComponent(b.id)) : "" });
-      }).join("") + "</div>";
+        return { name: b ? b.name : "(삭제된 건물)", link: b ? OfficeConfig.urlFor("building-detail.html?id=" + encodeURIComponent(b.id)) : "" };
+      } });
     }
     wire();
   }
