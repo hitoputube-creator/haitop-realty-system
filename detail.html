@@ -110,6 +110,20 @@
   #editModal #edit_internalInfoGrid { grid-template-columns:repeat(3,minmax(0,1fr)); }
   #editModal #edit_internalInfoGrid > .field { min-width:0; }
 }
+    #editManagementFeeWrap{display:none!important}
+    .edit-grid-3:has(#edit_salePrice):not(.commercial-price-compare){display:flex!important;gap:12px}.edit-grid-3:has(#edit_salePrice):not(.commercial-price-compare)>.field{flex:1 1 0;min-width:0;margin:0}
+    @media(min-width:901px){
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice){display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:10px 12px!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.commercial-compare-heading{grid-row:1!important;grid-column:1 / span 3!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.commercial-compare-heading.current{grid-column:4 / span 3!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.field{grid-row:2!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.field:has(#edit_presalePrice){grid-column:1!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.field:has(#edit_originalDeposit){grid-column:2!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.field:has(#edit_originalMonthlyRent){grid-column:3!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.field:has(#edit_salePrice){grid-column:4!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.field:has(#edit_deposit){grid-column:5!important}
+      .edit-grid-3.commercial-price-compare:has(#edit_salePrice)>.field:has(#edit_monthlyRent){grid-column:6!important}
+    }
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261020-form-headers">
 <script>
@@ -327,8 +341,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
         <div class="price-preview" id="edit_deposit_preview"></div></div>
       <div class="field"><label>월세</label><input id="edit_monthlyRent" type="text" placeholder="예: 300만" />
         <div class="price-preview" id="edit_monthlyRent_preview"></div></div>
-      <div class="field" data-price-fee><label>관리비</label><input id="edit_managementFee" type="text" placeholder="예: 15만" />
-        <div class="price-preview" id="edit_managementFee_preview"></div></div>
+      <div class="field" id="editManagementFeeWrap" aria-hidden="true"><input id="edit_managementFee" type="text" tabindex="-1" /><div class="price-preview" id="edit_managementFee_preview"></div></div>
       <div class="field" data-price-fee><label>권리금</label><input id="edit_premium" type="text" placeholder="예: 없음 또는 2,000만" />
         <div class="price-preview" id="edit_premium_preview"></div></div>
     </div>
@@ -492,11 +505,11 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
           </div>
           <div id="edit_additionalContactsWrap" style="display:contents;"></div>
           <button type="button" id="editAddOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 auto;box-sizing:border-box;height:38px;padding:0 14px;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addEditContactRow()">+ 추가 연락처</button>
+          <div class="field drive-link-inline" style="flex:1 1 220px;min-width:180px;margin:0;">
+            <label>드라이브 자료 연결</label>
+            <select id="edit_resource_id"><option value="">-- 연결 안함 --</option></select>
+          </div>
         </div>
-      </div>
-      <div class="field">
-        <label>드라이브 자료 연결</label>
-        <select id="edit_resource_id"><option value="">-- 연결 안함 --</option></select>
       </div>
       <div class="field" style="grid-column:1 / -1;">
         <label>소유주 메모 / 특이사항</label>
@@ -1817,11 +1830,10 @@ function closeHomepageTab(tab) {
     ).join("");
     return '<section class="detail-section" id="memoSection"><div class="detail-section-title">추가메모 <span style="font-size:12px;font-weight:400;color:var(--text-muted)">' + list.length + '건 · 날짜순</span></div>'
       + (rows || '<div style="font-size:13px;color:var(--text-muted);padding:2px 0 8px">아직 추가메모가 없어요.</div>')
-      + '<div style="display:flex;gap:8px;align-items:center;margin:12px 0 8px"><span style="font-size:13px;font-weight:700;color:var(--gold)">새 메모</span>'
-      + '<input type="date" id="addMemoDate" title="메모 날짜 선택" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:auto;flex:none;padding:2px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:12px"></div>'
-      + '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
-      + '<textarea id="addMemoText" rows="2" placeholder="나중에 알게 된 내용을 적고 저장을 누르세요 (위 날짜로 저장돼요)" style="flex:1;min-width:220px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
-      + '<button type="button" class="btn btn-primary" id="addMemoBtn">메모 저장</button></div></section>';
+      + '<div style="display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px">'
+      + '<input type="date" id="addMemoDate" title="메모 날짜 (달력에서 고르거나 직접 입력)" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:140px;flex:none;padding:8px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
+      + '<textarea id="addMemoText" rows="2" placeholder="새 메모 — 나중에 알게 된 내용을 적고 저장을 누르세요 (왼쪽 날짜로 저장돼요)" style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
+      + '<button type="button" class="btn btn-primary" id="addMemoBtn" style="flex:none">메모 저장</button></div></section>';
   }
   // 수정 화면의 추가메모 목록 (내용·날짜 수정, 삭제, 새 줄 추가)
   function buildEditMemoRow(m) {
