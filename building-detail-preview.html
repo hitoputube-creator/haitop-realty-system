@@ -645,7 +645,6 @@
 .units-tbl th, .units-tbl td { padding-left:6px; padding-right:6px; }
     .ftab { position:relative; }
     .ftab .rec-n { position:absolute; top:-6px; right:-4px; font-style:normal; font-size:10px; line-height:1; padding:2px 5px; border-radius:999px; background:#0b7a6b; color:#fff; }
-    .ftab.rec-open { margin-left:10px; border-color:#0b7a6b; color:#0b7a6b; }
     /* 상가 호실 현황 표: 평수를 가장 눈에 띄게, 나머지는 중요도에 따라 굵기·색 구분 */
     .units-tbl:not(.residential-unit-table) td:nth-child(2) strong { font-size:1.05rem; font-weight:800; color:#13201f; }
     .units-tbl:not(.residential-unit-table) td:nth-child(3) { font-weight:600; color:#1f2d2c; }
@@ -2462,150 +2461,80 @@ async function deleteBFile(id) {
     }
   }
 
-  /* ===== 건물 기록: 조건·홍보물·메모 (층·호실 연결, 파일 첨부) ===== */
-  const REC_PREFIX = "[기록] ";
-  const REC_KINDS = ["조건", "홍보물", "메모"];
-  let buildingRecords = [], recordsLoaded = false, recordsLoading = false, recordUrlMap = {};
-  let recFilterKind = "전체", recFilterFloor = "전체", recEditId = null, recEditFiles = [];
-  function recParse(row) {
-    try {
-      const d = JSON.parse(String(row.file_name).slice(REC_PREFIX.length));
-      d._rowId = row.id; d.files = Array.isArray(d.files) ? d.files : [];
-      return d;
-    } catch (e) { return null; }
-  }
+  /* ===== 건물 기록(특별 조건·홍보물): 공용 모듈 HitopRecords 사용 ===== */
+  let buildingRecords = [], recordUrlMap = {}, recordsLoaded = false, recordsLoading = false, recShowEnded = false, recKind = "전체";
   async function loadBuildingRecords() {
     if (recordsLoading) return;
     recordsLoading = true;
     try {
-      const rows = (await getBuildingFiles(buildingId)).filter(r => String(r.file_name).startsWith(REC_PREFIX));
-      buildingRecords = rows.map(recParse).filter(Boolean);
-      const urls = [...new Set(buildingRecords.flatMap(r => r.files.map(f => f.url)).filter(Boolean))];
-      recordUrlMap = {};
-      if (urls.length) {
-        const resolved = await resolveBuildingMaterialUrls(urls.map(u => ({ cloudinary_url: u })));
-        resolved.forEach((row, i) => { recordUrlMap[urls[i]] = row.cloudinary_url; });
-      }
+      const r = await HitopRecords.fetchRecords(buildingId);
+      buildingRecords = r.records; recordUrlMap = r.urlMap;
     } catch (e) { showToast("기록을 불러오지 못했어요: " + e.message); }
     recordsLoaded = true; recordsLoading = false;
-    renderFloorTabs();
-    if ($("recPanel")) renderRecPanel();
+    renderAll();
   }
-  function recSorted(list) {
-    return list.slice().sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || (b._rowId < a._rowId ? -1 : 1));
-  }
-  function recFloorLabel(r) { return r.floor ? floorLabel(r.floor) + (r.rooms ? " " + r.rooms : "") : (r.rooms || "건물 전체"); }
-  function recDateLabel(d) { return String(d || "").slice(5).replace("-", "."); }
-  function recTagHtml(kind) {
-    const strong = kind === "조건" || kind === "홍보물";
-    return '<span style="font-size:11px;padding:1px 8px;border-radius:999px;white-space:nowrap;border:1px solid ' + (strong ? "#0b7a6b" : "#c5d3d1") + ';color:' + (strong ? "#0b7a6b" : "#6b7b79") + '">' + esc(kind) + "</span>";
-  }
-  function recFilesHtml(r) {
-    return r.files.map(f => {
-      const url = recordUrlMap[f.url] || f.url;
-      const img = (typeof isImage === "function" && isImage(f.url, f.name));
-      return '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#0b7a6b;text-decoration:none;border:1px solid #cfe5e1;border-radius:6px;padding:1px 8px;margin:2px 6px 0 0">' + (img ? "🖼" : "📎") + " " + esc(f.name) + "</a>";
-    }).join("");
-  }
-  function renderRecordStrip() {
-    let box = $("floorRecordStrip");
-    if (!box) {
-      box = document.createElement("div"); box.id = "floorRecordStrip";
-      $("unitFloorTabs").parentElement.insertAdjacentElement("afterend", box);
-    }
-    const list = filterFloor === "전체" ? [] : recSorted(buildingRecords.filter(r => r.floor === filterFloor));
-    if (!list.length) { box.innerHTML = ""; box.style.display = "none"; return; }
-    box.style.cssText = "display:block;margin:4px 0 12px;padding:10px 14px;border:1px solid #cfe5e1;border-radius:10px;background:#f6fbfa;font-size:13px;line-height:1.7";
-    const shown = list.slice(0, 3);
-    box.innerHTML = '<div style="font-weight:700;margin-bottom:2px">' + esc(floorLabel(filterFloor)) + " 특별 조건 · 홍보 <span style=\"font-weight:400;color:#6b7b79;font-size:12px\">(" + list.length + "건)</span></div>"
-      + shown.map(r => "<div>" + recTagHtml(r.kind) + " " + (r.rooms ? '<b style="font-weight:600">' + esc(r.rooms) + "</b> " : "") + '<span style="white-space:pre-wrap">' + esc(r.text) + "</span> " + '<span style="color:#8a9a98;font-size:12px">· ' + esc(recDateLabel(r.date)) + "</span>" + (r.files.length ? "<div>" + recFilesHtml(r) + "</div>" : "") + "</div>").join("")
-      + '<div style="margin-top:4px"><button type="button" id="recStripMore" style="font-size:12px;border:1px solid #cfe5e1;background:#fff;border-radius:999px;padding:2px 12px;cursor:pointer;color:#0b7a6b">' + (list.length > 3 ? "더 보기" : "기록 열기") + "</button></div>";
-    $("recStripMore").addEventListener("click", () => openRecPanel(filterFloor));
-  }
-  function openRecPanel(floor) {
-    recFilterFloor = floor || "전체"; recFilterKind = "전체"; recEditId = null;
-    let p = $("recPanel");
-    if (p) p.remove();
-    p = document.createElement("div"); p.id = "recPanel";
-    p.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto";
-    p.innerHTML = '<div style="background:#fff;color:#1d2b2a;width:min(780px,96vw);border-radius:14px;padding:18px 20px 22px;box-shadow:0 10px 40px rgba(0,0,0,.25)"><div id="recPanelBody"></div></div>';
-    p.addEventListener("click", ev => { if (ev.target === p) p.remove(); });
-    document.body.appendChild(p);
-    renderRecPanel();
-  }
-  function recFloorOptions(sel) {
+  function recFloorList() {
     const seen = {}, floors = [];
     scopedUnits().forEach(u => { const f = unitGroup(u); if (f && !seen[f]) { seen[f] = true; floors.push(f); } });
     floors.sort((a, b) => parseInt(String(a).replace("B", "-")) - parseInt(String(b).replace("B", "-")));
-    return '<option value="">건물 전체</option>' + floors.map(f => '<option value="' + esc(f) + '"' + (f === sel ? " selected" : "") + ">" + esc(floorLabel(f)) + "</option>").join("");
+    return floors.map(f => ({ v: f, label: floorLabel(f) }));
   }
-  function renderRecPanel() {
-    const body = $("recPanelBody"); if (!body) return;
-    const inputCss = "width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid #cfdcda;border-radius:8px;font:inherit;font-size:13px;background:#fff;color:inherit";
-    const btn = (id, label, main) => '<button type="button" id="' + id + '" style="font:inherit;font-size:13px;padding:5px 14px;border-radius:999px;cursor:pointer;border:1px solid ' + (main ? "#0b7a6b;background:#0b7a6b;color:#fff" : "#cfdcda;background:#fff;color:#1d2b2a") + '">' + label + "</button>";
-    const chip = (label, active, cls, val) => '<button type="button" class="' + cls + '" data-v="' + esc(val) + '" style="font:inherit;font-size:12px;padding:3px 12px;border-radius:999px;cursor:pointer;border:1px solid ' + (active ? "#0b7a6b;background:#0b7a6b;color:#fff" : "#cfdcda;background:#fff;color:#1d2b2a") + '">' + esc(label) + "</button>";
-    const all = recSorted(buildingRecords);
-    const list = all.filter(r => (recFilterKind === "전체" || r.kind === recFilterKind) && (recFilterFloor === "전체" || r.floor === recFilterFloor));
-    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:16px;font-weight:700">📌 기록 · 특별 조건 · 홍보 <span style="font-weight:400;font-size:12px;color:#6b7b79">' + esc($("buildingName") ? $("buildingName").textContent : "") + "</span></div><div>" + btn("recAddBtn", "+ 기록 추가", true) + " " + btn("recCloseBtn", "닫기", false) + "</div></div>";
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">' + ["전체"].concat(REC_KINDS).map(k => chip(k + (k === "전체" ? " " + all.length : " " + all.filter(r => r.kind === k).length), recFilterKind === k, "rec-kind", k)).join("") + "</div>";
-    if (recFilterFloor !== "전체") html += '<div style="font-size:12px;color:#6b7b79;margin-bottom:6px">' + esc(floorLabel(recFilterFloor)) + ' 기록만 보는 중 · <button type="button" id="recAllFloors" style="border:0;background:none;color:#0b7a6b;cursor:pointer;font:inherit;text-decoration:underline">전체 층 보기</button></div>';
-    if (recEditId !== null) {
-      const cur = recEditId === "new" ? { date: new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10), kind: "조건", floor: recFilterFloor !== "전체" ? recFilterFloor : "", rooms: "", text: "", files: [] } : buildingRecords.find(r => r._rowId === recEditId);
-      if (cur) {
-        html += '<div style="border:1px solid #cfe5e1;background:#f6fbfa;border-radius:10px;padding:12px;margin:8px 0 12px">'
-          + '<div style="display:grid;grid-template-columns:130px 110px 1fr 1fr;gap:8px;margin-bottom:8px">'
-          + '<input id="recDate" type="date" value="' + esc(cur.date) + '" style="' + inputCss + '">'
-          + '<select id="recKind" style="' + inputCss + '">' + REC_KINDS.map(k => "<option" + (k === cur.kind ? " selected" : "") + ">" + k + "</option>").join("") + "</select>"
-          + '<select id="recFloor" style="' + inputCss + '">' + recFloorOptions(cur.floor) + "</select>"
-          + '<input id="recRooms" placeholder="대상 호실 (예: 601~603)" value="' + esc(cur.rooms) + '" style="' + inputCss + '"></div>'
-          + '<textarea id="recText" rows="4" placeholder="내용 (예: 특가 38억 VAT별도, 2026.12월까지 한정 / 수수료 조건 / 카톡 발송 내역)" style="' + inputCss + ';resize:vertical">' + esc(cur.text) + "</textarea>"
-          + '<div id="recKeptFiles" style="margin:6px 0">' + recEditFiles.map((f, i) => '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;border:1px solid #cfe5e1;border-radius:6px;padding:1px 8px;margin:2px 6px 0 0;background:#fff">📎 ' + esc(f.name) + ' <button type="button" class="rec-rm-file" data-i="' + i + '" style="border:0;background:none;cursor:pointer;color:#b3261e">✕</button></span>').join("") + "</div>"
-          + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><input id="recFile" type="file" multiple accept="image/*,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" style="font-size:12px">' + '<div>' + btn("recSaveBtn", "저장", true) + " " + btn("recCancelBtn", "취소", false) + "</div></div>"
-          + '<div id="recProg" style="font-size:12px;color:#6b7b79;margin-top:4px"></div></div>';
-      }
+  function recMark(ho) {
+    if (!buildingRecords.length) return "";
+    const hit = buildingRecords.filter(r => HitopRecords.roomsInclude(r, ho));
+    if (!hit.length) return "";
+    const act = hit.some(HitopRecords.isActive);
+    return '<button type="button" class="hr-mark' + (act ? "" : " ended") + '" data-hr-ho="' + esc(ho) + '" title="' + (act ? "특별 조건·홍보 진행 중" : "종료된 특별 홍보가 있어요") + '">📌</button>';
+  }
+  if (!window.__hrMarkClicks) {
+    window.__hrMarkClicks = true;
+    document.addEventListener("click", ev => {
+      const t = ev.target && ev.target.closest ? ev.target.closest(".hr-mark") : null;
+      if (!t) return;
+      ev.stopPropagation();
+      const HR = HitopRecords, ho = t.dataset.hrHo;
+      const hit = HR.sortRecords(buildingRecords.filter(r => HR.roomsInclude(r, ho)));
+      const ov = document.createElement("div"); ov.className = "hr-overlay";
+      ov.innerHTML = '<div class="hr-modal"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:16px">📌 ' + esc(ho) + '호 특별 조건 · 홍보</b><button type="button" class="hr-btn" id="hrMarkClose">닫기</button></div><div class="hr-grid" style="grid-template-columns:1fr">' + hit.map(r => HR.cardHtml(r, recordUrlMap, { readonly: true })).join("") + "</div></div>";
+      ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
+      document.body.appendChild(ov);
+      ov.querySelector("#hrMarkClose").addEventListener("click", () => ov.remove());
+    }, true);
+  }
+  function renderRecSection() {
+    const HR = HitopRecords;
+    HR.ensureStyle();
+    let box = $("recSection");
+    if (!box) {
+      box = document.createElement("div"); box.className = "card"; box.id = "recSection";
+      $("unitStatus").insertAdjacentElement("beforebegin", box);
     }
-    if (!list.length) html += '<div style="padding:18px 4px;color:#6b7b79;font-size:13px">' + (all.length ? "조건에 맞는 기록이 없어요." : "아직 기록이 없어요. 위의 + 기록 추가로 특별 조건이나 홍보물을 남겨 보세요.") + "</div>";
-    html += list.map(r => '<div style="display:grid;grid-template-columns:48px 62px 1fr auto;gap:10px;padding:9px 0;border-top:1px solid #e3eeec;font-size:13px;align-items:baseline">'
-      + '<span style="color:#6b7b79;font-size:12px">' + esc(recDateLabel(r.date)) + "</span>" + recTagHtml(r.kind)
-      + '<div><div style="color:#6b7b79;font-size:12px">' + esc(recFloorLabel(r)) + '</div><div style="white-space:pre-wrap;overflow-wrap:anywhere">' + esc(r.text) + "</div>" + (r.files.length ? "<div>" + recFilesHtml(r) + "</div>" : "") + "</div>"
-      + '<div style="white-space:nowrap"><button type="button" class="rec-edit" data-id="' + esc(r._rowId) + '" style="font:inherit;font-size:12px;border:1px solid #cfdcda;background:#fff;border-radius:999px;padding:1px 10px;cursor:pointer">수정</button> <button type="button" class="rec-del" data-id="' + esc(r._rowId) + '" style="font:inherit;font-size:12px;border:1px solid #e8c9c6;background:#fff;color:#b3261e;border-radius:999px;padding:1px 10px;cursor:pointer">삭제</button></div></div>').join("");
-    body.innerHTML = html;
-    $("recCloseBtn").addEventListener("click", () => $("recPanel").remove());
-    $("recAddBtn").addEventListener("click", () => { recEditId = "new"; recEditFiles = []; renderRecPanel(); });
-    body.querySelectorAll(".rec-kind").forEach(b => b.addEventListener("click", () => { recFilterKind = b.dataset.v; renderRecPanel(); }));
-    if ($("recAllFloors")) $("recAllFloors").addEventListener("click", () => { recFilterFloor = "전체"; renderRecPanel(); });
-    body.querySelectorAll(".rec-edit").forEach(b => b.addEventListener("click", () => { const r = buildingRecords.find(x => String(x._rowId) === b.dataset.id); recEditId = r._rowId; recEditFiles = r.files.slice(); renderRecPanel(); }));
-    body.querySelectorAll(".rec-del").forEach(b => b.addEventListener("click", async () => {
-      if (!confirm("이 기록을 삭제할까요? (첨부 파일은 보관소에 남아요)")) return;
-      try { await deleteBuildingFile(b.dataset.id); showToast("기록을 삭제했습니다."); await loadBuildingRecords(); } catch (e) { showToast("삭제 실패: " + e.message); }
+    const activeAll = buildingRecords.filter(HR.isActive).length;
+    let list = buildingRecords.filter(r => filterFloor === "전체" || !r.floor || r.floor === filterFloor);
+    if (!recShowEnded) list = list.filter(HR.isActive);
+    if (recKind !== "전체") list = list.filter(r => r.kind === recKind);
+    list = HR.sortRecords(list);
+    const chip = (label, on, attr, val) => '<button type="button" class="hr-btn' + (on ? " on" : "") + '" data-' + attr + '="' + esc(val) + '">' + esc(label) + "</button>";
+    const floorNote = filterFloor === "전체" ? "" : '<span style="font-size:12px;color:#6b7b79">' + esc(floorLabel(filterFloor)) + " + 건물 전체 기록</span>";
+    let html = '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:' + (buildingRecords.length ? "10px" : "0") + '"><div style="font-weight:800;font-size:1rem;color:#13201f">📌 특별 조건 · 홍보물 <span style="font-weight:400;font-size:12px;color:#6b7b79">진행 중 ' + activeAll + "건 " + floorNote + '</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><a class="hr-btn" style="text-decoration:none" href="' + esc(OfficeConfig.urlFor("special-promos.html")) + '" target="_blank" rel="noopener">특별 홍보물 전체 ›</a><button type="button" class="hr-btn main" id="recAddBtn">+ 기록 추가</button></div></div>';
+    if (buildingRecords.length) {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + chip(recShowEnded ? "종료 포함" : "진행중만", recShowEnded, "ended", "x") + ["전체"].concat(HR.KINDS).map(k => chip(k, recKind === k, "kind", k)).join("") + "</div>";
+      html += list.length ? '<div class="hr-grid">' + list.map(r => HR.cardHtml(r, recordUrlMap, {})).join("") + "</div>" : '<div style="padding:10px 2px;color:#6b7b79;font-size:13px">' + (recShowEnded ? "조건에 맞는 기록이 없어요." : "진행 중인 기록이 없어요. '종료 포함'을 누르면 지난 기록도 볼 수 있어요.") + "</div>";
+    }
+    box.innerHTML = html;
+    $("recAddBtn").addEventListener("click", () => HR.openForm({ buildingId, floors: recFloorList(), defaults: { floor: filterFloor !== "전체" ? filterFloor : "" }, onSaved: loadBuildingRecords }));
+    box.querySelectorAll("[data-ended]").forEach(b => b.addEventListener("click", () => { recShowEnded = !recShowEnded; renderRecSection(); }));
+    box.querySelectorAll("[data-kind]").forEach(b => b.addEventListener("click", () => { recKind = b.dataset.kind; renderRecSection(); }));
+    box.querySelectorAll("[data-hr-act]").forEach(b => b.addEventListener("click", async () => {
+      const rec = buildingRecords.find(r => String(r._rowId) === b.dataset.id), act = b.dataset.hrAct;
+      try {
+        if (act === "edit") { HR.openForm({ record: rec, buildingId, floors: recFloorList(), onSaved: loadBuildingRecords }); return; }
+        if (act === "end") { if (!confirm("이 홍보를 종료 처리할까요? (기록은 남아요)")) return; await HR.setEnded(rec, true); }
+        else if (act === "resume") await HR.setEnded(rec, false);
+        else if (act === "del") { if (!confirm("이 기록을 삭제할까요?")) return; await HR.deleteRecord(rec._rowId); }
+        await loadBuildingRecords();
+      } catch (e) { showToast("실패: " + e.message); }
     }));
-    body.querySelectorAll(".rec-rm-file").forEach(b => b.addEventListener("click", () => { recEditFiles.splice(Number(b.dataset.i), 1); const keep = { date: $("recDate").value, kind: $("recKind").value, floor: $("recFloor").value, rooms: $("recRooms").value, text: $("recText").value }; const cur = buildingRecords.find(r => r._rowId === recEditId); if (cur) Object.assign(cur, keep); renderRecPanel(); }));
-    if ($("recCancelBtn")) $("recCancelBtn").addEventListener("click", () => { recEditId = null; renderRecPanel(); });
-    if ($("recSaveBtn")) $("recSaveBtn").addEventListener("click", recSave);
-  }
-  async function recSave() {
-    const text = $("recText").value.trim();
-    if (!text) { showToast("내용을 적어 주세요."); return; }
-    const saveBtn = $("recSaveBtn"); saveBtn.disabled = true;
-    try {
-      const files = recEditFiles.slice();
-      const picked = Array.from($("recFile").files || []);
-      for (let i = 0; i < picked.length; i++) {
-        $("recProg").textContent = "파일 올리는 중 (" + (i + 1) + "/" + picked.length + ") " + picked[i].name;
-        files.push({ name: picked[i].name, url: await cloudinaryUpload(picked[i], "haitop/files") });
-      }
-      const data = { date: $("recDate").value, kind: $("recKind").value, floor: $("recFloor").value, rooms: $("recRooms").value.trim(), text, files };
-      const fileName = REC_PREFIX + JSON.stringify(data);
-      if (recEditId === "new") {
-        await addBuildingFile({ building_id: buildingId, file_name: fileName, cloudinary_url: "", drive_link: null });
-      } else {
-        const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_files?id=eq." + encodeURIComponent(recEditId), { method: "PATCH", headers: Object.assign({}, headers, { "Prefer": "return=minimal" }), body: JSON.stringify({ file_name: fileName }) });
-        if (!res.ok) throw new Error("기록 수정 실패: " + await res.text());
-      }
-      recEditId = null; recEditFiles = [];
-      showToast("✅ 기록을 저장했습니다.");
-      await loadBuildingRecords();
-    } catch (e) { showToast("❌ 저장 실패: " + e.message); saveBtn.disabled = false; }
   }
 
   function renderFloorTabs() {
@@ -2622,21 +2551,20 @@ async function deleteBFile(id) {
     });
 
     const tabs = ["전체"].concat(floors);
-    const recCount = f => buildingRecords.filter(r => r.floor === f).length;
+    const recCount = f => buildingRecords.filter(r => r.floor === f && HitopRecords.isActive(r)).length;
     $("unitFloorTabs").innerHTML = tabs.map(f => {
       const n = f === "전체" ? 0 : recCount(f);
       return '<button class="ftab' + (f === filterFloor ? " active" : "") + '" data-floor="' + esc(f) + '">' + esc(floorLabel(f)) + (n ? '<i class="rec-n">' + n + "</i>" : "") + "</button>";
-    }).join("") + '<button type="button" class="ftab rec-open" id="recOpenBtn" title="특별 조건·홍보물·메모 기록">📌 기록 ' + buildingRecords.length + "</button>";
+    }).join("");
 
-    $("unitFloorTabs").querySelectorAll(".ftab[data-floor]").forEach(btn => {
+    $("unitFloorTabs").querySelectorAll(".ftab").forEach(btn => {
       btn.addEventListener("click", () => {
         filterFloor = btn.dataset.floor;
         renderAll();
       });
     });
-    $("recOpenBtn").addEventListener("click", () => openRecPanel("전체"));
     if (!recordsLoaded && !recordsLoading) loadBuildingRecords();
-    try { renderRecordStrip(); } catch (e) { console.warn("[기록] 표시 실패", e); }
+    try { renderRecSection(); } catch (e) { console.warn("[기록] 표시 실패", e); }
   }
 
   const unitStatusLabel = {occ:'임차중', vac:'공실', sale:'매매가능', listed:'매물진행중'};
@@ -2803,7 +2731,7 @@ async function deleteBFile(id) {
       const status = commercialOccupancy(u);
       const bc     = status;
       return `<tr class="${u.추천등록일 && isFlagOn(u.추천매물) && isFlagOn(u.수익성매물) ? 'profit-recommended-row' : ''}">
-        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.묶음ID && activeBundleIds.has(u.묶음ID) ? '<span class="unit-flag bundle">묶음</span>' : ''}${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}${unitUpdTag([u])}</td>
+        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${recMark(u.호수)}${u.묶음ID && activeBundleIds.has(u.묶음ID) ? '<span class="unit-flag bundle">묶음</span>' : ''}${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}${unitUpdTag([u])}</td>
         <td>${u.현업종 || "-"}</td>
         <td style="white-space:nowrap;line-height:1.3">${unitAreaHtml(u)}</td>
         <td>${u.소유주 || "-"}</td>
@@ -3406,6 +3334,7 @@ async function deleteBFile(id) {
 })();
 </script>
 <script src="assets/js/price-room-import.js?v=20261027-latest-only"></script>
+<script src="assets/js/building-records.js?v=20261103-records1"></script>
 <script src="assets/js/building-sales-contact.js?v=20261013-contact2"></script>
 <style id="units-shadow-fix">.units-tbl th:last-child,.units-tbl td:last-child{box-shadow:none!important}.units-wrap.has-scroll .units-tbl td:last-child,.units-wrap.has-scroll .units-tbl th:last-child{box-shadow:-6px 0 8px -6px rgba(0,0,0,.28)!important}</style>
 <script>(function(){var w=document.querySelector('.units-wrap');if(!w)return;var t=w.querySelector('.units-tbl')||w;function u(){w.classList.toggle('has-scroll',w.scrollWidth>w.clientWidth+1)}addEventListener('resize',u);if(window.ResizeObserver){var ro=new ResizeObserver(u);ro.observe(w);ro.observe(t)}u()})();</script>
