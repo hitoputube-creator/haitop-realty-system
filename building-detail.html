@@ -2396,7 +2396,8 @@ async function deleteBFile(id) {
           paint('idle');
         };
         el.addEventListener('click', function (ev) {
-          const act = ev.target && ev.target.getAttribute ? ev.target.getAttribute('data-act') : null;
+          const actEl = ev.target && ev.target.closest ? ev.target.closest('[data-act]') : null;
+          const act = actEl ? actEl.getAttribute('data-act') : null;
           if (act === 'close') {
             try { window.close(); } catch (e) {}
             el.remove();
