@@ -643,6 +643,8 @@
 .units-tbl td.tbl-actions > * { white-space:nowrap; word-break:keep-all; }
 .units-tbl td:nth-child(3) { max-width:132px; white-space:normal; word-break:keep-all; }
 .units-tbl th, .units-tbl td { padding-left:6px; padding-right:6px; }
+    .ftab { position:relative; }
+    .ftab .rec-n { position:absolute; top:-6px; right:-4px; font-style:normal; font-size:10px; line-height:1; padding:2px 5px; border-radius:999px; background:#0b7a6b; color:#fff; }
     /* 상가 호실 현황 표: 평수를 가장 눈에 띄게, 나머지는 중요도에 따라 굵기·색 구분 */
     .units-tbl:not(.residential-unit-table) td:nth-child(2) strong { font-size:1.05rem; font-weight:800; color:#13201f; }
     .units-tbl:not(.residential-unit-table) td:nth-child(3) { font-weight:600; color:#1f2d2c; }
@@ -1698,7 +1700,7 @@ async function loadFiles() {
 }
 
 function renderFiles(files) {
-  files=files.filter(f=>!String(f.file_name).startsWith('[가격표] '));
+  files=files.filter(f=>!String(f.file_name).startsWith('[가격표] ') && !String(f.file_name).startsWith('[기록] '));
   const el = document.getElementById('fileList');
   if (!files.length) {
     el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">등록된 자료가 없습니다.</div>';
@@ -2459,6 +2461,82 @@ async function deleteBFile(id) {
     }
   }
 
+  /* ===== 건물 기록(특별 조건·홍보물): 공용 모듈 HitopRecords 사용 ===== */
+  let buildingRecords = [], recordUrlMap = {}, recordsLoaded = false, recordsLoading = false, recShowEnded = false, recKind = "전체";
+  async function loadBuildingRecords() {
+    if (recordsLoading) return;
+    recordsLoading = true;
+    try {
+      const r = await HitopRecords.fetchRecords(buildingId);
+      buildingRecords = r.records; recordUrlMap = r.urlMap;
+    } catch (e) { showToast("기록을 불러오지 못했어요: " + e.message); }
+    recordsLoaded = true; recordsLoading = false;
+    renderAll();
+  }
+  function recFloorList() {
+    const seen = {}, floors = [];
+    scopedUnits().forEach(u => { const f = unitGroup(u); if (f && !seen[f]) { seen[f] = true; floors.push(f); } });
+    floors.sort((a, b) => parseInt(String(a).replace("B", "-")) - parseInt(String(b).replace("B", "-")));
+    return floors.map(f => ({ v: f, label: floorLabel(f) }));
+  }
+  function recMark(ho) {
+    if (!buildingRecords.length) return "";
+    const hit = buildingRecords.filter(r => HitopRecords.roomsInclude(r, ho));
+    if (!hit.length) return "";
+    const act = hit.some(HitopRecords.isActive);
+    return '<button type="button" class="hr-mark' + (act ? "" : " ended") + '" data-hr-ho="' + esc(ho) + '" title="' + (act ? "특별 조건·홍보 진행 중" : "종료된 특별 홍보가 있어요") + '">📌</button>';
+  }
+  if (!window.__hrMarkClicks) {
+    window.__hrMarkClicks = true;
+    document.addEventListener("click", ev => {
+      const t = ev.target && ev.target.closest ? ev.target.closest(".hr-mark") : null;
+      if (!t) return;
+      ev.stopPropagation();
+      const HR = HitopRecords, ho = t.dataset.hrHo;
+      const hit = HR.sortRecords(buildingRecords.filter(r => HR.roomsInclude(r, ho)));
+      const ov = document.createElement("div"); ov.className = "hr-overlay";
+      ov.innerHTML = '<div class="hr-modal"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:16px">📌 ' + esc(ho) + '호 특별 조건 · 홍보</b><button type="button" class="hr-btn" id="hrMarkClose">닫기</button></div><div class="hr-grid" style="grid-template-columns:1fr">' + hit.map(r => HR.cardHtml(r, recordUrlMap, { readonly: true })).join("") + "</div></div>";
+      ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
+      document.body.appendChild(ov);
+      ov.querySelector("#hrMarkClose").addEventListener("click", () => ov.remove());
+    }, true);
+  }
+  function renderRecSection() {
+    const HR = HitopRecords;
+    HR.ensureStyle();
+    let box = $("recSection");
+    if (!box) {
+      box = document.createElement("div"); box.className = "card"; box.id = "recSection";
+      $("unitStatus").insertAdjacentElement("beforebegin", box);
+    }
+    const activeAll = buildingRecords.filter(HR.isActive).length;
+    let list = buildingRecords.filter(r => filterFloor === "전체" || !r.floor || r.floor === filterFloor);
+    if (!recShowEnded) list = list.filter(HR.isActive);
+    if (recKind !== "전체") list = list.filter(r => r.kind === recKind);
+    list = HR.sortRecords(list);
+    const chip = (label, on, attr, val) => '<button type="button" class="hr-btn' + (on ? " on" : "") + '" data-' + attr + '="' + esc(val) + '">' + esc(label) + "</button>";
+    const floorNote = filterFloor === "전체" ? "" : '<span style="font-size:12px;color:#6b7b79">' + esc(floorLabel(filterFloor)) + " + 건물 전체 기록</span>";
+    let html = '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:' + (buildingRecords.length ? "10px" : "0") + '"><div style="font-weight:800;font-size:1rem;color:#13201f">📌 특별 조건 · 홍보물 <span style="font-weight:400;font-size:12px;color:#6b7b79">진행 중 ' + activeAll + "건 " + floorNote + '</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><a class="hr-btn" style="text-decoration:none" href="' + esc(OfficeConfig.urlFor("special-promos.html")) + '" target="_blank" rel="noopener">특별 홍보물 전체 ›</a><button type="button" class="hr-btn main" id="recAddBtn">+ 기록 추가</button></div></div>';
+    if (buildingRecords.length) {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + chip(recShowEnded ? "종료 포함" : "진행중만", recShowEnded, "ended", "x") + ["전체"].concat(HR.KINDS).map(k => chip(k, recKind === k, "kind", k)).join("") + "</div>";
+      html += list.length ? '<div class="hr-grid">' + list.map(r => HR.cardHtml(r, recordUrlMap, {})).join("") + "</div>" : '<div style="padding:10px 2px;color:#6b7b79;font-size:13px">' + (recShowEnded ? "조건에 맞는 기록이 없어요." : "진행 중인 기록이 없어요. '종료 포함'을 누르면 지난 기록도 볼 수 있어요.") + "</div>";
+    }
+    box.innerHTML = html;
+    $("recAddBtn").addEventListener("click", () => HR.openForm({ buildingId, floors: recFloorList(), defaults: { floor: filterFloor !== "전체" ? filterFloor : "" }, onSaved: loadBuildingRecords }));
+    box.querySelectorAll("[data-ended]").forEach(b => b.addEventListener("click", () => { recShowEnded = !recShowEnded; renderRecSection(); }));
+    box.querySelectorAll("[data-kind]").forEach(b => b.addEventListener("click", () => { recKind = b.dataset.kind; renderRecSection(); }));
+    box.querySelectorAll("[data-hr-act]").forEach(b => b.addEventListener("click", async () => {
+      const rec = buildingRecords.find(r => String(r._rowId) === b.dataset.id), act = b.dataset.hrAct;
+      try {
+        if (act === "edit") { HR.openForm({ record: rec, buildingId, floors: recFloorList(), onSaved: loadBuildingRecords }); return; }
+        if (act === "end") { if (!confirm("이 홍보를 종료 처리할까요? (기록은 남아요)")) return; await HR.setEnded(rec, true); }
+        else if (act === "resume") await HR.setEnded(rec, false);
+        else if (act === "del") { if (!confirm("이 기록을 삭제할까요?")) return; await HR.deleteRecord(rec._rowId); }
+        await loadBuildingRecords();
+      } catch (e) { showToast("실패: " + e.message); }
+    }));
+  }
+
   function renderFloorTabs() {
     const seen = {};
     const floors = [];
@@ -2473,9 +2551,11 @@ async function deleteBFile(id) {
     });
 
     const tabs = ["전체"].concat(floors);
-    $("unitFloorTabs").innerHTML = tabs.map(f =>
-      `<button class="ftab${f === filterFloor ? " active" : ""}" data-floor="${esc(f)}">${esc(floorLabel(f))}</button>`
-    ).join("");
+    const recCount = f => buildingRecords.filter(r => r.floor === f && HitopRecords.isActive(r)).length;
+    $("unitFloorTabs").innerHTML = tabs.map(f => {
+      const n = f === "전체" ? 0 : recCount(f);
+      return '<button class="ftab' + (f === filterFloor ? " active" : "") + '" data-floor="' + esc(f) + '">' + esc(floorLabel(f)) + (n ? '<i class="rec-n">' + n + "</i>" : "") + "</button>";
+    }).join("");
 
     $("unitFloorTabs").querySelectorAll(".ftab").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -2483,6 +2563,8 @@ async function deleteBFile(id) {
         renderAll();
       });
     });
+    if (!recordsLoaded && !recordsLoading) loadBuildingRecords();
+    try { renderRecSection(); } catch (e) { console.warn("[기록] 표시 실패", e); }
   }
 
   const unitStatusLabel = {occ:'임차중', vac:'공실', sale:'매매가능', listed:'매물진행중'};
@@ -2649,7 +2731,7 @@ async function deleteBFile(id) {
       const status = commercialOccupancy(u);
       const bc     = status;
       return `<tr class="${u.추천등록일 && isFlagOn(u.추천매물) && isFlagOn(u.수익성매물) ? 'profit-recommended-row' : ''}">
-        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.묶음ID && activeBundleIds.has(u.묶음ID) ? '<span class="unit-flag bundle">묶음</span>' : ''}${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}${unitUpdTag([u])}</td>
+        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${recMark(u.호수)}${u.묶음ID && activeBundleIds.has(u.묶음ID) ? '<span class="unit-flag bundle">묶음</span>' : ''}${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}${unitUpdTag([u])}</td>
         <td>${u.현업종 || "-"}</td>
         <td style="white-space:nowrap;line-height:1.3">${unitAreaHtml(u)}</td>
         <td>${u.소유주 || "-"}</td>
@@ -3252,6 +3334,7 @@ async function deleteBFile(id) {
 })();
 </script>
 <script src="assets/js/price-room-import.js?v=20261027-latest-only"></script>
+<script src="assets/js/building-records.js?v=20261103-records1"></script>
 <script src="assets/js/building-sales-contact.js?v=20261013-contact2"></script>
 <style id="units-shadow-fix">.units-tbl th:last-child,.units-tbl td:last-child{box-shadow:none!important}.units-wrap.has-scroll .units-tbl td:last-child,.units-wrap.has-scroll .units-tbl th:last-child{box-shadow:-6px 0 8px -6px rgba(0,0,0,.28)!important}</style>
 <script>(function(){var w=document.querySelector('.units-wrap');if(!w)return;var t=w.querySelector('.units-tbl')||w;function u(){w.classList.toggle('has-scroll',w.scrollWidth>w.clientWidth+1)}addEventListener('resize',u);if(window.ResizeObserver){var ro=new ResizeObserver(u);ro.observe(w);ro.observe(t)}u()})();</script>
