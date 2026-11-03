@@ -62,7 +62,7 @@
   </div>
 </div>
 
-<script src="assets/js/building-records.js?v=20261103-records4"></script>
+<script src="assets/js/building-records.js?v=20261103-records5"></script>
 <script>
 (function () {
   var HR = window.HitopRecords;
@@ -76,7 +76,7 @@
       var results = await Promise.all([HR.fetchRecords(null), getDriveResources()]);
       state.records = results[0].records; state.urlMap = results[0].urlMap;
       var seen = {};
-      state.buildings = (results[1] || []).filter(function (b) { return b && b.id && b.name && !seen[b.id] && (seen[b.id] = true); }).map(function (b) { return { id: b.id, name: b.name }; });
+      state.buildings = (results[1] || []).filter(function (b) { return b && b.id && b.name && !seen[b.id] && (seen[b.id] = true); }).map(function (b) { return { id: b.id, name: b.name, cat: b.category || "", apt: b.category === "아파트" }; });
       state.buildings.sort(function (a, b) { return a.name.localeCompare(b.name, "ko"); });
       state.byId = {}; state.buildings.forEach(function (b) { state.byId[b.id] = b; });
     } catch (e) { $("spCount").textContent = "불러오지 못했어요: " + e.message; return; }
