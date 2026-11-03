@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { key: "index",      label: "통합관리", href: "index.html" },
   { key: "properties", label: "매물관리", href: "property-main.html?category=all&ui=20261006-brand2" },
   { key: "worklog",    label: "업무센터", href: "https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html", external: true },
+  { key: "diary",      label: "업무일지", href: "https://haitop-realestate-diary.vercel.app/", external: true },
   { key: "homepage",   label: "홈페이지", href: "https://hitoputube-creator.github.io/hitop-property-platform/listings.html", external: true }
 ];
 // action 항목(전체 백업/계약문자)은 해당 함수가 현재 페이지에 없으면
@@ -32,14 +33,14 @@ function renderMainNav() {
   if (!mount) return;
   const active = document.body.dataset.navActive || "";
 
-  const linksHtml = NAV_ITEMS.filter(item => OfficeConfig.id !== "ktop" || item.key !== "homepage").map(original => {
+  const linksHtml = NAV_ITEMS.filter(item => OfficeConfig.id !== "ktop" || (item.key !== "homepage" && item.key !== "diary")).map(original => {
     const item = OfficeConfig.id === 'ktop' && original.key === 'worklog' ? {...original,label:'업무일지',href:OFFICE_DIARY_URL,external:false} : original;
     const cls = "nav-link" + (item.key === active ? " active" : "");
     const attrs = item.external ? ' target="_blank" rel="noopener noreferrer"' : "";
     return `<a class="${cls}" href="${item.href}"${attrs}>${item.label}</a>`;
   }).join("");
 
-  const toolsHtml = NAV_TOOLS.map(original => {
+  const toolsHtml = NAV_TOOLS.filter(item => OfficeConfig.id === "ktop" || item.label !== "업무일지").map(original => {
     const t = OfficeConfig.id === 'ktop' && original.label === '업무일지' ? {...original,href:OFFICE_DIARY_URL,external:false} : original;
     if (t.action) {
       if (typeof window[t.action] === "function") {
