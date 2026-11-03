@@ -45,6 +45,18 @@
     @media(max-width:700px){.price-one-row{flex-wrap:wrap}.price-one-row>.field{flex:1 1 45%}}
     .area-rows-inline{display:flex;flex-wrap:wrap;gap:8px 32px;align-items:center}.area-rows-inline>.area-row{margin:0!important}
     .commercial-one-row{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important;gap:12px}.commercial-one-row>.field{margin:0}
+    @media(min-width:901px){
+      .price-one-row.commercial-price-compare{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:10px 12px!important}
+      .price-one-row.commercial-price-compare>.commercial-compare-heading{grid-row:1!important;grid-column:1 / span 3!important}
+      .price-one-row.commercial-price-compare>.commercial-compare-heading.current{grid-column:4 / span 3!important}
+      .price-one-row.commercial-price-compare>.field{grid-row:2!important}
+      .price-one-row.commercial-price-compare>.field:has(#presalePrice){grid-column:1!important}
+      .price-one-row.commercial-price-compare>.field:has(#originalDeposit){grid-column:2!important}
+      .price-one-row.commercial-price-compare>.field:has(#originalMonthlyRent){grid-column:3!important}
+      .price-one-row.commercial-price-compare>.field:has(#salePrice){grid-column:4!important}
+      .price-one-row.commercial-price-compare>.field:has(#deposit){grid-column:5!important}
+      .price-one-row.commercial-price-compare>.field:has(#monthlyRent){grid-column:6!important}
+    }
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261020-form-headers">
 <script>
