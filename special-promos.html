@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>하이탑부동산 | 특별 홍보물</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
+  <script src="assets/js/storage.js?v=20261017-notice-removed"></script>
+  <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+  <script src="assets/js/nav.js?v=20261006-ktop-diary1"></script>
+  <link rel="stylesheet" href="assets/css/resource-categories.css?v=20261027-section-bar">
+  <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261009-ktop-v6">
+  <script>
+  (function(){
+    var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+    document.documentElement.dataset.officeTheme=office;
+    if(office!=='ktop'){ var link=document.querySelector('link[href*="white-navy-workspace.css"]'); if(link)link.disabled=true; }
+  })();
+  </script>
+  <style>
+    .sp-wrap { margin: 16px 0 40px; }
+    .sp-top { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; }
+    .sp-title { font-size:1.25rem; font-weight:800; color:#13201f; }
+    .sp-sub { font-size:.82rem; color:#6b7b79; }
+    .sp-bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:12px; }
+    .sp-bar select { font:inherit; font-size:12px; border:1px solid #cfdcda; border-radius:8px; padding:4px 10px; background:#fff; color:#1d2b2a; }
+    .sp-quick { border:1px dashed #9ec9c3; background:#f6fbfa; border-radius:12px; padding:10px 12px; margin-bottom:14px; }
+    .sp-quick textarea { width:100%; box-sizing:border-box; border:1px solid #cfdcda; border-radius:8px; padding:8px 10px; font:inherit; font-size:13px; resize:vertical; background:#fff; color:#1d2b2a; }
+    .sp-empty { padding:40px 8px; color:#6b7b79; text-align:center; }
+    .sp-section-title { margin:18px 0 8px; font-size:.95rem; font-weight:700; color:#13201f; }
+  </style>
+</head>
+<body class="resources-page" data-nav-active="tools">
+<div class="page">
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="logo-main">하이탑부동산 특별 홍보물</div>
+      <div class="logo-sub">건물별 특별 조건 · 수수료 · 홍보물을 한곳에서</div>
+    </div>
+    <nav class="main-nav" id="mainNav"></nav>
+  </header>
+  <div class="header-line"></div>
+
+  <div class="sp-wrap">
+    <div class="sp-top">
+      <div><div class="sp-title">📌 특별 조건 · 홍보물</div><div class="sp-sub" id="spCount">불러오는 중...</div></div>
+      <button type="button" class="hr-btn main" id="spAdd">+ 기록 추가</button>
+    </div>
+
+    <div class="sp-quick">
+      <div style="font-size:12px;color:#6b7b79;margin-bottom:4px">💬 카톡 내용을 붙여 넣으면 건물, 수수료, 기한을 읽어서 입력 창을 채워 드려요 (저장 전에 확인해요)</div>
+      <textarea id="spPaste" rows="3" placeholder="(월드18차) 대표님~ 이번 할인 물건 부동산 수수료 5%입니다 ..."></textarea>
+      <div style="text-align:right;margin-top:6px"><button type="button" class="hr-btn" id="spRead">읽어서 입력 창 열기</button></div>
+    </div>
+
+    <div class="sp-bar" id="spBar"></div>
+    <div id="spList"></div>
+  </div>
+</div>
+
+<script src="assets/js/building-records.js?v=20261103-records1"></script>
+<script>
+(function () {
+  var HR = window.HitopRecords;
+  var state = { records: [], urlMap: {}, buildings: [], byId: {}, status: "진행중", kind: "전체", building: "", sort: "latest" };
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return HR.esc(s); }
+
+  async function load() {
+    HR.ensureStyle();
+    try {
+      var results = await Promise.all([HR.fetchRecords(null), getDriveResources()]);
+      state.records = results[0].records; state.urlMap = results[0].urlMap;
+      var seen = {};
+      state.buildings = (results[1] || []).filter(function (b) { return b && b.id && b.name && !seen[b.id] && (seen[b.id] = true); }).map(function (b) { return { id: b.id, name: b.name }; });
+      state.buildings.sort(function (a, b) { return a.name.localeCompare(b.name, "ko"); });
+      state.byId = {}; state.buildings.forEach(function (b) { state.byId[b.id] = b; });
+    } catch (e) { $("spCount").textContent = "불러오지 못했어요: " + e.message; return; }
+    render();
+  }
+
+  function render() {
+    var HRs = HR.status, recs = state.records;
+    var nActive = recs.filter(function (r) { return HRs(r).key === "active"; }).length;
+    var nSoon = recs.filter(function (r) { return HRs(r).key === "soon"; }).length;
+    var nEnded = recs.filter(function (r) { return HRs(r).key === "ended"; }).length;
+    $("spCount").textContent = "진행 중 " + (nActive + nSoon) + "건 · 마감 임박 " + nSoon + "건 · 종료 " + nEnded + "건";
+    var chip = function (label, on, attr, val) { return '<button type="button" class="hr-btn' + (on ? " on" : "") + '" data-' + attr + '="' + esc(val) + '">' + esc(label) + "</button>"; };
+    var usedIds = {}; recs.forEach(function (r) { usedIds[r._buildingId] = 1; });
+    var bOpts = '<option value="">건물 전체</option>' + state.buildings.filter(function (b) { return usedIds[b.id]; }).map(function (b) { return '<option value="' + esc(b.id) + '"' + (b.id === state.building ? " selected" : "") + ">" + esc(b.name) + "</option>"; }).join("");
+    $("spBar").innerHTML = chip("진행중 " + (nActive + nSoon), state.status === "진행중", "st", "진행중") + chip("임박 " + nSoon, state.status === "임박", "st", "임박") + chip("종료 " + nEnded, state.status === "종료", "st", "종료") + chip("전체 " + recs.length, state.status === "전체", "st", "전체")
+      + '<span style="width:8px"></span>' + ["전체"].concat(HR.KINDS).map(function (k) { return chip(k, state.kind === k, "kind", k); }).join("")
+      + '<span style="width:8px"></span><select id="spBuilding">' + bOpts + '</select>'
+      + '<select id="spSort"><option value="latest"' + (state.sort === "latest" ? " selected" : "") + '>최신순</option><option value="due"' + (state.sort === "due" ? " selected" : "") + '>기한 임박순</option><option value="fee"' + (state.sort === "fee" ? " selected" : "") + '>수수료 높은순</option></select>';
+    var list = recs.filter(function (r) {
+      var k = HRs(r).key;
+      if (state.status === "진행중" && k === "ended") return false;
+      if (state.status === "임박" && k !== "soon") return false;
+      if (state.status === "종료" && k !== "ended") return false;
+      if (state.kind !== "전체" && r.kind !== state.kind) return false;
+      if (state.building && r._buildingId !== state.building) return false;
+      return true;
+    });
+    list = HR.sortRecords(list, state.sort);
+    if (!list.length) { $("spList").innerHTML = '<div class="sp-empty">' + (recs.length ? "조건에 맞는 기록이 없어요." : "아직 기록이 없어요. 위의 + 기록 추가나 카톡 붙여넣기로 시작해 보세요.") + "</div>"; }
+    else {
+      $("spList").innerHTML = '<div class="hr-grid">' + list.map(function (r) {
+        var b = state.byId[r._buildingId];
+        return HR.cardHtml(r, state.urlMap, { buildingName: b ? b.name : "(삭제된 건물)", link: b ? OfficeConfig.urlFor("building-detail.html?id=" + encodeURIComponent(b.id)) : "" });
+      }).join("") + "</div>";
+    }
+    wire();
+  }
+
+  function wire() {
+    document.querySelectorAll("#spBar [data-st]").forEach(function (b) { b.addEventListener("click", function () { state.status = b.dataset.st; render(); }); });
+    document.querySelectorAll("#spBar [data-kind]").forEach(function (b) { b.addEventListener("click", function () { state.kind = b.dataset.kind; render(); }); });
+    $("spBuilding").addEventListener("change", function () { state.building = this.value; render(); });
+    $("spSort").addEventListener("change", function () { state.sort = this.value; render(); });
+    document.querySelectorAll("#spList [data-hr-act]").forEach(function (b) {
+      b.addEventListener("click", async function () {
+        var rec = state.records.find(function (r) { return String(r._rowId) === b.dataset.id; }), act = b.dataset.hrAct;
+        try {
+          if (act === "edit") { HR.openForm({ record: rec, buildings: state.buildings, onSaved: load }); return; }
+          if (act === "end") { if (!confirm("이 홍보를 종료 처리할까요? (기록은 남아요)")) return; await HR.setEnded(rec, true); }
+          else if (act === "resume") await HR.setEnded(rec, false);
+          else if (act === "del") { if (!confirm("이 기록을 삭제할까요?")) return; await HR.deleteRecord(rec._rowId); }
+          await load();
+        } catch (e) { alert("실패: " + e.message); }
+      });
+    });
+  }
+
+  $("spAdd").addEventListener("click", function () { HR.openForm({ buildings: state.buildings, onSaved: load }); });
+  $("spRead").addEventListener("click", function () {
+    var text = $("spPaste").value.trim();
+    if (!text) { alert("카톡 내용을 붙여 넣어 주세요."); return; }
+    var p = HR.parseMessage(text, state.buildings);
+    HR.openForm({ buildings: state.buildings, defaults: { text: p.text, fee: p.fee, due: p.due, kind: p.kind, _buildingId: p.building ? p.building.id : "" }, onSaved: async function () { $("spPaste").value = ""; await load(); } });
+  });
+  load();
+})();
+</script>
+</body>
+</html>
