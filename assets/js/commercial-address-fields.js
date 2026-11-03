@@ -4,7 +4,7 @@
  if(typeof base!=='function')return;
  const style=document.createElement('style');
  style.textContent='.commercial-address-parts[hidden]{display:none!important}.commercial-address-field{grid-column:1 / -1!important}.commercial-address-parts{display:grid;grid-template-columns:minmax(0,2fr) minmax(100px,1fr);gap:12px;margin-top:10px}.commercial-address-parts>.field{grid-column:auto!important;margin:0!important;min-width:0}.commercial-address-parts input{width:100%;box-sizing:border-box}.commercial-old-building-picker{display:none!important}';
- style.textContent += ".commercial-address-field{display:grid!important;grid-template-columns:minmax(0,2.4fr) minmax(0,1.2fr) minmax(80px,.7fr);column-gap:12px;row-gap:6px;align-items:start}.commercial-address-field>label{grid-column:1;grid-row:1}.commercial-address-field>div:not(.commercial-address-parts){grid-column:1;grid-row:2;min-width:0}.commercial-address-field>span{grid-column:1 / -1;grid-row:3}.commercial-address-field .commercial-address-parts{display:contents!important}.commercial-address-field .commercial-address-parts>.field{grid-column:auto!important;grid-row:1 / span 2;min-width:0}.commercial-address-field .commercial-address-parts>.field:first-child{grid-column:2!important}.commercial-address-field .commercial-address-parts>.field:last-child{grid-column:3!important}.commercial-address-field input{min-width:0;width:100%;box-sizing:border-box}.commercial-address-field .commercial-address-parts[hidden]{display:none!important}@media(max-width:520px){.commercial-address-field{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(56px,.6fr);column-gap:6px}.commercial-address-field input{font-size:12px;padding-left:6px;padding-right:6px}.commercial-address-field button{font-size:0!important;padding:6px!important}.commercial-address-field button::after{content:'조회';font-size:12px}}";
+ style.textContent += ".commercial-address-field{display:grid!important;grid-template-columns:minmax(0,1.1fr) minmax(0,2.6fr) minmax(80px,.7fr);column-gap:12px;row-gap:6px;align-items:start}.commercial-address-field>label{grid-column:2;grid-row:1}.commercial-address-field>div:not(.commercial-address-parts){grid-column:2;grid-row:2;min-width:0}.commercial-address-field>span{grid-column:1 / -1;grid-row:3}.commercial-address-field .commercial-address-parts{display:contents!important}.commercial-address-field .commercial-address-parts>.field{grid-column:auto!important;grid-row:1 / span 2;min-width:0}.commercial-address-field .commercial-address-parts>.field:first-child{grid-column:1!important}.commercial-address-field .commercial-address-parts>.field:last-child{grid-column:3!important}.commercial-address-field input{min-width:0;width:100%;box-sizing:border-box}.commercial-address-field .commercial-address-parts[hidden]{display:none!important}@media(max-width:520px){.commercial-address-field{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(56px,.6fr);column-gap:6px}.commercial-address-field input{font-size:12px;padding-left:6px;padding-right:6px}.commercial-address-field button{font-size:0!important;padding:6px!important}.commercial-address-field button::after{content:'조회';font-size:12px}}";
  document.head.appendChild(style);
  root.setupQuickBuildingSelect=function(selectId,publicId,mapId,complexId,cat1Id,cat2Id){
   const original=base.apply(this,arguments);
@@ -33,9 +33,11 @@
   function resolve(loose){
    if(!enabled)return;
    const building=match(map.value,loose===true);
-   if(building){map.value=building.addr;name.value=building.name;const pub=byId(publicId);if(pub){const dong=building.addr.match(/([가-힣]+(?:동|읍|면|리))/);pub.value=dong?'파주시 '+dong[1]:pub.value;}name.dispatchEvent(new Event('change',{bubbles:true}));return true;}
+   if(building){applyBuilding(building,true);return true;}
    return false;
   }
+  function applyBuilding(building,fire){map.value=building.addr;name.value=building.name;const pub=byId(publicId);if(pub){const dong=building.addr.match(/([가-힣]+(?:동|읍|면|리))/);pub.value=dong?'파주시 '+dong[1]:pub.value;}if(fire)name.dispatchEvent(new Event('change',{bubbles:true}));}
+  function resolveByName(loose){if(!enabled)return false;const building=match(name.value,loose===true);if(building){applyBuilding(building,false);return true;}return false;}
   function render(){
    if(typeof original==='function')original();
    enabled=byId(cat1Id)?.value==='상가사무실'||isOfficetel();
@@ -50,7 +52,7 @@
     roomField.querySelector('label').textContent='호수';
     map.placeholder='주소 또는 건물명을 입력하거나 목록에서 선택';
     room.placeholder='예) 101호';
-    map.setAttribute('list',list.id);options();
+    map.setAttribute('list',list.id);options();name.setAttribute('list',nameList.id);nameOptions();
    }else{
     nameAnchor.after(nameField);roomAnchor.after(roomField);
     addressField.querySelector('label').innerHTML=defaults.mapLabel;
@@ -58,8 +60,14 @@
     roomField.querySelector('label').innerHTML=defaults.roomLabel;
     map.placeholder=defaults.mapPlaceholder;room.placeholder=defaults.roomPlaceholder;
     if(defaults.list)map.setAttribute('list',defaults.list);else map.removeAttribute('list');
+    name.removeAttribute('list');
    }
   }
+  const nameList=document.createElement('datalist');nameList.id=mapId+'NameOptions';addressField.appendChild(nameList);
+  function nameOptions(){nameList.replaceChildren();choices().forEach(b=>{const option=document.createElement('option');option.value=b.name;option.label=b.addr;nameList.appendChild(option);});}
+  name.addEventListener('input',()=>resolveByName(false));
+  name.addEventListener('change',()=>{if(resolveByName(true))room.focus();});
+  name.addEventListener('focus',()=>{if(enabled)nameOptions();});
   map.addEventListener('input',()=>resolve(false));
   map.addEventListener('change',()=>{if(resolve(true))room.focus();});
   map.addEventListener('focus',()=>{if(enabled)options();});
@@ -70,7 +78,7 @@
     const line=String(r.memo||'').split(/\r?\n/).find(line=>/^(?:주소|지번주소|소재지)\s*[:：]/.test(line.trim()));
     const addr=line?line.replace(/^[^:：]+[:：]\s*/,'').trim():'';
     if(addr&&r.name&&!sources.some(b=>normalize(b.name)===normalize(r.name)))sources.push({name:r.name,addr,category:/오피스텔|힐스테이트/.test(r.category)?'오피스텔':'상가'});
-   });if(enabled)options();
+   });if(enabled){options();nameOptions();}
   }).catch(()=>{});
   return render;
  };
