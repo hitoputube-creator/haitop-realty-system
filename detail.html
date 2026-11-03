@@ -1397,6 +1397,35 @@ function closeHomepageTab(tab) {
     </div>`;
   }
 
+  function internalMemoField(value, commercial) {
+    const raw = detailText(value);
+    if (!hasDetailValue(raw)) return "";
+    return '<div class="detail-read-item wide" data-internal-memo="' + (commercial ? 'c' : 'n') + '">'
+      + '<div class="detail-read-label">비공개 내부메모 <button type="button" class="btn btn-ghost internal-memo-edit" style="padding:1px 10px;font-size:12px;margin-left:8px">수정</button></div>'
+      + '<div class="detail-read-value pre-line">' + escapeHtml(String(raw)) + '</div></div>';
+  }
+  // 내부메모(listings.description 열)만 바꿔 저장한다. 상가는 자동으로 채워진 줄을 그대로 두고 보이는 메모만 바꾼다.
+  async function saveListingDescription(id, text, commercial) {
+    const res1 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id) + "&select=description", { headers });
+    if (!res1.ok) throw new Error("조회 실패");
+    const rows = await res1.json();
+    if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
+    let next = text;
+    if (commercial) {
+      const kept = commercialAdditionalMemo(_currentItem, String(rows[0].description || ''), 'kept');
+      next = [kept, text].filter(part => part && String(part).trim()).join('\n');
+    }
+    const res2 = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(id), {
+      method: "PATCH",
+      headers: Object.assign({}, headers, { "Prefer": "return=minimal" }),
+      body: JSON.stringify({ description: next })
+    });
+    if (!res2.ok) throw new Error("내부메모 저장 실패: " + await res2.text());
+    try {
+      if (typeof syncCommercialUnitFromListing === "function") await syncCommercialUnitFromListing(Object.assign({}, _currentItem, { description: next }));
+    } catch (syncError) { console.warn("[연동] 내부메모 → 자료실 반영 실패:", syncError.message); }
+  }
+
   function detailSection(title, rows, opts = {}) {
     const body = rows.filter(Boolean).join("");
     if (!body && opts.required !== true) return "";
@@ -1864,7 +1893,7 @@ function closeHomepageTab(tab) {
 
 
   // 상가정보 표에 이미 표시한 항목과 정확히 같은 메모 행만 화면에서 생략한다.
-  function commercialAdditionalMemo(item, text) {
+  function commercialAdditionalMemo(item, text, mode) {
     const normalize = value => String(value ?? '').normalize('NFKC').replace(/[\s,]/g, '').toLowerCase();
     const known = new Set(formatLegacyDesc({...item, description:''}).split('\n').map(normalize).filter(Boolean));
     const add = (labels, values) => labels.forEach(label => values.filter(v => v !== null && v !== undefined && String(v).trim() !== '').forEach(value => known.add(normalize(label + ': ' + value))));
@@ -1886,7 +1915,7 @@ function closeHomepageTab(tab) {
     money(['분양가','분양금액'],[item.presalePrice]);
     money(['관리비'],[item.managementFee,item.shop_maintenance]);
     money(['권리금'],[item.premium,item.shop_premium]);
-    return String(text || '').split(/\r?\n/).filter(line => !known.has(normalize(line))).join('\n').trim();
+    return String(text || '').split(/\r?\n/).filter(line => (mode === 'kept') === known.has(normalize(line))).join('\n').trim();
   }
 
   function renderDetail(item) {
@@ -1954,7 +1983,7 @@ function closeHomepageTab(tab) {
       const quickMemo = isCommercialDetail ? commercialAdditionalMemo(item, item.quick_memo) : item.quick_memo;
       html += detailSection(isCommercialDetail ? "추가 메모" : "설명·메모", [
         ...(!isCommercialDetail ? [detailField("공개 매물설명", item.detailDescription, { wide: true, pre: true })] : []),
-        detailField("비공개 내부메모", description, { wide: true, pre: true }),
+        internalMemoField(description, isCommercialDetail),
         detailField("빠른등록 메모", differentValue(quickMemo, description), { wide: true, pre: true }),
         ...(!isCommercialDetail ? [detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true })] : []),
       ], { extraClass: "description-section" });
@@ -2205,6 +2234,38 @@ function closeHomepageTab(tab) {
             showToast("추가메모를 삭제했습니다.");
           }
         } catch (e) { showToast(e.message); }
+      });
+    }
+    // 비공개 내부메모 수정 · 저장 · 취소 (화면을 다시 그려도 한 번만 등록)
+    if (!window.__internalMemoClicks) {
+      window.__internalMemoClicks = true;
+      document.addEventListener("click", async (ev) => {
+        const t = ev.target && ev.target.closest ? ev.target.closest(".internal-memo-edit,.internal-memo-save,.internal-memo-cancel") : null;
+        const box = t && t.closest("[data-internal-memo]");
+        if (!box) return;
+        const commercial = box.dataset.internalMemo === "c";
+        const redraw = () => { document.getElementById("detailArea").innerHTML = renderDetail(_currentItem); rebindButtons(); };
+        try {
+          if (t.classList.contains("internal-memo-edit")) {
+            const current = box.querySelector(".detail-read-value").textContent;
+            box.innerHTML = '<div class="detail-read-label">비공개 내부메모</div>'
+              + '<textarea class="internal-memo-text" rows="8" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.25);background:transparent;color:inherit;font:inherit;resize:vertical">' + escapeHtml(current) + '</textarea>'
+              + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">'
+              + '<button type="button" class="btn btn-ghost internal-memo-cancel" style="padding:4px 12px;font-size:13px">취소</button>'
+              + '<button type="button" class="btn btn-primary internal-memo-save" style="padding:4px 12px;font-size:13px">저장</button></div>';
+            box.querySelector(".internal-memo-text").focus();
+          } else if (t.classList.contains("internal-memo-cancel")) {
+            redraw();
+          } else if (t.classList.contains("internal-memo-save")) {
+            const text = (box.querySelector(".internal-memo-text").value || "").replace(/\s+$/, "");
+            if (!text.trim() && !confirm("내용을 모두 지우면 내부메모가 지워져요. 계속할까요?")) return;
+            t.disabled = true;
+            await saveListingDescription(_currentItem.id, text, commercial);
+            _currentItem = await getListingById(_currentItem.id);
+            redraw();
+            showToast("내부메모를 고쳤습니다.");
+          }
+        } catch (e) { showToast(e.message); redraw(); }
       });
     }
     const confirmBtn = document.getElementById("confirmListingBtn");
