@@ -1,0 +1,3418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>하이탑부동산 | 건물 상세</title>
+  <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="assets/css/app.css" />
+  <style>
+    /* ── 섹션 타이틀 ── */
+    .sec-title {
+      font-size: 1rem; font-weight: 800; color: var(--gold);
+      margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .sec-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(212,175,55,0.3), transparent);
+    }
+
+    /* ── 건물 기본정보 요약 그리드 ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px; margin-bottom: 16px;
+    }
+    .info-cell {
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 10px; padding: 10px 14px;
+    }
+    .info-cell-label {
+      font-size: 0.7rem; font-weight: 700;
+      color: rgba(180,200,230,0.55); letter-spacing: 0.5px;
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .info-cell-value {
+      font-size: 0.9rem; color: var(--text); font-weight: 600;
+      line-height: 1.4;
+    }
+    .info-cell-value.empty { color: rgba(255,255,255,0.22); font-weight: 400; }
+
+    .building-location-links{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}
+    .building-location-links .btn{display:inline-flex;align-items:center;min-height:36px;font-size:.875rem;text-decoration:none}
+    .building-location-links .is-disabled{opacity:.45;cursor:default}
+
+    /* ── 업로드 폼 ── */
+    .upload-row {
+      display: grid; gap: 8px; align-items: center; margin-bottom: 10px;
+    }
+    .upload-row.floor-row  { grid-template-columns: 110px 1fr auto; }
+    .plan-area-inputs { display:none; gap:10px; flex-wrap:wrap; margin:10px 0; }
+    .plan-area-inputs label { flex:1 1 180px; font-size:.8rem; color:var(--muted); }
+    .plan-area-inputs input { width:100%; box-sizing:border-box; margin-top:5px; }
+    .plan-area-note { width:100%; margin:0; font-size:.75rem; color:var(--muted); }
+    .residential-plans .floor-grid { grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
+    .residential-plans .floor-thumb { object-fit:contain; background:#fff; }
+    .plan-areas { padding:10px; line-height:1.7; font-size:.8rem; }
+    .plan-areas strong { color:var(--gold); }
+    .plan-area-editor { padding:0 10px 10px; font-size:.78rem; }
+    .plan-area-editor summary { cursor:pointer; color:var(--muted); }
+    .plan-area-editor label { display:block; margin-top:8px; }
+    .plan-area-editor input { width:100%; box-sizing:border-box; margin:4px 0; }
+    .plan-area-editor button { margin-top:6px; }
+    .upload-row.file-row   { grid-template-columns: 1fr 1fr auto; }
+    .upload-row.link-row   { grid-template-columns: 1fr 1fr auto; }
+
+    /* ── 평면도 카드 그리드 ── */
+    .floor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px; margin-top: 14px;
+    }
+    .floor-card {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: border-color 0.18s;
+    }
+    .floor-card:hover { border-color: rgba(212,175,55,0.35); }
+    #floorGrid .floor-card-foot { flex-wrap: wrap; justify-content: flex-end; }
+    #floorGrid .floor-badge { flex: 1 1 100%; }
+    #floorGrid .floor-card { cursor: grab; }
+    #floorGrid .floor-card:active { cursor: grabbing; }
+    #floorGrid .floor-card.dragging { opacity: .42; border-color: var(--gold); }
+    #floorGrid .floor-card.drop-target { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(216,184,74,.28); }
+    .floor-sort-hint { font-size: .78rem; color: var(--muted); margin: 4px 0 0; }
+    .floor-sort-hint.saving { color: var(--gold); }
+    .floor-edit-btn {
+      padding: 5px 7px; border: 1px solid rgba(216,184,74,.65); border-radius: 6px;
+      color: #f8f3e6; background: rgba(216,184,74,.15); font-size: .72rem;
+      cursor: pointer; white-space: nowrap; font-family: inherit;
+    }
+    .floor-edit-btn:hover, .floor-edit-btn:focus-visible { background: rgba(216,184,74,.28); }
+    .floor-edit-btn:disabled { opacity: .55; cursor: wait; }
+
+    .floor-thumb {
+      width: 100%; aspect-ratio: 4/3;
+      object-fit: cover; cursor: pointer;
+      background: #fff;
+      display: block;
+      transition: opacity 0.15s;
+    }
+    .floor-thumb:hover { opacity: 0.85; }
+
+    .floor-pdf {
+      width: 100%; aspect-ratio: 4/3;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; background: rgba(212,175,55,0.06);
+      cursor: pointer;
+    }
+    .floor-pdf-icon { font-size: 2.2rem; }
+    .floor-pdf-label {
+      font-size: 0.72rem; color: var(--muted);
+      text-align: center; padding: 0 8px;
+      word-break: break-all; line-height: 1.4;
+    }
+
+    .floor-card-foot {
+      padding: 8px 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .floor-badge {
+      font-size: 0.78rem; font-weight: 700; color: var(--gold);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .floor-status-link, .floor-status-link:visited {
+      padding: 5px 7px; border: 1px solid rgba(216,184,74,.65); border-radius: 6px;
+      color: #f8f3e6; background: rgba(216,184,74,.15); font-size: .72rem;
+      text-decoration: none; white-space: nowrap;
+    }
+    .floor-status-link:hover, .floor-status-link:focus-visible { color:#fff; background:rgba(216,184,74,.28); }
+    .btn-icon {
+      border: none; background: transparent;
+      color: rgba(255,100,100,0.7); cursor: pointer;
+      font-size: 0.95rem; padding: 2px 4px;
+      border-radius: 6px; transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: rgba(255,79,106,0.18); color: var(--danger); }
+
+    /* ── 기타 자료 그리드 (평면도와 동일 레이아웃) ── */
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px; margin-top: 14px;
+    }
+
+    /* ── 업로드 진행 ── */
+    .upload-progress {
+      display: none; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--gold); padding: 4px 0;
+    }
+    .upload-progress.active { display: flex; }
+    .spinner-sm {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(212,175,55,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 빈 상태 ── */
+    .empty-state {
+      text-align: center; padding: 28px 20px;
+      color: var(--muted); font-size: 0.85rem;
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 12px;
+    }
+
+    /* ── 라이트박스 ── */
+    #lightbox {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.92);
+      align-items: center; justify-content: center;
+      padding: 20px; overflow: hidden;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      background: #fff;
+      max-width: 94vw; max-height: 90vh;
+      object-fit: contain; border-radius: 8px;
+      box-shadow: 0 0 60px rgba(0,0,0,0.8);
+      touch-action: none; user-select: none;
+      transform-origin: center center;
+      will-change: auto;
+    }
+    #lightbox-close {
+      position: fixed; top: 18px; right: 22px;
+      font-size: 1.8rem; color: rgba(255,255,255,0.75);
+      cursor: pointer; line-height: 1;
+      transition: color 0.15s; z-index: 2;
+    }
+    #lightbox-close:hover { color: var(--gold); }
+    #lightbox-caption {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      font-size: 0.85rem; color: rgba(255,255,255,0.55);
+      background: rgba(0,0,0,0.6); border-radius: 8px; padding: 6px 16px;
+      max-width: 80vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ── 라이트박스 확대/축소 툴바 ── */
+    #lightbox-toolbar {
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(10,14,28,0.85);
+      border: 1px solid rgba(212,175,55,0.30);
+      border-radius: 999px; padding: 5px; z-index: 2;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .lb-btn {
+      border: none; background: transparent; color: rgba(255,255,255,0.85);
+      font-size: 0.88rem; font-weight: 700; cursor: pointer;
+      padding: 7px 13px; border-radius: 999px; line-height: 1;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+    }
+    .lb-btn:hover { background: rgba(212,175,55,0.20); color: var(--gold); }
+    .lb-btn#lb-zoom-reset { min-width: 52px; }
+    .lb-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.15); margin: 0 2px; }
+    .lb-btn.lb-close-btn { color: rgba(255,140,140,0.9); }
+    .lb-btn.lb-close-btn:hover { background: rgba(255,79,106,0.18); color: var(--danger); }
+    .lb-btn:disabled { opacity:.45; cursor:wait; }
+    @media (max-width:600px) {
+      #lightbox-toolbar { max-width:calc(100vw - 24px); width:max-content; flex-wrap:wrap; justify-content:center; border-radius:16px; }
+      #lightbox-toolbar .lb-btn { padding:7px 9px; }
+    }
+
+    /* ══════════════════════════════════
+       호실 현황 섹션
+    ══════════════════════════════════ */
+    /* 요약 카드 */
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr 1fr; } }
+    .sum-card {
+      border-radius: 14px; padding: 14px 16px; text-align: center;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .sum-card.occupied { background: rgba(34,197,94,0.10);  border-color: rgba(34,197,94,0.25); }
+    .sum-card.vacant   { background: rgba(239,68,68,0.10);  border-color: rgba(239,68,68,0.25); }
+    .sum-card.forsale  { background: rgba(234,179,8,0.10);  border-color: rgba(234,179,8,0.25); }
+    .sum-card.revenue  { background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.25); }
+    .sum-card.own      { background: rgba(167,139,250,0.10); border-color: rgba(167,139,250,0.28); }
+    .unit-summary-filter { cursor:pointer; font-family:inherit; color:inherit; }
+    .unit-summary-filter .sum-num, .unit-summary-filter .sum-label { display:block; }
+    .unit-summary-filter:hover { filter:brightness(1.2); }
+    .unit-summary-filter.active, .unit-summary-filter:focus-visible { outline:2px solid var(--gold, #D4AF37); outline-offset:2px; }
+    .summary-note { margin: -4px 0 10px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
+    .sum-num   { font-size: 1.65rem; font-weight: 900; line-height: 1; }
+    .sum-label { font-size: 0.76rem; color: var(--muted); margin-top: 5px; }
+    .sum-card.occupied .sum-num { color: #4ade80; }
+    .sum-card.vacant   .sum-num { color: #f87171; }
+    .sum-card.forsale  .sum-num { color: #facc15; }
+    .sum-card.revenue  .sum-num { color: #93c5fd; }
+    .sum-card.own      .sum-num { color: #c4b5fd; }
+
+    /* 층 필터 탭 */
+    .floor-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    /* 호실 현황 버튼: 주 버튼(+ 호실 추가)만 노란색, 나머지는 옅은 테두리 버튼 */
+    #unitStatus .unit-head-main button, #unitStatus #unitBulkActions button, #unitStatus #unitBulkActions a { height:32px; padding:0 13px; font-size:.8rem; font-weight:700; border-radius:8px; }
+    #unitStatus #btnAddUnit { height:34px; padding:0 18px; font-size:.86rem; font-weight:800; }
+    #unitPriceUpload, #unitListingSend, #unitProfitRegister, #unitBundleRegister {
+      background:rgba(255,255,255,.05); color:#fff; border:1px solid rgba(255,255,255,.22); font-weight:600; }
+    #unitPriceUpload:hover, #unitListingSend:hover:not(:disabled), #unitProfitRegister:hover:not(:disabled), #unitBundleRegister:hover:not(:disabled) { background:rgba(255,255,255,.10); opacity:1; }
+    #unitListingSend:not(:disabled), #unitProfitRegister:not(:disabled), #unitBundleRegister:not(:disabled) { border-color:rgba(212,175,55,.65); color:#fff; }
+    #unitBulkActions button:disabled { opacity:.6; cursor:default; }
+    #unitStatus .unit-head-main .btn-unit-ghost, #unitStatus #unitBulkActions .btn-unit-ghost, #unitOrigToggle { color:#fff; border-color:rgba(255,255,255,.22); }
+    .unit-filter-bar .ftab:not(.active) { color:rgba(255,255,255,.9); }
+    #unitKindTabs .kind-move button { color:#fff; }
+    .unit-toolbar { display:flex; align-items:center; justify-content:space-between; gap:6px 12px; flex-wrap:wrap; margin:6px 0 8px; }
+    .unit-toolbar #unitCounts { margin:0; flex:1 1 260px; }
+    #unitOrigToggle { padding:4px 12px; font-size:.78rem; line-height:1.4; }
+    .unit-filter-bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; margin-bottom:10px; }
+    .unit-filter-bar .floor-tabs { margin:0; gap:5px; }
+    .unit-filter-bar .ftab { padding:4px 12px; }
+    #unitKindTabs:not([hidden]) { padding-right:16px; border-right:1px solid var(--border); }
+    #unitKindTabs .kind-move { display:flex; gap:5px; margin-left:4px; }
+    #unitKindTabs .kind-move[hidden] { display:none; }
+    #unitKindTabs .kind-move button { padding:3px 10px; font-size:.75rem; }
+    .ftab {
+      border: 1px solid var(--border); background: rgba(5,10,30,0.65);
+      padding: 6px 14px; border-radius: 999px; cursor: pointer;
+      font-size: 0.82rem; color: var(--muted); font-weight: 700; transition: 0.12s;
+    }
+    .ftab.active {
+      border-color: rgba(212,175,55,0.45); background: rgba(212,175,55,0.16);
+      color: rgba(255,255,255,0.92);
+    }
+
+    /* 호실 테이블 */
+    .units-wrap { overflow-x: auto; }
+    .units-tbl { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
+    .units-tbl th {
+      text-align: left; padding: 9px 12px; font-size: 0.75rem; color: var(--muted);
+      font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.15);
+    }
+    .unit-current-price { display: inline-flex; align-items: center; gap: 6px; color: var(--gold); font-weight: 700; }
+    .unit-current-tag { color: var(--gold); border: 1px solid rgba(212,175,55,0.5); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; }
+    .units-tbl td {
+      padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.88); vertical-align: middle;
+    }
+    .units-tbl tr:last-child td { border-bottom: none; }
+    .units-tbl tr:hover td { background: rgba(212,175,55,0.04); }
+    /* 매물(수정/매물등록) 열은 표가 가로로 길어져도 항상 보이도록 오른쪽에 고정 */
+    .units-tbl th:last-child, .units-tbl td:last-child {
+      position: sticky; right: 0; z-index: 2;
+      background: var(--panel);
+      box-shadow: -6px 0 8px -6px rgba(0,0,0,0.5);
+    }
+    .units-tbl th:last-child { z-index: 3; background: rgba(16,31,50,0.98); }
+    .units-tbl tr:hover td:last-child { background: #16283c; }
+
+    /* 상태 배지 */
+    .sbadge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 0.74rem; font-weight: 700;
+    }
+    .sbadge.임차중  { background: rgba(34,197,94,0.18);  color: #4ade80;  border: 1px solid rgba(34,197,94,0.30); }
+    .sbadge.공실   { background: rgba(239,68,68,0.18);  color: #f87171;  border: 1px solid rgba(239,68,68,0.30); }
+    .sbadge.매매가능 { background: rgba(234,179,8,0.18);  color: #facc15;  border: 1px solid rgba(234,179,8,0.30); }
+
+    /* 빈 상태 */
+    .units-empty {
+      text-align: center; color: var(--muted); padding: 38px 20px; font-size: 0.88rem;
+    }
+
+    /* 호실 모달 */
+    .unit-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9100;
+      background: rgba(0,0,0,0.75);
+      align-items: flex-start; justify-content: center;
+      padding: 24px 16px; overflow-y: auto;
+    }
+    .unit-modal-overlay.open { display: flex; }
+    .unit-modal-box {
+      background: linear-gradient(145deg, #0E1C34 0%, #132040 100%);
+      border: 1px solid rgba(212,175,55,0.30); border-radius: 20px;
+      padding: 24px; width: 100%; max-width: 620px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.7); position: relative;
+    }
+    .unit-modal-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 16px; color: rgba(255,255,255,0.95); }
+    .unit-modal-close {
+      position: absolute; top: 18px; right: 18px;
+      background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer;
+    }
+    .unit-modal-close:hover { color: #fff; }
+    /* 모달 섹션 구분 */
+    .um-section { margin-bottom: 14px; border-radius: 10px; overflow: hidden; }
+    .um-section-title {
+      font-size: 0.78rem; font-weight: 800; letter-spacing: 0.5px;
+      color: #fff; padding: 7px 14px;
+    }
+    /* 분양 당시 — 파란 계열 */
+    .um-section.sale .um-section-title { background: #1a3a6e; }
+    .um-section.sale { background: rgba(26,58,110,0.18); }
+    .um-section.sale .umgrid { padding: 10px 12px 12px; }
+    /* 현재 현황 — 골드 계열 */
+    .um-section.current .um-section-title { background: #8B6914; }
+    .um-section.current { background: #0d1f3c; }
+    .um-section.current .umgrid { padding: 10px 12px 12px; }
+    .um-section.current .umfield input,
+    .um-section.current .umfield select,
+    .um-section.current .umfield textarea {
+      border-color: rgba(201,168,76,0.45);
+    }
+    .um-section.current .umfield input:focus,
+    .um-section.current .umfield select:focus,
+    .um-section.current .umfield textarea:focus {
+      border-color: #C9A84C;
+    }
+    .umgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 480px) { .umgrid { grid-template-columns: 1fr; } }
+    .umgrid .full { grid-column: 1 / -1; }
+    /* 취소 버튼 */
+    .btn-unit-ghost {
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.14); border-radius: 10px;
+      padding: 9px 18px; font-size: 0.88rem; cursor: pointer; font-family: inherit;
+    }
+    .btn-unit-ghost:hover { background: rgba(255,255,255,0.10); }
+    /* 면적 듀얼 입력 (평 ↔ m²) */
+    .area-dual { grid-column: 1 / -1; }
+    .area-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto;
+      gap: 6px; align-items: center; margin-top: 5px;
+    }
+    .area-arrow {
+      font-size: 1rem; font-weight: 900;
+      color: #C9A84C; text-align: center; padding: 0 2px;
+    }
+    .area-unit { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+    .area-auto { color: #C9A84C !important; }  /* 자동계산값 골드 */
+    /* 실시간 한글 금액 힌트 */
+    .amt-hint {
+      display: block; min-height: 16px;
+      font-size: 0.74rem; font-weight: 700;
+      color: #C9A84C; margin-top: 3px; letter-spacing: 0.2px;
+    }
+    .umfield label { display: block; font-size: 0.76rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; }
+    .umfield input, .umfield select, .umfield textarea {
+      width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; padding: 9px 12px; font-size: 0.88rem;
+      color: rgba(255,255,255,0.92); font-family: inherit; outline: none; transition: border-color 0.15s;
+    }
+    .umfield input:focus, .umfield select:focus, .umfield textarea:focus {
+      border-color: rgba(212,175,55,0.55);
+    }
+    .umfield textarea { resize: vertical; min-height: 66px; }
+    .umfield select option { background: #0D1728; }
+    .umfield.umcheck { display: flex; align-items: flex-end; }
+    .umfield.umcheck label { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 0; font-size: 0.9rem; color: rgba(255,255,255,0.92); cursor: pointer; }
+    .umfield.umcheck input[type=checkbox] { width: 18px; height: 18px; padding: 0; accent-color: #C9A84C; }
+    .unit-flag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; vertical-align: middle; }
+    .unit-flag.rec { background: rgba(212,175,55,0.18); color: #C9A84C; border: 1px solid rgba(212,175,55,0.45); }
+    .unit-flag.profit { background: rgba(80,200,140,0.14); color: #6fd6a1; border: 1px solid rgba(80,200,140,0.4); }
+    .unit-memo-entry { padding:10px 0; border-top:1px solid rgba(255,255,255,.12); line-height:1.6; overflow-wrap:anywhere; }
+    .unit-memo-entry time { display:block; font-size:.74rem; color:var(--muted); margin-bottom:4px; }
+    .unit-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+    /* Compact apartment form: desktop rows, narrow screens retain paired fields. */
+    .residential-modal .unit-modal-box { max-width:900px; padding:16px; }
+    .residential-modal .unit-modal-title { margin-bottom:10px; }
+    .residential-modal .um-section { margin-bottom:8px; }
+    .residential-modal .um-section-title { padding:5px 10px; }
+    .residential-modal .um-section .umgrid { padding:8px 10px; gap:7px 10px; grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .residential-modal .umfield { min-width:0; }
+    .residential-modal .umfield label { margin-bottom:3px; }
+    .residential-modal .umfield input, .residential-modal .umfield select, .residential-modal .umfield textarea { min-width:0; padding:7px 9px; font-size:.82rem; }
+    .residential-modal .umfield textarea { min-height:46px; height:46px; }
+    .residential-modal .span-2 { grid-column:span 2; }
+    .residential-modal .span-3 { grid-column:span 3; }
+    .residential-modal .area-dual { grid-column:span 2; }
+    .residential-modal .area-row { margin-top:0; gap:4px; grid-template-columns:minmax(0,1fr) auto auto minmax(0,1fr) auto; }
+    .residential-modal .owner-phone-row { grid-template-columns:78px minmax(100px,1fr) auto auto; align-items:center; }
+    .owner-phone-row button { white-space:nowrap; padding:7px 10px; }
+    .residential-modal input[type=date] { color-scheme:dark; }
+    .unit-date-row { display:flex; align-items:center; gap:6px; }
+    .unit-date-row input { flex:1; min-width:0; }
+    .unit-date-row button { flex:0 0 32px; height:32px; padding:0; font-size:1rem; color:#f3d27b; }
+    .residential-modal .contract-dates { grid-column:1 / -1; display:grid; grid-template-columns:minmax(0,1fr) 100px minmax(0,1fr); gap:10px; }
+    @media(max-width:620px) {
+      .residential-modal .owner-phone-row { grid-template-columns:78px minmax(0,1fr) !important; }
+      .residential-modal .contract-dates { grid-template-columns:minmax(0,1fr) 76px; gap:7px; }
+      .contract-dates .contract-end { grid-column:1 / -1; }
+    }
+    .residential-modal .amt-hint { min-height:0; margin-top:2px; }
+    .owner-phone-row { display:grid; grid-template-columns:88px minmax(0,1fr); gap:6px; }
+    .residential-modal #unitAdditionalNotes .umgrid { grid-template-columns:minmax(0,1fr) auto; align-items:end; }
+    .residential-modal #unitAdditionalNotes .memo-input, .residential-modal #unitAdditionalNotes .memo-actions { grid-column:auto; }
+    .residential-modal #unitAdditionalNotes .memo-actions p { display:none; }
+    .residential-modal #unitMemoHistory { max-height:120px; overflow-y:auto; }
+    .residential-modal #unitMemoHistory p { margin:0; }
+    .residential-modal .unit-modal-actions { position:sticky; bottom:0; z-index:1; margin-top:8px; padding:8px 0 0; background:#132040; flex-wrap:wrap; }
+
+
+    /* 상가 호실 모달: 세로 길이를 줄이기 위한 촘촘한 4열 배치 + 저장 버튼 하단 고정 */
+    #unitModal:not(.residential-modal) { padding:12px 12px; }
+    #unitModal:not(.residential-modal) .unit-modal-box { max-width:860px; padding:14px 16px; border-radius:16px; }
+    #unitModal:not(.residential-modal) .unit-modal-title { margin-bottom:8px; font-size:1rem; }
+    #unitModal:not(.residential-modal) .unit-modal-close { top:10px; right:14px; }
+    #unitModal:not(.residential-modal) .um-section { margin-bottom:8px; }
+    #unitModal:not(.residential-modal) .um-section-title { padding:5px 12px; }
+    #unitModal:not(.residential-modal) .um-section .umgrid { padding:8px 10px 10px; gap:6px 10px; grid-template-columns:repeat(12,minmax(0,1fr)); }
+    #unitModal:not(.residential-modal) .umgrid .g2 { grid-column:span 2; }
+    #unitModal:not(.residential-modal) .umgrid .g3 { grid-column:span 3; }
+    #unitModal:not(.residential-modal) .umgrid .g4, #unitModal:not(.residential-modal) .umgrid .area-dual.g4 { grid-column:span 4; }
+    #unitModal:not(.residential-modal) .umfield { min-width:0; }
+    #unitModal:not(.residential-modal) .umfield label { margin-bottom:3px; font-size:.74rem; }
+    #unitModal:not(.residential-modal) .umfield input,
+    #unitModal:not(.residential-modal) .umfield select,
+    #unitModal:not(.residential-modal) .umfield textarea { padding:7px 9px; font-size:.84rem; min-width:0; box-sizing:border-box; }
+    #unitModal:not(.residential-modal) .umfield textarea { min-height:42px; height:42px; }
+        #unitModal:not(.residential-modal) .area-row { margin-top:0; gap:4px; }
+    #unitModal:not(.residential-modal) .amt-hint { min-height:0; margin-top:1px; font-size:.7rem; }
+    #unitModal:not(.residential-modal) .umfield.umcheck label { padding:6px 0; font-size:.86rem; }
+    #unitModal:not(.residential-modal) #u_비고_wrap { grid-column:1 / -1; }
+    #unitModal:not(.residential-modal) #unitAdditionalNotes .umgrid { grid-template-columns:minmax(0,1fr) auto; align-items:end; }
+    #unitModal:not(.residential-modal) #unitAdditionalNotes .memo-input,
+    #unitModal:not(.residential-modal) #unitAdditionalNotes .memo-actions { grid-column:auto; }
+    #unitModal:not(.residential-modal) #unitAdditionalNotes .memo-actions p { display:none; }
+    #unitModal:not(.residential-modal) #unitMemoHistory { max-height:110px; overflow-y:auto; }
+    #unitModal:not(.residential-modal) .unit-modal-actions { position:sticky; bottom:0; z-index:2; margin-top:6px; padding:8px 0 0; background:#132040; flex-wrap:wrap; box-shadow:0 -8px 10px -6px rgba(0,0,0,.45); }
+    #unitModal:not(.residential-modal) .unit-modal-actions button { padding:7px 16px; }
+    @media(max-width:620px) {
+      #unitModal:not(.residential-modal) .um-section .umgrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #unitModal:not(.residential-modal) .umgrid .g2, #unitModal:not(.residential-modal) .umgrid .g3 { grid-column:span 1; }
+      #unitModal:not(.residential-modal) .umgrid .g4, #unitModal:not(.residential-modal) .umgrid .area-dual.g4 { grid-column:1 / -1; }
+    }
+
+    @media(max-width:620px) {
+      .residential-modal { padding:12px 8px; }
+      .residential-modal .unit-modal-box { padding:12px; }
+      .residential-modal .um-section .umgrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+      .residential-modal .span-3 { grid-column:1 / -1; }
+      .residential-modal .area-dual { grid-column:1 / -1; }
+      .residential-modal .owner-phone-row { grid-template-columns:78px minmax(0,1fr); }
+    }
+
+    /* 소형 버튼 */
+    .btn-unit-edit {
+      background: rgba(212,175,55,0.10); color: #D4AF37;
+      border: 1px solid rgba(212,175,55,0.25); border-radius: 8px;
+      padding: 5px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.12s;
+    }
+    .btn-unit-edit:hover { background: rgba(212,175,55,0.20); }
+    /* 매물 연결 버튼 */
+    .btn-listing-reg {
+      background: rgba(96,165,250,0.12); color: #93c5fd;
+      border: 1px solid rgba(96,165,250,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-reg:hover { background: rgba(96,165,250,0.22); }
+    .btn-listing-view {
+      display: inline-block; text-decoration: none;
+      background: rgba(34,197,94,0.12); color: #4ade80;
+      border: 1px solid rgba(34,197,94,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-view:hover { background: rgba(34,197,94,0.22); }
+    .btn-listing-home {
+      display: inline-block; text-decoration: none;
+      background: rgba(168,85,247,0.12); color: #c084fc;
+      border: 1px solid rgba(168,85,247,0.28); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      transition: 0.12s; white-space: nowrap;
+    }
+    .btn-listing-home:hover { background: rgba(168,85,247,0.22); }
+    .tbl-actions { display: flex; gap: 5px; align-items: center; flex-wrap: nowrap; }
+    .btn-unit-del {
+      background: rgba(239,68,68,0.20); color: #ffc2c2;
+      border: 1px solid rgba(255,120,120,0.55); border-radius: 8px;
+      padding: 5px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.12s;
+    }
+    .btn-unit-del:hover { background: rgba(239,68,68,0.32); }
+    .btn-unit-add {
+      background: linear-gradient(135deg, #D4AF37 0%, #B8962A 100%); color: #000;
+      border: none; border-radius: 10px; padding: 9px 20px;
+      font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: 0.15s;
+    }
+    .btn-unit-add:hover { opacity: 0.88; }
+    .unit-sec-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; gap: 10px;
+    }
+    .unit-sec-head h3 { margin: 0; font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.92); white-space: nowrap; }
+    /* 호실 현황 머리줄: 1줄 제목 + 자주 쓰는 버튼, 2줄 선택 후 쓰는 버튼(왼쪽) · 상가 전용 버튼(오른쪽 끝) */
+    .unit-sec-head { flex-wrap: wrap; row-gap: 10px; }
+    .unit-head-main { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+    .unit-head-main .btn-unit-add, #unitBulkActions .btn-unit-add, #unitBulkActions .btn-unit-ghost, #unitBulkActions .btn-unit-del {
+      display: inline-flex; align-items: center; justify-content: center; height: 38px; box-sizing: border-box;
+      padding: 0 16px; font-size: 0.86rem; font-weight: 800; white-space: nowrap; border-radius: 10px; text-decoration: none;
+    }
+    #unitBulkActions { flex: 1 1 100%; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    #unitBulkActions [hidden], .unit-head-main [hidden] { display: none !important; }
+    #unitBulkActions .unit-bulk-extra { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
+  
+    .unit-dong-cell,.unit-room-cell{white-space:nowrap}
+    .unit-dong-cell strong,.unit-room-cell strong{font-size:.94rem;font-variant-numeric:tabular-nums}
+    .unit-dong-cell>small,.unit-room-cell>small{margin-left:3px;color:var(--muted);font-size:.72rem}
+    .unit-room-cell>small:last-child:not(:first-of-type){margin-left:0}
+
+
+    .residential-unit-table{table-layout:auto;min-width:1120px}
+    .residential-unit-table .tbl-actions { display:table-cell; white-space:nowrap; }
+    .residential-unit-table .tbl-actions > * { margin-right:5px; vertical-align:top; }
+    .unit-listing-menu { display:inline-block; }
+    .unit-listing-menu summary { list-style:none; }
+    .unit-listing-menu summary::-webkit-details-marker { display:none; }
+    .unit-listing-options { display:flex; flex-direction:column; gap:5px; margin-top:6px; }
+    .residential-unit-table th,.residential-unit-table td{box-sizing:border-box;padding-left:8px;padding-right:8px}
+    .residential-unit-table td{overflow:visible;text-overflow:clip}
+
+    .unit-sort{display:inline-flex;align-items:center;gap:5px;width:100%;border:0;background:none;color:inherit;font:inherit;font-weight:inherit;text-align:left;white-space:nowrap;cursor:pointer;padding:4px 0}
+    .unit-sort:hover,.unit-sort.active{color:var(--gold-soft)}
+    .unit-sort:focus-visible{outline:2px solid var(--gold-soft);outline-offset:2px;border-radius:3px}
+    .unit-sort-arrow{font-size:.7rem;opacity:.6}
+    .unit-sort.active .unit-sort-arrow{opacity:1}
+
+/* 소유주 연결 고객 버튼 */
+.owner-customer-link, .owner-customer-link:visited {
+  display:inline-flex; align-items:center; justify-content:center;
+  margin:6px 8px 0 0; padding:8px 14px; border-radius:8px;
+  color:#ffe29a; background:#17263b; border:1px solid #c9a84c;
+  font-size:13px; font-weight:700; text-decoration:none;
+}
+.owner-customer-link:hover { color:#fff3cc; background:#263b55; border-color:#ffe29a; }
+.owner-customer-link:focus-visible { outline:2px solid #ffe29a; outline-offset:3px; }
+</style>
+
+<style>
+.unit-sale-subtype{display:block;margin-top:4px;font-size:.72em;line-height:1.35;color:#d4af37;font-weight:600;white-space:nowrap}
+#unitPrintSheet{display:none}
+.unit-select-cell{width:34px!important;text-align:center!important}
+.unit-select-row,#unitSelectAll{width:16px;height:16px;accent-color:#d4af37;cursor:pointer}
+@page{size:A4 landscape;margin:11mm}
+@media print{body:has(#unitPrintSheet)>*:not(#unitPrintSheet){display:none!important}body:has(#unitPrintSheet){background:white!important;margin:0!important;padding:0!important}#unitPrintSheet{display:block!important;color:#111;font-family:Arial,sans-serif;font-size:9pt}#unitPrintSheet h2{font-size:14pt;margin:0 0 12px}#unitPrintSheet table{width:100%;table-layout:fixed;border-collapse:collapse}#unitPrintSheet td{white-space:pre-line}#unitPrintSheet th,#unitPrintSheet td{border:1px solid #bac3d0;padding:6px 5px;word-break:keep-all;overflow-wrap:anywhere;vertical-align:top}#unitPrintSheet th{background:#172847!important;color:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#unitPrintSheet tr{break-inside:avoid;page-break-inside:avoid}#unitPrintSheet thead{display:table-header-group}}
+@media print{
+ html,body{width:auto!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important}
+ #unitPrintSheet{position:static!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;font-size:9pt!important}
+ #unitPrintSheet .unit-print-header{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:9px}
+ #unitPrintSheet .unit-print-header h2{font-size:13pt!important;margin:0!important}
+ #unitPrintSheet .unit-print-header span{white-space:nowrap;font-size:8pt}
+ #unitPrintSheet table{width:100%!important;table-layout:fixed!important}
+ #unitPrintSheet td,#unitPrintSheet th{padding:7px 6px!important;white-space:pre-line!important;word-break:keep-all!important;overflow-wrap:anywhere!important}
+ #unitPrintSheet td:nth-child(3){white-space:pre-line!important;line-height:1.55!important}
+ #unitPrintSheet td:last-child,#unitPrintSheet th:last-child{width:22%!important}
+ #unitPrintSheet tr{break-inside:avoid!important;page-break-inside:avoid!important}
+}
+</style>
+<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261017-brand-text-nav">
+<script>
+(function(){
+  var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+  document.documentElement.dataset.officeTheme=office;
+  if(office!=='ktop'){
+    var link=document.querySelector('link[href*="white-navy-workspace.css"]');
+    if(link)link.disabled=true;
+    var building=document.getElementById('ktop-building-light');
+    if(building)building.disabled=true;
+  }
+})();
+</script>
+
+<style>.units-tbl .profit-recommended-row td{background:rgba(212,175,55,.11)}.units-tbl .profit-recommended-row td:first-child{box-shadow:inset 3px 0 #d4af37}.units-tbl .profit-recommended-row:hover td{background:rgba(212,175,55,.17)}</style>
+<style>#unitModal #unitAdditionalNotes #u_추가메모{min-height:140px;height:140px;resize:vertical}.sbadge.미확인{background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.35)}</style>
+<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
+<style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#16233d;color:#e6edf7;cursor:pointer}.presale-switch button.active{background:#80651f;border-color:#d4af37;color:#fff3c2}.presale-hidden{display:none!important}</style>
+<style>.unit-phase-label{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.76rem;font-weight:700}.unit-phase-label.ongoing{color:#edcf79;background:rgba(212,175,55,.12)}.unit-phase-label.completed{color:#aebbd0;background:rgba(147,170,205,.13)}</style>
+<style>
+/* 호실 현황 표: 매물 열 폭 고정 + 버튼 줄바꿈 (보증금·월세가 가려지지 않게) */
+.units-tbl th:last-child, .units-tbl td:last-child { width:146px; min-width:146px; max-width:146px; }
+.units-tbl td.tbl-actions { flex-wrap:wrap; align-content:center; gap:3px 4px; line-height:1.4; }
+.units-tbl td.tbl-actions > * { white-space:nowrap; word-break:keep-all; }
+.units-tbl td:nth-child(3) { max-width:132px; white-space:normal; word-break:keep-all; }
+.units-tbl th, .units-tbl td { padding-left:6px; padding-right:6px; }
+    .ftab { position:relative; }
+    .ftab .rec-n { position:absolute; top:-6px; right:-4px; font-style:normal; font-size:10px; line-height:1; padding:2px 5px; border-radius:999px; background:#0b7a6b; color:#fff; }
+    .ftab.rec-open { margin-left:10px; border-color:#0b7a6b; color:#0b7a6b; }
+    /* 상가 호실 현황 표: 평수를 가장 눈에 띄게, 나머지는 중요도에 따라 굵기·색 구분 */
+    .units-tbl:not(.residential-unit-table) td:nth-child(2) strong { font-size:1.05rem; font-weight:800; color:#13201f; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(3) { font-weight:600; color:#1f2d2c; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(4) { font-size:1.05rem; font-weight:800; color:#0b7a6b !important; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(4) span { font-size:.72rem; font-weight:400; color:#8a9a98; opacity:1 !important; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(5), .units-tbl:not(.residential-unit-table) td:nth-child(6) { color:#7d8b89 !important; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(8) span { font-weight:400; color:#8a9a98; opacity:1 !important; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(9) { font-weight:500; color:#33403f; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(10) { font-weight:700; color:#13201f !important; }
+</style>
+<style id="unitBundleStyle">
+.unit-flag.bundle{background:rgba(212,175,55,.18);color:#e0b84c;border:1px solid rgba(212,175,55,.45)}
+.unit-flag.sale{background:rgba(229,115,115,.2);color:#ef9a9a;border:1px solid rgba(229,115,115,.45)}
+.unit-bundle-box{margin-top:16px;padding:14px 16px;border:1px solid rgba(212,175,55,.35);border-radius:14px;background:rgba(212,175,55,.05)}
+.unit-bundle-box[hidden]{display:none}
+.unit-bundle-box .ub-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.unit-bundle-box .ub-head strong{font-size:.95rem}
+.unit-bundle-box .ub-head .ub-cnt{color:#e0b84c;font-weight:700}
+.unit-bundle-box .ub-head .ub-hint{font-size:.76rem;opacity:.65}
+.unit-bundle-box table{width:100%;border-collapse:collapse;table-layout:auto}
+.unit-bundle-box th{text-align:left;padding:7px 8px;font-size:.76rem;font-weight:700;color:#e0b84c;border-bottom:1px solid rgba(255,255,255,.14)}
+.unit-bundle-box td{padding:9px 8px;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:middle}
+.unit-bundle-box td.ub-price{color:#e0b84c;font-weight:700}
+.unit-bundle-box td.ub-act{text-align:right;width:1%;white-space:nowrap}
+.unit-bundle-box .ub-strike{font-size:.7rem;font-weight:400;opacity:.6;text-decoration:line-through}
+</style>
+</head>
+<body class="resources-page">
+<script>if (new URLSearchParams(location.search).get('unit')) { var __s = document.createElement('style'); __s.id = 'unitOnlyStyle'; __s.textContent = '.page{visibility:hidden}#unitModal{visibility:visible}'; document.head.appendChild(__s); setTimeout(function(){ var m = document.getElementById('unitModal'); if (!m || !m.classList.contains('open')) { var st = document.getElementById('unitOnlyStyle'); if (st) st.remove(); } }, 10000); }</script>
+<div class="page">
+
+  <!-- TOPBAR -->
+  <header class="topbar" style="margin-bottom:20px;">
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="brand-text">
+        <h1 id="buildingName">건물 상세</h1>
+        <p id="buildingDetailSubtitle">층별 평면도 · 기타 자료 관리</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="goBack()">← 뒤로가기</button>
+    </div>
+  </header>
+
+  <!-- ===== 건물 기본정보 요약 ===== -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="sec-title">🏢 건물 기본정보</div>
+    <div class="info-grid" id="infoGrid">
+      <div class="info-cell"><div class="info-cell-label">불러오는 중…</div></div>
+    </div>
+    <div class="building-location-links" id="buildingLocationLinks" aria-label="네이버에서 위치와 매물 보기"></div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn" style="font-size:0.82rem;" onclick="goOverview()">📝 단지 기본정보</button>
+    </div>
+  </div>
+
+  <!-- ===== 층별 평면도 ===== -->
+  <div class="card" id="planSection" style="margin-bottom:20px;">
+    <div class="sec-title" id="floorPlansTitle">📐 층별 평면도</div>
+
+    <div class="upload-row floor-row">
+      <input id="floorNum" type="text" placeholder="층 (예: 1층)" />
+      <input id="floorFile" type="file" accept="image/*,.pdf" style="font-size:0.85rem;" />
+      <button class="btn primary" onclick="uploadFloor()">+ 추가</button>
+    </div>
+    <div id="planAreaInputs" class="plan-area-inputs">
+      <label>분양면적(공급면적) ㎡<input id="supplyArea" type="number" min="0.0001" step="0.0001" inputmode="decimal" placeholder="예: 80.2197" /></label>
+      <label>전용면적 ㎡<input id="exclusiveArea" type="number" min="0.0001" step="0.0001" inputmode="decimal" placeholder="예: 55.98" /></label>
+      <p class="plan-area-note">분양면적 = 전용면적 + 주거공용면적 · 평은 자동 환산됩니다.</p>
+    </div>
+    <div class="upload-progress" id="floorProgress">
+      <div class="spinner-sm"></div> 업로드 중…
+    </div>
+
+    <p id="floorSortHint" class="floor-sort-hint" aria-live="polite">도면 카드를 원하는 위치로 끌어 놓으면 순서가 저장됩니다.</p>
+    <div class="floor-grid" id="floorGrid">
+      <div class="empty-state" style="grid-column:1/-1;">등록된 평면도가 없습니다.</div>
+    </div>
+  </div>
+
+  <!-- ===== 기타 자료 ===== -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="sec-title" id="buildingFilesTitle">📄 기타 자료</div>
+    <div id="residentialMaterialActions" style="display:none;margin-bottom:12px;gap:8px;flex-wrap:wrap;">
+      <a class="btn" id="residentialPlanSearch" target="_blank" rel="noopener noreferrer">평면도·배치도 찾기</a>
+      <a class="btn" id="residentialNaverComplex" target="_blank" rel="noopener noreferrer">네이버 단지검색</a>
+      <button class="btn" type="button" data-material-name="단지배치도">단지배치도 추가</button>
+      <button class="btn" type="button" data-material-name="동호수배치도">동호수배치도 추가</button>
+      <button class="btn" type="button" id="addResidentialPlan">평형별 평면도 추가</button>
+    </div>
+
+    <!-- 파일 업로드 -->
+    <div class="upload-row file-row">
+      <input id="fileName" type="text" placeholder="자료명 (예: 분양안내서)" />
+      <input id="fileUpload" type="file" accept="image/*,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" style="font-size:0.85rem;" />
+      <button class="btn primary" onclick="uploadFile()">+ 추가</button>
+    </div>
+    <div class="upload-progress" id="fileProgress">
+      <div class="spinner-sm"></div> 업로드 중…
+    </div>
+
+    <div class="file-grid" id="fileList">
+      <div class="empty-state" style="grid-column:1/-1;">등록된 자료가 없습니다.</div>
+    </div>
+  </div>
+
+  <!-- ===== 호실 현황 ===== -->
+  <div class="card" id="unitStatus" style="scroll-margin-top:20px;">
+    <div class="unit-sec-head">
+      <h3 id="unitStatusTitle">🏬 호실 현황</h3>
+      <div class="unit-head-main">
+        <button type="button" class="btn-unit-add" id="unitPriceUpload" hidden>가격표 자료 올리기</button>
+        <button class="btn-unit-add" id="btnAddUnit">+ 호실 추가</button>
+      </div>
+      <div id="unitBulkActions">
+        <button type="button" class="btn-unit-add" id="unitListingSend" hidden disabled>매물리스트로 보내기</button>
+        <button type="button" class="btn-unit-ghost" id="unitSelectPrint" disabled>선택인쇄</button>
+        <button type="button" class="btn-unit-del" id="unitSelectDelete" disabled>선택삭제</button>
+        <div class="unit-bulk-extra">
+          <button type="button" class="btn-unit-add" id="unitProfitRegister" disabled>수익성 추천</button>
+          <a class="btn-unit-ghost" id="unitProfitView" href="profit-recommendations.html">추천매물 모아보기</a>
+          <button type="button" class="btn-unit-add" id="unitBundleRegister" disabled>묶음 등록</button>
+          <button type="button" class="btn-unit-add" id="unitBundleRooms" disabled>호실 묶기</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="unitPriceFiles" hidden></div>
+    <!-- 요약 카드 -->
+    <div class="summary-grid" id="residentialSummaryGrid" style="display:none;">
+      <button type="button" class="sum-card forsale unit-summary-filter" data-unit-deal="매매" aria-pressed="false" title="매매 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumDealSale">-</span><span class="sum-label">매매</span></button>
+      <button type="button" class="sum-card revenue unit-summary-filter" data-unit-deal="전세" aria-pressed="false" title="전세 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumDealJeonse">-</span><span class="sum-label">전세</span></button>
+      <button type="button" class="sum-card occupied unit-summary-filter" data-unit-deal="월세" aria-pressed="false" title="월세 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumDealWolse">-</span><span class="sum-label">월세</span></button>
+      <button type="button" class="sum-card own unit-summary-filter" data-unit-deal="자가" aria-pressed="false" title="자가 세대만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumOwn">-</span><span class="sum-label">자가</span></button>
+    </div>
+    <p class="summary-note" id="residentialSummaryNote" style="display:none;"></p>
+    <div class="summary-grid" id="commercialSummaryGrid">
+      <button type="button" class="sum-card occupied unit-summary-filter" data-unit-status="occ" aria-pressed="false" title="임차중 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumOccupied">-</span><span class="sum-label">임차중</span></button>
+      <button type="button" class="sum-card vacant unit-summary-filter" data-unit-status="vac" aria-pressed="false" title="공실 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumVacant">-</span><span class="sum-label">공실</span></button>
+      <button type="button" class="sum-card forsale unit-summary-filter" data-unit-status="sale" aria-pressed="false" title="진행중인 매매 매물 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumForSale">-</span><span class="sum-label">매매가능</span></button>
+      <button type="button" class="sum-card revenue unit-summary-filter" data-unit-status="listed" aria-pressed="false" title="진행중인 매물 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumListed">-</span><span class="sum-label">매물진행중</span></button>
+    </div>
+
+    <div class="unit-toolbar">
+      <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.5;"></p><span style="font-size:.72rem;color:var(--text-muted,#9fb0c3);white-space:nowrap;margin-left:12px;" title="호실 옆 날짜는 마지막으로 수정한 날이에요">수정일 <span style="color:#66bb6a;">● 7일 이내</span> <span style="color:#ffd54f;">● 30일 이내</span> <span style="color:#78909c;">● 오래됨</span></span>
+      <button type="button" class="btn-unit-ghost" id="unitOrigToggle" hidden>원분양가 보기</button>
+    </div>
+    <!-- 구분(상가/오피스텔)·층 필터 탭: 한 줄로 -->
+    <div class="unit-filter-bar">
+      <div class="floor-tabs" id="unitKindTabs" hidden></div>
+      <div class="floor-tabs" id="unitFloorTabs"></div>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="units-wrap">
+      <table class="units-tbl">
+        <thead id="unitsTableHead">
+          <tr>
+            <th>호수</th>
+            <th>업종</th>
+            <th>전용면적</th>
+            <th>소유주</th>
+            <th>연락처</th>
+            <th>분양상태</th>
+            <th>가격</th>
+            <th>보증금</th>
+            <th>월세</th>
+            <th>상태</th>
+            <th>매물</th>
+          </tr>
+        </thead>
+        <tbody id="unitsTbody"></tbody>
+      </table>
+    </div>
+    <div id="unitBundleBox" class="unit-bundle-box" hidden></div>
+    <div id="unitsEmpty" class="units-empty" style="display:none;">
+      등록된 호실이 없습니다. [+ 호실 추가]를 눌러 시작하세요.
+    </div>
+  </div>
+
+  <!-- ★ 호실 추가/수정 모달 ★ -->
+  <div class="unit-modal-overlay" id="unitModal">
+    <div class="unit-modal-box">
+      <button class="unit-modal-close" id="umClose">✕</button>
+      <div class="unit-modal-title" id="umTitle">호실 추가</div>
+
+      <div id="residentialUnitFields" hidden>
+        <div class="um-section sale"><div class="um-section-title">🏠 기본정보</div><div class="umgrid">
+          <div class="umfield span-3"><label>아파트명</label><input id="ru_아파트명" readonly /></div>
+          <div class="umfield"><label>접수일자</label><input id="ru_접수일자" type="date" /></div>
+          <div class="umfield"><label>동 *</label><input id="ru_동" placeholder="예: 1101" /></div>
+          <div class="umfield"><label>호수 *</label><input id="ru_호수" placeholder="예: 101" /></div>
+          <div class="umfield"><label>분양평형</label><input id="ru_평형" placeholder="예: 24평" /></div>
+          <div class="umfield"><label>타입</label><input id="ru_타입" list="residentialUnitTypes" placeholder="예: 55A/AS" /><datalist id="residentialUnitTypes"></datalist></div>
+          <div class="umfield area-dual full"><label>분양면적(공급면적)</label><div class="area-row"><input id="ru_분양_평" type="number" min="0" step="0.01" placeholder="평" aria-label="분양면적 평" /><span class="area-unit">평</span><span class="area-arrow">↔</span><input id="ru_분양_m2" type="number" min="0" step="0.0001" placeholder="㎡" aria-label="분양면적 제곱미터" /><span class="area-unit">㎡</span></div></div>
+          <div class="umfield area-dual full"><label>전용면적</label><div class="area-row"><input id="ru_전용_평" type="number" min="0" step="0.01" placeholder="평" aria-label="전용면적 평" /><span class="area-unit">평</span><span class="area-arrow">↔</span><input id="ru_전용_m2" type="number" min="0" step="0.0001" placeholder="㎡" aria-label="전용면적 제곱미터" /><span class="area-unit">㎡</span></div></div>
+        </div></div>
+        <div class="um-section current"><div class="um-section-title">💰 거래·가격</div><div class="umgrid">
+          <div class="umfield"><label>매매·임대 구분</label><select id="ru_거래구분"><option value="">미정</option><option>매매</option><option>전세</option><option value="월세">월세(임대)</option><option>매매·전세</option><option value="매매·월세">매매·월세(임대)</option></select></div>
+          <div class="umfield"><label>매매 유형</label><select id="ru_매매유형"><option value="일반매매">일반매매</option><option value="세안고매매">세안고매매</option></select></div><div class="umfield"><label>승계 보증금 (만원)</label><input id="ru_승계보증금" type="number" min="0" placeholder="세안고 매매 시 입력" /></div><div class="umfield"><label>매매가 (만원)</label><input id="ru_매매가" type="number" min="0" placeholder="예: 50000" /><span class="amt-hint" id="h_ru_매매가"></span></div>
+          <div class="umfield"><label>임대 보증금·전세가 (만원)</label><input id="ru_보증금" type="number" min="0" placeholder="예: 30000" /><span class="amt-hint" id="h_ru_보증금"></span></div>
+          <div class="umfield"><label>월세 (만원)</label><input id="ru_월세" type="number" min="0" placeholder="예: 100" /><span class="amt-hint" id="h_ru_월세"></span></div>
+        </div></div>
+        <div class="um-section current"><div class="um-section-title">👤 소유자 정보</div><div class="umgrid">
+          <div class="umfield"><label>소유자 이름</label><input id="ru_소유자" /></div>
+          <div class="umfield span-3"><label>소유자 연락처</label><div class="owner-phone-row"><select id="ru_통신사" aria-label="소유자 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>알뜰폰</option><option>미확인</option></select><input id="ru_연락처" type="tel" placeholder="010-0000-0000" aria-label="소유자 전화번호" /><button type="button" class="btn-unit-ghost" id="ru_ownerRegistry" title="대법원 인터넷등기소 확인">대법원</button><button type="button" class="btn-unit-ghost" id="ru_ownerBuilding" title="건축물대장 확인">건축물대장</button></div></div><div id="ru_ownerCustomers" class="umfield span-3" style="display:none"></div>
+        </div></div>
+        <div class="um-section sale"><div class="um-section-title">📅 세입자·계약</div><div class="umgrid">
+          <div class="umfield"><label>세입자 현황</label><select id="ru_세입자현황"><option>미확인</option><option>자가거주</option><option value="임차중">세입자 거주</option><option>공실</option></select></div>
+          <div class="umfield"><label>세입자 이름</label><input id="ru_세입자이름" /></div>
+          <div class="umfield span-2"><label>세입자 연락처</label><input id="ru_세입자연락처" type="tel" placeholder="010-0000-0000" /></div>
+          <div class="contract-dates">
+            <div class="umfield"><label for="ru_계약시작">세입자 계약 시작일</label><div class="unit-date-row"><input id="ru_계약시작" type="date" /><button type="button" class="btn-unit-ghost" data-unit-date="ru_계약시작" aria-label="계약 시작일 달력 열기">📅</button></div></div>
+            <div class="umfield"><label for="ru_계약기간">계약기간</label><select id="ru_계약기간"><option value="">선택</option><option value="1">1년</option><option value="2">2년</option></select></div>
+            <div class="umfield contract-end"><label for="ru_계약종료">세입자 계약 종료일</label><div class="unit-date-row"><input id="ru_계약종료" type="date" /><button type="button" class="btn-unit-ghost" data-unit-date="ru_계약종료" aria-label="계약 종료일 달력 열기">📅</button></div></div>
+          </div>
+        </div></div>
+        <div class="um-section current"><div class="um-section-title">📝 옵션·비고</div><div class="umgrid">
+          <div class="umfield span-2"><label>옵션내역</label><textarea id="ru_옵션" placeholder="시스템에어컨, 붙박이장 등"></textarea></div>
+          <div class="umfield span-2"><label>비고</label><textarea id="ru_비고" placeholder="매물 특이사항"></textarea></div>
+        </div></div>
+      </div>
+
+      <div id="unitPresaleSwitch" class="presale-switch"><span>분양상태</span><button type="button" data-unit-phase="분양중">분양중</button><button type="button" data-unit-phase="분양완료">분양완료</button><button type="button" id="unitOriginalPrices">최초 분양자료 보기</button></div>
+      <!-- 분양 당시 -->
+      <div class="um-section sale" id="commercialUnitSale">
+        <div class="um-section-title">📋 호실 기본정보 · 분양자료</div>
+        <div class="umgrid">
+          <div class="umfield g2"><label>호수 *</label><input id="u_호수" placeholder="예: 101, 202" /></div>
+          <div class="umfield g2"><label>업종</label><input id="u_현업종" placeholder="예: 음식점, 학원" /></div>
+          <div class="umfield area-dual full g4">
+            <label>전용 면적</label>
+            <div class="area-row">
+              <input id="u_전용_평" type="number" step="0.01" placeholder="평" />
+              <span class="area-arrow">↔</span>
+              <input id="u_전용_m2" type="number" step="0.01" placeholder="m²" class="area-auto" />
+              <span class="area-unit">m²</span>
+            </div>
+          </div>
+          <div class="umfield area-dual full g4">
+            <label>분양 면적</label>
+            <div class="area-row">
+              <input id="u_분양_평" type="number" step="0.01" placeholder="평" />
+              <span class="area-arrow">↔</span>
+              <input id="u_분양_m2" type="number" step="0.01" placeholder="m²" class="area-auto" />
+              <span class="area-unit">m²</span>
+            </div>
+          </div>
+          <div class="umfield g3"><label>평당가 (만원)</label><input id="u_평당가" type="number" placeholder="0" /></div>
+          <div class="umfield g3"><label>분양금액 (만원)</label><input id="u_분양금액" type="number" placeholder="0" /><span class="amt-hint" id="h_분양금액"></span></div>
+          <div class="umfield g3"><label>보증금 (만원)</label><input id="u_보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_보증금"></span></div>
+          <div class="umfield g3"><label>월차임 (만원)</label><input id="u_월차임" type="number" placeholder="0" /><span class="amt-hint" id="h_월차임"></span></div>
+        </div>
+      </div>
+
+      <!-- 현재 현황 -->
+      <div class="um-section current" id="commercialUnitCurrent">
+        <div class="um-section-title">📊 현재 현황</div>
+        <div class="umgrid">
+          <div class="umfield g3">
+            <label>임대현황 (공실 여부)</label>
+            <select id="u_공실여부" aria-label="임대현황 공실 여부">
+              <option value="임차중">임차중</option>
+              <option value="공실">공실</option>
+            </select>
+          </div>
+          <div class="umfield g3"><label>(현)매매가격 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /><span class="amt-hint" id="h_현매매가격"></span></div>
+          <div class="umfield g3"><label>(현)보증금 (만원)</label><input id="u_현보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_현보증금"></span></div>
+          <div class="umfield g3"><label>(현)월세 (만원)</label><input id="u_현월세" type="number" placeholder="0" /><span class="amt-hint" id="h_현월세"></span></div>
+          <div class="umfield g3" id="u_구분_field" hidden>
+            <label>구분 (상가 / 오피스텔)</label>
+            <select id="u_구분" aria-label="구분"><option value="상가">상가</option><option value="오피스텔">오피스텔(주거)</option></select>
+          </div>
+          <div class="umfield g3">
+            <label>거래유형</label>
+            <select id="u_거래구분" aria-label="거래유형">
+              <option value="">선택하세요</option>
+              <option value="매매">매매</option>
+              <option value="전세">전세</option>
+              <option value="월세">월세(임대)</option>
+              <option value="매매·전세">매매·전세</option><option value="매매·월세">매매·월세(임대)</option><option value="회사분양">(회사)분양</option><option value="회사임대">(회사)월세(임대)</option>
+            </select>
+          </div>
+          <div class="umfield g3"><label>관리비</label><input id="u_관리비" placeholder="예: 15만" /></div>
+          <div class="umfield g3"><label>권리금</label><input id="u_권리금" placeholder="예: 없음 또는 2,000만" /></div>
+          <div class="umfield g3"><label>층정보</label><input id="u_층정보" placeholder="예: 지상 1층" /></div>
+          <div class="umfield g3"><label>용도지역</label><input id="u_용도지역" placeholder="예: 준공업지역" /></div>
+          <div class="umfield g3"><label>주차대수</label><input id="u_주차대수" placeholder="예: 10대" /></div>
+          <div class="umfield g3"><label>사용승인일</label><input id="u_사용승인일" placeholder="예: 2010-03-15" /></div>
+          <div class="umfield g4"><label>소유주명</label><input id="u_소유주" placeholder="예) 홍길동" /></div>
+          <div class="umfield g4"><label>연락처1</label><input id="u_연락처" placeholder="010-0000-0000" /></div>
+          <div class="umfield g4"><label>수익률 (%)</label><input id="u_수익률" placeholder="예: 5.2" /></div>
+          <div class="umfield umcheck g3"><label for="u_추천매물"><input id="u_추천매물" type="checkbox" /> ⭐ 추천매물</label></div>
+          <div class="umfield umcheck g3"><label for="u_수익성매물"><input id="u_수익성매물" type="checkbox" /> 💰 수익성매물</label></div>
+          <div class="umfield g3 umhint" style="font-size:.7rem;color:var(--muted);align-self:center">매물관리로는 목록에서 호실을 체크한 뒤 [선택 항목 매물리스트로 보내기]로 보냅니다. 보낸 뒤에는 서로 연동됩니다.</div>
+          <div class="umfield full"><label>소유주 메모 / 특이사항</label><textarea id="u_소유주메모" rows="2" placeholder="예) 통화 가능 시간, 특이사항 등"></textarea></div>
+          <div class="umfield full"><label>내부 메모 (비공개)</label><textarea id="u_내부메모" rows="2" placeholder="관리용 메모 / 특이사항"></textarea></div>
+          <div class="umfield full"><label>옵션내역</label><textarea id="u_옵션내역" rows="2" placeholder="시스템에어컨, 붙박이장 등"></textarea></div>
+          <div class="umfield full" id="u_비고_wrap"><label>비고</label><textarea id="u_비고" placeholder="특이사항 등 자유 입력"></textarea></div>
+        </div>
+      </div>
+
+      <div class="um-section current" id="unitAdditionalNotes"><div class="um-section-title">💬 추가메모</div><div class="umgrid">
+        <div class="umfield full memo-input"><label>새 메모</label><textarea id="u_추가메모" placeholder="상담 내용이나 변경사항을 추가하세요. 기존 메모에 날짜별로 누적됩니다."></textarea></div>
+        <div class="umfield full memo-actions"><label for="u_추가메모일" style="margin:0 0 3px;font-size:.72rem">메모 날짜</label><input type="date" id="u_추가메모일" style="margin-bottom:6px"><button type="button" class="btn-unit-ghost" id="umAddMemo">메모 추가·저장</button><p style="font-size:.74rem;color:var(--muted);margin-top:7px;">현재 입력내용과 메모를 함께 저장합니다.</p></div>
+        <div class="umfield full" id="unitMemoHistory" aria-live="polite"></div>
+      </div></div>
+
+      <div class="unit-modal-actions">
+        <a class="btn-unit-ghost" id="umListingView" hidden>매물 상세보기</a>
+        <button class="btn-unit-ghost" id="umRegistry" type="button" style="display:none;">건축물대장정보 확인</button>
+        <button class="btn-unit-ghost" id="umCancel">취소</button>
+        <button class="btn-unit-del" id="umDelete" style="display:none;">삭제</button>
+        <button class="btn-unit-add" id="umSave">저장</button>
+      </div>
+      <p id="unitRegistryApplied" role="status" hidden style="color:var(--gold-soft);font-size:.8rem;margin:8px 0 0;"></p>
+    </div>
+  </div>
+</div><!-- /page -->
+
+<!-- ===== 라이트박스 ===== -->
+<div class="unit-modal-overlay" id="bundleModal" role="dialog" aria-modal="true" aria-labelledby="bundleTitle">
+  <div class="unit-modal-box">
+    <h3 id="bundleTitle">묶음매물 등록</h3>
+    <p id="bundleRooms" style="overflow-wrap:anywhere"></p>
+    <div class="umgrid">
+      <div class="umfield"><label for="bundleMode">등록 방식</label><select id="bundleMode"><option value="rooms">여러 호실 묶음</option><option value="floor">층 전체</option></select></div>
+      <div class="umfield"><label for="bundleDeal">거래구분</label><select id="bundleDeal"><option>월세</option><option>매매</option><option>전세</option></select></div>
+      <div class="umfield"><label for="bundleExclusive">전용면적 합계 (평)</label><input id="bundleExclusive" type="number" min="0" step="0.01"></div>
+      <div class="umfield"><label for="bundleSupply">공급면적 합계 (평)</label><input id="bundleSupply" type="number" min="0" step="0.01"></div>
+      <div class="umfield"><label for="bundleSale">묶음 매매가 (만원)</label><input id="bundleSale" type="number" min="0" step="any"></div>
+      <div class="umfield"><label for="bundleDeposit">묶음 보증금 (만원)</label><input id="bundleDeposit" type="number" min="0" step="any"></div>
+      <div class="umfield"><label for="bundleRent">묶음 월세 (만원)</label><input id="bundleRent" type="number" min="0" step="any"></div>
+      <div class="umfield"><label for="bundleTerms">거래 조건</label><select id="bundleTerms"><option>일괄 거래만 가능</option><option>개별 거래도 가능</option></select></div>
+      <div class="umfield umcheck"><label><input id="bundleRecommended" type="checkbox"> ⭐ 추천매물</label></div>
+      <div class="umfield full"><label for="bundleMemo">비고</label><textarea id="bundleMemo" style="min-height:100px"></textarea></div>
+    </div>
+    <p style="font-size:.78rem;color:var(--muted)">면적은 확인 후 수정하세요. 미입력 호실이 있으면 합산에서 빠집니다. 가격은 묶음 전체 금액을 입력하세요.</p>
+    <div class="unit-modal-actions"><button type="button" class="btn-unit-ghost" id="bundleCancel">취소</button><button type="button" class="btn-unit-add" id="bundleSave">매물 등록</button></div>
+  </div>
+</div>
+<div id="lightbox" onclick="closeLightbox()">
+  <span id="lightbox-close" onclick="closeLightbox()">✕</span>
+  <div id="lightbox-toolbar" onclick="event.stopPropagation()">
+    <button type="button" class="lb-btn" title="축소" onclick="lbZoomOut()">−</button>
+    <button type="button" class="lb-btn" id="lb-zoom-reset" title="100%로 초기화" onclick="lbZoomReset()">100%</button>
+    <button type="button" class="lb-btn" title="확대" onclick="lbZoomIn()">+</button>
+    <span class="lb-divider"></span>
+    <button type="button" class="lb-btn" title="왼쪽 90° 회전" aria-label="왼쪽 90도 회전" onclick="lbRotate(-90)">↶</button>
+    <button type="button" class="lb-btn" title="오른쪽 90° 회전" aria-label="오른쪽 90도 회전" onclick="lbRotate(90)">↷</button>
+    <button type="button" class="lb-btn" title="회전 초기화" onclick="lbRotateReset()">원방향</button>
+    <button type="button" class="lb-btn" id="lb-save-rotation" onclick="lbSaveRotation()">회전 저장</button>
+    <span class="lb-divider"></span>
+    <button type="button" class="lb-btn lb-close-btn" title="닫기" onclick="closeLightbox()">✕ 닫기</button>
+  </div>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
+  <div id="lightbox-caption"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/js/storage.js?v=20261019-commercial-unit-sync"></script>
+<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+<script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/auth.js?v=20261006-office-login"></script>
+<script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
+<script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
+<script src="assets/js/building-register-view.js?v=20261007-unit-apply"></script>
+<script>
+/* ═══════════════════════════════════════════
+   Cloudinary 설정
+   업로드 서명은 브라우저가 직접 만들지 않는다 — Secret은 이제 이 코드에
+   존재하지 않고, Supabase Edge Function(cloudinary-sign-upload)이 로그인·
+   관리자 여부를 확인한 뒤 서명을 발급해준다.
+═══════════════════════════════════════════ */
+
+const MEMO_SEP = '---추가메모---';
+const OV_FIELDS = [
+  { label: '주소',      key: '주소' },
+  { label: '주차대수',  key: '주차대수' },
+  { label: '사용승인일',key: '사용승인일' },
+  { label: '구조',      key: '구조' },
+  { label: '토지면적',  key: '토지면적' },
+  { label: '건축면적',  key: '건축면적' },
+  { label: '연면적',    key: '연면적' },
+  { label: '관리사무소',key: '관리사무소' },
+];
+
+const params     = new URLSearchParams(location.search);
+const buildingId = params.get('id');
+let resourceScope = HitopResourceRooms.readDetailScope(location.search);
+let buildingAddress = '';
+let apartmentBuildingMode = false;
+function isApartmentBuilding(building) {
+  if (!building) return false;
+  const category = String(building.category || '').replace(/\s+/g, '');
+  const name = String(building.name || '').replace(/\s+/g, '');
+  const housingType = String(parseMemoFields(building.memo || '')['주택종류'] || '').replace(/\s+/g, '');
+  // A residential resource room also contains officetels and commercial units.
+  if (/오피스텔|상가/.test(category) || /상가/.test(name)) return false;
+  if (housingType) return housingType === '아파트';
+  return category === '아파트';
+}
+const RESIDENTIAL_OV_FIELDS = ['지번주소','행정구역','동수','세대수','주택종류','분양구분','규모','자료기준일','자료출처'];
+
+/* ── 유틸 ── */
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function isImage(url, fileName) {
+  const u = (url || fileName || '').toLowerCase();
+  if (/\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/.test(u)) return true;
+  // 구글 드라이브/포토 이미지 링크는 확장자가 없는 경우가 많아 도메인·경로 패턴으로 보조 판별
+  if (/lh3\.googleusercontent\.com/.test(u)) return true;
+  if (/drive\.google\.com\/thumbnail/.test(u)) return true;
+  return false;
+}
+
+function isPdf(url, fileName) {
+  const u = (url || fileName || '').toLowerCase();
+  return /\.pdf(\?|$)/.test(u);
+}
+
+/* ── Cloudinary 서명 업로드 ── */
+async function getCloudinarySignature(folder) {
+  const { data, error } = await hitopAuthClient.functions.invoke('cloudinary-sign-upload', {
+    body: { folder },
+  });
+  if (error) {
+    let msg = error.message || 'Cloudinary 서명 발급에 실패했습니다.';
+    try {
+      const body = await error.context.json();
+      if (body && body.error) msg = body.error;
+    } catch (_) { /* 응답 본문을 못 읽으면 기본 메시지 사용 */ }
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function cloudinaryUpload(file, folder = 'haitop') {
+  const pdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  if (OfficeConfig.id !== 'ktop' && pdf) {
+    if (file.size > 30*1024*1024) throw new Error('PDF는 30MB 이하로 올려주세요.');
+    const kind = folder === 'haitop/floors' ? 'floors' : folder === 'haitop/files' ? 'files' : '';
+    if (!kind) throw new Error('지원하지 않는 자료 구분입니다.');
+    const path = kind + '/' + buildingId + '/' + crypto.randomUUID() + '.pdf';
+    const {error} = await hitopAuthClient.storage.from('building-materials').upload(path, file, {contentType:'application/pdf', upsert:false});
+    if (error) throw new Error('PDF 업로드 실패: ' + error.message);
+    return SUPABASE_URL + '/storage/v1/object/authenticated/building-materials/' + path;
+  }
+  if(OfficeConfig.id==='ktop'){
+    const kind=folder==='haitop/floors' ? 'floors' : folder==='haitop/files' ? 'files' : '';
+    if(!kind)throw new Error('지원하지 않는 자료 구분입니다.');
+    if(file.size>20*1024*1024)throw new Error('파일은 20MB 이하로 올려주세요.');
+    const body=new FormData();body.append('file',file);body.append('buildingId',buildingId);body.append('kind',kind);
+    const {data,error}=await hitopAuthClient.functions.invoke('upload-building-material',{body});
+    if(error){
+      let message=error.message || '업로드 실패';
+      try{const result=await error.context.json();if(result.error)message=result.error;}catch(_){}
+      throw new Error(message);
+    }
+    if(!data || !data.url)throw new Error('파일 저장 응답이 올바르지 않습니다.');
+    return data.url;
+  }
+  const { signature, timestamp, apiKey, cloudName } = await getCloudinarySignature(folder);
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('api_key', apiKey);
+  fd.append('timestamp', timestamp);
+  fd.append('folder', folder);
+  fd.append('signature', signature);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+    { method: 'POST', body: fd }
+  );
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.secure_url;
+}
+
+/* ── 이동 ── */
+function goBack() { window.location.href = HitopResourceRooms.roomUrl(resourceScope); }
+function goOverview(){ window.location.href = HitopResourceRooms.detailUrl('building-overview.html', buildingId, resourceScope); }
+
+/* ── 라이트박스 (확대/축소/드래그 포함) ── */
+const LB_MIN_SCALE = 1, LB_MAX_SCALE = 5, LB_STEP = 0.5;
+let lbScale = 1, lbX = 0, lbY = 0;
+let lbRotation = 0;
+let lbVectorSize = null, lbIsVector = false;
+let lbMaterial = null, lbSaving = false;
+let lbDragging = false, lbLastX = 0, lbLastY = 0;
+let lbPinchStartDist = 0, lbPinchStartScale = 1;
+
+const lbImg = () => document.getElementById('lightbox-img');
+
+function lbApplyTransform() {
+  const img = lbImg();
+  const sideways = lbRotation % 180 !== 0;
+  // SVG must be laid out at the requested display size so the browser rerenders
+  // its geometry, rather than magnifying a cached compositing-layer bitmap.
+  if (lbIsVector && lbVectorSize) {
+    const maxW = sideways ? window.innerHeight * 0.9 - 100 : window.innerWidth * 0.94;
+    const maxH = sideways ? window.innerWidth * 0.94 : window.innerHeight * 0.9 - 100;
+    const fit = Math.min(maxW / lbVectorSize.width, maxH / lbVectorSize.height, 1);
+    img.style.maxWidth = 'none';
+    img.style.maxHeight = 'none';
+    img.style.width = Math.max(1, lbVectorSize.width * fit * lbScale) + 'px';
+    img.style.height = Math.max(1, lbVectorSize.height * fit * lbScale) + 'px';
+    img.style.flexShrink = '0';
+    img.style.transform = `translate(${lbX}px, ${lbY}px) rotate(${lbRotation}deg)`;
+  } else {
+    img.style.width = '';
+    img.style.height = '';
+    img.style.flexShrink = '';
+    img.style.maxWidth = sideways ? 'calc(90vh - 100px)' : '94vw';
+    img.style.maxHeight = sideways ? '94vw' : 'calc(90vh - 100px)';
+    img.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale}) rotate(${lbRotation}deg)`;
+  }
+  img.style.cursor = lbScale > 1 ? (lbDragging ? 'grabbing' : 'grab') : 'default';
+  const label = document.getElementById('lb-zoom-reset');
+  if (label) label.textContent = Math.round(lbScale * 100) + '%';
+}
+
+function lbSetScale(next) {
+  next = Math.min(LB_MAX_SCALE, Math.max(LB_MIN_SCALE, next));
+  if (next === LB_MIN_SCALE) { lbX = 0; lbY = 0; }
+  lbScale = next;
+  lbApplyTransform();
+}
+
+function lbZoomIn()    { lbSetScale(lbScale + LB_STEP); }
+function lbZoomOut()   { lbSetScale(lbScale - LB_STEP); }
+function lbZoomReset() { lbX = 0; lbY = 0; lbSetScale(1); }
+function lbRotate(degrees) {
+  if (lbSaving) return;
+  lbRotation = ((lbRotation + degrees) % 360 + 360) % 360;
+  lbX = 0; lbY = 0; lbDragging = false;
+  lbApplyTransform();
+}
+function lbRotateReset() { if (lbSaving) return; lbRotation = 0; lbX = 0; lbY = 0; lbApplyTransform(); }
+window.addEventListener('resize', () => {
+  if (document.getElementById('lightbox').classList.contains('open')) lbApplyTransform();
+});
+
+function openLightbox(url, caption, material = null) {
+  if (lbSaving) return;
+  lbMaterial = material;
+  document.getElementById('lb-save-rotation').hidden = !material;
+  const img = lbImg();
+  lbVectorSize = null;
+  lbIsVector = /\.svg(?:[?#]|$)/i.test(url);
+  img.onload = () => {
+    if (lbIsVector && img.naturalWidth && img.naturalHeight) {
+      lbVectorSize = { width: img.naturalWidth, height: img.naturalHeight };
+      lbApplyTransform();
+    }
+  };
+  img.src = url;
+  document.getElementById('lightbox-caption').textContent = caption || '';
+  lbX = 0; lbY = 0; lbScale = 1; lbRotation = 0;
+  lbApplyTransform();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function openPlanPreview(url, caption, kind, id) {
+  openLightbox(url, caption, kind && id ? {kind, id, url} : null);
+}
+function closeLightbox() {
+  if (lbSaving) return;
+  lbMaterial = null;
+  document.getElementById('lightbox').classList.remove('open');
+  lbImg().src = '';
+  lbX = 0; lbY = 0; lbScale = 1; lbRotation = 0; lbDragging = false;
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+async function lbSaveRotation() {
+  if (lbSaving || !lbMaterial) return;
+  if (!lbRotation) { showToast('방향을 회전한 뒤 저장하세요.'); return; }
+  const material = {...lbMaterial}, angle = lbRotation;
+  const button = document.getElementById('lb-save-rotation');
+  lbSaving = true;
+  button.textContent = '저장 중…';
+  document.querySelectorAll('#lightbox-toolbar button').forEach(b => { b.disabled = true; });
+  try {
+    const source = new Image();
+    source.crossOrigin = 'anonymous';
+    await new Promise((resolve, reject) => {
+      source.onload = resolve;
+      source.onerror = () => reject(new Error('이미지를 불러올 수 없습니다. 다시 열어주세요.'));
+      source.src = material.url;
+    });
+    const canvas = document.createElement('canvas');
+    const sideways = angle % 180 !== 0;
+    canvas.width = sideways ? source.naturalHeight : source.naturalWidth;
+    canvas.height = sideways ? source.naturalWidth : source.naturalHeight;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('이미지 저장을 지원하지 않는 브라우저입니다.');
+    context.translate(canvas.width / 2, canvas.height / 2);
+    context.rotate(angle * Math.PI / 180);
+    context.drawImage(source, -source.naturalWidth / 2, -source.naturalHeight / 2);
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(value => value ? resolve(value) : reject(new Error('회전 이미지 생성에 실패했습니다.')), 'image/png');
+    });
+    const file = new File([blob], `plan-${material.id}-rotated.png`, {type:'image/png'});
+    const url = await cloudinaryUpload(file, material.kind === 'floor' ? 'haitop/floors' : 'haitop/files');
+    if (material.kind === 'floor') {
+      await updateBuildingFloor(material.id, {cloudinary_url:url});
+    } else {
+      const response = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/building_files?id=eq.' + encodeURIComponent(material.id), {
+        method:'PATCH', headers:Object.assign({}, headers, {'Prefer':'return=representation'}),
+        body:JSON.stringify({cloudinary_url:url})
+      });
+      if (!response.ok) throw new Error('자료 저장 실패: ' + await response.text());
+      const rows = await response.json();
+      if (rows.length !== 1) throw new Error('저장할 자료를 찾지 못했습니다.');
+    }
+    lbMaterial = {...material, url};
+    lbImg().src = url;
+    lbRotation = 0; lbX = 0; lbY = 0; lbScale = 1;
+    lbApplyTransform();
+    if (material.kind === 'floor') await loadFloors(); else await loadFiles();
+    showToast('✅ 회전 방향이 저장되었습니다.');
+  } catch (error) {
+    showToast('❌ 회전 저장 실패: ' + error.message);
+  } finally {
+    lbSaving = false;
+    button.textContent = '회전 저장';
+    document.querySelectorAll('#lightbox-toolbar button').forEach(b => { b.disabled = false; });
+  }
+}
+
+/* 마우스 휠 / 트랙패드로 확대·축소 */
+lbImg().addEventListener('wheel', (e) => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  e.preventDefault();
+  lbSetScale(lbScale + (e.deltaY < 0 ? LB_STEP : -LB_STEP));
+}, { passive: false });
+
+/* 마우스 드래그로 이동 (확대된 상태에서만) */
+lbImg().addEventListener('mousedown', (e) => {
+  if (lbScale <= 1) return;
+  lbDragging = true; lbLastX = e.clientX; lbLastY = e.clientY;
+  lbApplyTransform();
+  e.preventDefault();
+});
+document.addEventListener('mousemove', (e) => {
+  if (!lbDragging) return;
+  lbX += e.clientX - lbLastX;
+  lbY += e.clientY - lbLastY;
+  lbLastX = e.clientX; lbLastY = e.clientY;
+  lbApplyTransform();
+});
+document.addEventListener('mouseup', () => {
+  if (!lbDragging) return;
+  lbDragging = false;
+  lbApplyTransform();
+});
+
+/* 모바일 터치: 두 손가락 핀치로 확대·축소, 한 손가락 드래그로 이동 */
+function lbTouchDist(t1, t2) {
+  return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+}
+lbImg().addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    lbPinchStartDist = lbTouchDist(e.touches[0], e.touches[1]);
+    lbPinchStartScale = lbScale;
+  } else if (e.touches.length === 1 && lbScale > 1) {
+    lbDragging = true;
+    lbLastX = e.touches[0].clientX;
+    lbLastY = e.touches[0].clientY;
+  }
+}, { passive: true });
+lbImg().addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2 && lbPinchStartDist) {
+    e.preventDefault();
+    const dist = lbTouchDist(e.touches[0], e.touches[1]);
+    lbSetScale(lbPinchStartScale * (dist / lbPinchStartDist));
+  } else if (e.touches.length === 1 && lbDragging) {
+    e.preventDefault();
+    const t = e.touches[0];
+    lbX += t.clientX - lbLastX;
+    lbY += t.clientY - lbLastY;
+    lbLastX = t.clientX; lbLastY = t.clientY;
+    lbApplyTransform();
+  }
+}, { passive: false });
+lbImg().addEventListener('touchend', () => {
+  lbDragging = false;
+  lbPinchStartDist = 0;
+  lbApplyTransform();
+});
+
+/* ══════════════════════════════════════════
+   초기 로드
+══════════════════════════════════════════ */
+async function init() {
+  if (!buildingId) { alert('건물 ID가 없습니다.'); goBack(); return; }
+  try {
+    const resources = await getDriveResources();
+    const building  = resources.find(r => r.id === buildingId);
+    if (building) {
+      apartmentBuildingMode = isApartmentBuilding(building);
+      window.__buildingCategory = String(building.category || '');
+      window.__unitKindFilter = /오피스텔상가/.test(window.__buildingCategory.replace(/\s+/g, '')) ? '상가' : '전체';
+      if (!resourceScope) {
+      await getDriveCategories();
+      resourceScope = HitopResourceRooms.resourceRoom(building);
+    }
+      document.getElementById('buildingName').textContent = building.name;
+      document.title = `하이탑부동산 | ${building.name}`;
+      const overviewAddresses = parseMemoFields(building.memo || '');
+      buildingAddress = overviewAddresses['지번주소'] || overviewAddresses['주소'] || '';
+      renderInfoGrid(building.memo || '');
+      if (apartmentBuildingMode) {
+        document.getElementById('buildingDetailSubtitle').textContent = '평형별 평면도 · 단지 자료 관리';
+        document.getElementById('floorPlansTitle').textContent = '📐 평형별 평면도';
+        document.getElementById('floorNum').placeholder = '평형·타입 (예: 55A)';
+        document.getElementById('floorNum').setAttribute('aria-label', '평형·타입');
+        document.getElementById('planSection').classList.add('residential-plans');
+        document.getElementById('planAreaInputs').style.display = 'flex';
+        document.getElementById('addResidentialPlan').addEventListener('click', () => {
+          document.getElementById('planSection').scrollIntoView({behavior:'smooth',block:'start'});
+          document.getElementById('floorNum').focus();
+        });
+        document.getElementById('buildingFilesTitle').textContent = '📄 단지배치도 · 동호수배치도 · 추가자료';
+        document.getElementById('residentialMaterialActions').style.display = 'flex';
+        const destination = HitopNaverLinks.complexDestination(building.name, building.memo);
+        document.getElementById('residentialPlanSearch').href='https://search.naver.com/search.naver?query='+encodeURIComponent(building.name+' 평면도 배치도');
+        const naverLink = document.getElementById('residentialNaverComplex');
+        naverLink.href = destination.url; naverLink.textContent = destination.label + ' · 평면도/호별정보';
+        document.getElementById('fileName').placeholder = '자료명 (예: 단지배치도, 동호수배치도)';
+        document.querySelectorAll('[data-material-name]').forEach(button => button.addEventListener('click', () => {
+          document.getElementById('fileName').value = button.dataset.materialName;
+          document.getElementById('fileUpload').click();
+        }));
+      }
+    }
+  } catch(e) { /* 이름 로드 실패 무시 */ }
+
+  await loadFloors();
+  await loadFiles();
+}
+
+/* ── 건물 기본정보 요약 ── */
+function parseMemoFields(raw) {
+  const basic = raw.indexOf(MEMO_SEP) === -1 ? raw : raw.slice(0, raw.indexOf(MEMO_SEP));
+  const fields = {};
+  basic.split('\n').forEach(line => {
+    const c = line.indexOf(':');
+    if (c === -1) return;
+    fields[line.slice(0,c).trim()] = line.slice(c+1).trim();
+  });
+  return fields;
+}
+
+function renderInfoGrid(memo) {
+  const fields = parseMemoFields(memo);
+  const overviewFields = OV_FIELDS.concat(apartmentBuildingMode ? RESIDENTIAL_OV_FIELDS.map(key => ({label:key,key})) : []);
+  const html = overviewFields.map(f => {
+    const val = fields[f.key] || '';
+    return `<div class="info-cell">
+      <div class="info-cell-label">${esc(f.label)}</div>
+      <div class="info-cell-value${val ? '' : ' empty'}">${val ? esc(val) : '—'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('infoGrid').innerHTML = html;
+  const links = document.getElementById('buildingLocationLinks');
+  links.replaceChildren();
+  if (resourceScope === 'residential') {
+    [['위치도', 'residential-location.html'], ['카카오맵', 'residential-kakao.html']].forEach(([label, page]) => {
+      const link = document.createElement('a'); link.className = 'btn'; link.textContent = label; link.href = page + '?id=' + encodeURIComponent(buildingId); links.appendChild(link);
+    });
+  }
+  window.HitopNaverLinks.append(links, fields.주소 || '', 'btn');
+  if (!window.HitopNaverLinks.urls(fields.주소)) {
+    const hint = document.createElement('span');
+    hint.textContent = '개요 상세보기에서 주소를 먼저 입력해 주세요.';
+    hint.style.cssText = 'font-size:.875rem;color:var(--text-muted);align-self:center';
+    links.appendChild(hint);
+  }
+}
+
+/* ══════════════════════════════════════════
+   층별 평면도
+══════════════════════════════════════════ */
+async function loadFloors() {
+  try {
+    const floors = await getBuildingFloors(buildingId);
+    renderFloors(floors);
+  } catch(e) {
+    document.getElementById('floorGrid').innerHTML =
+      `<div class="empty-state" style="grid-column:1/-1;color:var(--danger);">불러오기 실패: ${esc(e.message)}</div>`;
+  }
+}
+
+function formatPlanArea(value) {
+  const area = Number(value);
+  if (value === null || value === undefined || value === '' || !Number.isFinite(area) || area <= 0) return '미입력';
+  return `${area.toLocaleString('ko-KR', {minimumFractionDigits:2,maximumFractionDigits:2})}㎡ · ${(area / (400 / 121)).toFixed(2)}평`;
+}
+
+function readPlanAreas(supplyValue, exclusiveValue) {
+  const parse = value => {
+    if (String(value).trim() === '') return null;
+    const number = Number(value);
+    if (!Number.isFinite(number) || number <= 0 || number >= 100000000) throw new Error('면적은 0보다 큰 숫자로 입력하세요.');
+    return Math.round(number * 10000) / 10000;
+  };
+  const supply_area_m2 = parse(supplyValue), exclusive_area_m2 = parse(exclusiveValue);
+  if (supply_area_m2 !== null && exclusive_area_m2 !== null && supply_area_m2 < exclusive_area_m2) throw new Error('분양면적은 전용면적 이상이어야 합니다.');
+  return {supply_area_m2, exclusive_area_m2};
+}
+
+function renderPlanAreas(plan) {
+  return `<div class="plan-areas"><div><strong>분양면적</strong> ${formatPlanArea(plan.supply_area_m2)}</div><div><strong>전용면적</strong> ${formatPlanArea(plan.exclusive_area_m2)}</div></div>
+    <details class="plan-area-editor" draggable="false"><summary>면적 수정</summary>
+      <label>분양면적(공급면적) ㎡<input data-area="supply" type="number" min="0.0001" step="0.0001" inputmode="decimal" value="${esc(plan.supply_area_m2 ?? '')}" /></label>
+      <label>전용면적 ㎡<input data-area="exclusive" type="number" min="0.0001" step="0.0001" inputmode="decimal" value="${esc(plan.exclusive_area_m2 ?? '')}" /></label>
+      <button class="btn" type="button" onclick="savePlanAreas('${esc(plan.id)}',this)">면적 저장</button>
+    </details>`;
+}
+
+async function savePlanAreas(id, button) {
+  const editor = button.closest('.plan-area-editor');
+  let fields;
+  try { fields = readPlanAreas(editor.querySelector('[data-area="supply"]').value, editor.querySelector('[data-area="exclusive"]').value); }
+  catch (e) { showToast(e.message); return; }
+  button.disabled = true;
+  try {
+    await updateBuildingFloor(id, fields);
+    await loadFloors();
+    showToast('✅ 면적이 저장되었습니다.');
+  } catch (e) { showToast('❌ 면적 저장 실패: ' + e.message); }
+  finally { button.disabled = false; }
+}
+
+function renderFloors(floors) {
+  const el = document.getElementById('floorGrid');
+  if (!floors.length) {
+    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">등록된 평면도가 없습니다.</div>';
+    return;
+  }
+
+  el.innerHTML = floors.map(f => {
+    const url  = f.cloudinary_url;
+    const name = esc(f.file_name);
+    const badge = esc(f.floor_number);
+    const image = isImage(url, f.file_name);
+
+    const previewHtml = image
+      ? `<img class="floor-thumb" src="${esc(url)}" alt="${badge}"
+           loading="lazy" draggable="false"
+           onclick="openPlanPreview('${esc(url)}','${badge} — ${name}','floor','${esc(f.id)}')">`
+      : `<div class="floor-pdf" onclick="window.open('${esc(url)}','_blank')">
+           <div class="floor-pdf-icon">📄</div>
+           <div class="floor-pdf-label">${name}</div>
+         </div>`;
+
+    return `
+    <div class="floor-card" data-floor-id="${esc(f.id)}" draggable="true">
+      ${previewHtml}
+      ${apartmentBuildingMode ? renderPlanAreas(f) : ''}
+      <div class="floor-card-foot">
+        <span class="floor-badge">${badge}</span>
+        ${f.source_pdf_url && /^https:\/\//i.test(f.source_pdf_url) ? `<a class="floor-status-link" href="${esc(f.source_pdf_url)}" target="_blank" rel="noopener noreferrer">원본 PDF 보기</a>` : ''}
+        ${image && !apartmentBuildingMode ? `<a class="floor-status-link" href="floor-status.html?id=${encodeURIComponent(buildingId)}&floorId=${encodeURIComponent(f.id)}">현황보기</a>` : ''}
+        <button type="button" class="floor-edit-btn" data-floor-id="${esc(f.id)}">수정</button>
+        <input type="file" class="floor-replacement" data-floor-id="${esc(f.id)}" accept="image/*,.pdf" aria-label="${badge} 평면도 교체 파일 선택" hidden>
+        <button class="btn-icon" title="삭제" onclick="deleteFloor('${f.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.floor-edit-btn').forEach(button => {
+    button.addEventListener('click', () => button.nextElementSibling.click());
+  });
+  el.querySelectorAll('.floor-replacement').forEach(input => {
+    input.addEventListener('change', () => replaceFloorFile(input));
+  });
+
+  let draggedCard = null;
+  let dropped = false;
+  const cards = [...el.querySelectorAll('.floor-card')];
+
+  cards.forEach(card => {
+    card.addEventListener('dragstart', event => {
+      if (event.target.closest('.plan-area-editor, input, button, a')) { event.preventDefault(); return; }
+      draggedCard = card;
+      dropped = false;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', card.dataset.floorId);
+      requestAnimationFrame(() => card.classList.add('dragging'));
+    });
+    card.addEventListener('dragend', () => {
+      cards.forEach(item => item.classList.remove('dragging', 'drop-target'));
+      draggedCard = null;
+      if (!dropped) renderFloors(floors);
+    });
+  });
+
+  // 드래그 도중 DOM을 옮기면 브라우저의 drop 대상이 바뀔 수 있다.
+  // 놓는 순간에만 카드를 이동하고, 그 결과를 저장한다.
+  el.ondragover = event => {
+    if (!draggedCard) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    const target = event.target.closest('.floor-card');
+    cards.forEach(item => item.classList.toggle('drop-target', item === target && item !== draggedCard));
+  };
+  el.ondrop = event => {
+    if (!draggedCard) return;
+    event.preventDefault();
+    dropped = true;
+    const target = event.target.closest('.floor-card');
+    if (target && target !== draggedCard) {
+      const rect = target.getBoundingClientRect();
+      const after = event.clientX > rect.left + rect.width / 2;
+      el.insertBefore(draggedCard, after ? target.nextSibling : target);
+    } else if (!target) {
+      el.appendChild(draggedCard);
+    }
+    cards.forEach(item => item.classList.remove('drop-target'));
+    const nextIds = [...el.querySelectorAll('.floor-card')].map(card => card.dataset.floorId);
+    const oldIds = floors.map(floor => floor.id);
+    if (nextIds.some((id, index) => id !== oldIds[index])) {
+      saveFloorCardOrder(el);
+    } else {
+      renderFloors(floors);
+    }
+  };
+}
+
+async function saveFloorCardOrder(grid) {
+  const hint = document.getElementById('floorSortHint');
+  const ids = [...grid.querySelectorAll('.floor-card')].map(card => card.dataset.floorId);
+  hint.textContent = '순서를 저장하는 중…';
+  hint.classList.add('saving');
+  grid.querySelectorAll('.floor-card').forEach(card => { card.draggable = false; });
+  try {
+    await saveBuildingFloorOrder(buildingId, ids);
+    await loadFloors();
+    showToast('✅ 평면도 순서가 저장되었습니다.');
+    hint.textContent = '도면 카드를 원하는 위치로 끌어 놓으면 순서가 저장됩니다.';
+  } catch (error) {
+    await loadFloors();
+    hint.textContent = '순서 저장에 실패했습니다. 다시 시도해 주세요.';
+    showToast('❌ ' + error.message);
+  } finally {
+    hint.classList.remove('saving');
+  }
+}
+
+async function replaceFloorFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/') && file.type !== 'application/pdf' &&
+      !/\.(jpe?g|png|gif|webp|bmp|svg|pdf)$/i.test(file.name)) {
+    showToast('이미지 또는 PDF 파일을 선택하세요.');
+    input.value = '';
+    return;
+  }
+
+  const button = input.previousElementSibling;
+  const prog = document.getElementById('floorProgress');
+  button.disabled = true;
+  button.textContent = '교체 중…';
+  prog.classList.add('active');
+  try {
+    const url = await cloudinaryUpload(file, 'haitop/floors');
+    await updateBuildingFloor(input.dataset.floorId, {
+      file_name: file.name,
+      cloudinary_url: url,
+      source_pdf_url: file.type === 'application/pdf' || /\.pdf$/i.test(file.name) ? url : null
+    });
+    showToast('✅ 평면도가 교체되었습니다.');
+    await loadFloors();
+  } catch (e) {
+    showToast('❌ 평면도 교체 실패: ' + e.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = '수정';
+    input.value = '';
+    prog.classList.remove('active');
+  }
+}
+
+async function uploadFloor() {
+  const floorNum  = document.getElementById('floorNum').value.trim();
+  const fileInput = document.getElementById('floorFile');
+  const file      = fileInput.files[0];
+
+  if (!floorNum) { showToast(apartmentBuildingMode ? '평형·타입을 입력하세요.' : '층 번호를 입력하세요.'); return; }
+  if (!file)     { showToast('파일을 선택하세요.'); return; }
+  let areaFields = {};
+  if (apartmentBuildingMode) {
+    try { areaFields = readPlanAreas(document.getElementById('supplyArea').value, document.getElementById('exclusiveArea').value); }
+    catch (e) { showToast(e.message); return; }
+  }
+
+  const prog = document.getElementById('floorProgress');
+  prog.classList.add('active');
+  try {
+    const url = await cloudinaryUpload(file, 'haitop/floors');
+    await addBuildingFloor({ building_id: buildingId, floor_number: floorNum, file_name: file.name, cloudinary_url: url, ...areaFields });
+    document.getElementById('floorNum').value = '';
+    document.getElementById('supplyArea').value = '';
+    document.getElementById('exclusiveArea').value = '';
+    fileInput.value = '';
+    showToast('✅ 평면도가 추가되었습니다.');
+    await loadFloors();
+  } catch(e) {
+    showToast('❌ 업로드 실패: ' + e.message);
+  } finally {
+    prog.classList.remove('active');
+  }
+}
+
+async function deleteFloor(id) {
+  if (!confirm('이 평면도를 삭제하시겠습니까?')) return;
+  try {
+    await deleteBuildingFloor(id);
+    showToast('삭제되었습니다.');
+    await loadFloors();
+  } catch(e) { showToast('❌ 삭제 실패: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════
+   기타 자료
+══════════════════════════════════════════ */
+async function loadFiles() {
+  try {
+    const files = await getBuildingFiles(buildingId);
+    renderFiles(files);
+  } catch(e) {
+    document.getElementById('fileList').innerHTML =
+      `<div class="empty-state" style="color:var(--danger);">불러오기 실패: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderFiles(files) {
+  files=files.filter(f=>!String(f.file_name).startsWith('[가격표] ') && !String(f.file_name).startsWith('[기록] '));
+  const el = document.getElementById('fileList');
+  if (!files.length) {
+    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">등록된 자료가 없습니다.</div>';
+    return;
+  }
+
+  el.innerHTML = files.map(f => {
+    const url  = f.cloudinary_url || '';
+    const name = esc(f.file_name);
+    const safe = esc(url);
+
+    const previewHtml = isImage(url, f.file_name)
+      ? `<img class="floor-thumb" src="${safe}" alt="${name}"
+           loading="lazy"
+           onclick="openPlanPreview('${safe}','${name}','file','${esc(f.id)}')">`
+      : `<div class="floor-pdf" onclick="window.open('${safe}','_blank')">
+           <div class="floor-pdf-icon">📄</div>
+           <div class="floor-pdf-label">${name}</div>
+         </div>`;
+
+    return `
+    <div class="floor-card">
+      ${previewHtml}
+      <div class="floor-card-foot">
+        <span class="floor-badge" style="color:var(--text);font-weight:500;font-size:0.78rem;"
+          title="${name}">${name}</span>
+        ${f.drive_link && /^https:\/\//i.test(f.drive_link) ? `<a class="floor-status-link" href="${esc(f.drive_link)}" target="_blank" rel="noopener noreferrer">${isPdf(f.drive_link) ? '원본 PDF 보기' : '연결자료 보기'}</a>` : ''}
+        <button class="btn-icon" title="삭제" onclick="deleteBFile('${f.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function uploadFile() {
+  const name      = document.getElementById('fileName').value.trim();
+  const fileInput = document.getElementById('fileUpload');
+  const file      = fileInput.files[0];
+
+  if (!name) { showToast('자료명을 입력하세요.'); return; }
+  if (!file) { showToast('파일을 선택하세요.'); return; }
+
+  const prog = document.getElementById('fileProgress');
+  prog.classList.add('active');
+  try {
+    const url = await cloudinaryUpload(file, 'haitop/files');
+    await addBuildingFile({ building_id: buildingId, file_name: name, cloudinary_url: url, drive_link: null });
+    document.getElementById('fileName').value = '';
+    fileInput.value = '';
+    showToast('✅ 자료가 추가되었습니다.');
+    await loadFiles();
+  } catch(e) {
+    showToast('❌ 업로드 실패: ' + e.message);
+  } finally {
+    prog.classList.remove('active');
+  }
+}
+
+async function deleteBFile(id) {
+  if (!confirm('이 자료를 삭제하시겠습니까?')) return;
+  try {
+    await deleteBuildingFile(id);
+    showToast('삭제되었습니다.');
+    await loadFiles();
+  } catch(e) { showToast('❌ 삭제 실패: ' + e.message); }
+}
+
+(async function () {
+  await init();
+  // init() 완료 후 호실 현황 로드 (buildingName DOM 보장)
+  if (typeof window._loadBuildingUnits === "function") {
+    window._loadBuildingUnits();
+  }
+})();
+
+/* ======================================================
+   호실 현황 로직
+   - window._loadBuildingUnits 로 init() 완료 후 안전하게 호출
+   - 건물명(#buildingName DOM) -> local_id 로 Supabase 조회
+====================================================== */
+(function () {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  let unitPhase='분양중', unitOriginalOpen=false;
+  function renderUnitPhase() {
+    const resi=residentialUnitMode();$('unitPresaleSwitch').hidden=resi;
+    document.querySelectorAll('[data-unit-phase]').forEach(b=>{b.classList.toggle('active',b.dataset.unitPhase===unitPhase);b.setAttribute('aria-pressed',String(b.dataset.unitPhase===unitPhase));});
+    $('unitOriginalPrices').hidden=unitPhase!=='분양완료';$('unitOriginalPrices').textContent=unitOriginalOpen?'최초 분양자료 접기':'최초 분양자료 보기';
+    for(const id of ['u_평당가','u_분양금액','u_보증금','u_월차임'])$(id).closest('.umfield').classList.toggle('presale-hidden',unitPhase==='분양완료'&&!unitOriginalOpen);
+    for(const id of ['u_현매매가격','u_현보증금','u_현월세'])$(id).closest('.umfield').classList.toggle('presale-hidden',unitPhase==='분양중');
+  }
+  document.querySelectorAll('[data-unit-phase]').forEach(b=>b.addEventListener('click',()=>{unitPhase=b.dataset.unitPhase;unitOriginalOpen=false;renderUnitPhase();}));
+  $('unitOriginalPrices').addEventListener('click',()=>{unitOriginalOpen=!unitOriginalOpen;renderUnitPhase();});
+  let units       = [];
+  const selectedUnitRows = new Set();
+  let unitListingSendBusy = false;
+  function unitBulkState() {
+    const count = selectedUnitRows.size;
+    $("unitListingSend").hidden = false;
+    $("unitListingSend").disabled = !count || unitListingSendBusy;
+    $("unitListingSend").textContent = unitListingSendBusy ? "매물 등록 중…" : "매물리스트로 보내기 (" + count + ")";
+    $('unitProfitRegister').hidden = residentialUnitMode() || OfficeConfig.id !== 'hitop';
+    $('unitProfitView').hidden = residentialUnitMode() || OfficeConfig.id !== 'hitop';
+    $('unitProfitRegister').disabled = !count;
+    $('unitProfitRegister').textContent = '수익성 추천 (' + count + ')';
+    $('unitBundleRegister').hidden = residentialUnitMode();
+    $('unitBundleRegister').disabled = count < 2;
+    $('unitBundleRooms').hidden = residentialUnitMode();
+    $('unitBundleRooms').disabled = count < 2;
+    $("unitSelectPrint").disabled = !count;
+    $("unitSelectDelete").disabled = !count;
+    $("unitSelectPrint").textContent = "선택인쇄 (" + count + ")";
+    $("unitSelectDelete").textContent = "선택삭제 (" + count + ")";
+    document.querySelectorAll("[data-kind-move]").forEach(b => { b.disabled = !count; });
+    document.querySelectorAll("#unitKindTabs .kind-move").forEach(s => { s.hidden = !count; });
+  }
+  // 상가·사무실: 선택한 호실(분양중·분양완료 모두)을 매물관리(매물리스트)로 보낸다.
+  // 이미 보낸 호실은 다시 만들지 않고(중복 제외) 연동 상태를 유지한다.
+  async function sendCommercialUnitsToListing(rows) {
+    unitListingSendBusy = true; unitBulkState();
+    let added = 0, linked = 0;
+    try {
+      const all = (await getListingsRaw()).map(normalizeListingRow);
+      commercialListings = {}; activeListingIds = {};
+      all.forEach(l => { commercialListings[String(l.id)] = l; if (isActiveListing(l)) activeListingIds[String(l.id)] = true; });
+      activeListingLoaded = true;
+      const roomKey = value => String(value || '').replace(/\s+/g, '').replace(/호$/, '');
+      for (const unit of rows) {
+        if (!roomKey(unit.호수)) throw new Error('호수가 없는 호실은 수정 후 보내세요.');
+        if (unit.listing_id && commercialListings[String(unit.listing_id)]) { linked++; continue; }
+        // 같은 건물·같은 호수로 이미 등록된 매물이 있으면 새로 만들지 않고 연결만 한다.
+        const same = all.find(l => l.category1 === '상가사무실' && String(l.resource_id || '') === String(buildingId)
+          && roomKey(l.ho) === roomKey(unit.호수));
+        if (same) { unit.listing_id = same.id; delete unit.pending_listing_id; await saveBuildingUnits(bName, bName, units); linked++; continue; }
+        if (!unit.listing_id && !unit.pending_listing_id) unit.pending_listing_id = crypto.randomUUID();
+        // 재시도해도 중복 등록되지 않도록 먼저 ID를 저장한다.
+        await saveBuildingUnits(bName, bName, units);
+        await registerCommercialUnit(unit);
+        await saveBuildingUnits(bName, bName, units);
+        added++;
+      }
+      selectedUnitRows.clear();
+      showToast('매물 등록 ' + added + '건 · 기존 등록 ' + linked + '건 (중복 제외)', 7000);
+    } catch (error) {
+      showToast('등록 ' + added + '건 완료. 나머지 항목은 다시 시도하세요: ' + error.message, 10000);
+    } finally {
+      unitListingSendBusy = false; renderAll(); unitBulkState();
+    }
+  }
+  $('unitListingSend').addEventListener('click', async () => {
+    if (unitListingSendBusy) return;
+    const rows = units.filter((u,i) => selectedUnitRows.has(i));
+    if (!rows.length) return;
+    if (!residentialUnitMode()) { await sendCommercialUnitsToListing(rows); return; }
+    unitListingSendBusy = true; unitBulkState();
+    let added = 0, linked = 0;
+    try {
+      // Read every page in the current office before deciding whether to create a listing.
+      apartmentListings = (await getListingsRaw()).map(normalizeListingRow);
+      listingLookupLoaded = true;
+      for (const unit of rows) {
+        const matches = linkedUnitListings(unit);
+        if (matches.length || (unit.listing_id && await getListingById(unit.listing_id))) {
+          if (matches.length === 1) unit.listing_id = matches[0].id;
+          linked++; continue;
+        }
+        const parts = roomParts(unit);
+        if (!parts.dong || !parts.room) throw new Error('동·호수가 없는 세대는 수정 후 등록하세요.');
+        const id = unit.pending_listing_id || crypto.randomUUID();
+        unit.pending_listing_id = id;
+        // Persist the retry ID before creating so an interrupted request cannot create a duplicate.
+        await saveBuildingUnits(bName, bName, units);
+        let data = await getListingById(id);
+        if (!data) {
+          const won = value => value == null || value === '' ? '' : String(Number(value) * 10000);
+          const supply = residentialUnitArea(unit).supply;
+          const exclusive = unit.전용_m2 ?? (unit.전용_평 == null ? null : Number(unit.전용_평)*(400/121));
+          data = {id, type:'apartment', category1:'주거용', category2:'아파트',
+            resource_id:buildingId, listingKind:'매물', status:'진행중', is_public:false,
+            title:bName+' · '+parts.dong+'동 '+parts.room+'호', complexName:bName, buildingName:bName,
+            dong:parts.dong, ho:parts.room, privateDetailAddress:parts.dong+'동 '+parts.room+'호',
+            address:buildingAddress || '', mapAddress:buildingAddress || '',
+            dealType:unit.거래구분 || '', salePrice:won(unit.현_매매가격),
+            deposit:won(unit.현_보증금 ?? unit.보증금), monthlyRent:won(unit.현_월세 ?? unit.월차임),
+            supplyAreaM2:supply, supplyAreaPy:supply == null ? null : supply/(400/121),
+            exclusiveAreaM2:exclusive, exclusiveAreaPy:exclusive == null ? null : exclusive/(400/121),
+            apartmentSize:unit.평형 || '', apartmentType:unit.타입 || '',
+            owner_name:unit.소유주 || '', owner_phone1:unit.연락처 || '', ownerCarrier:unit.소유자통신사 || '',
+            description:unit.비고 || '', floorInfo:unit.층 == null ? '' : unit.층+'층',
+            apartmentUnitData:{...unit}, import_unit_snapshot:{...unit}};
+          await assertUniqueApartmentUnit(data);
+          await addListing(data);
+          added++;
+        } else linked++;
+        apartmentListings.push(data);
+        unit.listing_id = id;
+        delete unit.pending_listing_id;
+        await saveBuildingUnits(bName, bName, units);
+      }
+      await saveBuildingUnits(bName, bName, units);
+      selectedUnitRows.clear();
+      showToast('매물 등록 '+added+'건 · 기존 등록 '+linked+'건 (중복 제외)', 7000);
+    } catch (error) {
+      showToast('등록 '+added+'건 완료. 나머지 항목은 다시 시도하세요: '+error.message, 10000);
+    } finally {
+      unitListingSendBusy = false; renderAll(); unitBulkState();
+    }
+  });
+
+  function unitAreaText(u) { const p = Number(u.전용_평); return Number.isFinite(p) && p > 0 ? p.toFixed(2) + "평 (" + (p * 3.30579).toFixed(2) + "㎡)" : "-"; }
+  function unitAreaHtml(u) { const p = Number(u.전용_평); return Number.isFinite(p) && p > 0 ? p.toFixed(2) + "평<br><span style=\"font-size:.72rem;opacity:.65\">" + (p * 3.30579).toFixed(2) + "㎡</span>" : "-"; }
+  function unitCheckbox(u) { const idx=units.indexOf(u); return '<td class="unit-select-cell"><input type="checkbox" class="unit-select-row" data-ri="'+idx+'" aria-label="세대 선택" '+(selectedUnitRows.has(idx)?"checked":"")+'></td>'; }
+  function bindUnitSelection() {
+    $("unitsTbody").querySelectorAll(".unit-select-row").forEach(box => box.addEventListener("change", () => {
+      const id=Number(box.dataset.ri); if(box.checked) selectedUnitRows.add(id); else selectedUnitRows.delete(id);
+      const visible=[...$("unitsTbody").querySelectorAll(".unit-select-row")];
+      $("unitSelectAll").checked=visible.length>0 && visible.every(input=>input.checked);
+      unitBulkState();
+    }));
+    const visible=[...$("unitsTbody").querySelectorAll(".unit-select-row")];
+    $("unitSelectAll").checked=visible.length>0 && visible.every(input=>input.checked);
+    unitBulkState();
+  }
+  $("unitSelectPrint").addEventListener("click",()=>{
+    const rows=units.filter((u,i)=>selectedUnitRows.has(i));
+    if(!rows.length)return;
+    const residential=residentialUnitMode();
+    const columns=residential?["동·호수","면적·타입","거래구분","매매가","보증금/월세","소유주","연락처","옵션"]:["호수","업종","전용면적","소유주","연락처","분양상태","가격","보증금","월세","임대현황","옵션"];
+    const displayOption=u=>String(u.옵션내역 || u.옵션 || "").trim() || "-";
+    const price=n=>toKorAmt(n) || "-";
+    const cells=u=>residential
+      ? [roomParts(u).dong+"동 "+roomParts(u).room+"호",residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||"-"),unitDeal(u)+(u.매매유형==="세안고매매" && String(unitDeal(u)).includes("매매") ? "\n세안고매매" : ""),price(u.현_매매가격),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임)+(u.매매유형==="세안고매매"&&u.승계보증금!=null?"\\n승계 "+price(u.승계보증금):""),u.소유주||"-",u.연락처||"-",displayOption(u)]
+      : [u.호수||"-",u.현업종||"-",unitAreaText(u),u.소유주||"-",u.연락처||"-",CommercialPriceCore.status(u,true),commercialPriceText(u),currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
+    const printable=document.createElement("div");
+    printable.id="unitPrintSheet";
+    printable.innerHTML='<div class="unit-print-header"><h2>'+esc(bName)+' · 선택 '+rows.length+'건</h2><span>출력일 '+new Date().toLocaleDateString("ko-KR")+'</span></div><table><thead><tr>'+columns.map(v=>"<th>"+esc(v)+"</th>").join("")+"</tr></thead><tbody>"+rows.map(u=>"<tr>"+cells(u).map(v=>"<td>"+esc(v??"")+"</td>").join("")+"</tr>").join("")+"</tbody></table>";
+    document.body.appendChild(printable);
+    const cleanup=()=>{printable.remove();window.removeEventListener("afterprint",cleanup);};
+    window.addEventListener("afterprint",cleanup,{once:true});
+    window.print();
+  });
+  $("unitSelectDelete").addEventListener("click",async()=>{
+    const ids=[...selectedUnitRows].filter(i=>units[i]);if(!ids.length)return;
+    if(!confirm("선택한 "+ids.length+"개 세대자료를 삭제하시겠습니까? 연결된 매물은 삭제되지 않습니다. 이 작업은 되돌릴 수 없습니다."))return;
+    const button=$("unitSelectDelete");button.disabled=true;
+    try{const keep=units.filter((_,i)=>!selectedUnitRows.has(i));await saveBuildingUnits(bName,bName,keep);units=keep;selectedUnitRows.clear();renderAll();showToast("선택한 세대자료를 삭제했습니다.");}
+    catch(e){showToast("선택삭제 실패: "+e.message);}finally{unitBulkState();}
+  });
+  let editIdx     = -1;
+  let filterFloor = "전체";
+  let filterUnitDeal = ""; let filterUnitStatus = "";
+  let bName       = "";
+  let apartmentListings = [];
+  let listingLookupLoaded = false;
+  let pendingRegistryInfo = null;
+  let unitModalVersion = 0;
+  let unitModalDirty = false, unitMouseDownOnOverlay = false;
+  function linkedUnitListings(unit) { return apartmentUnitLinkedListings(unit, apartmentListings, buildingId, bName); }
+  function unitDeal(unit) { return apartmentUnitDeal(unit, linkedUnitListings(unit)); }
+
+  const residentialUnitMode = () => apartmentBuildingMode;
+  let unitPlans = [];
+  const todayInKorea = () => new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Seoul'});
+  function roomParts(u) {
+    const combined = String(u.호수 || '').trim();
+    const match = combined.match(/^(.+?)동\s*(.+?)(?:호)?$/);
+    return {dong:String(u.동 || (match && match[1]) || '').replace(/동$/, '').trim(), room:String(u.호 || (match && match[2]) || combined).replace(/호$/, '').trim()};
+  }
+  function unitGroup(u) { return residentialUnitMode() ? (roomParts(u).dong || '미입력') : floorOf(u.호수); }
+  function unitMemos(u) {
+    const memos = Array.isArray(u.추가메모) ? u.추가메모 : u.추가메모 ? [{text:String(u.추가메모),created_at:u.updated_at || null}] : [];
+    return residentialUnitMode() ? apartmentMemoEntries(memos, apartmentRemarksOnly(u.비고)) : memos;
+  }
+  let memoDraft = null, memoRemarks = null, memoEditing = -1;
+  const memoDateKey = n => { const d = n && n.created_at ? new Date(n.created_at) : null; return d && !Number.isNaN(d.getTime()) ? d.toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}) : ''; };
+  const memoIso = d => d === todayInKorea() ? new Date().toISOString() : new Date(d + 'T12:00:00+09:00').toISOString();
+  function renderMemoHistory(u) {
+    memoDraft = unitMemos(u).map(n => ({...n}));
+    const remarks = residentialUnitMode() ? apartmentRemarksOnly(u.비고) : String(u.비고 || "").trim();
+    // The original remarks are shown first; later saved memos follow in their original order.
+    memoRemarks = remarks ? {text:remarks,created_at:u.비고기록일 || u.비고작성일 || null, received_date:u.접수일자 || null} : null;
+    memoEditing = -1;
+    drawMemoHistory();
+  }
+  function drawMemoHistory() {
+    const entries = [];
+    if (memoRemarks) entries.push({...memoRemarks, idx:-1});
+    (memoDraft || []).forEach((note,i) => {
+      if (String(note.text || "").trim() || i === memoEditing) entries.push({...note, idx:i});
+    });
+    $('unitMemoHistory').style.maxHeight = memoEditing !== -1 ? 'none' : '';
+    $('unitMemoHistory').innerHTML = entries.length
+      ? entries.map((note,index) => {
+          const date = note.created_at ? new Date(note.created_at) : null;
+          const dateText = date && !Number.isNaN(date.getTime()) ? ' · 기록일 '+date.toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}) : (note.received_date ? ' · 접수일 '+esc(note.received_date) : ' · 기록일 미상');
+          const head = '<time>메모 '+(index+1)+esc(dateText)+'</time>';
+          const small = 'style="margin-left:8px;padding:2px 9px;font-size:.72rem;min-height:0"';
+          if (note.idx >= 0 ? note.idx === memoEditing : memoEditing === -2) {
+            return '<div class="unit-memo-entry" data-memo-idx="'+note.idx+'">'+head
+              +'<textarea rows="3" style="width:100%;box-sizing:border-box;min-height:70px;height:auto">'+esc(note.text || '')+'</textarea>'
+              +'<div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">'+(note.idx >= 0 ? '<label style="margin:0;font-size:.72rem">날짜</label><input type="date" value="'+memoDateKey(note)+'" style="width:auto;min-width:130px">' : '')
+              +'<button type="button" class="btn-unit-ghost" data-memo-act="save" '+small+'>수정 저장</button>'
+              +'<button type="button" class="btn-unit-ghost" data-memo-act="cancel" '+small+'>취소</button></div></div>';
+          }
+          return '<div class="unit-memo-entry" data-memo-idx="'+note.idx+'">'+head+esc(note.text || '').replace(/\\n/g,'<br>')
+            +'<button type="button" class="btn-unit-ghost" data-memo-act="edit" '+small+'>수정</button>'+'</div>';
+        }).join('')
+      : '<p style="color:var(--muted);font-size:.8rem;">저장된 기존 메모가 없습니다.</p>';
+  }
+  function ownerPhone(value) {
+    let digits = String(value || '').replace(/\D/g,'');
+    if (digits.startsWith('82') && /^(?:\+82|82)/.test(String(value))) digits = '0' + digits.slice(2);
+    if (digits.startsWith('02') && [9,10].includes(digits.length)) return digits.slice(0,2)+'-'+digits.slice(2,-4)+'-'+digits.slice(-4);
+    if ([10,11].includes(digits.length)) return digits.slice(0,3)+'-'+digits.slice(3,-4)+'-'+digits.slice(-4);
+    return String(value || '').trim();
+  }
+  function fillUnitPlanAreas() {
+    const type = $('ru_타입').value.trim();
+    const plan = unitPlans.find(p => p.floor_number === type);
+    if (!plan) return;
+    for (const [prefix, area] of [['분양',plan.supply_area_m2],['전용',plan.exclusive_area_m2]]) {
+      if (area != null) {
+        $('ru_'+prefix+'_m2').value = Number(area);
+        $('ru_'+prefix+'_평').value = (Number(area)/(400/121)).toFixed(2);
+      }
+    }
+    if (plan.supply_area_m2 != null) $('ru_평형').value = (Number(plan.supply_area_m2)/(400/121)).toFixed(2)+'평';
+  }
+  function residentialContractEnd(start, years) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || ![1,2].includes(Number(years))) return '';
+    const [year, month, day] = start.split('-').map(Number);
+    const date = new Date(Date.UTC(year + Number(years), month - 1, day));
+    date.setUTCDate(date.getUTCDate() - 1);
+    return date.toISOString().slice(0,10);
+  }
+  function syncResidentialContractPeriod() {
+    const start = $('ru_계약시작').value, end = $('ru_계약종료').value;
+    $('ru_계약기간').value = start && end ? String([1,2].find(years => residentialContractEnd(start,years) === end) || '') : '';
+  }
+  function updateResidentialContractEnd() {
+    const start = $('ru_계약시작').value, years = $('ru_계약기간').value;
+    if (!years) return;
+    $('ru_계약종료').value = residentialContractEnd(start, years);
+  }
+  function openResidentialFields(u, isNew) {
+    const linkedOwners = Array.isArray(u.owner_customer_ids) ? u.owner_customer_ids : [];
+    $('ru_ownerCustomers').style.display = linkedOwners.length ? '' : 'none';
+    $('ru_ownerCustomers').innerHTML = linkedOwners.map((id,index) => '<a class="owner-customer-link" href="' + esc(OfficeConfig.urlFor('customers.html?customerId=' + encodeURIComponent(id))) + '" target="_blank" rel="noopener">연결 고객 ' + (index+1) + ' · 연락처 원본 보기</a>').join(' · ');
+    const parts = roomParts(u);
+    const fields = {아파트명:bName,동:parts.dong,호수:parts.room,접수일자:u.접수일자 || (isNew ? todayInKorea() : ''),평형:u.평형,타입:u.타입,거래구분:u.거래구분,
+      매매가:u.현_매매가격,매매유형:u.매매유형 || '일반매매',승계보증금:u.승계보증금,보증금:effectiveUnitPrice(u.현_보증금,u.보증금),월세:effectiveUnitPrice(u.현_월세,u.월차임),소유자:u.소유주,연락처:u.연락처,통신사:u.소유자통신사,
+      세입자이름:u.세입자이름,세입자연락처:u.세입자연락처,세입자현황:u.세입자현황 || (u.공실여부 === '공실' ? '공실' : u.공실여부 === '임차중' ? '임차중' : '미확인'),계약시작:u.세입자계약시작일,계약종료:u.세입자계약종료일,옵션:u.옵션내역,비고:apartmentRemarksOnly(u.비고)};
+    fields.거래구분 = unitDeal(u);
+    $('ru_통신사').querySelectorAll('[data-custom-carrier]').forEach(option => option.remove());
+    if (u.소유자통신사 && !Array.from($('ru_통신사').options).some(option => option.value === u.소유자통신사)) {
+      const option = document.createElement('option'); option.value = option.textContent = u.소유자통신사; option.dataset.customCarrier = 'true'; $('ru_통신사').appendChild(option);
+    }
+    Object.entries(fields).forEach(([key,value]) => { $('ru_'+key).value = value ?? ''; });
+    const saleMode=$('ru_거래구분').value==='매매';$('ru_매매유형').disabled=!saleMode;$('ru_승계보증금').disabled=!saleMode || $('ru_매매유형').value!=='세안고매매';
+    syncResidentialContractPeriod();
+    for (const prefix of ['분양','전용']) {
+      const m2 = u[prefix+'_m2'] ?? (u[prefix+'_평'] != null ? Number(u[prefix+'_평'])*(400/121) : null) ?? (prefix==='분양' ? residentialUnitArea(u).supply : null);
+      $('ru_'+prefix+'_m2').value = m2 == null ? '' : Math.round(m2*10000)/10000;
+      $('ru_'+prefix+'_평').value = m2 == null ? '' : (m2/(400/121)).toFixed(2);
+    }
+    if (!$('ru_세입자현황').value) $('ru_세입자현황').value = '미확인';
+    ['매매가','보증금','월세'].forEach(k => {$('h_ru_'+k).textContent = toKorAmt($('ru_'+k).value);});
+  }
+  $('ru_거래구분').addEventListener('change',()=>{$('ru_매매유형').disabled=$('ru_거래구분').value!=='매매';$('ru_승계보증금').disabled=$('ru_거래구분').value!=='매매'||$('ru_매매유형').value!=='세안고매매';});
+  $('ru_매매유형').addEventListener('change',()=>{$('ru_승계보증금').disabled=$('ru_매매유형').value!=='세안고매매';});
+    function residentialUnitChanges(original) {
+    const value = key => $('ru_'+key).value.trim();
+    const dong = value('동').replace(/동$/,''), room = value('호수').replace(/호$/,'');
+    if (!dong || !room) throw new Error('동과 호수를 입력하세요.');
+    if (value('계약시작') && value('계약종료') && value('계약시작') > value('계약종료')) throw new Error('계약 종료일은 시작일 이후여야 합니다.');
+    const number = key => {const raw = value(key); if (!raw) return null; const n = Number(raw); if (!Number.isFinite(n) || n < 0) throw new Error('면적과 가격은 0 이상의 숫자로 입력하세요.'); return n;};
+    const supply = number('분양_m2'), exclusive = number('전용_m2');
+    if (supply != null && exclusive != null && supply < exclusive) throw new Error('분양면적은 전용면적 이상이어야 합니다.');
+    const label = `${dong}동 ${room}호`;
+    if (units.some((u,i) => i !== editIdx && roomParts(u).dong === dong && roomParts(u).room === room)) throw new Error('같은 동·호수가 이미 등록되어 있습니다.');
+    const tenant = value('세입자현황');
+    return {...original,아파트명:bName,동:dong,호:room,호수:label,층:floorOf(room),접수일자:value('접수일자') || null,평형:value('평형') || null,타입:value('타입') || null,
+      분양_m2:supply,전용_m2:exclusive,분양_평:supply == null ? null : supply/(400/121),전용_평:exclusive == null ? null : exclusive/(400/121),거래구분:value('거래구분') || null,
+      현_매매가격:number('매매가'),매매유형:value('거래구분')==='매매' ? value('매매유형') || '일반매매' : '일반매매',승계보증금:value('거래구분')==='매매' && value('매매유형')==='세안고매매' ? number('승계보증금') : null,현_보증금:number('보증금'),현_월세:number('월세'),소유주:value('소유자') || null,연락처:ownerPhone(value('연락처')) || null,소유자통신사:value('통신사') || null,
+      세입자이름:value('세입자이름') || null,세입자연락처:ownerPhone(value('세입자연락처')) || null,세입자현황:tenant,공실여부:tenant === '공실' ? '공실' : tenant === '임차중' ? '임차중' : tenant,세입자계약시작일:value('계약시작') || null,세입자계약종료일:value('계약종료') || null,
+      옵션내역:value('옵션') || null,비고:value('비고') || null,updated_at:new Date().toISOString()};
+  }
+
+
+
+  let residentialSort={key:'',direction:''};
+  const unitCollator=new Intl.Collator('ko-KR',{numeric:true,sensitivity:'base'});
+  function residentialSortParts(unit,key){
+    const parts=roomParts(unit);
+    const number=value=>{
+      if(value==null || String(value).trim()==='')return null;
+      const result=Number(String(value).replace(/,/g,''));
+      return Number.isFinite(result) ? result : null;
+    };
+    const text=value=>String(value ?? '').trim() || null;
+    switch(key){
+      case 'dong':return [text(parts.dong),text(parts.room)];
+      case 'room':return [text(parts.room),text(parts.dong)];
+      case 'sizeType':{const area=residentialUnitArea(unit);return [area.supply ?? number(String(area.size).match(/[\d.]+/)?.[0]),text(area.type)];}
+      case 'deal':return [text(unit.거래구분)];
+      case 'sale':return [number(unit.현_매매가격)];
+      case 'rent':return [number(effectiveUnitPrice(unit.현_보증금,unit.보증금)),number(effectiveUnitPrice(unit.현_월세,unit.월차임))];
+      case 'owner':return [text(unit.소유주),text(unit.연락처)];
+      case 'tenant':return [text(unit.세입자현황 || unit.공실여부 || '미확인')];
+      case 'received':return [text(unit.접수일자)];
+      case 'listed':return [String(unit.listing_id || '').trim() ? 1 : 0];
+    }
+    return [];
+  }
+  function sortedResidentialUnits(rows){
+    if(!residentialSort.key)return rows;
+    const factor=residentialSort.direction==='asc' ? 1 : -1;
+    return rows.slice().sort((a,b)=>{
+      const left=residentialSortParts(a,residentialSort.key),right=residentialSortParts(b,residentialSort.key);
+      for(let i=0;i<Math.max(left.length,right.length);i++){
+        const av=left[i],bv=right[i];
+        if(av==null && bv==null)continue;
+        if(av==null)return 1;
+        if(bv==null)return -1;
+        const result=typeof av==='number' && typeof bv==='number' ? av-bv : unitCollator.compare(String(av),String(bv));
+        if(result)return Math.sign(result)*factor;
+      }
+      return 0;
+    });
+  }
+  function renderResidentialHeader(){
+    const head=$('unitsTableHead');
+    head.closest('table').classList.add('residential-unit-table');
+    if(!head.dataset.sortReady){
+      const columns=[['dong','동'],['room','호수'],['sizeType','분양면적·타입'],['deal','거래구분'],['sale','매매가(만)'],['rent','보증금 / 월세(만)'],['owner','소유자·연락처'],['tenant','세입자현황'],['listed','관리']];
+      head.innerHTML='<tr><th class="unit-select-cell"><input type="checkbox" id="unitSelectAll" aria-label="현재 목록 전체선택"></th>'+columns.map(([key,label])=>'<th><button type="button" class="unit-sort" data-unit-sort="'+key+'" aria-label="'+label+' 정렬"><span>'+label+'</span><span class="unit-sort-arrow" aria-hidden="true">↕</span></button></th>').join('')+'</tr>';
+      head.dataset.sortReady='true';
+      head.querySelectorAll('.unit-sort').forEach(button=>{
+        button.addEventListener('click',()=>{
+          const key=button.dataset.unitSort;
+          residentialSort={key,direction:residentialSort.key===key && residentialSort.direction==='asc' ? 'desc' : 'asc'};
+          renderTable();
+        });
+      });
+    }
+    head.querySelectorAll('.unit-sort').forEach(button=>{
+      const active=button.dataset.unitSort===residentialSort.key;
+      const label=button.querySelector('span').textContent;
+      const th=button.closest('th');
+      th.setAttribute('aria-sort',active ? (residentialSort.direction==='asc' ? 'ascending' : 'descending') : 'none');
+      button.classList.toggle('active',active);
+      button.querySelector('.unit-sort-arrow').textContent=active ? (residentialSort.direction==='asc' ? '▲' : '▼') : '↕';
+      button.title=label+' '+(active && residentialSort.direction==='asc' ? '내림차순' : '오름차순')+' 정렬';
+    });
+  }
+
+  function residentialUnitArea(unit) {
+    const positive = value => value != null && value !== '' && Number.isFinite(Number(value)) && Number(value)>0 ? Number(value) : null;
+    const parts = roomParts(unit);
+    const reference = apartmentUnitReference({id:buildingId,name:bName},unitPlans,{units:[unit]},parts.dong,parts.room);
+    const supply = positive(unit.분양_m2) ?? (positive(unit.분양_평) ? Number(unit.분양_평)*(400/121) : null) ?? positive(reference.supply);
+    return {supply, size:supply ? (supply/(400/121)).toFixed(2)+'평' : unit.평형 || '-', type:reference.type || unit.타입 || ''};
+  }
+  function residentialUnitActions(unit, index) {
+    const links = linkedUnitListings(unit);
+    const edit = '<button class="btn-unit-edit" data-ri="'+index+'">수정·메모</button>';
+    const url = id => esc(OfficeConfig.urlFor('detail.html?id='+encodeURIComponent(id)));
+    if (!links.length && !unit.listing_id) return edit+'<button class="btn-listing-reg" data-ri="'+index+'">매물등록</button>';
+    if (links.length<=1) return edit+'<a class="btn-listing-view" href="'+url(links[0]?.id || unit.listing_id)+'">매물보기</a>';
+    return edit+'<details class="unit-listing-menu"><summary class="btn-listing-view">매물보기 ('+links.length+')</summary><div class="unit-listing-options">'+links.map((item,i)=>'<a class="btn-listing-view" href="'+url(item.id)+'">'+esc(item.dealType || apartmentSource(item).거래구분 || '매물')+' · '+(i+1)+'</a>').join('')+'</div></details>';
+  }
+  function renderResidentialTable(filtered) {
+    renderResidentialHeader();
+    $('unitsTbody').innerHTML = filtered.map(u => {
+      const ri = units.indexOf(u), parts=roomParts(u);
+      const sale = currentRentPrice(u.현_매매가격, null);
+      const tenant = u.세입자현황 || u.공실여부 || '미확인';
+      const area=residentialUnitArea(u);
+      return `<tr>${unitCheckbox(u)}<td class="unit-dong-cell"><strong>${esc(parts.dong || '-')}</strong><small>동</small></td><td class="unit-room-cell"><strong>${esc(parts.room || '-')}</strong><small>호</small></td><td>${esc(area.size)}${area.supply ? '<br><small>'+area.supply.toLocaleString('ko-KR',{maximumFractionDigits:2})+'㎡</small>' : ''}<br>${esc(area.type)}</td><td>${esc(unitDeal(u) || '-')}${u.매매유형 === "세안고매매" && String(unitDeal(u)).includes("매매") ? '<span class="unit-sale-subtype">세안고매매</span>' : ""}</td><td>${sale}</td><td>${currentRentPrice(u.현_보증금,u.보증금)} / ${currentRentPrice(u.현_월세,u.월차임)}</td><td>${esc(u.소유주 || '-')}<br>${esc(u.연락처 || '-')}</td><td>${esc(tenant)}</td><td class="tbl-actions">${residentialUnitActions(u,ri)}</td></tr>`;
+    }).join('');
+  }
+
+
+  function fmt(n) {
+    const v = Number(n);
+    return (v && isFinite(v)) ? v.toLocaleString("ko-KR") : "-";
+  }
+
+  function effectiveUnitPrice(current, original) {
+    return current !== null && current !== undefined && current !== "" ? current : original;
+  }
+
+  function currentRentPrice(current, original) {
+    const price = effectiveUnitPrice(current, original);
+    if (price === null || price === undefined || price === "") return "-";
+    return toKorAmt(price) || '-';
+  }
+
+  // 호수 -> 층 번호 문자열: 101->1, 201->2, 1001->10, B101->B1
+  function floorOf(room) {
+    const s = String(room || "").trim();
+    const bm = s.match(/^[Bb](\d)/);
+    if (bm) return "B" + bm[1];
+    const nm = s.match(/^(\d+)/);
+    if (nm) {
+      const n = parseInt(nm[1], 10);
+      if (n >= 1000) return String(Math.floor(n / 100));
+      if (n >= 100)  return String(Math.floor(n / 100));
+      return String(n);
+    }
+    return "기타";
+  }
+
+  function floorLabel(f) {
+    if (f === "전체") return "전체";
+    return residentialUnitMode() ? (f === "미입력" ? "동 미입력" : f + "동") : f + "층";
+  }
+
+  // 건물명 읽기 (DOM 갱신 대기)
+  async function getBuildingName() {
+    let name = ($("buildingName") || {}).textContent || "";
+    if (!name || name === "건물 상세") {
+      for (let i = 0; i < 6; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        name = ($("buildingName") || {}).textContent || "";
+        if (name && name !== "건물 상세") break;
+      }
+    }
+    return name;
+  }
+
+  // ── 매물등록 URL 생성 ──
+  function buildRegisterUrl(u) {
+    const p = new URLSearchParams();
+    if (typeof buildingId !== "undefined" && buildingId) p.set("buildingId", buildingId);
+    if (u.호수) p.set("roomNo", u.호수);
+    if(!residentialUnitMode())p.set("presaleStatus",CommercialPriceCore.status(u,true));
+    if (isFlagOn(u.추천매물)) p.set('recommended', '1');
+    if (residentialUnitMode()) p.set("resourceScope", "residential");
+    return "register.html?" + p.toString();
+  }
+
+  // 초기 로드 (init() 완료 후 호출)
+  async function loadUnits() {
+    bName = await getBuildingName();
+    if (residentialUnitMode()) {
+      $('unitStatusTitle').textContent = '🏠 세대별 자료';
+      $('btnAddUnit').textContent = '+ 세대 추가';
+      $('unitsEmpty').textContent = '등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.';
+      try { unitPlans = await getBuildingFloors(buildingId); } catch (_) { unitPlans = []; }
+      $('residentialUnitTypes').innerHTML = unitPlans.map(p => `<option value="${esc(p.floor_number)}"></option>`).join('');
+    }
+    console.log("[호실현황] ── loadUnits 시작 ──");
+    console.log("[호실현황] URL buildingId:", typeof buildingId !== "undefined" ? buildingId : "(없음)");
+    console.log("[호실현황] #buildingName DOM:", ($("buildingName")||{}).textContent);
+    console.log("[호실현황] 최종 bName:", bName);
+
+    if (!bName) {
+      console.warn("[호실현황] 건물명 없음 → 조회 중단");
+      return;
+    }
+    try {
+      const rec = await getBuildingRecord(bName);
+      console.log("[호실현황] getBuildingRecord 결과:", rec
+        ? `id=${rec.id}, name=${rec.name}, units=${Array.isArray(rec.units)?rec.units.length:0}개`
+        : "null (건물 없음)");
+      units = Array.isArray(rec && rec.units) ? rec.units : [];
+      selectedUnitRows.clear();
+      console.log("[호실현황] 최종 units 수:", units.length);
+    } catch(e) {
+      if (typeof showToast === "function") showToast("호실 로드 실패: " + e.message);
+      console.error("[호실현황] 로드 실패:", e);
+      units = [];
+    }
+    if (residentialUnitMode()) {
+      try { apartmentListings = await getListings(); listingLookupLoaded = true; }
+      catch (error) { apartmentListings = []; listingLookupLoaded = false; showToast('등록 매물 연결 조회 실패: '+error.message); }
+    } else {
+      // 상가·사무실: 호실에 연결된 매물 중 거래상태가 진행중인 것만 세기 위해 매물 상태를 읽어둔다(읽기 전용).
+      try {
+        const rows = await getListings();
+        activeListingIds = {}; commercialListings = {};
+        rows.forEach(l => { commercialListings[String(l.id)] = l; if (isActiveListing(l)) activeListingIds[String(l.id)] = true; });
+        activeListingLoaded = true;
+      } catch (error) { activeListingIds = {}; commercialListings = {}; activeListingLoaded = false; }
+    }
+    renderAll();
+    if (location.hash === '#unitStatus') $('unitStatus').scrollIntoView({ block: 'start' });
+    (function openUnitFromUrl() {
+      const want = new URLSearchParams(location.search).get('unit');
+      if (!want || window.__unitAutoOpened) return;
+      const norm = v => String(v ?? '').replace(/\s+/g, '').replace(/호$/, '');
+      const idx = units.findIndex(u => norm(u.호수) === norm(want));
+      if (idx < 0) { const st = document.getElementById('unitOnlyStyle'); if (st) st.remove(); return; }
+      window.__unitAutoOpened = true;
+      window.__unitOnly = true;
+      const finishUnitOnly = function () {
+        try { window.close(); } catch (e) {}
+        setTimeout(() => {
+          if (document.getElementById('unitOnlyDone')) return;
+          const d = document.createElement('div');
+          d.id = 'unitOnlyDone';
+          d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b1a2a;color:#fff;font-size:1.05rem;visibility:visible;';
+          d.innerHTML = '<div>호실 정보 창을 닫았습니다. 이 탭을 닫아 주세요.</div><button type="button" style="padding:8px 18px;border-radius:8px;border:1px solid #e0b84c;background:transparent;color:#e0b84c;cursor:pointer;" onclick="window.close()">탭 닫기</button>';
+          document.body.appendChild(d);
+        }, 400);
+      };
+      new MutationObserver(() => {
+        const open = $('unitModal').classList.contains('open');
+        if (open) { window.__unitOnlyFinished = false; return; }
+        if (window.__unitOnly && !window.__unitOnlyFinished) { window.__unitOnlyFinished = true; finishUnitOnly(); }
+      }).observe($('unitModal'), { attributes: true, attributeFilter: ['class'] });
+      setTimeout(() => { try { openModal(idx); } catch (e) {} }, 300);
+    })();
+  }
+
+  // init() 완료 후 외부에서 호출
+  window._loadBuildingUnits = loadUnits;
+
+  // 오피스텔 건물은 주거(오피스텔)와 상가가 한 건물에 같이 있어서, 호실마다 구분(상가/오피스텔)을 두고 버튼으로 나눠 본다.
+  function kindSplitEnabled() { return !residentialUnitMode() && /오피스텔/.test(String(window.__buildingCategory || '')); }
+  function unitKind(u) { return u && u.구분 === '오피스텔' ? '오피스텔' : '상가'; }
+  function scopedUnits() {
+    const f = window.__unitKindFilter || '전체';
+    return kindSplitEnabled() && f !== '전체' ? units.filter(u => unitKind(u) === f) : units;
+  }
+  function renderKindTabs() {
+    const box = $('unitKindTabs');
+    if (!box) return;
+    box.hidden = !kindSplitEnabled();
+    if (!kindSplitEnabled()) return;
+    const f = window.__unitKindFilter || '전체';
+    const count = kind => kind === '전체' ? units.length : units.filter(u => unitKind(u) === kind).length;
+    box.innerHTML = ['전체', '상가', '오피스텔'].map(kind =>
+      '<button type="button" class="ftab' + (kind === f ? ' active' : '') + '" data-kind="' + kind + '">' + (kind === '오피스텔' ? '🏠 오피스텔(주거)' : kind === '상가' ? '🏪 상가' : '전체') + ' ' + count(kind) + '</button>'
+    ).join('') + '<span class="kind-move"' + (selectedUnitRows.size ? '' : ' hidden') + '><button type="button" class="btn-unit-ghost" data-kind-move="상가">→ 상가로</button><button type="button" class="btn-unit-ghost" data-kind-move="오피스텔">→ 오피스텔로</button></span>';
+    box.querySelectorAll('[data-kind]').forEach(btn => btn.addEventListener('click', () => {
+      window.__unitKindFilter = btn.dataset.kind;
+      filterFloor = '전체';
+      renderAll();
+    }));
+    box.querySelectorAll('[data-kind-move]').forEach(btn => {
+      btn.disabled = !selectedUnitRows.size;
+      btn.addEventListener('click', async () => {
+        const kind = btn.dataset.kindMove;
+        const rows = units.filter((u, i) => selectedUnitRows.has(i));
+        if (!rows.length) return;
+        btn.disabled = true;
+        try {
+          rows.forEach(u => { u.구분 = kind; u.updated_at = new Date().toISOString(); });
+          await saveBuildingUnits(bName, bName, units);
+          selectedUnitRows.clear();
+          showToast(rows.length + '개 호실을 ' + kind + '로 옮겼습니다.');
+        } catch (error) { showToast('구분 변경 실패: ' + error.message); }
+        renderAll();
+      });
+    });
+  }
+
+  function renderAll() {
+    renderKindTabs();
+    renderSummary();
+    renderFloorTabs();
+    renderTable();
+  }
+
+  // 매물진행중: 거래상태가 진행중이고 보관용 명단이 아닌 매물
+  let activeListingIds = {}, commercialListings = {}, activeListingLoaded = false;
+  function isActiveListing(l) { return !!l && listingProgressStatus(l) === "진행중" && l.listingKind !== "명단"; }
+  function activeListingCount() {
+    if (residentialUnitMode()) {
+      return listingLookupLoaded ? units.filter(u => linkedUnitListings(u).some(isActiveListing)).length : null;
+    }
+    return activeListingLoaded ? commercialLinkedIds(units).filter(id => isActiveListing(commercialListings[id])).length : null;
+  }
+
+  function commercialLinkedIds(rows) {
+    return [...new Set(rows.flatMap(u => [u.listing_id, ...(u.묶음매물연결 || []).map(link => link.id)]).filter(Boolean).map(String))];
+  }
+  function commercialSaleCount() {
+    return activeListingLoaded ? commercialLinkedIds(units).filter(id => {
+      const listing = commercialListings[id];
+      return isActiveListing(listing) && String(listing.dealType || listing.deal_type || '').includes('매매') && CommercialPriceCore.price(listing).amount!==null;
+    }).length : null;
+  }
+
+  function commercialPriceText(u) {
+    const p=CommercialPriceCore.price(u,true);
+    return p.amount!==null ? toPlainWon(p.amount) : '-';
+  }
+  function originalPriceLine(u) {
+    if (!window.__unitShowOrig || CommercialPriceCore.status(u, true) !== '분양완료') return '';
+    const original = Number(u.분양금액);
+    return Number.isFinite(original) && original > 0 ? '<br><span style="font-size:.72rem;opacity:.7;white-space:nowrap">원분양가 ' + toPlainWon(original) + '</span>' : '';
+  }
+  function syncOrigToggle() {
+    const button = $("unitOrigToggle");
+    if (!button) return;
+    button.hidden = residentialUnitMode();
+    button.textContent = window.__unitShowOrig ? '원분양가 숨기기' : '원분양가 보기';
+    button.setAttribute('aria-pressed', String(!!window.__unitShowOrig));
+  }
+  try { window.__unitShowOrig = localStorage.getItem('unitShowOriginalPrice') === '1'; } catch (e) { window.__unitShowOrig = false; }
+  document.addEventListener('click', event => {
+    const button = event.target.closest && event.target.closest('#unitOrigToggle');
+    if (!button) return;
+    window.__unitShowOrig = !window.__unitShowOrig;
+    try { localStorage.setItem('unitShowOriginalPrice', window.__unitShowOrig ? '1' : '0'); } catch (e) {}
+    renderTable();
+  });
+  function commercialOccupancy(u) {
+    if (u.공실여부 === '공실') return '공실';
+    const industry = String(u.현업종 || '').trim();
+    return (industry && !['-','공실','없음','미확인'].includes(industry)) || u.공실여부 === '임차중' ? '임차중' : '공실';
+  }
+
+  function renderSummary() {
+    const occ  = scopedUnits().filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "임차중").length;
+    const vac  = scopedUnits().filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length;
+    const sale = residentialUnitMode() ? units.filter(u => String(unitDeal(u)).includes("매매")).length : commercialSaleCount();
+    const listedActive = activeListingCount();
+    $("sumOccupied").textContent = occ;
+    $("sumVacant").textContent   = vac;
+    $("sumForSale").textContent  = sale === null ? "-" : sale;
+    $("sumForSale").closest(".sum-card").title = "진행중인 매매 매물 건수 · 묶음매물은 1건 · 누르면 해당 호실만 보기";
+    $("sumListed").closest(".sum-card").title = "진행중인 매물 건수 · 묶음매물은 1건 · 누르면 해당 호실만 보기";
+    $("sumListed").textContent   = listedActive === null ? "-" : listedActive;
+    document.querySelectorAll('[data-unit-status]').forEach(button => {
+      const active = !residentialUnitMode() && filterUnitStatus === button.dataset.unitStatus;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+
+    // 주거(세대별 자료): 매매·전세·월세는 세대의 '거래구분', 자가는 '세입자현황=자가거주' 기준으로 센다.
+    // '매매·임대'처럼 둘 이상이면 각각 집계된다.
+    const resi = residentialUnitMode();
+
+    $("residentialSummaryGrid").style.display = resi ? "" : "none";
+    $("residentialSummaryNote").style.display = resi ? "" : "none";
+    $("commercialSummaryGrid").style.display  = resi ? "none" : "";
+    document.querySelectorAll('[data-unit-deal]').forEach(button => {
+      const active = resi && filterUnitDeal === button.dataset.unitDeal;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    if (resi) {
+      const deals = units.map(u => String(unitDeal(u) || ""));
+      $("sumDealSale").textContent   = deals.filter(d => d.includes("매매")).length;
+      $("sumDealJeonse").textContent = deals.filter(d => d.includes("전세")).length;
+      $("sumDealWolse").textContent  = deals.filter(d => d.includes("월세")).length;
+      $("sumOwn").textContent        = units.filter(u => (u.세입자현황 || u.공실여부 || "") === "자가거주").length;
+      const undecided = deals.filter(d => !/매매|전세|월세/.test(d)).length;
+      $("residentialSummaryNote").textContent =
+        `임차중 ${occ} · 공실 ${vac} · 매물진행중 ${listedActive === null ? "-" : listedActive}` +
+        ` · 매매·전세·월세는 거래구분 기준(둘 이상이면 각각 집계)` +
+        (undecided ? ` · 거래구분 미정·임대 ${undecided}세대` : "");
+    }
+  }
+
+  /* ===== 건물 기록: 조건·홍보물·메모 (층·호실 연결, 파일 첨부) ===== */
+  const REC_PREFIX = "[기록] ";
+  const REC_KINDS = ["조건", "홍보물", "메모"];
+  let buildingRecords = [], recordsLoaded = false, recordsLoading = false, recordUrlMap = {};
+  let recFilterKind = "전체", recFilterFloor = "전체", recEditId = null, recEditFiles = [];
+  function recParse(row) {
+    try {
+      const d = JSON.parse(String(row.file_name).slice(REC_PREFIX.length));
+      d._rowId = row.id; d.files = Array.isArray(d.files) ? d.files : [];
+      return d;
+    } catch (e) { return null; }
+  }
+  async function loadBuildingRecords() {
+    if (recordsLoading) return;
+    recordsLoading = true;
+    try {
+      const rows = (await getBuildingFiles(buildingId)).filter(r => String(r.file_name).startsWith(REC_PREFIX));
+      buildingRecords = rows.map(recParse).filter(Boolean);
+      const urls = [...new Set(buildingRecords.flatMap(r => r.files.map(f => f.url)).filter(Boolean))];
+      recordUrlMap = {};
+      if (urls.length) {
+        const resolved = await resolveBuildingMaterialUrls(urls.map(u => ({ cloudinary_url: u })));
+        resolved.forEach((row, i) => { recordUrlMap[urls[i]] = row.cloudinary_url; });
+      }
+    } catch (e) { showToast("기록을 불러오지 못했어요: " + e.message); }
+    recordsLoaded = true; recordsLoading = false;
+    renderFloorTabs();
+    if ($("recPanel")) renderRecPanel();
+  }
+  function recSorted(list) {
+    return list.slice().sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || (b._rowId < a._rowId ? -1 : 1));
+  }
+  function recFloorLabel(r) { return r.floor ? floorLabel(r.floor) + (r.rooms ? " " + r.rooms : "") : (r.rooms || "건물 전체"); }
+  function recDateLabel(d) { return String(d || "").slice(5).replace("-", "."); }
+  function recTagHtml(kind) {
+    const strong = kind === "조건" || kind === "홍보물";
+    return '<span style="font-size:11px;padding:1px 8px;border-radius:999px;white-space:nowrap;border:1px solid ' + (strong ? "#0b7a6b" : "#c5d3d1") + ';color:' + (strong ? "#0b7a6b" : "#6b7b79") + '">' + esc(kind) + "</span>";
+  }
+  function recFilesHtml(r) {
+    return r.files.map(f => {
+      const url = recordUrlMap[f.url] || f.url;
+      const img = (typeof isImage === "function" && isImage(f.url, f.name));
+      return '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#0b7a6b;text-decoration:none;border:1px solid #cfe5e1;border-radius:6px;padding:1px 8px;margin:2px 6px 0 0">' + (img ? "🖼" : "📎") + " " + esc(f.name) + "</a>";
+    }).join("");
+  }
+  function renderRecordStrip() {
+    let box = $("floorRecordStrip");
+    if (!box) {
+      box = document.createElement("div"); box.id = "floorRecordStrip";
+      $("unitFloorTabs").parentElement.insertAdjacentElement("afterend", box);
+    }
+    const list = filterFloor === "전체" ? [] : recSorted(buildingRecords.filter(r => r.floor === filterFloor));
+    if (!list.length) { box.innerHTML = ""; box.style.display = "none"; return; }
+    box.style.cssText = "display:block;margin:4px 0 12px;padding:10px 14px;border:1px solid #cfe5e1;border-radius:10px;background:#f6fbfa;font-size:13px;line-height:1.7";
+    const shown = list.slice(0, 3);
+    box.innerHTML = '<div style="font-weight:700;margin-bottom:2px">' + esc(floorLabel(filterFloor)) + " 특별 조건 · 홍보 <span style=\"font-weight:400;color:#6b7b79;font-size:12px\">(" + list.length + "건)</span></div>"
+      + shown.map(r => "<div>" + recTagHtml(r.kind) + " " + (r.rooms ? '<b style="font-weight:600">' + esc(r.rooms) + "</b> " : "") + '<span style="white-space:pre-wrap">' + esc(r.text) + "</span> " + '<span style="color:#8a9a98;font-size:12px">· ' + esc(recDateLabel(r.date)) + "</span>" + (r.files.length ? "<div>" + recFilesHtml(r) + "</div>" : "") + "</div>").join("")
+      + '<div style="margin-top:4px"><button type="button" id="recStripMore" style="font-size:12px;border:1px solid #cfe5e1;background:#fff;border-radius:999px;padding:2px 12px;cursor:pointer;color:#0b7a6b">' + (list.length > 3 ? "더 보기" : "기록 열기") + "</button></div>";
+    $("recStripMore").addEventListener("click", () => openRecPanel(filterFloor));
+  }
+  function openRecPanel(floor) {
+    recFilterFloor = floor || "전체"; recFilterKind = "전체"; recEditId = null;
+    let p = $("recPanel");
+    if (p) p.remove();
+    p = document.createElement("div"); p.id = "recPanel";
+    p.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto";
+    p.innerHTML = '<div style="background:#fff;color:#1d2b2a;width:min(780px,96vw);border-radius:14px;padding:18px 20px 22px;box-shadow:0 10px 40px rgba(0,0,0,.25)"><div id="recPanelBody"></div></div>';
+    p.addEventListener("click", ev => { if (ev.target === p) p.remove(); });
+    document.body.appendChild(p);
+    renderRecPanel();
+  }
+  function recFloorOptions(sel) {
+    const seen = {}, floors = [];
+    scopedUnits().forEach(u => { const f = unitGroup(u); if (f && !seen[f]) { seen[f] = true; floors.push(f); } });
+    floors.sort((a, b) => parseInt(String(a).replace("B", "-")) - parseInt(String(b).replace("B", "-")));
+    return '<option value="">건물 전체</option>' + floors.map(f => '<option value="' + esc(f) + '"' + (f === sel ? " selected" : "") + ">" + esc(floorLabel(f)) + "</option>").join("");
+  }
+  function renderRecPanel() {
+    const body = $("recPanelBody"); if (!body) return;
+    const inputCss = "width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid #cfdcda;border-radius:8px;font:inherit;font-size:13px;background:#fff;color:inherit";
+    const btn = (id, label, main) => '<button type="button" id="' + id + '" style="font:inherit;font-size:13px;padding:5px 14px;border-radius:999px;cursor:pointer;border:1px solid ' + (main ? "#0b7a6b;background:#0b7a6b;color:#fff" : "#cfdcda;background:#fff;color:#1d2b2a") + '">' + label + "</button>";
+    const chip = (label, active, cls, val) => '<button type="button" class="' + cls + '" data-v="' + esc(val) + '" style="font:inherit;font-size:12px;padding:3px 12px;border-radius:999px;cursor:pointer;border:1px solid ' + (active ? "#0b7a6b;background:#0b7a6b;color:#fff" : "#cfdcda;background:#fff;color:#1d2b2a") + '">' + esc(label) + "</button>";
+    const all = recSorted(buildingRecords);
+    const list = all.filter(r => (recFilterKind === "전체" || r.kind === recFilterKind) && (recFilterFloor === "전체" || r.floor === recFilterFloor));
+    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:16px;font-weight:700">📌 기록 · 특별 조건 · 홍보 <span style="font-weight:400;font-size:12px;color:#6b7b79">' + esc($("buildingName") ? $("buildingName").textContent : "") + "</span></div><div>" + btn("recAddBtn", "+ 기록 추가", true) + " " + btn("recCloseBtn", "닫기", false) + "</div></div>";
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">' + ["전체"].concat(REC_KINDS).map(k => chip(k + (k === "전체" ? " " + all.length : " " + all.filter(r => r.kind === k).length), recFilterKind === k, "rec-kind", k)).join("") + "</div>";
+    if (recFilterFloor !== "전체") html += '<div style="font-size:12px;color:#6b7b79;margin-bottom:6px">' + esc(floorLabel(recFilterFloor)) + ' 기록만 보는 중 · <button type="button" id="recAllFloors" style="border:0;background:none;color:#0b7a6b;cursor:pointer;font:inherit;text-decoration:underline">전체 층 보기</button></div>';
+    if (recEditId !== null) {
+      const cur = recEditId === "new" ? { date: new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10), kind: "조건", floor: recFilterFloor !== "전체" ? recFilterFloor : "", rooms: "", text: "", files: [] } : buildingRecords.find(r => r._rowId === recEditId);
+      if (cur) {
+        html += '<div style="border:1px solid #cfe5e1;background:#f6fbfa;border-radius:10px;padding:12px;margin:8px 0 12px">'
+          + '<div style="display:grid;grid-template-columns:130px 110px 1fr 1fr;gap:8px;margin-bottom:8px">'
+          + '<input id="recDate" type="date" value="' + esc(cur.date) + '" style="' + inputCss + '">'
+          + '<select id="recKind" style="' + inputCss + '">' + REC_KINDS.map(k => "<option" + (k === cur.kind ? " selected" : "") + ">" + k + "</option>").join("") + "</select>"
+          + '<select id="recFloor" style="' + inputCss + '">' + recFloorOptions(cur.floor) + "</select>"
+          + '<input id="recRooms" placeholder="대상 호실 (예: 601~603)" value="' + esc(cur.rooms) + '" style="' + inputCss + '"></div>'
+          + '<textarea id="recText" rows="4" placeholder="내용 (예: 특가 38억 VAT별도, 2026.12월까지 한정 / 수수료 조건 / 카톡 발송 내역)" style="' + inputCss + ';resize:vertical">' + esc(cur.text) + "</textarea>"
+          + '<div id="recKeptFiles" style="margin:6px 0">' + recEditFiles.map((f, i) => '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;border:1px solid #cfe5e1;border-radius:6px;padding:1px 8px;margin:2px 6px 0 0;background:#fff">📎 ' + esc(f.name) + ' <button type="button" class="rec-rm-file" data-i="' + i + '" style="border:0;background:none;cursor:pointer;color:#b3261e">✕</button></span>').join("") + "</div>"
+          + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><input id="recFile" type="file" multiple accept="image/*,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" style="font-size:12px">' + '<div>' + btn("recSaveBtn", "저장", true) + " " + btn("recCancelBtn", "취소", false) + "</div></div>"
+          + '<div id="recProg" style="font-size:12px;color:#6b7b79;margin-top:4px"></div></div>';
+      }
+    }
+    if (!list.length) html += '<div style="padding:18px 4px;color:#6b7b79;font-size:13px">' + (all.length ? "조건에 맞는 기록이 없어요." : "아직 기록이 없어요. 위의 + 기록 추가로 특별 조건이나 홍보물을 남겨 보세요.") + "</div>";
+    html += list.map(r => '<div style="display:grid;grid-template-columns:48px 62px 1fr auto;gap:10px;padding:9px 0;border-top:1px solid #e3eeec;font-size:13px;align-items:baseline">'
+      + '<span style="color:#6b7b79;font-size:12px">' + esc(recDateLabel(r.date)) + "</span>" + recTagHtml(r.kind)
+      + '<div><div style="color:#6b7b79;font-size:12px">' + esc(recFloorLabel(r)) + '</div><div style="white-space:pre-wrap;overflow-wrap:anywhere">' + esc(r.text) + "</div>" + (r.files.length ? "<div>" + recFilesHtml(r) + "</div>" : "") + "</div>"
+      + '<div style="white-space:nowrap"><button type="button" class="rec-edit" data-id="' + esc(r._rowId) + '" style="font:inherit;font-size:12px;border:1px solid #cfdcda;background:#fff;border-radius:999px;padding:1px 10px;cursor:pointer">수정</button> <button type="button" class="rec-del" data-id="' + esc(r._rowId) + '" style="font:inherit;font-size:12px;border:1px solid #e8c9c6;background:#fff;color:#b3261e;border-radius:999px;padding:1px 10px;cursor:pointer">삭제</button></div></div>').join("");
+    body.innerHTML = html;
+    $("recCloseBtn").addEventListener("click", () => $("recPanel").remove());
+    $("recAddBtn").addEventListener("click", () => { recEditId = "new"; recEditFiles = []; renderRecPanel(); });
+    body.querySelectorAll(".rec-kind").forEach(b => b.addEventListener("click", () => { recFilterKind = b.dataset.v; renderRecPanel(); }));
+    if ($("recAllFloors")) $("recAllFloors").addEventListener("click", () => { recFilterFloor = "전체"; renderRecPanel(); });
+    body.querySelectorAll(".rec-edit").forEach(b => b.addEventListener("click", () => { const r = buildingRecords.find(x => String(x._rowId) === b.dataset.id); recEditId = r._rowId; recEditFiles = r.files.slice(); renderRecPanel(); }));
+    body.querySelectorAll(".rec-del").forEach(b => b.addEventListener("click", async () => {
+      if (!confirm("이 기록을 삭제할까요? (첨부 파일은 보관소에 남아요)")) return;
+      try { await deleteBuildingFile(b.dataset.id); showToast("기록을 삭제했습니다."); await loadBuildingRecords(); } catch (e) { showToast("삭제 실패: " + e.message); }
+    }));
+    body.querySelectorAll(".rec-rm-file").forEach(b => b.addEventListener("click", () => { recEditFiles.splice(Number(b.dataset.i), 1); const keep = { date: $("recDate").value, kind: $("recKind").value, floor: $("recFloor").value, rooms: $("recRooms").value, text: $("recText").value }; const cur = buildingRecords.find(r => r._rowId === recEditId); if (cur) Object.assign(cur, keep); renderRecPanel(); }));
+    if ($("recCancelBtn")) $("recCancelBtn").addEventListener("click", () => { recEditId = null; renderRecPanel(); });
+    if ($("recSaveBtn")) $("recSaveBtn").addEventListener("click", recSave);
+  }
+  async function recSave() {
+    const text = $("recText").value.trim();
+    if (!text) { showToast("내용을 적어 주세요."); return; }
+    const saveBtn = $("recSaveBtn"); saveBtn.disabled = true;
+    try {
+      const files = recEditFiles.slice();
+      const picked = Array.from($("recFile").files || []);
+      for (let i = 0; i < picked.length; i++) {
+        $("recProg").textContent = "파일 올리는 중 (" + (i + 1) + "/" + picked.length + ") " + picked[i].name;
+        files.push({ name: picked[i].name, url: await cloudinaryUpload(picked[i], "haitop/files") });
+      }
+      const data = { date: $("recDate").value, kind: $("recKind").value, floor: $("recFloor").value, rooms: $("recRooms").value.trim(), text, files };
+      const fileName = REC_PREFIX + JSON.stringify(data);
+      if (recEditId === "new") {
+        await addBuildingFile({ building_id: buildingId, file_name: fileName, cloudinary_url: "", drive_link: null });
+      } else {
+        const res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/building_files?id=eq." + encodeURIComponent(recEditId), { method: "PATCH", headers: Object.assign({}, headers, { "Prefer": "return=minimal" }), body: JSON.stringify({ file_name: fileName }) });
+        if (!res.ok) throw new Error("기록 수정 실패: " + await res.text());
+      }
+      recEditId = null; recEditFiles = [];
+      showToast("✅ 기록을 저장했습니다.");
+      await loadBuildingRecords();
+    } catch (e) { showToast("❌ 저장 실패: " + e.message); saveBtn.disabled = false; }
+  }
+
+  function renderFloorTabs() {
+    const seen = {};
+    const floors = [];
+    scopedUnits().forEach(u => {
+      const f = unitGroup(u);
+      if (f && !seen[f]) { seen[f] = true; floors.push(f); }
+    });
+    floors.sort((a, b) => {
+      if (a.startsWith("B") && !b.startsWith("B")) return -1;
+      if (!a.startsWith("B") && b.startsWith("B")) return 1;
+      return parseInt(a.replace("B","")) - parseInt(b.replace("B",""));
+    });
+
+    const tabs = ["전체"].concat(floors);
+    const recCount = f => buildingRecords.filter(r => r.floor === f).length;
+    $("unitFloorTabs").innerHTML = tabs.map(f => {
+      const n = f === "전체" ? 0 : recCount(f);
+      return '<button class="ftab' + (f === filterFloor ? " active" : "") + '" data-floor="' + esc(f) + '">' + esc(floorLabel(f)) + (n ? '<i class="rec-n">' + n + "</i>" : "") + "</button>";
+    }).join("") + '<button type="button" class="ftab rec-open" id="recOpenBtn" title="특별 조건·홍보물·메모 기록">📌 기록 ' + buildingRecords.length + "</button>";
+
+    $("unitFloorTabs").querySelectorAll(".ftab[data-floor]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterFloor = btn.dataset.floor;
+        renderAll();
+      });
+    });
+    $("recOpenBtn").addEventListener("click", () => openRecPanel("전체"));
+    if (!recordsLoaded && !recordsLoading) loadBuildingRecords();
+    try { renderRecordStrip(); } catch (e) { console.warn("[기록] 표시 실패", e); }
+  }
+
+  const unitStatusLabel = {occ:'임차중', vac:'공실', sale:'매매가능', listed:'매물진행중'};
+  function matchesUnitStatusFilter(u) {
+    const s = filterUnitStatus;
+    if (!s || residentialUnitMode()) return true;
+    if (s === 'occ') return commercialOccupancy(u) === '임차중';
+    if (s === 'vac') return commercialOccupancy(u) === '공실';
+    const ids = commercialLinkedIds([u]);
+    if (s === 'listed') return ids.some(id => isActiveListing(commercialListings[id]));
+    if (s === 'sale') return ids.some(id => {
+      const listing = commercialListings[id];
+      return isActiveListing(listing) && String(listing.dealType || listing.deal_type || '').includes('매매') && CommercialPriceCore.price(listing).amount !== null;
+    });
+    return true;
+  }
+  document.querySelectorAll('[data-unit-status]').forEach(button => {
+    button.addEventListener('click', () => {
+      const status = button.dataset.unitStatus;
+      if ((status === 'sale' || status === 'listed') && !activeListingLoaded) { showToast('매물 정보를 불러오는 중입니다. 잠시 후 다시 눌러주세요.'); return; }
+      filterUnitStatus = filterUnitStatus === status ? '' : status;
+      filterFloor = '전체';
+      renderAll();
+      const box = $('unitsTbody'); if (box && filterUnitStatus) box.closest('.units-wrap').scrollIntoView({block:'nearest', behavior:'smooth'});
+    });
+  });
+  function matchesUnitDealFilter(unit, deal) {
+    if (!deal) return true;
+    if (deal === '자가') return (unit.세입자현황 || unit.공실여부 || '') === '자가거주';
+    return String(unitDeal(unit) || '').includes(deal);
+  }
+  document.querySelectorAll('[data-unit-deal]').forEach(button => {
+    button.addEventListener('click', () => {
+      filterUnitDeal = filterUnitDeal === button.dataset.unitDeal ? '' : button.dataset.unitDeal;
+      filterFloor = '전체';
+      renderAll();
+    });
+  });
+
+  // 추천매물·수익성매물 표시값 (true, 또는 예전에 글자로 적어둔 값은 모두 "표시됨"으로 본다)
+  function isFlagOn(v) {
+    if (v === true) return true;
+    const s = String(v ?? "").trim();
+    return s !== "" && !["false", "0", "n", "no", "x", "아니오", "없음"].includes(s.toLowerCase());
+  }
+
+  // ===== 호실 묶음 표시 (매물관리 분양 명단과 같은 묶음ID 사용) =====
+  let activeBundleIds = new Set();
+  const bundleRoomNum = h => parseInt(String(h || '').replace(/[^0-9]/g, ''), 10) || 0;
+  function unitBundleGroups() {
+    if (residentialUnitMode()) return [];
+    const map = new Map();
+    scopedUnits().forEach(u => {
+      const id = u.묶음ID;
+      if (!id || CommercialPriceCore.status(u, true) !== '분양중') return;
+      if (!map.has(id)) map.set(id, []);
+      map.get(id).push(u);
+    });
+    return [...map.values()].filter(g => g.length >= 2);
+  }
+  function bundleRoomLabel(g) {
+    const sorted = g.slice().sort((a, b) => bundleRoomNum(a.호수) - bundleRoomNum(b.호수));
+    const nums = sorted.map(u => bundleRoomNum(u.호수));
+    const consecutive = nums.length >= 3 && nums.every((n, i) => i === 0 || n === nums[i - 1] + 1);
+    return (consecutive ? nums[0] + '~' + nums[nums.length - 1] : sorted.map(u => u.호수).join('·')) + '호';
+  }
+  function bundleSum(g, pick) {
+    const vals = g.map(pick);
+    if (vals.some(v => v === null || v === undefined || !Number.isFinite(Number(v)))) return null;
+    return Math.round(vals.reduce((a, v) => a + Number(v), 0) * 100) / 100;
+  }
+  function unitUpdTag(list) {
+  let best = 0;
+  (list || []).forEach(u => { [u && u.updated_at, u && u.가격표반영일].forEach(v => { const t = Date.parse(v); if (Number.isFinite(t) && t > best) best = t; }); });
+  const base = "display:flex;align-items:center;gap:3px;margin:2px 0 0 0;font-size:.68rem;font-weight:400;white-space:nowrap;vertical-align:middle;";
+  if (!best) return '<span title="수정 기록 없음" style="' + base + 'color:#78909c;"><span style="width:8px;height:8px;border-radius:50%;border:1px solid #78909c;"></span>-</span>';
+  const days = Math.floor((Date.now() - best) / 86400000);
+  const color = days <= 7 ? "#66bb6a" : days <= 30 ? "#ffd54f" : "#78909c";
+  const iso = new Date(best + 9 * 3600000).toISOString();
+  const full = iso.slice(0, 10);
+  const sameYear = full.slice(0, 4) === new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 4);
+  const label = sameYear ? full.slice(5) : full.slice(2);
+  return '<span title="최근 수정 ' + full + (days <= 0 ? " (오늘)" : " (" + days + "일 전)") + '" style="' + base + 'color:' + color + ';"><span style="width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>' + label + '</span>';
+}
+  function renderUnitBundleBox() {
+    const box = $('unitBundleBox');
+    if (!box) return;
+    const groups = unitBundleGroups();
+    activeBundleIds = new Set(groups.map(g => g[0].묶음ID));
+    if (!groups.length) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    const rows = groups.map((g, i) => {
+      const sorted = g.slice().sort((a, b) => bundleRoomNum(a.호수) - bundleRoomNum(b.호수));
+      const sp = g.map(u => u.묶음특가).find(Boolean) || null;
+      const amt = bundleSum(g, u => CommercialPriceCore.price(u, true).amount);
+      const dep = bundleSum(g, u => CommercialPriceCore.economics(u, true).deposit);
+      const rent = bundleSum(g, u => CommercialPriceCore.economics(u, true).rent);
+      let shownAmt = amt, shownDep = dep, shownRent = rent, listPrice = null;
+      if (sp) {
+        listPrice = sp.정가 != null ? sp.정가 : amt;
+        if (sp.할인가 != null) shownAmt = sp.할인가;
+        if (sp.보증금 != null) shownDep = sp.보증금;
+        if (sp.월세 != null) shownRent = sp.월세;
+      }
+      const biz = (sorted.find(u => u.현업종) || {}).현업종 || '-';
+      const strike = sp && listPrice != null && listPrice !== shownAmt ? '<div class="ub-strike">' + toPlainWon(listPrice) + '</div>' : '';
+      return '<tr><td><strong>' + esc(bundleRoomLabel(g)) + '</strong> <span class="unit-flag bundle">' + g.length + '호실</span>' + (sp ? '<span class="unit-flag sale">특별할인</span>' : '') + unitUpdTag(g) + '</td>'
+        + '<td>' + esc(biz) + '</td>'
+        + '<td class="ub-price">' + (shownAmt != null ? toPlainWon(shownAmt) : '-') + strike + '</td>'
+        + '<td>' + esc(commercialOccupancy(sorted[0])) + '</td>'
+        + '<td>' + (shownDep != null ? (toKorAmt(shownDep) || '-') : '-') + ' / ' + (shownRent != null ? (toKorAmt(shownRent) || '-') : '-') + '</td>'
+        + '<td class="ub-act"><button type="button" class="btn-unit-ghost" data-ub-open="' + i + '">묶음 해제</button></td></tr>';
+    }).join('');
+    box.innerHTML = '<div class="ub-head"><strong>묶음 매물</strong><span class="ub-cnt">' + groups.length + '건</span><span class="ub-hint">위 목록에서 호실을 체크하고 "호실 묶기"로 만들어요 · 특별가는 매물관리 분양 명단에서 입력해요</span></div>'
+      + '<table><thead><tr><th>호수</th><th>업종</th><th>분양금액</th><th>임대현황</th><th>보증금 / 월세</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    box.querySelectorAll('[data-ub-open]').forEach(btn => btn.addEventListener('click', () => unbundleUnits(groups[Number(btn.dataset.ubOpen)])));
+  }
+  async function unbundleUnits(g) {
+    if (!g) return;
+    if (!confirm(bundleRoomLabel(g) + ' 묶음을 해제할까요?\n(호실 자료는 그대로 두고 묶음과 특별가만 지워요)')) return;
+    try {
+      const id = g[0].묶음ID;
+      const next = units.map(u => {
+        if (u.묶음ID !== id) return u;
+        const c = { ...u };
+        delete c.묶음ID; delete c.묶음모드; delete c.묶음특가;
+        c.비고 = String(c.비고 || '').replace(/(^|\n)\[특별할인[^\]]*\][^\n]*/g, '').trim() || null;
+        c.updated_at = new Date().toISOString();
+        return c;
+      });
+      await saveBuildingUnits(bName, bName, next);
+      units = next; selectedUnitRows.clear(); renderAll();
+      showToast('묶음을 해제했습니다.');
+    } catch (e) { showToast('묶음 해제 실패: ' + e.message); }
+  }
+  function renderTable() {
+    renderUnitBundleBox();
+    const grouped = filterFloor === "전체"
+      ? scopedUnits()
+      : scopedUnits().filter(u => unitGroup(u) === filterFloor);
+    const filtered = residentialUnitMode() ? sortedResidentialUnits(grouped.filter(u => matchesUnitDealFilter(u, filterUnitDeal))) : grouped.filter(matchesUnitStatusFilter);
+
+    const contacts = filtered.filter(u => String(u.소유주 || '').trim() && String(u.연락처 || '').trim()).length;
+    const listed = residentialUnitMode() ? filtered.filter(u => listingLookupLoaded ? linkedUnitListings(u).length > 0 : String(u.listing_id || '').trim()).length : commercialLinkedIds(filtered).filter(id => commercialListings[id]).length;
+    $("unitCounts").textContent = `${floorLabel(filterFloor)}${residentialUnitMode() && filterUnitDeal ? " · " + filterUnitDeal : ""}${!residentialUnitMode() && filterUnitStatus ? " · " + unitStatusLabel[filterUnitStatus] : ""} · 등록 ${residentialUnitMode() ? "세대" : "호실"} ${filtered.length}개 · 공실등록 ${filtered.filter(u => (residentialUnitMode() ? u.공실여부 : commercialOccupancy(u)) === "공실").length}개 · 소유주·연락처 확보 ${contacts}개 · 매물등록 ${listed}개`;
+    const tbody = $("unitsTbody");
+    const empty = $("unitsEmpty");
+
+    if (residentialUnitMode()) renderResidentialHeader();
+    if (!filtered.length) {
+      if(!residentialUnitMode()) empty.textContent = filterUnitStatus ? "선택한 조건에 해당하는 호실이 없습니다." : "등록된 호실이 없습니다. [+ 호실 추가]를 눌러 시작하세요.";
+      if(residentialUnitMode())empty.textContent=units.length ? "선택한 조건에 해당하는 세대가 없습니다." : "등록된 세대가 없습니다. [+ 세대 추가]를 눌러 등록하세요.";
+      tbody.innerHTML = "";
+      empty.style.display = "";
+      unitBulkState();
+      return;
+    }
+    empty.style.display = "none";
+
+    syncOrigToggle();
+    if (residentialUnitMode()) renderResidentialTable(filtered);
+    else { if (!$("unitSelectAll")) $("unitsTableHead").querySelector("tr").insertAdjacentHTML("afterbegin", '<th class="unit-select-cell"><input type="checkbox" id="unitSelectAll" aria-label="현재 목록 전체선택"></th>'); tbody.innerHTML = filtered.map(u => {
+      const ri     = units.indexOf(u);
+      const status = commercialOccupancy(u);
+      const bc     = status;
+      return `<tr class="${u.추천등록일 && isFlagOn(u.추천매물) && isFlagOn(u.수익성매물) ? 'profit-recommended-row' : ''}">
+        ${unitCheckbox(u)}<td><strong>${u.호수 || "-"}</strong>${u.묶음ID && activeBundleIds.has(u.묶음ID) ? '<span class="unit-flag bundle">묶음</span>' : ''}${u.추천등록일 ? '<span class="unit-flag rec">수익성 추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.추천매물) ? '<span class="unit-flag rec">⭐추천</span>' : ''}${!u.추천등록일 && isFlagOn(u.수익성매물) ? '<span class="unit-flag profit">💰수익성</span>' : ''}${unitUpdTag([u])}</td>
+        <td>${u.현업종 || "-"}</td>
+        <td style="white-space:nowrap;line-height:1.3">${unitAreaHtml(u)}</td>
+        <td>${u.소유주 || "-"}</td>
+        <td>${u.연락처 || "-"}</td>
+        <td><span class="unit-phase-label ${CommercialPriceCore.status(u,true)==='분양중' ? 'ongoing' : 'completed'}">${esc(CommercialPriceCore.status(u,true))}</span></td>
+        <td style="text-align:right">${commercialPriceText(u)}${originalPriceLine(u)}</td>
+        <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
+        <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
+        <td><span class="sbadge ${bc}">${status}</span></td>
+        <td class="tbl-actions">
+          <button class="btn-unit-edit" data-ri="${ri}">수정</button>
+          <button class="btn-unit-del" data-ri="${ri}">삭제</button>
+          ${(u.묶음매물연결 || []).map(link=>`<a class="btn-listing-view" href="detail.html?id=${encodeURIComponent(link.id)}" title="${esc(link.title)}">묶음매물 보기</a>`).join('')}
+        </td>
+      </tr>`;
+    }).join(""); }
+    $("unitSelectAll").onchange=e=>{$("unitsTbody").querySelectorAll(".unit-select-row").forEach(box=>{box.checked=e.target.checked;const id=Number(box.dataset.ri);if(box.checked)selectedUnitRows.add(id);else selectedUnitRows.delete(id);});unitBulkState();};
+    bindUnitSelection();
+
+    tbody.querySelectorAll(".btn-unit-edit[data-ri]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        try { openModal(Number(btn.dataset.ri)); }
+        catch (error) {
+          console.error("[세대 수정] 수정창 열기 실패:", error);
+          if (typeof showToast === "function") showToast("수정창 오류: " + error.message);
+          else alert("수정창 오류: " + error.message);
+        }
+      });
+    });
+    tbody.querySelectorAll(".btn-listing-reg[data-ri]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const u = units[Number(btn.dataset.ri)];
+        location.href = buildRegisterUrl(u);
+      });
+    });
+    tbody.querySelectorAll(".btn-unit-del[data-ri]").forEach(btn => {
+      btn.addEventListener("click", () => deleteUnit(Number(btn.dataset.ri)));
+    });
+  }
+
+  function openModal(idx) {
+    unitModalVersion++;
+    editIdx = idx;
+    pendingRegistryInfo = null;
+    const isNew = idx < 0;
+    $("umTitle").textContent    = isNew ? "호실 추가" : "호실 수정";
+    $("umDelete").style.display = isNew ? "none" : "";
+    $("umRegistry").style.display = "";
+    const u = isNew ? {} : units[idx];
+    unitPhase=isNew?"분양중":CommercialPriceCore.status(u,true);unitOriginalOpen=false;renderUnitPhase();
+    $('unitRegistryApplied').hidden = !u.건축물대장조회;
+    $('unitRegistryApplied').textContent = u.건축물대장조회 ? '저장된 대장: 전유 '+u.건축물대장조회.exclusive_area_m2+'㎡ · 공용 합계 '+(u.건축물대장조회.common_area_m2 ?? '미확인')+'㎡ · '+(u.건축물대장조회.unit_floor || '') : '';
+    $('unitModal').classList.toggle('residential-modal', residentialUnitMode());
+    $('residentialUnitFields').hidden = !residentialUnitMode();
+    $('commercialUnitSale').hidden = residentialUnitMode();
+    $('commercialUnitCurrent').hidden = residentialUnitMode();
+    if (residentialUnitMode()) {
+      $('umTitle').textContent = isNew ? '세대 추가' : '세대 수정';
+      openResidentialFields(u, isNew);
+    }
+    $('u_추가메모').value = ''; if($('u_추가메모일'))$('u_추가메모일').value = todayInKorea();
+    renderMemoHistory(u);
+
+    // 분양 당시
+    $("u_호수").value     = u.호수      || "";
+    $("u_현업종").value   = u.현업종    || "";
+    $("u_전용_평").value  = u.전용_평 ? parseFloat(u.전용_평).toFixed(2) : "";
+    $("u_전용_m2").value  = u.전용_평 ? (parseFloat(u.전용_평) * 3.30579).toFixed(2) : "";
+    $("u_분양_평").value  = u.분양_평 ? parseFloat(u.분양_평).toFixed(2) : "";
+    $("u_분양_m2").value  = u.분양_평 ? (parseFloat(u.분양_평) * 3.30579).toFixed(2) : "";
+    // m² 자동계산 색 표시
+    [$("u_전용_m2"), $("u_분양_m2")].forEach(el => {
+      if (el) el.style.color = el.value ? "#C9A84C" : "";
+    });
+    $("u_평당가").value   = u.평당가    || "";
+    $("u_분양금액").value = u.분양금액  || "";
+    $("u_보증금").value   = u.보증금    || "";
+    $("u_월차임").value   = u.월차임    || "";
+
+    // 현재 현황
+    $("u_공실여부").value   = commercialOccupancy(u);
+    $("u_현매매가격").value = u.현_매매가격 || "";
+    $("u_현보증금").value   = u.현_보증금   || "";
+    $("u_현월세").value     = u.현_월세     || "";
+    $("u_소유주").value     = u.소유주      || "";
+    $("u_연락처").value     = u.연락처      || "";
+    $("u_수익률").value     = u.수익률      || "";
+    $("u_추천매물").checked   = isFlagOn(u.추천매물);
+    $('umListingView').hidden = !u.listing_id;
+    $('umListingView').href = u.listing_id ? 'detail.html?id=' + encodeURIComponent(u.listing_id) : '#';
+    $("u_수익성매물").checked = isFlagOn(u.수익성매물);
+    // 매물관리(상가) 입력 항목과 같은 항목
+    // 이미 매물관리로 보낸 호실이면, 자료실에 아직 없는 항목은 매물관리 값을 가져와 채운다(저장 시 덮어써 지우지 않도록).
+    const linked = u.listing_id ? commercialListings[String(u.listing_id)] : null;
+    const fromListing = (unitKey, listingKey) => Object.hasOwn(u, unitKey) ? (u[unitKey] || "") : (linked?.[listingKey] || "");
+    $("u_거래구분").value   = ((v) => v === "임대" ? "월세" : v)(u.거래구분 || linked?.dealType || "");
+    $("u_구분_field").hidden = !kindSplitEnabled();
+    $("u_구분").value = u.구분 || (kindSplitEnabled() && (window.__unitKindFilter || "전체") !== "전체" ? window.__unitKindFilter : "상가");
+    $("u_관리비").value     = fromListing("관리비", "managementFee");
+    $("u_권리금").value     = fromListing("권리금", "premium");
+    $("u_층정보").value     = fromListing("층정보", "floorInfo");
+    $("u_용도지역").value   = fromListing("용도지역", "zoning");
+    $("u_주차대수").value   = fromListing("주차대수", "parkingCount");
+    $("u_사용승인일").value = fromListing("사용승인일", "approvalDate");
+    $("u_소유주메모").value = fromListing("소유주메모", "owner_memo");
+    $("u_내부메모").value   = fromListing("내부메모", "description");
+    $("u_옵션내역").value   = u.옵션내역 || u.옵션 || linked?.optionDetails || "";
+    $("u_비고").value       = fromListing("비고", "remarks");
+
+    refreshHints(u);
+    unitModalDirty = false;
+    $("unitModal").classList.add("open");
+    $(residentialUnitMode() ? "ru_동" : "u_호수").focus();
+  }
+
+  function closeModal() {
+    unitModalVersion++;
+    unitModalDirty = false;
+    $("unitModal").classList.remove("open");
+    editIdx = -1;
+  }
+
+  async function registerCommercialUnit(unit) {
+    const id = unit.listing_id || unit.pending_listing_id;
+    const existing = await getListingById(id);
+    const money = value => {
+      const n = Number(value);
+      return n > 0 && Number.isFinite(n) ? (n * 10000).toLocaleString('ko-KR') : '';
+    };
+    const sale = money(unit.현_매매가격 || unit.매매가격);
+    const presale = money(unit.분양금액);
+    const deposit = money(unit.현_보증금 ?? unit.보증금);
+    const rent = money(unit.현_월세 ?? unit.월차임);
+    // 자료실 항목이 비어 있으면(예전에 저장된 호실) 매물관리에 이미 있는 값을 지우지 않는다.
+    const keep = (unitKey, listingKey) => Object.hasOwn(unit, unitKey) ? (unit[unitKey] || '') : (existing?.[listingKey] || '');
+    const mergeMemos = (listingMemos, unitMemos) => {
+      const seen = new Set(), out = [];
+      for (const memo of [...(Array.isArray(listingMemos) ? listingMemos : []), ...(Array.isArray(unitMemos) ? unitMemos : [])]) {
+        const text = String(memo?.text || '').trim();
+        if (!text) continue;
+        const key = memo.id || text + '|' + (memo.created_at || '');
+        if (seen.has(key)) continue;
+        seen.add(key); out.push(memo);
+      }
+      return out;
+    };
+    const stickers = (existing?.stickers || []).filter(s => s !== '추천매물' && s !== '수익형');
+    if (isFlagOn(unit.추천매물)) stickers.push('추천매물');
+    if (isFlagOn(unit.수익성매물)) stickers.push('수익형');
+    const data = {
+      ...existing, id,
+      type:existing?.type || getTypeFromCategory('상가사무실', '상가', 'etc'),
+      category1:'상가사무실', category2:'상가',
+      ...(unit.bundle_details ? {bundle_details:unit.bundle_details} : {}),
+      title:unit.bundle_title || existing?.title || `${bName} ${unit.호수}호 상가`,
+      address:existing?.address || buildingAddress || '',
+      mapAddress:existing?.mapAddress || buildingAddress || '',
+      privateDetailAddress:`${bName} ${unit.호수}호`,
+      complexName:bName, ho:unit.호수,
+      resource_id:buildingId, status:existing?.status || '진행중', listingKind:'매물',
+      is_public:existing?.is_public === true,
+      shop_status:(unit.공실여부 === '공실' ? '공실' : unit.공실여부 === '임차중' ? '임차중' : (existing?.shop_status || '')), dealType:unit.거래구분 || existing?.dealType || (CommercialPriceCore.status(unit,true)==='분양중' || sale ? '매매' : '월세'),
+      salePrice:sale, presalePrice:presale, presaleStatus:CommercialPriceCore.status(unit,true), deposit, monthlyRent:rent,
+      managementFee:keep('관리비','managementFee'), premium:keep('권리금','premium'),
+      floorInfo:keep('층정보','floorInfo'), zoning:keep('용도지역','zoning'),
+      parkingCount:keep('주차대수','parkingCount'), approvalDate:keep('사용승인일','approvalDate'),
+      owner_memo:keep('소유주메모','owner_memo'), description:keep('내부메모','description'),
+      optionDetails:keep('옵션내역','optionDetails'), remarks:keep('비고','remarks'),
+      additionalMemos:mergeMemos(existing?.additionalMemos, unit.추가메모),
+      exclusiveAreaPy:Number(unit.전용_평) ? Math.round(Number(unit.전용_평) * 100) / 100 : null,
+      exclusiveAreaM2:unit.전용_평 ? Math.round(Number(unit.전용_평) * 3.30579 * 100) / 100 : null,
+      supplyAreaPy:Number(unit.분양_평) ? Math.round(Number(unit.분양_평) * 100) / 100 : null,
+      supplyAreaM2:unit.분양_평 ? Math.round(Number(unit.분양_평) * 3.30579 * 100) / 100 : null,
+      owner_name:unit.소유주 || '', owner_phone1:unit.연락처 || '', stickers,
+      detailDescription:unit.bundle_details ? '묶음 호실: '+unit.bundle_details.rooms.join(' · ')+'\n거래 조건: '+unit.bundle_details.terms : existing?.detailDescription || unit.현업종 || '',
+      import_unit_snapshot:{...unit}
+    };
+    if (existing) await updateListing(id, data); else await addListing(data);
+    unit.listing_id = id;
+    commercialListings[String(id)] = data;
+    activeListingIds[String(id)] = isActiveListing(data);
+    delete unit.pending_listing_id;
+  }
+
+  let profitRegisterBusy = false;
+  $('unitProfitRegister').addEventListener('click', async () => {
+    if (profitRegisterBusy || residentialUnitMode() || OfficeConfig.id !== 'hitop') return;
+    const selected = units.filter((u,i)=>selectedUnitRows.has(i));
+    if (!selected.length) { showToast('추천할 호실을 선택하세요.'); return; }
+    const reason = prompt('추천 사유를 입력하세요. (선택 · 500자까지)', '');
+    if (reason === null) return;
+    profitRegisterBusy = true; $('unitProfitRegister').disabled = true;
+    try {
+      const {data,error} = await hitopAuthClient.rpc('register_profit_recommendations', {p_name:bName,p_resource_id:buildingId,p_address:buildingAddress,p_expected:selected,p_reason:reason.trim()});
+      if (error) throw error;
+      selectedUnitRows.clear(); await loadUnits();
+      showToast(data.count + '개 호실이 수익성상가 추천매물로 등록되었습니다.', 6000);
+    } catch(e) { showToast('추천등록 실패: '+e.message, 9000); }
+    finally { profitRegisterBusy = false; unitBulkState(); }
+  });
+
+  let bundleRows = [], bundleSaving = false;
+  $('unitBundleRegister').addEventListener('click', () => {
+    bundleRows = units.filter((u,i) => selectedUnitRows.has(i));
+    if (residentialUnitMode() || bundleRows.length < 2) return;
+    $('bundleRooms').textContent = '선택 호실: ' + bundleRows.map(u => u.호수).join(' · ');
+    for (const [id,key] of [['bundleExclusive','전용_평'],['bundleSupply','분양_평']]) {
+      const sum = bundleRows.reduce((total,u)=>total+(Number(u[key]) || 0),0);
+      $(id).value = sum > 0 ? sum.toFixed(2) : '';
+    }
+    ['bundleSale','bundleDeposit','bundleRent','bundleMemo'].forEach(id=>{ $(id).value=''; $(id).dispatchEvent(new Event('input')); });
+    $('bundleMode').value='rooms'; $('bundleDeal').value='월세'; $('bundleTerms').selectedIndex=0;
+    $('bundleRecommended').checked=false;
+    $('bundleModal').classList.add('open');
+  });
+  $('bundleCancel').addEventListener('click', () => { if (!bundleSaving) $('bundleModal').classList.remove('open'); });
+  $('bundleSave').addEventListener('click', async () => {
+    if (bundleSaving || bundleRows.length < 2) return;
+    const rows = bundleRows, groups = [...new Set(rows.map(unitGroup))];
+    const wholeFloor = $('bundleMode').value === 'floor';
+    if (wholeFloor && (groups.length !== 1 || units.filter(u=>unitGroup(u)===groups[0]).some(u=>!rows.includes(u)))) {
+      showToast('층 전체 등록은 해당 층의 모든 호실을 선택하세요.'); return;
+    }
+    const number = id => {
+      const value = $(id).value.trim();
+      if (!value) return null;
+      const n = Number(value);
+      if (!Number.isFinite(n) || n < 0) throw new Error('면적과 가격은 0 이상의 숫자로 입력하세요.');
+      return n;
+    };
+    try {
+      const sale=number('bundleSale'),deposit=number('bundleDeposit'),rent=number('bundleRent');
+      const deal=$('bundleDeal').value;
+      if (deal==='매매' && !(sale>0) || deal==='전세' && !(deposit>0) || deal==='월세' && !(rent>0)) throw new Error('선택한 거래구분의 묶음 전체 가격을 입력하세요.');
+      const exclusive=number('bundleExclusive'),supply=number('bundleSupply');
+      if (supply!=null && exclusive!=null && supply<exclusive) throw new Error('공급면적은 전용면적 이상이어야 합니다.');
+      const key = JSON.stringify(rows.map(u=>String(u.호수)).sort());
+      const previous = rows[0].묶음매물연결?.find(link=>link.key===key);
+      const id = previous?.id || rows[0].묶음등록대기?.[key] || crypto.randomUUID();
+      const virtual = {pending_listing_id:id, 호수:rows.map(u=>u.호수).join('·'),
+        bundle_title:`${bName} ${wholeFloor ? groups[0]+'층 전체' : rows.map(u=>u.호수).join('·')+'호 묶음'}`,
+        거래구분:deal,현_매매가격:deal==='매매'?sale:null,현_보증금:deal!=='매매'?deposit:null,현_월세:deal==='월세'?rent:null,
+        전용_평:exclusive,분양_평:supply,추천매물:$('bundleRecommended').checked,비고:$('bundleMemo').value.trim(),
+        bundle_details:{mode:wholeFloor?'floor':'rooms',rooms:rows.map(u=>String(u.호수)),terms:$('bundleTerms').value,memo:$('bundleMemo').value.trim()}
+      };
+      bundleSaving=true; $('bundleSave').disabled=true; $('bundleSave').textContent='등록 중…';
+      rows.forEach(u=>{u.묶음등록대기={...u.묶음등록대기,[key]:id};});
+      await saveBuildingUnits(bName,bName,units);
+      await registerCommercialUnit(virtual);
+      rows.forEach(u=>{
+        u.묶음매물연결=[...(u.묶음매물연결 || []).filter(link=>link.key!==key),{key,id:virtual.listing_id,title:virtual.bundle_title}];
+        delete u.묶음등록대기[key];
+      });
+      await saveBuildingUnits(bName,bName,units);
+      selectedUnitRows.clear(); renderAll(); $('bundleModal').classList.remove('open');
+      showToast('묶음매물이 등록되었습니다.');
+    } catch(error) { showToast('묶음매물 등록 실패: '+error.message); }
+    finally { bundleSaving=false; $('bundleSave').disabled=false; $('bundleSave').textContent='매물 등록'; }
+  });
+
+  $('unitBundleRooms').addEventListener('click', async () => {
+    const rows = units.filter((u, i) => selectedUnitRows.has(i));
+    if (residentialUnitMode() || rows.length < 2) return;
+    if (rows.some(u => CommercialPriceCore.status(u, true) !== '분양중')) { alert('분양중인 호실만 묶을 수 있어요. 분양완료 호실은 체크를 풀어 주세요.'); return; }
+    const label = bundleRoomLabel(rows);
+    if (!confirm(label + ' (' + rows.length + '개 호실)을 하나의 묶음으로 표시할까요?\n(호실 가격은 바꾸지 않고 묶음 표시만 저장해요)')) return;
+    const button = $('unitBundleRooms'); button.disabled = true;
+    try {
+      const id = 'bd-' + Date.now().toString(36);
+      const picked = new Set(rows);
+      const next = units.map(u => picked.has(u) ? { ...u, 묶음ID: id, 묶음모드: 'both', updated_at: new Date().toISOString() } : u);
+      await saveBuildingUnits(bName, bName, next);
+      units = next; selectedUnitRows.clear(); renderAll();
+      showToast('호실 ' + rows.length + '개를 묶음으로 표시했습니다.');
+    } catch (e) { showToast('호실 묶기 실패: ' + e.message); }
+    finally { unitBulkState(); }
+  });
+
+  async function saveUnit(options = {}) {
+    if ($("umSave").disabled) return;
+    const 호수 = $("u_호수").value.trim();
+    if (!residentialUnitMode() && !호수) { if (typeof showToast === "function") showToast("호수를 입력하세요."); return; }
+
+    let unit = {
+      ...(editIdx >= 0 ? units[editIdx] : {}),
+      호수,
+      분양상태:unitPhase,
+      ...(kindSplitEnabled() ? { 구분: $("u_구분").value } : {}),
+      공실여부:    $("u_공실여부").value,
+      현업종:      $("u_현업종").value.trim()    || null,
+      소유주:      $("u_소유주").value.trim()    || null,
+      연락처:      $("u_연락처").value.trim()    || null,
+      보증금:      $("u_보증금").value === "" ? null : Number($("u_보증금").value),
+      월차임:      $("u_월차임").value === "" ? null : Number($("u_월차임").value),
+      전용_평:     $("u_전용_평").value ? Math.round(parseFloat($("u_전용_평").value) * 100) / 100 : null,
+      분양_평:     $("u_분양_평").value ? Math.round(parseFloat($("u_분양_평").value) * 100) / 100 : null,
+      평당가:      Number($("u_평당가").value)   || null,
+      분양금액:    Number($("u_분양금액").value) || null,
+      현_매매가격: Number($("u_현매매가격").value) || null,
+      현_보증금:   $("u_현보증금").value === "" ? null : Number($("u_현보증금").value),
+      현_월세:     $("u_현월세").value === "" ? null : Number($("u_현월세").value),
+      수익률:      $("u_수익률").value.trim()    || null,
+      추천매물:    $("u_추천매물").checked   ? true : null,
+      수익성매물:  $("u_수익성매물").checked ? true : null,
+      거래구분:    $("u_거래구분").value         || null,
+      관리비:      $("u_관리비").value.trim()    || null,
+      권리금:      $("u_권리금").value.trim()    || null,
+      층정보:      $("u_층정보").value.trim()    || null,
+      용도지역:    $("u_용도지역").value.trim()  || null,
+      주차대수:    $("u_주차대수").value.trim()  || null,
+      사용승인일:  $("u_사용승인일").value.trim() || null,
+      소유주메모:  $("u_소유주메모").value.trim() || null,
+      내부메모:    $("u_내부메모").value.trim()  || null,
+      옵션내역:    $("u_옵션내역").value.trim()  || null,
+      비고:        $("u_비고").value.trim()      || null,
+      updated_at:  new Date().toISOString()
+    };
+
+    const original = editIdx >= 0 ? units[editIdx] : {};
+    if (residentialUnitMode()) {
+      try { unit = residentialUnitChanges(original); }
+      catch (e) { showToast(e.message); return; }
+    }
+    if (pendingRegistryInfo) unit.건축물대장조회 = pendingRegistryInfo;
+    if (residentialUnitMode() && !unit.listing_id) {
+      const matches = linkedUnitListings(unit);
+      if (matches.length === 1) unit.listing_id = matches[0].id;
+    }
+    const newMemo = $('u_추가메모').value.trim();
+    unit.추가메모 = (memoDraft ? memoDraft : unitMemos(original)).map(m => ({...m}));
+    if (newMemo) {
+      const memoDate = ($('u_추가메모일') && $('u_추가메모일').value) || todayInKorea();
+      unit.추가메모.push({id:crypto.randomUUID(),text:newMemo,created_at:memoIso(memoDate)});
+    }
+    // 날짜를 고르거나 고친 메모도 날짜 순서로 보이게 (날짜 없는 예전 메모는 맨 앞 유지)
+    unit.추가메모 = unit.추가메모.map((m,i) => { const t = m.created_at ? Date.parse(m.created_at) : NaN; return {m,i,t:Number.isNaN(t) ? -Infinity : t}; })
+      .sort((a,b) => (a.t === b.t ? 0 : a.t < b.t ? -1 : 1) || (a.i - b.i)).map(x => x.m);
+    // 자료실에는 등록만 하고, 매물관리로는 [선택 항목 매물리스트로 보내기]로 보낸다.
+    // 이미 보낸(연결된) 호실은 저장할 때마다 매물관리 쪽도 같은 내용으로 갱신해 계속 연동한다.
+    delete unit.매물등록요청;
+    const registerNow = !options.keepOpen && !residentialUnitMode() && !!unit.listing_id;
+    const wasNew = editIdx < 0;
+    const savedIndex = wasNew ? units.length : editIdx;
+    const next = [...units];
+    if (wasNew) next.push(unit); else next[editIdx] = unit;
+
+    $("umSave").disabled = true;
+    $("umAddMemo").disabled = true;
+    $("umSave").textContent = "저장 중...";
+    try {
+      await saveBuildingUnits(bName, bName, next);
+      units = next;
+      editIdx = savedIndex;
+      if (registerNow) {
+        await registerCommercialUnit(unit);
+        await saveBuildingUnits(bName, bName, next);
+        activeListingIds[unit.listing_id] = isActiveListing(commercialListings[unit.listing_id]);
+      }
+      selectedUnitRows.clear();
+      renderAll();
+      if (options.keepOpen) { openModal(savedIndex); $('u_추가메모').focus(); }
+      else closeModal();
+      if (typeof showToast === "function") showToast(registerNow ? '수정 완료 · 연동된 매물관리에도 반영되었습니다.' : newMemo ? '추가메모가 저장되었습니다.' : wasNew ? '자료가 추가되었습니다.' : '수정 완료되었습니다.');
+    } catch(e) {
+      if (typeof showToast === "function") showToast("저장 실패: " + e.message);
+      console.error("[호실현황] 저장 실패:", e);
+    } finally {
+      $("umSave").disabled = false;
+      $("umAddMemo").disabled = false;
+      $("umSave").textContent = "저장";
+    }
+  }
+
+  async function deleteUnit(idx) {
+    const target = idx === undefined ? editIdx : idx;
+    if (target < 0 || !units[target]) return;
+    const u = units[target];
+    if (!confirm(`'${u.호수}' 호실을 삭제하시겠습니까?`)) return;
+    const next = units.filter((_, i) => i !== target);
+    $("umDelete").disabled = true;
+    try {
+      await saveBuildingUnits(bName, bName, next);
+      units = next;
+      selectedUnitRows.clear();
+      if (target === editIdx) closeModal();
+      renderAll();
+      if (typeof showToast === "function") showToast("삭제 완료되었습니다.");
+    } catch(e) {
+      if (typeof showToast === "function") showToast("삭제 실패: " + e.message);
+    } finally { $("umDelete").disabled = false; }
+  }
+
+  // 입력: 만원 단위 숫자, 출력: "880,000,000원" (쉼표 구분 원 단위 숫자)
+  function toPlainWon(val) {
+    if (val === null || val === undefined || String(val).trim() === '') return '';
+    const n = Number(String(val).replace(/,/g, ''));
+    const won = Math.round(n * 10000);
+    if (!Number.isSafeInteger(won) || won < 0) return '';
+    return won.toLocaleString('ko-KR') + '원';
+  }
+
+  // ── 한글 금액 변환 ──
+  // 입력: 만원 단위 숫자, 출력: "X억 X,XXX만원" 또는 "X,XXX만원"
+  function toKorAmt(val) {
+    if (val === null || val === undefined || String(val).trim() === '') return '';
+    const n = Number(String(val).replace(/,/g, ''));
+    const won = Math.round(n * 10000);
+    if (!Number.isSafeInteger(won) || won < 0) return '';
+    if (won === 0) return '0원';
+    const eok = Math.floor(won / 100000000);
+    const man = Math.floor((won % 100000000) / 10000);
+    const remainder = won % 10000;
+    const parts = [];
+    if (eok) parts.push(eok.toLocaleString('ko-KR') + (man || remainder ? '억' : '억원'));
+    if (man) parts.push(man.toLocaleString('ko-KR') + (remainder ? '만' : '만원'));
+    if (remainder) parts.push(remainder.toLocaleString('ko-KR') + '원');
+    return parts.join(' ');
+  }
+
+  // 한글 금액 힌트를 실시간으로 갱신하는 필드 목록
+  const AMT_FIELDS = ["u_분양금액","u_보증금","u_월차임","u_현매매가격","u_현보증금","u_현월세"];
+
+  function bindAmtHints() {
+    AMT_FIELDS.forEach(function(id) {
+      const input = $(id);
+      const hint  = document.getElementById("h_" + id.replace("u_",""));
+      if (!input || !hint) return;
+      input.addEventListener("input", function() {
+        hint.textContent = toKorAmt(input.value);
+      });
+    });
+  }
+  bindAmtHints();
+  ['u_분양금액','u_보증금','u_월차임','u_현매매가격','u_현보증금','u_현월세','u_평당가','ru_매매가','ru_보증금','ru_월세','ru_승계보증금','bundleSale','bundleDeposit','bundleRent'].forEach(id => {
+    const input = $(id);
+    if (!input) return;
+    input.step = 'any';
+    if (id.startsWith('bundle')) {
+      const hint = document.createElement('span');
+      hint.className = 'amt-hint';
+      input.insertAdjacentElement('afterend', hint);
+      input.addEventListener('input', () => { hint.textContent = toKorAmt(input.value); });
+    }
+  });
+
+  // ── 평 ↔ m² 양방향 변환 바인딩 ──
+  const PY_TO_M2 = 3.30579;
+  function bindAreaPair(pyId, m2Id) {
+    const pyEl = $(pyId);
+    const m2El = $(m2Id);
+    if (!pyEl || !m2El) return;
+    pyEl.addEventListener("input", () => {
+      const v = parseFloat(pyEl.value);
+      if (!isNaN(v) && v > 0) {
+        m2El.value = (v * PY_TO_M2).toFixed(2);
+        m2El.style.color = "#C9A84C";
+      } else {
+        m2El.value = "";
+        m2El.style.color = "";
+      }
+    });
+    m2El.addEventListener("input", () => {
+      const v = parseFloat(m2El.value);
+      if (!isNaN(v) && v > 0) {
+        pyEl.value = (v / PY_TO_M2).toFixed(2);
+        m2El.style.color = "#C9A84C";
+      } else {
+        pyEl.value = "";
+        m2El.style.color = "";
+      }
+    });
+  }
+  bindAreaPair("u_전용_평", "u_전용_m2");
+  bindAreaPair("u_분양_평", "u_분양_m2");
+
+  // 모달 열릴 때 힌트 초기값 갱신
+  function refreshHints(u) {
+    const map = {
+      u_분양금액: u.분양금액  || "",
+      u_보증금:   u.보증금    || "",
+      u_월차임:   u.월차임    || "",
+      u_현매매가격: u.현_매매가격 || "",
+      u_현보증금: u.현_보증금  || "",
+      u_현월세:   u.현_월세   || "",
+    };
+    Object.entries(map).forEach(function([id, val]) {
+      const hint = document.getElementById("h_" + id.replace("u_",""));
+      if (hint) hint.textContent = toKorAmt(val);
+    });
+  }
+
+  $('ru_계약기간').addEventListener('change', updateResidentialContractEnd);
+  $('ru_계약시작').addEventListener('change', updateResidentialContractEnd);
+  $('ru_계약종료').addEventListener('change', syncResidentialContractPeriod);
+  document.querySelectorAll('[data-unit-date]').forEach(button => button.addEventListener('click', () => {
+    const input = $(button.dataset.unitDate);
+    input.focus();
+    if (typeof input.showPicker === 'function') {
+      try { input.showPicker(); } catch (_) { /* Native date input remains available. */ }
+    }
+  }));
+  $('ru_타입').addEventListener('change', fillUnitPlanAreas);
+  function ownerSearch(source) {
+    openApartmentRegistrySearch({complexName:bName,dong:$('ru_동').value,ho:$('ru_호수').value,jibunAddress:buildingAddress},message=>showToast(message,10000),source);
+  }
+  $('ru_ownerRegistry').addEventListener('click',()=>ownerSearch('registry'));
+  $('ru_ownerBuilding').addEventListener('click',()=>ownerSearch('building'));
+  ['ru_연락처','ru_세입자연락처'].forEach(id => $(id).addEventListener('blur', () => {$(id).value = ownerPhone($(id).value);}));
+  ['매매가','보증금','월세'].forEach(k => $('ru_'+k).addEventListener('input', () => {$('h_ru_'+k).textContent = toKorAmt($('ru_'+k).value);}));
+  bindAreaPair('ru_분양_평','ru_분양_m2');
+  ['ru_분양_평','ru_분양_m2'].forEach(id=>$(id).addEventListener('input',()=>{$('ru_평형').value=Number($('ru_분양_평').value)>0 ? Number($('ru_분양_평').value).toFixed(2)+'평' : '';}));
+  bindAreaPair('ru_전용_평','ru_전용_m2');
+  $('unitMemoHistory').addEventListener('click', e => {
+    const btn = e.target.closest('[data-memo-act]');
+    if (!btn) return;
+    const row = btn.closest('.unit-memo-entry');
+    const i = Number(row.dataset.memoIdx);
+    const act = btn.dataset.memoAct;
+    if (i === -1 && memoRemarks) {
+      // 비고 칸에서 온 첫 메모도 여기서 바로 수정할 수 있게 한다.
+      if (act === 'edit') { memoEditing = -2; drawMemoHistory(); const rta = $('unitMemoHistory').querySelector('textarea'); if (rta) rta.focus(); }
+      else if (act === 'cancel') { memoEditing = -1; drawMemoHistory(); }
+      else if (act === 'save') {
+        const rtext = row.querySelector('textarea').value.trim();
+        if (!rtext) { showToast('메모 내용을 입력하세요.'); return; }
+        $(residentialUnitMode() ? 'ru_비고' : 'u_비고').value = rtext;
+        memoRemarks.text = rtext;
+        memoEditing = -1;
+        saveUnit({keepOpen:true});
+      }
+      return;
+    }
+    if (!memoDraft || !memoDraft[i]) return;
+    if (act === 'edit') { memoEditing = i; drawMemoHistory(); const ta = $('unitMemoHistory').querySelector('textarea'); if (ta) ta.focus(); }
+    else if (act === 'cancel') { memoEditing = -1; drawMemoHistory(); }
+    else if (act === 'save') {
+      const text = row.querySelector('textarea').value.trim();
+      if (!text) { showToast('메모 내용을 입력하세요.'); return; }
+      const picked = row.querySelector('input[type=date]').value;
+      const note = memoDraft[i];
+      note.text = text;
+      if (picked && picked !== memoDateKey(note)) note.created_at = memoIso(picked);
+      memoEditing = -1;
+      saveUnit({keepOpen:true});
+    }
+  });
+  $('umAddMemo').addEventListener('click', () => {
+    if (!$('u_추가메모').value.trim()) { showToast('추가메모를 입력하세요.'); return; }
+    saveUnit({keepOpen:true});
+  });
+  $("btnAddUnit").addEventListener("click", () => openModal(-1));
+  $("umSave").addEventListener("click", saveUnit);
+  $("umDelete").addEventListener("click", deleteUnit);
+  $("umRegistry").addEventListener("click", () => {
+    const targetEditIdx=editIdx;
+    const targetModalVersion=unitModalVersion;
+    const residential=residentialUnitMode();
+    const parts=residential ? {dong:$('ru_동').value.trim(),room:$('ru_호수').value.trim()} : roomParts({호수:$('u_호수').value});
+    if(!parts.room || (residential && !parts.dong)){showToast('동과 호수를 먼저 입력해주세요.');return;}
+    openBuildingRegisterInfo(buildingAddress, parts.room, parts.dong, {buildingName:bName, apartment:residential,onApply:info=>{
+      if(unitModalVersion!==targetModalVersion || editIdx!==targetEditIdx || !$('unitModal').classList.contains('open'))throw new Error('세대 수정창이 변경되었습니다. 다시 조회해주세요.');
+      const current=residential ? {dong:$('ru_동').value.trim(),room:$('ru_호수').value.trim()} : roomParts({호수:$('u_호수').value});
+      if(normalizeApartmentUnit(current.room,'호')!==normalizeApartmentUnit(info.unit_ho_name,'호') || (residential && normalizeApartmentUnit(current.dong,'동')!==normalizeApartmentUnit(info.unit_dong_name,'동')))throw new Error('수정 중인 동·호수가 변경되었습니다. 다시 조회해주세요.');
+      const prefix=residential ? 'ru_' : 'u_';
+      $(prefix+'전용_m2').value=info.exclusive_area_m2;
+      $(prefix+'전용_평').value=(Number(info.exclusive_area_m2)/(400/121)).toFixed(2);
+      const plan=residential ? apartmentSupplyPlan(unitPlans,Number(info.exclusive_area_m2),$('ru_타입').value.trim()) : null;
+      const supply=info.residential_supply_area_m2 ?? (plan && plan.supply);
+      if(supply!=null && Number(supply)>=Number(info.exclusive_area_m2)){
+        $(prefix+'분양_m2').value=supply;$(prefix+'분양_평').value=(Number(supply)/(400/121)).toFixed(2);
+        if(residential)$('ru_평형').value=(Number(supply)/(400/121)).toFixed(2)+'평';
+      }
+      pendingRegistryInfo={...info,queried_at:new Date().toISOString()};
+      $('unitRegistryApplied').hidden=false;
+      $('unitRegistryApplied').textContent='대장 적용: 전유 '+info.exclusive_area_m2+'㎡ · 공용 합계 '+(info.common_area_m2 ?? '미확인')+'㎡ · '+(info.unit_floor || '')+'. '+(supply!=null ? '공급면적 '+Number(supply).toFixed(2)+'㎡ · 분양평형 '+(Number(supply)/(400/121)).toFixed(2)+'평 적용.' : '공급면적 미확인: 해당 타입의 단지자료가 필요합니다. 기존 값은 유지했습니다.')+' 저장을 눌러주세요.';
+      showToast('조회값을 수정칸에 적용했습니다. 저장을 눌러주세요.');
+    }});
+  });
+  $("umCancel").addEventListener("click", closeModal);
+  $("umClose").addEventListener("click", closeModal);
+  // 입력 중 실수로 창이 닫히지 않도록: 글자를 드래그하다 창 밖에서 마우스를 놓아도 닫히지 않고,
+  // 입력한 내용이 있으면 확인을 거친 뒤에만 바깥 클릭으로 닫힌다.
+  $("unitModal").addEventListener("mousedown", e => { unitMouseDownOnOverlay = e.target === $("unitModal"); });
+  $("unitModal").addEventListener("input", () => { unitModalDirty = true; });
+  $("unitModal").addEventListener("change", () => { unitModalDirty = true; });
+  $("unitModal").addEventListener("click", e => {
+    if (e.target !== $("unitModal") || !unitMouseDownOnOverlay) return;
+    if (unitModalDirty && !confirm("입력 중인 내용이 있습니다. 저장하지 않고 닫을까요?")) return;
+    closeModal();
+  });
+
+  // fallback: init() 2초 후에도 미로드 시 재시도
+  setTimeout(() => {
+    if (units.length === 0 && bName === "") {
+      console.log("[호실현황] fallback 재시도");
+      loadUnits();
+    }
+  }, 2000);
+
+})();
+</script>
+<script src="assets/js/price-room-import.js?v=20261027-latest-only"></script>
+<script src="assets/js/building-sales-contact.js?v=20261013-contact2"></script>
+<style id="units-shadow-fix">.units-tbl th:last-child,.units-tbl td:last-child{box-shadow:none!important}.units-wrap.has-scroll .units-tbl td:last-child,.units-wrap.has-scroll .units-tbl th:last-child{box-shadow:-6px 0 8px -6px rgba(0,0,0,.28)!important}</style>
+<script>(function(){var w=document.querySelector('.units-wrap');if(!w)return;var t=w.querySelector('.units-tbl')||w;function u(){w.classList.toggle('has-scroll',w.scrollWidth>w.clientWidth+1)}addEventListener('resize',u);if(window.ResizeObserver){var ro=new ResizeObserver(u);ro.observe(w);ro.observe(t)}u()})();</script>
+</body>
+</html>
+
+
+
+
+
