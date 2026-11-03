@@ -125,7 +125,7 @@
 })();
 </script>
 
-<script src="assets/js/building-records.js?v=20261103-records2"></script>
+<script src="assets/js/building-records.js?v=20261103-records5"></script>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
 <script src="assets/js/commercial-presale-ui.js?v=20261019-status-alignment"></script>
 
@@ -2154,7 +2154,8 @@ function closeHomepageTab(tab) {
       if (item.ho) rooms.push(String(item.ho));
       const bd = item.bundle_details || item.bundleDetails;
       if (bd && Array.isArray(bd.rooms)) bd.rooms.forEach(r => rooms.push(String(r)));
-      const hit = HR.sortRecords(data.records.filter(r => rooms.some(h => HR.roomsInclude(r, h))));
+      const dongs = [item.apartmentDong, item.dong, item.동].filter(Boolean).map(String);
+      const hit = HR.sortRecords(data.records.filter(r => rooms.some(h => HR.roomsInclude(r, h)) && (!(r.fu === "동") || !r.floor || dongs.indexOf(String(r.floor)) >= 0)));
       if (!hit.length || !document.body.contains(box)) { box.innerHTML = ""; return; }
       HR.ensureStyle();
       const activeN = hit.filter(HR.isActive).length;
