@@ -166,6 +166,17 @@
       ".hr-viewer-body iframe{width:100%;height:100%;border:0;background:#fff}",
       ".hr-mark{border:0;background:none;cursor:pointer;font-size:13px;padding:0 2px;margin-left:4px;vertical-align:middle}",
       ".hr-mark.ended{opacity:.35;filter:grayscale(1)}",
+      ".hr-tblwrap{overflow-x:auto;border:1px solid #d6e6e3;border-radius:10px;background:#fff}",
+      ".hr-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:640px;color:#1d2b2a}",
+      ".hr-tbl th{background:#e9f6f3;color:#2d6a62;font-size:12px;text-align:left;padding:8px 10px;border-bottom:1px solid #d6e6e3;white-space:nowrap}",
+      ".hr-tbl td{padding:10px;border-bottom:1px solid #e6f0ee;vertical-align:top}",
+      ".hr-tbl tbody tr:last-child td{border-bottom:0}.hr-tbl tbody tr:nth-child(even) td{background:#f8fcfb}.hr-tbl tr.ended td{opacity:.55}",
+      ".hr-d{white-space:nowrap;font-weight:700;color:#0b7a6b}.hr-d small{display:block;font-weight:400;color:#8a9a98;font-size:11px}",
+      ".hr-b{font-weight:700}.hr-b a{color:inherit;text-decoration:none}.hr-b a:hover{text-decoration:underline}.hr-b small{display:block;font-weight:400;color:#6b7b79;font-size:12px}",
+      ".hr-c{line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.hr-c.open{display:block}",
+      ".hr-more{border:0;background:none;color:#0b7a6b;font-size:12px;cursor:pointer;padding:2px 0}",
+      ".hr-imgs{display:flex;gap:4px;flex-wrap:wrap}.hr-imgs img{width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:zoom-in;display:block}",
+      ".hr-tbl .hr-act{white-space:nowrap}.hr-tbl .hr-act .hr-btn{display:block;margin-bottom:4px;padding:1px 10px}",
       "@media(max-width:640px){.hr-grid{grid-template-columns:1fr}}"
     ].join("\n");
     document.head.appendChild(st);
@@ -191,6 +202,35 @@
       + (r.fee ? '<span class="hr-fee">수수료 ' + esc(r.fee) + "</span>" : "") + "<span>" + esc(r.date || "") + "</span></div>"
       + '<div class="hr-where">' + where + '</div><div class="hr-text">' + esc(r.text) + "</div>" + fh.bottom + "</div>" + acts + "</div>";
   }
+
+  /* ===== 표 목록: 날짜 | 건물 | 내용 | 이미지·파일 | 버튼 ===== */
+  function tableHtml(list, urlMap, o) {
+    o = o || {}; urlMap = urlMap || {};
+    var showB = !!o.showBuilding;
+    var head = "<tr><th>날짜</th>" + (showB ? "<th>건물</th>" : "<th>대상</th>") + "<th>내용</th><th>이미지 · 파일</th>" + (o.readonly ? "" : "<th></th>") + "</tr>";
+    var rows = list.map(function (r) {
+      var st = status(r), d = String(r.date || ""), info = o.info ? o.info(r) : {};
+      var sub = (r.floor ? r.floor + "층" : "") + (r.rooms ? (r.floor ? " " : "") + r.rooms + (/호/.test(r.rooms) ? "" : "호") : "");
+      var bcell = showB
+        ? '<div class="hr-b">' + (info.link ? '<a href="' + esc(info.link) + '">' + esc(info.name || "") + "</a>" : esc(info.name || "")) + "<small>" + esc(sub || "건물 전체") + "</small></div>"
+        : '<div class="hr-b">' + esc(sub || "건물 전체") + "</div>";
+      var imgs = r.files.filter(isImageFile), others = r.files.filter(function (f) { return !isImageFile(f); });
+      var fh = '<div class="hr-imgs">' + imgs.map(function (f) { var u = urlMap[f.url] || f.url; return '<img loading="lazy" src="' + esc(u) + '" alt="' + esc(f.name) + '" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">'; }).join("") + "</div>"
+        + others.map(function (f) { var u = urlMap[f.url] || f.url; return '<div><span class="hr-file" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">' + (isPdfFile(f) ? "📄 " : "📎 ") + esc(f.name) + "</span></div>"; }).join("");
+      var acts = o.readonly ? "" : '<td class="hr-act">'
+        + (r.ended ? '<button type="button" class="hr-btn" data-hr-act="resume" data-id="' + esc(r._rowId) + '">다시 진행</button>' : '<button type="button" class="hr-btn main" data-hr-act="end" data-id="' + esc(r._rowId) + '">종료 처리</button>')
+        + '<button type="button" class="hr-btn" data-hr-act="edit" data-id="' + esc(r._rowId) + '">수정</button><button type="button" class="hr-btn del" data-hr-act="del" data-id="' + esc(r._rowId) + '">삭제</button></td>';
+      return '<tr class="' + (st.key === "ended" ? "ended" : "") + '" data-rec="' + esc(r._rowId) + '"><td class="hr-d">' + esc(md(d)) + "<small>" + esc(d.slice(0, 4)) + "</small></td><td>" + bcell + "</td>"
+        + '<td><div class="hr-meta" style="margin-bottom:3px"><span class="hr-tag' + (r.kind === "메모" ? " memo" : "") + '">' + esc(r.kind) + '</span><span class="hr-st ' + st.key + '">' + esc(st.label) + "</span>" + (r.fee ? '<span class="hr-fee">수수료 ' + esc(r.fee) + "</span>" : "") + '</div><div class="hr-c">' + esc(r.text) + '</div><button type="button" class="hr-more" data-hr-more="1">더 보기</button></td>'
+        + "<td>" + fh + "</td>" + acts + "</tr>";
+    }).join("");
+    return '<div class="hr-tblwrap"><table class="hr-tbl"><thead>' + head + "</thead><tbody>" + rows + "</tbody></table></div>";
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest("[data-hr-more]") : null;
+    if (!b) return;
+    var c = b.previousElementSibling; c.classList.toggle("open"); b.textContent = c.classList.contains("open") ? "접기" : "더 보기";
+  });
 
   /* ===== 파일 보기 ===== */
   function openViewer(url, name) {
@@ -282,5 +322,5 @@
     return { building: guess, text: body, fee: fee, due: due, kind: kind };
   }
 
-  window.HitopRecords = { PREFIX: PREFIX, KINDS: KINDS, esc: esc, today: today, status: status, isActive: isActive, expandRooms: expandRooms, roomsInclude: roomsInclude, sortRecords: sortRecords, fetchRecords: fetchRecords, addRecord: addRecord, updateRecord: updateRecord, deleteRecord: deleteRecord, setEnded: setEnded, uploadFile: uploadFile, cardHtml: cardHtml, ensureStyle: ensureStyle, openViewer: openViewer, openForm: openForm, parseMessage: parseMessage };
+  window.HitopRecords = { PREFIX: PREFIX, KINDS: KINDS, esc: esc, today: today, status: status, isActive: isActive, expandRooms: expandRooms, roomsInclude: roomsInclude, sortRecords: sortRecords, fetchRecords: fetchRecords, addRecord: addRecord, updateRecord: updateRecord, deleteRecord: deleteRecord, setEnded: setEnded, uploadFile: uploadFile, cardHtml: cardHtml, tableHtml: tableHtml, ensureStyle: ensureStyle, openViewer: openViewer, openForm: openForm, parseMessage: parseMessage };
 })();
