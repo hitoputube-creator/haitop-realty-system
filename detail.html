@@ -125,6 +125,7 @@
 })();
 </script>
 
+<script src="assets/js/building-records.js?v=20261103-records2"></script>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
 <script src="assets/js/commercial-presale-ui.js?v=20261019-status-alignment"></script>
 
@@ -1975,6 +1976,7 @@ function closeHomepageTab(tab) {
 
     // 추가메모: 날짜별 목록 · 수정 · 삭제 · 새 메모 저장 (모든 매물 공통)
     html += renderMemoSection(item);
+    html += '<div id="listingPromoBox"></div>';
 
     const isApartmentDetail = category.category2 === "아파트" || item.type === "apartment";
     const isCommercialDetail = category.category1 === "상가사무실" || category.category1 === "상가/사무실" || ["shop", "office", "bizcenter"].includes(item.type);
@@ -2140,7 +2142,28 @@ function closeHomepageTab(tab) {
     };
   }
 
+  // 연결된 건물의 특별 조건·홍보물 중 이 매물 호실에 해당하는 것을 보여준다 (진행 중은 크게, 종료는 흐리게)
+  async function loadListingPromos() {
+    const box = document.getElementById("listingPromoBox");
+    const item = _currentItem;
+    if (!box || !item || !item.resource_id || typeof HitopRecords === "undefined") return;
+    try {
+      const HR = HitopRecords;
+      const data = await HR.fetchRecords(item.resource_id);
+      const rooms = [];
+      if (item.ho) rooms.push(String(item.ho));
+      const bd = item.bundle_details || item.bundleDetails;
+      if (bd && Array.isArray(bd.rooms)) bd.rooms.forEach(r => rooms.push(String(r)));
+      const hit = HR.sortRecords(data.records.filter(r => rooms.some(h => HR.roomsInclude(r, h))));
+      if (!hit.length || !document.body.contains(box)) { box.innerHTML = ""; return; }
+      HR.ensureStyle();
+      const activeN = hit.filter(HR.isActive).length;
+      box.innerHTML = '<section class="detail-section" style="margin-top:14px"><div class="detail-section-title">📌 특별 조건 · 홍보 <span style="font-size:12px;font-weight:400;color:var(--text-muted)">' + (activeN ? "진행 중 " + activeN + "건" : "진행 중인 건 없음 · 종료된 기록") + ' <a href="' + OfficeConfig.urlFor("special-promos.html") + '" target="_blank" rel="noopener" style="margin-left:8px">특별 홍보물 전체 ›</a></span></div><div class="hr-grid">' + hit.map(r => HR.cardHtml(r, data.urlMap, { readonly: true })).join("") + "</div></section>";
+    } catch (e) { console.warn("[특별 홍보] 불러오기 실패", e); }
+  }
+
   function rebindButtons() {
+    try { loadListingPromos(); } catch (e) { console.warn(e); }
     const item = _currentItem;
     const id   = item.id;
     const buildingOwnerButton=document.getElementById("buildingOwnerSearchBtn");
