@@ -2298,7 +2298,84 @@ async function deleteBFile(id) {
       if (idx < 0) { const st = document.getElementById('unitOnlyStyle'); if (st) st.remove(); return; }
       window.__unitAutoOpened = true;
       window.__unitOnly = true;
+      const showUnitSavedDialog = function (info) {
+        if (document.getElementById('unitSavedDialog')) return;
+        if (!document.getElementById('unitSavedStyle')) {
+          const css = document.createElement('style');
+          css.id = 'unitSavedStyle';
+          css.textContent =
+            '#unitSavedDialog{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(15,32,30,.5);visibility:visible;animation:usdFade .18s ease}' +
+            '@keyframes usdFade{from{opacity:0}to{opacity:1}}@keyframes usdPop{from{transform:translateY(8px) scale(.97);opacity:0}to{transform:none;opacity:1}}' +
+            '#unitSavedDialog .usd-box{width:min(440px,96vw);background:#fff;color:#17302d;border-radius:18px;padding:22px 22px 18px;box-shadow:0 18px 50px rgba(0,0,0,.28);animation:usdPop .22s ease}' +
+            '#unitSavedDialog .usd-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}' +
+            '#unitSavedDialog .usd-badge{flex:none;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#19c3b0,#0b7a6b);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(11,122,107,.35)}' +
+            '#unitSavedDialog .usd-title{font-size:17px;font-weight:800;line-height:1.2}' +
+            '#unitSavedDialog .usd-sub{font-size:12.5px;color:#6b7b79;margin-top:2px}' +
+            '#unitSavedDialog .usd-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;background:#f3f9f8;margin-bottom:8px;font-size:14px}' +
+            '#unitSavedDialog .usd-row.off{background:#f5f6f6;color:#7a8785}' +
+            '#unitSavedDialog .usd-ico{flex:none;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:#d9f3ee;color:#0b7a6b}' +
+            '#unitSavedDialog .usd-row.off .usd-ico{background:#e6e9e9;color:#8a9694}' +
+            '#unitSavedDialog .usd-row b{flex:1;font-weight:700}' +
+            '#unitSavedDialog .usd-row small{font-size:12px;color:#6b7b79}' +
+            '#unitSavedDialog .usd-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}' +
+            '#unitSavedDialog .usd-btn{appearance:none;border:1px solid #cfe0dd;background:#fff;color:#2a4a46;border-radius:999px;padding:9px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}' +
+            '#unitSavedDialog .usd-btn:hover{background:#f1f8f7;transform:translateY(-1px)}' +
+            '#unitSavedDialog .usd-btn.sub{border-color:#9fd8d0;color:#0b7a6b;background:#effaf8}' +
+            '#unitSavedDialog .usd-btn.main{border:0;color:#fff;background:linear-gradient(135deg,#19c3b0,#0b7a6b);box-shadow:0 6px 16px rgba(11,122,107,.32)}' +
+            '#unitSavedDialog .usd-btn.main:hover{box-shadow:0 8px 20px rgba(11,122,107,.42);background:linear-gradient(135deg,#1bd0bc,#0d8776)}' +
+            '#unitSavedDialog .usd-btn:active{transform:translateY(0)}' +
+            '#unitSavedDialog .usd-btn:focus-visible{outline:3px solid rgba(25,195,176,.45);outline-offset:2px}' +
+            '.unit-saved-flash{animation:usdFlash 2.4s ease 2}@keyframes usdFlash{0%,100%{background:transparent}30%{background:#fff3b8}}';
+          document.head.appendChild(css);
+        }
+        const L = info.listingId ? (commercialListings[String(info.listingId)] || null) : null;
+        const hasListing = !!info.listingId;
+        const el = document.createElement('div');
+        el.id = 'unitSavedDialog';
+        el.setAttribute('role', 'dialog');
+        el.innerHTML =
+          '<div class="usd-box">' +
+            '<div class="usd-head"><div class="usd-badge">✓</div><div><div class="usd-title">저장했어요</div><div class="usd-sub"></div></div></div>' +
+            '<div class="usd-row"><span class="usd-ico">✓</span><b>자료실 업데이트 완료</b><small>방금 저장됨</small></div>' +
+            '<div class="usd-row' + (hasListing ? '' : ' off') + '"><span class="usd-ico">' + (hasListing ? '✓' : '–') + '</span><b>' + (hasListing ? '매물관리 등록됨' : '매물관리 미등록') + '</b><small class="usd-lst"></small></div>' +
+            '<div class="usd-actions">' +
+              '<button type="button" class="usd-btn" data-act="close">닫기</button>' +
+              (hasListing ? '<button type="button" class="usd-btn sub" data-act="listing">매물 보기</button>' : '') +
+              '<button type="button" class="usd-btn main" data-act="check">자료실에서 확인</button>' +
+            '</div>' +
+          '</div>';
+        el.querySelector('.usd-sub').textContent = (bName || '') + ' ' + (info.ho || '') + '호';
+        el.querySelector('.usd-lst').textContent = hasListing ? ((L && L.status) || '') : '매물보내기로 등록할 수 있어요';
+        el.addEventListener('click', function (ev) {
+          const act = ev.target && ev.target.getAttribute ? ev.target.getAttribute('data-act') : null;
+          if (act === 'close') {
+            try { window.close(); } catch (e) {}
+            el.remove();
+            setTimeout(() => {
+              const d = document.createElement('div');
+              d.textContent = '이 탭을 닫아 주세요.';
+              d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#0b1a2a;color:#fff;visibility:visible';
+              document.body.appendChild(d);
+            }, 400);
+          }
+          if (act === 'listing') {
+            const u = 'detail.html?id=' + encodeURIComponent(info.listingId);
+            window.open(typeof OfficeConfig !== 'undefined' && OfficeConfig.urlFor ? OfficeConfig.urlFor(u) : u, '_blank');
+          }
+          if (act === 'check') {
+            window.__unitOnly = false;
+            const st = document.getElementById('unitOnlyStyle'); if (st) st.remove();
+            el.remove();
+            const row = [...document.querySelectorAll('#unitStatus tr')].find(tr => [...tr.querySelectorAll('td')].some(td => td.innerText.trim().split(/\s+/)[0] === String(info.ho)));
+            const target = row || $('unitStatus');
+            if (target) { target.scrollIntoView({ block: 'center' }); if (row) row.classList.add('unit-saved-flash'); }
+          }
+        });
+        document.body.appendChild(el);
+        const mainBtn = el.querySelector('[data-act="check"]'); if (mainBtn) mainBtn.focus();
+      };
       const finishUnitOnly = function () {
+        if (window.__unitSavedInfo) { const info = window.__unitSavedInfo; window.__unitSavedInfo = null; showUnitSavedDialog(info); return; }
         try { window.close(); } catch (e) {}
         setTimeout(() => {
           if (document.getElementById('unitOnlyDone')) return;
@@ -3093,7 +3170,10 @@ async function deleteBFile(id) {
       selectedUnitRows.clear();
       renderAll();
       if (options.keepOpen) { openModal(savedIndex); $('u_추가메모').focus(); }
-      else closeModal();
+      else {
+        if (window.__unitOnly) window.__unitSavedInfo = { ho: unit.호수, listingId: unit.listing_id || '' };
+        closeModal();
+      }
       if (typeof showToast === "function") showToast(registerNow ? '수정 완료 · 연동된 매물관리에도 반영되었습니다.' : newMemo ? '추가메모가 저장되었습니다.' : wasNew ? '자료가 추가되었습니다.' : '수정 완료되었습니다.');
     } catch(e) {
       if (typeof showToast === "function") showToast("저장 실패: " + e.message);
