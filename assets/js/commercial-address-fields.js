@@ -24,10 +24,15 @@
   const isOfficetel=()=>byId(cat2Id)?.value==='오피스텔';
   function choices(){return sources.filter(b=>!isOfficetel()||b.category==='오피스텔').slice().sort((a,b)=>a.name.localeCompare(b.name,'ko',{numeric:true}));}
   function options(){list.replaceChildren();choices().forEach(b=>{const option=document.createElement('option');option.value=b.addr+' · '+b.name;option.label=b.name;list.appendChild(option);});}
-  function match(value){const rows=choices();const exact=rows.find(b=>value===b.addr+' · '+b.name);if(exact)return exact;const matches=rows.filter(b=>normalize(value)===normalize(b.addr)||normalize(value)===normalize(b.name));return matches.length===1?matches[0]:null;}
-  function resolve(){
+  const keyOf=value=>normalize(value).replace(/\([^)]*\)/g,'').replace(/타워|빌딩|프라자|플라자|상가|오피스텔|단지/g,'');
+  function match(value,loose){const rows=choices();const exact=rows.find(b=>value===b.addr+' · '+b.name);if(exact)return exact;const matches=rows.filter(b=>normalize(value)===normalize(b.addr)||normalize(value)===normalize(b.name));if(matches.length===1)return matches[0];
+   const key=keyOf(value);if(!key||key.length<2)return null;
+   const byKey=rows.filter(b=>keyOf(b.name)===key);if(byKey.length===1)return byKey[0];
+   if(loose){const part=rows.filter(b=>{const kb=keyOf(b.name);return kb.length>=2&&(kb.includes(key)||key.includes(kb));});if(part.length===1)return part[0];}
+   return null;}
+  function resolve(loose){
    if(!enabled)return;
-   const building=match(map.value);
+   const building=match(map.value,loose===true);
    if(building){map.value=building.addr;name.value=building.name;const pub=byId(publicId);if(pub){const dong=building.addr.match(/([가-힣]+(?:동|읍|면|리))/);pub.value=dong?'파주시 '+dong[1]:pub.value;}name.dispatchEvent(new Event('change',{bubbles:true}));return true;}
    return false;
   }
@@ -55,8 +60,8 @@
     if(defaults.list)map.setAttribute('list',defaults.list);else map.removeAttribute('list');
    }
   }
-  map.addEventListener('input',resolve);
-  map.addEventListener('change',()=>{if(resolve())room.focus();});
+  map.addEventListener('input',()=>resolve(false));
+  map.addEventListener('change',()=>{if(resolve(true))room.focus();});
   map.addEventListener('focus',()=>{if(enabled)options();});
   [cat1Id,cat2Id].forEach(id=>byId(id)?.addEventListener('change',render));
   render();
