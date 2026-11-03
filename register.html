@@ -41,6 +41,10 @@
 @media(max-width:650px){.apartment-listing-form .apt-picker-row{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}.apartment-listing-form .price-grid-5{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:400px){.apartment-listing-form .umgrid{grid-template-columns:minmax(0,1fr)}.apartment-listing-form .span-2,.apartment-listing-form .span-3{grid-column:span 1}.apartment-listing-form .price-grid-5{grid-template-columns:minmax(0,1fr)}}
+    .price-one-row{display:flex!important;flex-wrap:nowrap;gap:12px}.price-one-row>.field{flex:1 1 0;min-width:0;margin:0}
+    @media(max-width:700px){.price-one-row{flex-wrap:wrap}.price-one-row>.field{flex:1 1 45%}}
+    .area-rows-inline{display:flex;flex-wrap:wrap;gap:8px 32px;align-items:center}.area-rows-inline>.area-row{margin:0!important}
+    .commercial-one-row{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important;gap:12px}.commercial-one-row>.field{margin:0}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261020-form-headers">
 <script>
@@ -237,7 +241,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
   <!-- ② 가격정보 -->
   <section class="card">
     <div class="card-title"><span>💰 가격정보</span></div>
-    <div class="form-grid-3">
+    <div class="form-grid-3 price-one-row">
       <div class="field">
         <label>매매가</label>
         <input id="salePrice" type="text" placeholder="예: 12억 5,000만" />
@@ -258,11 +262,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
         <input id="monthlyRent" type="text" placeholder="예: 300만" />
         <div class="price-preview" id="monthlyRent_preview"></div>
       </div>
-      <div class="field" data-price-fee>
-        <label>관리비</label>
-        <input id="managementFee" type="text" placeholder="예: 15만" />
-        <div class="price-preview" id="managementFee_preview"></div>
-      </div>
+      <div style="display:none" aria-hidden="true"><input id="managementFee" type="text" tabindex="-1" /><div class="price-preview" id="managementFee_preview"></div></div>
       <div class="field" data-price-fee>
         <label>권리금</label>
         <input id="premium" type="text" placeholder="예: 없음 또는 2,000만" />
@@ -286,6 +286,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
   <!-- ③ 면적정보 — 전용+공급 (상가사무실·주거용) -->
   <section class="card area-section area-exclusive" style="display:none;">
     <div class="card-title"><span>📐 면적정보</span></div>
+    <div class="area-rows-inline">
     <div class="area-row">
       <span class="area-label">전용면적</span>
       <input id="exclusiveAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
@@ -293,18 +294,20 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       <input id="exclusiveAreaPy" type="number" min="0" step="1" placeholder="0" />
       <span class="area-unit">평</span>
     </div>
-    <div class="area-row" style="margin-top:6px;">
+    <div class="area-row">
       <span class="area-label">공급면적</span>
       <input id="supplyAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
       <span class="area-unit">㎡</span>
       <input id="supplyAreaPy" type="number" min="0" step="1" placeholder="0" />
       <span class="area-unit">평</span>
     </div>
+    </div>
   </section>
 
   <!-- ③ 면적정보 — 대지+건축+연 (공장창고·단독전원주택·건물빌딩) -->
   <section class="card area-section area-building" style="display:none;">
     <div class="card-title"><span>📐 면적정보</span></div>
+    <div class="area-rows-inline">
     <div class="area-row">
       <span class="area-label">대지면적</span>
       <input id="landAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
@@ -312,19 +315,20 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       <input id="landAreaPy" type="number" min="0" step="1" placeholder="0" />
       <span class="area-unit">평</span>
     </div>
-    <div class="area-row" style="margin-top:6px;">
+    <div class="area-row">
       <span class="area-label">건축면적</span>
       <input id="buildingAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
       <span class="area-unit">㎡</span>
       <input id="buildingAreaPy" type="number" min="0" step="1" placeholder="0" />
       <span class="area-unit">평</span>
     </div>
-    <div class="area-row" style="margin-top:6px;">
+    <div class="area-row">
       <span class="area-label">연면적</span>
       <input id="totalFloorAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
       <span class="area-unit">㎡</span>
       <input id="totalFloorAreaPy" type="number" min="0" step="1" placeholder="0" />
       <span class="area-unit">평</span>
+    </div>
     </div>
   </section>
 
@@ -334,7 +338,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       <span>🏢 추가정보</span>
       <span style="font-size:0.78rem;color:var(--text-muted);">공장·상가·건물</span>
     </div>
-    <div class="form-grid-2">
+    <div class="form-grid-2 commercial-one-row">
       <div class="field">
         <label>층정보</label>
         <input id="floorInfo" type="text" placeholder="예: 지상 1층" />
@@ -371,13 +375,13 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
           </div>
           <div id="additionalContactsWrap" style="display:contents;"></div>
           <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 auto;box-sizing:border-box;height:38px;padding:0 14px;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addContactRow()">+ 추가 연락처</button>
+          <div class="field drive-link-inline" style="flex:1 1 220px;min-width:180px;margin:0;">
+            <label>드라이브 자료 연결</label>
+            <select id="resource_id">
+              <option value="">-- 연결 안함 --</option>
+            </select>
+          </div>
         </div>
-      </div>
-      <div class="field">
-        <label>드라이브 자료 연결</label>
-        <select id="resource_id">
-          <option value="">-- 연결 안함 --</option>
-        </select>
       </div>
       <div class="field" style="grid-column:1 / -1;">
         <label>소유주 메모 / 특이사항</label>
