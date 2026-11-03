@@ -643,6 +643,15 @@
 .units-tbl td.tbl-actions > * { white-space:nowrap; word-break:keep-all; }
 .units-tbl td:nth-child(3) { max-width:132px; white-space:normal; word-break:keep-all; }
 .units-tbl th, .units-tbl td { padding-left:6px; padding-right:6px; }
+    /* 상가 호실 현황 표: 평수를 가장 눈에 띄게, 나머지는 중요도에 따라 굵기·색 구분 */
+    .units-tbl:not(.residential-unit-table) td:nth-child(2) strong { font-size:1.05rem; font-weight:800; color:#13201f; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(3) { font-weight:600; color:#1f2d2c; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(4) { font-size:1.05rem; font-weight:800; color:#0b7a6b; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(4) span { font-size:.72rem; font-weight:400; color:#8a9a98; opacity:1 !important; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(5), .units-tbl:not(.residential-unit-table) td:nth-child(6) { color:#7d8b89; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(8) span { font-weight:400; color:#8a9a98; opacity:1 !important; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(9) { font-weight:500; color:#33403f; }
+    .units-tbl:not(.residential-unit-table) td:nth-child(10) { font-weight:700; color:#13201f; }
 </style>
 <style id="unitBundleStyle">
 .unit-flag.bundle{background:rgba(212,175,55,.18);color:#e0b84c;border:1px solid rgba(212,175,55,.45)}
