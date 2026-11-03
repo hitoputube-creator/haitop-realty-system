@@ -426,13 +426,15 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
   <!-- ⑦-3 추가메모 -->
   <section class="card">
     <div class="card-title"><span>💬 추가메모</span></div>
-    <div class="field" style="margin-bottom:10px;max-width:200px;">
-      <label>메모 날짜</label>
-      <input id="newMemoDate" type="date" />
-    </div>
-    <div class="field">
-      <label>새 메모</label>
-      <textarea id="newMemo" rows="4" placeholder="상담 내용이나 변경사항을 추가하세요. 저장 시 선택한 날짜로 기존 메모에 누적됩니다."></textarea>
+    <div style="display:flex;gap:10px;align-items:flex-start;">
+      <div class="field" style="flex:0 0 150px;margin:0;">
+        <label>날짜</label>
+        <input id="newMemoDate" type="date" title="달력에서 고르거나 직접 입력" />
+      </div>
+      <div class="field" style="flex:1 1 0;min-width:0;margin:0;">
+        <label>새 메모</label>
+        <textarea id="newMemo" rows="2" placeholder="상담 내용이나 변경사항을 추가하세요. 저장 시 왼쪽 날짜로 기존 메모에 누적됩니다."></textarea>
+      </div>
     </div>
   </section>
   </div>
