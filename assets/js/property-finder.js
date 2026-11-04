@@ -668,6 +668,12 @@ async function initBarCats() {
 async function start() {
   const mount = $('pfBarMount');
   if (mount) mount.innerHTML = barHtml();
+  if (mount && BAR_ONLY) {
+    mount.classList.add('pf-card-mode');
+    const title = document.createElement('div'); title.className = 'pf-bar-title';
+    title.append('조건으로 매물 찾기 '); const sm = document.createElement('small'); sm.textContent = '손님 조건을 넣고 검색하세요 · 결과는 새 창으로 열립니다'; title.append(sm);
+    mount.prepend(title);
+  }
   init();
   if (BAR_ONLY) { await initBarCats(); return; }
   const sp = new URLSearchParams(location.search);
