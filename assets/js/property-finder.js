@@ -631,8 +631,8 @@ function applyPrintPage() {
   if (!st) { st = document.createElement('style'); st.id = 'pfPageBoxes'; document.head.appendChild(st); }
   st.textContent = '@page{@top-left{content:' + q(b.title) + ';font:600 10px Pretendard,sans-serif;color:#555;vertical-align:bottom;padding-bottom:3mm}'
     + '@top-right{content:"브리핑 자료";' + f + 'color:#777;vertical-align:bottom;padding-bottom:3mm}'
-    + '@bottom-left{content:' + q(b.foot) + ';' + f + 'color:#444;vertical-align:top;padding-top:3mm}'
-    + '@bottom-right{content:counter(page) " / " counter(pages);' + f + 'color:#555;vertical-align:top;padding-top:3mm}}'
+    + '@bottom-center{content:' + q(b.foot) + ';font:600 10.5px Pretendard,"Malgun Gothic",sans-serif;color:#234c49;background:#f1f7f6;border:1px solid #b7cfcc;border-radius:6px;margin:3mm 0 5mm;padding:0 6mm;text-align:center;vertical-align:middle;white-space:nowrap}'
+    + '@bottom-right{content:counter(page) " / " counter(pages);' + f + 'color:#555;vertical-align:middle;margin:3mm 0 5mm}}'
     + '@page :first{@top-left{content:none}@top-right{content:none}}';
   if ($('pfPrintTitle')) $('pfPrintTitle').textContent = b.title;
 }
