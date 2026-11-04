@@ -77,7 +77,8 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
 @media(max-width:900px){.pf-picks{grid-template-columns:repeat(2,minmax(0,1fr))}.pf-list{height:170px}}
 .pf-printhead{display:none}
 @media print{
-  @page{size:A4 portrait;margin:10mm}
+  @page{size:A4 portrait;margin:17mm 11mm 17mm 11mm}
+  @page :first{@top-left{content:none}@top-right{content:none}}
   html,body{background:#fff!important;color:#000!important}
   .topbar,.heading,.pf-quickcard,.pf-card,.pf-idle,.pf-bar,.pf-hint,#pfMore,.pf-go,.pf-wrap>header,#pfBarMount,.pf-searchbar,.pf-filterbar,.pf-condline,#pfStatusMsg,#pfChange,.pf-empty[hidden]{display:none!important}
   .pf-wrap{max-width:none;padding:0}
@@ -152,7 +153,7 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
 
       <p class="pf-idle" id="pfIdle">조건을 고르고 <b>조건으로 검색</b>을 누르면 결과가 여기에 나옵니다.</p>
       <div id="pfResults" hidden>
-        <div class="pf-printhead"><h2>하이탑부동산 매물 목록</h2><p id="pfPrintCond"></p><p id="pfPrintMeta"></p></div>
+        <div class="pf-printhead"><h2 id="pfPrintTitle">하이탑부동산 매물 목록</h2><p id="pfPrintCond"></p><p id="pfPrintMeta"></p></div>
         <p class="pf-condline" id="pfCondLine"></p>
         <div class="pf-bar"><strong id="pfCount">0건</strong><span class="pf-sub" id="pfSplit"></span><span class="sp"></span>
           <label class="pf-sub">정렬 <select id="pfSort"><option value="floor">층 낮은 순</option><option value="area">평수 작은 순</option><option value="rent">월세 낮은 순</option><option value="sale">매매가 낮은 순</option><option value="building">건물 순</option><option value="newest">최근 순</option></select></label>
@@ -165,6 +166,6 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
       </div>
     </main>
   </div>
-  <script src="assets/js/property-finder.js?v=20261104-bar6"></script>
+  <script src="assets/js/property-finder.js?v=20261104-bar7"></script>
 </body>
 </html>
