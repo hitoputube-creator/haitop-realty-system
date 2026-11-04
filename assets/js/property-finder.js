@@ -142,7 +142,7 @@ function progressOf(l) {
   return s === '거래완료' || s === 'done' ? '거래완료' : s === '보류' ? '보류' : '진행중';
 }
 function buildEntries(data) {
-  const out = [], byListing = new Map();
+  const out = [], byListing = new Map(), unitIndex = new Map();
   const scope = g => g === '주거' ? 'residential' : 'commercial';
   for (const raw of data.listings || []) {
     const l = { ...raw, ...(raw.data && typeof raw.data === 'object' ? raw.data : {}), id: raw.id };
@@ -180,7 +180,7 @@ function buildEntries(data) {
       floors, floorDerived: derived, ex, sup, areaEstimated: estimated,
       deals, sale, dep, rent, jeonse: pt.jeonse,
       occ: text(l.shop_status || l.occupancy), tenant: '', progress: progressOf(raw),
-      created: text(raw.created_at), memo: memoText, href: 'detail.html?id=' + encodeURIComponent(l.id), linkLabel: '매물보기'
+      created: text(raw.created_at), memo: memoText, resId: text(l.resource_id), href: 'detail.html?id=' + encodeURIComponent(l.id), linkLabel: '매물보기'
     };
     e.cat = catOfListing(raw, e.building, group);
     out.push(e); byListing.set(String(l.id), e);
@@ -220,8 +220,9 @@ function buildEntries(data) {
         deals, sale, dep, rent, jeonse: null, occ, tenant: text(u.현업종), progress: occ === '임차중' ? '임차중' : '진행중',
         created: text(u.updated_at), memo: [bname, ho, u.현업종, u.추가메모 && typeof u.추가메모 === 'string' ? u.추가메모 : ''].map(text).join(' '),
         href: r ? 'building-detail.html?id=' + encodeURIComponent(r.id) + '&resourceScope=' + scope(group) + '#unitStatus' : 'building-overview.html',
-        linkLabel: '자료보기'
+        linkLabel: '자료보기', resId: r ? String(r.id) : '', unit: u, presale: man(u.분양금액), unitStatus: text(u.분양상태)
       };
+      if (r && ho) unitIndex.set(String(r.id) + '|' + ho.replace(/호$/, ''), u);
       e.cat = text(r?.category);
       const linked = byListing.get(String(u.listing_id || ''));
       if (linked) { // 같은 호실이 매물과 자료에 둘 다 있으면 매물 한 줄로 합친다
@@ -236,8 +237,19 @@ function buildEntries(data) {
         if (!linked.cat) linked.cat = e.cat;
         linked.linkLabel = '매물보기';
         linked.unitHref = e.href;
+        if (!linked.unit) { linked.unit = u; linked.presale = e.presale; linked.unitStatus = e.unitStatus; }
+        if (!linked.resId) linked.resId = e.resId;
       } else out.push(e);
     });
+  }
+  // 손님용 안내서용: 매물이 어느 건물·호실인지 자료실에서 찾아 둔다 (화면 표시는 그대로)
+  for (const e of out) {
+    if (e.src !== '매물' || e.unit) continue;
+    let rid = e.resId && RES_BY_ID.has(String(e.resId)) ? String(e.resId) : '';
+    if (!rid && e.building) { const list = RES_BY_NAME.get(compact(e.building)) || []; const p = list.find(x => ROOM.get(x.category) === 'commercial') || list[0]; rid = p ? String(p.id) : ''; }
+    e.resId = rid;
+    const hit = rid && e.ho ? unitIndex.get(rid + '|' + e.ho.replace(/호$/, '')) : null;
+    if (hit) { e.unit = hit; e.presale = man(hit.분양금액); e.unitStatus = text(hit.분양상태); }
   }
   return out;
 }
@@ -368,6 +380,8 @@ function row(e) {
   const go = el('div', 'pf-go');
   const link = el('a', '', e.linkLabel); link.href = linkUrl(e.href); go.append(link);
   if (e.unitHref) { const a2 = el('a', '', '자료보기'); a2.href = linkUrl(e.unitHref); go.append(a2); }
+  const pa = el('a', 'pf-guide', '상세인쇄'); pa.href = '#'; pa.title = '평면도에 호실 위치를 표시한 손님용 안내서 인쇄';
+  pa.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); guidePrint([e], pa); }); go.append(pa);
   r.append(kind, place, ho, fl, ar, pr, st, go);
   r.addEventListener('click', ev => { if (ev.target.closest('a,button,input')) return; togglePick(e, r, !picked.has(e.key), chk); });
   return r;
@@ -385,7 +399,47 @@ function updateSel() {
   if (!$('pfCopySel')) return;
   $('pfCopySel').textContent = '선택 복사' + (n ? ' (' + n + ')' : '');
   $('pfCopySel').disabled = n === 0;
+  const gb = $('pfGuideSel'); if (gb) { gb.textContent = '선택 상세인쇄' + (n ? ' (' + n + ')' : ''); gb.disabled = n === 0; }
+  const pb = $('pfPrint'); if (pb) pb.textContent = n ? '선택 인쇄 (' + n + ')' : '인쇄';
   const all = $('pfSelAll'); all.checked = n > 0 && n === matched.length; all.indeterminate = n > 0 && n < matched.length;
+}
+// ---------- 손님용 상세 안내서 (평면도 + 호실 위치) ----------
+const floorCache = new Map();
+async function guideFloors(rid) {
+  if (!rid) return [];
+  if (!floorCache.has(rid)) { let f = []; try { f = await getBuildingFloors(rid); } catch (_) { f = []; } floorCache.set(rid, f); }
+  return floorCache.get(rid);
+}
+function guideData(e, floors) {
+  const G = window.UnitGuide, u = e.unit || null;
+  const f0 = e.floors && e.floors.length ? e.floors[0] : null;
+  const fk = G.floorKeyOf(e.ho) || (f0 == null ? '' : f0 < 0 ? 'B' + (-f0) : String(f0));
+  const plan = G.pickPlan(floors, fk, u);
+  let amount = null, label = '매매가';
+  if (e.sale != null) amount = e.sale;
+  else if (e.deals.has('분양') && e.presale != null) { amount = e.presale; label = '분양가'; }
+  else if (e.jeonse != null) { amount = e.jeonse; label = '전세'; }
+  const fl = fmtFloors(e);
+  return {
+    name: e.building || text(e.title).replace(/__.*$/, '').replace(/^상가\s*[·\-]\s*/, '').replace(/\s*\d{3,4}\s*호?\s*$/, '').trim() || e.title, addr: text(e.addr).replace(/__.*$/, ''), ho: e.ho, fk, amount, amountLabel: label, vat: u && u.분양_VAT,
+    deposit: e.dep, rent: e.rent,
+    cells: [['층', fl === '확인 필요' ? '' : fl], ['전용면적', e.ex != null ? G.pyText(e.ex) : ''], ['분양면적', e.sup != null ? G.pyText(e.sup) : ''],
+      ['현재 업종', e.tenant && e.tenant !== '공실' ? e.tenant : ''], ['임대 현황', e.occ], ['분양 상태', e.unitStatus || (u && u.분양상태) || '']],
+    planUrl: plan.planUrl, pos: plan.pos
+  };
+}
+async function guidePrint(list, btn) {
+  if (!list.length) return;
+  if (!window.UnitGuide) { alert('안내서 도구를 불러오지 못했습니다. 새로고침해 주세요.'); return; }
+  if (list.length > 30) { alert('한 번에 30건까지 인쇄할 수 있어요. 나눠서 선택해 주세요.'); return; }
+  const old = btn.textContent; btn.textContent = '준비 중…'; btn.style.pointerEvents = 'none';
+  try {
+    const pages = [];
+    for (const e of list) pages.push(window.UnitGuide.guideHtml(guideData(e, await guideFloors(e.resId))));
+    const pbx = $('pfPageBoxes'); if (pbx) pbx.remove();
+    await window.UnitGuide.printHtml(pages.join(''));
+  } catch (err) { alert('안내서를 만들지 못했습니다: ' + err.message); }
+  finally { btn.textContent = old; btn.style.pointerEvents = ''; updateSel(); }
 }
 function copyText(list, title) {
   const lines = list.map(e => [e.building || e.title, e.ho ? e.ho + '호' : '', fmtFloors(e), areaText(e).join('/'), priceLines(e).join(', ')].filter(Boolean).join(' | '));
@@ -643,11 +697,12 @@ function applyPrintPage() {
 function printList() {
   if (!matched.length) return;
   applyPrintPage();
-  const cap = Math.min(matched.length, 500), list = $('pfList');
-  list.replaceChildren(); matched.slice(0, cap).forEach(e => list.append(row(e)));
+  const src = picked.size ? matched.filter(e => picked.has(e.key)) : matched;
+  const cap = Math.min(src.length, 500), list = $('pfList');
+  list.replaceChildren(); src.slice(0, cap).forEach(e => list.append(row(e)));
   const d = new Date();
   $('pfPrintCond').textContent = condText();
-  $('pfPrintMeta').textContent = '총 ' + matched.length + '건' + (matched.length > cap ? ' 중 ' + cap + '건 인쇄' : '') + ' · ' + d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0') + ' 출력';
+  $('pfPrintMeta').textContent = (picked.size ? '선택 ' : '총 ') + src.length + '건' + (src.length > cap ? ' 중 ' + cap + '건 인쇄' : '') + ' · ' + d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0') + ' 출력';
   const restore = () => { list.replaceChildren(); shown = 0; showMore(); };
   window.addEventListener('afterprint', restore, { once: true });
   window.print();
@@ -683,6 +738,7 @@ function init() {
     syncUI(); doSearch();
   });
   on('pfPrint', 'click', printList);
+  if ($('pfCopySel') && !$('pfGuideSel')) { const gb = document.createElement('button'); gb.className = 'pf-btn'; gb.id = 'pfGuideSel'; gb.type = 'button'; gb.disabled = true; gb.textContent = '선택 상세인쇄'; gb.title = '선택한 매물마다 평면도에 호실 위치를 표시한 안내서를 한 장씩 인쇄'; $('pfCopySel').after(gb); gb.addEventListener('click', () => guidePrint(matched.filter(e => picked.has(e.key)), gb)); }
   on('pfCopy', 'click', () => {
     const list = matched.slice(0, 60);
     copyTo($('pfCopy'), copyText(list, '[하이탑 매물 ' + matched.length + '건' + (matched.length > 60 ? ' 중 60건' : '') + ']'), () => '결과 복사');
