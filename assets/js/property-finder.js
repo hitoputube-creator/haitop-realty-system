@@ -75,7 +75,8 @@ function parseFloors(s) {
   s = text(s);
   if (!s) return null;
   if (/^-?\d+$/.test(s)) return [Number(s)];
-  if (/지하/.test(s)) { const m = s.match(/(\d+)/); return [-(m ? Number(m[1]) : 1)]; }
+  // "지상 18층/지하 6층"처럼 건물 전체 층수를 적은 칸은 이 호실의 층이 아니므로 모른다고 본다
+  if (/지하/.test(s)) { if (/지상/.test(s)) return null; const m = s.match(/지하\s*(\d+)/); return [-(m ? Number(m[1]) : 1)]; }
   let m = s.match(/(\d+)\s*[~\-]\s*(\d+)\s*층/);
   if (m) { const a = Number(m[1]), b = Number(m[2]), r = []; for (let i = Math.min(a, b); i <= Math.max(a, b) && r.length < 40; i++) r.push(i); return r; }
   m = s.match(/(\d+)\s*층/);
@@ -168,6 +169,10 @@ function buildEntries(data) {
     let floors = parseFloors(l.floorInfo ?? l.floor_info), derived = false;
     if (!floors) { const t = text(l.title).match(/(\d+)\s*층/); if (t) floors = [Number(t[1])]; }
     if (!floors && ho && group !== '토지') { floors = floorFromHo(ho); derived = !!floors; }
+    if (!floors && group !== '토지') {
+      const seg = text(l.title).match(/\d{3,4}(?:\s*[~·,+]\s*\d{3,4})+\s*호/);
+      if (seg) { const fs = new Set(); (seg[0].match(/\d{3,4}/g) || []).forEach(n => { const f = floorFromHo(n); if (f) fs.add(f[0]); }); if (fs.size) { floors = [...fs].sort((a, b) => a - b); derived = true; } }
+    }
     const building = text(l.buildingName || l.building_name || l.complexName) || findBuilding(l.title, l.address);
     const e = {
       key: 'L' + l.id, src: '매물', group, building, ho,
