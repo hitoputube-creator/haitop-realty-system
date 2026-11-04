@@ -342,6 +342,7 @@ function row(e) {
   const sub = e.src === '매물' ? [e.title, e.addr].find(s => s && s !== bname) : e.addr;
   if (sub) place.append(el('span', 'pf-muted', sub));
   place.append(el('span', 'pf-muted', [e.cat, e.group].filter(Boolean)[0]));
+  place.title = [bname, sub].filter(Boolean).join(' · ');
   const ho = el('div', 'pf-ho'); ho.append(el('span', hoText ? 'pf-num' : 'pf-muted', hoText || '-'));
   const hlFloor = F.floors.size > 0, hlArea = F.min != null || F.max != null, hlPrice = F.deals.size > 0 || F.depMin != null || F.depMax != null || F.rentMin != null || F.rentMax != null || F.saleMin != null || F.saleMax != null;
   const fl = el('div', 'pf-col' + (hlFloor ? ' pf-hl' : ''));
