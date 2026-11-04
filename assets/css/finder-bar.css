@@ -22,7 +22,7 @@ html .pf-list button[aria-pressed="true"]{background:#25675f!important;color:#ff
 .pf-range em{font-style:normal;font-size:13px;color:var(--sub,#618684);white-space:nowrap}
 .pf-tip{margin:8px 2px 0;font-size:13px;color:var(--sub,#618684)}
 .pf-details .pf-inline{margin:8px 0}
-html .pf-btn.big{font-size:19px;padding:14px 56px}
+html .pf-btn.big{font-size:14px;padding:8px 18px;white-space:nowrap;flex:0 0 auto}
 .pf-btn.big.is-dirty{box-shadow:0 0 0 4px rgba(37,103,95,.25)}
 .pf-dirty{color:#b25b00;font-weight:700;font-size:14px}
 .pf-searchbar{margin:6px 0 12px}
@@ -31,10 +31,11 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
 html .pf-quick-naver input{flex:1;min-width:0;border:0!important;background:transparent!important;font-size:16px;padding:8px 4px;outline:none;box-shadow:none!important}
 html .pf-quick-naver .pf-btn{border-radius:999px;padding:9px 22px}
 .pf-filterbar{margin:0 0 6px;padding:10px 0;border-top:1px solid var(--line,#e0efee);border-bottom:1px solid var(--line,#e0efee)}
-.pf-pills{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pf-pills{display:flex;gap:10px;align-items:flex-start}
+.pf-pillgroup{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
 .pf-grow{flex:1}
 .pf-pillwrap{position:relative}
-html .pf-pill{font:inherit;font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:999px;border:1px solid var(--line2,#cbe1e0);background:#fff;color:#234c49;cursor:pointer;white-space:nowrap}
+html .pf-pill{font:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:999px;border:1px solid var(--line2,#cbe1e0);background:#fff;color:#234c49;cursor:pointer;white-space:nowrap}
 html .pf-pill:hover{background:#f0f8f7}
 html .pf-pill.on{background:#25675f!important;color:#fff!important;border-color:#25675f!important}
 html .pf-pill.reset{border-style:dashed;font-weight:500}
@@ -49,7 +50,7 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
 .pf-row-opt select{margin-top:4px}
 .pf-dirty{margin:8px 4px 0}
 #pfBarMount button{font:inherit}
-@media(max-width:700px){.pf-pills{gap:6px}.pf-grow{display:none}.pf-pillwrap{position:static}.pf-panel{left:8px;right:8px;max-width:none;min-width:0!important}.pf-filterbar{position:relative}.pf-quick{flex-wrap:wrap}}
+@media(max-width:700px){.pf-pills{flex-wrap:wrap;gap:6px}.pf-grow{display:none}.pf-pillwrap{position:static}.pf-panel{left:8px;right:8px;max-width:none;min-width:0!important}.pf-filterbar{position:relative}.pf-quick{flex-wrap:wrap}}
 
 #pfBarMount.pf-card-mode{background:#fff;border:1px solid var(--line2,#cbe1e0);border-radius:18px;padding:16px 20px 14px;margin:30px 0 28px;box-shadow:0 4px 18px rgba(24,60,60,.10);border-top:4px solid #25675f}
 #pfBarMount.pf-card-mode .pf-bar-title{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-size:18px;font-weight:800;color:#1c4f4b}
@@ -57,3 +58,7 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
 #pfBarMount.pf-card-mode .pf-filterbar{border-bottom:0;padding-bottom:0}
 #pfBarMount.pf-card-mode .pf-panel{top:auto;bottom:calc(100% + 8px)}
 #pfBarMount.pf-card-mode .pf-panel .pf-list{max-height:240px}
+.pf-pill .pt{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf-actionbox{display:flex;gap:6px;align-items:center;flex:0 0 auto}
+.pf-actionbox .pf-pill.reset{padding:7px 10px}
+@media(max-width:700px){.pf-actionbox{width:100%;justify-content:flex-end}}
