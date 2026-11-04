@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>매물찾기</title>
   <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/finder-bar.css?v=20261104-bar1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
   <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
@@ -113,6 +114,8 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
 .pf-dirty{margin:8px 4px 0}
 @media(max-width:700px){.pf-pills{gap:6px}.pf-grow{display:none}.pf-pillwrap{position:static}.pf-panel{left:8px;right:8px;max-width:none;min-width:0!important}.pf-filterbar{position:relative}}
 .pf-more[hidden],.pf-empty[hidden],.pf-idle[hidden]{display:none!important}
+.pf-condline{margin:4px 2px 0;font-size:15px;font-weight:700;color:var(--gold,#25675f)}
+.pf-btn[hidden]{display:none!important}
 .pf-empty{padding:40px 0;text-align:center;color:var(--sub,#618684)}
 .pf-more{display:block;margin:16px auto 0}
 .pf-msg{color:var(--sub,#618684);font-size:14px;margin:8px 0}.pf-msg:empty{display:none}
@@ -130,40 +133,15 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
       <div class="heading"><p class="eyebrow">PROPERTY FINDER</p><h1>매물찾기</h1><p class="pf-sub" id="pfLoaded"></p></div>
       <p class="pf-msg" id="pfStatusMsg" role="status"></p>
 
-      <section class="pf-searchbar" aria-label="빠른 검색">
-        <form class="pf-quick pf-quick-naver" id="pfQuickForm"><svg class="pf-mag" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="pfQuick" type="text" autocomplete="off" placeholder="말로 입력해서 검색  예) 상가 1층 20~40평 운정역 월세" aria-label="한 줄로 조건 입력"><button class="pf-btn main" type="submit">검색</button></form>
-      </section>
+      <div id="pfBarMount"></div>
 
-      <section class="pf-filterbar" aria-label="조건 선택">
-        <div class="pf-pills">
-          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillGroup" data-label="종류" aria-expanded="false" aria-controls="pnGroup"><span class="pt">종류</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnGroup" hidden><div class="pf-list" id="pfGroup" role="group" aria-label="종류"><button type="button" data-v="" aria-pressed="false">전체</button><button type="button" data-v="상가·사무실" aria-pressed="false">상가·사무실</button><button type="button" data-v="주거" aria-pressed="false">주거</button><button type="button" data-v="토지" aria-pressed="false">토지</button><button type="button" data-v="공장·창고" aria-pressed="false">공장·창고</button><button type="button" data-v="기타" aria-pressed="false">기타</button></div></div></div>
-          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillCat" data-label="상가 구분" aria-expanded="false" aria-controls="pnCat"><span class="pt">상가 구분</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnCat" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfCat" role="group" aria-label="상가 구분"></div></div></div>
-          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillFloor" data-label="층" aria-expanded="false" aria-controls="pnFloor"><span class="pt">층</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnFloor" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfFloor" role="group" aria-label="층"><button type="button" data-v="__all" aria-pressed="false">전체</button><button type="button" data-v="-1" aria-pressed="false">지하</button><button type="button" data-v="1" aria-pressed="false">1층</button><button type="button" data-v="2" aria-pressed="false">2층</button><button type="button" data-v="3" aria-pressed="false">3층</button><button type="button" data-v="4" aria-pressed="false">4층</button><button type="button" data-v="5" aria-pressed="false">5층</button><button type="button" data-v="6" aria-pressed="false">6층 이상</button></div></div></div>
-          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillDeal" data-label="거래" aria-expanded="false" aria-controls="pnDeal"><span class="pt">거래</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnDeal" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfDeal" role="group" aria-label="거래"><button type="button" data-v="__all" aria-pressed="false">전체</button><button type="button" data-v="월세" aria-pressed="false">월세</button><button type="button" data-v="매매" aria-pressed="false">매매</button><button type="button" data-v="전세" aria-pressed="false">전세</button><button type="button" data-v="분양" aria-pressed="false">분양</button></div></div></div>
-          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillArea" data-label="평수" aria-expanded="false" aria-controls="pnArea"><span class="pt">평수</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnArea" hidden><div class="pf-list" id="pfAreaQuick" role="group" aria-label="평수"><button type="button" data-v="-" aria-pressed="false">전체</button><button type="button" data-v="-10" aria-pressed="false">10평 이하</button><button type="button" data-v="10-20" aria-pressed="false">10~20평</button><button type="button" data-v="20-40" aria-pressed="false">20~40평</button><button type="button" data-v="40-60" aria-pressed="false">40~60평</button><button type="button" data-v="60-" aria-pressed="false">60평 이상</button></div>
-   <div class="pf-range"><span>직접</span><input id="pfMin" type="number" min="0" step="0.1" placeholder="최소" aria-label="최소 평수"><i>~</i><input id="pfMax" type="number" min="0" step="0.1" placeholder="최대" aria-label="최대 평수"><em>평</em></div>
-   <select id="pfBasis" aria-label="면적 기준"><option value="ex">전용 기준</option><option value="sup">분양(계약) 기준</option><option value="any">전용·분양 둘 다</option></select></div></div>
-          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillPrice" data-label="금액" aria-expanded="false" aria-controls="pnPrice"><span class="pt">금액</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnPrice" hidden><div class="pf-panel-tip">비워 두면 제한 없음 (최저 ~ 최고)</div>
-   <div class="pf-range"><span>보증금</span><input id="pfDepMin" type="number" min="0" placeholder="최저"><i>~</i><input id="pfDepMax" type="number" min="0" placeholder="최고"><em>만원</em></div>
-   <div class="pf-range"><span>월세</span><input id="pfRentMin" type="number" min="0" placeholder="최저"><i>~</i><input id="pfRentMax" type="number" min="0" placeholder="최고"><em>만원</em></div>
-   <div class="pf-range"><span>매매가</span><input id="pfSaleMin" type="number" min="0" step="0.1" placeholder="최저"><i>~</i><input id="pfSaleMax" type="number" min="0" step="0.1" placeholder="최고"><em>억</em></div></div></div>
-          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillMore" data-label="상세" aria-expanded="false" aria-controls="pnMore"><span class="pt">상세</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnMore" hidden><select id="pfBuilding" aria-label="건물 선택"><option value="">건물 전체</option></select>
-   <input id="pfKw" type="text" placeholder="건물·호수·메모 검색" aria-label="건물 호수 메모 검색">
-   <label class="pf-row-opt">보는 범위 <select id="pfStatus"><option value="open">지금 소개 가능 (공실·진행중)</option><option value="withRented">임차중·보류도 포함</option><option value="all">거래완료까지 전체</option></select></label>
-   <label class="pf-row-opt"><input id="pfUnknown" type="checkbox"> 층·평수·가격이 비어 있는 것도 보기</label></div></div>
-          <button class="pf-pill reset" type="button" id="pfReset">↺ 초기화</button>
-          <span class="pf-grow"></span>
-          <button class="pf-btn main big" id="pfGo" type="button">조건으로 검색</button>
-        </div>
-        <p class="pf-dirty" id="pfDirty" hidden>조건이 바뀌었어요. <b>조건으로 검색</b>을 눌러 주세요.</p>
-      </section>
-
-      <p class="pf-idle" id="pfIdle">조건을 고르고 <b>검색</b>을 누르면 결과가 여기에 나옵니다.</p>
+      <p class="pf-idle" id="pfIdle">조건을 고르고 <b>조건으로 검색</b>을 누르면 결과가 여기에 나옵니다.</p>
       <div id="pfResults" hidden>
         <div class="pf-printhead"><h2>하이탑부동산 매물 목록</h2><p id="pfPrintCond"></p><p id="pfPrintMeta"></p></div>
+        <p class="pf-condline" id="pfCondLine"></p>
         <div class="pf-bar"><strong id="pfCount">0건</strong><span class="pf-sub" id="pfSplit"></span><span class="sp"></span>
           <label class="pf-sub">정렬 <select id="pfSort"><option value="floor">층 낮은 순</option><option value="area">평수 작은 순</option><option value="rent">월세 낮은 순</option><option value="sale">매매가 낮은 순</option><option value="building">건물 순</option><option value="newest">최근 순</option></select></label>
-          <button class="pf-btn" id="pfCopy" type="button">결과 복사</button><button class="pf-btn" id="pfPrint" type="button">인쇄</button></div>
+          <button class="pf-btn" id="pfChange" type="button" hidden>조건 바꾸기</button><button class="pf-btn" id="pfCopy" type="button">결과 복사</button><button class="pf-btn" id="pfPrint" type="button">인쇄</button></div>
         <p class="pf-hint" id="pfHint" role="status"></p>
         <div class="pf-head" aria-hidden="true"><span>구분</span><span>건물</span><span>호수</span><span>층</span><span>평수</span><span>가격</span><span>상태</span><span></span></div>
         <div id="pfList"></div>
@@ -172,6 +150,6 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
       </div>
     </main>
   </div>
-  <script src="assets/js/property-finder.js?v=20261104-finder7"></script>
+  <script src="assets/js/property-finder.js?v=20261104-bar1"></script>
 </body>
 </html>
