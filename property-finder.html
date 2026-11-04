@@ -34,12 +34,13 @@ html .pf-chips button[aria-pressed="true"]{background:#25675f!important;color:#f
 .pf-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .pf-wrap input[type=number],.pf-wrap input[type=text],.pf-wrap select{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line2,#cbe1e0);border-radius:8px;min-width:0}
 .pf-wrap input[type=number]{width:84px}.pf-wrap input[type=text]{flex:1;min-width:140px}
+.pf-catbox{max-height:150px;overflow-y:auto;padding:8px;border:1px solid var(--line2,#cbe1e0);border-radius:10px}
 .pf-sub{font-size:13px;color:var(--sub,#618684)}
 .pf-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0 6px}
 .pf-bar strong{font-size:22px}.pf-bar .sp{flex:1}
 .pf-hint{font-size:14px;color:#a35a00;margin:4px 0 8px}.pf-hint:empty{display:none}
 .pf-link{font:inherit;background:none;border:0;color:var(--gold,#25675f);text-decoration:underline;cursor:pointer;padding:0;font-weight:700}
-.pf-head,.pf-row{display:grid;grid-template-columns:62px minmax(170px,1.4fr) 92px 112px 190px 96px 104px;gap:12px;align-items:start}
+.pf-head,.pf-row{display:grid;grid-template-columns:56px minmax(140px,1.2fr) 82px 88px 160px 220px 84px 92px;gap:12px;align-items:start}
 .pf-head{font-size:13px;font-weight:700;color:var(--sub,#618684);padding:8px 14px;border-bottom:2px solid var(--line2,#cbe1e0)}
 .pf-row{padding:14px;border-bottom:1px solid var(--line,#e0efee);font-size:14px}
 .pf-row:hover{background:var(--panel2,#f8fcfc)}
@@ -47,10 +48,15 @@ html .pf-chips button[aria-pressed="true"]{background:#25675f!important;color:#f
 .pf-muted{color:var(--sub,#618684);font-size:13px}.pf-ok{color:#1d7a43;font-weight:700}.pf-warn{color:#b25b00;font-weight:700}
 .pf-badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px}.is-listing{background:#e3f4e9;color:#1d7a43}.is-data{background:#e9eef5;color:#47607c}
 .pf-go{display:flex;flex-direction:column;gap:5px}.pf-go a{text-align:center;border:1px solid var(--line2,#cbe1e0);border-radius:6px;padding:7px;font-size:13px;font-weight:700;text-decoration:none;color:inherit}.pf-go a:hover{background:var(--panel2,#f8fcfc)}
+.pf-ho{display:flex;align-items:flex-start}.pf-ho .pf-num{font-size:20px}
+.pf-line{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}.pf-tag{font-size:12px;color:var(--sub,#618684);min-width:26px}
+.pf-num{font-size:19px;font-weight:800;color:#12413c;letter-spacing:-.02em}.pf-num.sub{font-size:14px;font-weight:600;color:var(--sub,#618684)}
+.pf-row .pf-col{padding:7px 10px;border-radius:8px}.pf-col.pf-hl{background:#e6f5f2}.pf-head span:nth-child(n+4):nth-child(-n+7){padding-left:10px}.pf-col.pf-hl .pf-num{color:#0d6b5f}
+.pf-head{font-size:14px}.pf-place strong{font-size:17px}
 .pf-empty{padding:40px 0;text-align:center;color:var(--sub,#618684)}
 .pf-more{display:block;margin:16px auto 0}
 .pf-msg{color:var(--sub,#618684);font-size:14px;margin:8px 0}.pf-msg:empty{display:none}
-@media(max-width:900px){.pf-grid{grid-template-columns:1fr}.pf-head{display:none}.pf-row{grid-template-columns:62px 1fr 1fr}.pf-place{grid-column:2/4}.pf-go{grid-column:1/4;flex-direction:row}.pf-go a{flex:1}}
+@media(max-width:900px){.pf-grid{grid-template-columns:1fr}.pf-head{display:none}.pf-row{grid-template-columns:56px 1fr 80px}.pf-place{grid-column:2/3}.pf-go{grid-column:1/4;flex-direction:row}.pf-go a{flex:1}}
 @media(max-width:600px){.pf-wrap{padding:0 14px 40px}.pf-quick{flex-wrap:wrap}.pf-quick button{width:100%}}
 </style>
 </head>
@@ -80,9 +86,9 @@ html .pf-chips button[aria-pressed="true"]{background:#25675f!important;color:#f
               <select id="pfBasis" aria-label="면적 기준"><option value="ex">전용 기준</option><option value="sup">분양(계약) 기준</option><option value="any">전용·분양 둘 다</option></select></div>
             <div class="pf-chips" id="pfAreaQuick" style="margin-top:8px"><button type="button" data-v="-10" aria-pressed="false">10평 이하</button><button type="button" data-v="10-20" aria-pressed="false">10~20</button><button type="button" data-v="20-40" aria-pressed="false">20~40</button><button type="button" data-v="40-60" aria-pressed="false">40~60</button><button type="button" data-v="60-" aria-pressed="false">60평 이상</button></div></div>
 
-          <div class="pf-field"><span class="pf-label">위치</span>
-            <div class="pf-inline"><span class="pf-chips" id="pfNear"><button type="button" data-v="near" aria-pressed="false">운정역 일대</button></span>
-              <select id="pfBuilding" aria-label="건물 선택"><option value="">건물 전체</option></select>
+          <div class="pf-field"><span class="pf-label">위치 · 상가 구분 (여러 개 선택 가능, 스크롤)</span>
+            <div class="pf-catbox pf-chips" id="pfCat" role="group" aria-label="상가 구분"></div>
+            <div class="pf-inline" style="margin-top:8px"><select id="pfBuilding" aria-label="건물 선택"><option value="">건물 전체</option></select>
               <input id="pfKw" type="text" placeholder="건물·호수·메모 검색" aria-label="건물 호수 메모 검색"></div></div>
           <div class="pf-field"><span class="pf-label">가격 (이하)</span>
             <div class="pf-inline">보증금 <input id="pfDepMax" type="number" min="0" placeholder="만원"> 월세 <input id="pfRentMax" type="number" min="0" placeholder="만원"> 매매 <input id="pfSaleMax" type="number" min="0" step="0.1" placeholder="억"></div></div>
@@ -99,12 +105,12 @@ html .pf-chips button[aria-pressed="true"]{background:#25675f!important;color:#f
         <label class="pf-sub">정렬 <select id="pfSort"><option value="floor">층 낮은 순</option><option value="area">평수 작은 순</option><option value="rent">월세 낮은 순</option><option value="sale">매매가 낮은 순</option><option value="building">건물 순</option><option value="newest">최근 순</option></select></label>
         <button class="pf-btn" id="pfCopy" type="button">결과 복사</button></div>
       <p class="pf-hint" id="pfHint" role="status"></p>
-      <div class="pf-head" aria-hidden="true"><span>구분</span><span>건물 · 호수</span><span>층</span><span>평수</span><span>가격</span><span>상태</span><span></span></div>
+      <div class="pf-head" aria-hidden="true"><span>구분</span><span>건물</span><span>호수</span><span>층</span><span>평수</span><span>가격</span><span>상태</span><span></span></div>
       <div id="pfList"></div>
       <p class="pf-empty" id="pfEmpty" hidden>조건에 맞는 매물이 없습니다. 층이나 평수 범위를 넓혀 보세요.</p>
       <button class="pf-btn pf-more" id="pfMore" type="button" hidden>더 보기</button>
     </main>
   </div>
-  <script src="assets/js/property-finder.js?v=20261104-finder1"></script>
+  <script src="assets/js/property-finder.js?v=20261104-finder2"></script>
 </body>
 </html>
