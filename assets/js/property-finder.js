@@ -204,7 +204,7 @@ function buildEntries(data) {
 }
 
 // ---------- 조건 ----------
-const F = { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMax: null, rentMax: null, saleMax: null, status: 'open', unknown: false, sort: 'floor' };
+const F = { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMin: null, depMax: null, rentMin: null, rentMax: null, saleMin: null, saleMax: null, status: 'open', unknown: false, sort: 'floor' };
 let ALL = [], shown = 0, matched = [];
 
 function floorOK(e) {
@@ -220,8 +220,8 @@ function areaOK(e) {
   return known.some(v => (F.min == null || v >= F.min) && (F.max == null || v <= F.max));
 }
 function priceOK(e) {
-  const chk = (limit, val) => limit == null || (val == null ? F.unknown : val <= limit);
-  return chk(F.depMax, e.deals.has('전세') && e.jeonse != null ? e.jeonse : e.dep) && chk(F.rentMax, e.rent) && chk(F.saleMax, e.sale);
+  const chk = (min, max, val) => (min == null && max == null) || (val == null ? F.unknown : (min == null || val >= min) && (max == null || val <= max));
+  return chk(F.depMin, F.depMax, e.deals.has('전세') && e.jeonse != null ? e.jeonse : e.dep) && chk(F.rentMin, F.rentMax, e.rent) && chk(F.saleMin, F.saleMax, e.sale);
 }
 function statusOK(e) {
   if (F.status === 'all') return true;
@@ -299,7 +299,7 @@ function row(e) {
   if (sub) place.append(el('span', 'pf-muted', sub));
   place.append(el('span', 'pf-muted', [e.cat, e.group].filter(Boolean)[0]));
   const ho = el('div', 'pf-ho'); ho.append(el('span', hoText ? 'pf-num' : 'pf-muted', hoText || '-'));
-  const hlFloor = F.floors.size > 0, hlArea = F.min != null || F.max != null, hlPrice = F.deals.size > 0 || F.depMax != null || F.rentMax != null || F.saleMax != null;
+  const hlFloor = F.floors.size > 0, hlArea = F.min != null || F.max != null, hlPrice = F.deals.size > 0 || F.depMin != null || F.depMax != null || F.rentMin != null || F.rentMax != null || F.saleMin != null || F.saleMax != null;
   const fl = el('div', 'pf-col' + (hlFloor ? ' pf-hl' : ''));
   if (e.floors) { numSpan(fl, '', fmtFloors(e)); if (e.floorDerived) fl.append(el('small', 'pf-muted', '호수로 계산')); } else fl.append(el('span', 'pf-muted', '확인 필요'));
   const ar = el('div', 'pf-col' + (hlArea ? ' pf-hl' : ''));
@@ -340,7 +340,7 @@ function run() {
   hint.textContent = '';
   if (!saved && hidden > 0) {
     hint.append('층·평수·가격·위치 정보가 비어 있어 빠진 항목이 ' + hidden + '건 있습니다. ');
-    const b = el('button', 'pf-link', '포함해서 보기'); b.type = 'button'; b.onclick = () => { $('pfUnknown').checked = true; F.unknown = true; run(); }; hint.append(b);
+    const b = el('button', 'pf-link', '포함해서 보기'); b.type = 'button'; b.onclick = () => { $('pfUnknown').checked = true; F.unknown = true; doSearch(); }; hint.append(b);
   }
   $('pfList').replaceChildren(); shown = 0; showMore();
   $('pfEmpty').hidden = matched.length > 0;
@@ -354,21 +354,30 @@ function showMore() {
 }
 
 // ---------- 화면 조작 ----------
-function chipGroup(id, onToggle, single) {
+// 조건을 고르는 동안에는 결과가 바뀌지 않고, [검색] 버튼을 눌러야 결과가 나온다.
+let searched = false;
+function markDirty() {
+  if (!searched) return;
+  $('pfGo').classList.add('is-dirty'); $('pfDirty').hidden = false;
+}
+function pick(id, apply) {
   $(id).addEventListener('click', ev => {
     const b = ev.target.closest('button[data-v]'); if (!b) return;
-    const on = b.getAttribute('aria-pressed') !== 'true';
-    if (single) $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
-    b.setAttribute('aria-pressed', String(single ? true : on));
-    onToggle(b.dataset.v, single ? true : on);
-    run();
+    apply(b.dataset.v); markDirty(); syncPicks();
   });
 }
-function setChips(id, values) {
-  $(id).querySelectorAll('button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(values.has(b.dataset.v))));
+const toggleSet = (set, v) => { if (v === '__all') set.clear(); else set.has(v) ? set.delete(v) : set.add(v); };
+function areaKey() { return (F.min ?? '') + '-' + (F.max ?? ''); }
+function syncPicks() {
+  const mark = (id, test) => $(id).querySelectorAll('button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(test(b.dataset.v))));
+  mark('pfGroup', v => v === F.group);
+  mark('pfCat', v => v === '__all' ? F.cats.size === 0 : F.cats.has(v));
+  mark('pfFloor', v => v === '__all' ? F.floors.size === 0 : F.floors.has(Number(v)));
+  mark('pfDeal', v => v === '__all' ? F.deals.size === 0 : F.deals.has(v));
+  mark('pfAreaQuick', v => v === areaKey());
 }
 function numInput(id, key, scale) {
-  $(id).addEventListener('input', () => { const n = num($(id).value); F[key] = n == null ? null : n * (scale || 1); run(); });
+  $(id).addEventListener('input', () => { const n = num($(id).value); F[key] = n == null ? null : n * (scale || 1); markDirty(); syncPicks(); });
 }
 function refreshBuildings() {
   const sel = $('pfBuilding'), keep = F.building;
@@ -380,17 +389,22 @@ function refreshBuildings() {
 }
 function buildCatChips() {
   const box = $('pfCat'); box.replaceChildren();
-  CATS.forEach(n => { const b = el('button', '', n); b.type = 'button'; b.dataset.v = n; b.setAttribute('aria-pressed', 'false'); box.append(b); });
+  [['__all', '전체'], ...CATS.map(n => [n, n])].forEach(([v, t]) => { const b = el('button', '', t); b.type = 'button'; b.dataset.v = v; b.setAttribute('aria-pressed', 'false'); box.append(b); });
 }
 function syncUI() {
-  setChips('pfGroup', new Set([F.group]));
-  setChips('pfFloor', new Set([...F.floors].map(String)));
-  setChips('pfDeal', F.deals);
-  setChips('pfCat', F.cats); refreshBuildings();
+  syncPicks(); refreshBuildings();
   $('pfMin').value = F.min ?? ''; $('pfMax').value = F.max ?? '';
   $('pfKw').value = F.kw;
-  $('pfDepMax').value = F.depMax ?? ''; $('pfRentMax').value = F.rentMax ?? ''; $('pfSaleMax').value = F.saleMax != null ? F.saleMax / 10000 : '';
+  $('pfDepMin').value = F.depMin ?? ''; $('pfDepMax').value = F.depMax ?? ''; $('pfRentMin').value = F.rentMin ?? ''; $('pfRentMax').value = F.rentMax ?? '';
+  $('pfSaleMin').value = F.saleMin != null ? F.saleMin / 10000 : ''; $('pfSaleMax').value = F.saleMax != null ? F.saleMax / 10000 : '';
   $('pfUnknown').checked = F.unknown;
+}
+function doSearch() {
+  searched = true;
+  $('pfGo').classList.remove('is-dirty'); $('pfDirty').hidden = true;
+  $('pfIdle').hidden = true; $('pfResults').hidden = false;
+  run();
+  $('pfResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 // "상가 1층 20~40평 운정역 월세" 같은 한 줄 입력을 조건으로 바꾼다
 function parseQuick(q) {
@@ -425,30 +439,31 @@ function parseQuick(q) {
   return f;
 }
 function reset() {
-  Object.assign(F, { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMax: null, rentMax: null, saleMax: null, status: 'open', unknown: false });
+  Object.assign(F, { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMin: null, depMax: null, rentMin: null, rentMax: null, saleMin: null, saleMax: null, status: 'open', unknown: false });
   $('pfQuick').value = ''; $('pfBasis').value = 'ex'; $('pfStatus').value = 'open';
-  syncUI(); run();
+  syncUI(); markDirty();
 }
 function init() {
-  chipGroup('pfGroup', v => { F.group = v; }, true);
-  chipGroup('pfFloor', (v, on) => { on ? F.floors.add(Number(v)) : F.floors.delete(Number(v)); });
-  chipGroup('pfDeal', (v, on) => { on ? F.deals.add(v) : F.deals.delete(v); });
-  chipGroup('pfCat', (v, on) => { on ? F.cats.add(v) : F.cats.delete(v); refreshBuildings(); });
-  chipGroup('pfAreaQuick', v => { const [a, b] = v.split('-'); F.min = a === '' ? null : Number(a); F.max = b === '' ? null : Number(b); $('pfMin').value = F.min ?? ''; $('pfMax').value = F.max ?? ''; }, true);
-  numInput('pfMin', 'min'); numInput('pfMax', 'max'); numInput('pfDepMax', 'depMax'); numInput('pfRentMax', 'rentMax'); numInput('pfSaleMax', 'saleMax', 10000);
-  $('pfKw').addEventListener('input', () => { F.kw = $('pfKw').value; run(); });
-  $('pfBuilding').addEventListener('change', () => { F.building = $('pfBuilding').value; run(); });
-  $('pfBasis').addEventListener('change', () => { F.basis = $('pfBasis').value; run(); });
-  $('pfStatus').addEventListener('change', () => { F.status = $('pfStatus').value; run(); });
-  $('pfSort').addEventListener('change', () => { F.sort = $('pfSort').value; run(); });
-  $('pfUnknown').addEventListener('change', () => { F.unknown = $('pfUnknown').checked; run(); });
+  pick('pfGroup', v => { F.group = v; });
+  pick('pfFloor', v => { if (v === '__all') F.floors.clear(); else toggleSet(F.floors, Number(v)); });
+  pick('pfDeal', v => toggleSet(F.deals, v));
+  pick('pfCat', v => { toggleSet(F.cats, v); refreshBuildings(); });
+  pick('pfAreaQuick', v => { const [a, b] = v.split('-'); F.min = a === '' ? null : Number(a); F.max = b === '' ? null : Number(b); $('pfMin').value = F.min ?? ''; $('pfMax').value = F.max ?? ''; });
+  numInput('pfMin', 'min'); numInput('pfMax', 'max'); numInput('pfDepMin', 'depMin'); numInput('pfDepMax', 'depMax'); numInput('pfRentMin', 'rentMin'); numInput('pfRentMax', 'rentMax'); numInput('pfSaleMin', 'saleMin', 10000); numInput('pfSaleMax', 'saleMax', 10000);
+  $('pfKw').addEventListener('input', () => { F.kw = $('pfKw').value; markDirty(); });
+  $('pfBuilding').addEventListener('change', () => { F.building = $('pfBuilding').value; markDirty(); });
+  $('pfBasis').addEventListener('change', () => { F.basis = $('pfBasis').value; markDirty(); });
+  $('pfStatus').addEventListener('change', () => { F.status = $('pfStatus').value; markDirty(); });
+  $('pfUnknown').addEventListener('change', () => { F.unknown = $('pfUnknown').checked; markDirty(); });
+  $('pfSort').addEventListener('change', () => { F.sort = $('pfSort').value; matched.sort(SORTS[F.sort] || SORTS.floor); $('pfList').replaceChildren(); shown = 0; showMore(); });
   $('pfMore').addEventListener('click', showMore);
   $('pfReset').addEventListener('click', reset);
+  $('pfGo').addEventListener('click', doSearch);
   $('pfQuickForm').addEventListener('submit', ev => {
     ev.preventDefault();
     const q = parseQuick($('pfQuick').value);
     Object.assign(F, { group: q.group, floors: new Set([...q.floors].map(Number)), min: q.min, max: q.max, cats: q.cats, deals: q.deals, kw: q.kw, building: '' });
-    syncUI(); run();
+    syncUI(); doSearch();
   });
   $('pfCopy').addEventListener('click', async () => {
     const lines = matched.slice(0, 60).map(e => [e.building || e.title, e.ho ? e.ho + '호' : '', fmtFloors(e), areaText(e).join('/'), priceLines(e).join(', ')].filter(Boolean).join(' | '));
@@ -500,7 +515,7 @@ async function start() {
     status.textContent = data.failed && data.failed.length ? '일부 자료를 읽지 못했습니다(' + data.failed.join(', ') + '). 결과가 부족할 수 있어요. 새로고침해 주세요.' : '';
     $('pfLoaded').textContent = '전체 ' + ALL.length + '건 중에서 찾습니다';
     const initial = new URLSearchParams(location.search).get('q');
-    if (initial) { $('pfQuick').value = initial; $('pfQuickForm').requestSubmit(); } else { syncUI(); run(); }
+    if (initial) { $('pfQuick').value = initial; $('pfQuickForm').requestSubmit(); } else { syncUI(); }
   } catch (e) {
     status.textContent = e.message === 'SESSION' ? '로그인 상태를 확인할 수 없습니다. 다시 로그인해 주세요.' : '자료를 불러오지 못했습니다. 새로고침해 주세요.';
   }
