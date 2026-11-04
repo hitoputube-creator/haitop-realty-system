@@ -778,7 +778,45 @@ function updateKindTabCounts() {
   const nb = document.querySelector("#kindTabRow [data-naver]");
   if (nb) nb.firstChild.nodeValue = "네이버광고 " + live.filter(x => !isRosterListing(x) && isNaverAdListing(x)).length + "건";
   document.querySelectorAll("#kindTabRow .kind-tab").forEach(b => b.classList.toggle("active", b.dataset.naver ? !!currentNaverMode : b.dataset.presale ? !!currentPresaleMode : (b.dataset.kind === currentKindTab && !currentPresaleMode)));
+  updateNaverSummaryBar();
 }
+
+// 네이버광고 보기를 켜면 광고중 매물 수와 부동산 유형별 개수를 보여 주는 막대 (칸을 누르면 그 유형만 보인다)
+function updateNaverSummaryBar() {
+  const NAVER_SUMMARY_TYPES = [["공장창고", "공장·창고"], ["상가사무실", "상가·사무실"], ["토지", "토지"], ["주거용", "주거용"], ["건물빌딩", "건물·빌딩"]];
+  const bar = document.getElementById("naverSummaryBar");
+  if (!bar) return;
+  if (!currentNaverMode) { bar.hidden = true; return; }
+  const live = allListings.filter(x => (currentStatusFilter === "전체" || listingProgressStatus(x) === currentStatusFilter) && !isRosterListing(x) && isNaverAdListing(x));
+  const counts = {};
+  live.forEach(x => { const k = normalizeListingCategory(x).majorKey; counts[k] = (counts[k] || 0) + 1; });
+  const known = NAVER_SUMMARY_TYPES.reduce((s, t) => s + (counts[t[0]] || 0), 0);
+  const chip = (key, label, n, clickable) => '<button type="button" class="naver-chip' + (clickable && currentMajor === key ? ' active' : '') + (n ? '' : ' zero') + '"' + (clickable ? ' data-nmajor="' + key + '"' : ' disabled title="유형이 정해지지 않은 매물"') + '>' + label + ' <b>' + n + '</b></button>';
+  bar.innerHTML = '<span class="naver-total">네이버 광고중 <b>' + live.length + '건</b></span><span class="naver-sep">|</span>' +
+    NAVER_SUMMARY_TYPES.map(t => chip(t[0], t[1], counts[t[0]] || 0, true)).join("") +
+    (live.length - known > 0 ? chip("", "기타", live.length - known, false) : "");
+  bar.hidden = false;
+}
+(function addNaverSummaryBar() {
+  const row = document.getElementById("kindTabRow");
+  if (!row || document.getElementById("naverSummaryBar")) return;
+  const st = document.createElement("style");
+  st.textContent = "#naverSummaryBar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0;padding:10px 14px;background:#e8f7ee;border:1px solid #9dd9ad;border-radius:10px;font-size:.92rem}" +
+    "#naverSummaryBar[hidden]{display:none}#naverSummaryBar .naver-total{color:#1b6e2e}#naverSummaryBar .naver-sep{color:#9a9a9a}" +
+    "#naverSummaryBar .naver-chip{margin:0;background:#fff;border:1px solid #9dd9ad;border-radius:999px;padding:4px 12px;color:#222;cursor:pointer;font:inherit}" +
+    "#naverSummaryBar .naver-chip.zero{color:#999;border-color:#ddd}#naverSummaryBar .naver-chip.active{background:#1b8a3a;border-color:#1b8a3a;color:#fff}#naverSummaryBar .naver-chip:disabled{cursor:default}";
+  document.head.appendChild(st);
+  const bar = document.createElement("div");
+  bar.id = "naverSummaryBar";
+  bar.hidden = true;
+  row.parentElement.after(bar);
+  bar.addEventListener("click", e => {
+    const b = e.target.closest("[data-nmajor]");
+    if (!b) return;
+    const f = document.querySelector('#filterRow .filter-btn[data-major="' + b.dataset.nmajor + '"]');
+    if (f) f.click();
+  });
+})();
 
 const KOREAN_REGISTRATION_DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit"
