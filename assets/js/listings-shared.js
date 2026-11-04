@@ -389,7 +389,15 @@ function villageResourceUrl(item, village) {
 }
 
 // 진행중 옆 네이버광고 버튼: 포스 등록 매물이면 "네이버광고중", 아니면 포스 등록 화면으로 연결
-function naverAdIsOn(listingNo) {
+// 서버(매물 data의 naver_ad_on)에 저장된 값이 있으면 그것을 먼저 쓴다. 그래야 다른 기기에서도 같은 목록이 보인다.
+function naverAdFindItem(listingNo) {
+  if (typeof allListings === "undefined" || !Array.isArray(allListings)) return null;
+  const k = String(listingNo);
+  return allListings.find(x => String(getListingNumber(x)) === k) || null;
+}
+function naverAdIsOn(listingNo, item) {
+  const it = item || naverAdFindItem(listingNo);
+  if (it && typeof it.naver_ad_on === "boolean") return it.naver_ad_on;
   const saved = localStorage.getItem("naverAdOn:" + String(listingNo));
   if (saved === "1") return true;
   if (saved === "0") return false;
@@ -397,15 +405,20 @@ function naverAdIsOn(listingNo) {
 }
 // 네이버광고 버튼: 누르면 부동산포스 광고 화면으로 가고, 옆 체크박스로 "광고중" 표시를 직접 켜고 끈다 (이 브라우저에 저장)
 const NAVER_AD_BTN_BASE_STYLE = "flex:0 0 56px !important;width:56px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 !important;line-height:26px !important;font-size:10px !important;white-space:nowrap !important;border-radius:6px;";
-function naverAdWrapHtml(listingNo) {
+function naverAdAtLabel(item) {
+  const t = item && item.naver_ad_at ? new Date(item.naver_ad_at) : null;
+  return t && !isNaN(t) ? String(t.getMonth() + 1).padStart(2, "0") + "." + String(t.getDate()).padStart(2, "0") : "";
+}
+function naverAdWrapHtml(listingNo, item) {
   const no = String(listingNo).replace(/['"<>]/g, "");
-  const on = naverAdIsOn(no);
+  const it = item || naverAdFindItem(no);
+  const on = naverAdIsOn(no, it);
   const posId = NAVER_POS_LISTING_MAP[no];
   // 케이탑은 부동산포스 대신 써브로 네이버광고를 올린다
   const isKtop = document.documentElement.dataset.officeTheme === "ktop";
   const url = isKtop ? "https://ma.serve.co.kr/main" : (on ? "https://new.rfine.kr/Pos/Regi_list.php" : "https://new.rfine.kr/Pos/Regi.php");
   const label = "네이버광고";
-  const title = isKtop ? "써브 광고 화면 열기" : on ? "부동산포스 광고 목록" + (posId ? " (포스 매물번호 " + posId + ")" : "") : "부동산포스에 매물 등록";
+  const title = isKtop ? "써브 광고 화면 열기" : on ? "부동산포스 광고 목록" + (posId ? " (포스 매물번호 " + posId + ")" : "") + (naverAdAtLabel(it) ? " · 광고 올린 날 " + naverAdAtLabel(it) : "") : "부동산포스에 매물 등록";
   const style = on ? "background:#2e7d32 !important;color:#fff !important;border-color:#2e7d32 !important;font-weight:700 !important;" : "";
   return '<span class="lc-naver-wrap" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;">' +
     '<button type="button" class="btn btn-ghost lc-naver-btn" title="' + title + '" style="flex:0 0 56px !important;width:56px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 !important;line-height:26px !important;font-size:10px !important;white-space:nowrap !important;border-radius:6px;' + style + '" onclick="event.stopPropagation();window.open(\'' + url + '\',\'_blank\',\'noopener\')">' + label + '</button>' +
@@ -413,11 +426,36 @@ function naverAdWrapHtml(listingNo) {
     '</span>';
 }
 function naverAdToggle(listingNo, input) {
-  localStorage.setItem("naverAdOn:" + String(listingNo), input.checked ? "1" : "0");
+  const on = input.checked;
+  localStorage.setItem("naverAdOn:" + String(listingNo), on ? "1" : "0");
+  const item = naverAdFindItem(listingNo);
+  if (item) {
+    item.naver_ad_on = on;
+    if (on) item.naver_ad_at = new Date().toISOString(); else delete item.naver_ad_at;
+    naverAdSaveToServer(item, on);
+  }
   const wrap = input.closest(".lc-naver-wrap");
-  if (wrap) wrap.outerHTML = naverAdWrapHtml(listingNo);
+  if (wrap) wrap.outerHTML = naverAdWrapHtml(listingNo, item);
+  if (typeof updateKindTabCounts === "function") updateKindTabCounts();
 }
-function naverAdButtonHtml(listingNo) { return naverAdWrapHtml(listingNo); }
+// 광고 체크를 서버(매물 data)에 저장한다: naver_ad_on(켬/끔)과 naver_ad_at(켠 날). 다른 값은 바꾸지 않는다.
+async function naverAdSaveToServer(item, on) {
+  try {
+    const url = SUPABASE_URL + "/rest/v1/listings?id=eq." + encodeURIComponent(item.id);
+    const res1 = await fetchWithTimeout(url, { headers });
+    if (!res1.ok) throw new Error("조회 실패");
+    const rows = await res1.json();
+    if (!rows.length) throw new Error("매물을 찾을 수 없습니다");
+    const data = Object.assign({}, rows[0].data, { naver_ad_on: on });
+    if (on) data.naver_ad_at = item.naver_ad_at; else delete data.naver_ad_at;
+    const res2 = await fetchWithTimeout(url, { method: "PATCH", headers: Object.assign({}, headers, { "Prefer": "return=minimal" }), body: JSON.stringify({ data }) });
+    if (!res2.ok) throw new Error("저장 실패");
+  } catch (e) {
+    console.warn("네이버광고 표시 서버 저장 실패", e);
+    if (typeof showToast === "function") showToast("광고 표시가 서버에 저장되지 않았습니다. 이 기기에만 저장됩니다.", 4000);
+  }
+}
+function naverAdButtonHtml(listingNo, item) { return naverAdWrapHtml(listingNo, item); }
 
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
 function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
@@ -442,7 +480,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const statusLabel = getStatusLabel(item);
   const addressText = item.address || "(주소 미입력)";
   const listingNo = getListingNumber(item);
-  const naverAdBtn = naverAdButtonHtml(listingNo);
+  const naverAdBtn = naverAdButtonHtml(listingNo, item);
   const rawPriceText = formatPrice(item) || "-";
   const priceText = rawPriceText.includes("\n") ? rawPriceText : rawPriceText.replace(/^(?:매매|전세|월세|임대)\s+/, "");
   const apartment = item.apartmentUnitData || {};
