@@ -757,6 +757,7 @@ function matchesAllFilters(item) {
   if (currentMajor && !matchesCategoryFilter(item)) return false;
   if (currentDealFilter && !matchesDealFilter(item)) return false;
   if (currentPresaleMode && !isPresaleListingActive(item)) return false;
+  if (currentNaverMode && !isNaverAdListing(item)) return false;
   if (currentPresaleSub && (currentDealFilter === "회사분양" || currentPresaleMode) && !matchesPresaleSub(item)) return false;
   return true;
 }
@@ -774,7 +775,9 @@ function updateKindTabCounts() {
   set("kindCountListing", live.length - roster);
   set("kindCountRoster", roster);
   set("kindCountAll", live.length);
-  document.querySelectorAll("#kindTabRow .kind-tab").forEach(b => b.classList.toggle("active", b.dataset.presale ? !!currentPresaleMode : (b.dataset.kind === currentKindTab && !currentPresaleMode)));
+  const nb = document.querySelector("#kindTabRow [data-naver]");
+  if (nb) nb.firstChild.nodeValue = "네이버광고 " + live.filter(x => !isRosterListing(x) && isNaverAdListing(x)).length + "건";
+  document.querySelectorAll("#kindTabRow .kind-tab").forEach(b => b.classList.toggle("active", b.dataset.naver ? !!currentNaverMode : b.dataset.presale ? !!currentPresaleMode : (b.dataset.kind === currentKindTab && !currentPresaleMode)));
 }
 
 const KOREAN_REGISTRATION_DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
@@ -1131,6 +1134,24 @@ document.querySelectorAll("#kindTabRow .kind-tab").forEach(btn => {
   });
   row.appendChild(pb);
 })();
+(function addNaverKindTab() {
+  const row = document.getElementById("kindTabRow");
+  if (!row || row.querySelector("[data-naver]")) return;
+  const nb = document.createElement("button");
+  nb.type = "button";
+  nb.className = "kind-tab";
+  nb.dataset.naver = "1";
+  nb.title = "네이버광고 체크가 켜진 매물만 보기";
+  nb.appendChild(document.createTextNode("네이버광고"));
+  nb.addEventListener("click", () => {
+    currentNaverMode = !currentNaverMode;
+    currentPage = 1;
+    renderList();
+  });
+  row.appendChild(nb);
+  // 주소에 naverAd=1 이 있으면(메인 화면의 "네이버광고중 보기") 처음부터 켠 상태로 연다
+  if (new URLSearchParams(location.search).get("naverAd") === "1") currentNaverMode = true;
+})();
 document.getElementById("listingStatusFilter").addEventListener("change",e=>{
   currentStatusFilter=e.target.value;includeCompleted=currentStatusFilter==="전체"||currentStatusFilter==="거래완료";
   document.getElementById("includeCompletedChk").checked=includeCompleted;currentPage=1;renderList();saveFilterState();
@@ -1184,6 +1205,8 @@ function renderSubFilterRow() {
 // 회사분양(분양매물) 세부 필터: 공실 / 임차 / 추천매물 (자료실 임대현황·추천 스티커 기준)
 let currentPresaleSub = "";
 var currentPresaleMode = false;
+var currentNaverMode = false; // 네이버광고 체크가 켜진 매물만 보기 (체크 표시는 이 브라우저에 저장되어 있다)
+function isNaverAdListing(item) { return typeof naverAdIsOn === "function" && naverAdIsOn(getListingNumber(item)); }
 function presaleVacancyOf(item) {
   const unit = item.apartmentUnitData || {};
   const v = String(item.shop_status || item.occupancy || item.임대현황 || unit.임대현황 || item.공실여부 || unit.공실여부 || "");
