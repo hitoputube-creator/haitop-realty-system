@@ -496,14 +496,6 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
         <select class="lc-status-chip" style="flex:0 0 68px !important;width:68px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 8px 0 6px !important;font-size:11px !important;" aria-label="매물 거래상태" onclick="event.stopPropagation()" onchange="event.stopPropagation();handleListingProgressChange('${idArg}',this)">${isRoster && getStatusLabel(item)==='진행중' ? '<option value="" selected disabled>상태 선택</option>' : ''}${['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(getStatusLabel(item)===status && !(isRoster && status==='진행중')?' selected':'')+'>'+status+'</option>').join('')}</select>
         ${naverAdBtn}
         </div>
-        <div class="lc-toggle" data-homepage-only onclick="event.stopPropagation()">
-          <span class="lc-toggle-label">홈페이지</span>
-          <span class="lc-switch">
-            <input type="checkbox" ${item.is_public === true ? "checked" : ""} onchange="handlePublicToggle('${idArg}')">
-            <span class="track"></span>
-            <span class="thumb"></span>
-          </span>
-        </div>
       </div>
     </div>
   `;
