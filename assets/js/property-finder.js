@@ -7,6 +7,40 @@ const text = v => v == null ? '' : String(v).trim();
 const compact = v => text(v).normalize('NFKC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '');
 const num = v => { if (v == null || v === '') return null; const s = String(v).replace(/,/g, ''); if (!/\d/.test(s)) return null; const n = Number(s.replace(/[^\d.\-]/g, '')); return isFinite(n) ? n : null; };
 const PY = 3.305785;
+// 메인 화면에서는 검색 바만 보여 주고, 검색하면 결과 화면을 새 창으로 연다.
+const BAR_ONLY = !!window.PF_BAR_ONLY;
+const DEFAULT_CATS = ['운정역 상가', '운정3지구 상가(NT)', '초롱꽃마을 상가(F5,F6)', '해오름마을 근생상가(다율동)', '아파트 단지내상가', '별하람마을 근생상가', '오피스텔상가', '해오름마을 상가(F3, F7)'];
+const on = (id, ev, fn) => { const n = document.getElementById(id); if (n) n.addEventListener(ev, fn); };
+function barHtml() {
+  return `<section class="pf-searchbar" aria-label="빠른 검색">
+        <form class="pf-quick pf-quick-naver" id="pfQuickForm"><svg class="pf-mag" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="pfQuick" type="text" autocomplete="off" placeholder="말로 입력해서 검색  예) 상가 1층 20~40평 운정역 월세" aria-label="한 줄로 조건 입력"><button class="pf-btn main" type="submit">검색</button></form>
+      </section>
+
+      <section class="pf-filterbar" aria-label="조건 선택">
+        <div class="pf-pills">
+          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillGroup" data-label="종류" aria-expanded="false" aria-controls="pnGroup"><span class="pt">종류</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnGroup" hidden><div class="pf-list" id="pfGroup" role="group" aria-label="종류"><button type="button" data-v="" aria-pressed="false">전체</button><button type="button" data-v="상가·사무실" aria-pressed="false">상가·사무실</button><button type="button" data-v="주거" aria-pressed="false">주거</button><button type="button" data-v="토지" aria-pressed="false">토지</button><button type="button" data-v="공장·창고" aria-pressed="false">공장·창고</button><button type="button" data-v="기타" aria-pressed="false">기타</button></div></div></div>
+          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillCat" data-label="상가 구분" aria-expanded="false" aria-controls="pnCat"><span class="pt">상가 구분</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnCat" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfCat" role="group" aria-label="상가 구분"></div></div></div>
+          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillFloor" data-label="층" aria-expanded="false" aria-controls="pnFloor"><span class="pt">층</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnFloor" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfFloor" role="group" aria-label="층"><button type="button" data-v="__all" aria-pressed="false">전체</button><button type="button" data-v="-1" aria-pressed="false">지하</button><button type="button" data-v="1" aria-pressed="false">1층</button><button type="button" data-v="2" aria-pressed="false">2층</button><button type="button" data-v="3" aria-pressed="false">3층</button><button type="button" data-v="4" aria-pressed="false">4층</button><button type="button" data-v="5" aria-pressed="false">5층</button><button type="button" data-v="6" aria-pressed="false">6층 이상</button></div></div></div>
+          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillDeal" data-label="거래" aria-expanded="false" aria-controls="pnDeal"><span class="pt">거래</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnDeal" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfDeal" role="group" aria-label="거래"><button type="button" data-v="__all" aria-pressed="false">전체</button><button type="button" data-v="월세" aria-pressed="false">월세</button><button type="button" data-v="매매" aria-pressed="false">매매</button><button type="button" data-v="전세" aria-pressed="false">전세</button><button type="button" data-v="분양" aria-pressed="false">분양</button></div></div></div>
+          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillArea" data-label="평수" aria-expanded="false" aria-controls="pnArea"><span class="pt">평수</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnArea" hidden><div class="pf-list" id="pfAreaQuick" role="group" aria-label="평수"><button type="button" data-v="-" aria-pressed="false">전체</button><button type="button" data-v="-10" aria-pressed="false">10평 이하</button><button type="button" data-v="10-20" aria-pressed="false">10~20평</button><button type="button" data-v="20-40" aria-pressed="false">20~40평</button><button type="button" data-v="40-60" aria-pressed="false">40~60평</button><button type="button" data-v="60-" aria-pressed="false">60평 이상</button></div>
+   <div class="pf-range"><span>직접</span><input id="pfMin" type="number" min="0" step="0.1" placeholder="최소" aria-label="최소 평수"><i>~</i><input id="pfMax" type="number" min="0" step="0.1" placeholder="최대" aria-label="최대 평수"><em>평</em></div>
+   <select id="pfBasis" aria-label="면적 기준"><option value="ex">전용 기준</option><option value="sup">분양(계약) 기준</option><option value="any">전용·분양 둘 다</option></select></div></div>
+          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillPrice" data-label="금액" aria-expanded="false" aria-controls="pnPrice"><span class="pt">금액</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnPrice" hidden><div class="pf-panel-tip">비워 두면 제한 없음 (최저 ~ 최고)</div>
+   <div class="pf-range"><span>보증금</span><input id="pfDepMin" type="number" min="0" placeholder="최저"><i>~</i><input id="pfDepMax" type="number" min="0" placeholder="최고"><em>만원</em></div>
+   <div class="pf-range"><span>월세</span><input id="pfRentMin" type="number" min="0" placeholder="최저"><i>~</i><input id="pfRentMax" type="number" min="0" placeholder="최고"><em>만원</em></div>
+   <div class="pf-range"><span>매매가</span><input id="pfSaleMin" type="number" min="0" step="0.1" placeholder="최저"><i>~</i><input id="pfSaleMax" type="number" min="0" step="0.1" placeholder="최고"><em>억</em></div></div></div>
+          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillMore" data-label="상세" aria-expanded="false" aria-controls="pnMore"><span class="pt">상세</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnMore" hidden><input id="pfKw" type="text" placeholder="건물·호수·메모 검색" aria-label="건물 호수 메모 검색">
+   <label class="pf-row-opt">보는 범위 <select id="pfStatus"><option value="open">지금 소개 가능 (공실·진행중)</option><option value="withRented">임차중·보류도 포함</option><option value="all">거래완료까지 전체</option></select></label>
+   <label class="pf-row-opt"><input id="pfUnknown" type="checkbox"> 층·평수·가격이 비어 있는 것도 보기</label></div></div>
+          <button class="pf-pill reset" type="button" id="pfReset">↺ 초기화</button>
+          <span class="pf-grow"></span>
+          <button class="pf-btn main big" id="pfGo" type="button">조건으로 검색</button>
+        </div>
+        <p class="pf-dirty" id="pfDirty" hidden>조건이 바뀌었어요. <b>조건으로 검색</b>을 눌러 주세요.</p>
+      </section>
+
+      `;
+}
 const man = v => { const n = num(v); if (n == null || n <= 0) return null; return n >= 1e6 ? Math.round(n / 1e4) : n; }; // 원 단위면 만원으로 바꾼다
 const round1 = n => Math.round(n * 10) / 10;
 
@@ -334,6 +368,7 @@ function run() {
   matched = (saved ? loose : tight).slice().sort(SORTS[F.sort] || SORTS.floor);
   const hidden = loose.length - tight.length;
   $('pfCount').textContent = matched.length + '건';
+  if ($('pfCondLine')) $('pfCondLine').textContent = condText() || '조건 없음 (전체)';
   const c = {}; matched.forEach(e => c[e.src] = (c[e.src] || 0) + 1);
   $('pfSplit').textContent = '매물 ' + (c['매물'] || 0) + ' · 자료 ' + (c['자료'] || 0);
   const hint = $('pfHint');
@@ -429,7 +464,8 @@ function numInput(id, key, scale) {
   $(id).addEventListener('input', () => { const n = num($(id).value); F[key] = n == null ? null : n * (scale || 1); markDirty(); syncPicks(); });
 }
 function refreshBuildings() {
-  const sel = $('pfBuilding'), keep = F.building;
+  const sel = $('pfBuilding'); if (!sel) return;
+  const keep = F.building;
   const names = [...new Set(ALL.filter(e => e.building && (!F.cats.size || F.cats.has(e.cat))).map(e => e.building))].sort((a, b) => a.localeCompare(b, 'ko'));
   sel.replaceChildren(); const all = el('option', '', '건물 전체'); all.value = ''; sel.append(all);
   names.forEach(n => { const o = el('option', '', n); o.value = n; sel.append(o); });
@@ -448,10 +484,49 @@ function syncUI() {
   $('pfSaleMin').value = F.saleMin != null ? F.saleMin / 10000 : ''; $('pfSaleMax').value = F.saleMax != null ? F.saleMax / 10000 : '';
   $('pfUnknown').checked = F.unknown;
 }
+const PARAM_KEYS = ['q', 'g', 'c', 'fl', 'd', 'a1', 'a2', 'basis', 'b1', 'b2', 'r1', 'r2', 's1', 's2', 'kw', 'b', 'st', 'unk', 'all'];
+function toParams() {
+  const p = new URLSearchParams();
+  if (F.group) p.set('g', F.group);
+  if (F.cats.size) p.set('c', [...F.cats].join('|'));
+  if (F.floors.size) p.set('fl', [...F.floors].join(','));
+  if (F.deals.size) p.set('d', [...F.deals].join(','));
+  if (F.min != null) p.set('a1', F.min);
+  if (F.max != null) p.set('a2', F.max);
+  if (F.basis !== 'ex') p.set('basis', F.basis);
+  [['depMin', 'b1'], ['depMax', 'b2'], ['rentMin', 'r1'], ['rentMax', 'r2'], ['saleMin', 's1'], ['saleMax', 's2']].forEach(([k, n]) => { if (F[k] != null) p.set(n, F[k]); });
+  if (F.kw) p.set('kw', F.kw);
+  if (F.building) p.set('b', F.building);
+  if (F.status !== 'open') p.set('st', F.status);
+  if (F.unknown) p.set('unk', '1');
+  return p;
+}
+function applyParams(sp) {
+  const n = k => sp.has(k) && sp.get(k) !== '' && isFinite(Number(sp.get(k))) ? Number(sp.get(k)) : null;
+  F.group = sp.get('g') || '';
+  F.cats = new Set((sp.get('c') || '').split('|').filter(Boolean));
+  F.floors = new Set((sp.get('fl') || '').split(',').filter(x => x !== '').map(Number).filter(x => isFinite(x)));
+  F.deals = new Set((sp.get('d') || '').split(',').filter(Boolean));
+  F.min = n('a1'); F.max = n('a2');
+  F.basis = ['ex', 'sup', 'any'].includes(sp.get('basis')) ? sp.get('basis') : 'ex';
+  F.depMin = n('b1'); F.depMax = n('b2'); F.rentMin = n('r1'); F.rentMax = n('r2'); F.saleMin = n('s1'); F.saleMax = n('s2');
+  F.kw = sp.get('kw') || ''; F.building = sp.get('b') || '';
+  F.status = ['open', 'withRented', 'all'].includes(sp.get('st')) ? sp.get('st') : 'open';
+  F.unknown = sp.get('unk') === '1';
+  if ($('pfBasis')) $('pfBasis').value = F.basis;
+  if ($('pfStatus')) $('pfStatus').value = F.status;
+}
+function openResults(q) {
+  const p = q ? new URLSearchParams({ q }) : toParams();
+  if (![...p.keys()].length) p.set('all', '1');
+  window.open(OfficeConfig.urlFor('property-finder.html') + '&' + p.toString(), '_blank');
+}
 function doSearch() {
+  if (BAR_ONLY) { openResults(); return; }
   searched = true;
   $('pfGo').classList.remove('is-dirty'); $('pfDirty').hidden = true;
   $('pfIdle').hidden = true; $('pfResults').hidden = false;
+  if ($('pfChange') && !$('pfChange').hidden) $('pfBarMount').hidden = true;
   run();
   $('pfResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -525,22 +600,23 @@ function init() {
   pick('pfAreaQuick', v => { const [a, b] = v.split('-'); F.min = a === '' ? null : Number(a); F.max = b === '' ? null : Number(b); $('pfMin').value = F.min ?? ''; $('pfMax').value = F.max ?? ''; });
   numInput('pfMin', 'min'); numInput('pfMax', 'max'); numInput('pfDepMin', 'depMin'); numInput('pfDepMax', 'depMax'); numInput('pfRentMin', 'rentMin'); numInput('pfRentMax', 'rentMax'); numInput('pfSaleMin', 'saleMin', 10000); numInput('pfSaleMax', 'saleMax', 10000);
   $('pfKw').addEventListener('input', () => { F.kw = $('pfKw').value; markDirty(); });
-  $('pfBuilding').addEventListener('change', () => { F.building = $('pfBuilding').value; markDirty(); });
+  on('pfBuilding', 'change', () => { F.building = $('pfBuilding').value; markDirty(); });
   $('pfBasis').addEventListener('change', () => { F.basis = $('pfBasis').value; markDirty(); });
   $('pfStatus').addEventListener('change', () => { F.status = $('pfStatus').value; markDirty(); });
   $('pfUnknown').addEventListener('change', () => { F.unknown = $('pfUnknown').checked; markDirty(); });
-  $('pfSort').addEventListener('change', () => { F.sort = $('pfSort').value; matched.sort(SORTS[F.sort] || SORTS.floor); $('pfList').replaceChildren(); shown = 0; showMore(); });
-  $('pfMore').addEventListener('click', showMore);
+  on('pfSort', 'change', () => { F.sort = $('pfSort').value; matched.sort(SORTS[F.sort] || SORTS.floor); $('pfList').replaceChildren(); shown = 0; showMore(); });
+  on('pfMore', 'click', showMore);
   $('pfReset').addEventListener('click', reset);
   $('pfGo').addEventListener('click', () => { closePanels(); doSearch(); });
   $('pfQuickForm').addEventListener('submit', ev => {
     ev.preventDefault();
+    if (BAR_ONLY) { openResults($('pfQuick').value.trim()); return; }
     const q = parseQuick($('pfQuick').value);
     Object.assign(F, { group: q.group, floors: new Set([...q.floors].map(Number)), min: q.min, max: q.max, cats: q.cats, deals: q.deals, kw: q.kw, building: '' });
     syncUI(); doSearch();
   });
-  $('pfPrint').addEventListener('click', printList);
-  $('pfCopy').addEventListener('click', async () => {
+  on('pfPrint', 'click', printList);
+  on('pfCopy', 'click', async () => {
     const lines = matched.slice(0, 60).map(e => [e.building || e.title, e.ho ? e.ho + '호' : '', fmtFloors(e), areaText(e).join('/'), priceLines(e).join(', ')].filter(Boolean).join(' | '));
     const t = '[하이탑 매물 ' + matched.length + '건' + (matched.length > 60 ? ' 중 60건' : '') + ']\n' + lines.join('\n');
     try { await navigator.clipboard.writeText(t); $('pfCopy').textContent = '복사했습니다'; } catch (_) { $('pfCopy').textContent = '복사 실패'; }
@@ -578,8 +654,26 @@ async function loadData() {
   data.failed = failed;
   return data;
 }
+async function initBarCats() {
+  CATS = typeof OfficeConfig !== 'undefined' && OfficeConfig.id === 'hitop' ? DEFAULT_CATS.slice() : [];
+  buildCatChips(); syncUI();
+  try {
+    const auth = await hitopAuthClient.auth.getSession();
+    const token = auth.data?.session?.access_token; if (!token) return;
+    const rows = await fetchRows('drive_resource_categories', '*', token);
+    const names = rows.filter(c => c.room === 'commercial').sort((a, b) => (a.sort_order ?? a.order ?? a.position ?? 999) - (b.sort_order ?? b.order ?? b.position ?? 999)).map(c => c.name);
+    if (names.length) { CATS = names; buildCatChips(); syncPicks(); }
+  } catch (_) { /* 기본 목록을 그대로 쓴다 */ }
+}
 async function start() {
+  const mount = $('pfBarMount');
+  if (mount) mount.innerHTML = barHtml();
   init();
+  if (BAR_ONLY) { await initBarCats(); return; }
+  const sp = new URLSearchParams(location.search);
+  const hasCond = PARAM_KEYS.some(k => sp.has(k));
+  if (hasCond && mount) { mount.hidden = true; if ($('pfChange')) $('pfChange').hidden = false; }
+  on('pfChange', 'click', () => { mount.hidden = !mount.hidden; });
   const status = $('pfStatusMsg');
   try {
     status.textContent = '매물과 자료를 불러오는 중입니다…';
@@ -589,8 +683,9 @@ async function start() {
     buildCatChips();
     status.textContent = data.failed && data.failed.length ? '일부 자료를 읽지 못했습니다(' + data.failed.join(', ') + '). 결과가 부족할 수 있어요. 새로고침해 주세요.' : '';
     $('pfLoaded').textContent = '전체 ' + ALL.length + '건 중에서 찾습니다';
-    const initial = new URLSearchParams(location.search).get('q');
-    if (initial) { $('pfQuick').value = initial; $('pfQuickForm').requestSubmit(); } else { syncUI(); }
+    if (sp.get('q')) { $('pfQuick').value = sp.get('q'); $('pfQuickForm').requestSubmit(); }
+    else if (hasCond) { applyParams(sp); syncUI(); doSearch(); }
+    else syncUI();
   } catch (e) {
     status.textContent = e.message === 'SESSION' ? '로그인 상태를 확인할 수 없습니다. 다시 로그인해 주세요.' : '자료를 불러오지 못했습니다. 새로고침해 주세요.';
   }
