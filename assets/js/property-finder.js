@@ -616,8 +616,29 @@ function condText() {
   rg('보증금', F.depMin, F.depMax, '만원', 1); rg('월세', F.rentMin, F.rentMax, '만원', 1); rg('매매가', F.saleMin, F.saleMax, '억', 10000);
   return p.join(' / ');
 }
+// 인쇄할 때마다 맨 위(둘째 쪽부터)와 맨 아래에 상호·연락처를 넣는다
+function printBrand() {
+  const ktop = typeof OfficeConfig !== 'undefined' && OfficeConfig.id === 'ktop';
+  return ktop
+    ? { title: 'KTOP부동산 매물 목록', foot: 'KTOP부동산' }
+    : { title: '하이탑부동산 매물 목록', foot: '하이탑부동산공인중개사사무소  ·  T. 031-949-8969  ·  F. 031-944-1108' };
+}
+function applyPrintPage() {
+  const b = printBrand();
+  const q = s => '"' + s.replace(/"/g, '') + '"';
+  const f = 'font:10px Pretendard,sans-serif;';
+  let st = document.getElementById('pfPageBoxes');
+  if (!st) { st = document.createElement('style'); st.id = 'pfPageBoxes'; document.head.appendChild(st); }
+  st.textContent = '@page{@top-left{content:' + q(b.title) + ';font:600 10px Pretendard,sans-serif;color:#555;vertical-align:bottom;padding-bottom:3mm}'
+    + '@top-right{content:"브리핑 자료";' + f + 'color:#777;vertical-align:bottom;padding-bottom:3mm}'
+    + '@bottom-left{content:' + q(b.foot) + ';' + f + 'color:#444;vertical-align:top;padding-top:3mm}'
+    + '@bottom-right{content:counter(page) " / " counter(pages);' + f + 'color:#555;vertical-align:top;padding-top:3mm}}'
+    + '@page :first{@top-left{content:none}@top-right{content:none}}';
+  if ($('pfPrintTitle')) $('pfPrintTitle').textContent = b.title;
+}
 function printList() {
   if (!matched.length) return;
+  applyPrintPage();
   const cap = Math.min(matched.length, 500), list = $('pfList');
   list.replaceChildren(); matched.slice(0, cap).forEach(e => list.append(row(e)));
   const d = new Date();
