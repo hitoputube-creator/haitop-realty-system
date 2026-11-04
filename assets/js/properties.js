@@ -792,9 +792,11 @@ function updateNaverSummaryBar() {
   live.forEach(x => { const k = normalizeListingCategory(x).majorKey; counts[k] = (counts[k] || 0) + 1; });
   const known = NAVER_SUMMARY_TYPES.reduce((s, t) => s + (counts[t[0]] || 0), 0);
   const chip = (key, label, n, clickable) => '<button type="button" class="naver-chip' + (clickable && currentMajor === key ? ' active' : '') + (n ? '' : ' zero') + '"' + (clickable ? ' data-nmajor="' + key + '"' : ' disabled title="유형이 정해지지 않은 매물"') + '>' + label + ' <b>' + n + '</b></button>';
+  const staleN = live.filter(x => typeof isListingStale === "function" && isListingStale(x)).length;
   bar.innerHTML = '<span class="naver-total">네이버 광고중 <b>' + live.length + '건</b></span><span class="naver-sep">|</span>' +
     NAVER_SUMMARY_TYPES.map(t => chip(t[0], t[1], counts[t[0]] || 0, true)).join("") +
-    (live.length - known > 0 ? chip("", "기타", live.length - known, false) : "");
+    (live.length - known > 0 ? chip("", "기타", live.length - known, false) : "") +
+    '<span class="naver-sep">|</span><button type="button" class="naver-chip naver-stale' + (staleN ? '' : ' zero') + (staleOnly ? ' active' : '') + '" data-nstale="1" title="광고중인 매물 중 30일 넘게 확인 안 한 매물만 보기">⚠ 30일 미확인 <b>' + staleN + '</b></button>';
   bar.hidden = false;
 }
 (function addNaverSummaryBar() {
@@ -804,13 +806,15 @@ function updateNaverSummaryBar() {
   st.textContent = "#naverSummaryBar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0;padding:10px 14px;background:#e8f7ee;border:1px solid #9dd9ad;border-radius:10px;font-size:.92rem}" +
     "#naverSummaryBar[hidden]{display:none}#naverSummaryBar .naver-total{color:#1b6e2e}#naverSummaryBar .naver-sep{color:#9a9a9a}" +
     "#naverSummaryBar .naver-chip{margin:0;background:#fff;border:1px solid #9dd9ad;border-radius:999px;padding:4px 12px;color:#222;cursor:pointer;font:inherit}" +
-    "#naverSummaryBar .naver-chip.zero{color:#999;border-color:#ddd}#naverSummaryBar .naver-chip.active{background:#1b8a3a;border-color:#1b8a3a;color:#fff}#naverSummaryBar .naver-chip:disabled{cursor:default}";
+    "#naverSummaryBar .naver-chip.zero{color:#999;border-color:#ddd}#naverSummaryBar .naver-chip.active{background:#1b8a3a;border-color:#1b8a3a;color:#fff}#naverSummaryBar .naver-chip:disabled{cursor:default}#naverSummaryBar .naver-stale{border-color:#e0a95a;color:#8a5200;margin-left:auto}#naverSummaryBar .naver-stale.active{background:#c77a00;border-color:#c77a00;color:#fff}";
   document.head.appendChild(st);
   const bar = document.createElement("div");
   bar.id = "naverSummaryBar";
   bar.hidden = true;
   row.parentElement.after(bar);
   bar.addEventListener("click", e => {
+    const sb = e.target.closest("[data-nstale]");
+    if (sb) { if (typeof setStaleOnly === "function") setStaleOnly(!staleOnly); return; }
     const b = e.target.closest("[data-nmajor]");
     if (!b) return;
     const f = document.querySelector('#filterRow .filter-btn[data-major="' + b.dataset.nmajor + '"]');
@@ -921,6 +925,12 @@ function getBaseFilteredListings() {
 function sortListingsForDisplay(list) {
   const sorted = [...list];
   sorted.sort((a, b) => {
+    if (currentSort === "naver_newest") {
+      const na = Date.parse(a.naver_ad_at) || 0;
+      const nb = Date.parse(b.naver_ad_at) || 0;
+      if (na !== nb) return nb - na;
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    }
     if (currentSort === "confirm_oldest") {
       const ca = Date.parse(getListingConfirmedAt(a)) || 0;
       const cb = Date.parse(getListingConfirmedAt(b)) || 0;
@@ -1244,7 +1254,7 @@ function renderSubFilterRow() {
 let currentPresaleSub = "";
 var currentPresaleMode = false;
 var currentNaverMode = false; // 네이버광고 체크가 켜진 매물만 보기 (체크 표시는 이 브라우저에 저장되어 있다)
-function isNaverAdListing(item) { return typeof naverAdIsOn === "function" && naverAdIsOn(getListingNumber(item)); }
+function isNaverAdListing(item) { return typeof naverAdIsOn === "function" && naverAdIsOn(getListingNumber(item), item); }
 function presaleVacancyOf(item) {
   const unit = item.apartmentUnitData || {};
   const v = String(item.shop_status || item.occupancy || item.임대현황 || unit.임대현황 || item.공실여부 || unit.공실여부 || "");
@@ -2276,7 +2286,7 @@ function restoreFilterState() {
     searchKeyword = saved.searchKeyword || "";
     document.getElementById("searchInput").value = searchKeyword;
 
-    currentSort = ["oldest", "confirm_oldest"].includes(saved.currentSort) ? saved.currentSort : "newest";
+    currentSort = ["oldest", "confirm_oldest", "naver_newest"].includes(saved.currentSort) ? saved.currentSort : "newest";
     document.getElementById("sortSelect").value = currentSort;
     currentRegistrationMonth = /^\d{4}-\d{2}$/.test(saved.currentRegistrationMonth || "") ? saved.currentRegistrationMonth : "";
     noteDensity = saved.noteDensity === "compact" ? "compact" : "detail";
