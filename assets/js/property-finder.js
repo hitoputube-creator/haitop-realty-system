@@ -17,7 +17,7 @@ function barHtml() {
       </section>
 
       <section class="pf-filterbar" aria-label="조건 선택">
-        <div class="pf-pills">
+        <div class="pf-pills"><div class="pf-pillgroup">
           <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillSrc" data-label="검색 대상" aria-expanded="false" aria-controls="pnSrc"><span class="pt">검색 대상</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnSrc" hidden><div class="pf-panel-tip">어디에서 찾을지 고르세요. 둘 다 고르거나 안 고르면 함께 찾아요</div><div class="pf-list" id="pfSrc" role="group" aria-label="검색 대상"><button type="button" data-v="__all" aria-pressed="false">매물리스트 + 자료실</button><button type="button" data-v="매물" aria-pressed="false">매물리스트만</button><button type="button" data-v="자료" aria-pressed="false">자료실만</button></div></div></div>
           <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillGroup" data-label="종류" aria-expanded="false" aria-controls="pnGroup"><span class="pt">종류</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnGroup" hidden><div class="pf-list" id="pfGroup" role="group" aria-label="종류"><button type="button" data-v="" aria-pressed="false">전체</button><button type="button" data-v="상가·사무실" aria-pressed="false">상가·사무실</button><button type="button" data-v="주거" aria-pressed="false">주거</button><button type="button" data-v="토지" aria-pressed="false">토지</button><button type="button" data-v="공장·창고" aria-pressed="false">공장·창고</button><button type="button" data-v="기타" aria-pressed="false">기타</button></div></div></div>
           <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillCat" data-label="상가 구분" aria-expanded="false" aria-controls="pnCat"><span class="pt">상가 구분</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnCat" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfCat" role="group" aria-label="상가 구분"></div></div></div>
@@ -33,9 +33,8 @@ function barHtml() {
           <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillMore" data-label="상세" aria-expanded="false" aria-controls="pnMore"><span class="pt">상세</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnMore" hidden><input id="pfKw" type="text" placeholder="건물·호수·메모 검색" aria-label="건물 호수 메모 검색">
    <label class="pf-row-opt">보는 범위 <select id="pfStatus"><option value="open">지금 소개 가능 (공실·진행중)</option><option value="withRented">임차중·보류도 포함</option><option value="all">거래완료까지 전체</option></select></label>
    <label class="pf-row-opt"><input id="pfUnknown" type="checkbox"> 층·평수·가격이 비어 있는 것도 보기</label></div></div>
-          <button class="pf-pill reset" type="button" id="pfReset">↺ 초기화</button>
-          <span class="pf-grow"></span>
-          <button class="pf-btn main big" id="pfGo" type="button">조건으로 검색</button>
+          </div>
+          <div class="pf-actionbox"><button class="pf-pill reset" type="button" id="pfReset">↺ 초기화</button><button class="pf-btn main big" id="pfGo" type="button">조건으로 검색</button></div>
         </div>
         <p class="pf-dirty" id="pfDirty" hidden>조건이 바뀌었어요. <b>조건으로 검색</b>을 눌러 주세요.</p>
       </section>
