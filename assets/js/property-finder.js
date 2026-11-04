@@ -18,6 +18,7 @@ function barHtml() {
 
       <section class="pf-filterbar" aria-label="조건 선택">
         <div class="pf-pills">
+          <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillSrc" data-label="검색 대상" aria-expanded="false" aria-controls="pnSrc"><span class="pt">검색 대상</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnSrc" hidden><div class="pf-panel-tip">어디에서 찾을지 고르세요. 둘 다 고르거나 안 고르면 함께 찾아요</div><div class="pf-list" id="pfSrc" role="group" aria-label="검색 대상"><button type="button" data-v="__all" aria-pressed="false">매물리스트 + 자료실</button><button type="button" data-v="매물" aria-pressed="false">매물리스트만</button><button type="button" data-v="자료" aria-pressed="false">자료실만</button></div></div></div>
           <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillGroup" data-label="종류" aria-expanded="false" aria-controls="pnGroup"><span class="pt">종류</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnGroup" hidden><div class="pf-list" id="pfGroup" role="group" aria-label="종류"><button type="button" data-v="" aria-pressed="false">전체</button><button type="button" data-v="상가·사무실" aria-pressed="false">상가·사무실</button><button type="button" data-v="주거" aria-pressed="false">주거</button><button type="button" data-v="토지" aria-pressed="false">토지</button><button type="button" data-v="공장·창고" aria-pressed="false">공장·창고</button><button type="button" data-v="기타" aria-pressed="false">기타</button></div></div></div>
           <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillCat" data-label="상가 구분" aria-expanded="false" aria-controls="pnCat"><span class="pt">상가 구분</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnCat" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfCat" role="group" aria-label="상가 구분"></div></div></div>
           <div class="pf-pillwrap"><button class="pf-pill" type="button" id="pillFloor" data-label="층" aria-expanded="false" aria-controls="pnFloor"><span class="pt">층</span><span class="caret" aria-hidden="true">▾</span></button><div class="pf-panel" id="pnFloor" hidden><div class="pf-panel-tip">여러 개 선택할 수 있어요</div><div class="pf-list" id="pfFloor" role="group" aria-label="층"><button type="button" data-v="__all" aria-pressed="false">전체</button><button type="button" data-v="-1" aria-pressed="false">지하</button><button type="button" data-v="1" aria-pressed="false">1층</button><button type="button" data-v="2" aria-pressed="false">2층</button><button type="button" data-v="3" aria-pressed="false">3층</button><button type="button" data-v="4" aria-pressed="false">4층</button><button type="button" data-v="5" aria-pressed="false">5층</button><button type="button" data-v="6" aria-pressed="false">6층 이상</button></div></div></div>
@@ -238,7 +239,7 @@ function buildEntries(data) {
 }
 
 // ---------- 조건 ----------
-const F = { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMin: null, depMax: null, rentMin: null, rentMax: null, saleMin: null, saleMax: null, status: 'open', unknown: false, sort: 'floor' };
+const F = { srcs: new Set(), group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMin: null, depMax: null, rentMin: null, rentMax: null, saleMin: null, saleMax: null, status: 'open', unknown: false, sort: 'floor' };
 let ALL = [], shown = 0, matched = [];
 const picked = new Set(); // 선택 복사용: 고른 매물의 key
 
@@ -273,6 +274,11 @@ function kwOK(e) {
   if (!F.kw) return true;
   const h = compact([e.title, e.addr, e.building, e.ho, e.memo].join(' '));
   return F.kw.split(/\s+/).filter(Boolean).every(t => h.includes(compact(t)));
+}
+function srcOK(e) {
+  if (!F.srcs.size) return true;
+  // 매물과 자료실에 모두 있는 호실은 한 줄로 합쳐져 있으므로 양쪽 어디서 찾아도 나온다
+  return (F.srcs.has('매물') && e.src === '매물') || (F.srcs.has('자료') && (e.src === '자료' || !!e.unitHref));
 }
 function dealOK(e) {
   return !F.deals.size || [...F.deals].some(d => e.deals.has(d));
@@ -387,7 +393,7 @@ async function copyTo(btn, text, label) {
 function run() {
   picked.clear();
   // 정보 없음 때문에 빠진 건수를 알려 주려고 두 번 센다
-  const strict = ALL.filter(e => groupOK(e) && statusOK(e) && kwOK(e) && dealOK(e));
+  const strict = ALL.filter(e => srcOK(e) && groupOK(e) && statusOK(e) && kwOK(e) && dealOK(e));
   const saved = F.unknown;
   F.unknown = false; const tight = strict.filter(e => floorOK(e) && areaOK(e) && priceOK(e) && catOK(e));
   F.unknown = true; const loose = strict.filter(e => floorOK(e) && areaOK(e) && priceOK(e) && catOK(e));
@@ -434,6 +440,7 @@ const toggleSet = (set, v) => { if (v === '__all') set.clear(); else set.has(v) 
 function areaKey() { return (F.min ?? '') + '-' + (F.max ?? ''); }
 function syncPicks() {
   const mark = (id, test) => $(id).querySelectorAll('button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(test(b.dataset.v))));
+  mark('pfSrc', v => v === '__all' ? F.srcs.size === 0 : F.srcs.has(v));
   mark('pfGroup', v => v === F.group);
   mark('pfCat', v => v === '__all' ? F.cats.size === 0 : F.cats.has(v));
   mark('pfFloor', v => v === '__all' ? F.floors.size === 0 : F.floors.has(Number(v)));
@@ -442,7 +449,7 @@ function syncPicks() {
   updatePills();
 }
 // ----- 상단 필터 바(네이버 부동산 스타일) -----
-const PILL_PANELS = { pillGroup: 'pnGroup', pillCat: 'pnCat', pillFloor: 'pnFloor', pillDeal: 'pnDeal', pillArea: 'pnArea', pillPrice: 'pnPrice', pillMore: 'pnMore' };
+const PILL_PANELS = { pillSrc: 'pnSrc', pillGroup: 'pnGroup', pillCat: 'pnCat', pillFloor: 'pnFloor', pillDeal: 'pnDeal', pillArea: 'pnArea', pillPrice: 'pnPrice', pillMore: 'pnMore' };
 function pillSummaries() {
   const fl = [...F.floors].sort((a, b) => a - b).map(n => n < 0 ? '지하' : n >= 6 ? '6층+' : n + '층');
   const rg = (a, b, k, u) => (a != null ? a / k : '') + '~' + (b != null ? b / k : '') + u;
@@ -452,6 +459,7 @@ function pillSummaries() {
   if (F.saleMin != null || F.saleMax != null) price.push('매매 ' + rg(F.saleMin, F.saleMax, 10000, '억'));
   const more = (F.building ? 1 : 0) + (F.kw ? 1 : 0) + (F.status !== 'open' ? 1 : 0) + (F.unknown ? 1 : 0);
   return {
+    pillSrc: F.srcs.size === 1 ? ([...F.srcs][0] === '매물' ? '매물리스트만' : '자료실만') : '',
     pillGroup: F.group,
     pillCat: F.cats.size ? [...F.cats][0].replace(/\s*(상가|근생상가).*$/, '') + (F.cats.size > 1 ? ' 외 ' + (F.cats.size - 1) : '') : '',
     pillFloor: fl.length > 2 ? fl[0] + ' 외 ' + (fl.length - 1) : fl.join(', '),
@@ -512,9 +520,10 @@ function syncUI() {
   $('pfSaleMin').value = F.saleMin != null ? F.saleMin / 10000 : ''; $('pfSaleMax').value = F.saleMax != null ? F.saleMax / 10000 : '';
   $('pfUnknown').checked = F.unknown;
 }
-const PARAM_KEYS = ['q', 'g', 'c', 'fl', 'd', 'a1', 'a2', 'basis', 'b1', 'b2', 'r1', 'r2', 's1', 's2', 'kw', 'b', 'st', 'unk', 'all'];
+const PARAM_KEYS = ['q', 'src', 'g', 'c', 'fl', 'd', 'a1', 'a2', 'basis', 'b1', 'b2', 'r1', 'r2', 's1', 's2', 'kw', 'b', 'st', 'unk', 'all'];
 function toParams() {
   const p = new URLSearchParams();
+  if (F.srcs.size) p.set('src', [...F.srcs].join(','));
   if (F.group) p.set('g', F.group);
   if (F.cats.size) p.set('c', [...F.cats].join('|'));
   if (F.floors.size) p.set('fl', [...F.floors].join(','));
@@ -531,6 +540,8 @@ function toParams() {
 }
 function applyParams(sp) {
   const n = k => sp.has(k) && sp.get(k) !== '' && isFinite(Number(sp.get(k))) ? Number(sp.get(k)) : null;
+  F.srcs = new Set((sp.get('src') || '').split(',').filter(x => x === '매물' || x === '자료'));
+  if (F.srcs.size === 2) F.srcs.clear();
   F.group = sp.get('g') || '';
   F.cats = new Set((sp.get('c') || '').split('|').filter(Boolean));
   F.floors = new Set((sp.get('fl') || '').split(',').filter(x => x !== '').map(Number).filter(x => isFinite(x)));
@@ -593,6 +604,7 @@ function parseQuick(q) {
 function condText() {
   const p = [];
   p.push('종류 ' + (F.group || '전체'));
+  if (F.srcs.size === 1) p.push('대상 ' + ([...F.srcs][0] === '매물' ? '매물리스트만' : '자료실만'));
   if (F.cats.size) p.push('상가 구분 ' + [...F.cats].join(', '));
   if (F.building) p.push('건물 ' + F.building);
   if (F.kw) p.push('검색어 ' + F.kw);
@@ -615,12 +627,13 @@ function printList() {
   window.print();
 }
 function reset() {
-  Object.assign(F, { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMin: null, depMax: null, rentMin: null, rentMax: null, saleMin: null, saleMax: null, status: 'open', unknown: false });
+  Object.assign(F, { srcs: new Set(), group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMin: null, depMax: null, rentMin: null, rentMax: null, saleMin: null, saleMax: null, status: 'open', unknown: false });
   $('pfQuick').value = ''; $('pfBasis').value = 'ex'; $('pfStatus').value = 'open';
   syncUI(); markDirty();
 }
 function init() {
   initPills();
+  pick('pfSrc', v => { toggleSet(F.srcs, v); if (F.srcs.size === 2) F.srcs.clear(); });
   pick('pfGroup', v => { F.group = v; });
   pick('pfFloor', v => { if (v === '__all') F.floors.clear(); else toggleSet(F.floors, Number(v)); });
   pick('pfDeal', v => toggleSet(F.deals, v));
