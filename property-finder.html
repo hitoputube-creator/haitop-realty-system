@@ -41,7 +41,7 @@ html .pf-chips button[aria-pressed="true"]{background:#25675f!important;color:#f
 .pf-bar strong{font-size:22px}.pf-bar .sp{flex:1}
 .pf-hint{font-size:14px;color:#a35a00;margin:4px 0 8px}.pf-hint:empty{display:none}
 .pf-link{font:inherit;background:none;border:0;color:var(--gold,#25675f);text-decoration:underline;cursor:pointer;padding:0;font-weight:700}
-.pf-head,.pf-row{display:grid;grid-template-columns:56px minmax(140px,1.2fr) 82px 88px 160px 220px 84px 92px;gap:12px;align-items:start}
+.pf-head,.pf-row{display:grid;grid-template-columns:78px minmax(140px,1.2fr) 82px 88px 160px 220px 84px 92px;gap:12px;align-items:start}
 .pf-head{font-size:13px;font-weight:700;color:var(--sub,#618684);padding:8px 14px;border-bottom:2px solid var(--line2,#cbe1e0)}
 .pf-row{padding:14px;border-bottom:1px solid var(--line,#e0efee);font-size:14px}
 .pf-row:hover{background:var(--panel2,#f8fcfc)}
@@ -85,7 +85,7 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
   #pfList{counter-reset:pfno}
   .pf-head,.pf-row{display:grid!important;grid-template-columns:30px minmax(0,1.5fr) 56px 56px 150px 190px 72px!important;gap:0!important;align-items:stretch}
   .pf-head{background:none!important;border:0;border-bottom:1.5px solid #000;font-size:11px;padding:0 0 2px;color:#444}
-  .pf-head span{padding:4px 8px!important;border:0;font-weight:700}.pf-head span:first-child{font-size:0}.pf-head span:first-child::after{content:"No";font-size:11px}
+  .pf-head span{padding:4px 8px!important;border:0;font-weight:700}.pf-chk{display:none!important}.pf-head span:first-child{font-size:0}.pf-head span:first-child::after{content:"No";font-size:11px}
   .pf-head span:nth-child(8){display:none!important}
   .pf-row{counter-increment:pfno;padding:0!important;font-size:12.5px;line-height:1.4;page-break-inside:avoid;break-inside:avoid;border-bottom:1px solid #d9d9d9;background:#fff!important}
   .pf-row>:nth-child(8){display:none!important}
@@ -125,6 +125,10 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
 .pf-more[hidden],.pf-empty[hidden],.pf-idle[hidden]{display:none!important}
 .pf-condline{margin:4px 2px 0;font-size:15px;font-weight:700;color:var(--gold,#25675f)}
 .pf-btn[hidden]{display:none!important}
+.pf-kind{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.pf-chk{width:18px;height:18px;margin:0;accent-color:#25675f;cursor:pointer}
+.pf-row{cursor:pointer}.pf-row.is-picked{background:#eaf6f3}
+.pf-selall{display:inline-flex;align-items:center;gap:6px;font-size:14px;cursor:pointer}.pf-selall input{width:18px;height:18px;accent-color:#25675f}
+.pf-btn:disabled{opacity:.45;cursor:default}
 .pf-empty{padding:40px 0;text-align:center;color:var(--sub,#618684)}
 .pf-more{display:block;margin:16px auto 0}
 .pf-msg{color:var(--sub,#618684);font-size:14px;margin:8px 0}.pf-msg:empty{display:none}
@@ -150,7 +154,7 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
         <p class="pf-condline" id="pfCondLine"></p>
         <div class="pf-bar"><strong id="pfCount">0건</strong><span class="pf-sub" id="pfSplit"></span><span class="sp"></span>
           <label class="pf-sub">정렬 <select id="pfSort"><option value="floor">층 낮은 순</option><option value="area">평수 작은 순</option><option value="rent">월세 낮은 순</option><option value="sale">매매가 낮은 순</option><option value="building">건물 순</option><option value="newest">최근 순</option></select></label>
-          <button class="pf-btn" id="pfChange" type="button" hidden>조건 바꾸기</button><button class="pf-btn" id="pfCopy" type="button">결과 복사</button><button class="pf-btn" id="pfPrint" type="button">인쇄</button></div>
+          <button class="pf-btn" id="pfChange" type="button" hidden>조건 바꾸기</button><label class="pf-selall"><input type="checkbox" id="pfSelAll"> 전체 선택</label><button class="pf-btn" id="pfCopySel" type="button" disabled>선택 복사</button><button class="pf-btn" id="pfCopy" type="button">결과 복사</button><button class="pf-btn" id="pfPrint" type="button">인쇄</button></div>
         <p class="pf-hint" id="pfHint" role="status"></p>
         <div class="pf-head" aria-hidden="true"><span>구분</span><span>건물</span><span>호수</span><span>층</span><span>평수</span><span>가격</span><span>상태</span><span></span></div>
         <div id="pfList"></div>
@@ -159,6 +163,6 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
       </div>
     </main>
   </div>
-  <script src="assets/js/property-finder.js?v=20261104-bar3"></script>
+  <script src="assets/js/property-finder.js?v=20261104-bar4"></script>
 </body>
 </html>
