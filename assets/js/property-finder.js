@@ -620,7 +620,7 @@ function printBrand() {
   const ktop = typeof OfficeConfig !== 'undefined' && OfficeConfig.id === 'ktop';
   return ktop
     ? { title: 'KTOP부동산 매물 목록', foot: 'KTOP부동산' }
-    : { title: '하이탑부동산 매물 목록', foot: '하이탑부동산공인중개사사무소  ·  T. 031-949-8969  ·  F. 031-944-1108' };
+    : { title: '하이탑부동산 매물 목록', foot: '하이탑부동산공인중개사사무소     |     T. 031-949-8969' };
 }
 function applyPrintPage() {
   const b = printBrand();
@@ -630,7 +630,7 @@ function applyPrintPage() {
   if (!st) { st = document.createElement('style'); st.id = 'pfPageBoxes'; document.head.appendChild(st); }
   st.textContent = '@page{@top-left{content:' + q(b.title) + ';font:600 10px Pretendard,sans-serif;color:#555;vertical-align:bottom;padding-bottom:3mm}'
     + '@top-right{content:"브리핑 자료";' + f + 'color:#777;vertical-align:bottom;padding-bottom:3mm}'
-    + '@bottom-center{content:' + q(b.foot) + ';font:600 10.5px Pretendard,"Malgun Gothic",sans-serif;color:#234c49;background:#f1f7f6;border:1px solid #b7cfcc;border-radius:6px;margin:3mm 0 5mm;padding:0 6mm;text-align:center;vertical-align:middle;white-space:nowrap}'
+    + '@bottom-center{content:' + q(b.foot) + ';font:800 14px Pretendard,"Malgun Gothic",sans-serif;letter-spacing:.02em;color:#17473f;background:linear-gradient(90deg,#e6f2f0,#f6fbfa);border:1px solid #9fc4be;border-left:5px solid #25675f;border-radius:4px;margin:3mm 0 5mm;padding:0 10mm;text-align:center;vertical-align:middle;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     + '@bottom-right{content:counter(page) " / " counter(pages);' + f + 'color:#555;vertical-align:middle;margin:3mm 0 5mm}}'
     + '@page :first{@top-left{content:none}@top-right{content:none}}';
   if ($('pfPrintTitle')) $('pfPrintTitle').textContent = b.title;
