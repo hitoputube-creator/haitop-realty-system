@@ -53,6 +53,27 @@ html .pf-chips button[aria-pressed="true"]{background:#25675f!important;color:#f
 .pf-num{font-size:19px;font-weight:800;color:#12413c;letter-spacing:-.02em}.pf-num.sub{font-size:14px;font-weight:600;color:var(--sub,#618684)}
 .pf-row .pf-col{padding:7px 10px;border-radius:8px}.pf-col.pf-hl{background:#e6f5f2}.pf-head span:nth-child(n+4):nth-child(-n+7){padding-left:10px}.pf-col.pf-hl .pf-num{color:#0d6b5f}
 .pf-head{font-size:14px}.pf-place strong{font-size:17px}
+
+.pf-quickcard{padding:14px 16px}.pf-step{margin:0 0 12px;font-size:15px}
+.pf-picks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.pf-pick h3{margin:0 0 6px;font-size:15px;color:var(--gold,#25675f)}
+.pf-list{height:236px;overflow-y:auto;border:1px solid var(--line2,#cbe1e0);border-radius:10px;background:#fff;padding:4px}
+.pf-list button{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;font:inherit;font-size:15px;padding:10px 12px;margin:0 0 3px;border:0;border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+.pf-list button:hover{background:#f0f8f7}
+html .pf-list button[aria-pressed="true"]{background:#25675f!important;color:#fff!important;font-weight:700}
+.pf-list button[aria-pressed="true"]::after{content:"✓";font-weight:800}
+.pf-price{margin-top:14px}.pf-price h3{margin:0 0 6px;font-size:15px;color:var(--gold,#25675f)}.pf-price h3 small{font-weight:400;color:var(--sub,#618684);font-size:13px;margin-left:6px}
+.pf-price-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pf-range{display:flex;align-items:center;gap:6px;border:1px solid var(--line2,#cbe1e0);border-radius:10px;padding:8px 10px;background:#fff}
+.pf-range span{font-weight:700;min-width:46px}.pf-range input{width:100%;min-width:0}.pf-range i{font-style:normal}.pf-range em{font-style:normal;font-size:13px;color:var(--sub,#618684);white-space:nowrap}
+@media(max-width:900px){.pf-price-grid{grid-template-columns:1fr}}
+.pf-tip{margin:8px 2px 0;font-size:13px;color:var(--sub,#618684)}
+.pf-details{margin-top:12px;border-top:1px solid var(--line,#e0efee);padding-top:10px}.pf-details summary{cursor:pointer;font-weight:700;color:var(--gold,#25675f);margin-bottom:8px}.pf-details .pf-inline{margin:8px 0}
+.pf-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+html .pf-btn.big{font-size:19px;padding:14px 56px}
+.pf-btn.big.is-dirty{box-shadow:0 0 0 4px rgba(37,103,95,.25)}
+.pf-dirty{color:#b25b00;font-weight:700;font-size:14px}
+.pf-idle{margin:30px 0;text-align:center;color:var(--sub,#618684);font-size:16px}
+@media(max-width:900px){.pf-picks{grid-template-columns:repeat(2,minmax(0,1fr))}.pf-list{height:170px}}
 .pf-empty{padding:40px 0;text-align:center;color:var(--sub,#618684)}
 .pf-more{display:block;margin:16px auto 0}
 .pf-msg{color:var(--sub,#618684);font-size:14px;margin:8px 0}.pf-msg:empty{display:none}
@@ -70,47 +91,52 @@ html .pf-chips button[aria-pressed="true"]{background:#25675f!important;color:#f
       <div class="heading"><p class="eyebrow">PROPERTY FINDER</p><h1>매물찾기</h1><p class="pf-sub" id="pfLoaded"></p></div>
       <p class="pf-msg" id="pfStatusMsg" role="status"></p>
 
-      <section class="pf-card" aria-label="한 줄 검색">
-        <form class="pf-quick" id="pfQuickForm"><input id="pfQuick" type="text" autocomplete="off" placeholder="손님 말 그대로 입력  예) 상가 1층 20~40평 운정역 월세" aria-label="한 줄로 조건 입력"><button class="pf-btn main" type="submit">조건 넣기</button></form>
-        <p class="pf-example">입력하면 아래 조건 칸이 자동으로 채워집니다. 칸에서 직접 바꿔도 됩니다.</p>
+      <section class="pf-card pf-quickcard" aria-label="빠른 검색">
+        <form class="pf-quick" id="pfQuickForm"><input id="pfQuick" type="text" autocomplete="off" placeholder="말로 입력해서 바로 검색  예) 상가 1층 20~40평 운정역 월세" aria-label="한 줄로 조건 입력"><button class="pf-btn main" type="submit">검색</button></form>
       </section>
 
-      <section class="pf-card" aria-label="조건">
-        <div class="pf-grid">
-          <div class="pf-field"><span class="pf-label">종류</span><div class="pf-chips" id="pfGroup"><button type="button" data-v="" aria-pressed="false">전체</button><button type="button" data-v="상가·사무실" aria-pressed="false">상가·사무실</button><button type="button" data-v="주거" aria-pressed="false">주거</button><button type="button" data-v="토지" aria-pressed="false">토지</button><button type="button" data-v="공장·창고" aria-pressed="false">공장·창고</button><button type="button" data-v="기타" aria-pressed="false">기타</button></div></div>
-          <div class="pf-field"><span class="pf-label">거래 (여러 개 선택 가능)</span><div class="pf-chips" id="pfDeal"><button type="button" data-v="월세" aria-pressed="false">월세</button><button type="button" data-v="매매" aria-pressed="false">매매</button><button type="button" data-v="전세" aria-pressed="false">전세</button><button type="button" data-v="분양" aria-pressed="false">분양</button></div></div>
-
-          <div class="pf-field"><span class="pf-label">층 (여러 개 선택 가능)</span><div class="pf-chips" id="pfFloor"><button type="button" data-v="-1" aria-pressed="false">지하</button><button type="button" data-v="1" aria-pressed="false">1층</button><button type="button" data-v="2" aria-pressed="false">2층</button><button type="button" data-v="3" aria-pressed="false">3층</button><button type="button" data-v="4" aria-pressed="false">4층</button><button type="button" data-v="5" aria-pressed="false">5층</button><button type="button" data-v="6" aria-pressed="false">6층 이상</button></div></div>
-          <div class="pf-field"><span class="pf-label">평수</span>
-            <div class="pf-inline"><input id="pfMin" type="number" min="0" step="0.1" placeholder="최소" aria-label="최소 평수"> ~ <input id="pfMax" type="number" min="0" step="0.1" placeholder="최대" aria-label="최대 평수"> 평
-              <select id="pfBasis" aria-label="면적 기준"><option value="ex">전용 기준</option><option value="sup">분양(계약) 기준</option><option value="any">전용·분양 둘 다</option></select></div>
-            <div class="pf-chips" id="pfAreaQuick" style="margin-top:8px"><button type="button" data-v="-10" aria-pressed="false">10평 이하</button><button type="button" data-v="10-20" aria-pressed="false">10~20</button><button type="button" data-v="20-40" aria-pressed="false">20~40</button><button type="button" data-v="40-60" aria-pressed="false">40~60</button><button type="button" data-v="60-" aria-pressed="false">60평 이상</button></div></div>
-
-          <div class="pf-field"><span class="pf-label">위치 · 상가 구분 (여러 개 선택 가능, 스크롤)</span>
-            <div class="pf-catbox pf-chips" id="pfCat" role="group" aria-label="상가 구분"></div>
-            <div class="pf-inline" style="margin-top:8px"><select id="pfBuilding" aria-label="건물 선택"><option value="">건물 전체</option></select>
-              <input id="pfKw" type="text" placeholder="건물·호수·메모 검색" aria-label="건물 호수 메모 검색"></div></div>
-          <div class="pf-field"><span class="pf-label">가격 (이하)</span>
-            <div class="pf-inline">보증금 <input id="pfDepMax" type="number" min="0" placeholder="만원"> 월세 <input id="pfRentMax" type="number" min="0" placeholder="만원"> 매매 <input id="pfSaleMax" type="number" min="0" step="0.1" placeholder="억"></div></div>
+      <section class="pf-card" aria-label="조건 선택">
+        <p class="pf-step">조건을 고른 뒤 아래 <b>검색</b> 버튼을 누르세요. 안 고른 칸은 전체로 찾습니다.</p>
+        <div class="pf-picks">
+          <div class="pf-pick"><h3>종류</h3><div class="pf-list" id="pfGroup" role="group" aria-label="종류"><button type="button" data-v="" aria-pressed="false">전체</button><button type="button" data-v="상가·사무실" aria-pressed="false">상가·사무실</button><button type="button" data-v="주거" aria-pressed="false">주거</button><button type="button" data-v="토지" aria-pressed="false">토지</button><button type="button" data-v="공장·창고" aria-pressed="false">공장·창고</button><button type="button" data-v="기타" aria-pressed="false">기타</button></div></div>
+          <div class="pf-pick"><h3>상가 구분</h3><div class="pf-list" id="pfCat" role="group" aria-label="상가 구분"></div></div>
+          <div class="pf-pick"><h3>층</h3><div class="pf-list" id="pfFloor" role="group" aria-label="층"><button type="button" data-v="__all" aria-pressed="false">전체</button><button type="button" data-v="-1" aria-pressed="false">지하</button><button type="button" data-v="1" aria-pressed="false">1층</button><button type="button" data-v="2" aria-pressed="false">2층</button><button type="button" data-v="3" aria-pressed="false">3층</button><button type="button" data-v="4" aria-pressed="false">4층</button><button type="button" data-v="5" aria-pressed="false">5층</button><button type="button" data-v="6" aria-pressed="false">6층 이상</button></div></div>
+          <div class="pf-pick"><h3>평수</h3><div class="pf-list" id="pfAreaQuick" role="group" aria-label="평수"><button type="button" data-v="-" aria-pressed="false">전체</button><button type="button" data-v="-10" aria-pressed="false">10평 이하</button><button type="button" data-v="10-20" aria-pressed="false">10~20평</button><button type="button" data-v="20-40" aria-pressed="false">20~40평</button><button type="button" data-v="40-60" aria-pressed="false">40~60평</button><button type="button" data-v="60-" aria-pressed="false">60평 이상</button></div></div>
+          <div class="pf-pick"><h3>거래</h3><div class="pf-list" id="pfDeal" role="group" aria-label="거래"><button type="button" data-v="__all" aria-pressed="false">전체</button><button type="button" data-v="월세" aria-pressed="false">월세</button><button type="button" data-v="매매" aria-pressed="false">매매</button><button type="button" data-v="전세" aria-pressed="false">전세</button><button type="button" data-v="분양" aria-pressed="false">분양</button></div></div>
         </div>
-        <div class="pf-inline" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line,#e0efee)">
-          <label>보는 범위 <select id="pfStatus"><option value="open">지금 소개 가능한 것 (공실·진행중)</option><option value="withRented">임차중·보류도 포함</option><option value="all">거래완료까지 전체</option></select></label>
-          <label><input id="pfUnknown" type="checkbox"> 층·평수·가격이 비어 있는 것도 보기</label>
-          <span class="sp" style="flex:1"></span>
-          <button class="pf-btn" id="pfReset" type="button">조건 초기화</button>
+        <p class="pf-tip">상가 구분·층·거래는 여러 개 선택할 수 있어요. 칸 안에서 스크롤하세요.</p>
+        <div class="pf-price" aria-label="금액 범위">
+          <h3>금액 범위 <small>비워 두면 제한 없음</small></h3>
+          <div class="pf-price-grid">
+            <div class="pf-range"><span>보증금</span><input id="pfDepMin" type="number" min="0" placeholder="최저"><i>~</i><input id="pfDepMax" type="number" min="0" placeholder="최고"><em>만원</em></div>
+            <div class="pf-range"><span>월세</span><input id="pfRentMin" type="number" min="0" placeholder="최저"><i>~</i><input id="pfRentMax" type="number" min="0" placeholder="최고"><em>만원</em></div>
+            <div class="pf-range"><span>매매가</span><input id="pfSaleMin" type="number" min="0" step="0.1" placeholder="최저"><i>~</i><input id="pfSaleMax" type="number" min="0" step="0.1" placeholder="최고"><em>억</em></div>
+          </div>
         </div>
+        <details class="pf-details"><summary>더 자세히 (건물·호수, 평수 직접 입력)</summary>
+          <div class="pf-inline"><select id="pfBuilding" aria-label="건물 선택"><option value="">건물 전체</option></select>
+            <input id="pfKw" type="text" placeholder="건물·호수·메모 검색" aria-label="건물 호수 메모 검색"></div>
+          <div class="pf-inline"><span>평수</span><input id="pfMin" type="number" min="0" step="0.1" placeholder="최소" aria-label="최소 평수"> ~ <input id="pfMax" type="number" min="0" step="0.1" placeholder="최대" aria-label="최대 평수">
+            <select id="pfBasis" aria-label="면적 기준"><option value="ex">전용 기준</option><option value="sup">분양(계약) 기준</option><option value="any">전용·분양 둘 다</option></select></div>
+          <div class="pf-inline"><label>보는 범위 <select id="pfStatus"><option value="open">지금 소개 가능한 것 (공실·진행중)</option><option value="withRented">임차중·보류도 포함</option><option value="all">거래완료까지 전체</option></select></label>
+            <label><input id="pfUnknown" type="checkbox"> 층·평수·가격이 비어 있는 것도 보기</label></div>
+        </details>
+        <div class="pf-actions"><button class="pf-btn main big" id="pfGo" type="button">검색</button><button class="pf-btn" id="pfReset" type="button">조건 지우기</button><span class="pf-dirty" id="pfDirty" hidden>조건이 바뀌었어요. 검색을 눌러 주세요.</span></div>
       </section>
 
-      <div class="pf-bar"><strong id="pfCount">0건</strong><span class="pf-sub" id="pfSplit"></span><span class="sp"></span>
-        <label class="pf-sub">정렬 <select id="pfSort"><option value="floor">층 낮은 순</option><option value="area">평수 작은 순</option><option value="rent">월세 낮은 순</option><option value="sale">매매가 낮은 순</option><option value="building">건물 순</option><option value="newest">최근 순</option></select></label>
-        <button class="pf-btn" id="pfCopy" type="button">결과 복사</button></div>
-      <p class="pf-hint" id="pfHint" role="status"></p>
-      <div class="pf-head" aria-hidden="true"><span>구분</span><span>건물</span><span>호수</span><span>층</span><span>평수</span><span>가격</span><span>상태</span><span></span></div>
-      <div id="pfList"></div>
-      <p class="pf-empty" id="pfEmpty" hidden>조건에 맞는 매물이 없습니다. 층이나 평수 범위를 넓혀 보세요.</p>
-      <button class="pf-btn pf-more" id="pfMore" type="button" hidden>더 보기</button>
+      <p class="pf-idle" id="pfIdle">조건을 고르고 <b>검색</b>을 누르면 결과가 여기에 나옵니다.</p>
+      <div id="pfResults" hidden>
+        <div class="pf-bar"><strong id="pfCount">0건</strong><span class="pf-sub" id="pfSplit"></span><span class="sp"></span>
+          <label class="pf-sub">정렬 <select id="pfSort"><option value="floor">층 낮은 순</option><option value="area">평수 작은 순</option><option value="rent">월세 낮은 순</option><option value="sale">매매가 낮은 순</option><option value="building">건물 순</option><option value="newest">최근 순</option></select></label>
+          <button class="pf-btn" id="pfCopy" type="button">결과 복사</button></div>
+        <p class="pf-hint" id="pfHint" role="status"></p>
+        <div class="pf-head" aria-hidden="true"><span>구분</span><span>건물</span><span>호수</span><span>층</span><span>평수</span><span>가격</span><span>상태</span><span></span></div>
+        <div id="pfList"></div>
+        <p class="pf-empty" id="pfEmpty" hidden>조건에 맞는 매물이 없습니다. 층이나 평수 범위를 넓혀 보세요.</p>
+        <button class="pf-btn pf-more" id="pfMore" type="button" hidden>더 보기</button>
+      </div>
     </main>
   </div>
-  <script src="assets/js/property-finder.js?v=20261104-finder3"></script>
+  <script src="assets/js/property-finder.js?v=20261104-finder2"></script>
 </body>
 </html>
