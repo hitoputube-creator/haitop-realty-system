@@ -78,6 +78,19 @@
         </div>
         <p class="status" id="navigationStatus" role="status"></p>
       </section>
+      <section class="finder-bottom" aria-label="매물찾기 빠른 검색">
+        <form id="finderBottomForm" class="finder-bottom-form"><label for="finderBottomInput">매물찾기</label><input id="finderBottomInput" type="search" autocomplete="off" placeholder="손님 말 그대로 입력  예) 상가 1층 20~40평 운정역 월세"><button class="action primary" type="submit">검색</button></form>
+        <p class="finder-bottom-note">검색을 누르면 결과가 새 창으로 열립니다.</p>
+      </section>
+      <style>.finder-bottom{margin:28px 0 8px;padding:18px 20px;border:1px solid var(--line,#e0efee);border-radius:14px;background:var(--panel,#fff)}.finder-bottom-form{display:flex;gap:10px;align-items:center}.finder-bottom-form label{font-weight:800;white-space:nowrap;color:var(--gold,#25675f)}.finder-bottom-form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:12px 14px;border:2px solid var(--gold,#25675f);border-radius:10px}.finder-bottom-note{margin:8px 2px 0;font-size:13px;color:var(--sub,#618684)}@media(max-width:600px){.finder-bottom-form{flex-wrap:wrap}.finder-bottom-form input{flex-basis:100%}}</style>
+      <script>
+        document.getElementById('finderBottomForm').addEventListener('submit', function (event) {
+          event.preventDefault();
+          var q = document.getElementById('finderBottomInput').value.trim();
+          var url = OfficeConfig.urlFor('property-finder.html') + (q ? '&q=' + encodeURIComponent(q) : '');
+          window.open(url, '_blank');
+        });
+      </script>
       <nav class="secondary-links" aria-label="기존 화면 바로가기"><a href="properties.html">기존 매물관리</a><a href="resources.html">기존 자료관리</a></nav>
       <noscript><p>종류별 선택에는 자바스크립트가 필요합니다. 아래 기존 매물관리·자료관리 링크를 이용하세요.</p></noscript>
     </main>
