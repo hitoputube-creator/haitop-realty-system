@@ -240,6 +240,7 @@ function buildEntries(data) {
 // ---------- 조건 ----------
 const F = { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMin: null, depMax: null, rentMin: null, rentMax: null, saleMin: null, saleMax: null, status: 'open', unknown: false, sort: 'floor' };
 let ALL = [], shown = 0, matched = [];
+const picked = new Set(); // 선택 복사용: 고른 매물의 key
 
 function floorOK(e) {
   if (!F.floors.size) return true;
@@ -321,8 +322,11 @@ function numSpan(parent, label, value, cls) {
   parent.append(line);
 }
 function row(e) {
-  const r = el('article', 'pf-row');
+  const r = el('article', 'pf-row' + (picked.has(e.key) ? ' is-picked' : ''));
   const kind = el('div', 'pf-kind');
+  const chk = el('input', 'pf-chk'); chk.type = 'checkbox'; chk.checked = picked.has(e.key); chk.setAttribute('aria-label', '선택');
+  chk.addEventListener('change', () => togglePick(e, r, chk.checked));
+  kind.append(chk);
   kind.append(el('span', 'pf-badge ' + (e.src === '매물' ? 'is-listing' : 'is-data'), e.src));
   // 건물 / 호수를 따로 보여 준다
   const hoText = e.ho ? e.ho + (/호$/.test(e.ho) ? '' : '호') : '';
@@ -354,11 +358,34 @@ function row(e) {
   const link = el('a', '', e.linkLabel); link.href = linkUrl(e.href); go.append(link);
   if (e.unitHref) { const a2 = el('a', '', '자료보기'); a2.href = linkUrl(e.unitHref); go.append(a2); }
   r.append(kind, place, ho, fl, ar, pr, st, go);
+  r.addEventListener('click', ev => { if (ev.target.closest('a,button,input')) return; togglePick(e, r, !picked.has(e.key), chk); });
   return r;
 }
 function linkUrl(h) { try { return typeof OfficeConfig !== 'undefined' ? OfficeConfig.urlFor(h.split('#')[0]) + (h.includes('#') ? '#' + h.split('#')[1] : '') : h; } catch (_) { return h; } }
 
+function togglePick(e, rowEl, on, chk) {
+  on ? picked.add(e.key) : picked.delete(e.key);
+  rowEl.classList.toggle('is-picked', on);
+  const box = chk || rowEl.querySelector('.pf-chk'); if (box) box.checked = on;
+  updateSel();
+}
+function updateSel() {
+  const n = picked.size;
+  if (!$('pfCopySel')) return;
+  $('pfCopySel').textContent = '선택 복사' + (n ? ' (' + n + ')' : '');
+  $('pfCopySel').disabled = n === 0;
+  const all = $('pfSelAll'); all.checked = n > 0 && n === matched.length; all.indeterminate = n > 0 && n < matched.length;
+}
+function copyText(list, title) {
+  const lines = list.map(e => [e.building || e.title, e.ho ? e.ho + '호' : '', fmtFloors(e), areaText(e).join('/'), priceLines(e).join(', ')].filter(Boolean).join(' | '));
+  return title + '\n' + lines.join('\n');
+}
+async function copyTo(btn, text, label) {
+  try { await navigator.clipboard.writeText(text); btn.textContent = '복사했습니다'; } catch (_) { btn.textContent = '복사 실패'; }
+  setTimeout(() => { btn.textContent = label(); updateSel(); }, 1800);
+}
 function run() {
+  picked.clear();
   // 정보 없음 때문에 빠진 건수를 알려 주려고 두 번 센다
   const strict = ALL.filter(e => groupOK(e) && statusOK(e) && kwOK(e) && dealOK(e));
   const saved = F.unknown;
@@ -379,6 +406,7 @@ function run() {
   }
   $('pfList').replaceChildren(); shown = 0; showMore();
   $('pfEmpty').hidden = matched.length > 0;
+  updateSel();
 }
 function showMore() {
   const end = Math.min(shown + 50, matched.length), list = $('pfList');
@@ -616,11 +644,19 @@ function init() {
     syncUI(); doSearch();
   });
   on('pfPrint', 'click', printList);
-  on('pfCopy', 'click', async () => {
-    const lines = matched.slice(0, 60).map(e => [e.building || e.title, e.ho ? e.ho + '호' : '', fmtFloors(e), areaText(e).join('/'), priceLines(e).join(', ')].filter(Boolean).join(' | '));
-    const t = '[하이탑 매물 ' + matched.length + '건' + (matched.length > 60 ? ' 중 60건' : '') + ']\n' + lines.join('\n');
-    try { await navigator.clipboard.writeText(t); $('pfCopy').textContent = '복사했습니다'; } catch (_) { $('pfCopy').textContent = '복사 실패'; }
-    setTimeout(() => { $('pfCopy').textContent = '결과 복사'; }, 1800);
+  on('pfCopy', 'click', () => {
+    const list = matched.slice(0, 60);
+    copyTo($('pfCopy'), copyText(list, '[하이탑 매물 ' + matched.length + '건' + (matched.length > 60 ? ' 중 60건' : '') + ']'), () => '결과 복사');
+  });
+  on('pfCopySel', 'click', () => {
+    const list = matched.filter(e => picked.has(e.key));
+    if (!list.length) return;
+    copyTo($('pfCopySel'), copyText(list, '[하이탑 매물 선택 ' + list.length + '건]'), () => '선택 복사');
+  });
+  on('pfSelAll', 'change', () => {
+    if ($('pfSelAll').checked) matched.forEach(e => picked.add(e.key)); else picked.clear();
+    document.querySelectorAll('#pfList .pf-row').forEach((r, i) => { const on = picked.has(matched[i].key); r.classList.toggle('is-picked', on); r.querySelector('.pf-chk').checked = on; });
+    updateSel();
   });
 }
 
