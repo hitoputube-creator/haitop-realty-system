@@ -74,6 +74,20 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
 .pf-dirty{color:#b25b00;font-weight:700;font-size:14px}
 .pf-idle{margin:30px 0;text-align:center;color:var(--sub,#618684);font-size:16px}
 @media(max-width:900px){.pf-picks{grid-template-columns:repeat(2,minmax(0,1fr))}.pf-list{height:170px}}
+.pf-printhead{display:none}
+@media print{
+  @page{size:A4 landscape;margin:12mm}
+  html,body{background:#fff!important;color:#000!important}
+  .topbar,.heading,.pf-quickcard,.pf-card,.pf-idle,.pf-bar,.pf-hint,#pfMore,.pf-go,.pf-wrap>header{display:none!important}
+  .pf-printhead{display:block;margin:0 0 10px;border-bottom:2px solid #000;padding-bottom:6px}.pf-printhead h2{margin:0 0 4px;font-size:20px}.pf-printhead p{margin:2px 0;font-size:12px}
+  .pf-wrap{max-width:none;padding:0}
+  .pf-head,.pf-row{grid-template-columns:minmax(0,1.6fr) 64px 70px 120px 190px 80px!important;gap:8px}
+  .pf-head span:nth-child(1),.pf-head span:nth-child(8),.pf-row>:nth-child(1),.pf-row>:nth-child(8){display:none!important}
+  .pf-head{font-size:11px;padding:4px 6px;border-bottom:1px solid #000}
+  .pf-row{padding:6px;font-size:11px;page-break-inside:avoid;break-inside:avoid;border-bottom:1px solid #999;background:#fff!important}
+  .pf-place strong{font-size:13px}.pf-num{font-size:13px;color:#000!important}.pf-num.sub{font-size:11px}.pf-ho .pf-num{font-size:14px}
+  .pf-row .pf-col{padding:0!important;background:none!important}.pf-muted,.pf-tag{color:#333!important}.pf-ok,.pf-warn{color:#000!important}
+}
 .pf-empty{padding:40px 0;text-align:center;color:var(--sub,#618684)}
 .pf-more{display:block;margin:16px auto 0}
 .pf-msg{color:var(--sub,#618684);font-size:14px;margin:8px 0}.pf-msg:empty{display:none}
@@ -126,9 +140,10 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
 
       <p class="pf-idle" id="pfIdle">조건을 고르고 <b>검색</b>을 누르면 결과가 여기에 나옵니다.</p>
       <div id="pfResults" hidden>
+        <div class="pf-printhead"><h2>하이탑부동산 매물 목록</h2><p id="pfPrintCond"></p><p id="pfPrintMeta"></p></div>
         <div class="pf-bar"><strong id="pfCount">0건</strong><span class="pf-sub" id="pfSplit"></span><span class="sp"></span>
           <label class="pf-sub">정렬 <select id="pfSort"><option value="floor">층 낮은 순</option><option value="area">평수 작은 순</option><option value="rent">월세 낮은 순</option><option value="sale">매매가 낮은 순</option><option value="building">건물 순</option><option value="newest">최근 순</option></select></label>
-          <button class="pf-btn" id="pfCopy" type="button">결과 복사</button></div>
+          <button class="pf-btn" id="pfCopy" type="button">결과 복사</button><button class="pf-btn" id="pfPrint" type="button">인쇄</button></div>
         <p class="pf-hint" id="pfHint" role="status"></p>
         <div class="pf-head" aria-hidden="true"><span>구분</span><span>건물</span><span>호수</span><span>층</span><span>평수</span><span>가격</span><span>상태</span><span></span></div>
         <div id="pfList"></div>
@@ -137,6 +152,6 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
       </div>
     </main>
   </div>
-  <script src="assets/js/property-finder.js?v=20261104-finder5"></script>
+  <script src="assets/js/property-finder.js?v=20261104-finder2"></script>
 </body>
 </html>
