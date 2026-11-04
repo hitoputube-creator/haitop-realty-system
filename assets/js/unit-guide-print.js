@@ -190,6 +190,73 @@ async function printHtml(html) {
   window.print();
 }
 
+
+// ---------- 도면에서 호실 위치 한 번 찍기 (인쇄할 때만 쓰고, 저장은 선택) ----------
+function pickPosition(o) {
+  return new Promise(resolve => {
+    if (!document.getElementById('ugPickStyle')) {
+      const st = document.createElement('style'); st.id = 'ugPickStyle';
+      st.textContent = '#ugPick{position:fixed;inset:0;z-index:99999;background:rgba(15,30,28,.55);display:flex;align-items:center;justify-content:center;font-family:Pretendard,"Malgun Gothic",sans-serif}'
+        + '#ugPick .ugp-card{background:#fff;border-radius:12px;width:min(1000px,94vw);max-height:94vh;display:flex;flex-direction:column;padding:14px 16px;box-shadow:0 12px 40px rgba(0,0,0,.3)}'
+        + '#ugPick .ugp-head{display:flex;align-items:baseline;gap:10px}'
+        + '#ugPick .ugp-head b{font-size:1.15rem;color:#17473f}#ugPick .ugp-head span{color:#667;font-size:.85rem}'
+        + '#ugPick .ugp-x{margin-left:auto;border:0;background:none;font-size:1.2rem;cursor:pointer;color:#667}'
+        + '#ugPick .ugp-tip{margin:6px 0;padding:6px 10px;background:#eef7f4;border-radius:6px;font-size:.88rem;color:#1f5b4d}'
+        + '#ugPick .ugp-tools{display:flex;gap:6px;margin-bottom:6px;align-items:center;font-size:.8rem;color:#667}'
+        + '#ugPick button{font:inherit;font-size:.85rem;padding:5px 12px;border:1px solid #c9d6d2;border-radius:7px;background:#fff;color:#334;cursor:pointer}'
+        + '#ugPick button.on{background:#e3f4ed;border-color:#8fc9b6;font-weight:700}'
+        + '#ugPick .ugp-scroll{flex:1;min-height:200px;overflow:auto;border:1px solid #ccd;border-radius:8px;background:#f6f8f7}'
+        + '#ugPick .ugp-inner{position:relative;width:100%;line-height:0;cursor:crosshair}'
+        + '#ugPick .ugp-inner img{width:100%;height:auto;display:block;user-select:none;-webkit-user-drag:none}'
+        + '#ugPick .ugp-pin{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border:3px solid #d62828;border-radius:50%;box-sizing:border-box;background:rgba(214,40,40,.12);pointer-events:none}'
+        + '#ugPick .ugp-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;font-size:.85rem;color:#445;flex-wrap:wrap}'
+        + '#ugPick .ugp-foot span{display:flex;gap:6px}#ugPick .ugp-foot label{display:flex;align-items:center;gap:6px;margin:0;color:#445;font-size:.85rem;font-weight:500;opacity:1;cursor:pointer}#ugPick .ugp-foot input{margin:0;width:auto;height:auto}'
+        + '#ugPick button.go{background:#1f6b57;border-color:#1f6b57;color:#fff;font-weight:700}#ugPick button.go:disabled{opacity:.4;cursor:default}';
+      document.head.appendChild(st);
+    }
+    const ov = document.createElement('div'); ov.id = 'ugPick';
+    ov.innerHTML = '<div class="ugp-card"><div class="ugp-head"><b>' + esc(o.ho) + ' 위치 찍기</b><span>' + esc(o.title) + '</span><button type="button" class="ugp-x" data-a="cancel" title="닫기">✕</button></div>'
+      + '<div class="ugp-tip">도면에서 이 호실 자리를 한 번 누르세요. 다시 누르면 옮겨져요.</div>'
+      + '<div class="ugp-tools">크기 <button type="button" data-z="1" class="on">보통</button><button type="button" data-z="2">크게</button><button type="button" data-z="3">더 크게</button></div>'
+      + '<div class="ugp-scroll"><div class="ugp-inner"><img src="' + esc(o.planUrl) + '" alt="평면도" draggable="false"></div></div>'
+      + '<div class="ugp-foot">' + (o.canSave ? '<label><input type="checkbox" id="ugpSave"> 이 위치를 저장해 두기 (다음부터 자동으로 나와요)</label>' : '<span></span>')
+      + '<span><button type="button" data-a="nopos">위치 없이 인쇄</button><button type="button" data-a="cancel">취소</button><button type="button" class="go" data-a="go" disabled>이대로 인쇄</button></span></div></div>';
+    document.body.appendChild(ov);
+    const inner = ov.querySelector('.ugp-inner'), go = ov.querySelector('[data-a=go]');
+    let pos = null, pin = null;
+    const done = v => { document.removeEventListener('keydown', onKey, true); ov.remove(); resolve(v); };
+    const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } };
+    document.addEventListener('keydown', onKey, true);
+    inner.addEventListener('click', e => {
+      const r = inner.getBoundingClientRect();
+      pos = { x: Math.round((e.clientX - r.left) / r.width * 10000) / 100, y: Math.round((e.clientY - r.top) / r.height * 10000) / 100 };
+      if (!pin) { pin = document.createElement('span'); pin.className = 'ugp-pin'; inner.appendChild(pin); }
+      pin.style.left = pos.x + '%'; pin.style.top = pos.y + '%';
+      go.disabled = false;
+    });
+    ov.addEventListener('click', e => {
+      const z = e.target.closest && e.target.closest('[data-z]');
+      if (z) { inner.style.width = (Number(z.dataset.z) * 100) + '%'; ov.querySelectorAll('[data-z]').forEach(b => b.classList.toggle('on', b === z)); return; }
+      const a = e.target.closest && e.target.closest('[data-a]'); if (!a) { if (e.target === ov) done(null); return; }
+      if (a.dataset.a === 'cancel') done(null);
+      else if (a.dataset.a === 'nopos') done({ pos: null, save: false });
+      else if (a.dataset.a === 'go' && pos) done({ pos, save: !!(ov.querySelector('#ugpSave') || {}).checked });
+    });
+  });
+}
+async function savePosition(name, ho, plan, fk, pos) {
+  const rec = await getBuildingRecord(name);
+  if (!rec || !Array.isArray(rec.units)) throw new Error('건물 호실 자료를 찾지 못했습니다.');
+  if (!rec.units.some(u => String(u.호수) === String(ho))) throw new Error(ho + '호를 다시 찾지 못했습니다.');
+  const updated = rec.units.map(u => {
+    if (String(u.호수) !== String(ho)) return u;
+    const plans = { ...(u.plan_positions || {}) };
+    plans[plan.id] = { ...(plans[plan.id] || {}), [fk]: pos };
+    return { ...u, plan_positions: plans };
+  });
+  await saveBuildingUnits(rec.local_id, rec.name || name, updated);
+}
+
 window.UnitGuide = { guideHtml, listHtml, printHtml, pickPlan, floorKeyOf, planKey, floorText, pyText, korAmt, plainWon, guideDataFromUnit };
 
 // =====================================================================
@@ -281,7 +348,20 @@ async function run(hos, mode, btn) {
       await printHtml(listHtml(list, name, addr));
     } else {
       let floors = []; try { floors = await getBuildingFloors(buildingId); } catch (_) { /* 평면도 없이 인쇄 */ }
-      await printHtml(picked.map(u => guideHtml(guideDataFromUnit(u, name, addr, floors))).join(''));
+      const datas = picked.map(u => guideDataFromUnit(u, name, addr, floors));
+      if (btn && picked.length === 1) {
+        const u = picked[0], d = datas[0];
+        if (d.planUrl && !d.pos) {
+          const plan = (floors || []).find(f => planKey(f.floor_number) === d.fk);
+          const r = await pickPosition({ planUrl: d.planUrl, ho: String(u.호수).replace(/호$/, '') + '호', title: floorText(d.fk) + ' 평면도', canSave: !!plan && typeof getBuildingRecord === 'function' && typeof saveBuildingUnits === 'function' });
+          if (!r) return;
+          if (r.pos) {
+            d.pos = r.pos;
+            if (r.save && plan) { try { await savePosition(name, u.호수, plan, d.fk, r.pos); } catch (err) { alert('위치 저장은 못 했어요. 인쇄는 계속합니다: ' + err.message); } }
+          }
+        }
+      }
+      await printHtml(datas.map(guideHtml).join(''));
     }
   } catch (e) {
     alert('손님용 안내서를 만들지 못했습니다: ' + e.message);
