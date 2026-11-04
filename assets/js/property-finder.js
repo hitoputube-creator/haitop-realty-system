@@ -66,13 +66,19 @@ function listingGroup(l) {
   return '기타';
 }
 let KNOWN = []; // [{name, key}] 건물 이름 목록
-let NEAR = new Set(); // 운정역 일대 건물(공백 뺀 이름)
-function initKnown(resources) {
+let CATS = []; // 상가 카테고리 이름(자료관리 순서)
+let RES_BY_ID = new Map(), RES_BY_NAME = new Map(), ROOM = new Map();
+function initKnown(resources, categories) {
+  ROOM = new Map((categories || []).map(c => [c.name, c.room]));
+  CATS = (categories || []).filter(c => c.room === 'commercial').sort((a, b) => (a.sort_order ?? a.order ?? a.position ?? 999) - (b.sort_order ?? b.order ?? b.position ?? 999)).map(c => c.name);
+  RES_BY_ID = new Map((resources || []).map(r => [String(r.id), r]));
+  RES_BY_NAME = new Map();
+  (resources || []).forEach(r => { const k = compact(r.name); if (!RES_BY_NAME.has(k)) RES_BY_NAME.set(k, []); RES_BY_NAME.get(k).push(r); });
   const names = new Map();
   const base = typeof UNJEONG_QUICK_BUILDINGS !== 'undefined' ? UNJEONG_QUICK_BUILDINGS : [];
   const jb = new Map();
   base.forEach(b => {
-    names.set(compact(b.name), b.name); NEAR.add(compact(b.name));
+    names.set(compact(b.name), b.name);
     text(b.addr).replace(/와동동\s*/, '').split(/\s*,\s*/).forEach(j => { if (j) jb.set(j, jb.has(j) ? null : b.name); });
   });
   JIBUN = new Map([...jb].filter(([, v]) => v));
@@ -87,8 +93,12 @@ function findBuilding(...parts) {
   const m = text(parts.join(' ')).match(/와동동\s*(\d{3,4}(?:-\d+)?)(?![\d-])/);
   return m && JIBUN.has(m[1]) ? JIBUN.get(m[1]) : '';
 }
-function isNear(building, addr) {
-  return NEAR.has(compact(building)) || /와동동/.test(text(addr));
+function catOfListing(l, building, group) {
+  const r = RES_BY_ID.get(String(l.resource_id || ''));
+  if (r && r.category) return r.category;
+  const list = RES_BY_NAME.get(compact(building)) || [];
+  const pick = group === '상가·사무실' ? list.find(x => ROOM.get(x.category) === 'commercial') : list[0];
+  return pick ? text(pick.category) : '';
 }
 
 // ---------- 화면용 항목 만들기 ----------
@@ -133,14 +143,15 @@ function buildEntries(data) {
       occ: text(l.shop_status || l.occupancy), tenant: '', progress: progressOf(raw),
       created: text(raw.created_at), memo: memoText, href: 'detail.html?id=' + encodeURIComponent(l.id), linkLabel: '매물보기'
     };
-    e.near = isNear(e.building, e.addr);
+    e.cat = catOfListing(raw, e.building, group);
     out.push(e); byListing.set(String(l.id), e);
   }
   const resources = data.resources || [];
   const rooms = new Map((data.categories || []).map(c => [c.name, c.room]));
   for (const b of data.buildings || []) {
     const named = resources.filter(r => r.name === b.name || r.name === b.local_id);
-    const r = resources.find(r => r.id === b.local_id) || (named.length === 1 ? named[0] : null);
+    // 같은 이름의 자료가 둘(예: 오피스텔·오피스텔상가)이면 상가 쪽 자료로 연결한다
+    const r = resources.find(r => r.id === b.local_id) || (named.length === 1 ? named[0] : named.find(x => rooms.get(x.category) === 'commercial') || null);
     const category = text(r?.category);
     const room = rooms.get(category) || (/아파트|오피스텔|주거|힐스테이트/.test(category) ? 'residential' : 'commercial');
     const addrLine = text(r?.memo).split('\n').find(x => /^주소\s*:/.test(x));
@@ -172,7 +183,7 @@ function buildEntries(data) {
         href: r ? 'building-detail.html?id=' + encodeURIComponent(r.id) + '&resourceScope=' + scope(group) + '#unitStatus' : 'building-overview.html',
         linkLabel: '자료보기'
       };
-      e.near = isNear(e.building, e.addr);
+      e.cat = text(r?.category);
       const linked = byListing.get(String(u.listing_id || ''));
       if (linked) { // 같은 호실이 매물과 자료에 둘 다 있으면 매물 한 줄로 합친다
         if (!linked.floors && e.floors) { linked.floors = e.floors; linked.floorDerived = e.floorDerived; }
@@ -183,7 +194,7 @@ function buildEntries(data) {
         if (!linked.occ) linked.occ = e.occ;
         if (!linked.tenant) linked.tenant = e.tenant;
         if (linked.dep == null && linked.rent == null && linked.sale == null) { linked.dep = e.dep; linked.rent = e.rent; linked.sale = e.sale; e.deals.forEach(d => linked.deals.add(d)); }
-        linked.near = linked.near || e.near;
+        if (!linked.cat) linked.cat = e.cat;
         linked.linkLabel = '매물보기';
         linked.unitHref = e.href;
       } else out.push(e);
@@ -193,7 +204,7 @@ function buildEntries(data) {
 }
 
 // ---------- 조건 ----------
-const F = { group: '', floors: new Set(), min: null, max: null, basis: 'ex', near: false, building: '', kw: '', deals: new Set(), depMax: null, rentMax: null, saleMax: null, status: 'open', unknown: false, sort: 'floor' };
+const F = { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMax: null, rentMax: null, saleMax: null, status: 'open', unknown: false, sort: 'floor' };
 let ALL = [], shown = 0, matched = [];
 
 function floorOK(e) {
@@ -217,8 +228,12 @@ function statusOK(e) {
   if (e.src === '매물') return e.progress === '진행중' || (F.status === 'withRented' && e.progress === '보류');
   return e.occ !== '임차중' || F.status === 'withRented';
 }
+function catOK(e) {
+  if (!F.cats.size) return true;
+  if (!e.cat) return F.unknown;
+  return F.cats.has(e.cat);
+}
 function kwOK(e) {
-  if (F.near && !e.near) return false;
   if (F.building && compact(e.building) !== compact(F.building)) return false;
   if (!F.kw) return true;
   const h = compact([e.title, e.addr, e.building, e.ho, e.memo].join(' '));
@@ -265,28 +280,46 @@ function areaText(e) {
   return p.length ? p : ['확인 필요'];
 }
 function el(tag, cls, t) { const n = document.createElement(tag); if (cls) n.className = cls; if (t != null) n.textContent = t; return n; }
+function numSpan(parent, label, value, cls) {
+  const line = el('div', 'pf-line');
+  if (label) line.append(el('small', 'pf-tag', label));
+  line.append(el('span', 'pf-num' + (cls ? ' ' + cls : ''), value));
+  parent.append(line);
+}
 function row(e) {
   const r = el('article', 'pf-row');
   const kind = el('div', 'pf-kind');
   kind.append(el('span', 'pf-badge ' + (e.src === '매물' ? 'is-listing' : 'is-data'), e.src));
+  // 건물 / 호수를 따로 보여 준다
+  const hoText = e.ho ? e.ho + (/호$/.test(e.ho) ? '' : '호') : '';
+  const bname = e.building || (e.src === '매물' ? (e.title || '등록 매물') : e.title);
   const place = el('div', 'pf-place');
-  place.append(el('strong', '', e.src === '자료' ? e.title : (e.building ? e.building + (e.ho ? ' ' + e.ho + '호' : '') : e.title || '등록 매물')));
-  const head = e.src === '자료' ? e.title : (e.building ? e.building + (e.ho ? ' ' + e.ho + '호' : '') : e.title || '등록 매물');
-  const sub = e.src === '매물' ? [e.title, e.addr].find(s => s && s !== head && s !== e.building) : e.addr;
+  place.append(el('strong', '', bname));
+  const sub = e.src === '매물' ? [e.title, e.addr].find(s => s && s !== bname) : e.addr;
   if (sub) place.append(el('span', 'pf-muted', sub));
-  place.append(el('span', 'pf-muted', e.group));
-  const fl = el('div', 'pf-col'); fl.append(el('b', '', fmtFloors(e)));
-  if (e.floors && e.floorDerived) fl.append(el('small', 'pf-muted', '호수로 계산'));
-  const ar = el('div', 'pf-col'); areaText(e).forEach(t => ar.append(el(t === '확인 필요' ? 'span' : 'b', t === '확인 필요' ? 'pf-muted' : '', t)));
-  const pr = el('div', 'pf-col'); priceLines(e).forEach(t => pr.append(el('b', '', t)));
+  place.append(el('span', 'pf-muted', [e.cat, e.group].filter(Boolean)[0]));
+  const ho = el('div', 'pf-ho'); ho.append(el('span', hoText ? 'pf-num' : 'pf-muted', hoText || '-'));
+  const hlFloor = F.floors.size > 0, hlArea = F.min != null || F.max != null, hlPrice = F.deals.size > 0 || F.depMax != null || F.rentMax != null || F.saleMax != null;
+  const fl = el('div', 'pf-col' + (hlFloor ? ' pf-hl' : ''));
+  if (e.floors) { numSpan(fl, '', fmtFloors(e)); if (e.floorDerived) fl.append(el('small', 'pf-muted', '호수로 계산')); } else fl.append(el('span', 'pf-muted', '확인 필요'));
+  const ar = el('div', 'pf-col' + (hlArea ? ' pf-hl' : ''));
+  if (e.ex != null) numSpan(ar, '전용', round1(e.ex) + '평' + (e.areaEstimated ? '(메모)' : ''));
+  if (e.sup != null) numSpan(ar, '분양', round1(e.sup) + '평', 'sub');
+  if (e.ex == null && e.sup == null) ar.append(el('span', 'pf-muted', '확인 필요'));
+  const pr = el('div', 'pf-col' + (hlPrice ? ' pf-hl' : ''));
+  if (e.deals.has('월세')) numSpan(pr, '월세', e.dep != null || e.rent != null ? (e.dep != null ? fmtMan(e.dep) : '-') + ' / ' + (e.rent != null ? e.rent.toLocaleString('ko-KR') + '만' : '-') : '가격 확인');
+  if (e.deals.has('전세')) numSpan(pr, '전세', e.jeonse != null ? fmtMan(e.jeonse) : '가격 확인');
+  if (e.deals.has('매매')) numSpan(pr, '매매', e.sale != null ? fmtMan(e.sale) : '가격 확인');
+  if (e.deals.has('분양')) numSpan(pr, '', '분양중', 'sub');
+  if (!pr.children.length) pr.append(el('span', 'pf-muted', '가격 확인 필요'));
   const st = el('div', 'pf-col');
   if (e.src === '매물') st.append(el('span', e.progress === '진행중' ? 'pf-ok' : 'pf-muted', e.progress));
   if (e.occ) st.append(el('span', e.occ === '공실' ? 'pf-ok' : 'pf-warn', e.occ));
-  if (e.tenant) st.append(el('small', 'pf-muted', e.tenant));
+  if (e.tenant && e.tenant !== e.occ && e.tenant !== '공실') st.append(el('small', 'pf-muted', e.tenant));
   const go = el('div', 'pf-go');
-  const a = el('a', '', e.linkLabel); a.href = linkUrl(e.href); go.append(a);
+  const link = el('a', '', e.linkLabel); link.href = linkUrl(e.href); go.append(link);
   if (e.unitHref) { const a2 = el('a', '', '자료보기'); a2.href = linkUrl(e.unitHref); go.append(a2); }
-  r.append(kind, place, fl, ar, pr, st, go);
+  r.append(kind, place, ho, fl, ar, pr, st, go);
   return r;
 }
 function linkUrl(h) { try { return typeof OfficeConfig !== 'undefined' ? OfficeConfig.urlFor(h.split('#')[0]) + (h.includes('#') ? '#' + h.split('#')[1] : '') : h; } catch (_) { return h; } }
@@ -295,8 +328,8 @@ function run() {
   // 정보 없음 때문에 빠진 건수를 알려 주려고 두 번 센다
   const strict = ALL.filter(e => groupOK(e) && statusOK(e) && kwOK(e) && dealOK(e));
   const saved = F.unknown;
-  F.unknown = false; const tight = strict.filter(e => floorOK(e) && areaOK(e) && priceOK(e));
-  F.unknown = true; const loose = strict.filter(e => floorOK(e) && areaOK(e) && priceOK(e));
+  F.unknown = false; const tight = strict.filter(e => floorOK(e) && areaOK(e) && priceOK(e) && catOK(e));
+  F.unknown = true; const loose = strict.filter(e => floorOK(e) && areaOK(e) && priceOK(e) && catOK(e));
   F.unknown = saved;
   matched = (saved ? loose : tight).slice().sort(SORTS[F.sort] || SORTS.floor);
   const hidden = loose.length - tight.length;
@@ -306,7 +339,7 @@ function run() {
   const hint = $('pfHint');
   hint.textContent = '';
   if (!saved && hidden > 0) {
-    hint.append('층·평수·가격 정보가 비어 있어 빠진 항목이 ' + hidden + '건 있습니다. ');
+    hint.append('층·평수·가격·위치 정보가 비어 있어 빠진 항목이 ' + hidden + '건 있습니다. ');
     const b = el('button', 'pf-link', '포함해서 보기'); b.type = 'button'; b.onclick = () => { $('pfUnknown').checked = true; F.unknown = true; run(); }; hint.append(b);
   }
   $('pfList').replaceChildren(); shown = 0; showMore();
@@ -337,24 +370,44 @@ function setChips(id, values) {
 function numInput(id, key, scale) {
   $(id).addEventListener('input', () => { const n = num($(id).value); F[key] = n == null ? null : n * (scale || 1); run(); });
 }
+function refreshBuildings() {
+  const sel = $('pfBuilding'), keep = F.building;
+  const names = [...new Set(ALL.filter(e => e.building && (!F.cats.size || F.cats.has(e.cat))).map(e => e.building))].sort((a, b) => a.localeCompare(b, 'ko'));
+  sel.replaceChildren(); const all = el('option', '', '건물 전체'); all.value = ''; sel.append(all);
+  names.forEach(n => { const o = el('option', '', n); o.value = n; sel.append(o); });
+  if (!names.includes(keep)) F.building = '';
+  sel.value = F.building;
+}
+function buildCatChips() {
+  const box = $('pfCat'); box.replaceChildren();
+  CATS.forEach(n => { const b = el('button', '', n); b.type = 'button'; b.dataset.v = n; b.setAttribute('aria-pressed', 'false'); box.append(b); });
+}
 function syncUI() {
   setChips('pfGroup', new Set([F.group]));
   setChips('pfFloor', new Set([...F.floors].map(String)));
   setChips('pfDeal', F.deals);
-  setChips('pfNear', new Set(F.near ? ['near'] : []));
+  setChips('pfCat', F.cats); refreshBuildings();
   $('pfMin').value = F.min ?? ''; $('pfMax').value = F.max ?? '';
-  $('pfKw').value = F.kw; $('pfBuilding').value = F.building;
+  $('pfKw').value = F.kw;
   $('pfDepMax').value = F.depMax ?? ''; $('pfRentMax').value = F.rentMax ?? ''; $('pfSaleMax').value = F.saleMax != null ? F.saleMax / 10000 : '';
   $('pfUnknown').checked = F.unknown;
 }
 // "상가 1층 20~40평 운정역 월세" 같은 한 줄 입력을 조건으로 바꾼다
 function parseQuick(q) {
   q = text(q).replace(/[,，]/g, ' ');
-  const f = { group: '', floors: new Set(), min: null, max: null, near: false, deals: new Set(), kw: [] };
+  const f = { group: '', floors: new Set(), min: null, max: null, cats: new Set(), deals: new Set(), kw: [] };
+  const keyOf = n => /단지내/.test(n) ? '단지내' : n.split(/[\s(]/)[0].replace(/마을$/, '');
+  CATS.forEach(n => {
+    const key = keyOf(n), keys = [key]; if (key === '운정역') keys.push('운정');
+    if (keys.some(k => k && q.includes(k))) f.cats.add(n);
+  });
+  CATS.forEach(n => { q = q.replace(new RegExp(keyOf(n) + '(\\s*상가)?', 'g'), ' '); });
+  q = q.replace(/운정/g, ' ');
   if (/아파트|오피스텔|주거|원룸|투룸/.test(q)) f.group = '주거';
   else if (/공장|창고/.test(q)) f.group = '공장·창고';
   else if (/토지|택지|대지/.test(q)) f.group = '토지';
   else if (/상가|사무실|점포|가게/.test(q)) f.group = '상가·사무실';
+  if (!f.group && f.cats.size) f.group = '상가·사무실';
   let rest = q;
   rest = rest.replace(/지하\s*\d*\s*층?/g, () => { f.floors.add('-1'); return ' '; });
   rest = rest.replace(/(\d+)\s*층\s*이상/g, (_, n) => { for (let i = Number(n); i <= 6; i++) f.floors.add(String(i)); return ' '; });
@@ -366,13 +419,13 @@ function parseQuick(q) {
   rest = rest.replace(/(\d+(?:\.\d+)?)\s*평/g, (_, a) => { f.min = Number(a) - 3; f.max = Number(a) + 3; return ' '; });
   ['매매', '전세', '월세', '분양'].forEach(d => { if (rest.includes(d)) { f.deals.add(d); rest = rest.replace(d, ' '); } });
   rest = rest.replace(/임대/g, () => { f.deals.add('월세'); return ' '; });
-  if (/운정역|운정/.test(rest)) { f.near = true; rest = rest.replace(/운정역\s*상가|운정역|운정/g, ' '); }
+
   rest = rest.replace(/상가|사무실|점포|가게|아파트|오피스텔|주거|공장|창고|토지|택지|대지/g, ' ');
   f.kw = rest.split(/\s+/).filter(Boolean).join(' ');
   return f;
 }
 function reset() {
-  Object.assign(F, { group: '', floors: new Set(), min: null, max: null, basis: 'ex', near: false, building: '', kw: '', deals: new Set(), depMax: null, rentMax: null, saleMax: null, status: 'open', unknown: false });
+  Object.assign(F, { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMax: null, rentMax: null, saleMax: null, status: 'open', unknown: false });
   $('pfQuick').value = ''; $('pfBasis').value = 'ex'; $('pfStatus').value = 'open';
   syncUI(); run();
 }
@@ -380,7 +433,7 @@ function init() {
   chipGroup('pfGroup', v => { F.group = v; }, true);
   chipGroup('pfFloor', (v, on) => { on ? F.floors.add(Number(v)) : F.floors.delete(Number(v)); });
   chipGroup('pfDeal', (v, on) => { on ? F.deals.add(v) : F.deals.delete(v); });
-  chipGroup('pfNear', (v, on) => { F.near = on; });
+  chipGroup('pfCat', (v, on) => { on ? F.cats.add(v) : F.cats.delete(v); refreshBuildings(); });
   chipGroup('pfAreaQuick', v => { const [a, b] = v.split('-'); F.min = a === '' ? null : Number(a); F.max = b === '' ? null : Number(b); $('pfMin').value = F.min ?? ''; $('pfMax').value = F.max ?? ''; }, true);
   numInput('pfMin', 'min'); numInput('pfMax', 'max'); numInput('pfDepMax', 'depMax'); numInput('pfRentMax', 'rentMax'); numInput('pfSaleMax', 'saleMax', 10000);
   $('pfKw').addEventListener('input', () => { F.kw = $('pfKw').value; run(); });
@@ -394,11 +447,11 @@ function init() {
   $('pfQuickForm').addEventListener('submit', ev => {
     ev.preventDefault();
     const q = parseQuick($('pfQuick').value);
-    Object.assign(F, { group: q.group, floors: new Set([...q.floors].map(Number)), min: q.min, max: q.max, near: q.near, deals: q.deals, kw: q.kw, building: '' });
+    Object.assign(F, { group: q.group, floors: new Set([...q.floors].map(Number)), min: q.min, max: q.max, cats: q.cats, deals: q.deals, kw: q.kw, building: '' });
     syncUI(); run();
   });
   $('pfCopy').addEventListener('click', async () => {
-    const lines = matched.slice(0, 60).map(e => [e.src === '자료' ? e.title : (e.building ? e.building + (e.ho ? ' ' + e.ho + '호' : '') : e.title), fmtFloors(e), areaText(e).join('/'), priceLines(e).join(', ')].join(' | '));
+    const lines = matched.slice(0, 60).map(e => [e.building || e.title, e.ho ? e.ho + '호' : '', fmtFloors(e), areaText(e).join('/'), priceLines(e).join(', ')].filter(Boolean).join(' | '));
     const t = '[하이탑 매물 ' + matched.length + '건' + (matched.length > 60 ? ' 중 60건' : '') + ']\n' + lines.join('\n');
     try { await navigator.clipboard.writeText(t); $('pfCopy').textContent = '복사했습니다'; } catch (_) { $('pfCopy').textContent = '복사 실패'; }
     setTimeout(() => { $('pfCopy').textContent = '결과 복사'; }, 1800);
@@ -427,7 +480,7 @@ async function loadData() {
   const auth = await hitopAuthClient.auth.getSession();
   const token = auth.data?.session?.access_token;
   if (auth.error || !token) throw new Error('SESSION');
-  const srcs = [['listings', '*'], ['buildings', '*'], ['drive_resources', 'id,name,category,memo'], ['drive_resource_categories', 'id,name,room']];
+  const srcs = [['listings', '*'], ['buildings', '*'], ['drive_resources', 'id,name,category,memo'], ['drive_resource_categories', '*']];
   const res = await Promise.allSettled(srcs.map(s => fetchRows(s[0], s[1], token)));
   const keys = ['listings', 'buildings', 'resources', 'categories'], data = {}, failed = [];
   res.forEach((r, i) => { if (r.status === 'fulfilled') data[keys[i]] = r.value; else { data[keys[i]] = []; failed.push(srcs[i][0]); } });
@@ -441,10 +494,9 @@ async function start() {
   try {
     status.textContent = '매물과 자료를 불러오는 중입니다…';
     const data = await loadData();
-    initKnown(data.resources);
+    initKnown(data.resources, data.categories);
     ALL = buildEntries(data);
-    const names = [...new Set(ALL.filter(e => e.building).map(e => e.building))].sort((a, b) => a.localeCompare(b, 'ko'));
-    const sel = $('pfBuilding'); names.forEach(n => { const o = el('option', '', n); o.value = n; sel.append(o); });
+    buildCatChips();
     status.textContent = data.failed && data.failed.length ? '일부 자료를 읽지 못했습니다(' + data.failed.join(', ') + '). 결과가 부족할 수 있어요. 새로고침해 주세요.' : '';
     $('pfLoaded').textContent = '전체 ' + ALL.length + '건 중에서 찾습니다';
     syncUI(); run();
