@@ -435,7 +435,18 @@ async function guidePrint(list, btn) {
   const old = btn.textContent; btn.textContent = '준비 중…'; btn.style.pointerEvents = 'none';
   try {
     const pages = [];
-    for (const e of list) pages.push(window.UnitGuide.guideHtml(guideData(e, await guideFloors(e.resId))));
+    const G = window.UnitGuide, items = [];
+    for (const e of list) items.push(guideData(e, await guideFloors(e.resId)));
+    const need = items.filter(d => d.planUrl && !d.pos).length;
+    let n = 0;
+    for (const d of items) {
+      if (!d.planUrl || d.pos || !G.pickPosition) continue;
+      n++;
+      const r = await G.pickPosition({ planUrl: d.planUrl, ho: d.ho ? String(d.ho).replace(/호$/, '') + '호' : '', title: [d.name, G.floorText(d.fk) + ' 평면도'].filter(Boolean).join(' · ') + (need > 1 ? '  (' + n + '/' + need + ')' : ''), canSave: false });
+      if (!r) return;
+      if (r.pos) d.pos = r.pos;
+    }
+    for (const d of items) pages.push(G.guideHtml(d));
     const pbx = $('pfPageBoxes'); if (pbx) pbx.remove();
     await window.UnitGuide.printHtml(pages.join(''));
   } catch (err) { alert('안내서를 만들지 못했습니다: ' + err.message); }
