@@ -51,7 +51,9 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
 #pfBarMount button{font:inherit}
 @media(max-width:700px){.pf-pills{gap:6px}.pf-grow{display:none}.pf-pillwrap{position:static}.pf-panel{left:8px;right:8px;max-width:none;min-width:0!important}.pf-filterbar{position:relative}.pf-quick{flex-wrap:wrap}}
 
-#pfBarMount.pf-card-mode{background:#fff;border:1px solid var(--line2,#cbe1e0);border-radius:18px;padding:16px 20px 14px;margin:12px 0 34px;box-shadow:0 4px 18px rgba(24,60,60,.10);border-top:4px solid #25675f}
+#pfBarMount.pf-card-mode{background:#fff;border:1px solid var(--line2,#cbe1e0);border-radius:18px;padding:16px 20px 14px;margin:30px 0 28px;box-shadow:0 4px 18px rgba(24,60,60,.10);border-top:4px solid #25675f}
 #pfBarMount.pf-card-mode .pf-bar-title{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-size:18px;font-weight:800;color:#1c4f4b}
 #pfBarMount.pf-card-mode .pf-bar-title small{font-size:13px;font-weight:500;color:var(--sub,#618684)}
 #pfBarMount.pf-card-mode .pf-filterbar{border-bottom:0;padding-bottom:0}
+#pfBarMount.pf-card-mode .pf-panel{top:auto;bottom:calc(100% + 8px)}
+#pfBarMount.pf-card-mode .pf-panel .pf-list{max-height:240px}
