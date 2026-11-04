@@ -357,6 +357,7 @@ function showMore() {
 // 조건을 고르는 동안에는 결과가 바뀌지 않고, [검색] 버튼을 눌러야 결과가 나온다.
 let searched = false;
 function markDirty() {
+  updatePills();
   if (!searched) return;
   $('pfGo').classList.add('is-dirty'); $('pfDirty').hidden = false;
 }
@@ -375,6 +376,54 @@ function syncPicks() {
   mark('pfFloor', v => v === '__all' ? F.floors.size === 0 : F.floors.has(Number(v)));
   mark('pfDeal', v => v === '__all' ? F.deals.size === 0 : F.deals.has(v));
   mark('pfAreaQuick', v => v === areaKey());
+  updatePills();
+}
+// ----- 상단 필터 바(네이버 부동산 스타일) -----
+const PILL_PANELS = { pillGroup: 'pnGroup', pillCat: 'pnCat', pillFloor: 'pnFloor', pillDeal: 'pnDeal', pillArea: 'pnArea', pillPrice: 'pnPrice', pillMore: 'pnMore' };
+function pillSummaries() {
+  const fl = [...F.floors].sort((a, b) => a - b).map(n => n < 0 ? '지하' : n >= 6 ? '6층+' : n + '층');
+  const rg = (a, b, k, u) => (a != null ? a / k : '') + '~' + (b != null ? b / k : '') + u;
+  const price = [];
+  if (F.depMin != null || F.depMax != null) price.push('보증금 ' + rg(F.depMin, F.depMax, 1, '만'));
+  if (F.rentMin != null || F.rentMax != null) price.push('월세 ' + rg(F.rentMin, F.rentMax, 1, '만'));
+  if (F.saleMin != null || F.saleMax != null) price.push('매매 ' + rg(F.saleMin, F.saleMax, 10000, '억'));
+  const more = (F.building ? 1 : 0) + (F.kw ? 1 : 0) + (F.status !== 'open' ? 1 : 0) + (F.unknown ? 1 : 0);
+  return {
+    pillGroup: F.group,
+    pillCat: F.cats.size ? [...F.cats][0].replace(/\s*(상가|근생상가).*$/, '') + (F.cats.size > 1 ? ' 외 ' + (F.cats.size - 1) : '') : '',
+    pillFloor: fl.length > 2 ? fl[0] + ' 외 ' + (fl.length - 1) : fl.join(', '),
+    pillDeal: [...F.deals].join(', '),
+    pillArea: F.min != null || F.max != null ? rg(F.min, F.max, 1, '평') : '',
+    pillPrice: price.length > 1 ? price[0] + ' 외' : price.join(''),
+    pillMore: more ? '상세 ' + more : ''
+  };
+}
+function updatePills() {
+  const s = pillSummaries();
+  Object.keys(PILL_PANELS).forEach(id => {
+    const b = $(id); if (!b) return;
+    b.querySelector('.pt').textContent = s[id] || b.dataset.label;
+    b.classList.toggle('on', !!s[id]);
+  });
+}
+function closePanels(except) {
+  Object.entries(PILL_PANELS).forEach(([pid, panel]) => {
+    if (pid === except) return;
+    $(panel).hidden = true; $(pid).setAttribute('aria-expanded', 'false');
+  });
+}
+function initPills() {
+  Object.entries(PILL_PANELS).forEach(([pid, panel]) => {
+    $(pid).addEventListener('click', ev => {
+      ev.stopPropagation();
+      const open = $(panel).hidden;
+      closePanels(pid); $(panel).hidden = !open; $(pid).setAttribute('aria-expanded', String(open));
+    });
+  });
+  document.addEventListener('click', ev => { if (!ev.target.closest('.pf-pillwrap')) closePanels(); });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closePanels(); });
+  // 한 가지만 고르는 칸(종류·평수 목록)은 고르면 창을 닫는다
+  ['pfGroup', 'pfAreaQuick'].forEach(id => $(id).addEventListener('click', ev => { if (ev.target.closest('button[data-v]')) setTimeout(() => closePanels(), 120); }));
 }
 function numInput(id, key, scale) {
   $(id).addEventListener('input', () => { const n = num($(id).value); F[key] = n == null ? null : n * (scale || 1); markDirty(); syncPicks(); });
@@ -468,6 +517,7 @@ function reset() {
   syncUI(); markDirty();
 }
 function init() {
+  initPills();
   pick('pfGroup', v => { F.group = v; });
   pick('pfFloor', v => { if (v === '__all') F.floors.clear(); else toggleSet(F.floors, Number(v)); });
   pick('pfDeal', v => toggleSet(F.deals, v));
@@ -482,7 +532,7 @@ function init() {
   $('pfSort').addEventListener('change', () => { F.sort = $('pfSort').value; matched.sort(SORTS[F.sort] || SORTS.floor); $('pfList').replaceChildren(); shown = 0; showMore(); });
   $('pfMore').addEventListener('click', showMore);
   $('pfReset').addEventListener('click', reset);
-  $('pfGo').addEventListener('click', doSearch);
+  $('pfGo').addEventListener('click', () => { closePanels(); doSearch(); });
   $('pfQuickForm').addEventListener('submit', ev => {
     ev.preventDefault();
     const q = parseQuick($('pfQuick').value);
