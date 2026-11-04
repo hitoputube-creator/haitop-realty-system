@@ -58,12 +58,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }).observe(document.body, { childList: true, subtree: true });
 });
-
-// 모든 인쇄물(쪽마다)에 연한 상호 워터마크를 넣는다. 화면에는 보이지 않는다.
-(function () {
-  if (/\/(login|reset-password)\.html$/.test(location.pathname)) return;
-  const style = document.createElement('style');
-  style.id = 'office-print-watermark';
-  style.textContent = '@media print{html::after{content:"' + officeCompanyName + '";position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-32deg);font:800 92px/1 Pretendard,"Malgun Gothic",sans-serif;letter-spacing:.04em;color:rgba(37,103,95,.09);white-space:nowrap;z-index:2147483000;pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-  document.head.appendChild(style);
-})();
