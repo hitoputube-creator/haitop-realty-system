@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>매물찾기</title>
   <link rel="stylesheet" href="assets/css/tokens.css">
-  <link rel="stylesheet" href="assets/css/finder-bar.css?v=20261104-bar2">
+  <link rel="stylesheet" href="assets/css/finder-bar.css?v=20261104-bar1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
   <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
@@ -77,17 +77,26 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
 @media(max-width:900px){.pf-picks{grid-template-columns:repeat(2,minmax(0,1fr))}.pf-list{height:170px}}
 .pf-printhead{display:none}
 @media print{
-  @page{size:A4 landscape;margin:12mm}
+  @page{size:A4 landscape;margin:10mm}
   html,body{background:#fff!important;color:#000!important}
-  .topbar,.heading,.pf-quickcard,.pf-card,.pf-idle,.pf-bar,.pf-hint,#pfMore,.pf-go,.pf-wrap>header{display:none!important}
-  .pf-printhead{display:block;margin:0 0 10px;border-bottom:2px solid #000;padding-bottom:6px}.pf-printhead h2{margin:0 0 4px;font-size:20px}.pf-printhead p{margin:2px 0;font-size:12px}
+  .topbar,.heading,.pf-quickcard,.pf-card,.pf-idle,.pf-bar,.pf-hint,#pfMore,.pf-go,.pf-wrap>header,#pfBarMount,.pf-searchbar,.pf-filterbar,.pf-condline,#pfStatusMsg,#pfChange,.pf-empty[hidden]{display:none!important}
   .pf-wrap{max-width:none;padding:0}
-  .pf-head,.pf-row{grid-template-columns:minmax(0,1.6fr) 64px 70px 120px 190px 80px!important;gap:8px}
-  .pf-head span:nth-child(1),.pf-head span:nth-child(8),.pf-row>:nth-child(1),.pf-row>:nth-child(8){display:none!important}
-  .pf-head{font-size:11px;padding:4px 6px;border-bottom:1px solid #000}
-  .pf-row{padding:6px;font-size:11px;page-break-inside:avoid;break-inside:avoid;border-bottom:1px solid #999;background:#fff!important}
-  .pf-place strong{font-size:13px}.pf-num{font-size:13px;color:#000!important}.pf-num.sub{font-size:11px}.pf-ho .pf-num{font-size:14px}
-  .pf-row .pf-col{padding:0!important;background:none!important}.pf-muted,.pf-tag{color:#333!important}.pf-ok,.pf-warn{color:#000!important}
+  .pf-printhead{display:block;margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid #000}.pf-printhead h2{margin:0 0 3px;font-size:19px}.pf-printhead p{margin:1px 0;font-size:11px;color:#000}
+  #pfList{counter-reset:pfno}
+  .pf-head,.pf-row{display:grid!important;grid-template-columns:30px minmax(0,1.5fr) 56px 56px 150px 190px 72px!important;gap:0!important;align-items:stretch}
+  .pf-head{background:none!important;border:0;border-bottom:1.5px solid #000;font-size:11px;padding:0 0 2px;color:#444}
+  .pf-head span{padding:4px 8px!important;border:0;font-weight:700}.pf-head span:first-child{font-size:0}.pf-head span:first-child::after{content:"No";font-size:11px}
+  .pf-head span:nth-child(8){display:none!important}
+  .pf-row{counter-increment:pfno;padding:0!important;font-size:12.5px;line-height:1.4;page-break-inside:avoid;break-inside:avoid;border-bottom:1px solid #d9d9d9;background:#fff!important}
+  .pf-row>:nth-child(8){display:none!important}
+  .pf-row>*{padding:7px 8px!important;border:0!important;margin:0!important;background:none!important;border-radius:0!important}
+  .pf-row>:nth-child(1){text-align:left;font-size:0}.pf-row>:nth-child(1)::before{content:counter(pfno);font-size:11px;color:#777}.pf-row>:nth-child(1) .pf-badge{display:none}
+  .pf-place .pf-muted{display:none}.pf-place strong{font-size:12.5px}
+  .pf-col,.pf-ho{display:flex;flex-direction:row;flex-wrap:wrap;gap:0 10px;align-items:baseline}
+  .pf-col small.pf-muted{display:none}
+  .pf-line{gap:4px}.pf-tag{font-size:10px;color:#333!important;min-width:0}
+  .pf-num,.pf-ho .pf-num{font-size:12.5px;font-weight:700;color:#000!important}.pf-num.sub{font-size:11px;font-weight:500;color:#222!important}
+  .pf-muted{color:#333!important}.pf-ok,.pf-warn{color:#000!important;font-weight:700}
 }
 
 .pf-searchbar{margin:6px 0 12px}
@@ -150,6 +159,6 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
       </div>
     </main>
   </div>
-  <script src="assets/js/property-finder.js?v=20261104-bar2"></script>
+  <script src="assets/js/property-finder.js?v=20261104-bar3"></script>
 </body>
 </html>
