@@ -438,6 +438,30 @@ function parseQuick(q) {
   f.kw = rest.split(/\s+/).filter(Boolean).join(' ');
   return f;
 }
+function condText() {
+  const p = [];
+  p.push('종류 ' + (F.group || '전체'));
+  if (F.cats.size) p.push('상가 구분 ' + [...F.cats].join(', '));
+  if (F.building) p.push('건물 ' + F.building);
+  if (F.kw) p.push('검색어 ' + F.kw);
+  if (F.floors.size) p.push('층 ' + [...F.floors].sort((a, b) => a - b).map(n => n < 0 ? '지하' : n >= 6 ? '6층 이상' : n + '층').join(', '));
+  if (F.min != null || F.max != null) p.push('평수 ' + (F.min ?? '') + '~' + (F.max ?? '') + '평(' + ({ ex: '전용', sup: '분양', any: '전용·분양' }[F.basis]) + ')');
+  if (F.deals.size) p.push('거래 ' + [...F.deals].join(', '));
+  const rg = (name, a, b, unit, k) => { if (a != null || b != null) p.push(name + ' ' + (a != null ? a / k : '') + '~' + (b != null ? b / k : '') + unit); };
+  rg('보증금', F.depMin, F.depMax, '만원', 1); rg('월세', F.rentMin, F.rentMax, '만원', 1); rg('매매가', F.saleMin, F.saleMax, '억', 10000);
+  return p.join(' / ');
+}
+function printList() {
+  if (!matched.length) return;
+  const cap = Math.min(matched.length, 500), list = $('pfList');
+  list.replaceChildren(); matched.slice(0, cap).forEach(e => list.append(row(e)));
+  const d = new Date();
+  $('pfPrintCond').textContent = condText();
+  $('pfPrintMeta').textContent = '총 ' + matched.length + '건' + (matched.length > cap ? ' 중 ' + cap + '건 인쇄' : '') + ' · ' + d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0') + ' 출력';
+  const restore = () => { list.replaceChildren(); shown = 0; showMore(); };
+  window.addEventListener('afterprint', restore, { once: true });
+  window.print();
+}
 function reset() {
   Object.assign(F, { group: '', floors: new Set(), min: null, max: null, basis: 'ex', cats: new Set(), building: '', kw: '', deals: new Set(), depMin: null, depMax: null, rentMin: null, rentMax: null, saleMin: null, saleMax: null, status: 'open', unknown: false });
   $('pfQuick').value = ''; $('pfBasis').value = 'ex'; $('pfStatus').value = 'open';
@@ -465,6 +489,7 @@ function init() {
     Object.assign(F, { group: q.group, floors: new Set([...q.floors].map(Number)), min: q.min, max: q.max, cats: q.cats, deals: q.deals, kw: q.kw, building: '' });
     syncUI(); doSearch();
   });
+  $('pfPrint').addEventListener('click', printList);
   $('pfCopy').addEventListener('click', async () => {
     const lines = matched.slice(0, 60).map(e => [e.building || e.title, e.ho ? e.ho + '호' : '', fmtFloors(e), areaText(e).join('/'), priceLines(e).join(', ')].filter(Boolean).join(' | '));
     const t = '[하이탑 매물 ' + matched.length + '건' + (matched.length > 60 ? ' 중 60건' : '') + ']\n' + lines.join('\n');
