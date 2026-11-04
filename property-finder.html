@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>매물찾기</title>
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+  <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:var(--bg,#071625);color:var(--txt,#f5f8fb);font-family:Pretendard,system-ui,sans-serif;font-size:16px;line-height:1.6}
+    a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0;border-bottom:1px solid var(--line,#294057)}
+    .brand{display:flex;align-items:center;gap:12px}.brand-mark{display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--gold,#d8b84a);border-radius:10px;color:var(--gold,#d8b84a);font-size:24px;font-weight:800}.brand-name{font-size:18px;font-weight:750}.brand-sub{font-size:14px;color:var(--sub,#b4c2d2)}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap}.top-actions a{border:1px solid var(--line,#294057);border-radius:8px;padding:8px 14px;font-size:14px}.top-actions .customer-link{border-color:var(--gold,#d8b84a);color:var(--gold,#d8b84a);font-weight:700}
+    .heading{margin:28px 0 14px}.eyebrow{color:var(--gold,#d8b84a);font-size:14px;font-weight:650;margin:0 0 5px}h1{font-size:30px;margin:0;letter-spacing:-.025em}
+    @media(max-width:760px){.topbar{align-items:flex-start;flex-direction:column;padding:20px 0}}
+  
+.pf-wrap{max-width:1200px;margin:auto;padding:0 32px 60px}
+.pf-card{background:var(--panel,#fff);border:1px solid var(--line,#e0efee);border-radius:14px;padding:20px;margin-bottom:16px}
+.pf-quick{display:flex;gap:8px}.pf-quick input{flex:1;min-width:0;font:inherit;font-size:17px;padding:14px 16px;border:2px solid var(--gold,#25675f);border-radius:10px}
+.pf-btn{font:inherit;font-weight:700;border:1px solid var(--line2,#cbe1e0);border-radius:8px;padding:10px 18px;cursor:pointer;background:var(--panel,#fff);color:inherit}
+html .pf-btn.main{background:#25675f!important;color:#fff!important;border-color:#25675f!important}
+.pf-example{margin:8px 2px 0;font-size:13px;color:var(--sub,#618684)}
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 28px}
+.pf-field>label,.pf-field>.pf-label{display:block;font-weight:700;font-size:14px;margin-bottom:7px;color:var(--gold,#25675f)}
+.pf-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pf-chips button{font:inherit;font-size:14px;padding:7px 13px;border-radius:999px;border:1px solid var(--line2,#cbe1e0);background:var(--panel,#fff);color:inherit;cursor:pointer}
+html .pf-chips button[aria-pressed="true"]{background:#25675f!important;color:#fff!important;border-color:#25675f!important;font-weight:700}
+.pf-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pf-wrap input[type=number],.pf-wrap input[type=text],.pf-wrap select{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line2,#cbe1e0);border-radius:8px;min-width:0}
+.pf-wrap input[type=number]{width:84px}.pf-wrap input[type=text]{flex:1;min-width:140px}
+.pf-sub{font-size:13px;color:var(--sub,#618684)}
+.pf-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0 6px}
+.pf-bar strong{font-size:22px}.pf-bar .sp{flex:1}
+.pf-hint{font-size:14px;color:#a35a00;margin:4px 0 8px}.pf-hint:empty{display:none}
+.pf-link{font:inherit;background:none;border:0;color:var(--gold,#25675f);text-decoration:underline;cursor:pointer;padding:0;font-weight:700}
+.pf-head,.pf-row{display:grid;grid-template-columns:62px minmax(170px,1.4fr) 92px 112px 190px 96px 104px;gap:12px;align-items:start}
+.pf-head{font-size:13px;font-weight:700;color:var(--sub,#618684);padding:8px 14px;border-bottom:2px solid var(--line2,#cbe1e0)}
+.pf-row{padding:14px;border-bottom:1px solid var(--line,#e0efee);font-size:14px}
+.pf-row:hover{background:var(--panel2,#f8fcfc)}
+.pf-place,.pf-col{display:flex;flex-direction:column;gap:3px;overflow-wrap:anywhere}.pf-place strong{font-size:16px}
+.pf-muted{color:var(--sub,#618684);font-size:13px}.pf-ok{color:#1d7a43;font-weight:700}.pf-warn{color:#b25b00;font-weight:700}
+.pf-badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px}.is-listing{background:#e3f4e9;color:#1d7a43}.is-data{background:#e9eef5;color:#47607c}
+.pf-go{display:flex;flex-direction:column;gap:5px}.pf-go a{text-align:center;border:1px solid var(--line2,#cbe1e0);border-radius:6px;padding:7px;font-size:13px;font-weight:700;text-decoration:none;color:inherit}.pf-go a:hover{background:var(--panel2,#f8fcfc)}
+.pf-empty{padding:40px 0;text-align:center;color:var(--sub,#618684)}
+.pf-more{display:block;margin:16px auto 0}
+.pf-msg{color:var(--sub,#618684);font-size:14px;margin:8px 0}.pf-msg:empty{display:none}
+@media(max-width:900px){.pf-grid{grid-template-columns:1fr}.pf-head{display:none}.pf-row{grid-template-columns:62px 1fr 1fr}.pf-place{grid-column:2/4}.pf-go{grid-column:1/4;flex-direction:row}.pf-go a{flex:1}}
+@media(max-width:600px){.pf-wrap{padding:0 14px 40px}.pf-quick{flex-wrap:wrap}.pf-quick button{width:100%}}
+</style>
+</head>
+<body class="property-finder-page">
+  <div class="pf-wrap">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">H</span><div><div class="brand-name">매물찾기</div><div class="brand-sub">손님 조건으로 매물·자료 찾기</div></div></div>
+      <nav class="top-actions" aria-label="주요 페이지"><a href="property-main.html">매물관리 메인</a><a href="properties.html">매물목록</a><a href="resources.html">자료관리</a><a class="customer-link" href="customers.html">전체 고객관리</a></nav>
+    </header>
+    <main>
+      <div class="heading"><p class="eyebrow">PROPERTY FINDER</p><h1>매물찾기</h1><p class="pf-sub" id="pfLoaded"></p></div>
+      <p class="pf-msg" id="pfStatusMsg" role="status"></p>
+
+      <section class="pf-card" aria-label="한 줄 검색">
+        <form class="pf-quick" id="pfQuickForm"><input id="pfQuick" type="text" autocomplete="off" placeholder="손님 말 그대로 입력  예) 상가 1층 20~40평 운정역 월세" aria-label="한 줄로 조건 입력"><button class="pf-btn main" type="submit">조건 넣기</button></form>
+        <p class="pf-example">입력하면 아래 조건 칸이 자동으로 채워집니다. 칸에서 직접 바꿔도 됩니다.</p>
+      </section>
+
+      <section class="pf-card" aria-label="조건">
+        <div class="pf-grid">
+          <div class="pf-field"><span class="pf-label">종류</span><div class="pf-chips" id="pfGroup"><button type="button" data-v="" aria-pressed="false">전체</button><button type="button" data-v="상가·사무실" aria-pressed="false">상가·사무실</button><button type="button" data-v="주거" aria-pressed="false">주거</button><button type="button" data-v="토지" aria-pressed="false">토지</button><button type="button" data-v="공장·창고" aria-pressed="false">공장·창고</button><button type="button" data-v="기타" aria-pressed="false">기타</button></div></div>
+          <div class="pf-field"><span class="pf-label">거래 (여러 개 선택 가능)</span><div class="pf-chips" id="pfDeal"><button type="button" data-v="월세" aria-pressed="false">월세</button><button type="button" data-v="매매" aria-pressed="false">매매</button><button type="button" data-v="전세" aria-pressed="false">전세</button><button type="button" data-v="분양" aria-pressed="false">분양</button></div></div>
+
+          <div class="pf-field"><span class="pf-label">층 (여러 개 선택 가능)</span><div class="pf-chips" id="pfFloor"><button type="button" data-v="-1" aria-pressed="false">지하</button><button type="button" data-v="1" aria-pressed="false">1층</button><button type="button" data-v="2" aria-pressed="false">2층</button><button type="button" data-v="3" aria-pressed="false">3층</button><button type="button" data-v="4" aria-pressed="false">4층</button><button type="button" data-v="5" aria-pressed="false">5층</button><button type="button" data-v="6" aria-pressed="false">6층 이상</button></div></div>
+          <div class="pf-field"><span class="pf-label">평수</span>
+            <div class="pf-inline"><input id="pfMin" type="number" min="0" step="0.1" placeholder="최소" aria-label="최소 평수"> ~ <input id="pfMax" type="number" min="0" step="0.1" placeholder="최대" aria-label="최대 평수"> 평
+              <select id="pfBasis" aria-label="면적 기준"><option value="ex">전용 기준</option><option value="sup">분양(계약) 기준</option><option value="any">전용·분양 둘 다</option></select></div>
+            <div class="pf-chips" id="pfAreaQuick" style="margin-top:8px"><button type="button" data-v="-10" aria-pressed="false">10평 이하</button><button type="button" data-v="10-20" aria-pressed="false">10~20</button><button type="button" data-v="20-40" aria-pressed="false">20~40</button><button type="button" data-v="40-60" aria-pressed="false">40~60</button><button type="button" data-v="60-" aria-pressed="false">60평 이상</button></div></div>
+
+          <div class="pf-field"><span class="pf-label">위치</span>
+            <div class="pf-inline"><span class="pf-chips" id="pfNear"><button type="button" data-v="near" aria-pressed="false">운정역 일대</button></span>
+              <select id="pfBuilding" aria-label="건물 선택"><option value="">건물 전체</option></select>
+              <input id="pfKw" type="text" placeholder="건물·호수·메모 검색" aria-label="건물 호수 메모 검색"></div></div>
+          <div class="pf-field"><span class="pf-label">가격 (이하)</span>
+            <div class="pf-inline">보증금 <input id="pfDepMax" type="number" min="0" placeholder="만원"> 월세 <input id="pfRentMax" type="number" min="0" placeholder="만원"> 매매 <input id="pfSaleMax" type="number" min="0" step="0.1" placeholder="억"></div></div>
+        </div>
+        <div class="pf-inline" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line,#e0efee)">
+          <label>보는 범위 <select id="pfStatus"><option value="open">지금 소개 가능한 것 (공실·진행중)</option><option value="withRented">임차중·보류도 포함</option><option value="all">거래완료까지 전체</option></select></label>
+          <label><input id="pfUnknown" type="checkbox"> 층·평수·가격이 비어 있는 것도 보기</label>
+          <span class="sp" style="flex:1"></span>
+          <button class="pf-btn" id="pfReset" type="button">조건 초기화</button>
+        </div>
+      </section>
+
+      <div class="pf-bar"><strong id="pfCount">0건</strong><span class="pf-sub" id="pfSplit"></span><span class="sp"></span>
+        <label class="pf-sub">정렬 <select id="pfSort"><option value="floor">층 낮은 순</option><option value="area">평수 작은 순</option><option value="rent">월세 낮은 순</option><option value="sale">매매가 낮은 순</option><option value="building">건물 순</option><option value="newest">최근 순</option></select></label>
+        <button class="pf-btn" id="pfCopy" type="button">결과 복사</button></div>
+      <p class="pf-hint" id="pfHint" role="status"></p>
+      <div class="pf-head" aria-hidden="true"><span>구분</span><span>건물 · 호수</span><span>층</span><span>평수</span><span>가격</span><span>상태</span><span></span></div>
+      <div id="pfList"></div>
+      <p class="pf-empty" id="pfEmpty" hidden>조건에 맞는 매물이 없습니다. 층이나 평수 범위를 넓혀 보세요.</p>
+      <button class="pf-btn pf-more" id="pfMore" type="button" hidden>더 보기</button>
+    </main>
+  </div>
+  <script src="assets/js/property-finder.js?v=20261104-finder1"></script>
+</body>
+</html>
