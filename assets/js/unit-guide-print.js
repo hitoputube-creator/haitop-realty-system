@@ -257,7 +257,7 @@ async function savePosition(name, ho, plan, fk, pos) {
   await saveBuildingUnits(rec.local_id, rec.name || name, updated);
 }
 
-window.UnitGuide = { guideHtml, listHtml, printHtml, pickPlan, floorKeyOf, planKey, floorText, pyText, korAmt, plainWon, guideDataFromUnit };
+window.UnitGuide = { guideHtml, listHtml, printHtml, pickPosition, pickPlan, floorKeyOf, planKey, floorText, pyText, korAmt, plainWon, guideDataFromUnit };
 
 // =====================================================================
 // 건물 상세(호실 현황) 화면 전용
