@@ -77,13 +77,13 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
 @media(max-width:900px){.pf-picks{grid-template-columns:repeat(2,minmax(0,1fr))}.pf-list{height:170px}}
 .pf-printhead{display:none}
 @media print{
-  @page{size:A4 landscape;margin:10mm}
+  @page{size:A4 portrait;margin:10mm}
   html,body{background:#fff!important;color:#000!important}
   .topbar,.heading,.pf-quickcard,.pf-card,.pf-idle,.pf-bar,.pf-hint,#pfMore,.pf-go,.pf-wrap>header,#pfBarMount,.pf-searchbar,.pf-filterbar,.pf-condline,#pfStatusMsg,#pfChange,.pf-empty[hidden]{display:none!important}
   .pf-wrap{max-width:none;padding:0}
   .pf-printhead{display:block;margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid #000}.pf-printhead h2{margin:0 0 3px;font-size:19px}.pf-printhead p{margin:1px 0;font-size:11px;color:#000}
   #pfList{counter-reset:pfno}
-  .pf-head,.pf-row{display:grid!important;grid-template-columns:30px minmax(0,250px) 56px 56px 150px 190px minmax(72px,1fr)!important;gap:0!important;align-items:stretch}
+  .pf-head,.pf-row{display:grid!important;grid-template-columns:24px minmax(0,172px) 50px 44px 116px 150px minmax(54px,1fr)!important;gap:0!important;align-items:stretch}
   .pf-head{background:none!important;border:0;border-bottom:1.5px solid #000;font-size:11px;padding:0 0 2px;color:#444}
   .pf-head span{padding:4px 8px!important;border:0;font-weight:700}.pf-chk{display:none!important}.pf-head span:first-child{font-size:0}.pf-head span:first-child::after{content:"No";font-size:11px}
   .pf-head span:nth-child(8){display:none!important}
@@ -91,7 +91,7 @@ html .pf-btn.big{font-size:19px;padding:14px 56px}
   .pf-row>:nth-child(8){display:none!important}
   .pf-row>*{padding:7px 8px!important;border:0!important;margin:0!important;background:none!important;border-radius:0!important}
   .pf-row>:nth-child(1){text-align:left;font-size:0}.pf-row>:nth-child(1)::before{content:counter(pfno);font-size:11px;color:#777}.pf-row>:nth-child(1) .pf-badge{display:none}
-  .pf-place .pf-muted{display:none}.pf-place strong{font-size:12.5px}
+  .pf-place .pf-muted{display:none!important}.pf-place strong{font-size:12.5px}
   .pf-col,.pf-ho{display:flex;flex-direction:row;flex-wrap:wrap;gap:0 10px;align-items:baseline}
   .pf-col small.pf-muted{display:none}
   .pf-line{gap:4px}.pf-tag{font-size:10px;color:#333!important;min-width:0}
@@ -129,6 +129,8 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
 .pf-row{cursor:pointer}.pf-row.is-picked{background:#eaf6f3}
 .pf-selall{display:inline-flex;align-items:center;gap:6px;font-size:14px;cursor:pointer}.pf-selall input{width:18px;height:18px;accent-color:#25675f}
 .pf-btn:disabled{opacity:.45;cursor:default}
+.pf-place{min-width:0}.pf-place>*{min-width:0;max-width:100%}
+.pf-place strong,.pf-place .pf-muted{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pf-empty{padding:40px 0;text-align:center;color:var(--sub,#618684)}
 .pf-more{display:block;margin:16px auto 0}
 .pf-msg{color:var(--sub,#618684);font-size:14px;margin:8px 0}.pf-msg:empty{display:none}
@@ -163,6 +165,6 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
       </div>
     </main>
   </div>
-  <script src="assets/js/property-finder.js?v=20261104-bar5"></script>
+  <script src="assets/js/property-finder.js?v=20261104-bar6"></script>
 </body>
 </html>
