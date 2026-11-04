@@ -213,18 +213,28 @@ function sync() {
   if (l) { l.hidden = res; l.disabled = n === 0; const t = n ? '손님용 목록 인쇄 (' + n + ')' : '손님용 목록 인쇄'; if (l.textContent !== t) l.textContent = t; }
 }
 function addRowButtons() {
+  if (!document.getElementById('ugRowStyle')) {
+    const st = document.createElement('style'); st.id = 'ugRowStyle';
+    st.textContent = '.unit-select-cell .ug-row-btn{display:block;margin:6px 0 0 -2px;padding:3px 7px;font-size:.72rem;font-weight:600;line-height:1.2;background:#f3faf7;color:#1f6b57;border:1px solid #b7dccf;border-radius:6px;cursor:pointer}'
+      + '.unit-select-cell .ug-row-btn:hover{background:#e3f4ed}'
+      + '#unitsTbody td.tbl-actions .btn-unit-edit{background:#e8f3ff;color:#1d5fa8;border:1px solid #b9d5f5}'
+      + '#unitsTbody td.tbl-actions .btn-unit-edit:hover{background:#d8eaff}'
+      + '#unitsTbody td.tbl-actions .btn-unit-del{background:#fdeeee;color:#c0392b;border:1px solid #f1c3bf}'
+      + '#unitsTbody td.tbl-actions .btn-unit-del:hover{background:#fbdcdc}';
+    document.head.appendChild(st);
+  }
   if (residentialMode()) return;
   document.querySelectorAll('#unitsTbody tr').forEach(tr => {
-    const act = tr.querySelector('.tbl-actions');
-    if (!act || act.querySelector('.ug-row-btn')) return;
+    const old = tr.querySelector('.tbl-actions .ug-row-btn'); if (old) old.remove();
+    const cell = tr.querySelector('.unit-select-cell');
+    if (!cell || cell.querySelector('.ug-row-btn')) return;
     const strong = tr.children[1] && tr.children[1].querySelector('strong');
     if (!strong) return;
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'btn-unit-edit ug-row-btn'; b.textContent = '인쇄';
+    b.type = 'button'; b.className = 'ug-row-btn'; b.textContent = '인쇄';
     b.title = strong.textContent.trim() + '호 손님용 1장 인쇄';
-    b.style.cssText = 'padding:4px 7px;min-width:0;font-size:.78rem';
     b.addEventListener('click', e => { e.stopPropagation(); run([strong.textContent.trim()], 'guide', b); });
-    act.insertBefore(b, act.firstChild);
+    cell.appendChild(b);
   });
 }
 function mount() {
