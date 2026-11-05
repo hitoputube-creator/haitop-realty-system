@@ -97,20 +97,32 @@
   }
   /* 층 버튼 숫자: 기록의 층 칸이 비어 있어도 대상 호실 번호로 층을 알아내 표시 (월드타워처럼) */
   function floorOfHo(h) { return /^\d{3,4}$/.test(h) ? h.slice(0, -2) : ""; }
+  var regHo = null;
+  function readRegistered() {
+    var act = document.querySelector("#unitFloorTabs .ftab.active"), rows = document.querySelectorAll(".units-tbl tbody tr");
+    if (act && act.dataset.floor === "전체" && rows.length) {
+      var s = {}; rows.forEach(function (r) { var st = r.querySelector("td:nth-child(2) strong"); if (st) s[st.textContent.trim()] = 1; }); regHo = s;
+    }
+  }
+  /* 층 버튼 숫자 = 그 층에서 특별 조건이 걸린 호실 수 (층 칸이 비어 있어도 호실 번호로 층을 알아낸다) */
   function badges() {
     var box = $("unitFloorTabs"); if (!box || !HR) return;
+    var first = box.querySelector(".ftab[data-floor]:not([data-floor='전체'])"); if (!first || first.textContent.indexOf("동") >= 0) return;
+    readRegistered();
+    var per = {};
+    function add(f, h) { if (!f) return; if (regHo && !regHo[h]) return; (per[f] = per[f] || {})[h] = 1; }
+    recs.forEach(function (r) {
+      if (HR.status(r).key === "ended") return;
+      var rooms = HR.expandRooms(r.rooms || "").filter(Boolean);
+      if (rooms.length) rooms.forEach(function (h) { add(r.floor ? String(r.floor) : floorOfHo(h), h); });
+      else if (r.floor && regHo) Object.keys(regHo).forEach(function (h) { if (floorOfHo(h) === String(r.floor)) add(String(r.floor), h); });
+    });
     box.querySelectorAll(".ftab[data-floor]").forEach(function (b) {
-      if (b.dataset.pb) return;
-      var f = b.dataset.floor; if (!f || f === "전체" || b.textContent.indexOf("동") >= 0) return;
-      var extra = recs.filter(function (r) {
-        if (HR.status(r).key === "ended" || r.floor || !r.rooms) return false;
-        return HR.expandRooms(r.rooms).some(function (h) { return floorOfHo(h) === f; });
-      }).length;
-      if (!extra) return;
-      b.dataset.pb = "1";
-      var i = b.querySelector(".rec-n");
-      if (i) i.textContent = String((parseInt(i.textContent, 10) || 0) + extra);
-      else { i = document.createElement("i"); i.className = "rec-n"; i.textContent = String(extra); b.appendChild(i); }
+      var f = b.dataset.floor; if (!f || f === "전체") return;
+      var n = per[f] ? Object.keys(per[f]).length : 0, i = b.querySelector(".rec-n");
+      if (!n) { if (i) i.remove(); return; }
+      if (!i) { i = document.createElement("i"); i.className = "rec-n"; b.appendChild(i); }
+      i.textContent = String(n);
     });
   }
   function floorBadges() { load(false).then(badges).catch(function () {}); }
