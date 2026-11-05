@@ -242,3 +242,6 @@ html body .wd-sticker-bar .wd-sticker-btn:nth-child(1).active{border-color:#2547
 .auth-overlay .auth-title{color:#254767!important}
 .auth-overlay .auth-brand p{color:#51606f!important}
 .auth-overlay .auth-logout-btn{color:#fff!important;background:#254767!important;border-color:#254767!important;padding:9px 18px!important;font-size:.9rem!important;text-decoration:none!important}
+
+/* 주간 업무일지: 창이 좁아도 일주일(7칸)을 한 줄에 */
+@media (min-width:901px){.wd-week-grid{grid-template-columns:repeat(7,minmax(0,1fr)) !important;gap:8px !important}}
