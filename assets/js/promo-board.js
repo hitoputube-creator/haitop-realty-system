@@ -1,0 +1,163 @@
+/* 매물관리 화면용: 전체 건물 특별 조건·홍보물 비교 보드
+ * 매물관리 메인(property-main.html)과 매물목록(properties.html)에 자동으로 붙는다.
+ * 데이터는 건물 기록 모듈(building-records.js)과 같은 것을 읽기만 한다(저장·수정 없음).
+ */
+(function () {
+  if (window.__promoBoardLoaded) return; window.__promoBoardLoaded = true;
+  var LS_OPEN = "hitop_promo_board_open";
+  var state = { recs: [], urlMap: {}, byId: {}, kind: "전체", sort: "due", q: "", limit: 8 };
+  var HR = null;
+
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+  /* "6억 8,400만원", "9억 7천만원", "38억원" -> 만원 단위 숫자 */
+  function toMan(str) {
+    var s = String(str || "").replace(/\[[^\]]*\]|\([^)]*\)/g, "").replace(/,/g, "");
+    if (!s.trim()) return null;
+    var total = 0, hit = false, m;
+    if ((m = s.match(/(\d+(?:\.\d+)?)\s*억/))) { total += parseFloat(m[1]) * 10000; hit = true; }
+    if ((m = s.match(/(\d+)\s*천\s*만?/))) { total += parseInt(m[1], 10) * 1000; hit = true; }
+    if ((m = s.match(/(\d+)\s*백\s*만?/))) { total += parseInt(m[1], 10) * 100; hit = true; }
+    if ((m = s.replace(/\d+\s*[천백]\s*만?/g, "").match(/(\d+)\s*만/))) { total += parseInt(m[1], 10); hit = true; }
+    if (!hit && (m = s.match(/^\s*(\d+)\s*$/))) { total = parseInt(m[1], 10); hit = true; }
+    return hit && total > 0 ? total : null;
+  }
+  function discount(r) {
+    var dv = derive(r), p = toMan(dv.price), o = toMan(dv.orig);
+    if (p && o && o > p) return Math.round((1 - p / o) * 1000) / 10;
+    return null;
+  }
+  var AMT = "((?:\\d[\\d,\\.]*\\s*[억천백만]+\\s*)+원?)";
+  function pick(text, label) { var m = String(text || "").match(new RegExp(label + "\\s*:?\\s*" + AMT)); return m ? m[1].trim() : ""; }
+  function derive(r) {
+    if (r._d) return r._d;
+    var t = r.text || "", y = t.match(/수익률\s*(\d+(?:\.\d+)?)\s*%/);
+    r._d = { price: r.price || pick(t, "특가\\s*분양가") || pick(t, "분양가"), orig: r.orig || pick(t, "원분양가"), deposit: r.deposit || pick(t, "보증금"), rent: r.rent || pick(t, "월세"), yld: y ? y[1] + "%" : "" };
+    return r._d;
+  }
+  function subOf(r) { return (r.floor ? r.floor + (r.fu || "층") : "") + (r.rooms ? (r.floor ? " " : "") + r.rooms + (/호/.test(r.rooms) ? "" : "호") : ""); }
+
+  function style() {
+    if (document.getElementById("pbStyle")) return;
+    var st = document.createElement("style"); st.id = "pbStyle";
+    st.textContent = [
+      ".pb{background:#fff;border:1px solid #bfe6e3;border-left:6px solid #e8a317;border-radius:14px;padding:14px 16px;margin:14px 0;color:#17363a;font-size:13px}",
+      ".pb-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px}",
+      ".pb-head b{font-size:16px}.pb-sub{color:#667b79}.pb-sp{flex:1}",
+      ".pb-btn{border:1px solid #1b8a8a;color:#1b8a8a;border-radius:20px;padding:3px 12px;background:#fff;font:inherit;font-size:12px;cursor:pointer;text-decoration:none;display:inline-block;white-space:nowrap}",
+      ".pb-btn.on{background:#1b8a8a;color:#fff}",
+      ".pb-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 8px}",
+      ".pb-in{border:1px solid #cdddde;border-radius:8px;padding:6px 10px;width:260px;max-width:100%;font:inherit;font-size:13px;box-sizing:border-box}",
+      ".pb-wrap{overflow-x:auto}.pb table{width:100%;border-collapse:collapse;min-width:760px}",
+      ".pb th{background:#e8f6f5;text-align:left;padding:7px 8px;font-size:12px;white-space:nowrap}",
+      ".pb td{padding:8px;border-top:1px solid #e3eeee;vertical-align:top}",
+      ".pb tbody tr{cursor:pointer}.pb tbody tr:hover{background:#f4fbfa}",
+      ".pb td small{display:block;color:#7a8b89;margin-top:2px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+      ".pb-tag{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;background:#e3f4ef;color:#1a6b55;white-space:nowrap}",
+      ".pb-fee{background:#fff1c2;color:#8a5a00;font-weight:700}.pb-soon{background:#ffe0e0;color:#b00020;font-weight:700}",
+      ".pb-best{color:#d14a00;font-weight:700}.pb-orig{color:#8a9a98;text-decoration:line-through;font-size:12px}",
+      ".pb-empty{padding:14px 6px;color:#667b79}",
+      ".pb-file{color:#1b8a8a;text-decoration:none;display:block;white-space:nowrap}"
+    ].join("");
+    document.head.appendChild(st);
+  }
+
+  function visible() {
+    var q = state.q.trim().toLowerCase();
+    var list = state.recs.filter(function (r) {
+      if (HR.status(r).key === "ended") return false;
+      if (state.kind !== "전체" && r.kind !== state.kind) return false;
+      if (q) {
+        var b = state.byId[r._buildingId];
+        var hay = [b ? b.name : "", subOf(r), r.kind, r.text, r.fee, derive(r).price].join(" ").toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    if (state.sort === "disc") {
+      list.sort(function (a, b) { var da = discount(a), db = discount(b); return (db == null ? -1 : db) - (da == null ? -1 : da); });
+    } else {
+      list = HR.sortRecords(list, state.sort === "fee" ? "fee" : state.sort === "latest" ? "latest" : "due");
+    }
+    return list;
+  }
+
+  function rowHtml(r) {
+    var b = state.byId[r._buildingId], st = HR.status(r), d = discount(r), dv = derive(r);
+    var link = b ? OfficeConfig.urlFor("building-detail.html?id=" + encodeURIComponent(b.id)) : "";
+    var firstLine = String(r.text || "").split(/\n/).map(function (x) { return x.trim(); }).filter(Boolean).join(" · ");
+    var price = dv.price ? esc(dv.price) + (d != null ? ' <span class="pb-best">(-' + d + "%)</span>" : "") + (dv.orig ? '<br><span class="pb-orig">' + esc(dv.orig) + "</span>" : "") : (dv.orig ? "원분양가 " + esc(dv.orig) : "-");
+    var dr = [dv.deposit, dv.rent].filter(Boolean).map(esc);
+    var dueCell = st.key === "soon" ? '<span class="pb-tag pb-soon">' + esc(st.label) + "</span>" : esc(st.label);
+    var files = r.files.map(function (f) {
+      var u = state.urlMap[f.url] || f.url;
+      return '<a class="pb-file" href="' + esc(u) + '" target="_blank" rel="noopener" data-pb-file="1">' + (HRisImg(f) ? "🖼 " : "📄 ") + esc(String(f.name || "파일").slice(0, 14)) + "</a>";
+    }).join("");
+    return '<tr data-link="' + esc(link) + '"><td><b>' + esc(b ? b.name : "(삭제된 건물)") + "</b></td>"
+      + "<td>" + esc(subOf(r) || "건물 전체") + (firstLine ? "<small>" + esc(firstLine) + "</small>" : "") + "</td>"
+      + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span></td>"
+      + "<td>" + (r.fee ? '<span class="pb-tag pb-fee">' + esc(r.fee) + "</span>" : "-") + "</td>"
+      + "<td>" + price + "</td>"
+      + "<td>" + (dr.length ? dr.join(" / ") : "-") + "</td><td>" + (dv.yld ? esc(dv.yld) : "-") + "</td>"
+      + "<td>" + dueCell + "</td><td>" + (files || "-") + "</td></tr>";
+  }
+  function HRisImg(f) { return /\.(png|jpe?g|gif|webp|bmp|heic)(\?|$)/i.test(f.name || "") || /\/image\/upload\//.test(f.url || ""); }
+
+  function render() {
+    var root = document.getElementById("promoBoard"); if (!root) return;
+    var open = localStorage.getItem(LS_OPEN) !== "0";
+    var active = state.recs.filter(function (r) { return HR.status(r).key !== "ended"; });
+    var nSoon = active.filter(function (r) { return HR.status(r).key === "soon"; }).length;
+    var head = '<div class="pb-head"><span style="font-size:20px">📌</span><b>전체 건물 특별 조건 · 홍보물 비교</b>'
+      + '<span class="pb-sub">진행 중 ' + active.length + "건 · 마감 임박 " + nSoon + "건</span><span class=\"pb-sp\"></span>"
+      + '<a class="pb-btn" href="' + esc(OfficeConfig.urlFor("special-promos.html")) + '">전체 페이지 ›</a>'
+      + '<button type="button" class="pb-btn" id="pbToggle">' + (open ? "접기 ▴" : "펼치기 ▾") + "</button></div>";
+    if (!open) { root.innerHTML = head; document.getElementById("pbToggle").onclick = function () { localStorage.setItem(LS_OPEN, "1"); render(); }; return; }
+    var chip = function (label, on, attr, val) { return '<button type="button" class="pb-btn' + (on ? " on" : "") + '" data-' + attr + '="' + esc(val) + '">' + esc(label) + "</button>"; };
+    var bar = '<div class="pb-bar"><input class="pb-in" id="pbQ" placeholder="🔍 건물명·호실·내용 검색 (예: 월드타워, 수수료, 미용실)" value="' + esc(state.q) + '">'
+      + ["전체"].concat(HR.KINDS).map(function (k) { return chip(k, state.kind === k, "kind", k); }).join("")
+      + '<span class="pb-sp"></span><span class="pb-sub">정렬:</span>'
+      + [["due", "마감 임박순"], ["fee", "수수료 높은순"], ["disc", "할인율 큰순"], ["latest", "최신순"]].map(function (x) { return chip(x[1], state.sort === x[0], "sort", x[0]); }).join("") + "</div>";
+    var list = visible(), shown = list.slice(0, state.limit);
+    var body;
+    if (!list.length) body = '<div class="pb-empty">' + (active.length ? "조건에 맞는 기록이 없어요." : "진행 중인 특별 조건이 아직 없어요.") + "</div>";
+    else body = '<div class="pb-wrap"><table><thead><tr><th>건물</th><th>대상</th><th>종류</th><th>수수료</th><th>특가 분양가 / 할인</th><th>보증금 / 월세</th><th>수익률</th><th>마감</th><th>자료</th></tr></thead><tbody>'
+      + shown.map(rowHtml).join("") + "</tbody></table></div>"
+      + (list.length > shown.length ? '<div style="text-align:center;margin-top:8px"><button type="button" class="pb-btn" id="pbMore">더 보기 (' + (list.length - shown.length) + "건 더)</button></div>" : "");
+    root.innerHTML = head + bar + body;
+    wire(root);
+  }
+
+  function wire(root) {
+    var q = root.querySelector("#pbQ");
+    q.addEventListener("input", function () { state.q = q.value; state.limit = 8; var pos = q.selectionStart; render(); var n = document.getElementById("pbQ"); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} });
+    root.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { state.kind = b.dataset.kind; state.limit = 8; render(); }; });
+    root.querySelectorAll("[data-sort]").forEach(function (b) { b.onclick = function () { state.sort = b.dataset.sort; render(); }; });
+    var more = root.querySelector("#pbMore"); if (more) more.onclick = function () { state.limit += 20; render(); };
+    document.getElementById("pbToggle").onclick = function () { localStorage.setItem(LS_OPEN, "0"); render(); };
+    root.querySelectorAll("tbody tr").forEach(function (tr) {
+      tr.addEventListener("click", function (e) { if (e.target.closest("[data-pb-file]")) return; if (tr.dataset.link) location.href = tr.dataset.link; });
+    });
+  }
+
+  function loadScript(src) {
+    return new Promise(function (ok, fail) { var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = fail; document.head.appendChild(s); });
+  }
+
+  async function init() {
+    var anchor = document.getElementById("globalPropertySearch");
+    if (!anchor) return;
+    try {
+      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261103-records5");
+      HR = window.HitopRecords;
+      var res = await Promise.all([HR.fetchRecords(null), getDriveResources()]);
+      state.recs = res[0].records; state.urlMap = res[0].urlMap;
+      (res[1] || []).forEach(function (b) { if (b && b.id && b.name) state.byId[b.id] = { id: b.id, name: b.name }; });
+    } catch (e) { console.warn("[홍보 보드] 불러오기 실패", e); return; }
+    style();
+    var root = document.createElement("section"); root.id = "promoBoard"; root.className = "pb no-print";
+    anchor.parentNode.insertBefore(root, anchor.nextSibling);
+    render();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
