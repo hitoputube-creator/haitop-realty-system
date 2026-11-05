@@ -156,7 +156,10 @@
     } catch (e) { console.warn("[홍보 보드] 불러오기 실패", e); return; }
     style();
     var root = document.createElement("section"); root.id = "promoBoard"; root.className = "pb no-print";
-    anchor.parentNode.insertBefore(root, anchor.nextSibling);
+    var links = document.querySelector("nav.secondary-links"), tabP = document.getElementById("tabProperty");
+    if (links) links.parentNode.insertBefore(root, links);
+    else if (tabP) tabP.parentNode.insertBefore(root, tabP.nextSibling);
+    else anchor.parentNode.insertBefore(root, anchor.nextSibling);
     render();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
