@@ -64,6 +64,8 @@
       ".pb-new{background:#1b8a8a;color:#fff;border-radius:8px;font-size:10px;padding:0 5px;margin-left:4px;vertical-align:middle}",
       ".pb-disc{background:#ffe6d6;color:#d14a00;font-weight:700}",
       ".pb-sec{font-weight:700;margin:8px 0 2px}.pb-sec span{font-weight:400;color:#667b79}",
+      ".pb-pin{display:inline-block;background:#fff1c2;color:#8a5a00;border:1px solid #e8a317;border-radius:10px;padding:0 8px;font-size:12px;font-weight:700;margin-left:6px;cursor:pointer;white-space:nowrap}",
+      ".pb-pin.soon{background:#ffe0e0;color:#b00020;border-color:#e57373}",
       ".pb-file{color:#1b8a8a;text-decoration:none;display:block;white-space:nowrap}"
     ].join("");
     document.head.appendChild(st);
@@ -182,6 +184,55 @@
     });
   }
 
+  /* ===== 매물목록: 특별 조건 진행 중인 호실 매물에 📌 자동 표시 ===== */
+  function listingHits(l) {
+    if (!l || !l.resource_id) return [];
+    var rooms = []; if (l.ho) rooms.push(String(l.ho));
+    var bd = l.bundle_details || l.bundleDetails; if (bd && Array.isArray(bd.rooms)) bd.rooms.forEach(function (x) { rooms.push(String(x)); });
+    if (!rooms.length) return [];
+    var dongs = [l.apartmentDong, l.dong, l["동"]].filter(Boolean).map(String);
+    return state.recs.filter(function (r) {
+      return r._buildingId === l.resource_id && HR.status(r).key !== "ended" && rooms.some(function (h) { return HR.roomsInclude(r, h); })
+        && (!(r.fu === "동") || !r.floor || dongs.indexOf(String(r.floor)) >= 0);
+    });
+  }
+  function pinLabel(hits) {
+    var soon = hits.filter(function (r) { return HR.status(r).key === "soon"; })[0];
+    if (soon) return { t: "📌 " + HR.status(soon).label, soon: true };
+    var d = 0, f = 0; hits.forEach(function (r) { d = Math.max(d, discount(r) || 0); f = Math.max(f, parseFloat(r.fee) || 0); });
+    return { t: d ? "📌 특가 -" + d + "%" : f ? "📌 수수료 " + f + "%" : "📌 특별", soon: false };
+  }
+  function openPinModal(hits) {
+    HR.ensureStyle();
+    var ov = document.createElement("div"); ov.className = "hr-overlay";
+    ov.innerHTML = '<div class="hr-modal"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:16px">📌 특별 조건 · 홍보</b><button type="button" class="hr-btn" id="pbPinClose">닫기</button></div><div class="hr-grid" style="grid-template-columns:1fr">'
+      + HR.sortRecords(hits).map(function (r) { return HR.cardHtml(r, state.urlMap, { readonly: true }); }).join("") + "</div></div>";
+    document.body.appendChild(ov);
+    ov.addEventListener("click", function (e) { if (e.target === ov || e.target.id === "pbPinClose") ov.remove(); });
+  }
+  function markListings() {
+    if (typeof allListings === "undefined" || !state.recs.length) return;
+    var map = {}; allListings.forEach(function (l) { map[l.id] = l; });
+    document.querySelectorAll("#listingContainer input[data-sel]").forEach(function (inp) {
+      var card = inp.closest(".listing-card"); if (!card) return;
+      var cell = card.querySelector(".listing-cell-name"); if (!cell) return;
+      var old = cell.querySelector(".pb-pin"), hits = listingHits(map[inp.getAttribute("data-sel")]);
+      if (!hits.length) { if (old) old.remove(); return; }
+      var lab = pinLabel(hits);
+      if (old && old.textContent === lab.t) return;
+      if (old) old.remove();
+      var b = document.createElement("span"); b.className = "pb-pin" + (lab.soon ? " soon" : ""); b.textContent = lab.t; b.title = "누르면 특별 조건 보기";
+      b.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); openPinModal(hits); });
+      cell.appendChild(b);
+    });
+  }
+  function watchListings() {
+    var lc = document.getElementById("listingContainer"); if (!lc) return;
+    var t = null; var run = function () { clearTimeout(t); t = setTimeout(function () { try { markListings(); } catch (e) { console.warn(e); } }, 150); };
+    new MutationObserver(run).observe(lc, { childList: true, subtree: true }); run();
+  }
+  window.__pbDebug = { state: state, mark: function () { return markListings(); } };
+
   function loadScript(src) {
     return new Promise(function (ok, fail) { var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = fail; document.head.appendChild(s); });
   }
@@ -203,6 +254,7 @@
     else if (tabP) tabP.parentNode.insertBefore(root, tabP.nextSibling);
     else anchor.parentNode.insertBefore(root, anchor.nextSibling);
     render();
+    watchListings();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
