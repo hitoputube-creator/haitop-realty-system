@@ -95,12 +95,39 @@
     p.querySelectorAll("[data-up-end]").forEach(function (b) { b.onclick = function () { endRec(hits[+b.dataset.upEnd]); }; });
     p.querySelector("[data-up-add]").onclick = openAdd;
   }
+  /* 층 버튼 숫자: 기록의 층 칸이 비어 있어도 대상 호실 번호로 층을 알아내 표시 (월드타워처럼) */
+  function floorOfHo(h) { return /^\d{3,4}$/.test(h) ? h.slice(0, -2) : ""; }
+  function badges() {
+    var box = $("unitFloorTabs"); if (!box || !HR) return;
+    box.querySelectorAll(".ftab[data-floor]").forEach(function (b) {
+      if (b.dataset.pb) return;
+      var f = b.dataset.floor; if (!f || f === "전체" || b.textContent.indexOf("동") >= 0) return;
+      var extra = recs.filter(function (r) {
+        if (HR.status(r).key === "ended" || r.floor || !r.rooms) return false;
+        return HR.expandRooms(r.rooms).some(function (h) { return floorOfHo(h) === f; });
+      }).length;
+      if (!extra) return;
+      b.dataset.pb = "1";
+      var i = b.querySelector(".rec-n");
+      if (i) i.textContent = String((parseInt(i.textContent, 10) || 0) + extra);
+      else { i = document.createElement("i"); i.className = "rec-n"; i.textContent = String(extra); b.appendChild(i); }
+    });
+  }
+  function floorBadges() { load(false).then(badges).catch(function () {}); }
+  function watchFloors() {
+    var tries = 0, iv = setInterval(function () {
+      var box = $("unitFloorTabs");
+      if (box) { clearInterval(iv); new MutationObserver(floorBadges).observe(box, { childList: true }); floorBadges(); }
+      else if (++tries > 40) clearInterval(iv);
+    }, 500);
+  }
   function schedule() { clearTimeout(timer); timer = setTimeout(refresh, 250); }
   function init() {
     var m = $("unitModal"); if (!m) return;
     new MutationObserver(function () { if (m.classList.contains("open")) schedule(); }).observe(m, { attributes: true, attributeFilter: ["class"] });
     document.addEventListener("input", function (e) { if (e.target && e.target.id === "u_호수") schedule(); });
     if (m.classList.contains("open")) schedule();
+    watchFloors();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
   window.__upDebug = { refresh: refresh };
