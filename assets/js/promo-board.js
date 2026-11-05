@@ -5,7 +5,7 @@
 (function () {
   if (window.__promoBoardLoaded) return; window.__promoBoardLoaded = true;
   var LS_OPEN = "hitop_promo_board_open";
-  var state = { recs: [], urlMap: {}, byId: {}, kind: "전체", sort: "due", q: "", limit: 8 };
+  var state = { recs: [], urlMap: {}, byId: {}, kind: "전체", bsel: "", sort: "due", q: "", limit: 8 };
   var HR = null;
 
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
@@ -57,6 +57,13 @@
       ".pb-fee{background:#fff1c2;color:#8a5a00;font-weight:700}.pb-soon{background:#ffe0e0;color:#b00020;font-weight:700}",
       ".pb-best{color:#d14a00;font-weight:700}.pb-orig{color:#8a9a98;text-decoration:line-through;font-size:12px}",
       ".pb-empty{padding:14px 6px;color:#667b79}",
+      ".pb-bs{display:flex;gap:10px;overflow-x:auto;margin:8px 0 12px;padding-bottom:4px}",
+      ".pb-b{min-width:210px;border:1px solid #dde;border-radius:12px;padding:10px 12px;background:#fafefe;cursor:pointer}",
+      ".pb-b:hover{background:#f1fbfa}.pb-b.sel{border:2px solid #1b8a8a;background:#eefaf9;padding:9px 11px}",
+      ".pb-b .n{font-weight:700;font-size:14px}.pb-b .m{color:#7a8b89;margin:2px 0 6px;font-size:12px}",
+      ".pb-new{background:#1b8a8a;color:#fff;border-radius:8px;font-size:10px;padding:0 5px;margin-left:4px;vertical-align:middle}",
+      ".pb-disc{background:#ffe6d6;color:#d14a00;font-weight:700}",
+      ".pb-sec{font-weight:700;margin:8px 0 2px}.pb-sec span{font-weight:400;color:#667b79}",
       ".pb-file{color:#1b8a8a;text-decoration:none;display:block;white-space:nowrap}"
     ].join("");
     document.head.appendChild(st);
@@ -66,6 +73,7 @@
     var q = state.q.trim().toLowerCase();
     var list = state.recs.filter(function (r) {
       if (HR.status(r).key === "ended") return false;
+      if (state.bsel && r._buildingId !== state.bsel) return false;
       if (state.kind !== "전체" && r.kind !== state.kind) return false;
       if (q) {
         var b = state.byId[r._buildingId];
@@ -82,6 +90,38 @@
     return list;
   }
 
+  function dAgo(d) { return Math.round((Date.parse(HR.today()) - Date.parse(String(d).slice(0, 10))) / 86400000); }
+  function mdOf(d) { return String(d).slice(5, 10).replace("-", "."); }
+  function buildingCards() {
+    var by = {};
+    state.recs.forEach(function (r) {
+      if (HR.status(r).key === "ended") return;
+      var d = String(r.date || r._created || "").slice(0, 10); if (!d) return;
+      if (dAgo(d) > 30) return;
+      var o = by[r._buildingId] || (by[r._buildingId] = { id: r._buildingId, last: "", n: 0, fee: 0, disc: 0, due: "", soon: false });
+      o.n++; if (d > o.last) o.last = d;
+      var f = parseFloat(r.fee) || 0; if (f > o.fee) o.fee = f;
+      var dc = discount(r) || 0; if (dc > o.disc) o.disc = dc;
+      if (r.due && (!o.due || r.due < o.due)) o.due = r.due;
+    });
+    var list = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return a.last < b.last ? 1 : a.last > b.last ? -1 : 0; });
+    return list;
+  }
+  function cardsHtml() {
+    var list = buildingCards();
+    var html = '<div class="pb-sec">🏢 최근 소식이 있는 건물 <span>· 최근 30일 안에 새 기록이 올라온 건물, 최근순 · 누르면 아래 표가 그 건물만 보여요</span></div>';
+    if (!list.length) return html + '<div class="pb-empty">최근 30일 안에 올라온 기록이 없어요.</div>';
+    html += '<div class="pb-bs">' + list.map(function (o) {
+      var b = state.byId[o.id], tags = "";
+      if (o.fee) tags += '<span class="pb-tag pb-fee">수수료 ' + o.fee + "%</span> ";
+      if (o.disc) tags += '<span class="pb-tag pb-disc">최대 -' + o.disc + "%</span> ";
+      if (o.due) { var dd = Math.round((Date.parse(o.due) - Date.parse(HR.today())) / 86400000); tags += dd >= 0 && dd <= 7 ? '<span class="pb-tag pb-soon">D-' + dd + "</span>" : '<span class="pb-tag">~' + mdOf(o.due) + "</span>"; }
+      return '<div class="pb-b' + (state.bsel === o.id ? " sel" : "") + '" data-bsel="' + esc(o.id) + '"><div class="n">' + esc(b ? b.name : "(삭제된 건물)") + (dAgo(o.last) <= 7 ? '<span class="pb-new">NEW</span>' : "") + '</div><div class="m">최근 ' + mdOf(o.last) + " · 기록 " + o.n + "건</div>" + tags + "</div>";
+    }).join("") + "</div>";
+    var sb = state.bsel && state.byId[state.bsel];
+    html += '<div class="pb-sec">📋 기록 비교 표' + (sb ? ' <span>· ' + esc(sb.name) + '만 보는 중 <button type="button" class="pb-btn" id="pbAllB">전체 건물 보기</button></span>' : "") + "</div>";
+    return html;
+  }
   function rowHtml(r) {
     var b = state.byId[r._buildingId], st = HR.status(r), d = discount(r), dv = derive(r);
     var link = b ? OfficeConfig.urlFor("building-detail.html?id=" + encodeURIComponent(b.id)) : "";
@@ -124,7 +164,7 @@
     else body = '<div class="pb-wrap"><table><thead><tr><th>건물</th><th>대상</th><th>종류</th><th>수수료</th><th>특가 분양가 / 할인</th><th>보증금 / 월세</th><th>수익률</th><th>마감</th><th>자료</th></tr></thead><tbody>'
       + shown.map(rowHtml).join("") + "</tbody></table></div>"
       + (list.length > shown.length ? '<div style="text-align:center;margin-top:8px"><button type="button" class="pb-btn" id="pbMore">더 보기 (' + (list.length - shown.length) + "건 더)</button></div>" : "");
-    root.innerHTML = head + bar + body;
+    root.innerHTML = head + cardsHtml() + bar + body;
     wire(root);
   }
 
@@ -133,6 +173,8 @@
     q.addEventListener("input", function () { state.q = q.value; state.limit = 8; var pos = q.selectionStart; render(); var n = document.getElementById("pbQ"); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} });
     root.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { state.kind = b.dataset.kind; state.limit = 8; render(); }; });
     root.querySelectorAll("[data-sort]").forEach(function (b) { b.onclick = function () { state.sort = b.dataset.sort; render(); }; });
+    root.querySelectorAll("[data-bsel]").forEach(function (c) { c.onclick = function () { state.bsel = state.bsel === c.dataset.bsel ? "" : c.dataset.bsel; state.limit = 8; render(); }; });
+    var allB = root.querySelector("#pbAllB"); if (allB) allB.onclick = function () { state.bsel = ""; render(); };
     var more = root.querySelector("#pbMore"); if (more) more.onclick = function () { state.limit += 20; render(); };
     document.getElementById("pbToggle").onclick = function () { localStorage.setItem(LS_OPEN, "0"); render(); };
     root.querySelectorAll("tbody tr").forEach(function (tr) {
