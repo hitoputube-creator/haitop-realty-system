@@ -266,6 +266,25 @@ input[type=file].hidden-file { display:none; }
   .page-footer { display:none; }
   #photo-area, #contact-area, #info-table-area, #summary-area, #title-area, #desc-area { page-break-inside:avoid; }
 }
+
+/* ── 인쇄 잉크 절약: 진한 네이비 대신 연한 파랑 ── */
+#page-header { background:#eaf1fa !important; border-bottom:1px solid #c9d8ec; }
+.ph-logo { background:#fff !important; border:1.5px solid #c9a84c !important; color:#8a6a14 !important; }
+.ph-name { color:#1f3a63 !important; }
+.ph-doc { color:#8a6a14 !important; }
+.ph-date { color:#5b6f8c !important; }
+.ph-date strong { color:#1f3a63 !important; }
+.sum-card { background:#f3f7fc !important; border:1px solid #c9d8ec !important; box-shadow:none !important; }
+.sum-label { color:#5b6f8c !important; }
+.sum-value { color:#1f3a63 !important; }
+#sum-price { white-space:pre-line; }
+#contact-area { background:#eef3fa !important; border:1px solid #d3deee; }
+.contact-head { border-bottom:1px solid rgba(31,58,99,.18) !important; }
+.contact-company { color:#1f3a63 !important; }
+.contact-phone { color:#1f3a63 !important; }
+.contact-line { color:#3d4f6b !important; }
+.contact-label { color:#6b7f9c !important; }
+
 </style>
 </head>
 <body>
@@ -775,6 +794,14 @@ input[type=file].hidden-file { display:none; }
     const presale = fmtWonText(item.presalePrice);
     const deposit = fmtWonText(item.deposit);
     const rent = fmtWonText(item.monthlyRent);
+    /* 매매·월세 / 매매·전세 / 매매·임대 복합 거래: 매매가와 보증금·월세를 함께 표시 */
+    if (deal && deal.indexOf('매매') === 0 && /[·\/,+]/.test(deal) && (deposit || rent)) {
+      const head = sale ? '매매 ' + sale : '';
+      const tail = [];
+      if (deposit) tail.push((deal.indexOf('전세') >= 0 ? '전세 ' : '보증금 ') + deposit);
+      if (rent) tail.push('월세 ' + rent);
+      return [head, tail.join(' / ')].filter(Boolean).join(' / ');
+    }
     if ((deal === '월세' || deal === '임대' || deal === '단기임대') && (deposit || rent)) {
       if (deposit && rent) return deposit + ' / ' + rent;
       return deposit || rent;
@@ -882,7 +909,7 @@ input[type=file].hidden-file { display:none; }
     /* 가격 */
     const price = getPriceDisplay();
     const priceEl = document.getElementById('sum-price');
-    priceEl.textContent = price || '미입력';
+    priceEl.textContent = price ? (price.indexOf('매매 ') === 0 ? price.replace(' / ', '\n') : price) : '미입력';
     priceEl.classList.toggle('sm', price.length > 8);
 
     /* 전용면적 */
