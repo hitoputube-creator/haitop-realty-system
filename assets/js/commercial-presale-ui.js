@@ -36,7 +36,7 @@
    Object.entries(positions).forEach(([id,[row,col]])=>{const field=get(id)?.closest('.field');if(!field)return;field.classList.remove('presale-hidden');field.style.gridRow=enabled?String(row):'';field.style.gridColumn=enabled?String(col):'';if(id.startsWith('original'))field.hidden=!enabled;});
    const labels={presalePrice:enabled?'기존 분양가':'분양가',salePrice:enabled?'현재 매매가':'매매가',deposit:enabled?'현재 보증금':'보증금',monthlyRent:enabled?'현재 월세':'월세'};
    Object.entries(labels).forEach(([id,label])=>{const field=get(id)?.closest('.field');if(field)field.querySelector('label').textContent=label;});
-   ['publicAddress','title','managementFee','premium'].forEach(id=>{const field=get(id)?.closest('.field');if(field)field.classList.toggle('presale-hidden',enabled);});
+   ['publicAddress','managementFee','premium'].forEach(id=>{const field=get(id)?.closest('.field');if(field)field.classList.toggle('presale-hidden',enabled);});
   }
   const formatOriginal=id=>{const input=get(id),preview=get(id+'_preview');const digits=input.value.replace(/[^\d]/g,'');input.value=digits?Number(digits).toLocaleString('ko-KR'):'';if(preview){const n=Number(digits);preview.textContent=digits?new Intl.NumberFormat('ko-KR').format(n)+'원':'';}};
   ['originalDeposit','originalMonthlyRent'].forEach(id=>get(id).addEventListener('input',()=>formatOriginal(id)));
