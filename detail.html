@@ -141,7 +141,7 @@
 
 <script src="assets/js/building-records.js?v=20261103-records5"></script>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261019-status-alignment"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261106-title-visible"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -673,7 +673,7 @@ function closeHomepageTab(tab) {
     const grid = document.getElementById("edit_basicInfoGrid");
     const row = document.getElementById("editHomepageBasicFields");
     if (!field || !grid || !row) return;
-    if (isApartment) {
+    if (true) { // 제목은 모든 매물에서 기본정보 영역에 항상 보인다
       field.style.gridColumn = "1 / -1";
       if (field.parentElement !== grid) grid.appendChild(field);
     } else if (field.parentElement !== row) {
