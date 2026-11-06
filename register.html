@@ -826,6 +826,33 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     return _importedImageUrls.length + _selectedImages.length;
   }
 
+  // 업무일지 사진은 1시간짜리 임시 링크라서, 저장 전에 영구 저장소(listing-images)로 복사해 영구 주소만 저장한다.
+  async function makeImportedImagesPermanent(listingId) {
+    if (OfficeConfig.id === 'ktop') return;
+    const marker = '/storage/v1/object/sign/';
+    for (let i = 0; i < _importedImageUrls.length; i++) {
+      const url = String(_importedImageUrls[i] || '');
+      const at = url.indexOf(marker);
+      if (at < 0) continue;
+      try {
+        const rest = decodeURIComponent(url.slice(at + marker.length).split('?')[0]);
+        const slash = rest.indexOf('/');
+        const bucket = rest.slice(0, slash);
+        const objectPath = rest.slice(slash + 1);
+        const { data, error } = await hitopAuthClient.storage.from(bucket).createSignedUrl(objectPath, 300);
+        if (error || !data || !data.signedUrl) throw new Error((error && error.message) || '링크 생성 실패');
+        const res = await fetch(data.signedUrl);
+        if (!res.ok) throw new Error('사진 내려받기 실패 (' + res.status + ')');
+        const blob = await res.blob();
+        const name = objectPath.split('/').pop() || 'photo.jpg';
+        const file = new File([blob], name, { type: blob.type || 'image/jpeg' });
+        _importedImageUrls[i] = await uploadListingImage(file, listingId);
+      } catch (e) {
+        throw new Error('업무일지 사진을 영구 저장소에 복사하지 못했습니다: ' + (e.message || e));
+      }
+    }
+  }
+
   function uniqueRegisterUrls(urls) {
     const seen = new Set();
     return (Array.isArray(urls) ? urls : [])
@@ -1160,6 +1187,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
 
     try {
       await assertUniqueApartmentUnit(item);
+      await makeImportedImagesPermanent(item.id);
       if (_selectedImages.length) {
         const urls = await uploadListingImages(_selectedImages, item.id);
         const importedUrls = uniqueRegisterUrls(_importedImageUrls);
