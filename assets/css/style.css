@@ -695,7 +695,7 @@ textarea { resize: vertical; min-height: 120px; }
    2쌍/1쌍짜리 행은 마지막 값 칸만 남는 열까지 span해서 다음 라벨 시작 위치를 지킨다. */
 .listing-info-table {
   display: grid;
-  grid-template-columns: repeat(3, 92px minmax(0, 1fr));
+  grid-template-columns: repeat(3, 108px minmax(0, 1fr));
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   overflow: hidden;
