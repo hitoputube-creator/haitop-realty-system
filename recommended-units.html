@@ -177,6 +177,44 @@
       .p-note { margin-top:10px; padding-top:8px; border-top:1px solid #b9c2d3; font-size:8.5pt; color:#444; line-height:1.55; }
       .p-foot { margin-top:6px; text-align:center; font-size:9.5pt; font-weight:700; color:#1a2f55; }
     }
+  
+/* ── 화면 색: 다른 매물관리 화면과 같은 밝은 배경 (인쇄물은 그대로) ── */
+@media screen {
+  :root { --bg:#f3f9f9; --card:#ffffff; --line:#d9ebe9; --gold:#25675f; --text:#234c49; --muted:#618684; --green:#177a55; }
+  body { background:var(--bg); color:var(--text); }
+  h1 { color:#1c4f4b; }
+  .nav a, .btn { color:#25675f; background:#fff; border-color:#9cc9c4; }
+  .nav a:hover, .btn:hover { border-color:#25675f; background:#eaf8f7; }
+  .tab { background:#fff; color:#527b77; border-color:#cfe3e1; }
+  .tab:hover { background:#eaf8f7; }
+  .tab.active { background:#25675f; color:#fff; border-color:#25675f; }
+  .toolbar input[type=search], .toolbar select, .dt-inrow input, .lm-fields input, .fp-item select { background:#fff; color:#234c49; border-color:#b7d3d0; }
+  .bhead { background:#eaf8f7; }
+  .bhead h2, .bname { color:#1c4f4b; }
+  td { border-bottom-color:#e3f0ee; }
+  tr.clickrow:hover td { background:#f1f9f8; }
+  .flag.rec { background:#fff6da; color:#8a6a14; border-color:#e5cf8b; }
+  .flag.profit { background:#e5f6ee; color:#177a55; border-color:#9fd5bb; }
+  .flag.old { background:#fdeceb; color:#b3402f; border-color:#efb3aa; }
+  .sbadge.공실 { color:#b3402f; border-color:#efb3aa; }
+  .sbadge.임차중 { color:#177a55; border-color:#9fd5bb; }
+  .sbadge.매매가능 { color:#2b5fa8; border-color:#a9c6ea; }
+  .mini { background:#fff; color:#234c49; border-color:#cfe3e1; }
+  .mini:hover { border-color:#25675f; background:#eaf8f7; }
+  .mini.on { background:#fff6da; border-color:#d9b64a; color:#8a6a14; }
+  .mini.pon { background:#e5f6ee; border-color:#9fd5bb; color:#177a55; }
+  .empty b { color:#234c49; }
+  #toast { background:#25675f; color:#fff; border-color:#25675f; }
+  .dt-kc { background:#f8fcfc; }
+  #detail { border-left-color:#25675f; }
+  .dt-sim th, .dt-sim td { border-bottom-color:#e3f0ee; }
+  .recblock { background:#f8fcfc; border-top-color:#e3f0ee; }
+  .recrow { border-top-color:#d9ebe9; }
+  .lm-box { border-color:#25675f; }
+  .lm-go { background:#25675f; color:#fff; border-color:#25675f; }
+  .yield { color:#177a55; }
+  .sarrow { color:#25675f; }
+}
   </style>
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
   <script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
