@@ -205,6 +205,8 @@
       ".hr-viewer-head{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #e3eeec;font-size:13px}",
       ".hr-viewer-body{flex:1;min-height:0;background:#222;display:flex;align-items:center;justify-content:center}",
       ".hr-viewer-body img{max-width:100%;max-height:100%;object-fit:contain}",
+      ".hr-zstage{position:relative;width:100%;height:100%;overflow:hidden;cursor:grab;touch-action:none}.hr-zstage.drag{cursor:grabbing}",
+      ".hr-viewer-body .hr-zimg{position:absolute;left:0;top:0;max-width:none!important;max-height:none!important;transform-origin:0 0;user-select:none;-webkit-user-drag:none}",
       ".hr-viewer-body iframe{width:100%;height:100%;border:0;background:#fff}",
       ".hr-mark{border:0;background:none;cursor:pointer;font-size:13px;padding:0 2px;margin-left:4px;vertical-align:middle}",
       ".hr-mark.ended{opacity:.35;filter:grayscale(1)}",
@@ -291,10 +293,71 @@
     var isPdf = /\.pdf(\?|$)/i.test(name || "") || /\.pdf(\?|$)/i.test(url);
     if (!isImg && !isPdf) { window.open(url, "_blank", "noopener"); return; }
     var ov = document.createElement("div"); ov.className = "hr-overlay"; ov.style.alignItems = "center";
-    ov.innerHTML = '<div class="hr-viewer"><div class="hr-viewer-head"><span>' + esc(name || "") + '</span><span><a class="hr-btn" href="' + esc(url) + '" target="_blank" rel="noopener" style="text-decoration:none">새 탭</a> <button type="button" class="hr-btn" id="hrViewerClose">닫기</button></span></div><div class="hr-viewer-body">' + (isImg ? '<img src="' + esc(url) + '">' : '<iframe src="' + esc(url) + '"></iframe>') + "</div></div>";
-    ov.addEventListener("click", function (e) { if (e.target === ov) ov.remove(); });
+    var zoomBtns = isImg ? '<button type="button" class="hr-btn" data-z="out" title="축소 (-)">−</button> <button type="button" class="hr-btn" data-z="reset" title="화면에 맞추기 (0)">100%</button> <button type="button" class="hr-btn" data-z="in" title="확대 (+)">＋</button> ' : '';
+    ov.innerHTML = '<div class="hr-viewer"><div class="hr-viewer-head"><span>' + esc(name || "") + '</span><span>' + zoomBtns + '<a class="hr-btn" href="' + esc(url) + '" target="_blank" rel="noopener" style="text-decoration:none">새 탭</a> <button type="button" class="hr-btn" id="hrViewerClose">닫기</button></span></div><div class="hr-viewer-body">' + (isImg ? '<div class="hr-zstage"><img class="hr-zimg" draggable="false" src="' + esc(url) + '"></div>' : '<iframe src="' + esc(url) + '"></iframe>') + "</div></div>";
+    var onKey = null;
+    function close() { if (onKey) document.removeEventListener("keydown", onKey, true); ov.remove(); }
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
     document.body.appendChild(ov);
-    ov.querySelector("#hrViewerClose").addEventListener("click", function () { ov.remove(); });
+    ov.querySelector("#hrViewerClose").addEventListener("click", close);
+    if (isImg) onKey = wireZoom(ov, close);
+    else { onKey = function (e) { if (e.key === "Escape") close(); }; document.addEventListener("keydown", onKey, true); }
+  }
+  /* 이미지 확대: 휠·+/- 버튼·더블클릭·두 손가락 벌리기로 확대, 끌어서 이동 */
+  function wireZoom(ov, close) {
+    var stage = ov.querySelector(".hr-zstage"), img = ov.querySelector(".hr-zimg"), label = ov.querySelector("[data-z=reset]");
+    var fit = 1, z = 1, tx = 0, ty = 0, nw = 0, nh = 0, pts = {}, lastDist = 0;
+    function apply() { img.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + (fit * z) + ")"; label.textContent = Math.round(z * 100) + "%"; }
+    function center() { var r = stage.getBoundingClientRect(), s = fit * z; tx = (r.width - nw * s) / 2; ty = (r.height - nh * s) / 2; }
+    function reset() { if (!nw) return; var r = stage.getBoundingClientRect(); fit = Math.min(r.width / nw, r.height / nh); z = 1; center(); apply(); }
+    function zoomAt(f, cx, cy) {
+      var nz = Math.min(16, Math.max(1, z * f)); if (nz === z) return;
+      var s0 = fit * z, s1 = fit * nz; tx = cx - (cx - tx) * (s1 / s0); ty = cy - (cy - ty) * (s1 / s0); z = nz;
+      if (z === 1) center(); apply();
+    }
+    function mid() { var r = stage.getBoundingClientRect(); return [r.width / 2, r.height / 2]; }
+    function loaded() { nw = img.naturalWidth; nh = img.naturalHeight; reset(); }
+    if (img.complete && img.naturalWidth) loaded(); else img.addEventListener("load", loaded);
+    window.addEventListener("resize", function () { if (z === 1) reset(); });
+    stage.addEventListener("wheel", function (e) {
+      e.preventDefault(); var r = stage.getBoundingClientRect();
+      zoomAt(e.deltaY < 0 ? 1.25 : 1 / 1.25, e.clientX - r.left, e.clientY - r.top);
+    }, { passive: false });
+    stage.addEventListener("dblclick", function (e) {
+      var r = stage.getBoundingClientRect();
+      if (z > 1.5) reset(); else zoomAt(3 / z, e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener("pointerdown", function (e) {
+      pts[e.pointerId] = [e.clientX, e.clientY]; try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+      stage.classList.add("drag"); lastDist = 0;
+    });
+    stage.addEventListener("pointermove", function (e) {
+      if (!pts[e.pointerId]) return;
+      var ids = Object.keys(pts);
+      if (ids.length >= 2) {
+        pts[e.pointerId] = [e.clientX, e.clientY];
+        var a = pts[ids[0]], b = pts[ids[1]], d = Math.hypot(a[0] - b[0], a[1] - b[1]), r = stage.getBoundingClientRect();
+        if (lastDist) zoomAt(d / lastDist, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top);
+        lastDist = d; return;
+      }
+      tx += e.clientX - pts[e.pointerId][0]; ty += e.clientY - pts[e.pointerId][1];
+      pts[e.pointerId] = [e.clientX, e.clientY]; apply();
+    });
+    function up(e) { delete pts[e.pointerId]; lastDist = 0; if (!Object.keys(pts).length) stage.classList.remove("drag"); }
+    stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+    ov.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest("[data-z]"); if (!b) return;
+      var m = mid();
+      if (b.dataset.z === "in") zoomAt(1.5, m[0], m[1]); else if (b.dataset.z === "out") zoomAt(1 / 1.5, m[0], m[1]); else reset();
+    });
+    var onKey = function (e) {
+      if (e.key === "Escape") { e.stopPropagation(); close(); }
+      else if (e.key === "+" || e.key === "=") { var m = mid(); zoomAt(1.5, m[0], m[1]); }
+      else if (e.key === "-" || e.key === "_") { var m2 = mid(); zoomAt(1 / 1.5, m2[0], m2[1]); }
+      else if (e.key === "0") reset();
+    };
+    document.addEventListener("keydown", onKey, true);
+    return onKey;
   }
   document.addEventListener("click", function (e) {
     var t = e.target && e.target.closest ? e.target.closest("[data-hr-view]") : null;
