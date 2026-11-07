@@ -235,7 +235,7 @@ function _buildDriveItemsHtml(items, cat) {
     return `
     <div class="listing-card" style="cursor:default;">
       <div style="margin-bottom:10px;">
-        <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>${item._shared_reference ? '<span style="font-size:0.72rem;color:var(--text-muted);">' + (item._office === 'ktop' ? '🔗 케이탑 공유 · 읽기만' : '공유 기본자료') + '</span>' : ''}
+        <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>${item._shared_reference ? '<span style="font-size:0.72rem;color:var(--text-muted);">' + (item._office === 'ktop' ? '🔗 케이탑 자료 · 하이탑에서 수정 가능' : '공유 기본자료') + '</span>' : ''}
         ${memoPreview ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;line-height:1.4;">📝 ${memoPreview}</div>` : ''}
         ${residentialBasicSummary(item)}
         ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}
@@ -246,7 +246,7 @@ function _buildDriveItemsHtml(items, cat) {
         <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveBuilding('building-overview.html','${item.id}')">📝 개요</button>
         ${item.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="window.open('${item.url.replace(/'/g,"%27")}','_blank')">🔗 드라이브</button>` : ''}
         <button ${item._office === 'ktop' ? 'style="display:none"' : ''} class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveLinkModal('${item.id}')">🔗 매물연결</button>
-        <button ${item._office === 'ktop' ? 'style="display:none"' : ''} class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
+        <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
         <button ${item._office === 'ktop' ? 'style="display:none"' : ''} class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
       </div>
     </div>`;
@@ -617,6 +617,8 @@ function openDriveEdit(id) {
   document.getElementById("drive_edit_category").value = item.category || "";
   document.getElementById("drive_edit_name").value = item.name || "";
   document.getElementById("drive_edit_url").value = item.url || "";
+  document.getElementById("drive_edit_name").readOnly = item._office === "ktop";
+  document.getElementById("drive_edit_name").title = item._office === "ktop" ? "케이탑 자료의 건물명은 케이탑 화면에서 바꿔주세요" : "";
   document.getElementById("driveEditModal").style.display = "flex";
 }
 
