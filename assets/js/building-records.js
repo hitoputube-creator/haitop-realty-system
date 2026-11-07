@@ -40,8 +40,9 @@
     var out = [];
     String(text || "").replace(/호/g, " ").split(/[,·\/\s]+/).forEach(function (tok) {
       tok = tok.trim(); if (!tok) return;
-      var m = tok.match(/^(\d+)\s*[~\-]\s*(\d+)$/);
-      if (m) { var a = +m[1], b = +m[2]; if (a <= b && b - a <= 300) { for (var i = a; i <= b; i++) out.push(String(i)); return; } }
+      // 숫자 범위(601~603) 와 글자가 붙은 범위(B101~B104, 상가B101~B104)를 모두 푼다
+      var m = tok.match(/^([^\d~\-]*)(\d+)\s*[~\-]\s*([^\d~\-]*)(\d+)$/);
+      if (m && (!m[3] || m[3] === m[1])) { var a = +m[2], b = +m[4], w = m[2].length === m[4].length ? m[2].length : 0; if (a <= b && b - a <= 300) { for (var i = a; i <= b; i++) { var s = String(i); while (w && s.length < w) s = "0" + s; out.push(m[1] + s); } return; } }
       out.push(tok);
     });
     return out;
