@@ -128,8 +128,23 @@ function guideHtml(d) {
     + '<p class="ug-note">※ 이 자료는 참고용입니다. 금액과 면적은 등록된 자료 기준이며 실제와 다를 수 있으니 계약 전에 꼭 확인해 주세요.</p></section>';
 }
 // 층 평면도 목록에서 그 층 그림과 호실 위치를 찾는다
+// 호실의 층: 등록된 층 숫자가 있으면 그것을 쓴다 (B동 B101처럼 B로 시작하는 호수를 지하로 오해하지 않도록)
+function unitFloorKey(u) {
+  const f = String((u && u.층) == null ? '' : u.층).trim();
+  return /^\d+$/.test(f) ? f : floorKeyOf(u && u.호수);
+}
+// 도면 이름이 "1·2층", "1,2층", "1~2층"처럼 여러 층이면 각 층에서 모두 쓴다
+function planHasFloor(label, fk) {
+  const s = String(label || '');
+  if (planKey(s) === fk) return true;
+  if (/지하|^B/i.test(s)) return false;
+  const nums = s.match(/\d+/g) || [];
+  if (nums.length < 2) return false;
+  if (/[~\-]/.test(s) && nums.length === 2) { const a = +nums[0], b = +nums[1]; if (a <= b && b - a <= 60) { for (let i = a; i <= b; i++) if (String(i) === fk) return true; } return false; }
+  return nums.includes(fk);
+}
 function pickPlan(floors, fk, unit) {
-  const plan = (floors || []).find(f => planKey(f.floor_number) === fk);
+  const plan = (floors || []).find(f => planHasFloor(f.floor_number, fk));
   if (!plan || !plan.cloudinary_url) return { planUrl: '', pos: null };
   const pp = unit && unit.plan_positions && unit.plan_positions[plan.id];
   const pos = pp && (pp[fk] || Object.values(pp)[0]);
@@ -139,7 +154,7 @@ function pickPlan(floors, fk, unit) {
 // 건물 상세 화면의 호실(u) 하나를 d 로 바꾼다
 function guideDataFromUnit(u, name, addr, floors) {
   const eco = typeof CommercialPriceCore !== 'undefined' ? CommercialPriceCore.economics(u, true) : {};
-  const fk = floorKeyOf(u.호수);
+  const fk = unitFloorKey(u);
   const plan = pickPlan(floors, fk, u);
   return {
     name, addr, ho: u.호수, fk,
@@ -351,7 +366,7 @@ async function run(hos, mode, btn) {
       if (btn && picked.length === 1) {
         const u = picked[0], d = datas[0];
         if (d.planUrl && !d.pos) {
-          const plan = (floors || []).find(f => planKey(f.floor_number) === d.fk);
+          const plan = (floors || []).find(f => planHasFloor(f.floor_number, d.fk));
           const r = await pickPosition({ planUrl: d.planUrl, ho: String(u.호수).replace(/호$/, '') + '호', title: floorText(d.fk) + ' 평면도', canSave: !!plan && typeof getBuildingRecord === 'function' && typeof saveBuildingUnits === 'function' });
           if (!r) return;
           if (r.pos) {
