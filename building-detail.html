@@ -639,8 +639,8 @@
 <style>
 /* 호실 현황 표: 매물 열 폭 고정 + 버튼 줄바꿈 (보증금·월세가 가려지지 않게) */
 .units-tbl th:last-child, .units-tbl td:last-child { width:146px; min-width:146px; max-width:146px; }
-.units-tbl td.tbl-actions { flex-wrap:wrap; align-content:center; gap:3px 4px; line-height:1.4; }
-.units-tbl td.tbl-actions > * { white-space:nowrap; word-break:keep-all; }
+.units-tbl td.tbl-actions { display:table-cell; vertical-align:middle; white-space:nowrap; line-height:1.4; }
+.units-tbl td.tbl-actions > * { white-space:nowrap; word-break:keep-all; display:inline-block; margin:0 4px 0 0; vertical-align:middle; }
 .units-tbl td:nth-child(3) { max-width:132px; white-space:normal; word-break:keep-all; }
 .units-tbl th, .units-tbl td { padding-left:6px; padding-right:6px; }
     .ftab { position:relative; }
