@@ -5,7 +5,7 @@
 (function () {
   if (window.__promoBoardLoaded) return; window.__promoBoardLoaded = true;
   var LS_OPEN = "hitop_promo_board_open";
-  var state = { recs: [], urlMap: {}, byId: {}, kind: "전체", bsel: "", sort: "due", q: "", limit: 8 };
+  var state = { recs: [], urlMap: {}, byId: {}, kind: "전체", bsel: "", sort: "due", q: "", limit: 8, tableOpen: false };
   var HR = null;
 
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
@@ -147,13 +147,13 @@
 
   function render() {
     var root = document.getElementById("promoBoard"); if (!root) return;
-    var open = localStorage.getItem(LS_OPEN) !== "0";
+    var open = true;
     var active = state.recs.filter(function (r) { return HR.status(r).key !== "ended"; });
     var nSoon = active.filter(function (r) { return HR.status(r).key === "soon"; }).length;
     var head = '<div class="pb-head"><span style="font-size:20px">📌</span><b>전체 건물 특별 조건 · 홍보물 비교</b>'
       + '<span class="pb-sub">진행 중 ' + active.length + "건 · 마감 임박 " + nSoon + "건</span><span class=\"pb-sp\"></span>"
       + '<a class="pb-btn" href="' + esc(OfficeConfig.urlFor("special-promos.html")) + '">전체 페이지 ›</a>'
-      + '<button type="button" class="pb-btn" id="pbToggle">' + (open ? "접기 ▴" : "펼치기 ▾") + "</button></div>";
+      + "</div>";
     if (!open) { root.innerHTML = head; document.getElementById("pbToggle").onclick = function () { localStorage.setItem(LS_OPEN, "1"); render(); }; return; }
     var chip = function (label, on, attr, val) { return '<button type="button" class="pb-btn' + (on ? " on" : "") + '" data-' + attr + '="' + esc(val) + '">' + esc(label) + "</button>"; };
     var bar = '<div class="pb-bar"><input class="pb-in" id="pbQ" placeholder="🔍 건물명·호실·내용 검색 (예: 월드타워, 수수료, 미용실)" value="' + esc(state.q) + '">'
@@ -166,19 +166,20 @@
     else body = '<div class="pb-wrap"><table><thead><tr><th>건물</th><th>대상</th><th>종류</th><th>수수료</th><th>특가 분양가 / 할인</th><th>보증금 / 월세</th><th>수익률</th><th>마감</th><th>자료</th></tr></thead><tbody>'
       + shown.map(rowHtml).join("") + "</tbody></table></div>"
       + (list.length > shown.length ? '<div style="text-align:center;margin-top:8px"><button type="button" class="pb-btn" id="pbMore">더 보기 (' + (list.length - shown.length) + "건 더)</button></div>" : "");
-    root.innerHTML = head + cardsHtml() + bar + body;
+    var tblBtn = '<div style="margin:12px 0 4px"><button type="button" class="pb-btn" id="pbTbl">' + (state.tableOpen ? "📋 전체 기록 리스트 접기 ▴" : "📋 전체 기록 리스트 펼치기 ▾ (" + active.length + "건)") + "</button></div>";
+    root.innerHTML = head + cardsHtml() + tblBtn + (state.tableOpen ? bar + body : "");
     wire(root);
   }
 
   function wire(root) {
     var q = root.querySelector("#pbQ");
-    q.addEventListener("input", function () { state.q = q.value; state.limit = 8; var pos = q.selectionStart; render(); var n = document.getElementById("pbQ"); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} });
+    if (q) q.addEventListener("input", function () { state.q = q.value; state.limit = 8; var pos = q.selectionStart; render(); var n = document.getElementById("pbQ"); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} });
     root.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { state.kind = b.dataset.kind; state.limit = 8; render(); }; });
     root.querySelectorAll("[data-sort]").forEach(function (b) { b.onclick = function () { state.sort = b.dataset.sort; render(); }; });
-    root.querySelectorAll("[data-bsel]").forEach(function (c) { c.onclick = function () { state.bsel = state.bsel === c.dataset.bsel ? "" : c.dataset.bsel; state.limit = 8; render(); }; });
+    root.querySelectorAll("[data-bsel]").forEach(function (c) { c.onclick = function () { state.bsel = state.bsel === c.dataset.bsel ? "" : c.dataset.bsel; if (state.bsel) state.tableOpen = true; state.limit = 8; render(); }; });
     var allB = root.querySelector("#pbAllB"); if (allB) allB.onclick = function () { state.bsel = ""; render(); };
     var more = root.querySelector("#pbMore"); if (more) more.onclick = function () { state.limit += 20; render(); };
-    document.getElementById("pbToggle").onclick = function () { localStorage.setItem(LS_OPEN, "0"); render(); };
+    var tb = root.querySelector("#pbTbl"); if (tb) tb.onclick = function () { state.tableOpen = !state.tableOpen; render(); };
     root.querySelectorAll("tbody tr").forEach(function (tr) {
       tr.addEventListener("click", function (e) { if (e.target.closest("[data-pb-file]")) return; if (tr.dataset.link) location.href = tr.dataset.link; });
     });
