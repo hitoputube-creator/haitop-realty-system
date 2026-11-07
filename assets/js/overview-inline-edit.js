@@ -19,7 +19,7 @@
     if (text === '주소(구주소)') return ['ov_lot_address'];
     var f = (typeof editableOverviewFields === 'function' ? editableOverviewFields() : []).filter(function (x) { return x[0] === text; })[0];
     if (f) return [f[1]];
-    if (text === OWN + ' 분양담당자' && $('ov_sales_agent_name') && !(typeof buildingData !== 'undefined' && buildingData && buildingData._office === 'ktop')) return ['ov_sales_agent_name', 'ov_sales_agent_phone'];
+    if ((text === OWN + ' 분양담당자' || text === '케이탑 분양담당자') && $('ov_sales_agent_name')) return ['ov_sales_agent_name', 'ov_sales_agent_phone'];
     return null;
   }
 
