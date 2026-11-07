@@ -83,6 +83,8 @@ function ensureStyle() {
   .ug-pin{position:absolute;width:11mm;height:11mm;margin:-5.5mm 0 0 -5.5mm;border:3.2px solid #d62828;border-radius:50%;box-sizing:border-box}
   .ug-pin::after{content:"";position:absolute;left:50%;top:50%;width:2.2mm;height:2.2mm;margin:-1.1mm 0 0 -1.1mm;border-radius:50%;border:2px solid #d62828;box-sizing:border-box}
   .ug-pinlabel{position:absolute;background:#d62828;color:#fff;font-size:12px;font-weight:800;line-height:1;padding:3px 7px;border-radius:4px;white-space:nowrap;z-index:2}
+  .ug-status-row{display:flex;justify-content:flex-end;margin:0 0 4px}
+  .ug-status{border:1.6px solid #17473f;color:#17473f;background:#fff;font-size:12.5px;font-weight:800;line-height:1;padding:3px 11px;border-radius:5px}
   .ug-noplan{display:flex;align-items:center;justify-content:center;color:#888;font-size:13px;height:100%}
   .ug-note{font-size:10px;color:#666;margin:6px 0 0;line-height:1.4}
   .ul-page{font-family:Pretendard,"Malgun Gothic",sans-serif;color:#111}
@@ -111,7 +113,9 @@ function guideHtml(d) {
   const dep = korAmt(d.deposit), rent = korAmt(d.rent);
   if (dep || rent) rows.push('<div class="row"><span class="lb">보증금 / 월세</span><span class="mid">' + esc(dep || '-') + ' / ' + esc(rent || '-') + '</span></div>');
   const hoCell = d.ho ? [['호수', String(d.ho).replace(/호$/, '') + '호']] : [];
-  const cells = hoCell.concat(d.cells || []).filter(c => c[1]).map(c => '<div class="ug-cell"><span class="k">' + esc(c[0]) + '</span><span class="v">' + esc(c[1]) + '</span></div>');
+  const statusCell = (d.cells || []).find(c => c[0] === '분양 상태' && c[1]);
+  const statusHtml = statusCell ? '<div class="ug-status-row"><span class="ug-status">' + esc(statusCell[1]) + '</span></div>' : '';
+  const cells = hoCell.concat((d.cells || []).filter(c => c[0] !== '분양 상태')).filter(c => c[1]).map(c => '<div class="ug-cell"><span class="k">' + esc(c[0]) + '</span><span class="v">' + esc(c[1]) + '</span></div>');
   const hoLabel = d.ho ? String(d.ho).replace(/호$/, '') + '호' : '';
   let planHtml = '<div class="ug-noplan">이 층의 평면도 자료가 없습니다.</div>';
   let cap = (d.fk ? floorText(d.fk) + ' ' : '') + '평면도';
@@ -125,6 +129,7 @@ function guideHtml(d) {
   }
   return '<section class="ug-page"><div class="ug-top"><span class="ug-brand">' + esc(BRAND.name) + '</span><span class="ug-doc">호실 안내서</span></div>'
     + '<h1 class="ug-title">' + esc(d.name) + (hoLabel ? '<small>' + esc(hoLabel) + '</small>' : '') + '</h1><div class="ug-addr">' + esc(d.addr || '') + '</div>'
+    + statusHtml
     + (rows.length ? '<div class="ug-price">' + rows.join('') + '</div>' : '')
     + (cells.length ? '<div class="ug-grid">' + cells.join('') + '</div>' : '')
     + '<div class="ug-plan"><div class="ug-plan-cap">' + cap + '</div><div class="ug-plan-box">' + planHtml + '</div></div>'
