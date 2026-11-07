@@ -70,12 +70,49 @@
     return arr;
   }
 
+  /* 다른 사무소 기록 (읽기 전용 공유): 하이탑 <-> 케이탑 */
+  var OTHER_HITOP_FN = "https://xaxbkdnrzsghsabkdvzj.supabase.co/functions/v1/shared-reference-data?table=building_records";
+  var OTHER_KTOP_FN = "https://enefadyhmhfphtochlku.supabase.co/functions/v1/shared-office-contacts?table=records";
+  var OTHER_HITOP_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd", OTHER_KTOP_KEY = "sb_publishable__8Ru0l0wfQo8e5Ljq1ZQ7Q_LYtCAP-p";
+  var otherCache = null;
+  function otherRows() {
+    if (otherCache && Date.now() - otherCache.t < 30000) return otherCache.p;
+    var p = (async function () {
+      var isH = OfficeConfig.id === "hitop";
+      var s = await hitopAuthClient.auth.getSession();
+      var tok = s && s.data && s.data.session && s.data.session.access_token;
+      if (!tok) return [];
+      var res = await fetch(isH ? OTHER_KTOP_FN : OTHER_HITOP_FN, { headers: { apikey: isH ? OTHER_KTOP_KEY : OTHER_HITOP_KEY, Authorization: "Bearer " + tok }, signal: AbortSignal.timeout(15000) });
+      if (!res.ok) throw new Error("http " + res.status);
+      var rows = await res.json();
+      return Array.isArray(rows) ? rows : [];
+    })().catch(function (e) { otherCache = null; console.warn("[기록] 다른 사무소 기록 조회 실패", e); return []; });
+    otherCache = { t: Date.now(), p: p };
+    return p;
+  }
+  async function fetchOtherRecords(buildingId) {
+    var other = OfficeConfig.id === "hitop" ? "ktop" : "hitop", label = other === "hitop" ? "하이탑" : "케이탑";
+    var rows = await otherRows();
+    var known = null;
+    if (!buildingId) { try { known = {}; (await getDriveResources()).forEach(function (b) { known[b.id] = 1; }); } catch (e) { known = null; } }
+    return rows.filter(function (row) { return String(row.file_name || "").indexOf(PREFIX) === 0 && (buildingId ? row.building_id === buildingId : (!known || known[row.building_id])); })
+      .map(function (row) {
+        var r = parseRow(row); if (!r) return null;
+        r._rowId = "shared-" + other + "-" + row.id; r._shared = other; r._sharedLabel = label;
+        if (r.files.length) { r.text = String(r.text || "") + "\n📎 첨부파일 " + r.files.length + "개는 " + label + "에서 볼 수 있어요"; r.files = []; }
+        return r;
+      }).filter(Boolean);
+  }
+
   async function fetchRecords(buildingId) {
-    var url = SUPABASE_URL + "/rest/v1/building_files?select=*&file_name=like." + encodeURIComponent(PREFIX + "*")
+    var isK = OfficeConfig.id === "ktop";
+    var url = SUPABASE_URL + "/rest/v1/building_files?select=*" + (isK ? "" : "&file_name=like." + encodeURIComponent(PREFIX + "*"))
       + (buildingId ? "&building_id=eq." + encodeURIComponent(buildingId) : "") + "&order=created_at.desc";
     var res = await fetchWithTimeout(url, { headers: headers });
     if (!res.ok) throw new Error("기록 조회 실패");
-    var records = (await res.json()).map(parseRow).filter(Boolean);
+    var rowsOwn = await res.json();
+    if (isK) rowsOwn = rowsOwn.filter(function (row) { return String(row.file_name || "").indexOf(PREFIX) === 0 && !row._shared_reference; });
+    var records = rowsOwn.map(parseRow).filter(Boolean);
     var urls = []; records.forEach(function (r) { r.files.forEach(function (f) { if (f.url && urls.indexOf(f.url) < 0) urls.push(f.url); }); });
     var urlMap = {};
     if (urls.length) {
@@ -84,7 +121,8 @@
         resolved.forEach(function (row, i) { urlMap[urls[i]] = row.cloudinary_url; });
       } catch (e) { console.warn("[기록] 파일 주소 확인 실패", e); }
     }
-    return { records: records, urlMap: urlMap };
+    var shared = await fetchOtherRecords(buildingId);
+    return { records: records.concat(shared), urlMap: urlMap };
   }
   function serialize(data) {
     var d = { date: data.date, kind: data.kind, floor: data.floor || "", fu: data.fu || "", rooms: data.rooms || "", text: data.text || "", fee: data.fee || "", price: data.price || "", orig: data.orig || "", deposit: data.deposit || "", rent: data.rent || "", due: data.due || "", ended: !!data.ended, endedAt: data.endedAt || "", files: data.files || [] };
@@ -194,7 +232,7 @@
     var st = status(r), fh = filesHtml(r, urlMap || {});
     var where = (o.buildingName ? (o.link ? '<a href="' + esc(o.link) + '">' + esc(o.buildingName) + "</a>" : esc(o.buildingName)) : "") + (r.floor ? (o.buildingName ? " · " : "") + esc(r.floor) + esc(r.fu || "층") : "") + (r.rooms ? " " + esc(r.rooms) + (/호/.test(r.rooms) ? "" : "호") : "");
     if (!where) where = "건물 전체";
-    var acts = o.readonly ? "" : '<div class="hr-actions">'
+    var acts = r._shared ? '<div class="hr-actions"><span class="hr-tag memo">🔗 ' + esc(r._sharedLabel) + ' 공유 · 읽기만</span></div>' : o.readonly ? "" : '<div class="hr-actions">'
       + (r.ended ? '<button type="button" class="hr-btn" data-hr-act="resume" data-id="' + esc(r._rowId) + '">다시 진행</button>' : '<button type="button" class="hr-btn main" data-hr-act="end" data-id="' + esc(r._rowId) + '">종료 처리</button>')
       + '<button type="button" class="hr-btn" data-hr-act="edit" data-id="' + esc(r._rowId) + '">수정</button><button type="button" class="hr-btn del" data-hr-act="del" data-id="' + esc(r._rowId) + '">삭제</button></div>';
     return '<div class="hr-card' + (st.key === "ended" ? " ended" : "") + '" data-rec="' + esc(r._rowId) + '">' + fh.top
@@ -225,7 +263,7 @@
       var imgs = r.files.filter(isImageFile), others = r.files.filter(function (f) { return !isImageFile(f); });
       var fh = '<div class="hr-imgs">' + imgs.map(function (f) { var u = urlMap[f.url] || f.url; return '<img loading="lazy" src="' + esc(u) + '" alt="' + esc(f.name) + '" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">'; }).join("") + "</div>"
         + others.map(function (f) { var u = urlMap[f.url] || f.url; return '<div><span class="hr-file" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">' + (isPdfFile(f) ? "📄 " : "📎 ") + esc(f.name) + "</span></div>"; }).join("");
-      var acts = o.readonly ? "" : '<td class="hr-act">'
+      var acts = r._shared ? '<td class="hr-act"><span class="hr-tag memo">🔗 ' + esc(r._sharedLabel) + ' 공유</span></td>' : o.readonly ? "" : '<td class="hr-act">'
         + (r.ended ? '<button type="button" class="hr-btn" data-hr-act="resume" data-id="' + esc(r._rowId) + '">다시 진행</button>' : '<button type="button" class="hr-btn main" data-hr-act="end" data-id="' + esc(r._rowId) + '">종료 처리</button>')
         + '<button type="button" class="hr-btn" data-hr-act="edit" data-id="' + esc(r._rowId) + '">수정</button><button type="button" class="hr-btn del" data-hr-act="del" data-id="' + esc(r._rowId) + '">삭제</button></td>';
       return '<tr class="' + (st.key === "ended" ? "ended" : "") + '" data-rec="' + esc(r._rowId) + '"><td class="hr-d">' + esc(md(d)) + "<small>" + esc(d.slice(0, 4)) + "</small></td><td>" + bcell + "</td>"
