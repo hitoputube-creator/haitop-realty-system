@@ -137,7 +137,7 @@
     }).join("");
     return '<tr data-link="' + esc(link) + '"><td><b>' + esc(b ? b.name : "(삭제된 건물)") + "</b></td>"
       + "<td>" + esc(subOf(r) || "건물 전체") + (firstLine ? "<small>" + esc(firstLine) + "</small>" : "") + "</td>"
-      + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span></td>"
+      + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span>" + (r._shared ? ' <span class="pb-tag" title="' + esc(r._sharedLabel) + ' 기록 (읽기만)">🔗' + esc(r._sharedLabel) + "</span>" : "") + "</td>"
       + "<td>" + (r.fee ? '<span class="pb-tag pb-fee">' + esc(r.fee) + "</span>" : "-") + "</td>"
       + "<td>" + price + "</td>"
       + "<td>" + (dr.length ? dr.join(" / ") : "-") + "</td><td>" + (dv.yld ? esc(dv.yld) : "-") + "</td>"
@@ -242,7 +242,7 @@
     var anchor = document.getElementById("globalPropertySearch");
     if (!anchor) return;
     try {
-      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261103-records5");
+      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261107-share2");
       HR = window.HitopRecords;
       var res = await Promise.all([HR.fetchRecords(null), getDriveResources()]);
       state.recs = res[0].records; state.urlMap = res[0].urlMap;
