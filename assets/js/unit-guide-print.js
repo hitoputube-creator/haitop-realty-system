@@ -82,6 +82,7 @@ function ensureStyle() {
   .ug-plan-inner img{display:block;max-width:100%;max-height:150mm;width:auto;height:auto}
   .ug-pin{position:absolute;width:11mm;height:11mm;margin:-5.5mm 0 0 -5.5mm;border:3.2px solid #d62828;border-radius:50%;box-sizing:border-box}
   .ug-pin::after{content:"";position:absolute;left:50%;top:50%;width:2.2mm;height:2.2mm;margin:-1.1mm 0 0 -1.1mm;border-radius:50%;border:2px solid #d62828;box-sizing:border-box}
+  .ug-pinlabel{position:absolute;background:#d62828;color:#fff;font-size:12px;font-weight:800;line-height:1;padding:3px 7px;border-radius:4px;white-space:nowrap;z-index:2}
   .ug-noplan{display:flex;align-items:center;justify-content:center;color:#888;font-size:13px;height:100%}
   .ug-note{font-size:10px;color:#666;margin:6px 0 0;line-height:1.4}
   .ul-page{font-family:Pretendard,"Malgun Gothic",sans-serif;color:#111}
@@ -109,14 +110,16 @@ function guideHtml(d) {
   }
   const dep = korAmt(d.deposit), rent = korAmt(d.rent);
   if (dep || rent) rows.push('<div class="row"><span class="lb">보증금 / 월세</span><span class="mid">' + esc(dep || '-') + ' / ' + esc(rent || '-') + '</span></div>');
-  const cells = (d.cells || []).filter(c => c[1]).map(c => '<div class="ug-cell"><span class="k">' + esc(c[0]) + '</span><span class="v">' + esc(c[1]) + '</span></div>');
+  const hoCell = d.ho ? [['호수', String(d.ho).replace(/호$/, '') + '호']] : [];
+  const cells = hoCell.concat(d.cells || []).filter(c => c[1]).map(c => '<div class="ug-cell"><span class="k">' + esc(c[0]) + '</span><span class="v">' + esc(c[1]) + '</span></div>');
   const hoLabel = d.ho ? String(d.ho).replace(/호$/, '') + '호' : '';
   let planHtml = '<div class="ug-noplan">이 층의 평면도 자료가 없습니다.</div>';
   let cap = (d.fk ? floorText(d.fk) + ' ' : '') + '평면도';
   if (d.planUrl) {
     const pos = d.pos;
     const pin = pos && isFinite(Number(pos.x)) && isFinite(Number(pos.y))
-      ? '<span class="ug-pin" style="left:' + Number(pos.x) + '%;top:' + Number(pos.y) + '%"></span>' : '';
+      ? '<span class="ug-pin" style="left:' + Number(pos.x) + '%;top:' + Number(pos.y) + '%"></span>'
+        + '<span class="ug-pinlabel" style="left:' + Number(pos.x) + '%;top:' + Number(pos.y) + '%;' + (Number(pos.y) > 68 ? 'transform:translate(-50%,-100%);margin-top:-6.8mm' : 'transform:translateX(-50%);margin-top:6.8mm') + '">' + esc(hoLabel) + '</span>' : '';
     planHtml = '<div class="ug-plan-inner"><img src="' + esc(d.planUrl) + '" alt="' + esc(cap) + '">' + pin + '</div>';
     if (pin) cap += '<span>빨간 원이 ' + esc(hoLabel) + ' 위치입니다</span>';
   }
