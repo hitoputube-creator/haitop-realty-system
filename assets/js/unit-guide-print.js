@@ -334,9 +334,8 @@ async function run(hos, mode, btn) {
   try {
     const name = (($('buildingName') || {}).textContent || '').trim();
     const token = (await hitopAuthClient.auth.getSession()).data.session.access_token;
-    const res = await fetch(SUPABASE_URL + '/rest/v1/buildings?select=units&name=eq.' + encodeURIComponent(name), { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + token } });
-    const rows = await res.json();
-    const units = (rows[0] && rows[0].units) || [];
+    const rec = await getBuildingRecord(name);
+    const units = (rec && rec.units) || [];
     const picked = hos.map(h => units.find(u => String(u.호수) === String(h))).filter(Boolean);
     if (!picked.length) throw new Error('호실 자료를 찾지 못했습니다.');
     const addr = buildingAddress();
