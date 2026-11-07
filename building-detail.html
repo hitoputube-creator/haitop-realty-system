@@ -257,7 +257,7 @@
     .sum-card.vacant   .sum-num { color: #f87171; }
     .sum-card.forsale  .sum-num { color: #facc15; }
     .sum-card.revenue  .sum-num { color: #93c5fd; }
-    .sum-card.own      .sum-num { color: #c4b5fd; }
+    .sum-card.own      .sum-num { color: #c4b5fd; } #commercialSummaryGrid { grid-template-columns: repeat(5, 1fr); } @media (max-width: 600px) { #commercialSummaryGrid { grid-template-columns: 1fr 1fr; } }
 
     /* 층 필터 탭 */
     .floor-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
@@ -786,7 +786,7 @@
       <button type="button" class="sum-card occupied unit-summary-filter" data-unit-status="occ" aria-pressed="false" title="임차중 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumOccupied">-</span><span class="sum-label">임차중</span></button>
       <button type="button" class="sum-card vacant unit-summary-filter" data-unit-status="vac" aria-pressed="false" title="공실 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumVacant">-</span><span class="sum-label">공실</span></button>
       <button type="button" class="sum-card forsale unit-summary-filter" data-unit-status="sale" aria-pressed="false" title="진행중인 매매 매물 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumForSale">-</span><span class="sum-label">매매가능</span></button>
-      <button type="button" class="sum-card revenue unit-summary-filter" data-unit-status="listed" aria-pressed="false" title="진행중인 매물 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumListed">-</span><span class="sum-label">매물진행중</span></button>
+      <button type="button" class="sum-card revenue unit-summary-filter" data-unit-status="listed" aria-pressed="false" title="진행중인 매물 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumListed">-</span><span class="sum-label">매물진행중</span></button> <button type="button" class="sum-card own unit-summary-filter" data-unit-status="promo" aria-pressed="false" title="진행 중인 특별분양·홍보(📌) 호실만 보기 · 다시 누르면 전체"><span class="sum-num" id="sumPromo">-</span><span class="sum-label">📌 특별분양</span></button>
     </div>
 
     <div class="unit-toolbar">
@@ -2558,7 +2558,7 @@ async function deleteBFile(id) {
     $("sumForSale").textContent  = sale === null ? "-" : sale;
     $("sumForSale").closest(".sum-card").title = "진행중인 매매 매물 건수 · 묶음매물은 1건 · 누르면 해당 호실만 보기";
     $("sumListed").closest(".sum-card").title = "진행중인 매물 건수 · 묶음매물은 1건 · 누르면 해당 호실만 보기";
-    $("sumListed").textContent   = listedActive === null ? "-" : listedActive;
+    $("sumListed").textContent   = listedActive === null ? "-" : listedActive; if ($("sumPromo")) $("sumPromo").textContent = recordsLoaded ? scopedUnits().filter(unitHasPromo).length : "-";
     document.querySelectorAll('[data-unit-status]').forEach(button => {
       const active = !residentialUnitMode() && filterUnitStatus === button.dataset.unitStatus;
       button.classList.toggle('active', active);
@@ -2697,12 +2697,12 @@ async function deleteBFile(id) {
     try { renderRecSection(); } catch (e) { console.warn("[기록] 표시 실패", e); }
   }
 
-  const unitStatusLabel = {occ:'임차중', vac:'공실', sale:'매매가능', listed:'매물진행중'};
+  const unitStatusLabel = {occ:'임차중', vac:'공실', sale:'매매가능', listed:'매물진행중', promo:'특별분양'}; function unitHasPromo(u) { return !!(window.HitopRecords && buildingRecords.some(r => HitopRecords.roomsInclude(r, u.호수) && HitopRecords.isActive(r))); }
   function matchesUnitStatusFilter(u) {
     const s = filterUnitStatus;
     if (!s || residentialUnitMode()) return true;
     if (s === 'occ') return commercialOccupancy(u) === '임차중';
-    if (s === 'vac') return commercialOccupancy(u) === '공실';
+    if (s === 'vac') return commercialOccupancy(u) === '공실'; if (s === 'promo') return unitHasPromo(u);
     const ids = commercialLinkedIds([u]);
     if (s === 'listed') return ids.some(id => isActiveListing(commercialListings[id]));
     if (s === 'sale') return ids.some(id => {
