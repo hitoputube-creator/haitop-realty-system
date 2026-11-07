@@ -71,9 +71,30 @@
     document.head.appendChild(st);
   }
 
+  /* 보고 있는 카테고리 탭에 맞는 기록만 보여준다 (상가 홍보물은 상가 탭에서만 나온다) */
+  var CAT_LABEL = { all: "전체 건물", shop: "상가", land: "택지", home: "주거" };
+  function catKey() {
+    if (/property-main/.test(location.pathname)) { var t = document.querySelector('[data-category][aria-selected="true"]'); if (t) return t.dataset.category; }
+    var p = new URLSearchParams(location.search); return p.get("mainCategory") || p.get("category") || "all";
+  }
+  function roomOf(id) {
+    var b = state.byId[id], R = window.HitopResourceRooms;
+    if (!b) return "commercial";
+    return R && R.resourceRoom ? R.resourceRoom(b) : "commercial";
+  }
+  function inScope(r) {
+    var room = roomOf(r._buildingId), k = catKey();
+    if (k === "shop") return room === "commercial";
+    if (k === "land") return room === "land";
+    if (k === "home") return room === "residential";
+    if (k === "all") return room !== "commercial";
+    return false;
+  }
+  function scopedRecs() { return state.recs.filter(inScope); }
+
   function visible() {
     var q = state.q.trim().toLowerCase();
-    var list = state.recs.filter(function (r) {
+    var list = scopedRecs().filter(function (r) {
       if (HR.status(r).key === "ended") return false;
       if (state.bsel && r._buildingId !== state.bsel) return false;
       if (state.kind !== "전체" && r.kind !== state.kind) return false;
@@ -103,7 +124,7 @@
   function mdOf(d) { return String(d).slice(5, 10).replace("-", "."); }
   function buildingCards() {
     var by = {};
-    state.recs.forEach(function (r) {
+    scopedRecs().forEach(function (r) {
       if (HR.status(r).key === "ended") return;
       var d = String(r.date || r._created || "").slice(0, 10); if (!d) return;
       if (dAgo(d) > 30) return;
@@ -158,9 +179,12 @@
   function render() {
     var root = document.getElementById("promoBoard"); if (!root) return;
     var open = true;
-    var active = state.recs.filter(function (r) { return HR.status(r).key !== "ended"; });
+    var scoped = scopedRecs();
+    root.style.display = scoped.length ? "" : "none";
+    if (!scoped.length) return;
+    var active = scoped.filter(function (r) { return HR.status(r).key !== "ended"; });
     var nSoon = active.filter(function (r) { return HR.status(r).key === "soon"; }).length;
-    var head = '<div class="pb-head"><span style="font-size:20px">📌</span><b>전체 건물 특별 조건 · 홍보물 비교</b>'
+    var head = '<div class="pb-head"><span style="font-size:20px">📌</span><b>' + (CAT_LABEL[catKey()] || "전체 건물") + ' 특별 조건 · 홍보물 비교</b>'
       + '<span class="pb-sub">진행 중 ' + active.length + "건 · 마감 임박 " + nSoon + "건</span><span class=\"pb-sp\"></span>"
       + '<a class="pb-btn" href="' + esc(OfficeConfig.urlFor("special-promos.html")) + '">전체 페이지 ›</a>'
       + "</div>";
@@ -186,7 +210,7 @@
     if (q) q.addEventListener("input", function () { state.q = q.value; state.limit = 8; var pos = q.selectionStart; render(); var n = document.getElementById("pbQ"); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} });
     root.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { state.kind = b.dataset.kind; state.limit = 8; render(); }; });
     root.querySelectorAll("[data-sort]").forEach(function (b) { b.onclick = function () { state.sort = b.dataset.sort; render(); }; });
-    root.querySelectorAll("[data-bsel]").forEach(function (c) { c.onclick = function () { state.bsel = state.bsel === c.dataset.bsel ? "" : c.dataset.bsel; if (state.bsel) state.tableOpen = true; state.limit = 8; render(); }; });
+    root.querySelectorAll("[data-bsel]").forEach(function (c) { c.onclick = function () { state.bsel = c.dataset.bsel; state.tableOpen = true; state.limit = 8; render(); }; });
     var bAll = root.querySelector("#pbBAll"); if (bAll) bAll.onclick = function () { state.bAll = !state.bAll; render(); };
     var allB = root.querySelector("#pbAllB"); if (allB) allB.onclick = function () { state.bsel = ""; render(); };
     var more = root.querySelector("#pbMore"); if (more) more.onclick = function () { state.limit += 20; render(); };
@@ -253,9 +277,11 @@
     var anchor = document.getElementById("globalPropertySearch");
     if (!anchor) return;
     try {
-      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261107-zoom2");
+      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261107-zoom3");
       HR = window.HitopRecords;
+      if (!window.HitopResourceRooms) { try { await loadScript("assets/js/resource-rooms.js?v=20260930-category-drag"); } catch (e) { console.warn("[홍보 보드] 카테고리 분류 파일 없음", e); } }
       var res = await Promise.all([HR.fetchRecords(null), getDriveResources()]);
+      try { if (typeof getDriveCategories === "function") await getDriveCategories(); } catch (e) { console.warn("[홍보 보드] 카테고리 불러오기 실패", e); }
       state.recs = res[0].records; state.urlMap = res[0].urlMap;
       (res[1] || []).forEach(function (b) { if (b && b.id && b.name) state.byId[b.id] = { id: b.id, name: b.name, category: b.category || "" }; });
     } catch (e) { console.warn("[홍보 보드] 불러오기 실패", e); return; }
@@ -266,6 +292,10 @@
     else if (tabP) tabP.parentNode.insertBefore(root, tabP.nextSibling);
     else anchor.parentNode.insertBefore(root, anchor.nextSibling);
     render();
+    // 카테고리 탭을 바꾸면 보드도 그 카테고리 기록으로 바뀐다
+    var lastCat = catKey();
+    var onTab = function () { var c = catKey(); if (c !== lastCat) { lastCat = c; state.bsel = ""; state.limit = 8; render(); } };
+    document.querySelectorAll("[data-category]").forEach(function (t) { new MutationObserver(onTab).observe(t, { attributes: true, attributeFilter: ["aria-selected"] }); });
     watchListings();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
