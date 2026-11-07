@@ -188,3 +188,9 @@ html[data-office-skin='hitop-white'] .property-form-page #editModal .edit-modal-
   html[data-office-skin='hitop-white'] .property-form-page :is(.header,.topbar){padding:18px 16px;margin-top:12px;flex-wrap:wrap}
 }
 }
+
+/* 건물 개요·상세 표: 네이비 칸 글자가 안 보이던 문제 (하이탑 화이트 화면) */
+html[data-office-skin='hitop-white'] .info-table-label{color:#fff!important}
+html[data-office-skin='hitop-white'] .info-table-value{background:#f1f9f8!important;color:#1e3a3b!important}
+html[data-office-skin='hitop-white'] .info-table-value.empty{color:#7a8f8c!important}
+html[data-office-skin='hitop-white'] .summary-label{color:#4d6f6b!important}
