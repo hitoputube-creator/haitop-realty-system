@@ -91,12 +91,13 @@
   function bodyJson(options) { try { return typeof options.body === "string" ? JSON.parse(options.body) : null; } catch (e) { return null; } }
   function eqVal(params, k) { var v = params.get(k); return v && v.indexOf("eq.") === 0 ? v.slice(3) : ""; }
   async function idSets() {
-    var all = await Promise.all(["drive_resources", "buildings", "building_floors", "building_files"].map(ktopRows));
+    var all = await Promise.all(["drive_resources", "buildings", "building_floors", "building_files", "records"].map(ktopRows));
     var s = { res: {}, bld: {}, floor: {}, file: {} };
     all[0].forEach(function (r) { s.res[r.id] = 1; });
     all[1].forEach(function (r) { s.bld[r.id] = 1; });
     all[2].forEach(function (r) { s.floor[r.id] = 1; });
     all[3].forEach(function (r) { s.file[r.id] = 1; });
+    all[4].forEach(function (r) { s.file[r.id] = 1; });
     return s;
   }
   // 이 쓰기가 케이탑 자료에 대한 것인지 판단 (id는 사무소가 달라도 겹치지 않는다)
@@ -141,6 +142,8 @@
     if (!res.ok || !j || !j.url) throw new Error((j && j.error) || "파일 올리기에 실패했습니다. (" + res.status + ")");
     return j.url;
   }
+  // 홍보물 기록 화면(building-records.js)에서 케이탑 건물인지 확인하고 케이탑 저장소에 올릴 때 쓴다
+  window.KtopShared = { isKtopBuilding: async function (id) { var rows = id ? await ktopRows("drive_resources") : []; return rows.some(function (r) { return r.id === id; }); }, upload: uploadToKtop, saveContact: async function (name, contact) { var t = new URL(SUPABASE_URL + "/rest/v1/buildings?on_conflict=local_id"); await proxyWrite("POST", "buildings", t, { body: JSON.stringify({ local_id: name, name: name, sales_agent_name: contact.name, sales_agent_phone: contact.phone }), headers: { Prefer: "resolution=merge-duplicates,return=minimal" } }); } };
   function wrapUpload() {
     if (typeof window.cloudinaryUpload !== "function" || window.cloudinaryUpload.__ktopWrapped) return;
     var base = window.cloudinaryUpload;
