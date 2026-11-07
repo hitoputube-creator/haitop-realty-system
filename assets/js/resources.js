@@ -102,6 +102,45 @@ if (driveGlobalSearchInput) {
   driveGlobalSearchInput.addEventListener("keydown", e => { if (e.key === "Escape") { driveGlobalSearchInput.value = ""; driveGlobalSearch = ""; renderDriveTab(); } });
 }
 
+
+/* 새 건물 등록 전에 같은 이름·비슷한 이름의 건물이 이미 있는지 확인 (하이탑·케이탑 양쪽 자료 포함) */
+function _dupNorm(s) { return String(s || "").toLowerCase().replace(/\([^)]*\)/g, "").replace(/[\s·\-_.,]/g, ""); }
+function _dupOffice(item) {
+  if (OfficeConfig.id === "hitop") return item._office === "ktop" ? "케이탑" : "하이탑";
+  return item._shared_reference ? "하이탑" : "케이탑";
+}
+function findSimilarBuildings(name) {
+  const n = _dupNorm(name);
+  if (n.length < 2) return [];
+  return (allDriveResources || []).filter(r => {
+    const m = _dupNorm(r.name);
+    return m && (m === n || (Math.min(m.length, n.length) >= 4 && (m.includes(n) || n.includes(m))));
+  });
+}
+function confirmDuplicateBuilding(name) {
+  const hits = findSimilarBuildings(name);
+  if (!hits.length) return Promise.resolve(true);
+  return new Promise(resolve => {
+    const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,30,40,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+    const rows = hits.slice(0, 6).map(r => '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #d9e4ee;border-radius:10px;margin-top:6px;background:#f8fbfd;"><div><b style="color:' + (_dupOffice(r) === "케이탑" ? "#b45309" : "#1d5fa8") + ';">' + _dupOffice(r) + '</b> · ' + esc(r.name) + '<div style="font-size:.78rem;color:#6b7b8c;">' + esc(r.category || "") + '</div></div><button type="button" data-open="' + esc(r.id) + '" style="border:1px solid #1d5fa8;background:#fff;color:#1d5fa8;border-radius:8px;padding:5px 10px;cursor:pointer;">기존 자료 열기</button></div>').join("");
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3);color:#1d2b3a;font-family:inherit;">'
+      + '<div style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">⚠️ 이미 비슷한 건물이 있어요</div>'
+      + '<div style="font-size:.9rem;line-height:1.5;color:#44556a;">"' + esc(name) + '" 과(와) 같거나 비슷한 이름이 아래에 있습니다. 같은 건물이면 새로 만들지 말고 기존 자료를 열어 이어서 입력해 주세요.</div>'
+      + rows
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" data-act="cancel" style="border:1px solid #c5d3de;background:#fff;border-radius:10px;padding:8px 16px;cursor:pointer;">취소</button><button type="button" data-act="go" style="border:0;background:#d9534f;color:#fff;border-radius:10px;padding:8px 16px;cursor:pointer;font-weight:700;">그래도 새로 등록</button></div></div>';
+    const done = v => { ov.remove(); resolve(v); };
+    ov.addEventListener("click", e => {
+      const t = e.target.closest("button"); if (!t) { if (e.target === ov) done(false); return; }
+      if (t.dataset.open) { done(false); openDriveBuilding("building-detail.html", t.dataset.open); }
+      else if (t.dataset.act === "go") done(true);
+      else if (t.dataset.act === "cancel") done(false);
+    });
+    document.body.appendChild(ov);
+  });
+}
+
 document.getElementById("driveSaveBtn").addEventListener("click", async () => {
   const btn = document.getElementById("driveSaveBtn");
   const category = document.getElementById("drive_category").value.trim();
@@ -109,6 +148,7 @@ document.getElementById("driveSaveBtn").addEventListener("click", async () => {
   const url = document.getElementById("drive_url").value.trim();
   if (!category) { showToast("카테고리를 입력해주세요"); return; }
   if (!name) { showToast(driveResourceScope === "land" ? "자료명을 입력해주세요" : "건물명을 입력해주세요"); return; }
+  if (!(await confirmDuplicateBuilding(name))) return;
   btn.disabled = true; btn.textContent = "저장 중...";
   try {
     const statusEl=document.getElementById("drive_completion_reg"),monthEl=document.getElementById("drive_movein_reg");
@@ -195,7 +235,7 @@ function _buildDriveItemsHtml(items, cat) {
     return `
     <div class="listing-card" style="cursor:default;">
       <div style="margin-bottom:10px;">
-        <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>${item._shared_reference ? '<span style="font-size:0.72rem;color:var(--text-muted);">공유 기본자료</span>' : ''}
+        <span style="font-size:0.92rem;font-weight:600;color:var(--gold-soft);">${item.name}</span>${item._shared_reference ? '<span style="font-size:0.72rem;color:var(--text-muted);">' + (item._office === 'ktop' ? '🔗 케이탑 공유 · 읽기만' : '공유 기본자료') + '</span>' : ''}
         ${memoPreview ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;line-height:1.4;">📝 ${memoPreview}</div>` : ''}
         ${residentialBasicSummary(item)}
         ${linkedCount ? `<div style="font-size:0.72rem;color:var(--gold);margin-top:2px;opacity:0.8;">🔗 연결된 매물 ${linkedCount}건</div>` : ''}
@@ -205,9 +245,9 @@ function _buildDriveItemsHtml(items, cat) {
         <button class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px;" onclick="openDriveBuilding('building-detail.html','${item.id}')">📁 열기</button>
         <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveBuilding('building-overview.html','${item.id}')">📝 개요</button>
         ${item.url ? `<button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="window.open('${item.url.replace(/'/g,"%27")}','_blank')">🔗 드라이브</button>` : ''}
-        <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveLinkModal('${item.id}')">🔗 매물연결</button>
-        <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
-        <button class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
+        <button ${item._office === 'ktop' ? 'style="display:none"' : ''} class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveLinkModal('${item.id}')">🔗 매물연결</button>
+        <button ${item._office === 'ktop' ? 'style="display:none"' : ''} class="btn btn-ghost" style="font-size:0.75rem;padding:4px 10px;" onclick="openDriveEdit('${item.id}')">✏️ 수정</button>
+        <button ${item._office === 'ktop' ? 'style="display:none"' : ''} class="btn" style="font-size:0.75rem;padding:4px 10px;background:rgba(224,82,82,0.15);color:var(--red);border:1px solid rgba(224,82,82,0.3);" onclick="deleteDriveItem('${item.id}')">🗑 삭제</button>
       </div>
     </div>`;
   }).join("");
