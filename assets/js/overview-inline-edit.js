@@ -15,7 +15,8 @@
 
   function idsForLabel(text) {
     text = String(text || '').trim();
-    if (text === '주소' || text === '새주소(도로명주소)') return ['ov_address', 'ov_lot_address'];
+    if (text === '주소(새주소)') return ['ov_address'];
+    if (text === '주소(구주소)') return ['ov_lot_address'];
     var f = (typeof editableOverviewFields === 'function' ? editableOverviewFields() : []).filter(function (x) { return x[0] === text; })[0];
     if (f) return [f[1]];
     if (text === OWN + ' 분양담당자' && $('ov_sales_agent_name') && !(typeof buildingData !== 'undefined' && buildingData && buildingData._office === 'ktop')) return ['ov_sales_agent_name', 'ov_sales_agent_phone'];
@@ -78,7 +79,7 @@
     if (road && !lot && lookLot(road)) { lot = road; road = ''; }
     return { road: road, lot: lot };
   }
-  // 읽기 표: 새주소·구주소를 '주소' 한 줄로 합친다
+  // 읽기 표: 주소를 '주소(구주소)' '주소(새주소)' 두 칸(네이비 구분칸 포함)으로 나란히 보여준다
   function mergeAddressRow() {
     var labels = Array.prototype.slice.call(document.querySelectorAll('#infoTable .info-table-label'));
     var a = labels.filter(function (l) { return /^(주소|새주소\(도로명주소\))$/.test(l.textContent.trim()); })[0];
@@ -86,10 +87,13 @@
     if (!a || !a.nextElementSibling) return;
     var f = (typeof memoFields !== 'undefined' && memoFields) || {};
     var p = splitAddr(f['주소'], f['지번주소']);
-    var html = (p.road ? '<span class="addr-line"><b class="addr-tag">새주소</b>' + esc(p.road) + '</span>' : '') + (p.lot ? '<span class="addr-line"><b class="addr-tag">구주소</b>' + esc(p.lot) + '</span>' : '');
-    a.textContent = '주소';
-    var cell = a.nextElementSibling; cell.innerHTML = html || '—'; cell.classList.toggle('empty', !html); cell.style.gridColumn = '2 / -1';
     if (j) { var jv = j.nextElementSibling; j.remove(); if (jv) jv.remove(); }
+    var lotVal = a.nextElementSibling;
+    function fill(cell, text) { cell.textContent = text || '—'; cell.className = 'info-table-value' + (text ? '' : ' empty'); cell.style.gridColumn = ''; }
+    a.textContent = '주소(구주소)'; fill(lotVal, p.lot);
+    var l2 = document.createElement('div'), v2 = document.createElement('div');
+    l2.className = 'info-table-label'; l2.textContent = '주소(새주소)'; fill(v2, p.road);
+    lotVal.after(l2, v2);
   }
   var origRender = window.renderReadOnlyViews;
   window.renderReadOnlyViews = function () { origRender.apply(this, arguments); mergeAddressRow(); };
@@ -144,10 +148,10 @@
     } catch (e) { if (sync && token === sync.seq) setStatus(e.message || '주소 변환에 실패했어요.', true); }
   }
   function setupAddressSync() {
-    var road = $('ov_address'), lot = $('ov_lot_address'); if (!road || !lot || !road.parentNode || road.parentNode !== lot.parentNode) return;
+    var road = $('ov_address'), lot = $('ov_lot_address'); if (!road || !lot || !road.parentNode || !lot.parentNode) return;
     var cell = road.parentNode, status = document.createElement('div'); status.className = 'addr-status'; cell.appendChild(status);
     sync = { road: road, lot: lot, status: status, seq: 0, timer: null, pending: { road: false, lot: false }, ph: [road.placeholder, lot.placeholder], handlers: [] };
-    road.placeholder = '새주소 (도로명)  예) 경기도 파주시 ○○로 12'; lot.placeholder = '구주소 (지번)  예) 경기도 파주시 ○○동 123-4';
+    road.placeholder = '새주소(도로명) 예) 경기도 파주시 ○○로 12'; lot.placeholder = '구주소(지번) 예) 경기도 파주시 ○○동 123-4';
     // 옛 자료: 주소 칸에 구주소만 들어 있으면 구주소 칸으로 옮긴다
     var p = splitAddr(road.value, lot.value); road.value = p.road; lot.value = p.lot;
     function bind(el, from) {
