@@ -3,7 +3,7 @@ if (OfficeConfig.id === 'hitop' && !/\/(login|reset-password|property-print|prof
   document.documentElement.dataset.officeSkin = 'hitop-white';
   const skinLink = document.createElement('link');
   skinLink.rel = 'stylesheet';
-  skinLink.href = new URL('../css/hitop-white-skin.css?v=20261102-white', document.currentScript.src).href;
+  skinLink.href = new URL('../css/hitop-white-skin.css?v=20261107-white2', document.currentScript.src).href;
   document.head.appendChild(skinLink);
 }
 
