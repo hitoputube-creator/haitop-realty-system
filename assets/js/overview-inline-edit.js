@@ -19,14 +19,11 @@
     if (text === '지번주소(구주소)') text = '지번주소';
     var f = (typeof editableOverviewFields === 'function' ? editableOverviewFields() : []).filter(function (x) { return x[0] === text; })[0];
     if (f) return [f[1]];
-    if (text === OWN + ' 분양담당자' && $('ov_sales_agent_name')) return ['ov_sales_agent_name', 'ov_sales_agent_phone'];
+    if (text === OWN + ' 분양담당자' && $('ov_sales_agent_name') && !(typeof buildingData !== 'undefined' && buildingData && buildingData._office === 'ktop')) return ['ov_sales_agent_name', 'ov_sales_agent_phone'];
     return null;
   }
 
   function enter() {
-    if (typeof buildingData !== 'undefined' && buildingData && buildingData._office === 'ktop') {
-      showToast('케이탑 공유 자료입니다. 케이탑 화면에서 수정해 주세요.', 3500); return;
-    }
     populateForm(buildingData ? buildingData.memo || '' : '');
     moved = [];
     document.querySelectorAll('#infoTable .info-table-label').forEach(function (label) {
