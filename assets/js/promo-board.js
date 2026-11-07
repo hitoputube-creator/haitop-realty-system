@@ -124,6 +124,7 @@
     html += '<div class="pb-sec">📋 기록 비교 표' + (sb ? ' <span>· ' + esc(sb.name) + '만 보는 중 <button type="button" class="pb-btn" id="pbAllB">전체 건물 보기</button></span>' : "") + "</div>";
     return html;
   }
+  function pbReg(r) { if (!r._created) return ""; var t = new Date(r._created); if (isNaN(t)) return ""; var p = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(t).reduce(function (o, x) { o[x.type] = x.value; return o; }, {}); return " " + p.year + "." + p.month + "." + p.day; }
   function rowHtml(r) {
     var b = state.byId[r._buildingId], st = HR.status(r), d = discount(r), dv = derive(r);
     var link = b ? OfficeConfig.urlFor("building-detail.html?id=" + encodeURIComponent(b.id)) : "";
@@ -137,7 +138,7 @@
     }).join("");
     return '<tr data-link="' + esc(link) + '"><td><b>' + esc(b ? b.name : "(삭제된 건물)") + "</b></td>"
       + "<td>" + esc(subOf(r) || "건물 전체") + (firstLine ? "<small>" + esc(firstLine) + "</small>" : "") + "</td>"
-      + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span>" + (r._shared ? ' <span class="pb-tag" title="' + esc(r._sharedLabel) + ' 기록 (읽기만)">🔗' + esc(r._sharedLabel) + "</span>" : "") + "</td>"
+      + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span>" + ' <span class="pb-tag" style="font-weight:700;border-color:transparent;' + (r._origin === "ktop" ? "background:#fff1e0;color:#b45309" : "background:#e8f3ff;color:#1d5fa8") + '" title="' + (r._shared ? "공유 기록 (읽기만)" : "이 사무소에서 등록") + '">' + (r._origin === "ktop" ? "케이탑" : "하이탑") + " 등록" + pbReg(r) + "</span></td>"
       + "<td>" + (r.fee ? '<span class="pb-tag pb-fee">' + esc(r.fee) + "</span>" : "-") + "</td>"
       + "<td>" + price + "</td>"
       + "<td>" + (dr.length ? dr.join(" / ") : "-") + "</td><td>" + (dv.yld ? esc(dv.yld) : "-") + "</td>"
@@ -242,7 +243,7 @@
     var anchor = document.getElementById("globalPropertySearch");
     if (!anchor) return;
     try {
-      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261107-share2");
+      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261107-share3");
       HR = window.HitopRecords;
       var res = await Promise.all([HR.fetchRecords(null), getDriveResources()]);
       state.recs = res[0].records; state.urlMap = res[0].urlMap;
