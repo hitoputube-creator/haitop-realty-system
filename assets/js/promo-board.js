@@ -79,7 +79,7 @@
       if (state.kind !== "전체" && r.kind !== state.kind) return false;
       if (q) {
         var b = state.byId[r._buildingId];
-        var hay = [b ? b.name : "", subOf(r), r.kind, r.text, r.fee, derive(r).price].join(" ").toLowerCase();
+        var hay = [b ? b.name + " " + dname(b) : "", subOf(r), r.kind, r.text, r.fee, derive(r).price].join(" ").toLowerCase();
         if (hay.indexOf(q) < 0) return false;
       }
       return true;
@@ -92,6 +92,13 @@
     return list;
   }
 
+  /* 아파트 단지내상가는 "아파트 단지내상가(운정6차 디에트르 에듀타운)"처럼 카테고리 뒤에 단지 이름을 붙여 보여준다 */
+  function dname(b) {
+    if (!b) return "(삭제된 건물)";
+    var c = String(b.category || "").trim(), n = String(b.name || "").trim();
+    if (c && /단지내상가/.test(c)) { var base = n.replace(/\s*단지내상가\s*$/, "").trim(); return c + "(" + (base || n) + ")"; }
+    return n;
+  }
   function dAgo(d) { return Math.round((Date.parse(HR.today()) - Date.parse(String(d).slice(0, 10))) / 86400000); }
   function mdOf(d) { return String(d).slice(5, 10).replace("-", "."); }
   function buildingCards() {
@@ -119,11 +126,11 @@
       if (o.fee) tags += '<span class="pb-tag pb-fee">수수료 ' + o.fee + "%</span> ";
       if (o.disc) tags += '<span class="pb-tag pb-disc">최대 -' + o.disc + "%</span> ";
       if (o.due) { var dd = Math.round((Date.parse(o.due) - Date.parse(HR.today())) / 86400000); tags += dd >= 0 && dd <= 7 ? '<span class="pb-tag pb-soon">D-' + dd + "</span>" : '<span class="pb-tag">~' + mdOf(o.due) + "</span>"; }
-      return '<div class="pb-b' + (state.bsel === o.id ? " sel" : "") + '" data-bsel="' + esc(o.id) + '"><div class="n">' + esc(b ? b.name : "(삭제된 건물)") + (dAgo(o.last) <= 7 ? '<span class="pb-new">NEW</span>' : "") + '</div><div class="m">최근 ' + mdOf(o.last) + " · 기록 " + o.n + "건</div>" + (tags ? '<div class="tg">' + tags + "</div>" : "") + "</div>";
+      return '<div class="pb-b' + (state.bsel === o.id ? " sel" : "") + '" data-bsel="' + esc(o.id) + '"><div class="n">' + esc(dname(b)) + (dAgo(o.last) <= 7 ? '<span class="pb-new">NEW</span>' : "") + '</div><div class="m">최근 ' + mdOf(o.last) + " · 기록 " + o.n + "건</div>" + (tags ? '<div class="tg">' + tags + "</div>" : "") + "</div>";
     }).join("") + "</div>";
     if (list.length > BMAX) html += '<div style="text-align:center;margin:0 0 6px"><button type="button" class="pb-btn" id="pbBAll">' + (state.bAll ? "접기 ▴" : "전체 보기 (" + list.length + "곳) ▾") + "</button></div>";
     var sb = state.bsel && state.byId[state.bsel];
-    html += '<div class="pb-sec">📋 기록 비교 표' + (sb ? ' <span>· ' + esc(sb.name) + '만 보는 중 <button type="button" class="pb-btn" id="pbAllB">전체 건물 보기</button></span>' : "") + "</div>";
+    html += '<div class="pb-sec">📋 기록 비교 표' + (sb ? ' <span>· ' + esc(dname(sb)) + '만 보는 중 <button type="button" class="pb-btn" id="pbAllB">전체 건물 보기</button></span>' : "") + "</div>";
     return html;
   }
   function pbReg(r) { if (!r._created) return ""; var t = new Date(r._created); if (isNaN(t)) return ""; var p = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(t).reduce(function (o, x) { o[x.type] = x.value; return o; }, {}); return " " + p.year + "." + p.month + "." + p.day; }
@@ -138,7 +145,7 @@
       var u = state.urlMap[f.url] || f.url;
       return '<a class="pb-file" href="' + esc(u) + '" target="_blank" rel="noopener" data-pb-file="1">' + (HRisImg(f) ? "🖼 " : "📄 ") + esc(String(f.name || "파일").slice(0, 14)) + "</a>";
     }).join("");
-    return '<tr data-link="' + esc(link) + '"><td><b>' + esc(b ? b.name : "(삭제된 건물)") + "</b></td>"
+    return '<tr data-link="' + esc(link) + '"><td><b>' + esc(dname(b)) + "</b></td>"
       + "<td>" + esc(subOf(r) || "건물 전체") + (firstLine ? "<small>" + esc(firstLine) + "</small>" : "") + "</td>"
       + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span>" + ' <span class="pb-tag" style="font-weight:700;border-color:transparent;' + (r._origin === "ktop" ? "background:#fff1e0;color:#b45309" : "background:#e8f3ff;color:#1d5fa8") + '" title="' + (r._shared ? "공유 기록 (읽기만)" : "이 사무소에서 등록") + '">' + (r._origin === "ktop" ? "케이탑" : "하이탑") + " 등록" + pbReg(r) + "</span></td>"
       + "<td>" + (r.fee ? '<span class="pb-tag pb-fee">' + esc(r.fee) + "</span>" : "-") + "</td>"
@@ -246,11 +253,11 @@
     var anchor = document.getElementById("globalPropertySearch");
     if (!anchor) return;
     try {
-      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261107-share3");
+      if (!window.HitopRecords) await loadScript("assets/js/building-records.js?v=20261107-zoom2");
       HR = window.HitopRecords;
       var res = await Promise.all([HR.fetchRecords(null), getDriveResources()]);
       state.recs = res[0].records; state.urlMap = res[0].urlMap;
-      (res[1] || []).forEach(function (b) { if (b && b.id && b.name) state.byId[b.id] = { id: b.id, name: b.name }; });
+      (res[1] || []).forEach(function (b) { if (b && b.id && b.name) state.byId[b.id] = { id: b.id, name: b.name, category: b.category || "" }; });
     } catch (e) { console.warn("[홍보 보드] 불러오기 실패", e); return; }
     style();
     var root = document.createElement("section"); root.id = "promoBoard"; root.className = "pb no-print";
