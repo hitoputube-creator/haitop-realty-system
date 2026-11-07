@@ -5,7 +5,7 @@
 (function () {
   if (window.__promoBoardLoaded) return; window.__promoBoardLoaded = true;
   var LS_OPEN = "hitop_promo_board_open";
-  var state = { recs: [], urlMap: {}, byId: {}, kind: "전체", bsel: "", sort: "due", q: "", limit: 8, tableOpen: false };
+  var state = { recs: [], urlMap: {}, byId: {}, kind: "전체", bsel: "", sort: "due", q: "", limit: 8, tableOpen: false, bAll: false };
   var HR = null;
 
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
@@ -57,10 +57,10 @@
       ".pb-fee{background:#fff1c2;color:#8a5a00;font-weight:700}.pb-soon{background:#ffe0e0;color:#b00020;font-weight:700}",
       ".pb-best{color:#d14a00;font-weight:700}.pb-orig{color:#8a9a98;text-decoration:line-through;font-size:12px}",
       ".pb-empty{padding:14px 6px;color:#667b79}",
-      ".pb-bs{display:flex;gap:10px;overflow-x:auto;margin:8px 0 12px;padding-bottom:4px}",
-      ".pb-b{min-width:210px;border:1px solid #dde;border-radius:12px;padding:10px 12px;background:#fafefe;cursor:pointer}",
-      ".pb-b:hover{background:#f1fbfa}.pb-b.sel{border:2px solid #1b8a8a;background:#eefaf9;padding:9px 11px}",
-      ".pb-b .n{font-weight:700;font-size:14px}.pb-b .m{color:#7a8b89;margin:2px 0 6px;font-size:12px}",
+      ".pb-bs{display:block;border:1px solid #dde;border-radius:12px;overflow:hidden;margin:8px 0 8px}",
+      ".pb-b{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;padding:9px 14px;background:#fafefe;cursor:pointer;border-top:1px solid #e6eeee}.pb-b:first-child{border-top:0}",
+      ".pb-b:hover{background:#f1fbfa}.pb-b.sel{background:#e3f6f4;box-shadow:inset 4px 0 0 #1b8a8a}",
+      ".pb-b .n{font-weight:700;font-size:14px;flex:1 1 260px;min-width:0}.pb-b .m{color:#7a8b89;font-size:12px;white-space:nowrap}.pb-b .tg{display:flex;gap:6px;flex-wrap:wrap}",
       ".pb-new{background:#1b8a8a;color:#fff;border-radius:8px;font-size:10px;padding:0 5px;margin-left:4px;vertical-align:middle}",
       ".pb-disc{background:#ffe6d6;color:#d14a00;font-weight:700}",
       ".pb-sec{font-weight:700;margin:8px 0 2px}.pb-sec span{font-weight:400;color:#667b79}",
@@ -113,13 +113,15 @@
     var list = buildingCards();
     var html = '<div class="pb-sec">🏢 최근 소식이 있는 건물 <span>· 최근 30일 안에 새 기록이 올라온 건물, 최근순 · 누르면 아래 표가 그 건물만 보여요</span></div>';
     if (!list.length) return html + '<div class="pb-empty">최근 30일 안에 올라온 기록이 없어요.</div>';
-    html += '<div class="pb-bs">' + list.map(function (o) {
+    var BMAX = 5, bshown = state.bAll || list.length <= BMAX ? list : list.filter(function (o, i) { return i < BMAX || o.id === state.bsel; });
+    html += '<div class="pb-bs">' + bshown.map(function (o) {
       var b = state.byId[o.id], tags = "";
       if (o.fee) tags += '<span class="pb-tag pb-fee">수수료 ' + o.fee + "%</span> ";
       if (o.disc) tags += '<span class="pb-tag pb-disc">최대 -' + o.disc + "%</span> ";
       if (o.due) { var dd = Math.round((Date.parse(o.due) - Date.parse(HR.today())) / 86400000); tags += dd >= 0 && dd <= 7 ? '<span class="pb-tag pb-soon">D-' + dd + "</span>" : '<span class="pb-tag">~' + mdOf(o.due) + "</span>"; }
-      return '<div class="pb-b' + (state.bsel === o.id ? " sel" : "") + '" data-bsel="' + esc(o.id) + '"><div class="n">' + esc(b ? b.name : "(삭제된 건물)") + (dAgo(o.last) <= 7 ? '<span class="pb-new">NEW</span>' : "") + '</div><div class="m">최근 ' + mdOf(o.last) + " · 기록 " + o.n + "건</div>" + tags + "</div>";
+      return '<div class="pb-b' + (state.bsel === o.id ? " sel" : "") + '" data-bsel="' + esc(o.id) + '"><div class="n">' + esc(b ? b.name : "(삭제된 건물)") + (dAgo(o.last) <= 7 ? '<span class="pb-new">NEW</span>' : "") + '</div><div class="m">최근 ' + mdOf(o.last) + " · 기록 " + o.n + "건</div>" + (tags ? '<div class="tg">' + tags + "</div>" : "") + "</div>";
     }).join("") + "</div>";
+    if (list.length > BMAX) html += '<div style="text-align:center;margin:0 0 6px"><button type="button" class="pb-btn" id="pbBAll">' + (state.bAll ? "접기 ▴" : "전체 보기 (" + list.length + "곳) ▾") + "</button></div>";
     var sb = state.bsel && state.byId[state.bsel];
     html += '<div class="pb-sec">📋 기록 비교 표' + (sb ? ' <span>· ' + esc(sb.name) + '만 보는 중 <button type="button" class="pb-btn" id="pbAllB">전체 건물 보기</button></span>' : "") + "</div>";
     return html;
@@ -178,6 +180,7 @@
     root.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { state.kind = b.dataset.kind; state.limit = 8; render(); }; });
     root.querySelectorAll("[data-sort]").forEach(function (b) { b.onclick = function () { state.sort = b.dataset.sort; render(); }; });
     root.querySelectorAll("[data-bsel]").forEach(function (c) { c.onclick = function () { state.bsel = state.bsel === c.dataset.bsel ? "" : c.dataset.bsel; if (state.bsel) state.tableOpen = true; state.limit = 8; render(); }; });
+    var bAll = root.querySelector("#pbBAll"); if (bAll) bAll.onclick = function () { state.bAll = !state.bAll; render(); };
     var allB = root.querySelector("#pbAllB"); if (allB) allB.onclick = function () { state.bsel = ""; render(); };
     var more = root.querySelector("#pbMore"); if (more) more.onclick = function () { state.limit += 20; render(); };
     var tb = root.querySelector("#pbTbl"); if (tb) tb.onclick = function () { state.tableOpen = !state.tableOpen; render(); };
