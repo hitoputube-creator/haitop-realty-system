@@ -98,8 +98,10 @@
     return rows.filter(function (row) { return String(row.file_name || "").indexOf(PREFIX) === 0 && (buildingId ? row.building_id === buildingId : (!known || known[row.building_id])); })
       .map(function (row) {
         var r = parseRow(row); if (!r) return null;
-        r._rowId = "shared-" + other + "-" + row.id; r._shared = other; r._sharedLabel = label;
-        if (r.files.length) { r.text = String(r.text || "") + "\n📎 첨부파일 " + r.files.length + "개는 " + label + "에서 볼 수 있어요"; r.files = []; }
+        r._rowId = "shared-" + other + "-" + row.id; r._shared = other; r._sharedLabel = label; r._origin = other;
+        var withUrl = r.files.filter(function (f) { return f && f.url; }), lost = r.files.length - withUrl.length;
+        r.files = withUrl;
+        if (lost > 0) r.text = String(r.text || "") + "\n📎 열 수 없는 첨부파일 " + lost + "개는 " + label + "에서 볼 수 있어요";
         return r;
       }).filter(Boolean);
   }
@@ -113,6 +115,7 @@
     var rowsOwn = await res.json();
     if (isK) rowsOwn = rowsOwn.filter(function (row) { return String(row.file_name || "").indexOf(PREFIX) === 0 && !row._shared_reference; });
     var records = rowsOwn.map(parseRow).filter(Boolean);
+    records.forEach(function (r) { r._origin = OfficeConfig.id; });
     var urls = []; records.forEach(function (r) { r.files.forEach(function (f) { if (f.url && urls.indexOf(f.url) < 0) urls.push(f.url); }); });
     var urlMap = {};
     if (urls.length) {
@@ -182,6 +185,7 @@
       ".hr-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:4px;font-size:12px;color:#6b7b79}",
       ".hr-tag{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid #0b7a6b;color:#0b7a6b;white-space:nowrap}",
       ".hr-tag.memo{border-color:#c5d3d1;color:#6b7b79}",
+      ".hr-origin{font-size:11px;font-weight:700;padding:1px 8px;border-radius:6px;white-space:nowrap}.hr-origin.hitop{background:#e8f3ff;color:#1d5fa8}.hr-origin.ktop{background:#fff1e0;color:#b45309}",
       ".hr-st{font-size:11px;padding:1px 8px;border-radius:999px;white-space:nowrap}",
       ".hr-st.active{background:#e6f4f1;color:#0b7a6b}.hr-st.soon{background:#fdecea;color:#b3261e;font-weight:700}.hr-st.ended{background:#e9eded;color:#6b7b79}",
       ".hr-fee{font-size:11px;padding:1px 8px;border-radius:999px;background:#fff4d6;color:#8a5a00;font-weight:700;white-space:nowrap}",
@@ -227,16 +231,18 @@
     if (imgs.length) h += '<div class="hr-thumbs">' + imgs.slice(0, 3).map(function (f) { var u = urlMap[f.url] || f.url; return '<img loading="lazy" src="' + esc(u) + '" alt="' + esc(f.name) + '" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">'; }).join("") + "</div>";
     return { top: h, bottom: (others.length || imgs.length > 3) ? '<div class="hr-files">' + others.map(function (f) { var u = urlMap[f.url] || f.url; return '<span class="hr-file" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">' + (isPdfFile(f) ? "📄 " : "📎 ") + esc(f.name) + "</span>"; }).join("") + imgs.slice(3).map(function (f) { var u = urlMap[f.url] || f.url; return '<span class="hr-file" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">🖼 ' + esc(f.name) + "</span>"; }).join("") + "</div>" : "" };
   }
+  function regDate(r) { if (!r._created) return ""; var t = new Date(r._created); if (isNaN(t)) return ""; var p = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(t).reduce(function (o, x) { o[x.type] = x.value; return o; }, {}); return p.year + "." + p.month + "." + p.day; }
+  function originTag(r) { var k = r._origin === "ktop" ? "ktop" : "hitop", d = regDate(r); return '<span class="hr-origin ' + k + '" title="' + (d ? d + ' 등록' : '') + '">' + (k === "ktop" ? "케이탑" : "하이탑") + " 등록" + (d ? " " + d : "") + "</span>"; }
   function cardHtml(r, urlMap, o) {
     o = o || {};
     var st = status(r), fh = filesHtml(r, urlMap || {});
     var where = (o.buildingName ? (o.link ? '<a href="' + esc(o.link) + '">' + esc(o.buildingName) + "</a>" : esc(o.buildingName)) : "") + (r.floor ? (o.buildingName ? " · " : "") + esc(r.floor) + esc(r.fu || "층") : "") + (r.rooms ? " " + esc(r.rooms) + (/호/.test(r.rooms) ? "" : "호") : "");
     if (!where) where = "건물 전체";
-    var acts = r._shared ? '<div class="hr-actions"><span class="hr-tag memo">🔗 ' + esc(r._sharedLabel) + ' 공유 · 읽기만</span></div>' : o.readonly ? "" : '<div class="hr-actions">'
+    var acts = r._shared ? '<div class="hr-actions"><span class="hr-tag memo">🔗 공유 · 읽기만</span></div>' : o.readonly ? "" : '<div class="hr-actions">'
       + (r.ended ? '<button type="button" class="hr-btn" data-hr-act="resume" data-id="' + esc(r._rowId) + '">다시 진행</button>' : '<button type="button" class="hr-btn main" data-hr-act="end" data-id="' + esc(r._rowId) + '">종료 처리</button>')
       + '<button type="button" class="hr-btn" data-hr-act="edit" data-id="' + esc(r._rowId) + '">수정</button><button type="button" class="hr-btn del" data-hr-act="del" data-id="' + esc(r._rowId) + '">삭제</button></div>';
     return '<div class="hr-card' + (st.key === "ended" ? " ended" : "") + '" data-rec="' + esc(r._rowId) + '">' + fh.top
-      + '<div class="hr-body"><div class="hr-meta"><span class="hr-tag' + (r.kind === "메모" ? " memo" : "") + '">' + esc(r.kind) + '</span><span class="hr-st ' + st.key + '">' + esc(st.label) + "</span>"
+      + '<div class="hr-body"><div class="hr-meta">' + originTag(r) + '<span class="hr-tag' + (r.kind === "메모" ? " memo" : "") + '">' + esc(r.kind) + '</span><span class="hr-st ' + st.key + '">' + esc(st.label) + "</span>"
       + (r.fee ? '<span class="hr-fee">수수료 ' + esc(r.fee) + "</span>" : "") + "<span>" + esc(r.date || "") + "</span></div>"
       + '<div class="hr-where">' + where + '</div>' + priceHtml(r) + '<div class="hr-text">' + esc(r.text) + "</div>" + fh.bottom + "</div>" + acts + "</div>";
   }
@@ -263,11 +269,11 @@
       var imgs = r.files.filter(isImageFile), others = r.files.filter(function (f) { return !isImageFile(f); });
       var fh = '<div class="hr-imgs">' + imgs.map(function (f) { var u = urlMap[f.url] || f.url; return '<img loading="lazy" src="' + esc(u) + '" alt="' + esc(f.name) + '" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">'; }).join("") + "</div>"
         + others.map(function (f) { var u = urlMap[f.url] || f.url; return '<div><span class="hr-file" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">' + (isPdfFile(f) ? "📄 " : "📎 ") + esc(f.name) + "</span></div>"; }).join("");
-      var acts = r._shared ? '<td class="hr-act"><span class="hr-tag memo">🔗 ' + esc(r._sharedLabel) + ' 공유</span></td>' : o.readonly ? "" : '<td class="hr-act">'
+      var acts = r._shared ? '<td class="hr-act"><span class="hr-tag memo">🔗 공유 · 읽기만</span></td>' : o.readonly ? "" : '<td class="hr-act">'
         + (r.ended ? '<button type="button" class="hr-btn" data-hr-act="resume" data-id="' + esc(r._rowId) + '">다시 진행</button>' : '<button type="button" class="hr-btn main" data-hr-act="end" data-id="' + esc(r._rowId) + '">종료 처리</button>')
         + '<button type="button" class="hr-btn" data-hr-act="edit" data-id="' + esc(r._rowId) + '">수정</button><button type="button" class="hr-btn del" data-hr-act="del" data-id="' + esc(r._rowId) + '">삭제</button></td>';
       return '<tr class="' + (st.key === "ended" ? "ended" : "") + '" data-rec="' + esc(r._rowId) + '"><td class="hr-d">' + esc(md(d)) + "<small>" + esc(d.slice(0, 4)) + "</small></td><td>" + bcell + "</td>"
-        + '<td><div class="hr-meta" style="margin-bottom:3px"><span class="hr-tag' + (r.kind === "메모" ? " memo" : "") + '">' + esc(r.kind) + '</span><span class="hr-st ' + st.key + '">' + esc(st.label) + "</span>" + (r.fee ? '<span class="hr-fee">수수료 ' + esc(r.fee) + "</span>" : "") + '</div>' + priceHtml(r) + '<div class="hr-c">' + esc(r.text) + '</div><button type="button" class="hr-more" data-hr-more="1">더 보기</button></td>'
+        + '<td><div class="hr-meta" style="margin-bottom:3px">' + originTag(r) + '<span class="hr-tag' + (r.kind === "메모" ? " memo" : "") + '">' + esc(r.kind) + '</span><span class="hr-st ' + st.key + '">' + esc(st.label) + "</span>" + (r.fee ? '<span class="hr-fee">수수료 ' + esc(r.fee) + "</span>" : "") + '</div>' + priceHtml(r) + '<div class="hr-c">' + esc(r.text) + '</div><button type="button" class="hr-more" data-hr-more="1">더 보기</button></td>'
         + "<td>" + fh + "</td>" + acts + "</tr>";
     }).join("");
     return '<div class="hr-tblwrap"><table class="hr-tbl"><thead>' + head + "</thead><tbody>" + rows + "</tbody></table></div>";
