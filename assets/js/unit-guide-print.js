@@ -137,8 +137,11 @@ function unitFloorKey(u) {
   return /^\d+$/.test(f) ? f : floorKeyOf(u && u.호수);
 }
 // 도면 이름이 "1·2층", "1,2층", "1~2층"처럼 여러 층이면 각 층에서 모두 쓴다
-function planHasFloor(label, fk) {
+function planHasFloor(label, fk, ho) {
   const s = String(label || '');
+  // 도면 이름에 "(B동)"처럼 동이 적혀 있으면 그 동의 호실(B로 시작)에만 쓴다
+  const wing = s.match(/\(([A-Za-z])동\)/);
+  if (wing && ho && !String(ho).trim().toUpperCase().startsWith(wing[1].toUpperCase())) return false;
   if (planKey(s) === fk) return true;
   if (/지하|^B/i.test(s)) return false;
   const nums = s.match(/\d+/g) || [];
@@ -147,7 +150,7 @@ function planHasFloor(label, fk) {
   return nums.includes(fk);
 }
 function pickPlan(floors, fk, unit) {
-  const plan = (floors || []).find(f => planHasFloor(f.floor_number, fk));
+  const plan = (floors || []).find(f => planHasFloor(f.floor_number, fk, unit && unit.호수));
   if (!plan || !plan.cloudinary_url) return { planUrl: '', pos: null };
   const pp = unit && unit.plan_positions && unit.plan_positions[plan.id];
   const pos = pp && (pp[fk] || Object.values(pp)[0]);
@@ -369,7 +372,7 @@ async function run(hos, mode, btn) {
       if (btn && picked.length === 1) {
         const u = picked[0], d = datas[0];
         if (d.planUrl && !d.pos) {
-          const plan = (floors || []).find(f => planHasFloor(f.floor_number, d.fk));
+          const plan = (floors || []).find(f => planHasFloor(f.floor_number, d.fk, u.호수));
           const r = await pickPosition({ planUrl: d.planUrl, ho: String(u.호수).replace(/호$/, '') + '호', title: floorText(d.fk) + ' 평면도', canSave: !!plan && typeof getBuildingRecord === 'function' && typeof saveBuildingUnits === 'function' });
           if (!r) return;
           if (r.pos) {
