@@ -60,7 +60,7 @@
       ".pb-bs{display:block;border:1px solid #dde;border-radius:12px;overflow:hidden;margin:8px 0 8px}",
       ".pb-b{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;padding:9px 14px;background:#fafefe;cursor:pointer;border-top:1px solid #e6eeee}.pb-b:first-child{border-top:0}",
       ".pb-b:hover{background:#f1fbfa}.pb-b.sel{background:#e3f6f4;box-shadow:inset 4px 0 0 #1b8a8a}",
-      ".pb-b .n{font-weight:700;font-size:14px;flex:1 1 260px;min-width:0}.pb-b .m{color:#7a8b89;font-size:12px;white-space:nowrap}.pb-b .tg{display:flex;gap:6px;flex-wrap:wrap}",
+      ".pb-b .n{font-weight:700;font-size:14px;flex:1 1 260px;min-width:0}.pb-b .m{color:#7a8b89;font-size:12px;white-space:nowrap;min-width:132px;text-align:right}.pb-b .tg{display:flex;gap:6px;flex-wrap:wrap}",
       ".pb-new{background:#1b8a8a;color:#fff;border-radius:8px;font-size:10px;padding:0 5px;margin-left:4px;vertical-align:middle}",
       ".pb-disc{background:#ffe6d6;color:#d14a00;font-weight:700}",
       ".pb-sec{font-weight:700;margin:8px 0 2px}.pb-sec span{font-weight:400;color:#667b79}",
@@ -147,7 +147,7 @@
       if (o.fee) tags += '<span class="pb-tag pb-fee">수수료 ' + o.fee + "%</span> ";
       if (o.disc) tags += '<span class="pb-tag pb-disc">최대 -' + o.disc + "%</span> ";
       if (o.due) { var dd = Math.round((Date.parse(o.due) - Date.parse(HR.today())) / 86400000); tags += dd >= 0 && dd <= 7 ? '<span class="pb-tag pb-soon">D-' + dd + "</span>" : '<span class="pb-tag">~' + mdOf(o.due) + "</span>"; }
-      return '<div class="pb-b' + (state.bsel === o.id ? " sel" : "") + '" data-bsel="' + esc(o.id) + '"><div class="n">' + esc(dname(b)) + (dAgo(o.last) <= 7 ? '<span class="pb-new">NEW</span>' : "") + '</div><div class="m">최근 ' + mdOf(o.last) + " · 기록 " + o.n + "건</div>" + (tags ? '<div class="tg">' + tags + "</div>" : "") + "</div>";
+      return '<div class="pb-b' + (state.bsel === o.id ? " sel" : "") + '" data-bsel="' + esc(o.id) + '"><div class="n">' + esc(dname(b)) + (dAgo(o.last) <= 7 ? '<span class="pb-new">NEW</span>' : "") + '</div>' + (tags ? '<div class="tg">' + tags + "</div>" : "") + '<div class="m">최근 ' + mdOf(o.last) + " · 기록 " + o.n + "건</div></div>";
     }).join("") + "</div>";
     if (list.length > BMAX) html += '<div style="text-align:center;margin:0 0 6px"><button type="button" class="pb-btn" id="pbBAll">' + (state.bAll ? "접기 ▴" : "전체 보기 (" + list.length + "곳) ▾") + "</button></div>";
     var sb = state.bsel && state.byId[state.bsel];
