@@ -102,6 +102,8 @@
         r._rowId = "shared-" + other + "-" + row.id; r._shared = other; r._sharedLabel = label; r._origin = other;
         var withUrl = r.files.filter(function (f) { return f && f.url; }), lost = r.files.length - withUrl.length;
         r.files = withUrl;
+        // 하이탑은 케이탑이 올린 기록도 직접 수정·삭제할 수 있다 (케이탑 공유 함수가 하이탑 관리자 로그인을 확인하고 저장)
+        if (OfficeConfig.id === "hitop" && other === "ktop" && lost === 0) { r._rowId = row.id; r._shared = ""; r._ktopRecord = true; }
         if (lost > 0) r.text = String(r.text || "") + "\n📎 열 수 없는 첨부파일 " + lost + "개는 " + label + "에서 볼 수 있어요";
         return r;
       }).filter(Boolean);
@@ -147,6 +149,7 @@
 
   /* 파일 올리기: PDF는 비공개 보관소, 그 밖은 기존 자료와 같은 방식 */
   async function uploadFile(file, buildingId) {
+    if (window.KtopShared && await window.KtopShared.isKtopBuilding(buildingId)) return window.KtopShared.upload(file, "haitop/files", buildingId);
     var pdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
     if (typeof OfficeConfig !== "undefined" && OfficeConfig.id === "ktop") {
       if (file.size > 20 * 1024 * 1024) throw new Error("파일은 20MB 이하로 올려주세요.");
@@ -241,7 +244,7 @@
     var st = status(r), fh = filesHtml(r, urlMap || {});
     var where = (o.buildingName ? (o.link ? '<a href="' + esc(o.link) + '">' + esc(o.buildingName) + "</a>" : esc(o.buildingName)) : "") + (r.floor ? (o.buildingName ? " · " : "") + esc(r.floor) + esc(r.fu || "층") : "") + (r.rooms ? " " + esc(r.rooms) + (/호/.test(r.rooms) ? "" : "호") : "");
     if (!where) where = "건물 전체";
-    var acts = r._shared ? '<div class="hr-actions"><span class="hr-tag memo">🔗 공유 · 읽기만</span></div>' : o.readonly ? "" : '<div class="hr-actions">'
+    var acts = r._shared ? "" : o.readonly ? "" : '<div class="hr-actions">'
       + (r.ended ? '<button type="button" class="hr-btn" data-hr-act="resume" data-id="' + esc(r._rowId) + '">다시 진행</button>' : '<button type="button" class="hr-btn main" data-hr-act="end" data-id="' + esc(r._rowId) + '">종료 처리</button>')
       + '<button type="button" class="hr-btn" data-hr-act="edit" data-id="' + esc(r._rowId) + '">수정</button><button type="button" class="hr-btn del" data-hr-act="del" data-id="' + esc(r._rowId) + '">삭제</button></div>';
     return '<div class="hr-card' + (st.key === "ended" ? " ended" : "") + '" data-rec="' + esc(r._rowId) + '">' + fh.top
@@ -272,7 +275,7 @@
       var imgs = r.files.filter(isImageFile), others = r.files.filter(function (f) { return !isImageFile(f); });
       var fh = '<div class="hr-imgs">' + imgs.map(function (f) { var u = urlMap[f.url] || f.url; return '<img loading="lazy" src="' + esc(u) + '" alt="' + esc(f.name) + '" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">'; }).join("") + "</div>"
         + others.map(function (f) { var u = urlMap[f.url] || f.url; return '<div><span class="hr-file" data-hr-view="' + esc(u) + '" data-hr-name="' + esc(f.name) + '">' + (isPdfFile(f) ? "📄 " : "📎 ") + esc(f.name) + "</span></div>"; }).join("");
-      var acts = r._shared ? '<td class="hr-act"><span class="hr-tag memo">🔗 공유 · 읽기만</span></td>' : o.readonly ? "" : '<td class="hr-act">'
+      var acts = r._shared ? '<td class="hr-act"></td>' : o.readonly ? "" : '<td class="hr-act">'
         + (r.ended ? '<button type="button" class="hr-btn" data-hr-act="resume" data-id="' + esc(r._rowId) + '">다시 진행</button>' : '<button type="button" class="hr-btn main" data-hr-act="end" data-id="' + esc(r._rowId) + '">종료 처리</button>')
         + '<button type="button" class="hr-btn" data-hr-act="edit" data-id="' + esc(r._rowId) + '">수정</button><button type="button" class="hr-btn del" data-hr-act="del" data-id="' + esc(r._rowId) + '">삭제</button></td>';
       return '<tr class="' + (st.key === "ended" ? "ended" : "") + '" data-rec="' + esc(r._rowId) + '"><td class="hr-d">' + esc(md(d)) + "<small>" + esc(d.slice(0, 4)) + "</small></td><td>" + bcell + "</td>"
