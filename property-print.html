@@ -283,6 +283,22 @@ input[type=file].hidden-file { display:none; }
 .pick-actions button.go { background:#25675f; border-color:#5f8780;color:#ffffff; }
 @media print { #pick-overlay { display:none !important; } }
 
+
+/* ── 하단 상호·부동산 정보: 박스형 ── */
+#contact-area { padding:0 !important; overflow:hidden; border:1.5px solid #25675f; border-radius:12px !important;
+  background:#fff; box-shadow:0 2px 8px rgba(37,103,95,.08); }
+#contact-area .contact-head { margin:0; padding:11px 18px; border-bottom:0; align-items:center;
+  background:linear-gradient(115deg,#1d5149,#25675f 60%,#2f8176); }
+#contact-area .contact-company { color:#fff; font-size:15px; letter-spacing:-.2px; }
+#contact-area .contact-phone { color:#fff; font-size:14px; letter-spacing:.3px; }
+#contact-area .contact-grid { gap:0; }
+#contact-area .contact-line { padding:7px 18px; border-top:1px solid #dbe8e5; grid-template-columns:72px 1fr; align-items:center; }
+#contact-area .contact-line:nth-child(-n+2) { border-top:0; }
+#contact-area .contact-line:nth-child(odd) { border-right:1px solid #dbe8e5; }
+#contact-area .contact-line:nth-child(4n+3), #contact-area .contact-line:nth-child(4n+4) { background:#f6faf9; }
+#contact-area .contact-label { color:#25675f; font-weight:800; }
+#contact-area .contact-value { color:#234c49; font-weight:600; }
+@media (max-width:560px){ #contact-area .contact-line{border-right:0 !important; border-top:1px solid #dbe8e5 !important;} #contact-area .contact-line:first-child{border-top:0 !important;} }
 </style>
 </head>
 <body>
