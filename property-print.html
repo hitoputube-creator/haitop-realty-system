@@ -155,7 +155,7 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
 input[type=file].hidden-file { display:none; }
 
 /* ── 하단 회사정보 ── */
-#contact-area { background:var(--navy);
+:is(#contact-area,#contact-area-ktop) { background:var(--navy);
   border-radius:10px; padding:16px 22px 15px; }
 .contact-head { display:grid; grid-template-columns:1fr auto; align-items:end;
   gap:16px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #779a94; }
@@ -261,10 +261,10 @@ input[type=file].hidden-file { display:none; }
   .photo-del-btn { display:none !important; }
   .page-wrap { max-width:100%; margin:0; padding:0; }
   #property-page { box-shadow:none !important; border-radius:0 !important; }
-  #page-header, #contact-area, .sum-card {
+  #page-header, :is(#contact-area,#contact-area-ktop), .sum-card {
     -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   .page-footer { display:none; }
-  #photo-area, #contact-area, #info-table-area, #summary-area, #title-area, #desc-area { page-break-inside:avoid; }
+  #photo-area, :is(#contact-area,#contact-area-ktop), #info-table-area, #summary-area, #title-area, #desc-area { page-break-inside:avoid; }
 }
 
 /* ── 설명서에 넣을 사진 2장 고르기 ── */
@@ -285,20 +285,22 @@ input[type=file].hidden-file { display:none; }
 
 
 /* ── 하단 상호·부동산 정보: 박스형 ── */
-#contact-area { padding:0 !important; overflow:hidden; border:1.5px solid #25675f; border-radius:12px !important;
+:is(#contact-area,#contact-area-ktop) { padding:0 !important; overflow:hidden; border:1.5px solid #25675f; border-radius:12px !important;
   background:#fff; box-shadow:0 2px 8px rgba(37,103,95,.08); }
-#contact-area .contact-head { margin:0; padding:11px 18px; border-bottom:0; align-items:center;
+:is(#contact-area,#contact-area-ktop) .contact-head { margin:0; padding:11px 18px; border-bottom:0; align-items:center;
   background:linear-gradient(115deg,#1d5149,#25675f 60%,#2f8176); }
-#contact-area .contact-company { color:#fff; font-size:15px; letter-spacing:-.2px; }
-#contact-area .contact-phone { color:#fff; font-size:14px; letter-spacing:.3px; }
-#contact-area .contact-grid { gap:0; }
-#contact-area .contact-line { padding:7px 18px; border-top:1px solid #dbe8e5; grid-template-columns:72px 1fr; align-items:center; }
-#contact-area .contact-line:nth-child(-n+2) { border-top:0; }
-#contact-area .contact-line:nth-child(odd) { border-right:1px solid #dbe8e5; }
-#contact-area .contact-line:nth-child(4n+3), #contact-area .contact-line:nth-child(4n+4) { background:#f6faf9; }
-#contact-area .contact-label { color:#25675f; font-weight:800; }
-#contact-area .contact-value { color:#234c49; font-weight:600; }
-@media (max-width:560px){ #contact-area .contact-line{border-right:0 !important; border-top:1px solid #dbe8e5 !important;} #contact-area .contact-line:first-child{border-top:0 !important;} }
+:is(#contact-area,#contact-area-ktop) .contact-company { color:#fff; font-size:15px; letter-spacing:-.2px; }
+:is(#contact-area,#contact-area-ktop) .contact-phone { color:#fff; font-size:14px; letter-spacing:.3px; }
+:is(#contact-area,#contact-area-ktop) .contact-grid { gap:0; }
+:is(#contact-area,#contact-area-ktop) .contact-line { padding:7px 18px; border-top:1px solid #dbe8e5; grid-template-columns:72px 1fr; align-items:center; }
+:is(#contact-area,#contact-area-ktop) .contact-line:nth-child(-n+2) { border-top:0; }
+:is(#contact-area,#contact-area-ktop) .contact-line:nth-child(odd) { border-right:1px solid #dbe8e5; }
+:is(#contact-area,#contact-area-ktop) .contact-line:nth-child(4n+3), :is(#contact-area,#contact-area-ktop) .contact-line:nth-child(4n+4) { background:#f6faf9; }
+:is(#contact-area,#contact-area-ktop) .contact-label { color:#25675f; font-weight:800; }
+:is(#contact-area,#contact-area-ktop) .contact-value { color:#234c49; font-weight:600; }
+@media (max-width:560px){ :is(#contact-area,#contact-area-ktop) .contact-line{border-right:0 !important; border-top:1px solid #dbe8e5 !important;} :is(#contact-area,#contact-area-ktop) .contact-line:first-child{border-top:0 !important;} }
+:is(#contact-area,#contact-area-ktop)[hidden]{display:none !important}
+#contact-area-ktop .contact-grid[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -613,6 +615,15 @@ input[type=file].hidden-file { display:none; }
       </div>
     </div>
 
+    <!-- 케이탑 인쇄물 하단 정보 박스: 아래 KTOP_INFO 값을 채우면 표시됩니다(빈 항목은 자동으로 숨김) -->
+    <div id="contact-area-ktop" data-ktop-company-details hidden style="margin:0 28px 22px; border-radius:10px;">
+      <div class="contact-head">
+        <div class="contact-company" id="ktopCompanyName"></div>
+        <div class="contact-phone" id="ktopCompanyPhone"></div>
+      </div>
+      <div class="contact-grid" id="ktopCompanyGrid"></div>
+    </div>
+
     <div class="page-footer">
       <span data-office-brand data-office-company-footer>하이탑부동산공인중개사사무소 · 031-949-8969</span>
       <span id="footer-date"></span>
@@ -622,6 +633,24 @@ input[type=file].hidden-file { display:none; }
 
 </div><!-- /#mainContent -->
 
+<script>
+/* 케이탑 하단 정보 박스. 값이 있는 항목만 표시합니다. */
+(function () {
+  var KTOP_INFO = { phone: '', rep: '', fax: '', addr: '', reg: '', biz: '', email: '' };
+  if (typeof OfficeConfig === 'undefined' || OfficeConfig.id !== 'ktop') return;
+  var box = document.getElementById('contact-area-ktop');
+  if (!box) return;
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  document.getElementById('ktopCompanyName').textContent = typeof officeCompanyName !== 'undefined' ? officeCompanyName : 'KTOP부동산';
+  document.getElementById('ktopCompanyPhone').textContent = KTOP_INFO.phone ? 'T. ' + KTOP_INFO.phone : '';
+  var rows = [['대표', KTOP_INFO.rep], ['팩스', KTOP_INFO.fax], ['주소', KTOP_INFO.addr], ['등록번호', KTOP_INFO.reg], ['사업자번호', KTOP_INFO.biz], ['이메일', KTOP_INFO.email]]
+    .filter(function (r) { return r[1]; });
+  var grid = document.getElementById('ktopCompanyGrid');
+  grid.innerHTML = rows.map(function (r) { return '<div class="contact-line"><span class="contact-label">' + r[0] + '</span><span class="contact-value">' + esc(r[1]) + '</span></div>'; }).join('');
+  if (!rows.length) grid.hidden = true;
+  box.hidden = false;
+})();
+</script>
 <script>
 (async function () {
   'use strict';
