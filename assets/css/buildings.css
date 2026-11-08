@@ -65,15 +65,13 @@
   margin-bottom:12px;
 }
 .tab{
-  border:1px solid var(--border);
-  background:var(--panel);
+  border:1px solid var(--border);background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;
   padding:8px 10px;
   border-radius:999px;
   cursor:pointer;
   font-size:0.86rem;
   color:var(--muted);
-  font-weight:800;
-}
+  font-weight:800;border-color:transparent;box-shadow:var(--box-depth,0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95));}
 .tab.active{
   border-color:rgba(37,103,95,0.5);
   background:rgba(37,103,95,0.16);
@@ -135,11 +133,9 @@
   padding:4px 10px;
   border-radius:999px;
   border:1px solid var(--border);
-  color:var(--muted);
-  background:#f8fcfc;
+  color:var(--muted);background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;
   cursor:pointer;
-  user-select:none;
-}
+  user-select:none;border-color:transparent;box-shadow:var(--box-depth,0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95));}
 .chip.active{
   border-color:rgba(37,103,95,0.5);
   background:rgba(37,103,95,0.16);

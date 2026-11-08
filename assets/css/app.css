@@ -1,6 +1,6 @@
 /* assets/css/app.css - White Workspace Base Theme (기본 화이트 디자인) */
 
-@import url("tokens.css?v=20261108-white-border1");
+@import url("tokens.css?v=20261108-white-depth1");
 
 *, *::before, *::after { box-sizing:border-box; }
 
@@ -22,14 +22,11 @@ html, body {
 }
 
 /* ── CARD ── */
-.card{
-  background:var(--bg, #ffffff);
+.card{background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;
   border:1px solid var(--border);
   border-radius:18px;
-  padding:20px;
-  box-shadow:0 2px 4px rgba(35,76,73,0.08), 0 10px 28px rgba(35,76,73,0.08), inset 0 1px 0 rgba(37,103,95,0.08);
-  position:relative;
-}
+  padding:20px;box-shadow:var(--box-depth,0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95));
+  position:relative;border-color:transparent;}
 .card::before{
   content:'';
   position:absolute;
@@ -79,16 +76,14 @@ label{
   color:#234c49;
   letter-spacing:0.4px; text-transform:uppercase;
 }
-input, select, textarea{
-  background:#ffffff;
+input, select, textarea{background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;
   border:1px solid #779a94;
   border-radius:10px;
   color:var(--text);
   font-family:inherit; font-size:0.92rem;
   padding:10px 12px; width:100%;
   outline:none;
-  transition:border-color 0.18s, box-shadow 0.18s;
-}
+  transition:border-color 0.18s, box-shadow 0.18s;border-color:transparent;box-shadow:var(--field-depth,inset 0 1px 2px rgba(35,76,73,.04),0 1px 3px rgba(35,76,73,.035));}
 input:focus, select:focus, textarea:focus{
   border-color:rgba(37,103,95,0.5);
   box-shadow:0 0 0 3px rgba(37,103,95,0.08);
@@ -101,13 +96,11 @@ input[readonly]{ background:rgba(255,255,255,0.04); color:var(--muted); cursor:d
 /* ── BUTTONS ── */
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
-  border:1px solid var(--line2);
-  background:rgba(255,255,255,0.02);
+  border:1px solid var(--line2);background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;
   color:var(--sub);
   border-radius:10px; padding:9px 16px;
   font-family:inherit; font-size:0.88rem; font-weight:600;
-  cursor:pointer; transition:all 0.16s; white-space:nowrap;
-}
+  cursor:pointer; transition:all 0.16s; white-space:nowrap;border-color:transparent;box-shadow:var(--box-depth,0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95));}
 .btn:hover{
   border-color:var(--blue);
   background:var(--blue2);

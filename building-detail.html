@@ -6,7 +6,7 @@
   <title>하이탑부동산 | 건물 상세</title>
   <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-border1" />
+  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-depth1" />
   <style>
     /* ── 섹션 타이틀 ── */
     .sec-title {
@@ -24,11 +24,9 @@
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 10px; margin-bottom: 16px;
     }
-    .info-cell {
-      background: #f8fcfc;
+    .info-cell {background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;
       border: 1px solid rgba(37,103,95,0.5);
-      border-radius: 10px; padding: 10px 14px;
-    }
+      border-radius: 10px; padding: 10px 14px;border-color:transparent;box-shadow:var(--box-depth,0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95));}
     .info-cell-label {
       font-size: 0.7rem; font-weight: 700;
       color: #234c49; letter-spacing: 0.5px;
@@ -71,13 +69,11 @@
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 12px; margin-top: 14px;
     }
-    .floor-card {
-      background: #f8fcfc;
+    .floor-card {background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;
       border: 1px solid #779a94;
       border-radius: 12px; overflow: hidden;
       display: flex; flex-direction: column;
-      transition: border-color 0.18s;
-    }
+      transition: border-color 0.18s;border-color:transparent;box-shadow:var(--box-depth,0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95));}
     .floor-card:hover { border-color: rgba(37,103,95,0.5); }
     #floorGrid .floor-card-foot { flex-wrap: wrap; justify-content: flex-end; }
     #floorGrid .floor-badge { flex: 1 1 100%; }
@@ -339,12 +335,9 @@
       padding: 24px 16px; overflow-y: auto;
     }
     .unit-modal-overlay.open { display: flex; }
-    .unit-modal-box {
-      background: linear-gradient(145deg, #ffffff 0%, #ffffff 100%);
+    .unit-modal-box {background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;
       border: 1px solid rgba(37,103,95,0.5); border-radius: 20px;
-      padding: 24px; width: 100%; max-width: 620px;
-      box-shadow: 0 24px 60px rgba(35,76,73,0.08); position: relative;
-    }
+      padding: 24px; width: 100%; max-width: 620px;box-shadow:var(--box-depth,0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95)); position: relative;border-color:transparent;}
     .unit-modal-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 16px; color: #234c49; }
     .unit-modal-close {
       position: absolute; top: 18px; right: 18px;
@@ -1008,13 +1001,13 @@
 <div class="toast" id="toast"></div>
 
 <script src="assets/js/storage.js?v=20261019-commercial-unit-sync"></script><script src="assets/js/ktop-shared-view.js?v=20261107-ksv3"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-depth1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
-<script src="assets/js/building-register-view.js?v=20261108-white-border1"></script>
+<script src="assets/js/building-register-view.js?v=20261108-white-depth1"></script>
 <script>
 /* ═══════════════════════════════════════════
    Cloudinary 설정
@@ -3466,7 +3459,7 @@ async function deleteBFile(id) {
 
 })();
 </script>
-<script src="assets/js/price-room-import.js?v=20261108-white-border1"></script>
+<script src="assets/js/price-room-import.js?v=20261108-white-depth1"></script>
 <script src="assets/js/building-records.js?v=20261107-zoom3"></script>
 <script src="assets/js/building-sales-contact.js?v=20261107-contact3"></script>
 <script src="assets/js/unit-guide-print.js?v=20261107-guide8"></script>
