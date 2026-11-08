@@ -4,11 +4,10 @@ const officeCompanyName = OfficeConfig.id === 'ktop' ? 'KTOP부동산' : '하이
 const officeManagementTitle = officeCompanyName + ' 매물관리';
 
 function officeBrandText(text) {
-  if (OfficeConfig.id !== 'ktop') return text;
   return String(text).replace(/하이탑부동산공인중개사사무소|하이탑부동산|케이탑부동산|HITOP\s*부동산|KTOP\s*부동산/g, officeCompanyName);
 }
 function officeUpdateDocumentTitle() {
-  if (OfficeConfig.id !== 'ktop' || document.title.startsWith(officeManagementTitle)) return;
+  if (document.title.startsWith(officeManagementTitle)) return;
   const detail = officeBrandText(document.title).replaceAll(officeCompanyName, '')
     .replace(/^[\s|·—-]+|[\s|·—-]+$/g, '');
   const plain = ['매물관리', '매물관리 메인', '매물 목록', '매물관리 로그인'].includes(detail);
@@ -16,7 +15,6 @@ function officeUpdateDocumentTitle() {
   if (document.title !== next) document.title = next;
 }
 function officeUpdateBranding(root) {
-  if (OfficeConfig.id !== 'ktop') return;
   const selectors = '.logo-main, .brand-name, #officeBrand, .ph-name, .contact-company, .ctrl-title, [data-office-brand]';
   const nodes = [...root.querySelectorAll(selectors)];
   if (root.matches && root.matches(selectors)) nodes.unshift(root);
@@ -32,10 +30,10 @@ function officeUpdateBranding(root) {
     if (next !== original) node.textContent = next;
   });
   root.querySelectorAll('.brand-mark, .ph-logo').forEach(node => {
-    const next = node.matches('.ph-logo') ? 'KT' : 'K';
+    const next = OfficeConfig.id === 'ktop' ? (node.matches('.ph-logo') ? 'KT' : 'K') : (node.matches('.ph-logo') ? 'HT' : 'H');
     if (node.textContent !== next) node.textContent = next;
   });
-  root.querySelectorAll('[data-hitop-company-details]').forEach(node => { node.hidden = true; });
+  if (OfficeConfig.id === 'ktop') root.querySelectorAll('[data-hitop-company-details]').forEach(node => { node.hidden = true; });
 }
 officeUpdateDocumentTitle();
 const officeTitleNode = document.querySelector('title');
