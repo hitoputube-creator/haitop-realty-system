@@ -18,7 +18,7 @@
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;background:var(--header-fill,linear-gradient(112deg,#075c68 0%,#078b94 34%,#13b3ac 68%,#4adbc3 100%));border:0;border-radius:16px;box-shadow:var(--header-shadow,0 8px 24px rgba(9,112,113,.16),inset 0 1px 0 rgba(255,255,255,.2));color:#ffffff;margin-top:20px;}
     .brand{display:flex;align-items:center;gap:12px}.brand-mark{display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--gold,#5f8780);border-radius:10px;color:#ffffff;font-size:24px;font-weight:800;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.35);box-shadow:none;}.brand-name{font-size:18px;font-weight:750;color:#ffffff;text-shadow:none;}.brand-sub{font-size:14px;color:#dbf8f8}
     .top-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}.top-actions a,.top-actions button{border:1px solid var(--line,#779a94);border-radius:7px;padding:5px 10px;font-size:13px;background:rgba(255,255,255,.86);border-color:rgba(255,255,255,.72);box-shadow:0 2px 5px rgba(5,78,79,.06);color:#075b60;line-height:1.4;min-height:32px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;}.top-actions .customer-link{border-color:#ffffff;color:#075b60;font-weight:700;background:#ffffff;box-shadow:none;}
-    .top-actions .auth-login{font-weight:700;background:#ffffff}.top-actions .auth-logout{color:#9b3028;font-weight:650}.top-actions button:disabled{opacity:.6;cursor:wait}
+    .top-actions .auth-logout{color:#9b3028;font-weight:650}.top-actions button:disabled{opacity:.6;cursor:wait}
     .heading{margin:28px 0 14px}.eyebrow{color:var(--gold,#25675f);font-size:14px;font-weight:650;margin:0 0 5px}h1{font-size:30px;margin:0;letter-spacing:-.025em}
     @media(max-width:760px){.top-actions a,.top-actions button{min-height:36px}.topbar{align-items:flex-start;flex-direction:column;padding:18px 16px;margin-top:12px;}}
   
@@ -144,7 +144,7 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
   <div class="pf-wrap">
     <header class="topbar">
       <div class="brand"><span class="brand-mark" aria-hidden="true">H</span><div><div class="brand-name">매물찾기</div><div class="brand-sub">손님 조건으로 매물·자료 찾기</div></div></div>
-      <nav class="top-actions" aria-label="주요 페이지"><a href="property-main.html">매물관리 메인</a><a href="properties.html">매물목록</a><a href="resources.html">자료관리</a><a class="customer-link" href="customers.html">전체 고객관리</a><a class="auth-login" data-auth-login href="login.html" title="로그인 화면 열기 및 계정변경">로그인 / 계정변경</a><button class="auth-logout" data-auth-logout type="button" hidden>로그아웃</button></nav>
+      <nav class="top-actions" aria-label="주요 페이지"><a href="property-main.html">매물관리 메인</a><a href="properties.html">매물목록</a><a href="resources.html">자료관리</a><a class="customer-link" href="customers.html">전체 고객관리</a><button class="auth-logout" data-auth-logout type="button" hidden>로그아웃</button></nav>
     </header>
     <main>
       <div class="heading"><p class="eyebrow">PROPERTY FINDER</p><h1>매물찾기</h1><p class="pf-sub" id="pfLoaded"></p></div>
@@ -169,6 +169,6 @@ html .pf-pill.reset{border-style:dashed;font-weight:500}
   </div>
   <script src="assets/js/unit-guide-print.js?v=20261107-guide8"></script>
 <script src="assets/js/property-finder.js?v=20261104-pick1"></script>
-<script src="assets/js/auth-navigation.js?v=20261108-auth-nav1"></script>
+<script src="assets/js/auth-navigation.js?v=20261108-auth-nav2"></script>
 </body>
 </html>

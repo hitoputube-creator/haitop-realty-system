@@ -1,14 +1,8 @@
-/* 상단 계정 버튼: 기존 인증 처리만 연결하며 별도 세션을 만들지 않습니다. */
+/* 상단 계정 메뉴는 로그아웃 하나만 표시합니다. 기존 인증 함수가 로그인 화면으로 이동합니다. */
 (function () {
   'use strict';
   function setupAuthNavigation() {
-    const login = document.querySelector('[data-auth-login]');
     const logout = document.querySelector('[data-auth-logout]');
-    if (login) {
-      const next = location.pathname.split('/').pop() + location.search;
-      const destination = 'login.html?redirect=' + encodeURIComponent(next);
-      login.href = typeof OfficeConfig !== 'undefined' ? OfficeConfig.urlFor(destination) : destination;
-    }
     if (!logout) return;
     logout.addEventListener('click', async function () {
       if (logout.disabled || typeof hitopAdminLogout !== 'function') return;
