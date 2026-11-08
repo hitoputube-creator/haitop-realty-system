@@ -53,7 +53,7 @@
       ".pb td{padding:8px;border-top:1px solid #e3eeee;vertical-align:top}",
       ".pb tbody tr{cursor:pointer}.pb tbody tr:hover{background:#f4fbfa}",
       ".pb td small{display:block;color:#7a8b89;margin-top:2px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
-      ".pb td:first-child{word-break:keep-all;min-width:110px}.pb td:nth-child(3){white-space:nowrap;min-width:120px}.pb-regdate{display:block;margin-top:4px;font-size:11px;color:#617286;white-space:nowrap}",
+      ".pb td:first-child{word-break:keep-all;min-width:110px}.pb td:nth-child(3){white-space:nowrap;min-width:120px}.pb-biz{display:inline-block;margin-left:4px;padding:1px 8px;border-radius:10px;font-size:11.5px;background:#eef3f8;color:#294867;white-space:nowrap}.pb-regdate{display:block;margin-top:4px;font-size:11px;color:#617286;white-space:nowrap}",
       ".pb-tag{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;background:#e3f4ef;color:#1a6b55;white-space:nowrap}",
       ".pb-fee{background:#fff1c2;color:#8a5a00;font-weight:700}.pb-soon{background:#ffe0e0;color:#b00020;font-weight:700}",
       ".pb-best{color:#d14a00;font-weight:700}.pb-orig{color:#8a9a98;text-decoration:line-through;font-size:12px}",
@@ -156,6 +156,17 @@
     return html;
   }
   function pbReg(r) { if (!r._created) return ""; var t = new Date(r._created); if (isNaN(t)) return ""; var p = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(t).reduce(function (o, x) { o[x.type] = x.value; return o; }, {}); return " " + p.year + "." + p.month + "." + p.day; }
+  // 기록 본문에서 업종만 뽑아 표에 보여 주고, 나머지 설명은 상세페이지에서 확인한다.
+  function bizOf(r) {
+    var parts = String(r.text || "").split(/\n| · /), m, i;
+    for (i = 0; i < parts.length; i++) {
+      m = parts[i].trim().match(/^(?:업종\s*[:：]\s*)?(.+?)\s*입점(?:\s*(?:완료|예정|중|확정))?$/);
+      if (m && m[1] && m[1].length <= 30) return m[1].trim();
+      m = parts[i].trim().match(/^업종\s*[:：]\s*(.+)$/);
+      if (m && m[1].length <= 30) return m[1].trim();
+    }
+    return "";
+  }
   function rowHtml(r) {
     var b = state.byId[r._buildingId], st = HR.status(r), d = discount(r), dv = derive(r);
     var link = b ? OfficeConfig.urlFor("building-detail.html?id=" + encodeURIComponent(b.id)) : "";
@@ -168,7 +179,7 @@
       return '<a class="pb-file" href="' + esc(u) + '" target="_blank" rel="noopener" data-pb-file="1">' + (HRisImg(f) ? "🖼 " : "📄 ") + esc(String(f.name || "파일").slice(0, 14)) + "</a>";
     }).join("");
     return '<tr data-link="' + esc(link) + '"><td><b>' + esc(dname(b)) + "</b></td>"
-      + "<td>" + esc(subOf(r) || "건물 전체") + (firstLine ? "<small>" + esc(firstLine) + "</small>" : "") + "</td>"
+      + "<td>" + esc(subOf(r) || "건물 전체") + (bizOf(r) ? ' <span class="pb-biz">' + esc(bizOf(r)) + "</span>" : "") + "</td>"
       + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span>" + ' <span class="pb-tag" style="font-weight:700;border-color:transparent;' + (r._origin === "ktop" ? "background:#fff1e0;color:#b45309" : "background:#e8f3ff;color:#1d5fa8") + '" title="' + (r._shared ? "공유 기록 (읽기만)" : "이 사무소에서 등록") + '">' + (r._origin === "ktop" ? "케이탑" : "하이탑") + "</span>" + (pbReg(r) ? '<div class="pb-regdate">' + pbReg(r).trim() + "</div>" : "") + "</td>"
       + "<td>" + (r.fee ? '<span class="pb-tag pb-fee">' + esc(r.fee) + "</span>" : "-") + "</td>"
       + "<td>" + price + "</td>"
