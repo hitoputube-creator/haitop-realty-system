@@ -1,190 +1,190 @@
 /* 2026-10-08 · Shared white/navy workspace, only on admin pages */
-html[data-office-theme='ktop']{--bg:#ffffff!important;--bg2:#ffffff!important;--bg-main:#ffffff!important;--bg-soft:#ffffff!important;--panel:#fff!important;--panel2:#f8fafc!important;--card:#fff!important;--card2:#edf3f9!important;--bg-card:#fff!important;--surface:#fff!important;--surface2:#f8fafc!important;--line:#e0e7ef!important;--line2:#cbd5e1!important;--border:#dce4ed!important;--txt:#23364c!important;--text:#23364c!important;--text-main:#23364c!important;--sub:#617286!important;--text-muted:#617286!important;--muted:#66788c!important;--gold:#254767!important;--gold-soft:#254767!important;--blue:#345f86!important;--blue2:#eaf1f8!important}html[data-office-theme='ktop'],html[data-office-theme='ktop'] body{background:#ffffff!important;background-image:none!important;color:#23364c!important;color-scheme:light}html[data-office-theme='ktop'] .page,html[data-office-theme='ktop'] .container,html[data-office-theme='ktop'] .main-content{color:#23364c}html[data-office-theme='ktop'] .card,html[data-office-theme='ktop'] .entry,html[data-office-theme='ktop'] .panel,html[data-office-theme='ktop'] .topbar,html[data-office-theme='ktop'] .header,html[data-office-theme='ktop'] .modal-content,html[data-office-theme='ktop'] .modal-box,html[data-office-theme='ktop'] [class*="card-body"]{background:#fff!important;background-image:none!important;border-color:#e0e7ef!important;box-shadow:0 3px 15px rgba(24,44,71,.055)!important;color:#23364c!important}html[data-office-theme='ktop'] .card:before{background:none!important}html[data-office-theme='ktop'] h1,html[data-office-theme='ktop'] h2,html[data-office-theme='ktop'] h3,html[data-office-theme='ktop'] h4,html[data-office-theme='ktop'] .brand-name,html[data-office-theme='ktop'] .logo-main,html[data-office-theme='ktop'] .brand-text h1,html[data-office-theme='ktop'] .unit-sec-head h3{color:#1c344f!important;text-shadow:none!important}html[data-office-theme='ktop'] p,html[data-office-theme='ktop'] label,html[data-office-theme='ktop'] .field label,html[data-office-theme='ktop'] .umfield label,html[data-office-theme='ktop'] .brand-sub{color:#52667b}html[data-office-theme='ktop'] input:not([type="checkbox"]):not([type="radio"]),html[data-office-theme='ktop'] select,html[data-office-theme='ktop'] textarea{background:#fff!important;color:#1e3248!important;border-color:#cbd5e1!important;color-scheme:light}html[data-office-theme='ktop'] input::placeholder,html[data-office-theme='ktop'] textarea::placeholder{color:#8a98a8!important}html[data-office-theme='ktop'] input:focus,html[data-office-theme='ktop'] select:focus,html[data-office-theme='ktop'] textarea:focus{border-color:#365f88!important;box-shadow:0 0 0 2px rgba(54,95,136,.14)!important}html[data-office-theme='ktop'] input[readonly],html[data-office-theme='ktop'] input:disabled,html[data-office-theme='ktop'] select:disabled{background:#f2f5f9!important;color:#64748b!important}html[data-office-theme='ktop'] button:not(.primary):not(.btn-primary):not(.btn-unit-add):not(.map-hotspot):not(.kk-pin),html[data-office-theme='ktop'] .btn:not(.primary):not(.btn-primary),html[data-office-theme='ktop'] .action:not(.primary){background:#fff;color:#294867;border-color:#cbd5e1}html[data-office-theme='ktop'] button:hover:not(:disabled),html[data-office-theme='ktop'] .btn:hover{filter:brightness(.97)}html[data-office-theme='ktop'] .btn.primary,html[data-office-theme='ktop'] .btn-primary,html[data-office-theme='ktop'] .action.primary,html[data-office-theme='ktop'] .btn-unit-add,html[data-office-theme='ktop'] .category[aria-selected="true"],html[data-office-theme='ktop'] .tab.active{background:#182c47!important;background-image:none!important;border-color:#182c47!important;color:#fff!important;box-shadow:none!important}html[data-office-theme='ktop'] .category:not([aria-selected="true"]),html[data-office-theme='ktop'] .tab:not(.active){background:#fff!important;color:#35516a!important;border-color:#cbd5e1!important}html[data-office-theme='ktop'] table,html[data-office-theme='ktop'] tbody,html[data-office-theme='ktop'] tr{background:#fff;color:#23364c}html[data-office-theme='ktop'] thead,html[data-office-theme='ktop'] thead tr,html[data-office-theme='ktop'] table th{background:#edf2f8!important;color:#304960!important;border-color:#dbe4ee!important}html[data-office-theme='ktop'] table td{color:#293d52!important;border-color:#e5ebf2!important}html[data-office-theme='ktop'] tbody tr:nth-child(even) td{background:#f9fbfd}html[data-office-theme='ktop'] tbody tr:hover td{background:#eef4f9!important}html[data-office-theme='ktop'] .unit-modal-box,html[data-office-theme='ktop'] .modal{color:#23364c}html[data-office-theme='ktop'] .um-section,html[data-office-theme='ktop'] .um-section.sale,html[data-office-theme='ktop'] .um-section.current{background:#f7f9fc!important;border-color:#e3eaf1!important}html[data-office-theme='ktop'] .um-section-title,html[data-office-theme='ktop'] .um-section.sale .um-section-title,html[data-office-theme='ktop'] .um-section.current .um-section-title{background:#eaf0f7!important;color:#233f5d!important}html[data-office-theme='ktop'] .unit-memo-entry{color:#23364c!important;border-color:#e2e8f0!important}html[data-office-theme='ktop'] .unit-modal-actions{background:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']){--bg:#ffffff!important;--bg2:#ffffff!important;--bg-main:#ffffff!important;--bg-soft:#ffffff!important;--panel:#fff!important;--panel2:#f8fafc!important;--card:#fff!important;--card2:#edf3f9!important;--bg-card:#fff!important;--surface:#fff!important;--surface2:#f8fafc!important;--line:#e0e7ef!important;--line2:#cbd5e1!important;--border:#dce4ed!important;--txt:#23364c!important;--text:#23364c!important;--text-main:#23364c!important;--sub:#617286!important;--text-muted:#617286!important;--muted:#66788c!important;--gold:#254767!important;--gold-soft:#254767!important;--blue:#345f86!important;--blue2:#eaf1f8!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']),html:is([data-office-theme='ktop'],[data-office-theme='hitop']) body{background:#ffffff!important;background-image:none!important;color:#23364c!important;color-scheme:light}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .page,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .container,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .main-content{color:#23364c}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .card,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .entry,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .panel,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .topbar,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .header,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .modal-content,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .modal-box,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) [class*="card-body"]{background:#fff!important;background-image:none!important;border-color:#e0e7ef!important;box-shadow:0 3px 15px rgba(24,44,71,.055)!important;color:#23364c!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .card:before{background:none!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) h1,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) h2,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) h3,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) h4,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .brand-name,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .logo-main,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .brand-text h1,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .unit-sec-head h3{color:#1c344f!important;text-shadow:none!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) p,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) label,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .field label,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .umfield label,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .brand-sub{color:#52667b}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) input:not([type="checkbox"]):not([type="radio"]),html:is([data-office-theme='ktop'],[data-office-theme='hitop']) select,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) textarea{background:#fff!important;color:#1e3248!important;border-color:#cbd5e1!important;color-scheme:light}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) input::placeholder,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) textarea::placeholder{color:#8a98a8!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) input:focus,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) select:focus,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) textarea:focus{border-color:#365f88!important;box-shadow:0 0 0 2px rgba(54,95,136,.14)!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) input[readonly],html:is([data-office-theme='ktop'],[data-office-theme='hitop']) input:disabled,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) select:disabled{background:#f2f5f9!important;color:#64748b!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) button:not(.primary):not(.btn-primary):not(.btn-unit-add):not(.map-hotspot):not(.kk-pin),html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .btn:not(.primary):not(.btn-primary),html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .action:not(.primary){background:#fff;color:#294867;border-color:#cbd5e1}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) button:hover:not(:disabled),html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .btn:hover{filter:brightness(.97)}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .btn.primary,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .btn-primary,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .action.primary,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .btn-unit-add,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .category[aria-selected="true"],html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .tab.active{background:#182c47!important;background-image:none!important;border-color:#182c47!important;color:#fff!important;box-shadow:none!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .category:not([aria-selected="true"]),html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .tab:not(.active){background:#fff!important;color:#35516a!important;border-color:#cbd5e1!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) table,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) tbody,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) tr{background:#fff;color:#23364c}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) thead,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) thead tr,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) table th{background:#edf2f8!important;color:#304960!important;border-color:#dbe4ee!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) table td{color:#293d52!important;border-color:#e5ebf2!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) tbody tr:nth-child(even) td{background:#f9fbfd}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) tbody tr:hover td{background:#eef4f9!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .unit-modal-box,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .modal{color:#23364c}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .um-section,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .um-section.sale,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .um-section.current{background:#f7f9fc!important;border-color:#e3eaf1!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .um-section-title,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .um-section.sale .um-section-title,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .um-section.current .um-section-title{background:#eaf0f7!important;color:#233f5d!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .unit-memo-entry{color:#23364c!important;border-color:#e2e8f0!important}html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .unit-modal-actions{background:#fff!important}
 @media print{html[data-office-theme='ktop'],html[data-office-theme='ktop'] body{background:#fff!important}html[data-office-theme='ktop'] #unitPrintSheet{background:#fff!important}html[data-office-theme='ktop'] #unitPrintSheet th{background:#182c47!important;color:#fff!important}}
 
 /* KTOP only: white canvas, slate labels, navy actions. Never target HITOP. */
-html[data-office-theme='ktop'] {
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) {
   --gold-light:#254767!important; --gold2:#eef3f8!important;
   --gold-dim:#eef3f8!important; --border-soft:#e2e8f0!important;
   --border-slate:#cbd5e1!important; --danger:#b42318!important;
   --red:#b42318!important; --green:#157347!important;
 }
-html[data-office-theme='ktop'] :is(.header,.topbar) {
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.header,.topbar) {
   background:#fff!important; box-shadow:none!important;
 }
-html[data-office-theme='ktop'] .header-line {border-color:#e2e8f0!important}
-html[data-office-theme='ktop'] :is(.sec-title)::after {background:#e2e8f0!important}
-html[data-office-theme='ktop'] :is(.logo-icon,.logo) {border-color:#cbd5e1!important;background:#f1f5f9!important}
-html[data-office-theme='ktop'] :is(.logo-icon)::before,
-html[data-office-theme='ktop'] :is(.logo-icon)::after {background:#254767!important}
-html[data-office-theme='ktop'] :is(.page-title,.card-title,.quick-title,.detail-title,.detail-section-title,.modal-title,.modal-section-title,.sec-title,.section-title,.unit-sale-subtype,.price-preview,.amt-hint) {color:#1e3a56!important}
-html[data-office-theme='ktop'] :is(.nav-link,.nav-logout-btn,.btn-ghost,.owner-customer-link,.floor-status-entry,.floor-status-link,.floor-edit-btn,.apartment-autofill-btn,.kind-tab,.chip,.category-btn,.filter-btn) {
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .header-line {border-color:#e2e8f0!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.sec-title)::after {background:#e2e8f0!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.logo-icon,.logo) {border-color:#cbd5e1!important;background:#f1f5f9!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.logo-icon)::before,
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.logo-icon)::after {background:#254767!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.page-title,.card-title,.quick-title,.detail-title,.detail-section-title,.modal-title,.modal-section-title,.sec-title,.section-title,.unit-sale-subtype,.price-preview,.amt-hint) {color:#1e3a56!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.nav-link,.nav-logout-btn,.btn-ghost,.owner-customer-link,.floor-status-entry,.floor-status-link,.floor-edit-btn,.apartment-autofill-btn,.kind-tab,.chip,.category-btn,.filter-btn) {
   background:#fff!important; color:#254767!important; border-color:#cbd5e1!important;
 }
-html[data-office-theme='ktop'] :is(.nav-link.active,.kind-tab.active,.chip.active,.category-btn.active,.filter-btn.active,.reg-mode-card.active) {
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.nav-link.active,.kind-tab.active,.chip.active,.category-btn.active,.filter-btn.active,.reg-mode-card.active) {
   background:#eef3f8!important; color:#1e3a56!important; border-color:#7b93ab!important;
 }
-html[data-office-theme='ktop'] :is(.nav-link,.nav-logout-btn,.btn-ghost,.owner-customer-link,.floor-status-entry,.floor-status-link,.floor-edit-btn,.apartment-autofill-btn):hover {background:#f1f5f9!important;color:#1e3a56!important}
-html[data-office-theme='ktop'] :is(.btn-primary,.btn.primary,.action.primary,.btn-unit-add,.br-fetch,.cfp-apply) {background:#1e3a56!important;color:#fff!important;border-color:#1e3a56!important;background-image:none!important}
-html[data-office-theme='ktop'] :is(.btn-danger,.btn-select-delete,.btn-icon,.br-error,.cfp-msg,.consult-error) {color:#b42318!important;border-color:#f2c7c2!important}
-html[data-office-theme='ktop'] :is(.btn-success,.lc-status.status-active) {color:#157347!important}
-html[data-office-theme='ktop'] :is(.nav-dropdown-menu,.quick-card,.desc-card,.detail-section,.listing-info-section,.listing-card,.reg-mode-card,.info-cell,.floor-card,.file-card,.item,.unit-modal-box,.br-box,.col-filter-pop,.cust-consultation) {
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.nav-link,.nav-logout-btn,.btn-ghost,.owner-customer-link,.floor-status-entry,.floor-status-link,.floor-edit-btn,.apartment-autofill-btn):hover {background:#f1f5f9!important;color:#1e3a56!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.btn-primary,.btn.primary,.action.primary,.btn-unit-add,.br-fetch,.cfp-apply) {background:#1e3a56!important;color:#fff!important;border-color:#1e3a56!important;background-image:none!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.btn-danger,.btn-select-delete,.btn-icon,.br-error,.cfp-msg,.consult-error) {color:#b42318!important;border-color:#f2c7c2!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.btn-success,.lc-status.status-active) {color:#157347!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.nav-dropdown-menu,.quick-card,.desc-card,.detail-section,.listing-info-section,.listing-card,.reg-mode-card,.info-cell,.floor-card,.file-card,.item,.unit-modal-box,.br-box,.col-filter-pop,.cust-consultation) {
   background:#fff!important;background-image:none!important;color:#1e293b!important;border-color:#e2e8f0!important;
   box-shadow:0 2px 10px rgba(15,23,42,.04)!important;
 }
-html[data-office-theme='ktop'] :is(.edit-modal-header,.edit-modal-footer,.unit-modal-actions,.floor-card-foot,.file-card-foot) {background:#fff!important;border-color:#e2e8f0!important}
-html[data-office-theme='ktop'] :is(.apartment-info-table,.listing-info-table) {background:#fff!important;color:#1e293b!important;border:1px solid #e2e8f0!important}
-html[data-office-theme='ktop'] :is(.apartment-info-row>div,.listing-info-table>div) {border-color:#e2e8f0!important}
-html[data-office-theme='ktop'] :is(.apartment-info-row .ipt-label,.listing-info-table .ipt-label,.detail-read-label) {background:#f1f5f9!important;color:#334155!important;border-color:#e2e8f0!important}
-html[data-office-theme='ktop'] :is(.apartment-info-row .ipt-value,.listing-info-table .ipt-value,.detail-read-value) {background:#fff!important;color:#1e293b!important;border-color:#e2e8f0!important}
-html[data-office-theme='ktop'] :is(.apartment-title-name,.apartment-title-unit,.lc-title,.listing-cell-owner,.listing-cell-phone,.listing-cell-note,.lc-desc,.floorgrid .fkey,.info-cell-value,.br-result td,.unit-memo-entry,.cfp-val) {color:#1e293b!important}
-html[data-office-theme='ktop'] :is(.logo-sub,.info-cell-label,.info-cell-value.empty,.br-box p,.lc-no,.lc-phone-secondary) {color:#64748b!important}
-html[data-office-theme='ktop'] :is(.apartment-info-row a,.cust-consultation-actions a.btn) {color:#254767!important;background:#f8fafc!important;border-color:#cbd5e1!important}
-html[data-office-theme='ktop'] :is(.listing-column-header,.floorgrid,.empty,.cfp-list,.sticker-chip,.sticker-label,.badge,.badge.gray,.lc-type,.lc-roster-badge,.lc-deal-badge,.um-section,.um-section.sale,.um-section.current) {background:#f1f5f9!important;color:#334155!important;border-color:#e2e8f0!important}
-html[data-office-theme='ktop'] :is(.um-section-title,.sale .um-section-title,.current .um-section-title) {background:#eaf0f7!important;color:#1e3a56!important}
-html[data-office-theme='ktop'] :is(.lc-status.status-needs,.badge-blue) {color:#245c91!important}
-html[data-office-theme='ktop'] :is(.lc-status.status-done,.lc-desc-done) {color:#64748b!important}
-html[data-office-theme='ktop'] :is(.lc-deal-badge.deal-sale) {background:#eef3f8!important;color:#254767!important}
-html[data-office-theme='ktop'] :is(.lc-deal-badge.deal-monthly) {background:#edf4fc!important;color:#245c91!important}
-html[data-office-theme='ktop'] :is(.lc-deal-badge.deal-jeonse) {background:#edf7f0!important;color:#157347!important}
-html[data-office-theme='ktop'] table td {background:#fff!important}
-html[data-office-theme='ktop'] tbody tr:nth-child(even) td {background:#f8fafc!important}
-html[data-office-theme='ktop'] tbody tr:hover td {background:#eef3f8!important}
-html[data-office-theme='ktop'] :is(input,select,textarea) {color-scheme:light!important}
-html[data-office-theme='ktop'] :is(button,a,input,select,textarea):focus-visible {outline:2px solid #365f88;outline-offset:2px}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.edit-modal-header,.edit-modal-footer,.unit-modal-actions,.floor-card-foot,.file-card-foot) {background:#fff!important;border-color:#e2e8f0!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.apartment-info-table,.listing-info-table) {background:#fff!important;color:#1e293b!important;border:1px solid #e2e8f0!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.apartment-info-row>div,.listing-info-table>div) {border-color:#e2e8f0!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.apartment-info-row .ipt-label,.listing-info-table .ipt-label,.detail-read-label) {background:#f1f5f9!important;color:#334155!important;border-color:#e2e8f0!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.apartment-info-row .ipt-value,.listing-info-table .ipt-value,.detail-read-value) {background:#fff!important;color:#1e293b!important;border-color:#e2e8f0!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.apartment-title-name,.apartment-title-unit,.lc-title,.listing-cell-owner,.listing-cell-phone,.listing-cell-note,.lc-desc,.floorgrid .fkey,.info-cell-value,.br-result td,.unit-memo-entry,.cfp-val) {color:#1e293b!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.logo-sub,.info-cell-label,.info-cell-value.empty,.br-box p,.lc-no,.lc-phone-secondary) {color:#64748b!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.apartment-info-row a,.cust-consultation-actions a.btn) {color:#254767!important;background:#f8fafc!important;border-color:#cbd5e1!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.listing-column-header,.floorgrid,.empty,.cfp-list,.sticker-chip,.sticker-label,.badge,.badge.gray,.lc-type,.lc-roster-badge,.lc-deal-badge,.um-section,.um-section.sale,.um-section.current) {background:#f1f5f9!important;color:#334155!important;border-color:#e2e8f0!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.um-section-title,.sale .um-section-title,.current .um-section-title) {background:#eaf0f7!important;color:#1e3a56!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.lc-status.status-needs,.badge-blue) {color:#245c91!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.lc-status.status-done,.lc-desc-done) {color:#64748b!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.lc-deal-badge.deal-sale) {background:#eef3f8!important;color:#254767!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.lc-deal-badge.deal-monthly) {background:#edf4fc!important;color:#245c91!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.lc-deal-badge.deal-jeonse) {background:#edf7f0!important;color:#157347!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) table td {background:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) tbody tr:nth-child(even) td {background:#f8fafc!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) tbody tr:hover td {background:#eef3f8!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(input,select,textarea) {color-scheme:light!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(button,a,input,select,textarea):focus-visible {outline:2px solid #365f88;outline-offset:2px}
 @media print {
   html[data-office-theme='ktop'] :is(#unitPrintSheet,#unitPrintSheet td) {background:#fff!important;color:#111!important}
   html[data-office-theme='ktop'] #unitPrintSheet th {background:#1e3a56!important;color:#fff!important}
 }
 
-html[data-office-theme='ktop'] select option {background:#fff!important;color:#1e293b!important}
-html[data-office-theme='ktop'] :is(.area-auto,.area-arrow,.unit-modal-title) {color:#254767!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) select option {background:#fff!important;color:#1e293b!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.area-auto,.area-arrow,.unit-modal-title) {color:#254767!important}
 
 /* KTOP property management: light canvas and blue focal areas. */
 @media screen {
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page){background:#f3f5f9!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar){border-radius:16px;padding:20px 24px;margin-top:20px;background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;border:0!important;box-shadow:0 7px 24px rgba(31,75,139,.13)!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.logo-main,.brand-name,.brand-text h1){color:#fff!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.logo-sub,.brand-sub,.brand-text p){color:#dbe7f8!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) .brand-mark{background:rgba(255,255,255,.13)!important;color:#fff!important;border-color:rgba(255,255,255,.35)!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.logo-icon,.logo){background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.4)!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) .logo-icon::before,html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) .logo-icon::after{background:#fff!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.top-actions a,.actions .btn){background:rgba(255,255,255,.1)!important;color:#eef5ff!important;border-color:rgba(255,255,255,.25)!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.nav-link.active,.customer-link){background:#fff!important;color:#1956a3!important;border-color:#fff!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.top-actions a,.actions .btn):hover{background:rgba(255,255,255,.2)!important;color:#fff!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) .header-line{display:none}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.entry,.card){border-color:#dce5ef!important;border-radius:16px;box-shadow:0 5px 20px rgba(24,44,71,.045)!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .entry{border-top:4px solid #1767d2!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .entry:nth-child(2){border-top-color:#19a494!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .entry-label{display:inline-flex;align-self:flex-start;background:#eaf2ff;color:#1859af!important;padding:4px 11px;border-radius:7px;font-weight:750}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .entry:nth-child(2) .entry-label{background:#eaf7f3;color:#137a69!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.category[aria-selected="true"],.kind-tab.active,.filter-btn.active,.btn-primary,.action.primary){background:#1767d2!important;color:#fff!important;border-color:#1767d2!important;box-shadow:0 3px 9px rgba(23,103,210,.12)!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.category[aria-selected="false"],.kind-tab:not(.active),.filter-btn:not(.active)){background:#fff!important;border-color:#d8e3f1!important;color:#42617f!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .category:hover{border-color:#80ade6!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .panel-heading h2{display:flex;align-items:center;gap:9px;color:#193860!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .panel-heading h2::before{content:"";width:5px;height:20px;display:block;background:#1767d2;border-radius:4px}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .filter-panel-card{border-top:4px solid #1767d2!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .listing-top-row{padding-bottom:14px;border-bottom:1px solid #e3eaf3}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .filter-group-label{color:#35516f;font-weight:700}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .card-title{border-bottom:1px solid #e3eaf3;padding-bottom:12px;color:#193860!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .card-title::before{content:"";display:inline-block;width:5px;height:19px;background:#1767d2;border-radius:4px;margin-right:8px}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.listing-card,.lc-card){border-color:#dce5ef!important;box-shadow:0 3px 12px rgba(24,44,71,.045)!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.listing-card,.lc-card):hover{border-color:#a4c2e8!important;box-shadow:0 7px 20px rgba(31,75,139,.09)!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-deal-badge.deal-sale{background:#eaf2ff!important;color:#1956a3!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-deal-badge.deal-jeonse{background:#eaf7f0!important;color:#157347!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-deal-badge.deal-monthly{background:#fff5e6!important;color:#946111!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-status.status-active{background:#eaf7f0!important;color:#157347!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-status.status-done{background:#f0f3f6!important;color:#64748b!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) thead th{background:#eaf1fb!important;color:#24476b!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) tbody tr:hover td{background:#eef5ff!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(#searchBtn,#resourceLink){background:#eaf2ff!important;color:#1956a3!important;border-color:#c4d8f5!important}
-html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) input:focus,html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) select:focus{border-color:#1767d2!important;box-shadow:0 0 0 3px rgba(23,103,210,.10)!important}
-@media(max-width:760px){html[data-office-theme='ktop'] :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.header,.topbar){padding:18px 16px;margin-top:12px}}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page){background:#f3f5f9!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar){border-radius:16px;padding:20px 24px;margin-top:20px;background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;border:0!important;box-shadow:0 7px 24px rgba(31,75,139,.13)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.logo-main,.brand-name,.brand-text h1){color:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.logo-sub,.brand-sub,.brand-text p){color:#dbe7f8!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) .brand-mark{background:rgba(255,255,255,.13)!important;color:#fff!important;border-color:rgba(255,255,255,.35)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.logo-icon,.logo){background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.4)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) .logo-icon::before,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) .logo-icon::after{background:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.top-actions a,.actions .btn){background:rgba(255,255,255,.1)!important;color:#eef5ff!important;border-color:rgba(255,255,255,.25)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.nav-link.active,.customer-link){background:#fff!important;color:#1956a3!important;border-color:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.top-actions a,.actions .btn):hover{background:rgba(255,255,255,.2)!important;color:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page,.listings-kakao-page,.shop-kakao-page,.land-map-page) .header-line{display:none}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.entry,.card){border-color:#dce5ef!important;border-radius:16px;box-shadow:0 5px 20px rgba(24,44,71,.045)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .entry{border-top:4px solid #1767d2!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .entry:nth-child(2){border-top-color:#19a494!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .entry-label{display:inline-flex;align-self:flex-start;background:#eaf2ff;color:#1859af!important;padding:4px 11px;border-radius:7px;font-weight:750}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .entry:nth-child(2) .entry-label{background:#eaf7f3;color:#137a69!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.category[aria-selected="true"],.kind-tab.active,.filter-btn.active,.btn-primary,.action.primary){background:#1767d2!important;color:#fff!important;border-color:#1767d2!important;box-shadow:0 3px 9px rgba(23,103,210,.12)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.category[aria-selected="false"],.kind-tab:not(.active),.filter-btn:not(.active)){background:#fff!important;border-color:#d8e3f1!important;color:#42617f!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .category:hover{border-color:#80ade6!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .panel-heading h2{display:flex;align-items:center;gap:9px;color:#193860!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .panel-heading h2::before{content:"";width:5px;height:20px;display:block;background:#1767d2;border-radius:4px}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .filter-panel-card{border-top:4px solid #1767d2!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .listing-top-row{padding-bottom:14px;border-bottom:1px solid #e3eaf3}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .filter-group-label{color:#35516f;font-weight:700}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .card-title{border-bottom:1px solid #e3eaf3;padding-bottom:12px;color:#193860!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .card-title::before{content:"";display:inline-block;width:5px;height:19px;background:#1767d2;border-radius:4px;margin-right:8px}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.listing-card,.lc-card){border-color:#dce5ef!important;box-shadow:0 3px 12px rgba(24,44,71,.045)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.listing-card,.lc-card):hover{border-color:#a4c2e8!important;box-shadow:0 7px 20px rgba(31,75,139,.09)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-deal-badge.deal-sale{background:#eaf2ff!important;color:#1956a3!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-deal-badge.deal-jeonse{background:#eaf7f0!important;color:#157347!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-deal-badge.deal-monthly{background:#fff5e6!important;color:#946111!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-status.status-active{background:#eaf7f0!important;color:#157347!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) .lc-status.status-done{background:#f0f3f6!important;color:#64748b!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) thead th{background:#eaf1fb!important;color:#24476b!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) tbody tr:hover td{background:#eef5ff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(#searchBtn,#resourceLink){background:#eaf2ff!important;color:#1956a3!important;border-color:#c4d8f5!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) input:focus,html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) select:focus{border-color:#1767d2!important;box-shadow:0 0 0 3px rgba(23,103,210,.10)!important}
+@media(max-width:760px){html:is([data-office-theme='ktop'],[data-office-theme='hitop']) :is(.properties-page,.property-main-page,.integrated-management-page,.resources-page) :is(.header,.topbar){padding:18px 16px;margin-top:12px}}
 }
 
 /* KTOP integrated management and customer list accents. */
 @media screen{
-html[data-office-theme='ktop'] .integrated-management-page .tab-nav{background:#fff;border:1px solid #dce5ef;border-radius:12px;padding:6px;gap:5px;margin:18px 0 16px}
-html[data-office-theme='ktop'] .integrated-management-page .tab-btn{background:transparent!important;color:#42617f!important;border:0!important;border-radius:8px;padding:10px 16px}
-html[data-office-theme='ktop'] .integrated-management-page .tab-btn.active{background:#1767d2!important;color:#fff!important;box-shadow:0 3px 8px rgba(23,103,210,.16)}
-html[data-office-theme='ktop'] .integrated-management-page .tab-btn:not(.active):hover{background:#eaf2ff!important;color:#1956a3!important}
-html[data-office-theme='ktop'] .integrated-management-page .customer-type-tabs button{background:#f4f7fc!important;color:#42617f!important;border-color:#d8e3f1!important}
-html[data-office-theme='ktop'] .integrated-management-page .customer-type-tabs button.active{background:#1767d2!important;color:#fff!important;border-color:#1767d2!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-table-head{background:#edf3fc!important;color:#24476b!important;border:1px solid #dce5ef;border-radius:9px;font-weight:750}
-html[data-office-theme='ktop'] .integrated-management-page .cust-row{border-bottom:1px solid #e8edf4!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-row:nth-child(even){background:#f8fafc!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-row:hover{background:#eef5ff!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-cell-name{color:#193860!important;font-weight:750}
-html[data-office-theme='ktop'] .integrated-management-page .customer-tags{color:#74859a!important;font-weight:500}
-html[data-office-theme='ktop'] .integrated-management-page .cust-cell-actions{border-color:#d8e3f1!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-act-detail{color:#1956a3!important;background:#eaf2ff!important;border-color:#c4d8f5!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-act-edit{color:#946111!important;background:#fff5e6!important;border-color:#ecd7af!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-act-delete{color:#b42318!important;background:#fff0ee!important;border-color:#efcbc5!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-act-diary{color:#137a69!important;background:#eaf7f3!important;border-color:#c3e5d9!important}
-html[data-office-theme='ktop'] .integrated-management-page .cust-cell-actions button:hover{filter:brightness(.96)}
-html[data-office-theme='ktop'] .integrated-management-page .pagination button.active{background:#1767d2!important;color:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .tab-nav{background:#fff;border:1px solid #dce5ef;border-radius:12px;padding:6px;gap:5px;margin:18px 0 16px}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .tab-btn{background:transparent!important;color:#42617f!important;border:0!important;border-radius:8px;padding:10px 16px}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .tab-btn.active{background:#1767d2!important;color:#fff!important;box-shadow:0 3px 8px rgba(23,103,210,.16)}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .tab-btn:not(.active):hover{background:#eaf2ff!important;color:#1956a3!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .customer-type-tabs button{background:#f4f7fc!important;color:#42617f!important;border-color:#d8e3f1!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .customer-type-tabs button.active{background:#1767d2!important;color:#fff!important;border-color:#1767d2!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-table-head{background:#edf3fc!important;color:#24476b!important;border:1px solid #dce5ef;border-radius:9px;font-weight:750}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-row{border-bottom:1px solid #e8edf4!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-row:nth-child(even){background:#f8fafc!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-row:hover{background:#eef5ff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-cell-name{color:#193860!important;font-weight:750}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .customer-tags{color:#74859a!important;font-weight:500}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-cell-actions{border-color:#d8e3f1!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-act-detail{color:#1956a3!important;background:#eaf2ff!important;border-color:#c4d8f5!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-act-edit{color:#946111!important;background:#fff5e6!important;border-color:#ecd7af!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-act-delete{color:#b42318!important;background:#fff0ee!important;border-color:#efcbc5!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-act-diary{color:#137a69!important;background:#eaf7f3!important;border-color:#c3e5d9!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .cust-cell-actions button:hover{filter:brightness(.96)}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .integrated-management-page .pagination button.active{background:#1767d2!important;color:#fff!important}
 }
 
 /* KTOP resource room: match diary blue accents. */
 @media screen{
-html[data-office-theme='ktop'] .resources-page>div[style*="background:#183b36"]{background:#eaf1fb!important;color:#355779!important;border-bottom:1px solid #d4e1f2}
-html[data-office-theme='ktop'] .resources-page .resource-toolbar{padding:12px 0;gap:8px}
-html[data-office-theme='ktop'] .resources-page .quick-card{border:1px solid #dce5ef!important;border-top:4px solid #1767d2!important;border-radius:16px;box-shadow:0 5px 20px rgba(24,44,71,.045)!important}
-html[data-office-theme='ktop'] .resources-page .quick-title{color:#193860!important;font-weight:750}
-html[data-office-theme='ktop'] .resources-page .drive-category-row [data-cidx]{background:#f4f7fc!important;color:#42617f!important;border-color:#d8e3f1!important}
-html[data-office-theme='ktop'] .resources-page .drive-category-row [data-cidx][aria-pressed="true"]{background:#1767d2!important;color:#fff!important;border-color:#1767d2!important;box-shadow:0 3px 9px rgba(23,103,210,.15)}
-html[data-office-theme='ktop'] .resources-page .drive-category-row [data-cidx]:hover{border-color:#80ade6!important}
-html[data-office-theme='ktop'] .resources-page .drive-category-grip{background:#edf3fc!important;color:#436991!important;border-color:#d8e3f1!important}
-html[data-office-theme='ktop'] .resources-page .drive-cat-drop-target{outline-color:#1767d2!important;background:#eaf2ff!important}
-html[data-office-theme='ktop'] .resources-page .listing-card{border-left:4px solid #1767d2!important;border-radius:13px!important}
-html[data-office-theme='ktop'] .resources-page .floor-status-entry{background:#eaf2ff!important;color:#1956a3!important;border-color:#c4d8f5!important}
-html[data-office-theme='ktop'] .resources-page .resource-location-entry{background:#eaf7f3!important;color:#137a69!important;border-color:#c3e5d9!important}
-html[data-office-theme='ktop'] .resources-page .listing-card button[onclick^="openDriveLinkModal"]{background:#eaf7f3!important;color:#137a69!important;border-color:#c3e5d9!important}
-html[data-office-theme='ktop'] .resources-page .listing-card button[onclick^="openDriveEdit"]{background:#fff5e6!important;color:#946111!important;border-color:#ecd7af!important}
-html[data-office-theme='ktop'] .resources-page .listing-card button[onclick^="deleteDriveItem"]{background:#fff0ee!important;color:#b42318!important;border-color:#efcbc5!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page>div[style*="background:#183b36"]{background:#eaf1fb!important;color:#355779!important;border-bottom:1px solid #d4e1f2}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .resource-toolbar{padding:12px 0;gap:8px}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .quick-card{border:1px solid #dce5ef!important;border-top:4px solid #1767d2!important;border-radius:16px;box-shadow:0 5px 20px rgba(24,44,71,.045)!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .quick-title{color:#193860!important;font-weight:750}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .drive-category-row [data-cidx]{background:#f4f7fc!important;color:#42617f!important;border-color:#d8e3f1!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .drive-category-row [data-cidx][aria-pressed="true"]{background:#1767d2!important;color:#fff!important;border-color:#1767d2!important;box-shadow:0 3px 9px rgba(23,103,210,.15)}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .drive-category-row [data-cidx]:hover{border-color:#80ade6!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .drive-category-grip{background:#edf3fc!important;color:#436991!important;border-color:#d8e3f1!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .drive-cat-drop-target{outline-color:#1767d2!important;background:#eaf2ff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .listing-card{border-left:4px solid #1767d2!important;border-radius:13px!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .floor-status-entry{background:#eaf2ff!important;color:#1956a3!important;border-color:#c4d8f5!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .resource-location-entry{background:#eaf7f3!important;color:#137a69!important;border-color:#c3e5d9!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .listing-card button[onclick^="openDriveLinkModal"]{background:#eaf7f3!important;color:#137a69!important;border-color:#c3e5d9!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .listing-card button[onclick^="openDriveEdit"]{background:#fff5e6!important;color:#946111!important;border-color:#ecd7af!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .resources-page .listing-card button[onclick^="deleteDriveItem"]{background:#fff0ee!important;color:#b42318!important;border-color:#efcbc5!important}
 }
 
 /* KTOP registration and edit surfaces use the property-management navy header. */
 @media screen {
-html[data-office-theme='ktop'] body.property-form-page{background:#f3f5f9!important}
-html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar){
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) body.property-form-page{background:#f3f5f9!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page :is(.header,.topbar){
   display:flex;align-items:center;justify-content:space-between;gap:20px;
   margin-top:20px;padding:20px 24px;border:0!important;border-radius:16px;
   background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;
   box-shadow:0 7px 24px rgba(31,75,139,.13)!important
 }
-html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.logo-main,.brand-text h1){color:#fff!important}
-html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.logo-sub,.brand-text p){color:#dbe7f8!important}
-html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.logo-icon,.logo){
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page :is(.header,.topbar) :is(.logo-main,.brand-text h1){color:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page :is(.header,.topbar) :is(.logo-sub,.brand-text p){color:#dbe7f8!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page :is(.header,.topbar) :is(.logo-icon,.logo){
   display:grid;place-items:center;width:40px;height:40px;flex:0 0 40px;
   border:1px solid rgba(255,255,255,.35)!important;border-radius:10px;
   background:rgba(255,255,255,.13)!important;color:#fff!important
 }
-html[data-office-theme='ktop'] .property-form-page .header .logo-icon::before{
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page .header .logo-icon::before{
   content:"K";position:static;width:auto;height:auto;line-height:1;
   background:none!important;color:#fff;font-size:24px;font-weight:800
 }
-html[data-office-theme='ktop'] .property-form-page .header .logo-icon::after{display:none}
-html[data-office-theme='ktop'] .property-form-page .topbar .logo::before{content:"K";color:#fff;font-size:24px;font-weight:800;line-height:1}
-html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.actions .btn:not(.danger),.customer-navigation .btn){
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page .header .logo-icon::after{display:none}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page .topbar .logo::before{content:"K";color:#fff;font-size:24px;font-weight:800;line-height:1}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.actions .btn:not(.danger),.customer-navigation .btn){
   background:rgba(255,255,255,.1)!important;color:#eef5ff!important;
   border-color:rgba(255,255,255,.25)!important
 }
-html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.nav-link.active,.customer-navigation .return-main){
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page :is(.header,.topbar) :is(.nav-link.active,.customer-navigation .return-main){
   background:#fff!important;color:#1956a3!important;border-color:#fff!important
 }
-html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.actions .btn:not(.danger),.customer-navigation .btn):hover{
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page :is(.header,.topbar) :is(.nav-link,.nav-logout-btn,.actions .btn:not(.danger),.customer-navigation .btn):hover{
   background:rgba(255,255,255,.2)!important;color:#fff!important
 }
-html[data-office-theme='ktop'] .property-form-page .header-line{display:none}
-html[data-office-theme='ktop'] .property-form-page #editModal .edit-modal-header{
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page .header-line{display:none}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page #editModal .edit-modal-header{
   background:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba)!important;border-bottom:0!important
 }
-html[data-office-theme='ktop'] .property-form-page #editModal .edit-modal-header .modal-title{color:#fff!important}
-html[data-office-theme='ktop'] .property-form-page #editModal .edit-modal-close{
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page #editModal .edit-modal-header .modal-title{color:#fff!important}
+html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page #editModal .edit-modal-close{
   background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.45)!important;color:#fff!important
 }
 @media(max-width:760px){
-  html[data-office-theme='ktop'] .property-form-page :is(.header,.topbar){padding:18px 16px;margin-top:12px;flex-wrap:wrap}
+  html:is([data-office-theme='ktop'],[data-office-theme='hitop']) .property-form-page :is(.header,.topbar){padding:18px 16px;margin-top:12px;flex-wrap:wrap}
 }
 }
