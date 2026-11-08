@@ -247,7 +247,7 @@
   document.documentElement.dataset.officeTheme=office;
   if(office!=='ktop'){
     var link=document.querySelector('link[href*="white-navy-workspace.css"]');
-    if(link)link.disabled=true;
+    if(link)link.disabled=false;
     var building=document.getElementById('ktop-building-light');
     if(building)building.disabled=true;
   }
