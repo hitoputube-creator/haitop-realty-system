@@ -301,6 +301,7 @@ input[type=file].hidden-file { display:none; }
 @media (max-width:560px){ :is(#contact-area,#contact-area-ktop) .contact-line{border-right:0 !important; border-top:1px solid #dbe8e5 !important;} :is(#contact-area,#contact-area-ktop) .contact-line:first-child{border-top:0 !important;} }
 :is(#contact-area,#contact-area-ktop)[hidden]{display:none !important}
 #contact-area-ktop .contact-grid[hidden]{display:none}
+#contact-area-ktop .contact-name{color:#fff;font-size:15px;font-weight:900;letter-spacing:-.2px}
 </style>
 </head>
 <body>
@@ -618,7 +619,7 @@ input[type=file].hidden-file { display:none; }
     <!-- 케이탑 인쇄물 하단 정보 박스: 아래 KTOP_INFO 값을 채우면 표시됩니다(빈 항목은 자동으로 숨김) -->
     <div id="contact-area-ktop" data-ktop-company-details hidden style="margin:0 28px 22px; border-radius:10px;">
       <div class="contact-head">
-        <div class="contact-company" id="ktopCompanyName"></div>
+        <div class="contact-name" id="ktopCompanyName"></div>
         <div class="contact-phone" id="ktopCompanyPhone"></div>
       </div>
       <div class="contact-grid" id="ktopCompanyGrid"></div>
