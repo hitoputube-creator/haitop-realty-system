@@ -145,7 +145,7 @@ function areaText(py, m2) {
   if (!isFinite(p) || p <= 0) return '';
   return p.toFixed(1).replace(/\.0$/, '') + '평(' + m.toFixed(1).replace(/\.0$/, '') + '㎡)';
 }
-var TYPE_LABELS = { apartment:'아파트', villa:'빌라', house:'주택', shop:'상가', office:'사무실', officetel:'오피스텔', hilsstate:'힐스테이트더운정', factory:'공장·창고', warehouse:'창고', bizcenter:'지식산업센터', land:'토지', etc:'기타' };
+var TYPE_LABELS = { apartment:'아파트', villa:'빌라', house:'주택', shop:'상가', office:'사무실', officetel:'오피스텔', hilsstate:'힐스테이트더운정', multifamily:'다가구', building:'건물', factory:'공장·창고', warehouse:'창고', bizcenter:'지식산업센터', land:'토지', etc:'기타' };
 function typeLabel(t) { if (TYPE_LABELS[t]) return TYPE_LABELS[t]; if (t && t.indexOf('land') === 0) return '토지'; return t || '기타'; }
 
 function priceOf(it, t, deal) {
@@ -176,8 +176,8 @@ function buildFacts(it) {
   var t = it.type || 'etc', f = { id: it.id, type: t, typeLabel: typeLabel(t) };
   f.title = v(it.title, it.publicAddress, it.displayAddress);
   f.addr = v(it.roadAddress, it.mapAddress, it.publicAddress, it.displayAddress, it.address);
-  var m = f.addr.match(/([가-힣]+)(시|군)\s+([가-힣0-9]+(?:동|읍|면|리))/);
-  f.city = m ? m[1] : ''; f.dong = m ? m[3] : '';
+  var cm = f.addr.match(/([가-힣]{2,4})(시|군)(?=\s|$)/), dm = f.addr.match(/([가-힣]{1,6}(?:동|읍|면|리))(?=\s|\d|$)/);
+  f.city = cm ? cm[1] : '파주'; f.dong = dm ? dm[1] : '';
   if (!f.dong) { var rm = f.addr.match(/([가-힣0-9]+(?:로|길))/); f.dong = rm ? rm[1] : ''; }
   var deal = v(it.dealType, it.shop_dealType, it.officetel_dealType, it.factory_dealType);
   if (!deal && t.indexOf('land') === 0) deal = '매매';
