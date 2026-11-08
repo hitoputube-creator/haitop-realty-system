@@ -1,12 +1,4 @@
-// 하이탑도 케이탑과 같은 화이트 바탕 + 블루 제목줄 화면으로 보이게 한다. (화면 색만 바뀜)
-if (OfficeConfig.id === 'hitop' && !/\/(login|reset-password|property-print|profit-recommendations|recommended-units)\.html$/.test(location.pathname)) {
-  document.documentElement.dataset.officeSkin = 'hitop-white';
-  const skinLink = document.createElement('link');
-  skinLink.rel = 'stylesheet';
-  skinLink.href = new URL('../css/hitop-white-skin.css?v=20261107-white2', document.currentScript.src).href;
-  document.head.appendChild(skinLink);
-}
-
+// 하이탑 기본 디자인은 공통 CSS 원본에서 화이트로 관리합니다. 별도 테마 주입 없음.
 // 화면·인쇄물의 상호만 변경한다. 고객/매물 데이터의 이름은 변경하지 않는다.
 const officeCompanyName = OfficeConfig.id === 'ktop' ? 'KTOP부동산' : '하이탑부동산';
 const officeManagementTitle = officeCompanyName + ' 매물관리';

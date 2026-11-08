@@ -1,12 +1,12 @@
-.land-location-page{max-width:1440px}.land-location-page h1{font-size:1.55rem;color:var(--gold-soft);margin:0 0 10px}.location-intro p,.map-help,.source-note,.block-list-card p{color:var(--text-muted);font-size:.85rem;line-height:1.65}.map-controls,.view-tabs,.zoom-controls,.filter-bar,.detail-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.map-controls{justify-content:space-between;margin:20px 0 12px}.filter-bar{margin-bottom:12px}.land-location-page button,.land-location-page a.btn{font-family:inherit;min-height:40px;text-decoration:none}.land-location-page button[aria-pressed=true]{border-color:var(--gold);background:rgba(216,184,74,.16);color:var(--gold-soft)}.land-location-page a.btn{display:inline-flex;align-items:center}.zoom-controls output{min-width:48px;text-align:center;font-size:.85rem}.legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.shop{background:#ad10a0}.multi{background:#3049aa}.third{background:#c92219}.map-viewport{width:100%;max-height:76vh;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:#fff;overscroll-behavior:contain}.map-stage{position:relative;width:100%;line-height:0;container-type:inline-size}.map-stage img{display:block;width:100%;height:auto;user-select:none}.map-hotspots{position:absolute;inset:0;pointer-events:none}.map-hotspot{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;display:flex;align-items:center;justify-content:center;border:2px solid #fff;border-radius:50%;color:white;box-shadow:0 1px 5px #0008;min-height:0!important;padding:0;cursor:pointer;font-weight:700;font-size:clamp(7px,1.25cqw,24px);line-height:1;aspect-ratio:1;width:2.7%}.map-hotspot:hover,.map-hotspot:focus-visible{outline:3px solid #e5bf35;outline-offset:2px;z-index:2;filter:brightness(1.15)}.map-hotspot.label-hotspot{border-radius:6px;background:#fff;color:#bf211a;width:4.4%;aspect-ratio:1.55;font-size:clamp(7px,1.05cqw,22px);border-color:#bf211a}.map-hotspot.site-hotspot{width:2.6%;background:#c92219}.source-note{font-size:.76rem;margin:10px 0 18px}.block-list-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.block-list-heading h2{font-size:1rem;margin:0;color:var(--gold-soft)}.block-list-heading span{color:var(--text-muted);font-size:.8rem}.block-group h3{font-size:.9rem;color:var(--text-main);margin:18px 0 10px}.block-buttons{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}.block-button{background:var(--panel2);color:var(--text-main);border:1px solid var(--border-slate);border-radius:8px;padding:8px 6px;cursor:pointer}.block-button small{display:block;font-size:.65rem;color:var(--text-muted);margin-top:3px}.block-button:hover,.block-button:focus-visible{border-color:var(--gold);color:var(--gold-soft)}.block-detail-card{margin-top:16px}.detail-eyebrow{color:var(--text-muted);font-size:.85rem}.drawing-empty{padding:50px 16px;text-align:center;border:1px dashed var(--border-slate);border-radius:12px;margin:24px 0;background:var(--panel2)}.drawing-empty>span{font-size:3rem;color:var(--gold)}.drawing-empty h2{font-size:1.1rem;color:var(--gold-soft)}.drawing-empty p,#detailNote{color:var(--text-muted);font-size:.85rem;line-height:1.7}.detail-actions{margin-top:20px}#detailDrawing img{display:block;width:100%;height:auto}#mapError{color:var(--red);padding:12px}[hidden]{display:none!important}@media(max-width:720px){.map-controls{align-items:flex-start;gap:12px}.view-tabs{width:100%}.view-tabs .btn{flex:1}.filter-bar .btn{font-size:.75rem}.location-intro h1{font-size:1.25rem}.map-viewport{max-height:65vh}.block-buttons{grid-template-columns:repeat(auto-fill,minmax(72px,1fr))}.drawing-empty{padding:32px 12px}.main-nav .nav-link{padding:0 10px}}
+.land-location-page{max-width:1440px}.land-location-page h1{font-size:1.55rem;color:var(--gold-soft);margin:0 0 10px}.location-intro p,.map-help,.source-note,.block-list-card p{color:var(--text-muted);font-size:.85rem;line-height:1.65}.map-controls,.view-tabs,.zoom-controls,.filter-bar,.detail-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.map-controls{justify-content:space-between;margin:20px 0 12px}.filter-bar{margin-bottom:12px}.land-location-page button,.land-location-page a.btn{font-family:inherit;min-height:40px;text-decoration:none}.land-location-page button[aria-pressed=true]{border-color:var(--gold);background:rgba(37,103,95,0.16);color:var(--gold-soft)}.land-location-page a.btn{display:inline-flex;align-items:center}.zoom-controls output{min-width:48px;text-align:center;font-size:.85rem}.legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.shop{background:#ad10a0;color:#ffffff}.multi{background:#ffffff}.third{background:#c92219;color:#ffffff}.map-viewport{width:100%;max-height:76vh;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:#fff;overscroll-behavior:contain}.map-stage{position:relative;width:100%;line-height:0;container-type:inline-size}.map-stage img{display:block;width:100%;height:auto;user-select:none}.map-hotspots{position:absolute;inset:0;pointer-events:none}.map-hotspot{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;display:flex;align-items:center;justify-content:center;border:2px solid #dcedec;border-radius:50%;color:white;box-shadow:0 1px 5px rgba(35,76,73,0.08);min-height:0!important;padding:0;cursor:pointer;font-weight:700;font-size:clamp(7px,1.25cqw,24px);line-height:1;aspect-ratio:1;width:2.7%}.map-hotspot:hover,.map-hotspot:focus-visible{outline:3px solid #cbe1e0;outline-offset:2px;z-index:2;filter:brightness(1.15)}.map-hotspot.label-hotspot{border-radius:6px;background:#fff;color:#b42318;width:4.4%;aspect-ratio:1.55;font-size:clamp(7px,1.05cqw,22px);border-color:#bf211a}.map-hotspot.site-hotspot{width:2.6%;background:#c92219;color:#ffffff}.source-note{font-size:.76rem;margin:10px 0 18px}.block-list-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.block-list-heading h2{font-size:1rem;margin:0;color:var(--gold-soft)}.block-list-heading span{color:var(--text-muted);font-size:.8rem}.block-group h3{font-size:.9rem;color:var(--text-main);margin:18px 0 10px}.block-buttons{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}.block-button{background:var(--panel2);color:var(--text-main);border:1px solid var(--border-slate);border-radius:8px;padding:8px 6px;cursor:pointer}.block-button small{display:block;font-size:.65rem;color:var(--text-muted);margin-top:3px}.block-button:hover,.block-button:focus-visible{border-color:var(--gold);color:var(--gold-soft)}.block-detail-card{margin-top:16px}.detail-eyebrow{color:var(--text-muted);font-size:.85rem}.drawing-empty{padding:50px 16px;text-align:center;border:1px dashed var(--border-slate);border-radius:12px;margin:24px 0;background:var(--panel2)}.drawing-empty>span{font-size:3rem;color:var(--gold)}.drawing-empty h2{font-size:1.1rem;color:var(--gold-soft)}.drawing-empty p,#detailNote{color:var(--text-muted);font-size:.85rem;line-height:1.7}.detail-actions{margin-top:20px}#detailDrawing img{display:block;width:100%;height:auto}#mapError{color:var(--red);padding:12px}[hidden]{display:none!important}@media(max-width:720px){.map-controls{align-items:flex-start;gap:12px}.view-tabs{width:100%}.view-tabs .btn{flex:1}.filter-bar .btn{font-size:.75rem}.location-intro h1{font-size:1.25rem}.map-viewport{max-height:65vh}.block-buttons{grid-template-columns:repeat(auto-fill,minmax(72px,1fr))}.drawing-empty{padding:32px 12px}.main-nav .nav-link{padding:0 10px}}
 /* Land types follow the supplied parcel sheet; Unjeong 2 map categories keep their original colors. */
-.single-land{background:#eb7926}.shop-land{background:#689f3d}.map-hotspot.land-type-single{background:#df6e20}.map-hotspot.land-type-shop{background:#5d9134}.block-button.land-type-single{border-left:4px solid #eb7926}.block-button.land-type-shop{border-left:4px solid #689f3d}.type-notice{font-size:.82rem;color:var(--text-muted);line-height:1.6}.drawing-controls{margin:18px 0 10px}#detailDrawing{max-height:75vh;overflow:auto;background:white;border-radius:10px;border:1px solid var(--line2)}#detailDrawing img{max-width:none}#detailDrawingError{color:var(--red);font-size:.85rem}
+.single-land{background:#eb7926;color:#ffffff}.shop-land{background:#689f3d;color:#ffffff}.map-hotspot.land-type-single{background:#df6e20;color:#ffffff}.map-hotspot.land-type-shop{background:#5d9134;color:#ffffff}.block-button.land-type-single{border-left:4px solid #eb7926}.block-button.land-type-shop{border-left:4px solid #689f3d}.type-notice{font-size:.82rem;color:var(--text-muted);line-height:1.6}.drawing-controls{margin:18px 0 10px}#detailDrawing{max-height:75vh;overflow:auto;background:white;border-radius:10px;border:1px solid var(--line2)}#detailDrawing img{max-width:none}#detailDrawingError{color:var(--red);font-size:.85rem}
 /* The cover scales with the source map; circular click targets stay above it. */
 .map-hotspots{z-index:2}
 
 .parcel-stage{position:relative;line-height:0}.parcel-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}.parcel-shape{fill:transparent;stroke:transparent;stroke-width:.002;pointer-events:auto;cursor:pointer}.parcel-manager{margin:24px 0}.parcel-manager h2{font-size:1.1rem;color:var(--gold-soft)}.parcel-manager p{font-size:.85rem;line-height:1.65;color:var(--text-muted)}#parcelStatus{color:var(--gold-soft)}.parcel-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.parcel-fields label{display:flex;flex-direction:column;gap:6px;font-size:.85rem}.parcel-manager input,.parcel-manager select,.parcel-manager textarea{box-sizing:border-box;width:100%;padding:10px;border-radius:7px;border:1px solid var(--border-slate);background:var(--panel2);color:var(--text-main);font:inherit;min-height:44px}.parcel-manager .filter-bar label{font-size:.8rem}.parcel-note{grid-column:1/-1}#parcelEditor{border-top:1px solid var(--line2);margin-top:20px;padding-top:18px;scroll-margin-top:16px}.parcel-manager .block-buttons{grid-template-columns:repeat(auto-fill,minmax(68px,1fr))}.parcel-manager input[readonly]{opacity:.75}
 
-.source-group-filter{display:flex;gap:12px;align-items:center;margin:16px 0}.source-group-filter select{width:auto;min-width:180px}.parcel-table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line2);border-radius:8px}.parcel-source-table{width:100%;border-collapse:collapse;min-width:620px;font-size:.82rem}.parcel-source-table th,.parcel-source-table td{padding:10px;border-bottom:1px solid var(--line2);text-align:left;white-space:nowrap}.parcel-source-table th{position:sticky;top:0;background:var(--panel2);z-index:1;color:var(--gold-soft)}.parcel-source-table .btn{min-height:34px;padding:5px 9px;font-size:.8rem}.source-subblock{fill:transparent;stroke:transparent;pointer-events:auto;cursor:pointer}.source-subblock:hover,.source-subblock:focus{fill:#d8b84a70;stroke:#a67200;stroke-width:.002}#parcelSourceDetail{white-space:pre-line;color:var(--gold-soft);font-size:.85rem;line-height:1.7}
+.source-group-filter{display:flex;gap:12px;align-items:center;margin:16px 0}.source-group-filter select{width:auto;min-width:180px}.parcel-table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line2);border-radius:8px}.parcel-source-table{width:100%;border-collapse:collapse;min-width:620px;font-size:.82rem}.parcel-source-table th,.parcel-source-table td{padding:10px;border-bottom:1px solid var(--line2);text-align:left;white-space:nowrap}.parcel-source-table th{position:sticky;top:0;background:var(--panel2);z-index:1;color:var(--gold-soft)}.parcel-source-table .btn{min-height:34px;padding:5px 9px;font-size:.8rem}.source-subblock{fill:transparent;stroke:transparent;pointer-events:auto;cursor:pointer}.source-subblock:hover,.source-subblock:focus{fill:#25675f;stroke:#25675f;stroke-width:.002}#parcelSourceDetail{white-space:pre-line;color:var(--gold-soft);font-size:.85rem;line-height:1.7}
 
 #mapViewport,#detailDrawing{touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}#mapViewport img,#detailDrawing img{-webkit-user-drag:none;user-drag:none}#detailDrawing img{-webkit-user-drag:none;user-select:none}
 
@@ -25,40 +25,40 @@
 .parcel-manager input[readonly]{opacity:1;background:transparent;border-color:transparent;border-bottom-color:var(--line2);color:var(--gold-soft)}
 .land-location-page .detail-actions{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:8px;margin-top:12px}
 .land-location-page .detail-actions .btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:34px;padding:6px 12px;font-size:.8rem;line-height:1.3;border:1px solid var(--border-slate);border-radius:5px;background:var(--panel2);color:var(--text-main);text-decoration:none}
-.land-location-page .detail-actions .btn-primary{background:var(--gold);border-color:var(--gold);color:#071625}
+.land-location-page .detail-actions .btn-primary{background:var(--gold);border-color:var(--gold);color:#ffffff}
 .land-location-page .detail-actions a.btn:visited{color:var(--text-main)}
-.land-location-page .detail-actions a.btn-primary:visited{color:#071625}
+.land-location-page .detail-actions a.btn-primary:visited{color:#234c49}
 .land-location-page .detail-actions .btn:hover{border-color:var(--gold)}
 .land-location-page .detail-actions .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-#parcelDelete{margin-left:auto;color:#ffb3b3;background:transparent}
+#parcelDelete{margin-left:auto;color:#b42318;background:transparent}
 .block-footer-actions{padding-top:12px;border-top:1px solid var(--line2)}
 @media(max-width:480px){.parcel-value-pair{padding:0;gap:8px}.parcel-fields{gap:7px 8px}.land-location-page .block-footer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.block-footer-actions #sourceDrawingLink{grid-column:1/-1}.land-location-page .detail-actions .btn{min-height:36px}}
 
 /* Parcel views share the drawing coordinate system and never intercept clicks. */
 .parcel-view-controls{display:flex;flex-wrap:nowrap;gap:6px;margin:8px 0;overflow-x:auto}.parcel-view-controls .btn{flex:0 0 auto;white-space:nowrap}.parcel-view-controls .btn{min-height:34px;font-size:.8rem;padding:6px 10px}
-.parcel-map-label{font-size:.008px;font-weight:700;fill:#102238;stroke:#fff;stroke-width:.0016px;paint-order:stroke fill;pointer-events:none}
-.parcel-shape.parcel-building-building{fill:#2563eb70;stroke:#1d4ed8;stroke-width:.003}
+.parcel-map-label{font-size:.008px;font-weight:700;fill:#234c49;stroke:#234c49;stroke-width:.0016px;paint-order:stroke fill;pointer-events:none}
+.parcel-shape.parcel-building-building{fill:#2b5fa8;stroke:#1d4ed8;stroke-width:.003}
 .parcel-building-vector-overlay{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;pointer-events:none;opacity:0;z-index:0}
 .parcel-vector-hit-layer{overflow:visible;pointer-events:none}
 .parcel-vector-hit{fill:transparent!important;stroke:transparent!important;pointer-events:all;cursor:pointer}
 /* 원본 도면에 필지 칸막이 선이 없어 번호 위치로 나눈 필지는 가는 선으로 구분 표시 */
 .parcel-vector-hit.parcel-vector-split{stroke:rgba(70,70,70,.55)!important;stroke-width:.7!important;vector-effect:non-scaling-stroke}
-.parcel-vector-hit:hover,.parcel-vector-hit:focus-visible{stroke:#a67200!important;stroke-width:1.2!important;vector-effect:non-scaling-stroke;outline:none}
-.parcel-vector-hit.parcel-vector-building-highlight{fill:#2563eb99!important;stroke:#1d4ed8!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-vector-hit:hover,.parcel-vector-hit:focus-visible{stroke:#25675f!important;stroke-width:1.2!important;vector-effect:non-scaling-stroke;outline:none}
+.parcel-vector-hit.parcel-vector-building-highlight{fill:#2b5fa8!important;stroke:#1d4ed8!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
 
-.parcel-contact-marker{font-size:.012px;stroke-width:.002px}.parcel-contact-marker.parcel-contact-contact{fill:#137a42}.parcel-contact-marker.parcel-contact-registered{fill:#a66b00}.parcel-contact-marker.parcel-contact-missing{fill:#526071}.parcel-contact-marker.parcel-contact-unknown{fill:#6d36a0}
-.parcel-contact-badge{display:inline-block;margin-right:10px;font-size:.75rem}.parcel-contact-badge.parcel-contact-contact{color:#8debbb}.parcel-contact-badge.parcel-contact-registered{color:#f4d27b}.parcel-contact-badge.parcel-contact-missing{color:var(--text-muted)}.parcel-contact-badge.parcel-contact-unknown{color:#dbb7ff}
+.parcel-contact-marker{font-size:.012px;stroke-width:.002px}.parcel-contact-marker.parcel-contact-contact{fill:#137a42}.parcel-contact-marker.parcel-contact-registered{fill:#25675f}.parcel-contact-marker.parcel-contact-missing{fill:#234c49}.parcel-contact-marker.parcel-contact-unknown{fill:#6d36a0}
+.parcel-contact-badge{display:inline-block;margin-right:10px;font-size:.75rem}.parcel-contact-badge.parcel-contact-contact{color:#177a55}.parcel-contact-badge.parcel-contact-registered{color:#25675f}.parcel-contact-badge.parcel-contact-missing{color:var(--text-muted)}.parcel-contact-badge.parcel-contact-unknown{color:#234c49}
 
 /* Parcel details open above the drawing without moving the underlying page. */
-#parcelEditor{width:min(760px,calc(100% - 28px));max-width:none;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);margin:auto;padding:18px;border:1px solid var(--border-slate);border-radius:12px;background:var(--panel2);color:var(--text-main);box-shadow:0 20px 80px #0008;overflow-y:auto;overscroll-behavior:contain}
-#parcelEditor::backdrop{background:rgba(2,8,17,.72)}
+#parcelEditor{width:min(760px,calc(100% - 28px));max-width:none;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);margin:auto;padding:18px;border:1px solid var(--border-slate);border-radius:12px;background:var(--panel2);color:var(--text-main);box-shadow:0 20px 80px rgba(35,76,73,0.08);overflow-y:auto;overscroll-behavior:contain}
+#parcelEditor::backdrop{background:#ffffff}
 .parcel-modal-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px}
 #parcelEditor .parcel-modal-close{flex:0 0 auto;min-height:32px;width:32px;padding:0;border:1px solid var(--border-slate);border-radius:5px;background:transparent;color:var(--text-main);font-size:1.4rem;line-height:1;cursor:pointer}
 #parcelFormTitle:focus{outline:none}
 #parcelModalStatus{margin:6px 0 10px;color:var(--gold-soft);font-size:.78rem;line-height:1.4}
 @media(max-width:480px){#parcelEditor{width:calc(100% - 20px);max-height:calc(100dvh - 20px);padding:12px}.parcel-modal-heading{gap:8px}}
 
-.parcel-shape:focus-visible{stroke:#a67200;stroke-width:.003;outline:none}
+.parcel-shape:focus-visible{stroke:#25675f;stroke-width:.003;outline:none}
 
 .parcel-building-check{display:flex;align-items:center;gap:8px;min-height:36px;margin:0 0 6px;font-size:.85rem;font-weight:600;cursor:pointer;width:fit-content}
 #parcel-building{width:18px;height:18px;min-height:18px;margin:0;padding:0;accent-color:var(--gold);cursor:pointer;flex:0 0 auto}
@@ -83,19 +83,19 @@
 .parcel-vector-hit.parcel-vector-contact-highlight.parcel-vector-building-highlight{fill:#9333ea99!important;stroke:#7e22ce!important}
 .parcel-shape.parcel-contact-highlight.parcel-building-building{fill:#9333ea70;stroke:#7e22ce}
 
-.parcel-vector-hit.parcel-vector-lh-highlight{fill:#f59e0b99!important;stroke:#b45309!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
-.parcel-shape.parcel-lh-highlight{fill:#f59e0b80;stroke:#b45309;stroke-width:.003}
-.parcel-vector-hit.parcel-vector-lh-highlight.parcel-vector-building-highlight{fill:#2563eb99!important;stroke:#1d4ed8!important}
+.parcel-vector-hit.parcel-vector-lh-highlight{fill:#25675f!important;stroke:#b42318!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-lh-highlight{fill:#25675f;stroke:#b42318;stroke-width:.003}
+.parcel-vector-hit.parcel-vector-lh-highlight.parcel-vector-building-highlight{fill:#2b5fa8!important;stroke:#1d4ed8!important}
 .parcel-vector-hit.parcel-vector-lh-highlight.parcel-vector-contact-highlight{fill:#16a34a99!important;stroke:#15803d!important}
 .parcel-vector-hit.parcel-vector-lh-highlight.parcel-vector-contact-highlight.parcel-vector-building-highlight{fill:#9333ea99!important;stroke:#7e22ce!important}
-.lh-detail{margin:12px 0;padding:12px 0;border-top:1px solid #d8b84a55;border-bottom:1px solid #d8b84a55}.lh-detail h4{font-size:1.05rem;margin:0 0 8px}.lh-info-grid{display:grid;grid-template-columns:minmax(110px,35%) 1fr;gap:6px 12px;margin:12px 0}.lh-info-grid dt{color:#64748b}.lh-info-grid dd{margin:0;overflow-wrap:anywhere}.lh-detail details{margin-top:14px}.lh-detail summary{cursor:pointer}#lhParcelSection{margin-top:20px}#lhParcelSection .btn{white-space:nowrap}.lh-detail .btn{display:inline-block}
+.lh-detail{margin:12px 0;padding:12px 0;border-top:1px solid rgba(37,103,95,0.3333333333333333);border-bottom:1px solid rgba(37,103,95,0.3333333333333333)}.lh-detail h4{font-size:1.05rem;margin:0 0 8px}.lh-info-grid{display:grid;grid-template-columns:minmax(110px,35%) 1fr;gap:6px 12px;margin:12px 0}.lh-info-grid dt{color:#64748b}.lh-info-grid dd{margin:0;overflow-wrap:anywhere}.lh-detail details{margin-top:14px}.lh-detail summary{cursor:pointer}#lhParcelSection{margin-top:20px}#lhParcelSection .btn{white-space:nowrap}.lh-detail .btn{display:inline-block}
 @media(max-width:720px){.lh-info-grid{grid-template-columns:110px 1fr;font-size:.9rem;gap:8px}.lh-detail{padding:10px 0}}
 
-.parcel-shape.parcel-lh-highlight.parcel-building-building{fill:#2563eb70;stroke:#1d4ed8}.parcel-shape.parcel-lh-highlight.parcel-contact-highlight{fill:#16a34a70;stroke:#15803d}.parcel-shape.parcel-lh-highlight.parcel-contact-highlight.parcel-building-building{fill:#9333ea70;stroke:#7e22ce}
+.parcel-shape.parcel-lh-highlight.parcel-building-building{fill:#2b5fa8;stroke:#1d4ed8}.parcel-shape.parcel-lh-highlight.parcel-contact-highlight{fill:#16a34a70;stroke:#15803d}.parcel-shape.parcel-lh-highlight.parcel-contact-highlight.parcel-building-building{fill:#9333ea70;stroke:#7e22ce}
 
-.lh-official-map{display:block;width:100%;height:78svh;min-height:480px;background:#faf8f1;border:1px solid #d8b84a55;border-radius:8px;touch-action:none;cursor:grab}.lh-official-map path{fill:#f59e0b99;stroke:#b45309;stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer}.lh-official-map path:hover,.lh-official-map path:focus-visible{fill:#f97316;outline:none;stroke:#7c2d12;stroke-width:2}.lh-map-tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}@media(max-width:720px){.lh-official-map{height:74svh;min-height:420px}}
+.lh-official-map{display:block;width:100%;height:78svh;min-height:480px;background:#faf8f1;border:1px solid rgba(37,103,95,0.3333333333333333);border-radius:8px;touch-action:none;cursor:grab}.lh-official-map path{fill:#25675f;stroke:#b42318;stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer}.lh-official-map path:hover,.lh-official-map path:focus-visible{fill:#b42318;outline:none;stroke:#7c2d12;stroke-width:2}.lh-map-tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}@media(max-width:720px){.lh-official-map{height:74svh;min-height:420px}}
 
-.lh-official-map path.lh-has-building{fill:#2563eb99;stroke:#1d4ed8}.lh-official-map path.lh-has-contact{fill:#16a34a99;stroke:#15803d}.lh-official-map path.lh-has-building.lh-has-contact{fill:#9333ea99;stroke:#7e22ce}
+.lh-official-map path.lh-has-building{fill:#2b5fa8;stroke:#1d4ed8}.lh-official-map path.lh-has-contact{fill:#16a34a99;stroke:#15803d}.lh-official-map path.lh-has-building.lh-has-contact{fill:#9333ea99;stroke:#7e22ce}
 
 .lh-info-grid dt{color:var(--text-muted)}.lh-detail a.btn,#lhParcelSection a.btn{color:var(--gold-soft);border:1px solid var(--border-slate);border-radius:5px;padding:6px 12px}.parcel-private-heading{margin:16px 0 10px;color:var(--gold-soft)}
 
@@ -115,10 +115,10 @@
 #overview .filter-caption{color:var(--text-muted);font-size:.72rem}
 #overview .filter-arrow{margin-left:auto;color:var(--gold-soft)}
 #overview .map-filter-dropdown[open] .filter-arrow{transform:rotate(180deg)}
-#overview .map-filter-menu{position:absolute;top:calc(100% + 5px);left:0;z-index:20;display:flex;flex-direction:column;gap:2px;min-width:100%;width:max-content;max-width:calc(100vw - 40px);padding:5px;box-sizing:border-box;border:1px solid var(--border-slate);border-radius:7px;background:var(--panel2);box-shadow:0 10px 26px #0006}
+#overview .map-filter-menu{position:absolute;top:calc(100% + 5px);left:0;z-index:20;display:flex;flex-direction:column;gap:2px;min-width:100%;width:max-content;max-width:calc(100vw - 40px);padding:5px;box-sizing:border-box;border:1px solid var(--border-slate);border-radius:7px;background:var(--panel2);box-shadow:0 10px 26px rgba(35,76,73,0.08)}
 #overview .map-filter-menu .btn{display:flex;align-items:center;justify-content:flex-start;min-height:36px;padding:8px 10px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text-main);font:inherit;font-size:.8rem;white-space:nowrap;cursor:pointer}
-#overview .map-filter-menu .btn[aria-pressed=true]{background:rgba(216,184,74,.14);color:var(--gold-soft);font-weight:700}
-#overview .map-filter-menu .btn:hover{background:rgba(216,184,74,.08)}
+#overview .map-filter-menu .btn[aria-pressed=true]{background:rgba(37,103,95,0.14);color:var(--gold-soft);font-weight:700}
+#overview .map-filter-menu .btn:hover{background:rgba(37,103,95,0.08)}
 #overview .map-filter-dropdown summary:focus-visible,#overview .map-filter-menu .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #overview .zoom-controls{flex-wrap:nowrap;gap:5px;margin-left:auto}
 #overview .zoom-controls .btn{box-sizing:border-box;min-height:34px;padding:7px 10px;border:1px solid var(--border-slate);border-radius:6px;background:var(--panel2);color:var(--text-main);font-size:.8rem;cursor:pointer}
@@ -138,8 +138,8 @@
 #blockDetail #kakaoMapLink{margin-right:auto;text-decoration:none}
 #blockDetail .parcel-view-controls{flex:0 1 auto;min-width:0;display:flex;flex-wrap:nowrap;align-items:center;gap:5px;margin:0;padding:3px 0;overflow-x:auto;scrollbar-width:thin}
 #blockDetail .drawing-controls{flex:0 0 auto;display:flex;flex-wrap:nowrap;gap:5px;margin:0}
-#blockDetail .drawing-toolbar .btn,#blockDetail #backToMap{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:34px;padding:7px 11px;border:1px solid var(--border-slate);border-radius:6px;background:rgba(7,22,37,.35);color:var(--text-muted);font:inherit;font-size:.8rem;line-height:1.3;white-space:nowrap;cursor:pointer}
-#blockDetail .drawing-toolbar .btn[aria-pressed=true]{border-color:var(--gold);background:rgba(216,184,74,.14);color:var(--gold-soft);font-weight:700}
+#blockDetail .drawing-toolbar .btn,#blockDetail #backToMap{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:34px;padding:7px 11px;border:1px solid var(--border-slate);border-radius:6px;background:#ffffff;color:var(--text-muted);font:inherit;font-size:.8rem;line-height:1.3;white-space:nowrap;cursor:pointer}
+#blockDetail .drawing-toolbar .btn[aria-pressed=true]{border-color:var(--gold);background:rgba(37,103,95,0.14);color:var(--gold-soft);font-weight:700}
 #blockDetail .drawing-toolbar .btn:hover,#blockDetail #backToMap:hover{border-color:var(--gold);color:var(--gold-soft)}
 #blockDetail .drawing-toolbar .btn:focus-visible,#blockDetail #backToMap:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #blockDetail #drawingZoomIn,#blockDetail #drawingZoomOut{width:34px;padding:0;color:var(--text-main);font-size:1.05rem}
@@ -154,23 +154,23 @@
 }
 
 /* Contact availability uses symbols; parcel fills remain available for buildings. */
-.parcel-contact-dot{fill:#dc2626;stroke:#fff;stroke-width:.0014;pointer-events:none}
+.parcel-contact-dot{fill:#b42318;stroke:#234c49;stroke-width:.0014;pointer-events:none}
 .parcel-contact-cross-outline,.parcel-contact-cross{fill:none;stroke-linecap:round;pointer-events:none}
-.parcel-contact-cross-outline{stroke:#fff;stroke-width:.0034}
-.parcel-contact-cross{stroke:#5b6472;stroke-width:.0016}
-.parcel-contact-badge.parcel-contact-contact{color:#ff7373}
+.parcel-contact-cross-outline{stroke:#234c49;stroke-width:.0034}
+.parcel-contact-cross{stroke:#234c49;stroke-width:.0016}
+.parcel-contact-badge.parcel-contact-contact{color:#b42318}
 .parcel-contact-badge.parcel-contact-registered,.parcel-contact-badge.parcel-contact-missing{color:var(--text-muted)}
 
 /* Area text uses regular HTML glyphs so a wide SVG cannot flatten the font. */
 .parcel-stage{container-type:inline-size}
 .parcel-area-label-overlay{position:absolute;inset:0;z-index:3;pointer-events:none}
-.parcel-area-label{position:absolute;display:block;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;font-family:inherit;font-size:clamp(5px,.65cqw,40px);font-weight:600;font-style:normal;font-stretch:normal;line-height:1.2;letter-spacing:0;color:#102238;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff}
+.parcel-area-label{position:absolute;display:block;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;font-family:inherit;font-size:clamp(5px,.65cqw,40px);font-weight:600;font-style:normal;font-stretch:normal;line-height:1.2;letter-spacing:0;color:#234c49;text-shadow:-1px -1px 0 #234c49,1px -1px 0 #234c49,-1px 1px 0 #234c49,1px 1px 0 #234c49}
 
 /* SVG parcel clicks do not leave the browser's rectangular focus outline. */
 #detailDrawing svg:focus,#detailDrawing svg :focus{outline:none!important}
 /* Keyboard focus follows the parcel boundary instead of a rectangular box. */
-#detailDrawing .parcel-vector-hit:focus-visible{stroke:#a67200!important;stroke-width:1.2!important;vector-effect:non-scaling-stroke}
-#detailDrawing .parcel-shape:focus-visible{stroke:#a67200;stroke-width:.003}
+#detailDrawing .parcel-vector-hit:focus-visible{stroke:#25675f!important;stroke-width:1.2!important;vector-effect:non-scaling-stroke}
+#detailDrawing .parcel-shape:focus-visible{stroke:#25675f;stroke-width:.003}
 
 /* Keep field names beside their values with a clear type hierarchy. */
 #parcelEditor .parcel-fields label{display:grid;grid-template-columns:136px minmax(0,1fr);align-items:center;gap:8px;color:var(--text-muted);font-size:12px;font-weight:500;line-height:1.4}
@@ -230,7 +230,7 @@
 .building-update-status .btn{flex-shrink:0}
 
 .parcel-note-date-label{display:flex;align-items:center;gap:10px;margin:0 0 10px;color:var(--text-muted);font-size:12px}
-#parcelNoteDate{width:170px;max-width:100%;color-scheme:dark}
+#parcelNoteDate{width:170px;max-width:100%;color-scheme:light}
 
 .parcel-print-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-slate)}
 .parcel-print-controls label{display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap}
@@ -253,7 +253,7 @@
 
 
 /* Ownership text badges coexist with building colors and area labels. */
-.parcel-ownership-label{padding:.08em .3em;border-radius:.25em;background:#f8fafce8;text-shadow:none;border:1px solid #64748b;color:#334155}
+.parcel-ownership-label{padding:.08em .3em;border-radius:.25em;background:#f8fafce8;text-shadow:none;border:1px solid #64748b;color:#234c49}
 .parcel-ownership-person{background:#dcfce7f2;border-color:#15803d;color:#14532d}
 .parcel-ownership-corporation{background:#ffedd5f2;border-color:#c2410c;color:#7c2d12}
 .parcel-ownership-other{background:#ede9fef2;border-color:#7c3aed;color:#4c1d95}
@@ -264,7 +264,7 @@
 .land-location-page .building-update-status .btn:hover,.land-location-page .building-update-status .btn:focus-visible{border-color:var(--gold);color:var(--gold-soft)}
 
 /* Only parcels without basic information receive a cross. Area/ownership labels keep their own styles. */
-.parcel-data-cross{position:absolute;transform:translate(-50%,-50%);color:#dc2626;font-size:16px;font-weight:800;line-height:1;text-shadow:0 0 2px #fff,1px 1px 0 #fff,-1px -1px 0 #fff;pointer-events:none}
+.parcel-data-cross{position:absolute;transform:translate(-50%,-50%);color:#b42318;font-size:16px;font-weight:800;line-height:1;text-shadow:0 0 2px #234c49,1px 1px 0 #234c49,-1px -1px 0 #234c49;pointer-events:none}
 .parcel-data-cross-offset{margin-top:1.3em}
 
 .parcel-global-search{padding:12px;margin:12px 0;border:1px solid var(--line2);border-radius:8px;background:var(--panel2)}
@@ -286,7 +286,7 @@
 .block-navigation select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .block-search-panel .parcel-search-controls{flex-wrap:nowrap;align-items:flex-end}
 .block-search-panel .parcel-search-field{flex:1 1 auto;min-width:0}
-.block-search-panel .btn{flex:none;background:var(--gold);border-color:var(--gold);color:#071625}
+.block-search-panel .btn{flex:none;background:var(--gold);border-color:var(--gold);color:#ffffff}
 .block-search-panel #parcelStatus{margin:6px 0 0;font-size:.75rem;line-height:1.4}
 .block-search-panel #parcelStatus:empty{display:none}
 .parcel-manager .filter-bar[hidden]{display:none}
@@ -304,27 +304,27 @@
 
 /* Owner data: open O ring for present, X for absent. */
 .parcel-contact-ring-outline,.parcel-contact-ring{fill:none;pointer-events:none}
-.parcel-contact-ring-outline{stroke:#fff;stroke-width:.0034}
-.parcel-contact-ring{stroke:#dc2626;stroke-width:.0016}
+.parcel-contact-ring-outline{stroke:#234c49;stroke-width:.0034}
+.parcel-contact-ring{stroke:#b42318;stroke-width:.0016}
 
 /* 허용가구수 구분: 색 + 숫자 라벨 */
 .block-rules{margin:.35rem 0 .6rem;font-weight:600}
-.parcel-vector-hit.parcel-vector-hh-1{fill:#38bdf899!important;stroke:#0369a1!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
-.parcel-shape.parcel-hh-1{fill:#38bdf880;stroke:#0369a1;stroke-width:.003}
-.parcel-hh-label.parcel-hh-text-1{border-color:#0369a1}
-.parcel-vector-hit.parcel-vector-hh-2{fill:#4ade8099!important;stroke:#15803d!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
-.parcel-shape.parcel-hh-2{fill:#4ade8080;stroke:#15803d;stroke-width:.003}
+.parcel-vector-hit.parcel-vector-hh-1{fill:#2b5fa8!important;stroke:#234c49!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-1{fill:#2b5fa8;stroke:#234c49;stroke-width:.003}
+.parcel-hh-label.parcel-hh-text-1{border-color:#dcedec}
+.parcel-vector-hit.parcel-vector-hh-2{fill:#177a55!important;stroke:#15803d!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-2{fill:#177a55;stroke:#15803d;stroke-width:.003}
 .parcel-hh-label.parcel-hh-text-2{border-color:#15803d}
-.parcel-vector-hit.parcel-vector-hh-3{fill:#facc1599!important;stroke:#a16207!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
-.parcel-shape.parcel-hh-3{fill:#facc1580;stroke:#a16207;stroke-width:.003}
+.parcel-vector-hit.parcel-vector-hh-3{fill:#25675f!important;stroke:#a16207!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-3{fill:#25675f;stroke:#a16207;stroke-width:.003}
 .parcel-hh-label.parcel-hh-text-3{border-color:#a16207}
-.parcel-vector-hit.parcel-vector-hh-4{fill:#fb923c99!important;stroke:#c2410c!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
-.parcel-shape.parcel-hh-4{fill:#fb923c80;stroke:#c2410c;stroke-width:.003}
+.parcel-vector-hit.parcel-vector-hh-4{fill:#b42318!important;stroke:#b42318!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-4{fill:#b42318;stroke:#b42318;stroke-width:.003}
 .parcel-hh-label.parcel-hh-text-4{border-color:#c2410c}
-.parcel-vector-hit.parcel-vector-hh-5{fill:#f8717199!important;stroke:#b91c1c!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
-.parcel-shape.parcel-hh-5{fill:#f8717180;stroke:#b91c1c;stroke-width:.003}
+.parcel-vector-hit.parcel-vector-hh-5{fill:#b42318!important;stroke:#b42318!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-hh-5{fill:#b42318;stroke:#b42318;stroke-width:.003}
 .parcel-hh-label.parcel-hh-text-5{border-color:#b91c1c}
-.parcel-hh-label{padding:.08em .3em;border-radius:.25em;background:#f8fafce8;text-shadow:none;border:1px solid #64748b;color:#1f2937}
+.parcel-hh-label{padding:.08em .3em;border-radius:.25em;background:#f8fafce8;text-shadow:none;border:1px solid #64748b;color:#234c49}
 
 /* 상단 정리: 제목줄에 규제 요약, 선택+검색 한 줄, 안내/업데이트 접기 */
 #blockDetail .block-title-row .block-rules{margin:0;font-size:.82rem;font-weight:600;line-height:1.5}
@@ -336,14 +336,14 @@
 #blockDetail .block-heading .block-search-panel{grid-column:2;grid-row:2;margin-left:0;flex:none;min-width:0}
 @media(max-width:760px){#blockDetail .block-heading{grid-template-columns:minmax(0,1fr)}#blockDetail .block-heading .block-navigation,#blockDetail .block-heading .block-search-panel{grid-column:1;grid-row:auto}}
 .info-fold{margin:6px 0}
-.info-fold>summary{cursor:pointer;display:inline-block;font-size:.8rem;color:var(--muted,#9fb3c8);padding:4px 10px;border:1px solid rgba(255,255,255,.18);border-radius:999px;list-style:none}
+.info-fold>summary{cursor:pointer;display:inline-block;font-size:.8rem;color:var(--muted,#9fb3c8);padding:4px 10px;border:1px solid #dcedec;border-radius:999px;list-style:none}
 .info-fold>summary::-webkit-details-marker{display:none}
 .info-fold[open]>summary{margin-bottom:8px}
 
 /* 미분양 */
-.parcel-vector-hit.parcel-vector-unsold{fill:#dc2626b3!important;stroke:#991b1b!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
-.parcel-shape.parcel-unsold{fill:#dc2626b3!important;stroke:#991b1b!important}
-.parcel-unsold-label{color:#475569;font-weight:700;font-size:.62rem}
+.parcel-vector-hit.parcel-vector-unsold{fill:#b42318!important;stroke:#991b1b!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}
+.parcel-shape.parcel-unsold{fill:#b42318!important;stroke:#991b1b!important}
+.parcel-unsold-label{color:#234c49;font-weight:700;font-size:.62rem}
 .parcel-unsold-check{display:flex;align-items:center;gap:8px}
 
 /* ===== 필지 세부정보 편집창: 섹션형 레이아웃 (v20261003-editor-pro-1) ===== */
@@ -354,7 +354,7 @@
 #parcelEditor .pe-subline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;flex-wrap:wrap}
 #parcelFormSubtitle{margin:0;color:var(--text-muted);font-size:.86rem}
 #parcelEditor .parcel-building-check{margin:0;min-height:32px;padding:3px 12px 3px 10px;border:1px solid var(--border-slate);border-radius:999px;font-size:.82rem;color:var(--text-main);background:rgba(255,255,255,.03)}
-#parcelEditor .parcel-building-check:has(input:checked){border-color:var(--gold);background:rgba(216,184,74,.12);color:var(--gold-soft)}
+#parcelEditor .parcel-building-check:has(input:checked){border-color:var(--gold);background:rgba(37,103,95,0.12);color:var(--gold-soft)}
 #parcelEditor .pe-body{padding:8px 22px 22px}
 #parcelEditor .pe-body>.source-note{margin:8px 0 0}
 #parcelModalStatus{margin:8px 0 0;min-height:0}
@@ -371,7 +371,7 @@
 #parcelEditor .parcel-fields label .parcel-field-label,#parcelEditor .pe-address>label .parcel-field-label{padding:0;white-space:normal}
 #parcelEditor .parcel-fields input,#parcelEditor .parcel-fields select,#parcelEditor .parcel-fields textarea,#parcelEditor .pe-address input{box-sizing:border-box;width:100%;min-height:40px;padding:8px 11px;border:1px solid var(--border-slate);border-radius:8px;background:var(--bg);color:var(--text-main);font-size:.92rem;font-weight:500}
 #parcelEditor .parcel-fields textarea{min-height:76px;resize:vertical;line-height:1.5}
-#parcelEditor .parcel-fields input:focus-visible,#parcelEditor .parcel-fields select:focus-visible,#parcelEditor .parcel-fields textarea:focus-visible,#parcelEditor .pe-address input:focus-visible{outline:2px solid rgba(216,184,74,.45);outline-offset:0;border-color:var(--gold)}
+#parcelEditor .parcel-fields input:focus-visible,#parcelEditor .parcel-fields select:focus-visible,#parcelEditor .parcel-fields textarea:focus-visible,#parcelEditor .pe-address input:focus-visible{outline:2px solid rgba(37,103,95,0.35);outline-offset:0;border-color:var(--gold)}
 #parcelEditor .parcel-fields input[readonly]{background:transparent;border-style:dashed;color:var(--gold-soft)}
 #parcelEditor .parcel-fields input[type=checkbox]{width:18px;min-height:18px;height:18px;padding:0;accent-color:var(--gold)}
 #parcelEditor .parcel-fields .parcel-unsold-check{flex-direction:row;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border-slate);border-radius:8px;background:rgba(255,255,255,.03);font-weight:500;cursor:pointer}
@@ -380,12 +380,12 @@
 #parcelEditor .parcel-fields .parcel-note .parcel-field-label{padding-top:0}
 /* 소재지 + 현황 확인 도구 */
 #parcelEditor .pe-address{display:grid;gap:10px}
-#parcelEditor .parcel-live-check{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0;padding:10px 12px;border:1px solid rgba(216,184,74,.32);border-radius:10px;background:rgba(216,184,74,.05)}
+#parcelEditor .parcel-live-check{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0;padding:10px 12px;border:1px solid rgba(37,103,95,0.32);border-radius:10px;background:rgba(37,103,95,0.05)}
 #parcelEditor .parcel-live-actions{display:flex;flex-wrap:wrap;gap:8px}
 #parcelEditor .parcel-live-actions .btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:34px;padding:0 13px;border:1px solid var(--border-slate);border-radius:8px;background:rgba(255,255,255,.05);color:var(--text-main);font-size:.8rem;font-weight:600;text-decoration:none;cursor:pointer;filter:none}
 #parcelEditor .parcel-live-actions .btn:visited{color:var(--text-main)}
 #parcelEditor .parcel-live-actions .btn:hover{border-color:var(--gold);color:var(--gold-soft);filter:none}
-#parcelEditor .parcel-live-actions #parcelRegisterCheck{border-color:var(--gold);background:rgba(216,184,74,.14);color:var(--gold-soft)}
+#parcelEditor .parcel-live-actions #parcelRegisterCheck{border-color:var(--gold);background:rgba(37,103,95,0.14);color:var(--gold-soft)}
 #parcelEditor .parcel-live-actions .btn.is-disabled{background:rgba(255,255,255,.03);color:var(--text-muted);opacity:.45;cursor:not-allowed}
 #parcelEditor #parcelRegisterResult{flex:1 1 220px;margin:0;font-size:.8rem;line-height:1.5;color:var(--text-main)}
 #parcelEditor #parcelRegisterResult:empty{display:none}
@@ -400,7 +400,7 @@
 #parcelEditor .pe-actions{position:sticky;bottom:0;z-index:4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:20px -22px 0;padding:12px 22px;background:var(--panel);border-top:1px solid var(--border-slate)}
 #parcelEditor .pe-actions .btn{min-height:40px;padding:0 18px;border-radius:8px;font-weight:600}
 #parcelEditor .pe-actions .btn-primary{min-width:140px}
-#parcelEditor .pe-actions #parcelDelete{margin-left:auto;color:#f87171;border-color:rgba(248,113,113,.5);background:transparent}
+#parcelEditor .pe-actions #parcelDelete{margin-left:auto;color:#b42318;border-color:rgba(248,113,113,.5);background:transparent}
 #parcelEditor .pe-actions #parcelDelete:hover{background:rgba(248,113,113,.12);border-color:#f87171}
 /* 메모·사진 */
 #parcelEditor .parcel-notes{margin-top:26px;padding-top:18px}
@@ -419,7 +419,7 @@
 #parcelLhDetail:empty,#parcelEditor .pe-body>.source-note:empty{display:none}
 #parcelEditor .pe-actions .btn:not(.btn-primary),#parcelEditor .parcel-print-controls .btn{border:1px solid var(--border-slate);background:rgba(255,255,255,.05);color:var(--text-main)}
 #parcelEditor .pe-actions .btn:not(.btn-primary):hover,#parcelEditor .parcel-print-controls .btn:hover{border-color:var(--gold);color:var(--gold-soft)}
-#parcelEditor .pe-actions #parcelDelete{color:#f87171;border-color:rgba(248,113,113,.5);background:transparent}
+#parcelEditor .pe-actions #parcelDelete{color:#b42318;border-color:rgba(248,113,113,.5);background:transparent}
 #parcelEditor .parcel-modal-close{background:transparent}
 @media(max-width:600px){#parcelEditor .pe-head{position:static}}
 /* ===== v2: 더 간단하고 낮은 편집창 ===== */
@@ -463,7 +463,7 @@
 #parcelEditor .parcel-live-actions .btn:hover,#parcelEditor .parcel-building-heading .btn:hover,#parcelEditor .pe-actions .btn:not(.btn-primary):hover,#parcelEditor .parcel-print-controls .btn:hover,#parcelEditor .parcel-photo-input:hover{background:var(--panel2);border-color:var(--gold);color:var(--gold-soft)}
 #parcelEditor .parcel-live-actions .btn.is-disabled{opacity:.4;color:var(--text-muted)}
 #parcelEditor .pe-actions #parcelDelete{margin-left:auto;background:transparent;color:var(--text-muted);border-color:var(--border-slate)}
-#parcelEditor .pe-actions #parcelDelete:hover{color:#f87171;border-color:#f87171;background:transparent}
+#parcelEditor .pe-actions #parcelDelete:hover{color:#b42318;border-color:#f87171;background:transparent}
 #parcelEditor .pe-actions .btn-primary{min-height:34px;border-radius:6px;font-weight:600;font-size:.82rem;min-width:0;padding:0 16px}
 #parcelEditor .parcel-modal-close{background:var(--panel2);border-radius:6px}
 #parcelEditor .parcel-building-check{border-radius:6px;background:var(--panel2)}

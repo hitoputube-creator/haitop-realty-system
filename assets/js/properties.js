@@ -301,7 +301,7 @@ function renderPreview() {
         <input type="checkbox" ${chk} style="width:auto;accent-color:var(--gold);cursor:pointer;" onchange="togglePreviewCheck('${item.id}',this.checked)" />
       </td>
       <td style="text-align:center;color:var(--text-muted);font-size:0.76rem;width:28px;">${i + 1}</td>
-      <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(212,175,55,0.1);color:var(--gold);">${escapeHtml(normalizeListingCategory(item).subLabel || getListingCategoryLabel(item))}</span><span class="selected-print-date">${escapeHtml(formatRegistrationDate(item))}</span></td>
+      <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(37,103,95,0.1);color:var(--gold);">${escapeHtml(normalizeListingCategory(item).subLabel || getListingCategoryLabel(item))}</span><span class="selected-print-date">${escapeHtml(formatRegistrationDate(item))}</span></td>
       <td style="font-weight:500;">${formatSelectedPrintAddress(item)}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(getListingTypeText(item))}</td>
       <td style="font-size:0.82rem;">${escapeHtml(formatPrice(item))}${seanGo ? `<span class="selected-print-subline">${escapeHtml(seanGo)}</span>` : ""}</td>
@@ -364,7 +364,7 @@ function setViewMode(mode, opts = {}) {
     list: document.getElementById("viewToggleList"),
     note: document.getElementById("viewToggleNote")
   };
-  const gold = "rgba(212,175,55,0.2)", goldTxt = "var(--gold)";
+  const gold = "rgba(37,103,95,0.2)", goldTxt = "var(--gold)";
   const none = "transparent", noneTxt = "var(--text-muted)";
   Object.entries(buttons).forEach(([key, btn]) => {
     if (!btn) return;
@@ -806,7 +806,7 @@ function updateNaverSummaryBar() {
   st.textContent = "#naverSummaryBar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0;padding:10px 14px;background:#e8f7ee;border:1px solid #9dd9ad;border-radius:10px;font-size:.92rem}" +
     "#naverSummaryBar[hidden]{display:none}#naverSummaryBar .naver-total{color:#1b6e2e}#naverSummaryBar .naver-sep{color:#9a9a9a}" +
     "#naverSummaryBar .naver-chip{margin:0;background:#fff;border:1px solid #9dd9ad;border-radius:999px;padding:4px 12px;color:#222;cursor:pointer;font:inherit}" +
-    "#naverSummaryBar .naver-chip.zero{color:#999;border-color:#ddd}#naverSummaryBar .naver-chip.active{background:#1b8a3a;border-color:#1b8a3a;color:#fff}#naverSummaryBar .naver-chip:disabled{cursor:default}#naverSummaryBar .naver-stale{border-color:#e0a95a;color:#8a5200;margin-left:auto}#naverSummaryBar .naver-stale.active{background:#c77a00;border-color:#c77a00;color:#fff}";
+    "#naverSummaryBar .naver-chip.zero{color:#999;border-color:#dcedec}#naverSummaryBar .naver-chip.active{background:#1b8a3a;border-color:#1b8a3a;color:#ffffff}#naverSummaryBar .naver-chip:disabled{cursor:default}#naverSummaryBar .naver-stale{border-color:#e0a95a;color:#8a5200;margin-left:auto}#naverSummaryBar .naver-stale.active{background:#c77a00;border-color:#c77a00;color:#ffffff}";
   document.head.appendChild(st);
   const bar = document.createElement("div");
   bar.id = "naverSummaryBar";
@@ -1481,10 +1481,10 @@ function presaleRowHtml(r, idx) {
   const selChecked = selKeys.every(k => presaleSel.has(k));
   const vac = u.공실여부 || "-";
   const vacColor = vac === "공실" ? "#ffb74d" : vac === "임차중" ? "#81c784" : "inherit";
-  const tags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(224,184,76,.15);color:#e0b84c;margin-right:4px;">' + t + '</span>').join("") || '<span style="color:var(--text-muted);">-</span>';
+  const tags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(37,103,95,0.15);color:#25675f;margin-right:4px;">' + t + '</span>').join("") || '<span style="color:var(--text-muted);">-</span>';
   const rent = presaleMan(u.현_보증금 ?? u.보증금) + " / " + presaleMan(u.현_월세 ?? u.월차임);
   const td = "padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;";
-  return '<tr' + (r.isBundle ? ' style="background:rgba(224,184,76,.09);"' : '') + '><td style="' + td + 'width:28px;"><input type="checkbox" data-sel="' + selKeys.join(",") + '"' + (selChecked ? " checked" : "") + ' style="width:auto;min-width:0;height:auto;padding:0;margin:0;"></td><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.hoLabel || ((r.ho || "-") + "호")) + presaleUpdTag(r.members ? r.members.map(m => m.unit) : [u]) + (r.groupCount > 1 ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(224,184,76,.18);color:#e0b84c;">' + r.groupCount + '호실 합계</span>' : "") + (r.special ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(229,115,115,.2);color:#ef9a9a;">특별할인</span>' : "") + '</td><td style="' + td + '">' + (u.현업종 ? String(u.현업종).replace(/</g, '&lt;') : '<span style="color:var(--text-muted);">-</span>') + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleWon(u.분양금액) + (r.special && r.listPrice != null && r.listPrice !== u.분양금액 ? '<div style="font-size:.7rem;font-weight:400;color:var(--text-muted);text-decoration:line-through;">' + presaleWon(r.listPrice) + '</div>' : "") + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + (r.special ? (presaleYieldValue(u) == null ? "-" : presaleYieldValue(u).toFixed(2) + "%") : presaleYieldText(u)) + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;">' + (r.isBundle ? '<button type="button" class="btn btn-ghost" data-special="' + idx + '" style="padding:4px 10px;font-size:.76rem;margin-right:6px;">특별가</button>' : "") + '<a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.linkHo || r.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
+  return '<tr' + (r.isBundle ? ' style="background:rgba(37,103,95,0.09);"' : '') + '><td style="' + td + 'width:28px;"><input type="checkbox" data-sel="' + selKeys.join(",") + '"' + (selChecked ? " checked" : "") + ' style="width:auto;min-width:0;height:auto;padding:0;margin:0;"></td><td style="' + td + 'font-weight:600;">' + r.building + '</td><td style="' + td + '">' + (r.hoLabel || ((r.ho || "-") + "호")) + presaleUpdTag(r.members ? r.members.map(m => m.unit) : [u]) + (r.groupCount > 1 ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(37,103,95,0.18);color:#25675f;">' + r.groupCount + '호실 합계</span>' : "") + (r.special ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(229,115,115,.2);color:#b42318;">특별할인</span>' : "") + '</td><td style="' + td + '">' + (u.현업종 ? String(u.현업종).replace(/</g, '&lt;') : '<span style="color:var(--text-muted);">-</span>') + '</td><td style="' + td + 'color:#25675f;font-weight:600;">' + presaleWon(u.분양금액) + (r.special && r.listPrice != null && r.listPrice !== u.분양금액 ? '<div style="font-size:.7rem;font-weight:400;color:var(--text-muted);text-decoration:line-through;">' + presaleWon(r.listPrice) + '</div>' : "") + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#25675f;font-weight:600;">' + (r.special ? (presaleYieldValue(u) == null ? "-" : presaleYieldValue(u).toFixed(2) + "%") : presaleYieldText(u)) + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;">' + (r.isBundle ? '<button type="button" class="btn btn-ghost" data-special="' + idx + '" style="padding:4px 10px;font-size:.76rem;margin-right:6px;">특별가</button>' : "") + '<a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(r.localId) + '&unit=' + encodeURIComponent(r.linkHo || r.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
 }
 function presaleOpenSpecial(b) {
   if (!b) return;
@@ -1494,18 +1494,18 @@ function presaleOpenSpecial(b) {
   const won = v => v == null ? "" : String(Math.round(Number(v) * 10000));
   const d = document.createElement("div");
   d.id = "presaleSpecialDlg";
-  d.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;";
-  const inp = "width:100%;box-sizing:border-box;height:34px;padding:0 10px;border-radius:8px;border:1px solid #36516b;background:#071625;color:#fff;font-size:.9rem;";
+  d.style.cssText = "position:fixed;inset:0;z-index:9999;background:#f8fcfc;display:flex;align-items:center;justify-content:center;";
+  const inp = "width:100%;box-sizing:border-box;height:34px;padding:0 10px;border-radius:8px;border:1px solid #dcedec;background:#ffffff;color:#234c49;font-size:.9rem;";
   const lab = "display:block;font-size:.78rem;color:#9fb3c8;margin:10px 0 4px;";
-  d.innerHTML = '<div style="width:min(460px,92vw);max-height:90vh;overflow:auto;background:#112437;border:1px solid #36516b;border-radius:14px;padding:20px;color:#f1f5f9;">' +
-    '<div style="font-weight:700;color:#e0b84c;">특별가 입력 · ' + b.building + ' ' + b.hoLabel + '</div>' +
+  d.innerHTML = '<div style="width:min(460px,92vw);max-height:90vh;overflow:auto;background:#ffffff;border:1px solid #dcedec;border-radius:14px;padding:20px;color:#234c49;">' +
+    '<div style="font-weight:700;color:#25675f;">특별가 입력 · ' + b.building + ' ' + b.hoLabel + '</div>' +
     '<div style="font-size:.76rem;color:#9fb3c8;margin-top:4px;">호실 합계: 분양 ' + presaleWon(b.sums.amt) + ' · 보증금 ' + presaleMan(b.sums.dep) + ' · 월세 ' + presaleMan(b.sums.rent) + '</div>' +
     '<label style="' + lab + '">할인분양가 (원)</label><input id="spDisc" type="number" style="' + inp + '" value="' + won(sp0.할인가) + '">' +
     '<label style="' + lab + '">정가 (원, 취소선으로 표시)</label><input id="spList" type="number" style="' + inp + '" value="' + won(sp0.정가 != null ? sp0.정가 : b.sums.amt) + '">' +
     '<label style="' + lab + '">보증금 (원)</label><input id="spDep" type="number" style="' + inp + '" value="' + won(sp0.보증금 != null ? sp0.보증금 : b.sums.dep) + '">' +
     '<label style="' + lab + '">월세 (원)</label><input id="spRent" type="number" style="' + inp + '" value="' + won(sp0.월세 != null ? sp0.월세 : b.sums.rent) + '">' +
     '<label style="' + lab + '">설명 (자료실 호실 비고에 저장돼요. 예: 10년 계약, 2년마다 2% 인상)</label><textarea id="spMemo" style="' + inp + 'height:70px;padding:8px 10px;resize:vertical;">' + String(sp0.특약 || "").replace(/</g, "&lt;") + '</textarea>' +
-    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" id="spUnbundle" class="btn btn-ghost" style="padding:6px 12px;margin-right:auto;color:#ef9a9a;">묶음 해제</button><button type="button" id="spDel" class="btn btn-ghost" style="padding:6px 12px;">특별가 삭제</button><button type="button" id="spCancel" class="btn btn-ghost" style="padding:6px 12px;">취소</button><button type="button" id="spSave" class="btn btn-ghost" style="padding:6px 14px;background:#e0b84c;color:#071625;font-weight:700;">저장</button></div></div>';
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" id="spUnbundle" class="btn btn-ghost" style="padding:6px 12px;margin-right:auto;color:#b42318;">묶음 해제</button><button type="button" id="spDel" class="btn btn-ghost" style="padding:6px 12px;">특별가 삭제</button><button type="button" id="spCancel" class="btn btn-ghost" style="padding:6px 12px;">취소</button><button type="button" id="spSave" class="btn btn-ghost" style="padding:6px 14px;background:#25675f;color:#ffffff;font-weight:700;">저장</button></div></div>';
   document.body.appendChild(d);
   const q = id => d.querySelector("#" + id);
   const num = id => { const v = q(id).value.replace(/[^0-9.]/g, ""); return v === "" ? null : Math.round(Number(v) / 10000 * 100) / 100; };
@@ -1552,22 +1552,22 @@ function presaleRenderBundlePanel() {
   const bundles = presaleBuildBundles().filter(b => !bf || b.building === bf);
   if (!currentPresaleMode || !presaleMajorAllowed() || !bundles.length) { box.style.display = "none"; return; }
   box.style.display = "";
-  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#e0b84c;font-size:.78rem;border-bottom:1px solid var(--border-slate,#2c4258);white-space:nowrap;";
+  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#25675f;font-size:.78rem;border-bottom:1px solid var(--border-slate,#dcedec);white-space:nowrap;";
   const td = "padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;";
   const head = ["건물", "호수", "업종", "분양금액", "임대현황", "보증금 / 월세", "수익률", "표시", ""].map(h => '<th style="' + thS + '">' + h + '</th>').join("");
   const body = bundles.map((b, i) => {
     const u = b.unit;
     const vac = u.공실여부 || "-";
     const vacColor = vac === "공실" ? "#ffb74d" : vac === "임차중" ? "#81c784" : "inherit";
-    const tags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(224,184,76,.15);color:#e0b84c;margin-right:4px;">' + t + '</span>').join("") || '<span style="color:var(--text-muted);">-</span>';
+    const tags = [isUnitFlagOn(u.수익성매물) ? "수익성" : "", isUnitFlagOn(u.추천매물) ? "추천" : ""].filter(Boolean).map(t => '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;background:rgba(37,103,95,0.15);color:#25675f;margin-right:4px;">' + t + '</span>').join("") || '<span style="color:var(--text-muted);">-</span>';
     const rent = presaleMan(u.현_보증금 ?? u.보증금) + " / " + presaleMan(u.현_월세 ?? u.월차임);
     const yv = presaleYieldValue(u);
     const yt = yv == null ? "-" : yv.toFixed(b.special ? 2 : 1) + "%";
     const strike = b.special && b.listPrice != null && b.listPrice !== u.분양금액 ? '<div style="font-size:.7rem;font-weight:400;color:var(--text-muted);text-decoration:line-through;">' + presaleWon(b.listPrice) + '</div>' : "";
-    const badge = (b.special ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(229,115,115,.2);color:#ef9a9a;">특별할인</span>' : "");
-    return '<tr><td style="' + td + 'font-weight:600;">' + b.building + '</td><td style="' + td + '">' + b.hoLabel + presaleUpdTag(b.members.map(m => m.unit)) + ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(224,184,76,.18);color:#e0b84c;">' + b.groupCount + '호실</span>' + '<div style="margin-top:5px;"><button type="button" class="btn btn-ghost" data-bsp="' + i + '" style="padding:3px 10px;font-size:.74rem;' + (b.special ? 'color:#ef9a9a;border-color:rgba(229,115,115,.6);background:rgba(229,115,115,.12);' : '') + '">' + (b.special ? '특별할인' : '특별가') + '</button></div></td><td style="' + td + '">' + (u.현업종 ? String(u.현업종).replace(/</g, "&lt;") : "-") + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + presaleWon(u.분양금액) + strike + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#e0b84c;font-weight:600;">' + yt + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(b.localId) + '&unit=' + encodeURIComponent(b.linkHo || b.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
+    const badge = (b.special ? ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(229,115,115,.2);color:#b42318;">특별할인</span>' : "");
+    return '<tr><td style="' + td + 'font-weight:600;">' + b.building + '</td><td style="' + td + '">' + b.hoLabel + presaleUpdTag(b.members.map(m => m.unit)) + ' <span style="display:inline-block;padding:1px 7px;margin-left:4px;border-radius:10px;font-size:.7rem;background:rgba(37,103,95,0.18);color:#25675f;">' + b.groupCount + '호실</span>' + '<div style="margin-top:5px;"><button type="button" class="btn btn-ghost" data-bsp="' + i + '" style="padding:3px 10px;font-size:.74rem;' + (b.special ? 'color:#b42318;border-color:rgba(229,115,115,.6);background:rgba(229,115,115,.12);' : '') + '">' + (b.special ? '특별할인' : '특별가') + '</button></div></td><td style="' + td + '">' + (u.현업종 ? String(u.현업종).replace(/</g, "&lt;") : "-") + '</td><td style="' + td + 'color:#25675f;font-weight:600;">' + presaleWon(u.분양금액) + strike + '</td><td style="' + td + 'color:' + vacColor + ';font-weight:600;">' + vac + '</td><td style="' + td + '">' + rent + '</td><td style="' + td + 'color:#25675f;font-weight:600;">' + yt + '</td><td style="' + td + '">' + tags + '</td><td style="' + td + 'text-align:right;"><a class="btn btn-ghost" style="padding:4px 10px;font-size:.76rem;text-decoration:none;" href="building-detail.html?id=' + encodeURIComponent(b.localId) + '&unit=' + encodeURIComponent(b.linkHo || b.ho) + '#unitStatus" onclick="window.open(this.href,\'_blank\');return false;">자료실 열기</a></td></tr>';
   }).join("");
-  box.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">묶음 매물</strong><span style="color:#e0b84c;font-weight:600;">' + bundles.length + '건</span><span style="font-size:.76rem;color:var(--text-muted);">위 목록에서 호실을 체크하고 "선택 묶기"로 만들어요</span></div><div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>';
+  box.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">묶음 매물</strong><span style="color:#25675f;font-weight:600;">' + bundles.length + '건</span><span style="font-size:.76rem;color:var(--text-muted);">위 목록에서 호실을 체크하고 "선택 묶기"로 만들어요</span></div><div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>';
   box.querySelectorAll("button[data-bsp]").forEach(btn => btn.addEventListener("click", () => presaleOpenSpecial(bundles[Number(btn.dataset.bsp)])));
   box.querySelectorAll("button[data-bun]").forEach(btn => btn.addEventListener("click", () => presaleUnbundleBundle(bundles[Number(btn.dataset.bun)])));
 }
@@ -1588,8 +1588,8 @@ function updatePresaleTbody() {
   presaleRenderBundlePanel();
 }
 function buildPresaleFrame(panel, all) {
-  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#e0b84c;font-size:.78rem;border-bottom:1px solid var(--border-slate,#2c4258);white-space:nowrap;cursor:pointer;user-select:none;";
-  const inS = "width:100%;min-width:60px;height:28px;box-sizing:border-box;padding:0 6px;font-size:.76rem;border-radius:6px;border:1px solid var(--border-slate,#2c4258);background:#0b1a2a;color:#fff;";
+  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#25675f;font-size:.78rem;border-bottom:1px solid var(--border-slate,#dcedec);white-space:nowrap;cursor:pointer;user-select:none;";
+  const inS = "width:100%;min-width:60px;height:28px;box-sizing:border-box;padding:0 6px;font-size:.76rem;border-radius:6px;border:1px solid var(--border-slate,#dcedec);background:#ffffff;color:#234c49;";
   const cols = [["", ""], ["building", "건물"], ["ho", "호수"], ["biz", "업종"], ["price", "분양금액"], ["vac", "임대현황"], ["", "보증금 / 월세"], ["yield", "수익률"], ["", "표시"], ["", ""]];
   const buildings = Array.from(new Set(all.map(r => r.building))).sort();
   const opt = (v, l) => '<option value="' + v + '">' + l + '</option>';
@@ -1605,10 +1605,10 @@ function buildPresaleFrame(panel, all) {
     '<select data-f="tag" style="' + inS + '">' + opt("", "전체") + opt("수익성", "수익성") + opt("추천", "추천") + opt("없음", "표시 없음") + '</select>',
     '<button type="button" id="presaleFilterReset" class="btn btn-ghost" style="padding:3px 10px;font-size:.74rem;">초기화</button>'
   ];
-  panel.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">자료실 분양중 호실</strong><span id="presaleCount" style="color:#e0b84c;font-weight:600;"></span><span style="font-size:.76rem;color:var(--text-muted);">매물관리 반영 없이 자료실 기준 · 제목을 누르면 정렬</span><span style="margin-left:auto;display:flex;gap:8px;align-items:center;"><button type="button" id="presaleBundleBtn" class="btn btn-ghost" style="padding:3px 10px;font-size:.76rem;">선택 묶기</button></span></div>' +
+  panel.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">자료실 분양중 호실</strong><span id="presaleCount" style="color:#25675f;font-weight:600;"></span><span style="font-size:.76rem;color:var(--text-muted);">매물관리 반영 없이 자료실 기준 · 제목을 누르면 정렬</span><span style="margin-left:auto;display:flex;gap:8px;align-items:center;"><button type="button" id="presaleBundleBtn" class="btn btn-ghost" style="padding:3px 10px;font-size:.76rem;">선택 묶기</button></span></div>' +
     '<div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>' +
     cols.map(([k, l]) => k ? '<th data-key="' + k + '" data-label="' + l + '" style="' + thS + '">' + l + '</th>' : '<th style="' + thS + 'cursor:default;">' + l + '</th>').join("") +
-    '</tr><tr>' + filterCells.map(c => '<td style="padding:4px 6px;border-bottom:1px solid var(--border-slate,#2c4258);">' + c + '</td>').join("") + '</tr></thead><tbody id="presaleTbody"></tbody></table></div>';
+    '</tr><tr>' + filterCells.map(c => '<td style="padding:4px 6px;border-bottom:1px solid var(--border-slate,#dcedec);">' + c + '</td>').join("") + '</tr></thead><tbody id="presaleTbody"></tbody></table></div>';
   panel.querySelectorAll("th[data-key]").forEach(th => th.addEventListener("click", () => {
     const k = th.dataset.key;
     if (presaleSort.key === k) { if (presaleSort.dir > 0) presaleSort.dir = -1; else presaleSort = { key: "", dir: 1 }; } else presaleSort = { key: k, dir: 1 };
@@ -1646,7 +1646,7 @@ async function renderPresaleUnitPanel() {
     if (!anchor) return;
     panel = document.createElement("div");
     panel.id = "presaleUnitPanel";
-    panel.style.cssText = "margin:14px 0;padding:14px 16px;border:1px solid var(--border-slate,#2c4258);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));";
+    panel.style.cssText = "margin:14px 0;padding:14px 16px;border:1px solid var(--border-slate,#dcedec);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));";
     const host = anchor.closest("section, .card, .filter-panel") || anchor.parentElement;
     host.parentElement.insertBefore(panel, host.nextSibling);
   }
@@ -1661,7 +1661,7 @@ async function renderPresaleUnitPanel() {
     panel.dataset.ready = "1";
     updatePresaleTbody();
   } catch (e) {
-    panel.innerHTML = '<div style="color:#e57373;padding:8px 0;">' + e.message + '</div>';
+    panel.innerHTML = '<div style="color:#b42318;padding:8px 0;">' + e.message + '</div>';
   }
 }
 function renderPresaleSubRow() {

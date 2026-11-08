@@ -5,9 +5,9 @@
   gap:12px;
   padding:14px 16px;
   border:1px solid var(--border);
-  background:linear-gradient(180deg, rgba(23,43,66,0.92), rgba(16,31,50,0.92));
+  background:var(--bg, #ffffff);
   border-radius:16px;
-  box-shadow:0 12px 28px rgba(0,0,0,0.35);
+  box-shadow:0 12px 28px rgba(35,76,73,0.08);
 }
 .brand{
   display:flex;
@@ -18,8 +18,8 @@
   width:38px;
   height:38px;
   border-radius:12px;
-  background:radial-gradient(circle at 30% 20%, rgba(216,184,74,0.35), rgba(216,184,74,0.05));
-  border:1px solid rgba(216,184,74,0.35);
+  background:radial-gradient(circle at 30% 20%, rgba(37,103,95,0.35), rgba(37,103,95,0.05));
+  border:1px solid rgba(37,103,95,0.35);
 }
 .brand-text h1{
   margin:0;
@@ -75,9 +75,9 @@
   font-weight:800;
 }
 .tab.active{
-  border-color:rgba(216,184,74,0.45);
-  background:rgba(216,184,74,0.16);
-  color:rgba(255,255,255,0.92);
+  border-color:rgba(37,103,95,0.35);
+  background:rgba(37,103,95,0.16);
+  color:#234c49;
 }
 
 .form-actions{
@@ -93,13 +93,13 @@
   gap:8px 10px;
   align-items:center;
   padding:10px 10px 2px;
-  border:1px dashed rgba(255,255,255,0.16);
+  border:1px dashed #dcedec;
   border-radius:14px;
-  background:rgba(0,0,0,0.10);
+  background:#f8fcfc;
 }
 .floorgrid .fkey{
   font-weight:900;
-  color:rgba(255,255,255,0.82);
+  color:#234c49;
   font-size:0.88rem;
   text-align:right;
   padding-right:4px;
@@ -136,14 +136,14 @@
   border-radius:999px;
   border:1px solid var(--border);
   color:var(--muted);
-  background:rgba(0,0,0,0.10);
+  background:#f8fcfc;
   cursor:pointer;
   user-select:none;
 }
 .chip.active{
-  border-color:rgba(216,184,74,0.45);
-  background:rgba(216,184,74,0.16);
-  color:rgba(255,255,255,0.92);
+  border-color:rgba(37,103,95,0.35);
+  background:rgba(37,103,95,0.16);
+  color:#234c49;
 }
 
 .building-list{
@@ -156,7 +156,7 @@
   border:1px solid var(--border);
   border-radius:16px;
   padding:12px 12px;
-background:rgba(6,10,22,0.35);
+background:#ffffff;
   display:grid;
   grid-template-columns: 1fr auto;
   gap:10px;
@@ -165,7 +165,7 @@ background:rgba(6,10,22,0.35);
   transition:0.15s ease;
 }
 .item:hover{
-  border-color:rgba(216,184,74,0.35);
+  border-color:rgba(37,103,95,0.35);
   transform:translateY(-1px);
 }
 .meta{
@@ -198,14 +198,14 @@ background:rgba(6,10,22,0.35);
   font-size:0.72rem;
   border-radius:999px;
   padding:4px 9px;
-  border:1px solid rgba(216,184,74,0.25);
-  background:rgba(216,184,74,0.10);
-  color:rgba(255,255,255,0.88);
+  border:1px solid rgba(37,103,95,0.25);
+  background:rgba(37,103,95,0.1);
+  color:#234c49;
 }
 .badge.gray{
-  border-color:rgba(255,255,255,0.16);
+  border-color:#dcedec;
   background:rgba(255,255,255,0.06);
-  color:rgba(255,255,255,0.74);
+  color:#234c49;
 }
 .item-actions{
   display:flex;
@@ -223,7 +223,7 @@ background:rgba(6,10,22,0.35);
   color:var(--muted);
   font-size:0.9rem;
   padding:12px;
-  border:1px dashed rgba(255,255,255,0.16);
+  border:1px dashed #dcedec;
   border-radius:14px;
-  background:rgba(0,0,0,0.08);
+  background:#f8fcfc;
 }

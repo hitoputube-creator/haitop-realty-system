@@ -118,7 +118,7 @@
       const unit=fields(item).unit;
       if (unit && node.textContent.trim() !== '-') {
         const sub=document.createElement('span');sub.className='lc-building-unit';sub.textContent=unit;
-        sub.style.display='block';sub.style.marginTop='4px';sub.style.padding='0';sub.style.border='none';sub.style.background='transparent';sub.style.fontSize='14px';sub.style.fontWeight='800';sub.style.lineHeight='1.35';sub.style.color='#f3d56b';
+        sub.style.display='block';sub.style.marginTop='4px';sub.style.padding='0';sub.style.border='none';sub.style.background='transparent';sub.style.fontSize='14px';sub.style.fontWeight='800';sub.style.lineHeight='1.35';sub.style.color='#25675f';
         node.appendChild(sub);
       }
     }
@@ -239,8 +239,8 @@
     .properties-page .typed-property-row .listing-cell {min-width:0;font-size:13px;overflow-wrap:anywhere;}
     .properties-page .typed-property-row .lc-no {display:block;font-size:11px;color:var(--text-muted);}
     .typed-list-table-wrap {overflow:auto;}
-    html body.properties-page .listing-card.profit-recommended-row,.typed-list-table .profit-recommended-row td{background:rgba(212,175,55,.10)!important;}
-    .typed-list-table .profit-recommended-row td:first-child{box-shadow:inset 3px 0 #d4af37;}
+    html body.properties-page .listing-card.profit-recommended-row,.typed-list-table .profit-recommended-row td{background:rgba(37,103,95,0.1)!important;}
+    .typed-list-table .profit-recommended-row td:first-child{box-shadow:inset 3px 0 rgba(37,103,95,0.08);}
     .profit-recommended-badge{display:block;color:var(--gold);font-size:11px;margin-top:5px;font-weight:700;}
     .typed-list-table {width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:13px;}
     .typed-list-table th,.typed-list-table td {padding:12px 8px;border-bottom:1px solid var(--border-slate);text-align:left;}
@@ -284,14 +284,14 @@
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-main,
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-sub {display:block;line-height:1.3;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-main {font-weight:750;}
-    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-sub {color:#4c6582;font-weight:650;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-apartment-sub {color:#234c49;font-weight:650;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-supply {display:flex;flex-direction:column;gap:3px;line-height:1.25;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-supply-size {font-weight:750;white-space:nowrap;font-variant-numeric:tabular-nums;}
-    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-supply-type {color:#526b88;white-space:nowrap;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-supply-type {color:#234c49;white-space:nowrap;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-dong,
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-room {font-size:14px;font-weight:750;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-price.has-price {padding:5px 6px;border-left:3px solid #1767d2;border-radius:5px;background:#eaf2ff;overflow:visible;}
-    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-price.has-price .lc-price-text {font-size:14px;font-weight:800;color:#1459b2;line-height:1.4;}
+    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-price.has-price .lc-price-text {font-size:14px;font-weight:800;color:#234c49;line-height:1.4;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-sort-btn[aria-label='분양평형/타입 정렬'] {line-height:1.2;white-space:normal;}
     @media(min-width:801px) {
       html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-phone {overflow:visible;}

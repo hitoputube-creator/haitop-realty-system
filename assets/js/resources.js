@@ -123,13 +123,13 @@ function confirmDuplicateBuilding(name) {
   return new Promise(resolve => {
     const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const ov = document.createElement("div");
-    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,30,40,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
-    const rows = hits.slice(0, 6).map(r => '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #d9e4ee;border-radius:10px;margin-top:6px;background:#f8fbfd;"><div><b style="color:' + (_dupOffice(r) === "케이탑" ? "#b45309" : "#1d5fa8") + ';">' + _dupOffice(r) + '</b> · ' + esc(r.name) + '<div style="font-size:.78rem;color:#6b7b8c;">' + esc(r.category || "") + '</div></div><button type="button" data-open="' + esc(r.id) + '" style="border:1px solid #1d5fa8;background:#fff;color:#1d5fa8;border-radius:8px;padding:5px 10px;cursor:pointer;">기존 자료 열기</button></div>').join("");
-    ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3);color:#1d2b3a;font-family:inherit;">'
+    ov.style.cssText = "position:fixed;inset:0;background:#ffffff;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+    const rows = hits.slice(0, 6).map(r => '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #dcedec;border-radius:10px;margin-top:6px;background:#f8fbfd;"><div><b style="color:' + (_dupOffice(r) === "케이탑" ? "#b45309" : "#1d5fa8") + ';">' + _dupOffice(r) + '</b> · ' + esc(r.name) + '<div style="font-size:.78rem;color:#6b7b8c;">' + esc(r.category || "") + '</div></div><button type="button" data-open="' + esc(r.id) + '" style="border:1px solid #dcedec;background:#fff;color:#234c49;border-radius:8px;padding:5px 10px;cursor:pointer;">기존 자료 열기</button></div>').join("");
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(35,76,73,0.08);color:#234c49;font-family:inherit;">'
       + '<div style="font-size:1.1rem;font-weight:800;margin-bottom:6px;">⚠️ 이미 비슷한 건물이 있어요</div>'
-      + '<div style="font-size:.9rem;line-height:1.5;color:#44556a;">"' + esc(name) + '" 과(와) 같거나 비슷한 이름이 아래에 있습니다. 같은 건물이면 새로 만들지 말고 기존 자료를 열어 이어서 입력해 주세요.</div>'
+      + '<div style="font-size:.9rem;line-height:1.5;color:#234c49;">"' + esc(name) + '" 과(와) 같거나 비슷한 이름이 아래에 있습니다. 같은 건물이면 새로 만들지 말고 기존 자료를 열어 이어서 입력해 주세요.</div>'
       + rows
-      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" data-act="cancel" style="border:1px solid #c5d3de;background:#fff;border-radius:10px;padding:8px 16px;cursor:pointer;">취소</button><button type="button" data-act="go" style="border:0;background:#d9534f;color:#fff;border-radius:10px;padding:8px 16px;cursor:pointer;font-weight:700;">그래도 새로 등록</button></div></div>';
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;"><button type="button" data-act="cancel" style="border:1px solid #dcedec;background:#fff;border-radius:10px;padding:8px 16px;cursor:pointer;">취소</button><button type="button" data-act="go" style="border:0;background:#d9534f;color:#234c49;border-radius:10px;padding:8px 16px;cursor:pointer;font-weight:700;">그래도 새로 등록</button></div></div>';
     const done = v => { ov.remove(); resolve(v); };
     ov.addEventListener("click", e => {
       const t = e.target.closest("button"); if (!t) { if (e.target === ov) done(false); return; }
@@ -399,8 +399,8 @@ function buildVillageGroupsHtml(items, category) {
   const singleGroup = villages.length <= 1;
   return villages.map(village => {
     const groupItems = [...byVillage.get(village)].sort(compareApartmentComplexes);
-    return `<details class="village-group" style="margin-bottom:10px;border:1px solid rgba(212,175,55,0.2);border-radius:10px;overflow:hidden;"${singleGroup ? ' open' : ''}>
-      <summary style="cursor:pointer;padding:10px 14px;font-weight:700;color:var(--gold);background:rgba(212,175,55,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+    return `<details class="village-group" style="margin-bottom:10px;border:1px solid rgba(37,103,95,0.2);border-radius:10px;overflow:hidden;"${singleGroup ? ' open' : ''}>
+      <summary style="cursor:pointer;padding:10px 14px;font-weight:700;color:var(--gold);background:rgba(37,103,95,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;">
         <span>🏘️ ${escapeCategory(village)}</span>
         <span style="font-size:.78rem;font-weight:500;opacity:.75;">${groupItems.length}개</span>
       </summary>
@@ -452,16 +452,16 @@ function renderDriveTab() {
       <button data-cidx="${i}" aria-pressed="${isActive}" style="
         flex:1;min-width:0;padding:10px 14px;font-size:0.85rem;font-weight:${isActive?'700':'500'};
         text-align:left;border-radius:8px;cursor:pointer;border:1px solid;
-        background:${isActive?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.04)'};
+        background:${isActive?'rgba(37,103,95,0.18)':'rgba(255,255,255,0.04)'};
         color:${isActive?'var(--gold)':'var(--text-muted)'};
-        border-color:${isActive?'rgba(212,175,55,0.5)':'rgba(255,255,255,0.1)'};
+        border-color:${isActive?'rgba(37,103,95,0.5)':'rgba(255,255,255,0.1)'};
         transition:all 0.15s;overflow:hidden;text-overflow:ellipsis;">
         ${isActive?'▲':'▼'} 📂 ${escapeCategory(c)}
         <span style="font-size:0.72rem;opacity:0.7;">(${grouped[c].length})</span>
       </button>
       <button data-cat-edit-idx="${i}" title="폴더명 수정" style="
         flex:0 0 auto;padding:0 10px;border-radius:8px;cursor:pointer;
-        border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
+        border:1px solid #dcedec;background:rgba(255,255,255,0.04);
         color:var(--text-muted);font-size:0.85rem;">✏️</button>
     </div>`;
   });
@@ -577,7 +577,7 @@ function renderDriveLinkList() {
   }
   area.innerHTML = activeListings.map(l => {
     const checked = l.resource_id === linkEditingDriveId;
-    return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;background:${checked?'rgba(212,175,55,0.1)':'rgba(255,255,255,0.03)'};border:1px solid ${checked?'rgba(212,175,55,0.35)':'rgba(255,255,255,0.07)'};margin-bottom:6px;">
+    return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;background:${checked?'rgba(37,103,95,0.1)':'rgba(255,255,255,0.03)'};border:1px solid ${checked?'rgba(37,103,95,0.35)':'rgba(255,255,255,0.07)'};margin-bottom:6px;">
       <input type="checkbox" data-lid="${l.id}" ${checked?'checked':''} style="width:auto;accent-color:var(--gold);" />
       <div style="flex:1;">
         <div style="font-size:0.85rem;font-weight:600;color:var(--text-main);">${l.address || l.title || "(주소 미입력)"}</div>

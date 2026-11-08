@@ -4,19 +4,19 @@
   <meta charset="UTF-8" />
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="assets/css/style.css?v=20261106-label108" />
+<link rel="stylesheet" href="assets/css/style.css?v=20261108-white-base1" />
 <script src="assets/js/storage.js?v=20261031-confirm"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
-<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <script src="assets/js/nav.js?v=20261007-ktop-internal"></script>
 <style>
 .apartment-listing-form[hidden], [id$="nonApartmentFields"][hidden]{display:none!important}
-.apartment-listing-form .um-section{border-radius:10px;overflow:hidden;margin:10px 0;background:#0d1f3c}
-.apartment-listing-form .um-section-title{padding:6px 10px;font-weight:700;font-size:.82rem;background:#8b6914;color:#fff}
-.apartment-listing-form .sale .um-section-title{background:#1a3a6e}
+.apartment-listing-form .um-section{border-radius:10px;overflow:hidden;margin:10px 0;background:#ffffff}
+.apartment-listing-form .um-section-title{padding:6px 10px;font-weight:700;font-size:.82rem;background:#8b6914;color:#ffffff}
+.apartment-listing-form .sale .um-section-title{background:#ffffff}
 .apartment-listing-form .umgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;padding:10px}
 .apartment-listing-form .umfield{min-width:0}
 .apartment-listing-form label{display:block;font-size:.76rem;margin-bottom:4px;color:var(--text-muted)}
@@ -35,7 +35,7 @@
 .apartment-listing-form .apt-picker-row [hidden]{display:none!important}
 .apartment-listing-form .apt-auto-note{font-weight:400;font-size:.72rem;color:var(--gold);margin-left:4px}
 .apartment-listing-form .apt-more{padding:10px 14px}
-.apartment-listing-form .apt-more>summary{cursor:pointer;color:#d4af37;font-size:.85rem}
+.apartment-listing-form .apt-more>summary{cursor:pointer;color:#25675f;font-size:.85rem}
 .apartment-listing-form .apt-more>.um-section{margin:10px -14px 0}
 @media(max-width:650px){.apartment-listing-form .apt-picker-row{grid-template-columns:minmax(0,1fr)}}
 .apartment-listing-form .price-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
@@ -52,40 +52,40 @@
 .apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}
 .apartment-details-column .owner-contact-row .ipt-value{white-space:nowrap}
 .apartment-memo-section .ipt-value{max-height:120px;overflow-y:auto}
-.apartment-info-table{border:1px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
+.apartment-info-table{border:1px solid #dcedec;border-radius:10px;overflow:hidden}
 .apartment-info-row{display:grid;grid-template-columns:repeat(var(--pairs),minmax(96px,128px) minmax(0,1fr))}
 .apartment-info-row.apartment-unit-row{grid-template-columns:64px minmax(50px,.7fr) 68px minmax(155px,1.4fr) 60px minmax(70px,.8fr) 56px minmax(50px,.6fr)}
-.apartment-info-row>div{min-width:0;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.1);line-height:1.5;box-sizing:border-box}
+.apartment-info-row>div{min-width:0;padding:8px 10px;border-bottom:1px solid #dcedec;line-height:1.5;box-sizing:border-box}
 .apartment-info-row:last-child>div{border-bottom:0}
-.apartment-info-row .ipt-label{display:flex;align-items:center;color:var(--gold);background:#0f2032;font-size:.82rem;font-weight:700;border-right:1px solid rgba(255,255,255,.08)}
-.apartment-info-row .ipt-value{display:flex;align-items:center;background:#182c43;font-size:.88rem;overflow-wrap:anywhere;white-space:pre-wrap}
+.apartment-info-row .ipt-label{display:flex;align-items:center;color:var(--gold);background:#ffffff;font-size:.82rem;font-weight:700;border-right:1px solid #dcedec}
+.apartment-info-row .ipt-value{display:flex;align-items:center;background:#ffffff;font-size:.88rem;overflow-wrap:anywhere;white-space:pre-wrap}
 .apartment-info-row[style="--pairs:1"] .ipt-value{display:block}
 .apartment-detail-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 24px}
 .apartment-title-name{line-height:1.4}
-.apartment-title-unit{display:inline-flex;align-items:baseline;gap:18px;color:var(--text-main,#e8eef7);white-space:nowrap;line-height:1.3}
+.apartment-title-unit{display:inline-flex;align-items:baseline;gap:18px;color:var(--text-main,#234c49);white-space:nowrap;line-height:1.3}
 .apartment-unit-part{display:inline-flex;align-items:baseline;gap:4px}
 .apartment-unit-part strong{font-size:1.6rem;font-weight:750;letter-spacing:-.02em}
 .apartment-unit-part small{font-size:1rem;font-weight:600;color:var(--text-muted)}
 .apartment-unit-action{gap:8px;flex-wrap:wrap}
 .apartment-info-row .ipt-value.apartment-unit-action{padding-right:6px}
-.apartment-autofill-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;min-height:28px;padding:4px 8px;border:1px solid rgba(212,175,55,.28);border-radius:6px;background:rgba(212,175,55,.09);color:var(--gold);font-family:inherit;font-size:.74rem;font-weight:600;line-height:1.2;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
-.apartment-autofill-btn:hover{background:rgba(212,175,55,.17);border-color:rgba(212,175,55,.6)}
+.apartment-autofill-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;min-height:28px;padding:4px 8px;border:1px solid rgba(37,103,95,0.28);border-radius:6px;background:rgba(37,103,95,0.09);color:var(--gold);font-family:inherit;font-size:.74rem;font-weight:600;line-height:1.2;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.apartment-autofill-btn:hover{background:rgba(37,103,95,0.17);border-color:rgba(37,103,95,0.35)}
 .apartment-autofill-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .apartment-autofill-btn:disabled{opacity:.6;cursor:wait}
 .apartment-autofill-btn svg{width:13px;height:13px;flex-shrink:0}
 @media(max-width:850px){.apartment-info-row.apartment-unit-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-details-layout{grid-template-columns:minmax(0,1fr)}.apartment-info-row{grid-template-columns:repeat(2,minmax(82px,108px) minmax(0,1fr))}.apartment-info-row[style="--pairs:1"]{grid-template-columns:108px minmax(0,1fr)}.apartment-details-column .apartment-info-row{grid-template-columns:90px minmax(0,1fr)}.apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}}
 @media(max-width:580px){.apartment-info-row.apartment-unit-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row[style="--pairs:1"]{grid-template-columns:100px minmax(0,1fr)}.apartment-info-row>div{padding:9px 10px}.apartment-details-column .owner-contact-row{grid-template-columns:74px minmax(0,1fr) 52px 48px}.apartment-details-column .owner-contact-row>div{padding:8px 6px}.apartment-detail-title{gap:8px 18px}.apartment-unit-part strong{font-size:1.45rem}}
-.detail-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.detail-print-tools{margin-left:auto;display:flex;align-items:center;gap:8px}.detail-actions #detailProgressStatus{width:108px;min-width:108px;max-width:108px;flex:0 0 108px;height:36px;margin:0;padding:6px 10px;font-size:.82rem;border:1px solid var(--border-slate);border-radius:18px;color-scheme:dark}.detail-print-tools #printBriefBtn{white-space:nowrap}
+.detail-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.detail-print-tools{margin-left:auto;display:flex;align-items:center;gap:8px}.detail-actions #detailProgressStatus{width:108px;min-width:108px;max-width:108px;flex:0 0 108px;height:36px;margin:0;padding:6px 10px;font-size:.82rem;border:1px solid var(--border-slate);border-radius:18px;color-scheme:light}.detail-print-tools #printBriefBtn{white-space:nowrap}
 
 /* 소유주 연결 고객 버튼 */
 .owner-customer-link, .owner-customer-link:visited {
   display:inline-flex; align-items:center; justify-content:center;
   margin:6px 8px 0 0; padding:8px 14px; border-radius:8px;
-  color:#ffe29a; background:#17263b; border:1px solid #c9a84c;
+  color:#25675f; background:#ffffff; border:1px solid #cbe1e0;
   font-size:13px; font-weight:700; text-decoration:none;
 }
-.owner-customer-link:hover { color:#fff3cc; background:#263b55; border-color:#ffe29a; }
-.owner-customer-link:focus-visible { outline:2px solid #ffe29a; outline-offset:3px; }
+.owner-customer-link:hover { color:#234c49; background:#ffffff; border-color:#cbe1e0; }
+.owner-customer-link:focus-visible { outline:2px solid #cbe1e0; outline-offset:3px; }
 
 .tenant-info-section > summary { cursor:pointer; margin-bottom:0; }
 .tenant-info-section[open] > summary { margin-bottom:12px; }
@@ -141,7 +141,7 @@
 
 <script src="assets/js/building-records.js?v=20261107-share3"></script>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261106-title-visible"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261108-white-base1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -151,20 +151,20 @@
 @media(max-width:650px){.apartment-listing-form .owner-phone-row {grid-template-columns:1fr;}}
 #owner_memo,#edit_owner_memo {min-height:110px;resize:vertical;}
 html[data-office-theme="ktop"] #apartmentListingForm .um-section,
-html[data-office-theme="ktop"] #edit_apartmentListingForm .um-section {background:#fff;border-color:#ccd9e8;}
-html[data-office-theme="ktop"] .apartment-listing-form .um-section-title {background:#e7effb;color:#193c70;border-bottom:1px solid #c5d6ed;}
-html[data-office-theme="ktop"] .apartment-listing-form .sale .um-section-title {background:#dce9fa;color:#193c70;}
-html[data-office-theme="ktop"] .apartment-listing-form label {color:#344b66;font-weight:600;}
+html[data-office-theme="ktop"] #edit_apartmentListingForm .um-section {background:#fff;border-color:#dcedec;}
+html[data-office-theme="ktop"] .apartment-listing-form .um-section-title {background:#e7effb;color:#234c49;border-bottom:1px solid #dcedec;}
+html[data-office-theme="ktop"] .apartment-listing-form .sale .um-section-title {background:#dce9fa;color:#234c49;}
+html[data-office-theme="ktop"] .apartment-listing-form label {color:#234c49;font-weight:600;}
 html[data-office-theme="ktop"] .apartment-listing-form input,
 html[data-office-theme="ktop"] .apartment-listing-form select,
-html[data-office-theme="ktop"] .apartment-listing-form textarea {background:#fff;color:#172c46;border:1px solid #b5c6dc;border-radius:7px;color-scheme:light;}
-html[data-office-theme="ktop"] .apartment-listing-form summary {color:#193c70!important;}
+html[data-office-theme="ktop"] .apartment-listing-form textarea {background:#fff;color:#234c49;border:1px solid #b5c6dc;border-radius:7px;color-scheme:light;}
+html[data-office-theme="ktop"] .apartment-listing-form summary {color:#234c49!important;}
 #owner_memo:focus,#edit_owner_memo:focus,.apartment-listing-form input:focus,.apartment-listing-form textarea:focus {outline:2px solid #6ca0e1;outline-offset:1px;}
-#edit_internalInfoGrid {padding:14px;border:1px solid var(--border-slate);border-radius:10px;background:rgba(190,145,60,.08);}
+#edit_internalInfoGrid {padding:14px;border:1px solid var(--border-slate);border-radius:10px;background:rgba(37,103,95,0.08);}
 </style>
 <style>
 #owner_name[hidden],#owner_phone1[hidden],#edit_owner_name[hidden],#edit_owner_phone1[hidden],.field>label[hidden],.field[hidden] {display:none!important;}
-html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;color:#193c70;padding:10px 12px;border-radius:7px;}
+html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;color:#234c49;padding:10px 12px;border-radius:7px;}
 </style><style>
   /* 건물·빌딩, 토지, 아파트·오피스텔 외 주거용: 호수 / 자주쓰는 운정역 상가·오피스텔 / 단지명 숨김 */
   #editModal.bld-edit [data-hide-bld] { display: none !important; }
@@ -185,7 +185,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 <style>
 .detail-confirm-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:14px;}
 .detail-confirm-row b{font-weight:700;}
-.confirm-fresh{color:#17703a;font-weight:700;}.confirm-stale{color:#b45309;font-weight:700;}.confirm-old{color:#c62828;font-weight:800;}.confirm-none{color:#4f5f72;font-weight:600;}
+.confirm-fresh{color:#17703a;font-weight:700;}.confirm-stale{color:#b42318;font-weight:700;}.confirm-old{color:#b42318;font-weight:800;}.confirm-none{color:#234c49;font-weight:600;}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -215,12 +215,12 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 <div id="toast"></div>
 
 <!-- 전역 에러 오버레이 -->
-<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#f8fcfc;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
   <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
-  <div style="font-size:1.1rem;font-weight:700;color:#e0e0e0;margin-bottom:8px;">연결 오류가 발생했습니다</div>
+  <div style="font-size:1.1rem;font-weight:700;color:#234c49;margin-bottom:8px;">연결 오류가 발생했습니다</div>
   <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
-  <button onclick="location.reload()" style="background:#d4af37;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
-  <button onclick="location.href='index.html'" style="margin-top:10px;background:none;border:1px solid #555;border-radius:8px;padding:10px 24px;font-size:0.88rem;color:#aaa;cursor:pointer;">← 목록으로</button>
+  <button onclick="location.reload()" style="background:#25675f;color:#ffffff;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
+  <button onclick="location.href='index.html'" style="margin-top:10px;background:none;border:1px solid #dcedec;border-radius:8px;padding:10px 24px;font-size:0.88rem;color:#aaa;cursor:pointer;">← 목록으로</button>
 </div>
 
 <script>
@@ -251,7 +251,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
 
     <!-- 건축물대장 자동조회 결과 참고 (자동조회 성공 시에만 표시) -->
     <div id="editBuildingLookupRefBox" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;padding:10px 14px;background:rgba(80,180,100,0.07);border:1px solid rgba(80,180,100,0.2);border-radius:10px;">
-      <strong style="color:#5cb85c;">📐 건축물대장 자동입력 참고</strong><br />
+      <strong style="color:#177a55;">📐 건축물대장 자동입력 참고</strong><br />
       <span id="editBuildingLookupRefText"></span>
     </div>
 
@@ -434,7 +434,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
       </div>
       <div id="edit_addrRow" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:10px;">
       <div class="field">
-        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#c9a84c);">고객에게 보이는 주소</span></label>
+        <label>공개주소 <span style="font-size:0.78rem;color:var(--gold-soft,#25675f);">고객에게 보이는 주소</span></label>
         <input id="edit_publicAddress" type="text" placeholder="예) 파주시 동패동, 운정역 인근" />
       </div>
       </div>
@@ -557,7 +557,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   </div>
 </div>
 
-<script src="assets/js/register-picker.js?v=20261027-addr-convert4"></script>
+<script src="assets/js/register-picker.js?v=20261108-white-base1"></script>
 <script src="assets/js/kakao-config.js"></script>
 <script src="assets/js/road-address.js"></script>
 
@@ -765,7 +765,7 @@ function closeHomepageTab(tab) {
     return `<div class="contact-row" data-idx="${idx}" style="display:flex;gap:6px;align-items:flex-end;margin:0;">
       <input type="text" class="contact-name-input" placeholder="이름(선택)" style="flex:0 0 110px;width:110px;min-width:0;" />
       <input type="tel" class="contact-phone-input" placeholder="010-0000-0000" style="flex:0 0 170px;width:170px;min-width:0;" />
-      <button type="button" class="btn btn-ghost" title="삭제" style="flex:0 0 38px;box-sizing:border-box;height:38px;padding:0;font-size:0.9rem;text-align:center;color:var(--red,#e05252);border-color:rgba(224,82,82,0.4);" onclick="removeEditContactRow(this)">✕</button>
+      <button type="button" class="btn btn-ghost" title="삭제" style="flex:0 0 38px;box-sizing:border-box;height:38px;padding:0;font-size:0.9rem;text-align:center;color:var(--red,#b42318);border-color:rgba(224,82,82,0.4);" onclick="removeEditContactRow(this)">✕</button>
     </div>`;
   }
   function addEditContactRow(name, phone) {
@@ -1820,7 +1820,7 @@ function closeHomepageTab(tab) {
     const list = listingMemoList(item).filter(m => memoShownText(m).trim()).reverse();
     const btnStyle = "flex:none;padding:2px 10px;font-size:12px";
     const rows = list.map(m =>
-      '<div class="memo-row" data-key="' + escapeHtml(memoKey(m)) + '" style="padding:8px 0;border-top:1px dashed rgba(255,255,255,0.14)">'
+      '<div class="memo-row" data-key="' + escapeHtml(memoKey(m)) + '" style="padding:8px 0;border-top:1px dashed #dcedec">'
       + '<div style="display:flex;gap:10px;align-items:flex-start">'
       + '<span style="flex:none;color:var(--text-muted);font-size:12px;min-width:88px">' + escapeHtml(memoDateLabel(m)) + '</span>'
       + '<span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px">' + escapeHtml(memoShownText(m)) + '</span>'
@@ -1831,15 +1831,15 @@ function closeHomepageTab(tab) {
     return '<section class="detail-section" id="memoSection"><div class="detail-section-title">추가메모 <span style="font-size:12px;font-weight:400;color:var(--text-muted)">' + list.length + '건 · 날짜순</span></div>'
       + (rows || '<div style="font-size:13px;color:var(--text-muted);padding:2px 0 8px">아직 추가메모가 없어요.</div>')
       + '<div style="display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px">'
-      + '<input type="date" id="addMemoDate" title="메모 날짜 (달력에서 고르거나 직접 입력)" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:140px;flex:none;padding:8px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
-      + '<textarea id="addMemoText" rows="4" placeholder="새 메모 — 나중에 알게 된 내용을 적고 저장을 누르세요 (왼쪽 날짜로 저장돼요)" style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
+      + '<input type="date" id="addMemoDate" title="메모 날짜 (달력에서 고르거나 직접 입력)" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:140px;flex:none;padding:8px 6px;border-radius:8px;border:1px solid #dcedec;background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
+      + '<textarea id="addMemoText" rows="4" placeholder="새 메모 — 나중에 알게 된 내용을 적고 저장을 누르세요 (왼쪽 날짜로 저장돼요)" style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid #dcedec;background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
       + '<button type="button" class="btn btn-primary" id="addMemoBtn" style="flex:none">메모 저장</button></div></section>';
   }
   // 수정 화면의 추가메모 목록 (내용·날짜 수정, 삭제, 새 줄 추가)
   function buildEditMemoRow(m) {
     const row = document.createElement("div");
     row.className = "edit-memo-row";
-    row.style.cssText = "display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px dashed rgba(255,255,255,0.14)";
+    row.style.cssText = "display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px dashed #dcedec";
     if (m) { row.dataset.key = memoKey(m); row.dataset.origText = memoShownText(m); row.dataset.origDate = memoDateKst(m); }
     const date = document.createElement("input");
     date.type = "date"; date.className = "edit-memo-date";
@@ -1981,7 +1981,7 @@ function closeHomepageTab(tab) {
       html += '<div class="detail-confirm-row">최종확인일 <b id="confirmListingBtn" class="' + ci.cls + '" title="누르면 오늘 날짜로 확인 처리" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px">' + escapeHtml(formatDateValue(getListingConfirmedAt(item)) || "-") + '</b> <span class="' + ci.cls + '">(' + escapeHtml(ci.text) + ')</span></div>';
     }
 
-    html += `<div class="detail-badges"><span data-homepage-only class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#b99cff;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
+    html += `<div class="detail-badges"><span data-homepage-only class="badge" style="background:${item.is_public === true ? 'rgba(80,180,100,0.18)' : 'rgba(255,255,255,0.06)'};color:${item.is_public === true ? '#5cb85c' : 'var(--text-muted)'};border:1px solid ${item.is_public === true ? 'rgba(80,180,100,0.35)' : 'rgba(255,255,255,0.12)'};">${item.is_public === true ? '&#54856;&#54168;&#51060;&#51648; &#44277;&#44060;&#51473;' : '&#48708;&#44277;&#44060;'}</span>${matchesComplexTag(item, '힐스테이트더운정') ? '<span class="badge" style="background:rgba(124,58,237,0.12);color:#234c49;border:1px solid rgba(124,58,237,0.3);">🏢 힐스테이트더운정</span>' : ''}</div>`;
 
     // 기본정보·주소정보·가격·면적·건물정보·소유주 연락처를 하나의 "매물 상세정보" 표로 통합.
     html += renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact);
@@ -2033,11 +2033,11 @@ function closeHomepageTab(tab) {
           <div class="detail-resource-row" style="margin-bottom:7px;">
             <span class="detail-read-value" style="flex:1;color:var(--gold-soft);">📄 ${escapeHtml(l && l.name ? l.name : "링크")}</span>
             ${l && l.url ? `<a href="${escapeAttr(l.url)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.75rem;padding:3px 12px;text-decoration:none;">열기</a>` : ""}
-            <button onclick="deleteDriveLink(${i})" style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1rem;padding:0 4px;">✕</button>
+            <button onclick="deleteDriveLink(${i})" style="background:none;border:none;color:var(--red,#b42318);cursor:pointer;font-size:1rem;padding:0 4px;">✕</button>
           </div>`).join("")
         : `<div class="detail-read-value" style="color:var(--text-muted);font-size:0.82rem;">등록된 링크가 없습니다</div>`}
       </div>
-      <div id="addLinkForm" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,175,55,0.15);">
+      <div id="addLinkForm" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(37,103,95,0.15);">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <input id="newLinkName" type="text" placeholder="이름 (예: 토지대장)" style="width:130px;flex-shrink:0;" />
           <input id="newLinkUrl" type="text" placeholder="https://drive.google.com/..." style="flex:1;min-width:160px;" />
@@ -2244,8 +2244,8 @@ function closeHomepageTab(tab) {
             const m = listingMemoList(_currentItem).find(x => memoKey(x) === key);
             if (!m) return;
             row.innerHTML = '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
-              + '<input type="date" class="memo-edit-date" value="' + escapeHtml(memoDateKst(m)) + '" style="width:auto;flex:none;padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
-              + '<textarea class="memo-edit-text" rows="3" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical">' + escapeHtml(memoShownText(m)) + '</textarea>'
+              + '<input type="date" class="memo-edit-date" value="' + escapeHtml(memoDateKst(m)) + '" style="width:auto;flex:none;padding:4px 6px;border-radius:6px;border:1px solid #dcedec;background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
+              + '<textarea class="memo-edit-text" rows="3" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid #dcedec;background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical">' + escapeHtml(memoShownText(m)) + '</textarea>'
               + '<button type="button" class="btn btn-primary memo-save" style="flex:none;padding:4px 12px;font-size:13px">저장</button>'
               + '<button type="button" class="btn btn-ghost memo-cancel" style="flex:none;padding:4px 12px;font-size:13px">취소</button></div>';
           } else if (t.classList.contains("memo-cancel")) {
@@ -2285,7 +2285,7 @@ function closeHomepageTab(tab) {
           if (t.classList.contains("internal-memo-edit")) {
             const current = box.querySelector(".detail-read-value").textContent;
             box.innerHTML = '<div class="detail-read-label">비공개 내부메모</div>'
-              + '<textarea class="internal-memo-text" rows="8" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.25);background:transparent;color:inherit;font:inherit;resize:vertical">' + escapeHtml(current) + '</textarea>'
+              + '<textarea class="internal-memo-text" rows="8" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid #dcedec;background:transparent;color:inherit;font:inherit;resize:vertical">' + escapeHtml(current) + '</textarea>'
               + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">'
               + '<button type="button" class="btn btn-ghost internal-memo-cancel" style="padding:4px 12px;font-size:13px">취소</button>'
               + '<button type="button" class="btn btn-primary internal-memo-save" style="padding:4px 12px;font-size:13px">저장</button></div>';

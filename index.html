@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <title>하이탑부동산 매물 목록</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20261006-brand-layout" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20261108-white-base1" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
-<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
@@ -15,16 +15,16 @@
   <style>
     /* 목록보기 테이블 */
     #listViewTable { width:100%; border-collapse:collapse; font-size:0.82rem; }
-    #listViewTable thead th { background:#1a2a4a; color:#d4af37; padding:8px 10px; text-align:left; font-weight:600; position:sticky;top:0; }
-    #listViewTable tbody td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; cursor:pointer; }
-    #listViewTable tbody tr:hover td { background:rgba(212,175,55,0.07); }
+    #listViewTable thead th { background:#ffffff; color:#25675f; padding:8px 10px; text-align:left; font-weight:600; position:sticky;top:0; }
+    #listViewTable tbody td { padding:7px 10px; border-bottom:1px solid #dcedec; vertical-align:top; cursor:pointer; }
+    #listViewTable tbody tr:hover td { background:rgba(37,103,95,0.07); }
     #listViewTable tbody tr.done-row td { color:#777; }
     #listViewTable tbody tr.done-row:hover td { background:rgba(255,255,255,0.03); }
     /* 선택매물보기 테이블 */
     #selectedViewTable { width:100%; border-collapse:collapse; font-size:0.83rem; }
-    #selectedViewTable thead th { padding:9px 10px; text-align:left; font-weight:600; color:var(--text-muted); border-bottom:2px solid rgba(212,175,55,0.25); }
-    #selectedViewTable tbody td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; }
-    #selectedViewTable tbody tr:hover td { background:rgba(212,175,55,0.05); }
+    #selectedViewTable thead th { padding:9px 10px; text-align:left; font-weight:600; color:var(--text-muted); border-bottom:2px solid rgba(37,103,95,0.25); }
+    #selectedViewTable tbody td { padding:8px 10px; border-bottom:1px solid #dcedec; vertical-align:top; }
+    #selectedViewTable tbody tr:hover td { background:rgba(37,103,95,0.05); }
     #selectedViewTable tbody tr.done-row td { color:#666; }
     /* 인쇄 */
     @media print {
@@ -37,12 +37,12 @@
       #selectedPrintHeader { display: flex !important; }
       #selectedViewTable { font-size: 10px; width: 100%; border-collapse: collapse; }
       #selectedViewTable thead th {
-        background: #1a2a4a !important; color: #d4af37 !important;
+        background: #ffffff !important; color: #25675f !important;
         padding: 6px 8px; border-bottom: none;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
       }
       #selectedViewTable tbody td {
-        padding: 5px 8px; border-bottom: 1px solid #ddd !important;
+        padding: 5px 8px; border-bottom: 1px solid #dcedec !important;
         color: #111 !important; vertical-align: top;
       }
       #selectedViewTable tbody tr.done-row td {
@@ -59,49 +59,49 @@
     .cust-act-detail { background:transparent; color:var(--blue); }
     .cust-act-detail:hover { background:rgba(95,159,216,0.18); }
     .cust-act-edit { background:transparent; color:var(--gold); }
-    .cust-act-edit:hover { background:rgba(216,184,74,0.18); }
+    .cust-act-edit:hover { background:rgba(37,103,95,0.18); }
     .cust-act-delete { background:transparent; color:var(--red); }
     .cust-act-delete:hover { background:rgba(224,82,82,0.18); }
-    .cust-act-diary { background:transparent; color:#2dd4bf; }
+    .cust-act-diary { background:transparent; color:#177a55; }
     .cust-act-diary:hover { background:rgba(45,212,191,0.18); }
     /* ── 고객 목록: 연락처를 박스 없는 텍스트로 표시 ── */
     .cust-phone-link { display:inline-flex; align-items:center; gap:5px; color:var(--text-main); text-decoration:none; background:none; border:none; padding:0; }
     .cust-phone-link:hover { color:var(--gold-soft); text-decoration:underline; }
     /* 카드 더보기/접기 공통 */
     .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
-    .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:linear-gradient(transparent,var(--bg-card)); pointer-events:none; }
-    .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(212,175,55,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
+    .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:var(--bg, #ffffff); pointer-events:none; }
+    .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(37,103,95,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
     /* ── 추천매물 파일 그리드 ── */
     .rec-file-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; margin-top:10px; }
-    .rec-file-card { background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; cursor:pointer; transition:border-color .15s; }
-    .rec-file-card:hover { border-color:rgba(212,175,55,0.35); }
+    .rec-file-card { background:#f8fcfc; border:1px solid #dcedec; border-radius:10px; overflow:hidden; cursor:pointer; transition:border-color .15s; }
+    .rec-file-card:hover { border-color:rgba(37,103,95,0.35); }
     .rec-file-thumb { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; }
-    .rec-file-pdf { width:100%; aspect-ratio:4/3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:rgba(212,175,55,0.06); }
+    .rec-file-pdf { width:100%; aspect-ratio:4/3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:rgba(37,103,95,0.06); }
     .rec-file-pdf-icon { font-size:1.8rem; }
     .rec-file-label { font-size:0.65rem; color:var(--text-muted); text-align:center; padding:0 4px; word-break:break-all; line-height:1.3; }
-    .rec-file-foot { display:flex; align-items:center; justify-content:space-between; padding:5px 7px; border-top:1px solid rgba(255,255,255,0.06); }
-    .rec-file-name { font-size:0.68rem; color:rgba(255,255,255,0.7); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .rec-file-del { background:none; border:none; color:rgba(255,100,100,0.6); cursor:pointer; font-size:0.85rem; padding:0 2px; border-radius:4px; flex-shrink:0; }
+    .rec-file-foot { display:flex; align-items:center; justify-content:space-between; padding:5px 7px; border-top:1px solid #dcedec; }
+    .rec-file-name { font-size:0.68rem; color:#234c49; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rec-file-del { background:none; border:none; color:#b42318; cursor:pointer; font-size:0.85rem; padding:0 2px; border-radius:4px; flex-shrink:0; }
     .rec-file-del:hover { color:var(--red); background:rgba(255,79,106,0.15); }
     /* ── 라이트박스 ── */
     #recLightbox { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.93); align-items:center; justify-content:center; padding:20px; }
     #recLightbox.open { display:flex; }
-    #recLightbox img { max-width:94vw; max-height:88vh; object-fit:contain; border-radius:8px; box-shadow:0 0 60px rgba(0,0,0,0.8); }
-    #recLbClose { position:fixed; top:16px; right:20px; font-size:1.8rem; color:rgba(255,255,255,0.75); cursor:pointer; line-height:1; transition:color .15s; }
-    #recLbClose:hover { color:var(--gold); }
-    #recLbCaption { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); font-size:0.82rem; color:rgba(255,255,255,0.5); background:rgba(0,0,0,0.6); border-radius:8px; padding:5px 14px; }
+    #recLightbox img { max-width:94vw; max-height:88vh; object-fit:contain; border-radius:8px; box-shadow:0 0 60px rgba(35,76,73,0.08); }
+    #recLbClose { position:fixed; top:16px; right:20px; font-size:1.8rem;color:#ffffff; cursor:pointer; line-height:1; transition:color .15s; }
+    #recLbClose:hover {color:#ffffff; }
+    #recLbCaption { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); font-size:0.82rem; color:#234c49; background:#f8fcfc; border-radius:8px; padding:5px 14px; }
     /* ── 인라인 파일 추가 폼 ── */
-    .rec-add-form { background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.2); border-radius:10px; padding:12px; margin-top:10px; display:none; }
+    .rec-add-form { background:rgba(37,103,95,0.06); border:1px solid rgba(37,103,95,0.2); border-radius:10px; padding:12px; margin-top:10px; display:none; }
     .rec-add-form.open { display:block; }
     .rec-upload-row { display:flex; gap:8px; align-items:center; }
     .rec-spinner { display:none; align-items:center; gap:6px; font-size:0.78rem; color:var(--gold); margin-top:6px; }
     .rec-spinner.active { display:flex; }
-    .rec-spinner-dot { width:12px; height:12px; border:2px solid rgba(212,175,55,0.3); border-top-color:var(--gold); border-radius:50%; animation:recSpin .7s linear infinite; }
+    .rec-spinner-dot { width:12px; height:12px; border:2px solid rgba(37,103,95,0.3); border-top-color:var(--gold); border-radius:50%; animation:recSpin .7s linear infinite; }
     @keyframes recSpin { to { transform:rotate(360deg); } }
   
 .customer-type-tabs { display:flex; gap:7px; flex-wrap:wrap; margin:10px 0 14px; }
 .customer-type-tabs button { border:1px solid var(--border-slate); border-radius:20px; background:transparent; color:var(--text-main); padding:7px 12px; cursor:pointer; font:inherit; font-size:.85rem; }
-.customer-type-tabs button.active { background:var(--gold); color:var(--bg-main); border-color:var(--gold); }
+.customer-type-tabs button.active { background:var(--gold);color:#ffffff; border-color:var(--gold); }
 .customer-tags { display:block; color:var(--gold); font-size:.76rem; margin-top:4px; }
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261009-ktop-v5">
@@ -339,12 +339,12 @@
       </div>
       <!-- 통합검색: 현재매물 섹션 -->
       <div id="unifiedActiveSection" style="display:none;">
-        <div style="font-weight:600;font-size:0.88rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(212,175,55,0.2);">현재매물 <span id="unifiedActiveCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+        <div style="font-weight:600;font-size:0.88rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(37,103,95,0.2);">현재매물 <span id="unifiedActiveCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
         <div id="unifiedActiveContainer" class="listing-grid"></div>
         <div style="height:16px;"></div>
       </div>
       <!-- 통합검색: 거래완료 섹션 헤더 -->
-      <div id="unifiedDoneLabelInDoneTab" style="display:none;font-weight:600;font-size:0.88rem;color:#e88;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(238,136,136,0.2);">거래완료 <span id="unifiedDoneLabelCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+      <div id="unifiedDoneLabelInDoneTab" style="display:none;font-weight:600;font-size:0.88rem;color:#b42318;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(238,136,136,0.2);">거래완료 <span id="unifiedDoneLabelCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
       <div id="doneContainer" class="listing-grid"></div>
       <div id="doneEmpty" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
         거래완료된 매물이 없습니다.
@@ -468,7 +468,7 @@
       <button class="filter-badge" data-reftype="토지">토지</button>
       <button class="filter-badge" data-reftype="기타">기타</button>
       <span style="font-size:0.8rem;color:var(--text-muted);font-weight:600;margin-left:10px;">지역</span>
-      <select id="refRegionFilter" style="background:var(--bg-soft);color:var(--text-main);border:1px solid rgba(212,175,55,0.3);border-radius:6px;padding:4px 8px;font-size:0.82rem;">
+      <select id="refRegionFilter" style="background:var(--bg-soft);color:var(--text-main);border:1px solid rgba(37,103,95,0.3);border-radius:6px;padding:4px 8px;font-size:0.82rem;">
         <option value="전체">전체</option>
         <option value="운정">운정</option>
         <option value="교하">교하</option>
@@ -585,7 +585,7 @@
 
     <!-- 파일 목록 -->
     <div style="margin-bottom:10px;">
-      <label style="font-size:0.78rem;font-weight:700;color:rgba(180,200,230,0.65);letter-spacing:0.4px;text-transform:uppercase;display:block;margin-bottom:6px;">연결된 파일</label>
+      <label style="font-size:0.78rem;font-weight:700;color:#234c49;letter-spacing:0.4px;text-transform:uppercase;display:block;margin-bottom:6px;">연결된 파일</label>
       <div id="rece_file_list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;min-height:20px;"></div>
       <!-- 파일 추가 행 -->
       <div id="rece_new_files"></div>
@@ -764,11 +764,11 @@
 
 
 <!-- 전역 에러 오버레이 -->
-<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d0d0d;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#f8fcfc;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
   <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
-  <div style="font-size:1.1rem;font-weight:700;color:#e0e0e0;margin-bottom:8px;">연결 오류가 발생했습니다</div>
+  <div style="font-size:1.1rem;font-weight:700;color:#234c49;margin-bottom:8px;">연결 오류가 발생했습니다</div>
   <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
-  <button onclick="location.reload()" style="background:#d4af37;color:#000;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
+  <button onclick="location.reload()" style="background:#25675f;color:#ffffff;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
 </div>
 
 <script>
@@ -830,8 +830,8 @@ if (tab === "done")       renderDoneList();
   }
 </script>
 
-<!-- 매물/거래완료 공유 데이터 · 렌더러 (assets/js/listings-shared.js — properties.html과 공용) -->
-<script src="assets/js/listings-shared.js?v=20261104-naversv"></script>
+<!-- 매물/거래완료 공유 데이터 · 렌더러 (assets/js/listings-shared.js?v=20261108-white-base1 — properties.html과 공용) -->
+<script src="assets/js/listings-shared.js?v=20261108-white-base1"></script>
 <script>
 
   // ===== 공통 페이지네이션 헬퍼 =====
@@ -948,7 +948,7 @@ if (tab === "done")       renderDoneList();
         <div class="card-expand-wrap" data-expanded="false">
           ${(item.owner_phone1||item.quick_contact||item.owner_contact) ? `<div style="margin-top:4px;font-size:0.78rem;color:var(--text-muted);">📞 ${item.owner_phone1||item.quick_contact||item.owner_contact}</div>` : ""}
           ${(item.quick_memo||item.description) ? `<div style="margin-top:4px;font-size:0.76rem;color:var(--text-muted);">📝 ${item.quick_memo||item.description}</div>` : ""}
-          ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#e88;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
+          ${item.completed_at ? `<div style="margin-top:6px;font-size:0.78rem;color:#b42318;">✅ 거래완료일: ${formatDate(item.completed_at)}</div>` : ""}
           <div class="card-expand-fade"></div>
         </div>
         <button class="card-expand-btn" onclick="event.stopPropagation();toggleCardExpand(this)">▼ 더보기</button>
@@ -1603,7 +1603,7 @@ if (tab === "done")       renderDoneList();
     }
     const refStart = (refPage - 1) * REF_PER_PAGE;
     const refPageItems = list.slice(refStart, refStart + REF_PER_PAGE);
-    const typeColors = { "상가": "#d4af37", "건물": "#4caf7d", "토지": "#6fa8dc", "기타": "#a7b0d0" };
+    const typeColors = { "상가": "#25675f", "건물": "#4caf7d", "토지": "#6fa8dc", "기타": "#a7b0d0" };
     container.innerHTML = `<div class="listing-grid">` + refPageItems.map(p => {
       const color = typeColors[p.property_type] || "#a7b0d0";
       const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString("ko-KR") : "";
@@ -1770,7 +1770,7 @@ if (tab === "done")       renderDoneList();
     row.innerHTML = `
       <input type="file" accept="image/*,.pdf" style="flex:1;font-size:0.82rem;" />
       <button onclick="this.closest('.rec-file-input-row').remove()"
-        style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>`;
+        style="background:none;border:none;color:var(--red,#b42318);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>`;
     list.appendChild(row);
   }
 
@@ -1939,14 +1939,14 @@ if (tab === "done")       renderDoneList();
         const nameE = (f.file_name || "").replace(/"/g, "&quot;");
         const icon  = _recIsImage(f.cloudinary_url, f.file_name) ? "🖼" : "📄";
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;
-                  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+                  background:rgba(255,255,255,0.04);border:1px solid #dcedec;
                   border-radius:8px;font-size:0.82rem;">
           <span>${icon}</span>
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-                color:rgba(255,255,255,0.8);" title="${nameE}">${nameE}</span>
+                color:#234c49;" title="${nameE}">${nameE}</span>
           <button class="btn btn-ghost" style="font-size:0.72rem;padding:2px 8px;"
             onclick="window.open('${safe}','_blank')">열기</button>
-          <button style="background:none;border:none;color:rgba(255,100,100,0.7);
+          <button style="background:none;border:none;color:#b42318;
             cursor:pointer;font-size:1rem;padding:0 2px;flex-shrink:0;"
             onclick="recModalDeleteFile('${f.id}','${id}')">✕</button>
         </div>`;
@@ -1976,7 +1976,7 @@ if (tab === "done")       renderDoneList();
     row.innerHTML = `
       <input type="file" accept="image/*,.pdf" style="flex:1;font-size:0.82rem;" />
       <button onclick="this.closest('.rec-file-input-row').remove()"
-        style="background:none;border:none;color:var(--red,#e05252);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>`;
+        style="background:none;border:none;color:var(--red,#b42318);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>`;
     c.appendChild(row);
   }
 
@@ -2149,25 +2149,25 @@ if (tab === "done")       renderDoneList();
 <style>
 #contractModal {
   position: fixed; inset: 0; z-index: 9999;
-  background: rgba(2,3,10,0.88);
+  background: #ffffff;
   display: flex; align-items: flex-start; justify-content: center;
   padding: 20px 12px;
   overflow-y: auto;
 }
 .cm-wrap {
-  background: radial-gradient(circle at top left, #182853 0, #0b1a33 45%, #050914 100%);
-  border: 1px solid rgba(212,175,55,0.45);
+  background: radial-gradient(circle at top left, #ffffff 0, #ffffff 45%, #ffffff 100%);
+  border: 1px solid rgba(37,103,95,0.35);
   border-radius: 18px;
   width: 100%; max-width: 700px;
   padding: 24px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  box-shadow: 0 20px 60px rgba(35,76,73,0.08);
   margin-bottom: 20px;
 }
 .cm-header {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 20px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(212,175,55,0.25);
+  border-bottom: 1px solid rgba(37,103,95,0.25);
 }
 .cm-header h2 { font-size: 1.1rem; color: var(--gold); margin: 0; }
 .cm-close {
@@ -2196,38 +2196,37 @@ if (tab === "done")       renderDoneList();
 .cm-field textarea {
   width: 100%;
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(212,175,55,0.25);
+  border: 1px solid rgba(37,103,95,0.25);
   border-radius: 8px;
   color: var(--text-main);
   padding: 8px 10px;
   font-size: 0.85rem;
   font-family: inherit;
-  color-scheme: dark;
+  color-scheme: light;
 }
 .cm-field input:focus,
-.cm-field textarea:focus { outline: none; border-color: rgba(212,175,55,0.6); }
+.cm-field textarea:focus { outline: none; border-color: rgba(37,103,95,0.35); }
 .cm-toggle-group { display: flex; gap: 6px; flex-wrap: wrap; }
 .cm-toggle {
   padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; cursor: pointer;
-  border: 1px solid rgba(212,175,55,0.35); background: transparent; color: var(--text-muted);
+  border: 1px solid rgba(37,103,95,0.35); background: transparent; color: var(--text-muted);
   transition: 0.15s;
 }
 .cm-toggle.active {
-  background: linear-gradient(135deg, #f3d27b, #d4af37);
-  color: #201608; font-weight: bold; border-color: transparent;
+  background: linear-gradient(135deg, #25675f, #25675f);color:#ffffff; font-weight: bold; border-color: transparent;
 }
-.cm-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 14px 0; }
+.cm-divider { border: none; border-top: 1px solid #dcedec; margin: 14px 0; }
 .cm-calc-box {
   font-size: 0.83rem; color: var(--gold-soft);
-  background: rgba(212,175,55,0.07);
-  border: 1px solid rgba(212,175,55,0.15);
+  background: rgba(37,103,95,0.07);
+  border: 1px solid rgba(37,103,95,0.15);
   border-radius: 8px; padding: 8px 12px;
   margin-top: 4px;
 }
 .cm-output {
   width: 100%;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(212,175,55,0.3);
+  background: #f8fcfc;
+  border: 1px solid rgba(37,103,95,0.3);
   border-radius: 10px;
   color: var(--text-main);
   font-size: 0.84rem;
@@ -2714,7 +2713,7 @@ ${cmFmtDate(sendDate)}`;
           <div style="font-size:0.82rem;color:var(--text-main);white-space:pre-wrap;line-height:1.6;">${safeContent}</div>
           <div class="memo-fade" style="position:absolute;bottom:0;left:0;right:0;height:36px;background:linear-gradient(transparent,var(--bg-card));pointer-events:none;"></div>
         </div>
-        <button class="memo-expand-btn" style="display:none;width:100%;background:none;border:none;border-top:1px solid rgba(212,175,55,0.15);color:var(--gold);font-size:0.78rem;cursor:pointer;padding:6px 0 2px;margin-bottom:6px;font-family:inherit;letter-spacing:0.03em;" onclick="toggleMemoExpand(this)">▼ 더보기</button>
+        <button class="memo-expand-btn" style="display:none;width:100%;background:none;border:none;border-top:1px solid rgba(37,103,95,0.15);color:var(--gold);font-size:0.78rem;cursor:pointer;padding:6px 0 2px;margin-bottom:6px;font-family:inherit;letter-spacing:0.03em;" onclick="toggleMemoExpand(this)">▼ 더보기</button>
         <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">
           등록: ${createdAt}${updatedAt ? ` · 수정: ${updatedAt}` : ""}
         </div>

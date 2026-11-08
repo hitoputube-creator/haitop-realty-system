@@ -6,7 +6,7 @@
   <title>하이탑부동산 | 건물 상세</title>
   <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-  <link rel="stylesheet" href="assets/css/app.css" />
+  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-base1" />
   <style>
     /* ── 섹션 타이틀 ── */
     .sec-title {
@@ -15,7 +15,7 @@
     }
     .sec-title::after {
       content: ''; flex: 1; height: 1px;
-      background: linear-gradient(90deg, rgba(212,175,55,0.3), transparent);
+      background: linear-gradient(90deg, rgba(37,103,95,0.3), transparent);
     }
 
     /* ── 건물 기본정보 요약 그리드 ── */
@@ -25,20 +25,20 @@
       gap: 10px; margin-bottom: 16px;
     }
     .info-cell {
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(212,175,55,0.15);
+      background: #f8fcfc;
+      border: 1px solid rgba(37,103,95,0.15);
       border-radius: 10px; padding: 10px 14px;
     }
     .info-cell-label {
       font-size: 0.7rem; font-weight: 700;
-      color: rgba(180,200,230,0.55); letter-spacing: 0.5px;
+      color: #234c49; letter-spacing: 0.5px;
       text-transform: uppercase; margin-bottom: 4px;
     }
     .info-cell-value {
       font-size: 0.9rem; color: var(--text); font-weight: 600;
       line-height: 1.4;
     }
-    .info-cell-value.empty { color: rgba(255,255,255,0.22); font-weight: 400; }
+    .info-cell-value.empty { color: #234c49; font-weight: 400; }
 
     .building-location-links{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}
     .building-location-links .btn{display:inline-flex;align-items:center;min-height:36px;font-size:.875rem;text-decoration:none}
@@ -72,27 +72,27 @@
       gap: 12px; margin-top: 14px;
     }
     .floor-card {
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: #f8fcfc;
+      border: 1px solid #dcedec;
       border-radius: 12px; overflow: hidden;
       display: flex; flex-direction: column;
       transition: border-color 0.18s;
     }
-    .floor-card:hover { border-color: rgba(212,175,55,0.35); }
+    .floor-card:hover { border-color: rgba(37,103,95,0.35); }
     #floorGrid .floor-card-foot { flex-wrap: wrap; justify-content: flex-end; }
     #floorGrid .floor-badge { flex: 1 1 100%; }
     #floorGrid .floor-card { cursor: grab; }
     #floorGrid .floor-card:active { cursor: grabbing; }
     #floorGrid .floor-card.dragging { opacity: .42; border-color: var(--gold); }
-    #floorGrid .floor-card.drop-target { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(216,184,74,.28); }
+    #floorGrid .floor-card.drop-target { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(37,103,95,0.08); }
     .floor-sort-hint { font-size: .78rem; color: var(--muted); margin: 4px 0 0; }
     .floor-sort-hint.saving { color: var(--gold); }
     .floor-edit-btn {
-      padding: 5px 7px; border: 1px solid rgba(216,184,74,.65); border-radius: 6px;
-      color: #f8f3e6; background: rgba(216,184,74,.15); font-size: .72rem;
+      padding: 5px 7px; border: 1px solid rgba(37,103,95,0.35); border-radius: 6px;
+      color: #234c49; background: rgba(37,103,95,0.15); font-size: .72rem;
       cursor: pointer; white-space: nowrap; font-family: inherit;
     }
-    .floor-edit-btn:hover, .floor-edit-btn:focus-visible { background: rgba(216,184,74,.28); }
+    .floor-edit-btn:hover, .floor-edit-btn:focus-visible { background: rgba(37,103,95,0.28); }
     .floor-edit-btn:disabled { opacity: .55; cursor: wait; }
 
     .floor-thumb {
@@ -108,7 +108,7 @@
       width: 100%; aspect-ratio: 4/3;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 8px; background: rgba(212,175,55,0.06);
+      gap: 8px; background: rgba(37,103,95,0.06);
       cursor: pointer;
     }
     .floor-pdf-icon { font-size: 2.2rem; }
@@ -121,21 +121,21 @@
     .floor-card-foot {
       padding: 8px 10px;
       display: flex; align-items: center; justify-content: space-between; gap: 6px;
-      border-top: 1px solid rgba(255,255,255,0.06);
+      border-top: 1px solid #dcedec;
     }
     .floor-badge {
       font-size: 0.78rem; font-weight: 700; color: var(--gold);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .floor-status-link, .floor-status-link:visited {
-      padding: 5px 7px; border: 1px solid rgba(216,184,74,.65); border-radius: 6px;
-      color: #f8f3e6; background: rgba(216,184,74,.15); font-size: .72rem;
+      padding: 5px 7px; border: 1px solid rgba(37,103,95,0.35); border-radius: 6px;
+      color: #234c49; background: rgba(37,103,95,0.15); font-size: .72rem;
       text-decoration: none; white-space: nowrap;
     }
-    .floor-status-link:hover, .floor-status-link:focus-visible { color:#fff; background:rgba(216,184,74,.28); }
+    .floor-status-link:hover, .floor-status-link:focus-visible { color:#234c49; background:rgba(37,103,95,0.28); }
     .btn-icon {
       border: none; background: transparent;
-      color: rgba(255,100,100,0.7); cursor: pointer;
+      color: #b42318; cursor: pointer;
       font-size: 0.95rem; padding: 2px 4px;
       border-radius: 6px; transition: background 0.15s;
       flex-shrink: 0;
@@ -157,7 +157,7 @@
     .upload-progress.active { display: flex; }
     .spinner-sm {
       width: 14px; height: 14px;
-      border: 2px solid rgba(212,175,55,0.3);
+      border: 2px solid rgba(37,103,95,0.3);
       border-top-color: var(--gold);
       border-radius: 50%; animation: spin 0.7s linear infinite;
     }
@@ -167,7 +167,7 @@
     .empty-state {
       text-align: center; padding: 28px 20px;
       color: var(--muted); font-size: 0.85rem;
-      border: 1px dashed rgba(255,255,255,0.1);
+      border: 1px dashed #dcedec;
       border-radius: 12px;
     }
 
@@ -183,21 +183,21 @@
       background: #fff;
       max-width: 94vw; max-height: 90vh;
       object-fit: contain; border-radius: 8px;
-      box-shadow: 0 0 60px rgba(0,0,0,0.8);
+      box-shadow: 0 0 60px rgba(35,76,73,0.08);
       touch-action: none; user-select: none;
       transform-origin: center center;
       will-change: auto;
     }
     #lightbox-close {
       position: fixed; top: 18px; right: 22px;
-      font-size: 1.8rem; color: rgba(255,255,255,0.75);
+      font-size: 1.8rem;color:#ffffff;
       cursor: pointer; line-height: 1;
       transition: color 0.15s; z-index: 2;
     }
-    #lightbox-close:hover { color: var(--gold); }
+    #lightbox-close:hover {color:#ffffff; }
     #lightbox-caption {
       position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-      font-size: 0.85rem; color: rgba(255,255,255,0.55);
+      font-size: 0.85rem;color:#ffffff;
       background: rgba(0,0,0,0.6); border-radius: 8px; padding: 6px 16px;
       max-width: 80vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
@@ -206,22 +206,22 @@
     #lightbox-toolbar {
       position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
       display: flex; align-items: center; gap: 4px;
-      background: rgba(10,14,28,0.85);
-      border: 1px solid rgba(212,175,55,0.30);
+      background: #ffffff;
+      border: 1px solid rgba(37,103,95,0.3);
       border-radius: 999px; padding: 5px; z-index: 2;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      box-shadow: 0 8px 24px rgba(35,76,73,0.08);
     }
     .lb-btn {
-      border: none; background: transparent; color: rgba(255,255,255,0.85);
+      border: none; background: transparent; color: #234c49;
       font-size: 0.88rem; font-weight: 700; cursor: pointer;
       padding: 7px 13px; border-radius: 999px; line-height: 1;
       transition: background 0.15s, color 0.15s;
       font-family: inherit;
     }
-    .lb-btn:hover { background: rgba(212,175,55,0.20); color: var(--gold); }
+    .lb-btn:hover { background: rgba(37,103,95,0.2); color: var(--gold); }
     .lb-btn#lb-zoom-reset { min-width: 52px; }
     .lb-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.15); margin: 0 2px; }
-    .lb-btn.lb-close-btn { color: rgba(255,140,140,0.9); }
+    .lb-btn.lb-close-btn { color: #b42318; }
     .lb-btn.lb-close-btn:hover { background: rgba(255,79,106,0.18); color: var(--danger); }
     .lb-btn:disabled { opacity:.45; cursor:wait; }
     @media (max-width:600px) {
@@ -239,25 +239,25 @@
     @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr 1fr; } }
     .sum-card {
       border-radius: 14px; padding: 14px 16px; text-align: center;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid #dcedec;
     }
     .sum-card.occupied { background: rgba(34,197,94,0.10);  border-color: rgba(34,197,94,0.25); }
     .sum-card.vacant   { background: rgba(239,68,68,0.10);  border-color: rgba(239,68,68,0.25); }
-    .sum-card.forsale  { background: rgba(234,179,8,0.10);  border-color: rgba(234,179,8,0.25); }
+    .sum-card.forsale  { background: rgba(37,103,95,0.1);  border-color: rgba(37,103,95,0.25); }
     .sum-card.revenue  { background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.25); }
     .sum-card.own      { background: rgba(167,139,250,0.10); border-color: rgba(167,139,250,0.28); }
     .unit-summary-filter { cursor:pointer; font-family:inherit; color:inherit; }
     .unit-summary-filter .sum-num, .unit-summary-filter .sum-label { display:block; }
     .unit-summary-filter:hover { filter:brightness(1.2); }
-    .unit-summary-filter.active, .unit-summary-filter:focus-visible { outline:2px solid var(--gold, #D4AF37); outline-offset:2px; }
+    .unit-summary-filter.active, .unit-summary-filter:focus-visible { outline:2px solid var(--gold, #cbe1e0); outline-offset:2px; }
     .summary-note { margin: -4px 0 10px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
     .sum-num   { font-size: 1.65rem; font-weight: 900; line-height: 1; }
     .sum-label { font-size: 0.76rem; color: var(--muted); margin-top: 5px; }
-    .sum-card.occupied .sum-num { color: #4ade80; }
-    .sum-card.vacant   .sum-num { color: #f87171; }
-    .sum-card.forsale  .sum-num { color: #facc15; }
-    .sum-card.revenue  .sum-num { color: #93c5fd; }
-    .sum-card.own      .sum-num { color: #c4b5fd; } #commercialSummaryGrid { grid-template-columns: repeat(5, 1fr); } @media (max-width: 600px) { #commercialSummaryGrid { grid-template-columns: 1fr 1fr; } }
+    .sum-card.occupied .sum-num { color: #177a55; }
+    .sum-card.vacant   .sum-num { color: #b42318; }
+    .sum-card.forsale  .sum-num { color: #25675f; }
+    .sum-card.revenue  .sum-num { color: #234c49; }
+    .sum-card.own      .sum-num { color: #234c49; } #commercialSummaryGrid { grid-template-columns: repeat(5, 1fr); } @media (max-width: 600px) { #commercialSummaryGrid { grid-template-columns: 1fr 1fr; } }
 
     /* 층 필터 탭 */
     .floor-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
@@ -265,13 +265,13 @@
     #unitStatus .unit-head-main button, #unitStatus #unitBulkActions button, #unitStatus #unitBulkActions a { height:32px; padding:0 13px; font-size:.8rem; font-weight:700; border-radius:8px; }
     #unitStatus #btnAddUnit { height:34px; padding:0 18px; font-size:.86rem; font-weight:800; }
     #unitPriceUpload, #unitListingSend, #unitProfitRegister, #unitBundleRegister {
-      background:rgba(255,255,255,.05); color:#fff; border:1px solid rgba(255,255,255,.22); font-weight:600; }
+      background:rgba(255,255,255,.05); color:#234c49; border:1px solid #dcedec; font-weight:600; }
     #unitPriceUpload:hover, #unitListingSend:hover:not(:disabled), #unitProfitRegister:hover:not(:disabled), #unitBundleRegister:hover:not(:disabled) { background:rgba(255,255,255,.10); opacity:1; }
-    #unitListingSend:not(:disabled), #unitProfitRegister:not(:disabled), #unitBundleRegister:not(:disabled) { border-color:rgba(212,175,55,.65); color:#fff; }
+    #unitListingSend:not(:disabled), #unitProfitRegister:not(:disabled), #unitBundleRegister:not(:disabled) { border-color:rgba(37,103,95,0.35); color:#234c49; }
     #unitBulkActions button:disabled { opacity:.6; cursor:default; }
-    #unitStatus .unit-head-main .btn-unit-ghost, #unitStatus #unitBulkActions .btn-unit-ghost, #unitOrigToggle { color:#fff; border-color:rgba(255,255,255,.22); }
-    .unit-filter-bar .ftab:not(.active) { color:rgba(255,255,255,.9); }
-    #unitKindTabs .kind-move button { color:#fff; }
+    #unitStatus .unit-head-main .btn-unit-ghost, #unitStatus #unitBulkActions .btn-unit-ghost, #unitOrigToggle { color:#234c49; border-color:#dcedec; }
+    .unit-filter-bar .ftab:not(.active) { color:#234c49; }
+    #unitKindTabs .kind-move button { color:#234c49; }
     .unit-toolbar { display:flex; align-items:center; justify-content:space-between; gap:6px 12px; flex-wrap:wrap; margin:6px 0 8px; }
     .unit-toolbar #unitCounts { margin:0; flex:1 1 260px; }
     #unitOrigToggle { padding:4px 12px; font-size:.78rem; line-height:1.4; }
@@ -283,13 +283,13 @@
     #unitKindTabs .kind-move[hidden] { display:none; }
     #unitKindTabs .kind-move button { padding:3px 10px; font-size:.75rem; }
     .ftab {
-      border: 1px solid var(--border); background: rgba(5,10,30,0.65);
+      border: 1px solid var(--border); background: #ffffff;
       padding: 6px 14px; border-radius: 999px; cursor: pointer;
       font-size: 0.82rem; color: var(--muted); font-weight: 700; transition: 0.12s;
     }
     .ftab.active {
-      border-color: rgba(212,175,55,0.45); background: rgba(212,175,55,0.16);
-      color: rgba(255,255,255,0.92);
+      border-color: rgba(37,103,95,0.35); background: rgba(37,103,95,0.16);
+      color: #234c49;
     }
 
     /* 호실 테이블 */
@@ -297,34 +297,34 @@
     .units-tbl { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
     .units-tbl th {
       text-align: left; padding: 9px 12px; font-size: 0.75rem; color: var(--muted);
-      font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: rgba(0,0,0,0.15);
+      font-weight: 700; border-bottom: 1px solid #dcedec;
+      background: #f8fcfc;
     }
     .unit-current-price { display: inline-flex; align-items: center; gap: 6px; color: var(--gold); font-weight: 700; }
-    .unit-current-tag { color: var(--gold); border: 1px solid rgba(212,175,55,0.5); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; }
+    .unit-current-tag { color: var(--gold); border: 1px solid rgba(37,103,95,0.35); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; }
     .units-tbl td {
-      padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.88); vertical-align: middle;
+      padding: 10px 12px; border-bottom: 1px solid #dcedec;
+      color: #234c49; vertical-align: middle;
     }
     .units-tbl tr:last-child td { border-bottom: none; }
-    .units-tbl tr:hover td { background: rgba(212,175,55,0.04); }
+    .units-tbl tr:hover td { background: rgba(37,103,95,0.04); }
     /* 매물(수정/매물등록) 열은 표가 가로로 길어져도 항상 보이도록 오른쪽에 고정 */
     .units-tbl th:last-child, .units-tbl td:last-child {
       position: sticky; right: 0; z-index: 2;
       background: var(--panel);
-      box-shadow: -6px 0 8px -6px rgba(0,0,0,0.5);
+      box-shadow: -6px 0 8px -6px rgba(35,76,73,0.08);
     }
-    .units-tbl th:last-child { z-index: 3; background: rgba(16,31,50,0.98); }
-    .units-tbl tr:hover td:last-child { background: #16283c; }
+    .units-tbl th:last-child { z-index: 3; background: #ffffff; }
+    .units-tbl tr:hover td:last-child { background: #ffffff; }
 
     /* 상태 배지 */
     .sbadge {
       display: inline-block; padding: 3px 10px; border-radius: 999px;
       font-size: 0.74rem; font-weight: 700;
     }
-    .sbadge.임차중  { background: rgba(34,197,94,0.18);  color: #4ade80;  border: 1px solid rgba(34,197,94,0.30); }
-    .sbadge.공실   { background: rgba(239,68,68,0.18);  color: #f87171;  border: 1px solid rgba(239,68,68,0.30); }
-    .sbadge.매매가능 { background: rgba(234,179,8,0.18);  color: #facc15;  border: 1px solid rgba(234,179,8,0.30); }
+    .sbadge.임차중  { background: rgba(34,197,94,0.18);  color: #177a55;  border: 1px solid rgba(34,197,94,0.30); }
+    .sbadge.공실   { background: rgba(239,68,68,0.18);  color: #b42318;  border: 1px solid rgba(239,68,68,0.30); }
+    .sbadge.매매가능 { background: rgba(37,103,95,0.18);  color: #25675f;  border: 1px solid rgba(37,103,95,0.3); }
 
     /* 빈 상태 */
     .units-empty {
@@ -340,48 +340,48 @@
     }
     .unit-modal-overlay.open { display: flex; }
     .unit-modal-box {
-      background: linear-gradient(145deg, #0E1C34 0%, #132040 100%);
-      border: 1px solid rgba(212,175,55,0.30); border-radius: 20px;
+      background: linear-gradient(145deg, #ffffff 0%, #ffffff 100%);
+      border: 1px solid rgba(37,103,95,0.3); border-radius: 20px;
       padding: 24px; width: 100%; max-width: 620px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.7); position: relative;
+      box-shadow: 0 24px 60px rgba(35,76,73,0.08); position: relative;
     }
-    .unit-modal-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 16px; color: rgba(255,255,255,0.95); }
+    .unit-modal-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 16px; color: #234c49; }
     .unit-modal-close {
       position: absolute; top: 18px; right: 18px;
       background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer;
     }
-    .unit-modal-close:hover { color: #fff; }
+    .unit-modal-close:hover { color: #234c49; }
     /* 모달 섹션 구분 */
     .um-section { margin-bottom: 14px; border-radius: 10px; overflow: hidden; }
     .um-section-title {
       font-size: 0.78rem; font-weight: 800; letter-spacing: 0.5px;
-      color: #fff; padding: 7px 14px;
+      color: #234c49; padding: 7px 14px;
     }
     /* 분양 당시 — 파란 계열 */
-    .um-section.sale .um-section-title { background: #1a3a6e; }
-    .um-section.sale { background: rgba(26,58,110,0.18); }
+    .um-section.sale .um-section-title { background: #ffffff; }
+    .um-section.sale { background: #ffffff; }
     .um-section.sale .umgrid { padding: 10px 12px 12px; }
     /* 현재 현황 — 골드 계열 */
-    .um-section.current .um-section-title { background: #8B6914; }
-    .um-section.current { background: #0d1f3c; }
+    .um-section.current .um-section-title { background: #8B6914; ;color:#ffffff}
+    .um-section.current { background: #ffffff; }
     .um-section.current .umgrid { padding: 10px 12px 12px; }
     .um-section.current .umfield input,
     .um-section.current .umfield select,
     .um-section.current .umfield textarea {
-      border-color: rgba(201,168,76,0.45);
+      border-color: rgba(37,103,95,0.35);
     }
     .um-section.current .umfield input:focus,
     .um-section.current .umfield select:focus,
     .um-section.current .umfield textarea:focus {
-      border-color: #C9A84C;
+      border-color: #cbe1e0;
     }
     .umgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @media (max-width: 480px) { .umgrid { grid-template-columns: 1fr; } }
     .umgrid .full { grid-column: 1 / -1; }
     /* 취소 버튼 */
     .btn-unit-ghost {
-      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7);
-      border: 1px solid rgba(255,255,255,0.14); border-radius: 10px;
+      background: rgba(255,255,255,0.06); color: #234c49;
+      border: 1px solid #dcedec; border-radius: 10px;
       padding: 9px 18px; font-size: 0.88rem; cursor: pointer; font-family: inherit;
     }
     .btn-unit-ghost:hover { background: rgba(255,255,255,0.10); }
@@ -394,34 +394,34 @@
     }
     .area-arrow {
       font-size: 1rem; font-weight: 900;
-      color: #C9A84C; text-align: center; padding: 0 2px;
+      color: #25675f; text-align: center; padding: 0 2px;
     }
     .area-unit { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
-    .area-auto { color: #C9A84C !important; }  /* 자동계산값 골드 */
+    .area-auto { color: #25675f !important; }  /* 자동계산값 골드 */
     /* 실시간 한글 금액 힌트 */
     .amt-hint {
       display: block; min-height: 16px;
       font-size: 0.74rem; font-weight: 700;
-      color: #C9A84C; margin-top: 3px; letter-spacing: 0.2px;
+      color: #25675f; margin-top: 3px; letter-spacing: 0.2px;
     }
     .umfield label { display: block; font-size: 0.76rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; }
     .umfield input, .umfield select, .umfield textarea {
-      width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
+      width: 100%; background: #f8fcfc; border: 1px solid #dcedec;
       border-radius: 10px; padding: 9px 12px; font-size: 0.88rem;
-      color: rgba(255,255,255,0.92); font-family: inherit; outline: none; transition: border-color 0.15s;
+      color: #234c49; font-family: inherit; outline: none; transition: border-color 0.15s;
     }
     .umfield input:focus, .umfield select:focus, .umfield textarea:focus {
-      border-color: rgba(212,175,55,0.55);
+      border-color: rgba(37,103,95,0.35);
     }
     .umfield textarea { resize: vertical; min-height: 66px; }
-    .umfield select option { background: #0D1728; }
+    .umfield select option { background: #ffffff; }
     .umfield.umcheck { display: flex; align-items: flex-end; }
-    .umfield.umcheck label { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 0; font-size: 0.9rem; color: rgba(255,255,255,0.92); cursor: pointer; }
+    .umfield.umcheck label { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 0; font-size: 0.9rem; color: #234c49; cursor: pointer; }
     .umfield.umcheck input[type=checkbox] { width: 18px; height: 18px; padding: 0; accent-color: #C9A84C; }
     .unit-flag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; vertical-align: middle; }
-    .unit-flag.rec { background: rgba(212,175,55,0.18); color: #C9A84C; border: 1px solid rgba(212,175,55,0.45); }
-    .unit-flag.profit { background: rgba(80,200,140,0.14); color: #6fd6a1; border: 1px solid rgba(80,200,140,0.4); }
-    .unit-memo-entry { padding:10px 0; border-top:1px solid rgba(255,255,255,.12); line-height:1.6; overflow-wrap:anywhere; }
+    .unit-flag.rec { background: rgba(37,103,95,0.18); color: #25675f; border: 1px solid rgba(37,103,95,0.35); }
+    .unit-flag.profit { background: rgba(80,200,140,0.14); color: #177a55; border: 1px solid rgba(80,200,140,0.4); }
+    .unit-memo-entry { padding:10px 0; border-top:1px solid #dcedec; line-height:1.6; overflow-wrap:anywhere; }
     .unit-memo-entry time { display:block; font-size:.74rem; color:var(--muted); margin-bottom:4px; }
     .unit-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
 
@@ -441,10 +441,10 @@
     .residential-modal .area-row { margin-top:0; gap:4px; grid-template-columns:minmax(0,1fr) auto auto minmax(0,1fr) auto; }
     .residential-modal .owner-phone-row { grid-template-columns:78px minmax(100px,1fr) auto auto; align-items:center; }
     .owner-phone-row button { white-space:nowrap; padding:7px 10px; }
-    .residential-modal input[type=date] { color-scheme:dark; }
+    .residential-modal input[type=date] { color-scheme:light; }
     .unit-date-row { display:flex; align-items:center; gap:6px; }
     .unit-date-row input { flex:1; min-width:0; }
-    .unit-date-row button { flex:0 0 32px; height:32px; padding:0; font-size:1rem; color:#f3d27b; }
+    .unit-date-row button { flex:0 0 32px; height:32px; padding:0; font-size:1rem; color:#25675f; }
     .residential-modal .contract-dates { grid-column:1 / -1; display:grid; grid-template-columns:minmax(0,1fr) 100px minmax(0,1fr); gap:10px; }
     @media(max-width:620px) {
       .residential-modal .owner-phone-row { grid-template-columns:78px minmax(0,1fr) !important; }
@@ -458,7 +458,7 @@
     .residential-modal #unitAdditionalNotes .memo-actions p { display:none; }
     .residential-modal #unitMemoHistory { max-height:120px; overflow-y:auto; }
     .residential-modal #unitMemoHistory p { margin:0; }
-    .residential-modal .unit-modal-actions { position:sticky; bottom:0; z-index:1; margin-top:8px; padding:8px 0 0; background:#132040; flex-wrap:wrap; }
+    .residential-modal .unit-modal-actions { position:sticky; bottom:0; z-index:1; margin-top:8px; padding:8px 0 0; background:#ffffff; flex-wrap:wrap; }
 
 
     /* 상가 호실 모달: 세로 길이를 줄이기 위한 촘촘한 4열 배치 + 저장 버튼 하단 고정 */
@@ -487,7 +487,7 @@
     #unitModal:not(.residential-modal) #unitAdditionalNotes .memo-actions { grid-column:auto; }
     #unitModal:not(.residential-modal) #unitAdditionalNotes .memo-actions p { display:none; }
     #unitModal:not(.residential-modal) #unitMemoHistory { max-height:110px; overflow-y:auto; }
-    #unitModal:not(.residential-modal) .unit-modal-actions { position:sticky; bottom:0; z-index:2; margin-top:6px; padding:8px 0 0; background:#132040; flex-wrap:wrap; box-shadow:0 -8px 10px -6px rgba(0,0,0,.45); }
+    #unitModal:not(.residential-modal) .unit-modal-actions { position:sticky; bottom:0; z-index:2; margin-top:6px; padding:8px 0 0; background:#ffffff; flex-wrap:wrap; box-shadow:0 -8px 10px -6px rgba(35,76,73,0.08); }
     #unitModal:not(.residential-modal) .unit-modal-actions button { padding:7px 16px; }
     @media(max-width:620px) {
       #unitModal:not(.residential-modal) .um-section .umgrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -506,14 +506,14 @@
 
     /* 소형 버튼 */
     .btn-unit-edit {
-      background: rgba(212,175,55,0.10); color: #D4AF37;
-      border: 1px solid rgba(212,175,55,0.25); border-radius: 8px;
+      background: rgba(37,103,95,0.1); color: #25675f;
+      border: 1px solid rgba(37,103,95,0.25); border-radius: 8px;
       padding: 5px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.12s;
     }
-    .btn-unit-edit:hover { background: rgba(212,175,55,0.20); }
+    .btn-unit-edit:hover { background: rgba(37,103,95,0.2); }
     /* 매물 연결 버튼 */
     .btn-listing-reg {
-      background: rgba(96,165,250,0.12); color: #93c5fd;
+      background: rgba(96,165,250,0.12); color: #234c49;
       border: 1px solid rgba(96,165,250,0.28); border-radius: 8px;
       padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
       transition: 0.12s; white-space: nowrap;
@@ -521,7 +521,7 @@
     .btn-listing-reg:hover { background: rgba(96,165,250,0.22); }
     .btn-listing-view {
       display: inline-block; text-decoration: none;
-      background: rgba(34,197,94,0.12); color: #4ade80;
+      background: rgba(34,197,94,0.12); color: #177a55;
       border: 1px solid rgba(34,197,94,0.28); border-radius: 8px;
       padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
       transition: 0.12s; white-space: nowrap;
@@ -537,13 +537,13 @@
     .btn-listing-home:hover { background: rgba(168,85,247,0.22); }
     .tbl-actions { display: flex; gap: 5px; align-items: center; flex-wrap: nowrap; }
     .btn-unit-del {
-      background: rgba(239,68,68,0.20); color: #ffc2c2;
+      background: rgba(239,68,68,0.20); color: #b42318;
       border: 1px solid rgba(255,120,120,0.55); border-radius: 8px;
       padding: 5px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.12s;
     }
     .btn-unit-del:hover { background: rgba(239,68,68,0.32); }
     .btn-unit-add {
-      background: linear-gradient(135deg, #D4AF37 0%, #B8962A 100%); color: #000;
+      background: linear-gradient(135deg, #25675f 0%, #25675f 100%);color:#ffffff;
       border: none; border-radius: 10px; padding: 9px 20px;
       font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: 0.15s;
     }
@@ -552,7 +552,7 @@
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px; gap: 10px;
     }
-    .unit-sec-head h3 { margin: 0; font-size: 1rem; font-weight: 800; color: rgba(255,255,255,0.92); white-space: nowrap; }
+    .unit-sec-head h3 { margin: 0; font-size: 1rem; font-weight: 800; color: #234c49; white-space: nowrap; }
     /* 호실 현황 머리줄: 1줄 제목 + 자주 쓰는 버튼, 2줄 선택 후 쓰는 버튼(왼쪽) · 상가 전용 버튼(오른쪽 끝) */
     .unit-sec-head { flex-wrap: wrap; row-gap: 10px; }
     .unit-head-main { display: flex; gap: 8px; align-items: center; margin-left: auto; }
@@ -590,20 +590,20 @@
 .owner-customer-link, .owner-customer-link:visited {
   display:inline-flex; align-items:center; justify-content:center;
   margin:6px 8px 0 0; padding:8px 14px; border-radius:8px;
-  color:#ffe29a; background:#17263b; border:1px solid #c9a84c;
+  color:#25675f; background:#ffffff; border:1px solid #cbe1e0;
   font-size:13px; font-weight:700; text-decoration:none;
 }
-.owner-customer-link:hover { color:#fff3cc; background:#263b55; border-color:#ffe29a; }
-.owner-customer-link:focus-visible { outline:2px solid #ffe29a; outline-offset:3px; }
+.owner-customer-link:hover { color:#234c49; background:#ffffff; border-color:#cbe1e0; }
+.owner-customer-link:focus-visible { outline:2px solid #cbe1e0; outline-offset:3px; }
 </style>
 
 <style>
-.unit-sale-subtype{display:block;margin-top:4px;font-size:.72em;line-height:1.35;color:#d4af37;font-weight:600;white-space:nowrap}
+.unit-sale-subtype{display:block;margin-top:4px;font-size:.72em;line-height:1.35;color:#25675f;font-weight:600;white-space:nowrap}
 #unitPrintSheet{display:none}
 .unit-select-cell{width:34px!important;text-align:center!important}
 .unit-select-row,#unitSelectAll{width:16px;height:16px;accent-color:#d4af37;cursor:pointer}
 @page{size:A4 landscape;margin:11mm}
-@media print{body:has(#unitPrintSheet)>*:not(#unitPrintSheet){display:none!important}body:has(#unitPrintSheet){background:white!important;margin:0!important;padding:0!important}#unitPrintSheet{display:block!important;color:#111;font-family:Arial,sans-serif;font-size:9pt}#unitPrintSheet h2{font-size:14pt;margin:0 0 12px}#unitPrintSheet table{width:100%;table-layout:fixed;border-collapse:collapse}#unitPrintSheet td{white-space:pre-line}#unitPrintSheet th,#unitPrintSheet td{border:1px solid #bac3d0;padding:6px 5px;word-break:keep-all;overflow-wrap:anywhere;vertical-align:top}#unitPrintSheet th{background:#172847!important;color:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#unitPrintSheet tr{break-inside:avoid;page-break-inside:avoid}#unitPrintSheet thead{display:table-header-group}}
+@media print{body:has(#unitPrintSheet)>*:not(#unitPrintSheet){display:none!important}body:has(#unitPrintSheet){background:white!important;margin:0!important;padding:0!important}#unitPrintSheet{display:block!important;color:#111;font-family:Arial,sans-serif;font-size:9pt}#unitPrintSheet h2{font-size:14pt;margin:0 0 12px}#unitPrintSheet table{width:100%;table-layout:fixed;border-collapse:collapse}#unitPrintSheet td{white-space:pre-line}#unitPrintSheet th,#unitPrintSheet td{border:1px solid #dcedec;padding:6px 5px;word-break:keep-all;overflow-wrap:anywhere;vertical-align:top}#unitPrintSheet th{background:#ffffff!important;color:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#unitPrintSheet tr{break-inside:avoid;page-break-inside:avoid}#unitPrintSheet thead{display:table-header-group}}
 @media print{
  html,body{width:auto!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important}
  #unitPrintSheet{position:static!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;font-size:9pt!important}
@@ -631,11 +631,11 @@
 })();
 </script>
 
-<style>.units-tbl .profit-recommended-row td{background:rgba(212,175,55,.11)}.units-tbl .profit-recommended-row td:first-child{box-shadow:inset 3px 0 #d4af37}.units-tbl .profit-recommended-row:hover td{background:rgba(212,175,55,.17)}</style>
-<style>#unitModal #unitAdditionalNotes #u_추가메모{min-height:140px;height:140px;resize:vertical}.sbadge.미확인{background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.35)}</style>
+<style>.units-tbl .profit-recommended-row td{background:rgba(37,103,95,0.11)}.units-tbl .profit-recommended-row td:first-child{box-shadow:inset 3px 0 rgba(37,103,95,0.08)}.units-tbl .profit-recommended-row:hover td{background:rgba(37,103,95,0.17)}</style>
+<style>#unitModal #unitAdditionalNotes #u_추가메모{min-height:140px;height:140px;resize:vertical}.sbadge.미확인{background:rgba(148,163,184,.15);color:#234c49;border:1px solid rgba(148,163,184,.35)}</style>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#16233d;color:#e6edf7;cursor:pointer}.presale-switch button.active{background:#80651f;border-color:#d4af37;color:#fff3c2}.presale-hidden{display:none!important}</style>
-<style>.unit-phase-label{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.76rem;font-weight:700}.unit-phase-label.ongoing{color:#edcf79;background:rgba(212,175,55,.12)}.unit-phase-label.completed{color:#aebbd0;background:rgba(147,170,205,.13)}</style>
+<style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#ffffff;color:#234c49;cursor:pointer}.presale-switch button.active{background:#25675f;border-color:#cbe1e0;color:#ffffff}.presale-hidden{display:none!important}</style>
+<style>.unit-phase-label{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.76rem;font-weight:700}.unit-phase-label.ongoing{color:#25675f;background:rgba(37,103,95,0.12)}.unit-phase-label.completed{color:#aebbd0;background:rgba(147,170,205,.13)}</style>
 <style>
 /* 호실 현황 표: 매물 열 폭 고정 + 버튼 줄바꿈 (보증금·월세가 가려지지 않게) */
 .units-tbl th:last-child, .units-tbl td:last-child { width:146px; min-width:146px; max-width:146px; }
@@ -644,7 +644,7 @@
 .units-tbl td:nth-child(3) { max-width:132px; white-space:normal; word-break:keep-all; }
 .units-tbl th, .units-tbl td { padding-left:6px; padding-right:6px; }
     .ftab { position:relative; }
-    .ftab .rec-n { position:absolute; top:-6px; right:-4px; font-style:normal; font-size:10px; line-height:1; padding:2px 5px; border-radius:999px; background:#0b7a6b; color:#fff; }
+    .ftab .rec-n { position:absolute; top:-6px; right:-4px; font-style:normal; font-size:10px; line-height:1; padding:2px 5px; border-radius:999px; background:#0b7a6b;color:#ffffff; }
     /* 상가 호실 현황 표: 평수를 가장 눈에 띄게, 나머지는 중요도에 따라 굵기·색 구분 */
     .units-tbl:not(.residential-unit-table) td:nth-child(2) strong { font-size:1.05rem; font-weight:800; color:#13201f; }
     .units-tbl:not(.residential-unit-table) td:nth-child(3) { font-weight:600; color:#1f2d2c; }
@@ -656,18 +656,18 @@
     .units-tbl:not(.residential-unit-table) td:nth-child(10) { font-weight:700; color:#13201f !important; }
 </style>
 <style id="unitBundleStyle">
-.unit-flag.bundle{background:rgba(212,175,55,.18);color:#e0b84c;border:1px solid rgba(212,175,55,.45)}
-.unit-flag.sale{background:rgba(229,115,115,.2);color:#ef9a9a;border:1px solid rgba(229,115,115,.45)}
-.unit-bundle-box{margin-top:16px;padding:14px 16px;border:1px solid rgba(212,175,55,.35);border-radius:14px;background:rgba(212,175,55,.05)}
+.unit-flag.bundle{background:rgba(37,103,95,0.18);color:#25675f;border:1px solid rgba(37,103,95,0.35)}
+.unit-flag.sale{background:rgba(229,115,115,.2);color:#b42318;border:1px solid rgba(229,115,115,.45)}
+.unit-bundle-box{margin-top:16px;padding:14px 16px;border:1px solid rgba(37,103,95,0.35);border-radius:14px;background:rgba(37,103,95,0.05)}
 .unit-bundle-box[hidden]{display:none}
 .unit-bundle-box .ub-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .unit-bundle-box .ub-head strong{font-size:.95rem}
-.unit-bundle-box .ub-head .ub-cnt{color:#e0b84c;font-weight:700}
+.unit-bundle-box .ub-head .ub-cnt{color:#25675f;font-weight:700}
 .unit-bundle-box .ub-head .ub-hint{font-size:.76rem;opacity:.65}
 .unit-bundle-box table{width:100%;border-collapse:collapse;table-layout:auto}
-.unit-bundle-box th{text-align:left;padding:7px 8px;font-size:.76rem;font-weight:700;color:#e0b84c;border-bottom:1px solid rgba(255,255,255,.14)}
-.unit-bundle-box td{padding:9px 8px;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:middle}
-.unit-bundle-box td.ub-price{color:#e0b84c;font-weight:700}
+.unit-bundle-box th{text-align:left;padding:7px 8px;font-size:.76rem;font-weight:700;color:#25675f;border-bottom:1px solid #dcedec}
+.unit-bundle-box td{padding:9px 8px;font-size:.84rem;border-bottom:1px solid #dcedec;vertical-align:middle}
+.unit-bundle-box td.ub-price{color:#25675f;font-weight:700}
 .unit-bundle-box td.ub-act{text-align:right;width:1%;white-space:nowrap}
 .unit-bundle-box .ub-strike{font-size:.7rem;font-weight:400;opacity:.6;text-decoration:line-through}
 </style>
@@ -790,7 +790,7 @@
     </div>
 
     <div class="unit-toolbar">
-      <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.5;"></p><span style="font-size:.72rem;color:var(--text-muted,#9fb0c3);white-space:nowrap;margin-left:12px;" title="호실 옆 날짜는 마지막으로 수정한 날이에요">수정일 <span style="color:#66bb6a;">● 7일 이내</span> <span style="color:#ffd54f;">● 30일 이내</span> <span style="color:#78909c;">● 오래됨</span></span>
+      <p id="unitCounts" style="color:var(--gold-soft);font-size:.85rem;line-height:1.5;"></p><span style="font-size:.72rem;color:var(--text-muted,#9fb0c3);white-space:nowrap;margin-left:12px;" title="호실 옆 날짜는 마지막으로 수정한 날이에요">수정일 <span style="color:#177a55;">● 7일 이내</span> <span style="color:#25675f;">● 30일 이내</span> <span style="color:#78909c;">● 오래됨</span></span>
       <button type="button" class="btn-unit-ghost" id="unitOrigToggle" hidden>원분양가 보기</button>
     </div>
     <!-- 구분(상가/오피스텔)·층 필터 탭: 한 줄로 -->
@@ -1008,13 +1008,13 @@
 <div class="toast" id="toast"></div>
 
 <script src="assets/js/storage.js?v=20261019-commercial-unit-sync"></script><script src="assets/js/ktop-shared-view.js?v=20261107-ksv3"></script>
-<script src="assets/js/office-brand.js?v=20261006-brand-layout"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
-<script src="assets/js/building-register-view.js?v=20261007-unit-apply"></script>
+<script src="assets/js/building-register-view.js?v=20261108-white-base1"></script>
 <script>
 /* ═══════════════════════════════════════════
    Cloudinary 설정
@@ -2306,9 +2306,9 @@ async function deleteBFile(id) {
           css.textContent =
             '#unitSavedDialog{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(15,32,30,.5);visibility:visible;animation:usdFade .18s ease}' +
             '@keyframes usdFade{from{opacity:0}to{opacity:1}}@keyframes usdPop{from{transform:translateY(8px) scale(.97);opacity:0}to{transform:none;opacity:1}}' +
-            '#unitSavedDialog .usd-box{width:min(440px,96vw);background:#fff;color:#17302d;border-radius:18px;padding:22px 22px 18px;box-shadow:0 18px 50px rgba(0,0,0,.28);animation:usdPop .22s ease}' +
+            '#unitSavedDialog .usd-box{width:min(440px,96vw);background:#fff;color:#17302d;border-radius:18px;padding:22px 22px 18px;box-shadow:0 18px 50px rgba(35,76,73,0.08);animation:usdPop .22s ease}' +
             '#unitSavedDialog .usd-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}' +
-            '#unitSavedDialog .usd-badge{flex:none;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#19c3b0,#0b7a6b);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(11,122,107,.35)}' +
+            '#unitSavedDialog .usd-badge{flex:none;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#19c3b0,#0b7a6b);color:#234c49;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(35,76,73,0.08)}' +
             '#unitSavedDialog .usd-title{font-size:17px;font-weight:800;line-height:1.2}' +
             '#unitSavedDialog .usd-sub{font-size:12.5px;color:#6b7b79;margin-top:2px}' +
             '#unitSavedDialog .usd-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;background:#f3f9f8;margin-bottom:8px;font-size:14px}' +
@@ -2321,17 +2321,17 @@ async function deleteBFile(id) {
             '#unitSavedDialog .usd-toggle:hover{background:#e6f5f2;transform:translateY(-1px)}#unitSavedDialog .usd-toggle.off:hover{background:#ecefef}' +
             '#unitSavedDialog .usd-toggle:focus-visible{outline:3px solid rgba(25,195,176,.45);outline-offset:2px}#unitSavedDialog .usd-toggle[disabled]{opacity:.6;cursor:wait;transform:none}' +
             '#unitSavedDialog .usd-switch{flex:none;width:42px;height:24px;border-radius:999px;background:#c9d2d1;position:relative;transition:background .2s}' +
-            '#unitSavedDialog .usd-switch i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}' +
+            '#unitSavedDialog .usd-switch i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(35,76,73,0.08);transition:left .2s}' +
             '#unitSavedDialog .usd-switch.on{background:linear-gradient(135deg,#19c3b0,#0b7a6b)}#unitSavedDialog .usd-switch.on i{left:21px}' +
             '#unitSavedDialog .usd-row.warn{background:#fff3f1;color:#8a2c22;flex-wrap:wrap}' +
             '#unitSavedDialog .usd-mini{appearance:none;border:1px solid #e7b9b3;background:#fff;color:#8a2c22;border-radius:999px;padding:5px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}' +
-            '#unitSavedDialog .usd-mini.danger{border:0;background:#d9534f;color:#fff}' +
+            '#unitSavedDialog .usd-mini.danger{border:0;background:#d9534f;color:#234c49' +
             '#unitSavedDialog .usd-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}' +
-            '#unitSavedDialog .usd-btn{appearance:none;border:1px solid #cfe0dd;background:#fff;color:#2a4a46;border-radius:999px;padding:9px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}' +
+            '#unitSavedDialog .usd-btn{appearance:none;border:1px solid #dcedec;background:#fff;color:#2a4a46;border-radius:999px;padding:9px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}' +
             '#unitSavedDialog .usd-btn:hover{background:#f1f8f7;transform:translateY(-1px)}' +
             '#unitSavedDialog .usd-btn.sub{border-color:#9fd8d0;color:#0b7a6b;background:#effaf8}' +
-            '#unitSavedDialog .usd-btn.main{border:0;color:#fff;background:linear-gradient(135deg,#19c3b0,#0b7a6b);box-shadow:0 6px 16px rgba(11,122,107,.32)}' +
-            '#unitSavedDialog .usd-btn.main:hover{box-shadow:0 8px 20px rgba(11,122,107,.42);background:linear-gradient(135deg,#1bd0bc,#0d8776)}' +
+            '#unitSavedDialog .usd-btn.main{border:0;color:#234c49;background:linear-gradient(135deg,#19c3b0,#0b7a6b);box-shadow:0 6px 16px rgba(35,76,73,0.08)}' +
+            '#unitSavedDialog .usd-btn.main:hover{box-shadow:0 8px 20px rgba(35,76,73,0.08);background:linear-gradient(135deg,#1bd0bc,#0d8776)}' +
             '#unitSavedDialog .usd-btn:active{transform:translateY(0)}' +
             '#unitSavedDialog .usd-btn:focus-visible{outline:3px solid rgba(25,195,176,.45);outline-offset:2px}' +
             '.unit-saved-flash{animation:usdFlash 2.4s ease 2}@keyframes usdFlash{0%,100%{background:transparent}30%{background:#fff3b8}}';
@@ -2404,7 +2404,7 @@ async function deleteBFile(id) {
             setTimeout(() => {
               const d = document.createElement('div');
               d.textContent = '이 탭을 닫아 주세요.';
-              d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#0b1a2a;color:#fff;visibility:visible';
+              d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#234c49;visibility:visible';
               document.body.appendChild(d);
             }, 400);
           }
@@ -2434,8 +2434,8 @@ async function deleteBFile(id) {
           if (document.getElementById('unitOnlyDone')) return;
           const d = document.createElement('div');
           d.id = 'unitOnlyDone';
-          d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b1a2a;color:#fff;font-size:1.05rem;visibility:visible;';
-          d.innerHTML = '<div>호실 정보 창을 닫았습니다. 이 탭을 닫아 주세요.</div><button type="button" style="padding:8px 18px;border-radius:8px;border:1px solid #e0b84c;background:transparent;color:#e0b84c;cursor:pointer;" onclick="window.close()">탭 닫기</button>';
+          d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#ffffff;color:#234c49;font-size:1.05rem;visibility:visible;';
+          d.innerHTML = '<div>호실 정보 창을 닫았습니다. 이 탭을 닫아 주세요.</div><button type="button" style="padding:8px 18px;border-radius:8px;border:1px solid #dcedec;background:transparent;color:#25675f;cursor:pointer;" onclick="window.close()">탭 닫기</button>';
           document.body.appendChild(d);
         }, 400);
       };
@@ -2934,7 +2934,7 @@ async function deleteBFile(id) {
     $("u_분양_m2").value  = u.분양_평 ? (parseFloat(u.분양_평) * 3.30579).toFixed(2) : "";
     // m² 자동계산 색 표시
     [$("u_전용_m2"), $("u_분양_m2")].forEach(el => {
-      if (el) el.style.color = el.value ? "#C9A84C" : "";
+      if (el) el.style.color = el.value ? "#25675f" : "";
     });
     $("u_평당가").value   = u.평당가    || "";
     $("u_분양금액").value = u.분양금액  || "";
@@ -3320,7 +3320,7 @@ async function deleteBFile(id) {
       const v = parseFloat(pyEl.value);
       if (!isNaN(v) && v > 0) {
         m2El.value = (v * PY_TO_M2).toFixed(2);
-        m2El.style.color = "#C9A84C";
+        m2El.style.color = "#25675f";
       } else {
         m2El.value = "";
         m2El.style.color = "";
@@ -3330,7 +3330,7 @@ async function deleteBFile(id) {
       const v = parseFloat(m2El.value);
       if (!isNaN(v) && v > 0) {
         pyEl.value = (v / PY_TO_M2).toFixed(2);
-        m2El.style.color = "#C9A84C";
+        m2El.style.color = "#25675f";
       } else {
         pyEl.value = "";
         m2El.style.color = "";
@@ -3466,11 +3466,11 @@ async function deleteBFile(id) {
 
 })();
 </script>
-<script src="assets/js/price-room-import.js?v=20261027-latest-only"></script>
+<script src="assets/js/price-room-import.js?v=20261108-white-base1"></script>
 <script src="assets/js/building-records.js?v=20261107-zoom3"></script>
 <script src="assets/js/building-sales-contact.js?v=20261107-contact3"></script>
 <script src="assets/js/unit-guide-print.js?v=20261107-guide8"></script>
-<style id="units-shadow-fix">.units-tbl th:last-child,.units-tbl td:last-child{box-shadow:none!important}.units-wrap.has-scroll .units-tbl td:last-child,.units-wrap.has-scroll .units-tbl th:last-child{box-shadow:-6px 0 8px -6px rgba(0,0,0,.28)!important}</style>
+<style id="units-shadow-fix">.units-tbl th:last-child,.units-tbl td:last-child{box-shadow:none!important}.units-wrap.has-scroll .units-tbl td:last-child,.units-wrap.has-scroll .units-tbl th:last-child{box-shadow:-6px 0 8px -6px rgba(35,76,73,0.08)!important}</style>
 <script>(function(){var w=document.querySelector('.units-wrap');if(!w)return;var t=w.querySelector('.units-tbl')||w;function u(){w.classList.toggle('has-scroll',w.scrollWidth>w.clientWidth+1)}addEventListener('resize',u);if(window.ResizeObserver){var ro=new ResizeObserver(u);ro.observe(w);ro.observe(t)}u()})();</script>
 <script src="assets/js/unit-promo-check.js?v=20261105-up3"></script>
 </body>

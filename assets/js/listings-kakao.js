@@ -108,7 +108,7 @@
       counts.all++;
       counts[p.key] = (counts[p.key] || 0) + 1;
     });
-    var list = [{ key: 'all', label: '전체매물', color: '#e5bf35' }].concat(Core.CATEGORIES);
+    var list = [{ key: 'all', label: '전체매물', color: '#25675f' }].concat(Core.CATEGORIES);
     list.forEach(function (c) {
       var btn = el('button', 'btn');
       btn.type = 'button';

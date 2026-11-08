@@ -719,7 +719,7 @@
       page.innerHTML = `
         <div class="est-banner">
           <div class="est-banner-top">
-            <div class="est-brand">${logoSvg('#e6cd8e', '#c9a24a', 30)}<div><span class="kr">${esc(officeCompanyName)}</span><span class="en">Haitop Realty</span></div></div>
+            <div class="est-brand">${logoSvg('#25675f', '#25675f', 30)}<div><span class="kr">${esc(officeCompanyName)}</span><span class="en">Haitop Realty</span></div></div>
             <div class="est-date">작성일자 <b>${dateStr}</b></div>
           </div>
           <h2>매 &nbsp; 물 &nbsp; 안 &nbsp; 내 &nbsp; 서</h2>
@@ -738,7 +738,7 @@
         <table class="est-tbl"><thead><tr>${loan ? '<th>항목</th><th>대출 (O)</th><th>대출 (X)</th>' : '<th>항목</th><th>내용</th>'}</tr></thead><tbody>${rows.join('')}</tbody></table>
         <div class="est-note">${loan && canCalc ? '※ <strong>취득세 (4.6%)</strong> : ' + eok(Math.round(p0 * 0.046)) + ' — 부가세 발생 여부 및 건물/토지 비율에 따라 변동될 수 있습니다.<br>' : ''}※ 금액은 만원 단위 입력값 기준이며, 수익률은 연수익금 ÷ 실투자금으로 계산한 단순수익률(취득세·세금·부가세 제외)로 참고용입니다. 가격·임대 조건·공실 여부(${esc(u.공실여부 || '-')})는 변동될 수 있으니 계약 전 반드시 현장과 서류로 확인하시기 바랍니다.</div>
         <div class="est-foot">
-          <div class="ef-left">${logoSvg('#c9a24a', '#12244a', 26)}<div>
+          <div class="ef-left">${logoSvg('#25675f', '#12244a', 26)}<div>
             <div class="fc">${ktop ? esc(officeCompanyName) : '하이탑부동산공인중개사사무소'}</div>
             ${ktop ? '' : '<div class="fp">대표: 주현희 &nbsp;|&nbsp; 경기도 파주시 책향기로 830, 1층<br>사업자등록번호 305-48-62183 &nbsp;|&nbsp; 중개사무소 등록번호 41480-2016-00026<br>newpajucity@naver.com</div>'}
           </div></div>
