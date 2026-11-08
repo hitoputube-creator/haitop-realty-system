@@ -636,12 +636,12 @@ input[type=file].hidden-file { display:none; }
 <script>
 /* 케이탑 하단 정보 박스. 값이 있는 항목만 표시합니다. */
 (function () {
-  var KTOP_INFO = { phone: '', rep: '', fax: '', addr: '', reg: '', biz: '', email: '' };
+  var KTOP_INFO = { name: '케이탑부동산', phone: '031-943-8000', rep: '주세진', fax: '', addr: '경기 파주시 양지로 112 단지내상가 108', reg: '', biz: '527-75-00406', email: 'k-top1@naver.com' };
   if (typeof OfficeConfig === 'undefined' || OfficeConfig.id !== 'ktop') return;
   var box = document.getElementById('contact-area-ktop');
   if (!box) return;
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  document.getElementById('ktopCompanyName').textContent = typeof officeCompanyName !== 'undefined' ? officeCompanyName : 'KTOP부동산';
+  document.getElementById('ktopCompanyName').textContent = KTOP_INFO.name || (typeof officeCompanyName !== 'undefined' ? officeCompanyName : 'KTOP부동산');
   document.getElementById('ktopCompanyPhone').textContent = KTOP_INFO.phone ? 'T. ' + KTOP_INFO.phone : '';
   var rows = [['대표', KTOP_INFO.rep], ['팩스', KTOP_INFO.fax], ['주소', KTOP_INFO.addr], ['등록번호', KTOP_INFO.reg], ['사업자번호', KTOP_INFO.biz], ['이메일', KTOP_INFO.email]]
     .filter(function (r) { return r[1]; });
