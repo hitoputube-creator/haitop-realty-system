@@ -1,4 +1,4 @@
-:root { --navy:#ffffff; --navy2:#ffffff; --navy3:#ffffff; --line:#dcedec; --gold:#25675f; --text:#234c49; --muted:#234c49; --green:#177a55; --red:#b42318; }
+:root { --navy:#ffffff; --navy2:#ffffff; --navy3:#ffffff; --line:#779a94; --gold:#25675f; --text:#234c49; --muted:#234c49; --green:#177a55; --red:#b42318; }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--navy); color:var(--text); font-family:Pretendard,system-ui,sans-serif; }
 .shop-page { max-width:1500px; margin:auto; padding:14px 16px 40px; }
@@ -6,7 +6,7 @@ body { margin:0; background:var(--navy); color:var(--text); font-family:Pretenda
 .shop-header h1 { margin:0; font-size:1.3rem; }
 .shop-header p { margin:2px 0 0; color:var(--muted); font-size:.85rem; }
 .shop-nav, .shop-tools { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
-.shop-btn { border:1px solid rgba(37,103,95,0.35); border-radius:8px; padding:8px 12px; background:var(--navy3); color:var(--text);
+.shop-btn { border:1px solid rgba(37,103,95,0.5); border-radius:8px; padding:8px 12px; background:var(--navy3); color:var(--text);
   font:inherit; font-size:.85rem; cursor:pointer; text-decoration:none; }
 .shop-btn:hover, .shop-btn:focus-visible { border-color:var(--gold); background:#ffffff; }
 .shop-btn.primary { background:#25675f;color:#ffffff; font-weight:700; }
@@ -20,7 +20,7 @@ body { margin:0; background:var(--navy); color:var(--text); font-family:Pretenda
 .shop-legend { color:var(--muted); font-size:.78rem; display:flex; align-items:center; gap:6px; }
 .dot { display:inline-block; width:10px; height:10px; border-radius:50%; }
 .dot.vacant { background:var(--red); } .dot.full { background:var(--green); } .dot.none { background:#8a97ab; ;color:#ffffff}
-select, input, textarea { border:1px solid #dcedec; border-radius:7px; padding:8px; background:var(--navy3); color:#234c49; font:inherit; font-size:.88rem; min-width:0; width:100%; }
+select, input, textarea { border:1px solid #779a94; border-radius:7px; padding:8px; background:var(--navy3); color:#234c49; font:inherit; font-size:.88rem; min-width:0; width:100%; }
 .shop-tools select { width:auto; max-width:200px; }
 .map-scroll { overflow:auto; max-height:70vh; border-radius:10px; border:1px solid var(--line); touch-action:pan-x pan-y; }
 .map-stage { position:relative; width:100%; line-height:0; }
@@ -31,7 +31,7 @@ select, input, textarea { border:1px solid #dcedec; border-radius:7px; padding:8
 .map-pins { position:absolute; inset:0; pointer-events:none; z-index:2; }
 .bpin { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; border:2px solid currentColor; border-radius:8px; padding:3px 6px;
   background:#ffffff; color:var(--green); font:inherit; font-size:12px; line-height:1.25; cursor:pointer; max-width:120px; text-align:center; }
-.bpin.vacant { color:var(--red); } .bpin.none { color:#8a97ab; } .bpin.selected { outline:2px solid #dcedec; z-index:2; }
+.bpin.vacant { color:var(--red); } .bpin.none { color:#8a97ab; } .bpin.selected { outline:2px solid #779a94; z-index:2; }
 .bpin span { display:block; color:#234c49; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:108px; }
 .filter-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px; }
 .filter-grid label, .unit-form label { display:grid; gap:4px; color:var(--muted); font-size:.78rem; }
@@ -40,7 +40,7 @@ select, input, textarea { border:1px solid #dcedec; border-radius:7px; padding:8
 .table-scroll { overflow:auto; max-height:65vh; border:1px solid var(--line); border-radius:10px; }
 .result-table { width:100%; border-collapse:collapse; font-size:.84rem; min-width:760px; }
 .result-table th { position:sticky; top:0; background:#ffffff; color:var(--gold); text-align:left; padding:8px; white-space:nowrap; }
-.result-table td { padding:8px; border-top:1px solid #dcedec; vertical-align:top; }
+.result-table td { padding:8px; border-top:1px solid #779a94; vertical-align:top; }
 .result-table tbody tr { cursor:pointer; }
 .result-table tbody tr:hover { background:#ffffff; }
 .tag { display:inline-block; padding:1px 7px; border-radius:20px; font-size:.75rem; border:1px solid currentColor; }

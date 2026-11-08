@@ -806,7 +806,7 @@ function updateNaverSummaryBar() {
   st.textContent = "#naverSummaryBar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0;padding:10px 14px;background:#e8f7ee;border:1px solid #9dd9ad;border-radius:10px;font-size:.92rem}" +
     "#naverSummaryBar[hidden]{display:none}#naverSummaryBar .naver-total{color:#1b6e2e}#naverSummaryBar .naver-sep{color:#9a9a9a}" +
     "#naverSummaryBar .naver-chip{margin:0;background:#fff;border:1px solid #9dd9ad;border-radius:999px;padding:4px 12px;color:#222;cursor:pointer;font:inherit}" +
-    "#naverSummaryBar .naver-chip.zero{color:#999;border-color:#dcedec}#naverSummaryBar .naver-chip.active{background:#1b8a3a;border-color:#1b8a3a;color:#ffffff}#naverSummaryBar .naver-chip:disabled{cursor:default}#naverSummaryBar .naver-stale{border-color:#e0a95a;color:#8a5200;margin-left:auto}#naverSummaryBar .naver-stale.active{background:#c77a00;border-color:#c77a00;color:#ffffff}";
+    "#naverSummaryBar .naver-chip.zero{color:#999;border-color:#779a94}#naverSummaryBar .naver-chip.active{background:#1b8a3a;border-color:#1b8a3a;color:#ffffff}#naverSummaryBar .naver-chip:disabled{cursor:default}#naverSummaryBar .naver-stale{border-color:#e0a95a;color:#8a5200;margin-left:auto}#naverSummaryBar .naver-stale.active{background:#c77a00;border-color:#c77a00;color:#ffffff}";
   document.head.appendChild(st);
   const bar = document.createElement("div");
   bar.id = "naverSummaryBar";
@@ -1495,9 +1495,9 @@ function presaleOpenSpecial(b) {
   const d = document.createElement("div");
   d.id = "presaleSpecialDlg";
   d.style.cssText = "position:fixed;inset:0;z-index:9999;background:#f8fcfc;display:flex;align-items:center;justify-content:center;";
-  const inp = "width:100%;box-sizing:border-box;height:34px;padding:0 10px;border-radius:8px;border:1px solid #dcedec;background:#ffffff;color:#234c49;font-size:.9rem;";
+  const inp = "width:100%;box-sizing:border-box;height:34px;padding:0 10px;border-radius:8px;border:1px solid #779a94;background:#ffffff;color:#234c49;font-size:.9rem;";
   const lab = "display:block;font-size:.78rem;color:#9fb3c8;margin:10px 0 4px;";
-  d.innerHTML = '<div style="width:min(460px,92vw);max-height:90vh;overflow:auto;background:#ffffff;border:1px solid #dcedec;border-radius:14px;padding:20px;color:#234c49;">' +
+  d.innerHTML = '<div style="width:min(460px,92vw);max-height:90vh;overflow:auto;background:#ffffff;border:1px solid #779a94;border-radius:14px;padding:20px;color:#234c49;">' +
     '<div style="font-weight:700;color:#25675f;">특별가 입력 · ' + b.building + ' ' + b.hoLabel + '</div>' +
     '<div style="font-size:.76rem;color:#9fb3c8;margin-top:4px;">호실 합계: 분양 ' + presaleWon(b.sums.amt) + ' · 보증금 ' + presaleMan(b.sums.dep) + ' · 월세 ' + presaleMan(b.sums.rent) + '</div>' +
     '<label style="' + lab + '">할인분양가 (원)</label><input id="spDisc" type="number" style="' + inp + '" value="' + won(sp0.할인가) + '">' +
@@ -1552,7 +1552,7 @@ function presaleRenderBundlePanel() {
   const bundles = presaleBuildBundles().filter(b => !bf || b.building === bf);
   if (!currentPresaleMode || !presaleMajorAllowed() || !bundles.length) { box.style.display = "none"; return; }
   box.style.display = "";
-  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#25675f;font-size:.78rem;border-bottom:1px solid var(--border-slate,#dcedec);white-space:nowrap;";
+  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#25675f;font-size:.78rem;border-bottom:1px solid var(--border-slate,#779a94);white-space:nowrap;";
   const td = "padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.84rem;white-space:nowrap;";
   const head = ["건물", "호수", "업종", "분양금액", "임대현황", "보증금 / 월세", "수익률", "표시", ""].map(h => '<th style="' + thS + '">' + h + '</th>').join("");
   const body = bundles.map((b, i) => {
@@ -1588,8 +1588,8 @@ function updatePresaleTbody() {
   presaleRenderBundlePanel();
 }
 function buildPresaleFrame(panel, all) {
-  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#25675f;font-size:.78rem;border-bottom:1px solid var(--border-slate,#dcedec);white-space:nowrap;cursor:pointer;user-select:none;";
-  const inS = "width:100%;min-width:60px;height:28px;box-sizing:border-box;padding:0 6px;font-size:.76rem;border-radius:6px;border:1px solid var(--border-slate,#dcedec);background:#ffffff;color:#234c49;";
+  const thS = "text-align:left;padding:8px 10px;font-weight:600;color:#25675f;font-size:.78rem;border-bottom:1px solid var(--border-slate,#779a94);white-space:nowrap;cursor:pointer;user-select:none;";
+  const inS = "width:100%;min-width:60px;height:28px;box-sizing:border-box;padding:0 6px;font-size:.76rem;border-radius:6px;border:1px solid var(--border-slate,#779a94);background:#ffffff;color:#234c49;";
   const cols = [["", ""], ["building", "건물"], ["ho", "호수"], ["biz", "업종"], ["price", "분양금액"], ["vac", "임대현황"], ["", "보증금 / 월세"], ["yield", "수익률"], ["", "표시"], ["", ""]];
   const buildings = Array.from(new Set(all.map(r => r.building))).sort();
   const opt = (v, l) => '<option value="' + v + '">' + l + '</option>';
@@ -1608,7 +1608,7 @@ function buildPresaleFrame(panel, all) {
   panel.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;"><strong style="font-size:.95rem;">자료실 분양중 호실</strong><span id="presaleCount" style="color:#25675f;font-weight:600;"></span><span style="font-size:.76rem;color:var(--text-muted);">매물관리 반영 없이 자료실 기준 · 제목을 누르면 정렬</span><span style="margin-left:auto;display:flex;gap:8px;align-items:center;"><button type="button" id="presaleBundleBtn" class="btn btn-ghost" style="padding:3px 10px;font-size:.76rem;">선택 묶기</button></span></div>' +
     '<div style="overflow:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>' +
     cols.map(([k, l]) => k ? '<th data-key="' + k + '" data-label="' + l + '" style="' + thS + '">' + l + '</th>' : '<th style="' + thS + 'cursor:default;">' + l + '</th>').join("") +
-    '</tr><tr>' + filterCells.map(c => '<td style="padding:4px 6px;border-bottom:1px solid var(--border-slate,#dcedec);">' + c + '</td>').join("") + '</tr></thead><tbody id="presaleTbody"></tbody></table></div>';
+    '</tr><tr>' + filterCells.map(c => '<td style="padding:4px 6px;border-bottom:1px solid var(--border-slate,#779a94);">' + c + '</td>').join("") + '</tr></thead><tbody id="presaleTbody"></tbody></table></div>';
   panel.querySelectorAll("th[data-key]").forEach(th => th.addEventListener("click", () => {
     const k = th.dataset.key;
     if (presaleSort.key === k) { if (presaleSort.dir > 0) presaleSort.dir = -1; else presaleSort = { key: "", dir: 1 }; } else presaleSort = { key: k, dir: 1 };
@@ -1646,7 +1646,7 @@ async function renderPresaleUnitPanel() {
     if (!anchor) return;
     panel = document.createElement("div");
     panel.id = "presaleUnitPanel";
-    panel.style.cssText = "margin:14px 0;padding:14px 16px;border:1px solid var(--border-slate,#dcedec);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));";
+    panel.style.cssText = "margin:14px 0;padding:14px 16px;border:1px solid var(--border-slate,#779a94);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));";
     const host = anchor.closest("section, .card, .filter-panel") || anchor.parentElement;
     host.parentElement.insertBefore(panel, host.nextSibling);
   }

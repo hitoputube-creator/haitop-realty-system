@@ -35,7 +35,7 @@
 table{
   width:100%; border-collapse:collapse;
   background:#ffffff;
-  border:1px solid rgba(37,103,95,0.15);
+  border:1px solid rgba(37,103,95,0.5);
   border-radius:14px; overflow:hidden;
 }
 thead th{
@@ -43,12 +43,12 @@ thead th{
   color:#25675f;
   padding:11px 12px;
   background:rgba(37,103,95,0.06);
-  border-bottom:1px solid rgba(37,103,95,0.15);
+  border-bottom:1px solid rgba(37,103,95,0.5);
   letter-spacing:0.3px; text-transform:uppercase;
 }
 tbody td{
   padding:11px 12px;
-  border-bottom:1px solid #dcedec;
+  border-bottom:1px solid #779a94;
   vertical-align:middle; font-size:0.9rem;
   color:#234c49;
 }

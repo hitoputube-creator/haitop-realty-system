@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20261108-white-base1" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20261108-white-border1" />
   <script src="assets/js/storage.js?v=20261027-registry-addr"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
@@ -36,7 +36,7 @@
 .apartment-listing-form .apt-more>summary{cursor:pointer;color:#25675f;font-size:.85rem}
 .apartment-listing-form .apt-more>.um-section{margin:10px -14px 0}
 .apartment-listing-form .price-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
-.homepage-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:transparent;border:1px dashed rgba(37,103,95,0.35);border-radius:10px;padding:12px 14px;color:var(--text-main,inherit);font-size:.92rem;font-weight:700;cursor:pointer}
+.homepage-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:transparent;border:1px dashed rgba(37,103,95,0.5);border-radius:10px;padding:12px 14px;color:var(--text-main,inherit);font-size:.92rem;font-weight:700;cursor:pointer}
 .homepage-toggle-hint{font-size:.78rem;font-weight:400;color:var(--text-muted)}
 @media(max-width:650px){.apartment-listing-form .apt-picker-row{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:650px){.apartment-listing-form .umgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.apartment-listing-form .span-3{grid-column:span 2}.apartment-listing-form .price-grid-5{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -81,7 +81,7 @@
 })();
 </script>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261108-white-base1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261108-white-border1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -91,8 +91,8 @@
 @media(max-width:650px){.apartment-listing-form .owner-phone-row {grid-template-columns:1fr;}}
 #owner_memo,#edit_owner_memo {min-height:110px;resize:vertical;}
 html[data-office-theme="ktop"] #apartmentListingForm .um-section,
-html[data-office-theme="ktop"] #edit_apartmentListingForm .um-section {background:#fff;border-color:#dcedec;}
-html[data-office-theme="ktop"] .apartment-listing-form .um-section-title {background:#e7effb;color:#234c49;border-bottom:1px solid #dcedec;}
+html[data-office-theme="ktop"] #edit_apartmentListingForm .um-section {background:#fff;border-color:#779a94;}
+html[data-office-theme="ktop"] .apartment-listing-form .um-section-title {background:#e7effb;color:#234c49;border-bottom:1px solid #779a94;}
 html[data-office-theme="ktop"] .apartment-listing-form .sale .um-section-title {background:#dce9fa;color:#234c49;}
 html[data-office-theme="ktop"] .apartment-listing-form label {color:#234c49;font-weight:600;}
 html[data-office-theme="ktop"] .apartment-listing-form input,
@@ -158,7 +158,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
     <a class="btn btn-ghost back-to-properties" href="properties.html">← 매물관리로 돌아가기</a>
     <h1 id="registerPageTitle" class="page-title" style="margin:0;">📝 상세저장 — 매물 등록</h1>
   </div>
-  <div id="registerPageIntro" style="font-size:0.82rem;color:#25675f;margin-bottom:16px;padding:10px 14px;background:rgba(37,103,95,0.06);border:1px solid rgba(37,103,95,0.2);border-radius:10px;">
+  <div id="registerPageIntro" style="font-size:0.82rem;color:#25675f;margin-bottom:16px;padding:10px 14px;background:rgba(37,103,95,0.06);border:1px solid rgba(37,103,95,0.5);border-radius:10px;">
     매물 정보를 등록해주세요. 홈페이지에 올릴 매물은 맨 아래 「홈페이지 등록」을 체크해 입력하세요.
   </div>
   <!-- 빠른저장 전환 참고 정보 (sessionStorage 데이터가 있을 때만 표시) -->
@@ -381,7 +381,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
 
   </div><!-- nonApartmentFields -->
   <!-- ⑦ 내부전용 -->
-  <section class="card" style="border-top:3px solid #cbe1e0;background:var(--bg-card);">
+  <section class="card" style="border-top:3px solid #5f8780;background:var(--bg-card);">
     <div class="card-title"><span>🔒 내부전용</span></div>
     <div class="form-grid-3">
       <div class="field" style="grid-column:1 / -1;margin-bottom:0;">
@@ -529,7 +529,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
 </div>
 <div id="toast"></div>
 
-<script src="assets/js/register-picker.js?v=20261108-white-base1"></script>
+<script src="assets/js/register-picker.js?v=20261108-white-border1"></script>
 <script src="assets/js/kakao-config.js"></script>
 <script src="assets/js/road-address.js"></script>
 <script>

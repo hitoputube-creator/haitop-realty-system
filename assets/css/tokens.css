@@ -3,12 +3,12 @@
 :root {
   color-scheme: light;
   --bg:#ffffff; --bg2:#ffffff; --panel:#ffffff; --panel2:#f8fcfc;
-  --card:#ffffff; --card2:#edf9f8; --line:#e0efee; --line2:#cbe1e0;
+  --card:#ffffff; --card2:#edf9f8; --line:#779a94; --line2:#5f8780;
   --txt:#234c49; --sub:#618684; --muted:#668c89;
   --gold:#25675f; --gold2:#eef8f7; --blue:#34867c; --blue2:#eaf8f7;
   --danger:#b42318; --bg-main:#ffffff; --bg-card:#ffffff; --bg-soft:#f8fcfc;
   --surface:#ffffff; --surface2:#f8fcfc; --text:#234c49; --text-main:#234c49;
   --text-muted:#618684; --gold-soft:#25675f; --gold-light:#34867c;
-  --gold-dim:#eef8f7; --border:#dcedec; --border-soft:#e2f0f0;
-  --border-slate:#cbe1e0; --red:#b42318; --green:#177a55; --radius:14px;
+  --gold-dim:#eef8f7; --border:#779a94; --border-soft:#9bb9b4;
+  --border-slate:#5f8780; --red:#b42318; --green:#177a55; --radius:14px;
 }

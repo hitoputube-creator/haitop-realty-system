@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>하이탑부동산 | 건물별 층 현황</title>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-base1" />
+  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-border1" />
   <style>
     body { margin:0; background:#ffffff; color:#234c49; }
     main { max-width:1380px; margin:auto; padding:24px; }
@@ -13,12 +13,12 @@
     h1 { margin:0; font-size:1.5rem; } p { color:#234c49; }
     header p { margin:5px 0 0; }
     .nav { display:flex; gap:9px; flex-wrap:wrap; }
-    .nav a, .card a { color:#234c49; border:1px solid #cbe1e0; border-radius:8px; padding:9px 14px; text-decoration:none; }
-    .nav a:hover, .card:hover { border-color:#cbe1e0; background:#ffffff; }
-    .floor-picker { display:flex; align-items:center; gap:8px; margin:0 0 14px; flex-wrap:wrap; } .floor-picker label + select { margin-right:12px; } .floor-picker label { white-space:nowrap; } .floor-picker input[type=search] { padding:8px 12px; border:1px solid #dcedec; border-radius:7px; background:#ffffff; color:#234c49; font:inherit; min-width:220px; width:auto; } .floor-picker select { width:auto; min-width:180px; flex:0 0 auto; }
-    .floor-picker select { padding:8px 12px; border:1px solid #dcedec; border-radius:7px; background:#ffffff; color:#234c49; font:inherit; }
+    .nav a, .card a { color:#234c49; border:1px solid #5f8780; border-radius:8px; padding:9px 14px; text-decoration:none; }
+    .nav a:hover, .card:hover { border-color:#5f8780; background:#ffffff; }
+    .floor-picker { display:flex; align-items:center; gap:8px; margin:0 0 14px; flex-wrap:wrap; } .floor-picker label + select { margin-right:12px; } .floor-picker label { white-space:nowrap; } .floor-picker input[type=search] { padding:8px 12px; border:1px solid #779a94; border-radius:7px; background:#ffffff; color:#234c49; font:inherit; min-width:220px; width:auto; } .floor-picker select { width:auto; min-width:180px; flex:0 0 auto; }
+    .floor-picker select { padding:8px 12px; border:1px solid #779a94; border-radius:7px; background:#ffffff; color:#234c49; font:inherit; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
-    .card { background:#ffffff; border:1px solid #dcedec; border-radius:12px; overflow:hidden; transition:background .15s,border-color .15s; }
+    .card { background:#ffffff; border:1px solid #779a94; border-radius:12px; overflow:hidden; transition:background .15s,border-color .15s; }
     .card > a { display:block; padding:0; border:0; border-radius:0; height:100%; }
     .card img { width:100%; height:180px; object-fit:contain; background:#e9edf1; display:block; }
     .card .body { padding:14px; }
@@ -40,7 +40,7 @@
     <div id="buildingGrid" class="grid"></div>
   </main>
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>

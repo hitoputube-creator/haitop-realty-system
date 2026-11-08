@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>하이탑부동산 | 전체 고객관리</title>
-  <link rel="stylesheet" href="assets/css/style.css?v=20261108-white-base1">
+  <link rel="stylesheet" href="assets/css/style.css?v=20261108-white-border1">
   <script src="assets/js/storage.js?v=20261008-status-portfolio"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
@@ -95,7 +95,7 @@
 @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:minmax(0,1.55fr) minmax(0,1.1fr) minmax(0,1.2fr) 105px 122px}}
 </style><style>
 .cust-row .cust-cell-actions{width:134px}
-.cust-row .cust-cell-actions .cust-act-register{flex-basis:50px;width:50px;font-size:.7rem;color:var(--gold-soft);background:rgba(37,103,95,0.08);border-color:rgba(37,103,95,0.28)}
+.cust-row .cust-cell-actions .cust-act-register{flex-basis:50px;width:50px;font-size:.7rem;color:var(--gold-soft);background:rgba(37,103,95,0.08);border-color:rgba(37,103,95,0.5)}
 @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:minmax(0,1.55fr) minmax(0,1.1fr) minmax(0,1.2fr) 105px 134px}}
 @media(max-width:640px){.cust-row .cust-cell-actions{width:148px}.cust-row .cust-cell-actions .cust-act-register{flex-basis:52px;width:52px}}
 </style><style>
@@ -105,18 +105,18 @@
 html[data-office-theme='ktop'] body.customer-management-page{background:#f3f6fb!important}
 html[data-office-theme='ktop'] .customer-management-page .header{background:transparent!important;box-shadow:none!important}
 html[data-office-theme='ktop'] .customer-management-page .header-line{background:#d8e3f1}
-html[data-office-theme='ktop'] .customer-management-page .logo-icon{background:#e7effc;border-color:#dcedec}
-html[data-office-theme='ktop'] .customer-management-page .customer-navigation .return-main{background:#ffffff!important;color:#234c49!important;border-color:#dcedec!important}
-html[data-office-theme='ktop'] .customer-management-page .card{border:1px solid #dcedec!important;box-shadow:0 5px 20px rgba(31,61,104,.06)!important}
+html[data-office-theme='ktop'] .customer-management-page .logo-icon{background:#e7effc;border-color:#779a94}
+html[data-office-theme='ktop'] .customer-management-page .customer-navigation .return-main{background:#ffffff!important;color:#234c49!important;border-color:#779a94!important}
+html[data-office-theme='ktop'] .customer-management-page .card{border:1px solid #779a94!important;box-shadow:0 5px 20px rgba(31,61,104,.06)!important}
 html[data-office-theme='ktop'] .customer-management-page .card-title>span{border-left:3px solid #3478d5;padding-left:10px;font-weight:700;color:#234c49}
-html[data-office-theme='ktop'] .customer-management-page .btn-primary{background:#ffffff!important;border-color:#dcedec!important;color:#234c49!important}
+html[data-office-theme='ktop'] .customer-management-page .btn-primary{background:#ffffff!important;border-color:#779a94!important;color:#234c49!important}
 html[data-office-theme='ktop'] .customer-management-page .cust-view-tabs button.active{background:#e8f0ff!important;border-color:#bbcff1!important;color:#234c49!important}
-html[data-office-theme='ktop'] .customer-management-page .customer-type-tabs button{background:#f8faff!important;color:#234c49!important;border-color:#dcedec!important}
-html[data-office-theme='ktop'] .customer-management-page .customer-type-tabs button.active{background:#ffffff!important;color:#234c49!important;border-color:#dcedec!important;box-shadow:0 2px 5px rgba(35,76,73,0.08)}
-html[data-office-theme='ktop'] .customer-management-page #customerCategoryAdd{color:#234c49!important;background:#edf4ff!important;border-color:#dcedec!important}
-html[data-office-theme='ktop'] .customer-management-page .cust-table-head{background:#e9f0f9!important;color:#234c49!important;border-top:1px solid #dcedec;border-bottom:1px solid #dcedec;border-radius:8px 8px 0 0}
+html[data-office-theme='ktop'] .customer-management-page .customer-type-tabs button{background:#f8faff!important;color:#234c49!important;border-color:#779a94!important}
+html[data-office-theme='ktop'] .customer-management-page .customer-type-tabs button.active{background:#ffffff!important;color:#234c49!important;border-color:#779a94!important;box-shadow:0 2px 5px rgba(35,76,73,0.08)}
+html[data-office-theme='ktop'] .customer-management-page #customerCategoryAdd{color:#234c49!important;background:#edf4ff!important;border-color:#779a94!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-table-head{background:#e9f0f9!important;color:#234c49!important;border-top:1px solid #779a94;border-bottom:1px solid #779a94;border-radius:8px 8px 0 0}
 html[data-office-theme='ktop'] .customer-management-page .cust-sort-button{color:#234c49!important;background:transparent!important}
-html[data-office-theme='ktop'] .customer-management-page .cust-row{border-bottom:1px solid #dcedec!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-row{border-bottom:1px solid #779a94!important}
 html[data-office-theme='ktop'] .customer-management-page .cust-row:nth-child(even){background:#f8fafd!important}
 html[data-office-theme='ktop'] .customer-management-page .cust-row:hover{background:#edf4ff!important}
 html[data-office-theme='ktop'] .customer-management-page .cust-cell-name{color:#234c49!important}
@@ -128,14 +128,14 @@ html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[d
 html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[data-kind='업체']{background:#e7f1f8!important;color:#234c49!important}
 html[data-office-theme='ktop'] .customer-management-page .customer-kind-change[data-kind='지인']{background:#fcebf1!important;color:#9a4b6a!important}
 html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions{background:transparent!important;border:0!important}
-html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-detail{color:#234c49!important;background:#eaf2ff!important;border-color:#dcedec!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-detail{color:#234c49!important;background:#eaf2ff!important;border-color:#779a94!important}
 html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-edit{color:#8b5a13!important;background:#fff5e6!important;border-color:#eedcbb!important}
-html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-diary{color:#197764!important;background:#e9f6f1!important;border-color:#dcedec!important}
-html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-close{color:#63728a!important;background:#f3f5f8!important;border-color:#dcedec!important}
-html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-delete{color:#b42318!important;background:#fff0ee!important;border-color:#dcedec!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-diary{color:#197764!important;background:#e9f6f1!important;border-color:#779a94!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-close{color:#63728a!important;background:#f3f5f8!important;border-color:#779a94!important}
+html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-delete{color:#b42318!important;background:#fff0ee!important;border-color:#779a94!important}
 html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cust-act-register{color:#ffffff !important;background:#2c64b6!important;border-color:#2c64b6!important}
 html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .btn:hover{filter:brightness(.94)}
-html[data-office-theme='ktop'] .customer-management-page .page-btn{background:#f2f6fc!important;color:#234c49!important;border-color:#dcedec!important}
+html[data-office-theme='ktop'] .customer-management-page .page-btn{background:#f2f6fc!important;color:#234c49!important;border-color:#779a94!important}
 html[data-office-theme='ktop'] .customer-management-page .page-btn:disabled{opacity:.4}
 </style>
 

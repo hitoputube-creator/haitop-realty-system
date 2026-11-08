@@ -32,7 +32,7 @@
   /* 프린트 표 */
   table{
     background:#fff !important;
-    border:1px solid #dcedec !important;
+    border:1px solid #779a94 !important;
     border-radius:0 !important;
     overflow:visible !important;
     margin:0 26px;
@@ -40,12 +40,12 @@
   thead th{
     background:#f6f6f6 !important;
     color:#111 !important;
-    border-bottom:1px solid #dcedec !important;
+    border-bottom:1px solid #779a94 !important;
     font-size:11px !important;
     padding:8px 8px !important;
   }
   tbody td{
-    border-bottom:1px solid #dcedec !important;
+    border-bottom:1px solid #779a94 !important;
     font-size:11px !important;
     padding:8px 8px !important;
     color:#111 !important;
@@ -68,7 +68,7 @@
     width:26px;
     height:26px;
     border-radius:8px;
-    border:1px solid #dcedec;
+    border:1px solid #779a94;
     background: #fff;
   }
   #printFooterText{

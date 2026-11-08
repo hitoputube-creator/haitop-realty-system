@@ -6,7 +6,7 @@
   <title>하이탑부동산 | 건물 상세</title>
   <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-base1" />
+  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-border1" />
   <style>
     /* ── 섹션 타이틀 ── */
     .sec-title {
@@ -26,7 +26,7 @@
     }
     .info-cell {
       background: #f8fcfc;
-      border: 1px solid rgba(37,103,95,0.15);
+      border: 1px solid rgba(37,103,95,0.5);
       border-radius: 10px; padding: 10px 14px;
     }
     .info-cell-label {
@@ -73,12 +73,12 @@
     }
     .floor-card {
       background: #f8fcfc;
-      border: 1px solid #dcedec;
+      border: 1px solid #779a94;
       border-radius: 12px; overflow: hidden;
       display: flex; flex-direction: column;
       transition: border-color 0.18s;
     }
-    .floor-card:hover { border-color: rgba(37,103,95,0.35); }
+    .floor-card:hover { border-color: rgba(37,103,95,0.5); }
     #floorGrid .floor-card-foot { flex-wrap: wrap; justify-content: flex-end; }
     #floorGrid .floor-badge { flex: 1 1 100%; }
     #floorGrid .floor-card { cursor: grab; }
@@ -88,7 +88,7 @@
     .floor-sort-hint { font-size: .78rem; color: var(--muted); margin: 4px 0 0; }
     .floor-sort-hint.saving { color: var(--gold); }
     .floor-edit-btn {
-      padding: 5px 7px; border: 1px solid rgba(37,103,95,0.35); border-radius: 6px;
+      padding: 5px 7px; border: 1px solid rgba(37,103,95,0.5); border-radius: 6px;
       color: #234c49; background: rgba(37,103,95,0.15); font-size: .72rem;
       cursor: pointer; white-space: nowrap; font-family: inherit;
     }
@@ -121,14 +121,14 @@
     .floor-card-foot {
       padding: 8px 10px;
       display: flex; align-items: center; justify-content: space-between; gap: 6px;
-      border-top: 1px solid #dcedec;
+      border-top: 1px solid #779a94;
     }
     .floor-badge {
       font-size: 0.78rem; font-weight: 700; color: var(--gold);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .floor-status-link, .floor-status-link:visited {
-      padding: 5px 7px; border: 1px solid rgba(37,103,95,0.35); border-radius: 6px;
+      padding: 5px 7px; border: 1px solid rgba(37,103,95,0.5); border-radius: 6px;
       color: #234c49; background: rgba(37,103,95,0.15); font-size: .72rem;
       text-decoration: none; white-space: nowrap;
     }
@@ -157,7 +157,7 @@
     .upload-progress.active { display: flex; }
     .spinner-sm {
       width: 14px; height: 14px;
-      border: 2px solid rgba(37,103,95,0.3);
+      border: 2px solid rgba(37,103,95,0.5);
       border-top-color: var(--gold);
       border-radius: 50%; animation: spin 0.7s linear infinite;
     }
@@ -167,7 +167,7 @@
     .empty-state {
       text-align: center; padding: 28px 20px;
       color: var(--muted); font-size: 0.85rem;
-      border: 1px dashed #dcedec;
+      border: 1px dashed #779a94;
       border-radius: 12px;
     }
 
@@ -207,7 +207,7 @@
       position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
       display: flex; align-items: center; gap: 4px;
       background: #ffffff;
-      border: 1px solid rgba(37,103,95,0.3);
+      border: 1px solid rgba(37,103,95,0.5);
       border-radius: 999px; padding: 5px; z-index: 2;
       box-shadow: 0 8px 24px rgba(35,76,73,0.08);
     }
@@ -239,17 +239,17 @@
     @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr 1fr; } }
     .sum-card {
       border-radius: 14px; padding: 14px 16px; text-align: center;
-      border: 1px solid #dcedec;
+      border: 1px solid #779a94;
     }
     .sum-card.occupied { background: rgba(34,197,94,0.10);  border-color: rgba(34,197,94,0.25); }
     .sum-card.vacant   { background: rgba(239,68,68,0.10);  border-color: rgba(239,68,68,0.25); }
-    .sum-card.forsale  { background: rgba(37,103,95,0.1);  border-color: rgba(37,103,95,0.25); }
+    .sum-card.forsale  { background: rgba(37,103,95,0.1);  border-color: rgba(37,103,95,0.5); }
     .sum-card.revenue  { background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.25); }
     .sum-card.own      { background: rgba(167,139,250,0.10); border-color: rgba(167,139,250,0.28); }
     .unit-summary-filter { cursor:pointer; font-family:inherit; color:inherit; }
     .unit-summary-filter .sum-num, .unit-summary-filter .sum-label { display:block; }
     .unit-summary-filter:hover { filter:brightness(1.2); }
-    .unit-summary-filter.active, .unit-summary-filter:focus-visible { outline:2px solid var(--gold, #cbe1e0); outline-offset:2px; }
+    .unit-summary-filter.active, .unit-summary-filter:focus-visible { outline:2px solid var(--gold, #5f8780); outline-offset:2px; }
     .summary-note { margin: -4px 0 10px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
     .sum-num   { font-size: 1.65rem; font-weight: 900; line-height: 1; }
     .sum-label { font-size: 0.76rem; color: var(--muted); margin-top: 5px; }
@@ -265,11 +265,11 @@
     #unitStatus .unit-head-main button, #unitStatus #unitBulkActions button, #unitStatus #unitBulkActions a { height:32px; padding:0 13px; font-size:.8rem; font-weight:700; border-radius:8px; }
     #unitStatus #btnAddUnit { height:34px; padding:0 18px; font-size:.86rem; font-weight:800; }
     #unitPriceUpload, #unitListingSend, #unitProfitRegister, #unitBundleRegister {
-      background:rgba(255,255,255,.05); color:#234c49; border:1px solid #dcedec; font-weight:600; }
+      background:rgba(255,255,255,.05); color:#234c49; border:1px solid #779a94; font-weight:600; }
     #unitPriceUpload:hover, #unitListingSend:hover:not(:disabled), #unitProfitRegister:hover:not(:disabled), #unitBundleRegister:hover:not(:disabled) { background:rgba(255,255,255,.10); opacity:1; }
-    #unitListingSend:not(:disabled), #unitProfitRegister:not(:disabled), #unitBundleRegister:not(:disabled) { border-color:rgba(37,103,95,0.35); color:#234c49; }
+    #unitListingSend:not(:disabled), #unitProfitRegister:not(:disabled), #unitBundleRegister:not(:disabled) { border-color:rgba(37,103,95,0.5); color:#234c49; }
     #unitBulkActions button:disabled { opacity:.6; cursor:default; }
-    #unitStatus .unit-head-main .btn-unit-ghost, #unitStatus #unitBulkActions .btn-unit-ghost, #unitOrigToggle { color:#234c49; border-color:#dcedec; }
+    #unitStatus .unit-head-main .btn-unit-ghost, #unitStatus #unitBulkActions .btn-unit-ghost, #unitOrigToggle { color:#234c49; border-color:#779a94; }
     .unit-filter-bar .ftab:not(.active) { color:#234c49; }
     #unitKindTabs .kind-move button { color:#234c49; }
     .unit-toolbar { display:flex; align-items:center; justify-content:space-between; gap:6px 12px; flex-wrap:wrap; margin:6px 0 8px; }
@@ -288,7 +288,7 @@
       font-size: 0.82rem; color: var(--muted); font-weight: 700; transition: 0.12s;
     }
     .ftab.active {
-      border-color: rgba(37,103,95,0.35); background: rgba(37,103,95,0.16);
+      border-color: rgba(37,103,95,0.5); background: rgba(37,103,95,0.16);
       color: #234c49;
     }
 
@@ -297,13 +297,13 @@
     .units-tbl { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
     .units-tbl th {
       text-align: left; padding: 9px 12px; font-size: 0.75rem; color: var(--muted);
-      font-weight: 700; border-bottom: 1px solid #dcedec;
+      font-weight: 700; border-bottom: 1px solid #779a94;
       background: #f8fcfc;
     }
     .unit-current-price { display: inline-flex; align-items: center; gap: 6px; color: var(--gold); font-weight: 700; }
-    .unit-current-tag { color: var(--gold); border: 1px solid rgba(37,103,95,0.35); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; }
+    .unit-current-tag { color: var(--gold); border: 1px solid rgba(37,103,95,0.5); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; }
     .units-tbl td {
-      padding: 10px 12px; border-bottom: 1px solid #dcedec;
+      padding: 10px 12px; border-bottom: 1px solid #779a94;
       color: #234c49; vertical-align: middle;
     }
     .units-tbl tr:last-child td { border-bottom: none; }
@@ -324,7 +324,7 @@
     }
     .sbadge.임차중  { background: rgba(34,197,94,0.18);  color: #177a55;  border: 1px solid rgba(34,197,94,0.30); }
     .sbadge.공실   { background: rgba(239,68,68,0.18);  color: #b42318;  border: 1px solid rgba(239,68,68,0.30); }
-    .sbadge.매매가능 { background: rgba(37,103,95,0.18);  color: #25675f;  border: 1px solid rgba(37,103,95,0.3); }
+    .sbadge.매매가능 { background: rgba(37,103,95,0.18);  color: #25675f;  border: 1px solid rgba(37,103,95,0.5); }
 
     /* 빈 상태 */
     .units-empty {
@@ -341,7 +341,7 @@
     .unit-modal-overlay.open { display: flex; }
     .unit-modal-box {
       background: linear-gradient(145deg, #ffffff 0%, #ffffff 100%);
-      border: 1px solid rgba(37,103,95,0.3); border-radius: 20px;
+      border: 1px solid rgba(37,103,95,0.5); border-radius: 20px;
       padding: 24px; width: 100%; max-width: 620px;
       box-shadow: 0 24px 60px rgba(35,76,73,0.08); position: relative;
     }
@@ -368,12 +368,12 @@
     .um-section.current .umfield input,
     .um-section.current .umfield select,
     .um-section.current .umfield textarea {
-      border-color: rgba(37,103,95,0.35);
+      border-color: rgba(37,103,95,0.5);
     }
     .um-section.current .umfield input:focus,
     .um-section.current .umfield select:focus,
     .um-section.current .umfield textarea:focus {
-      border-color: #cbe1e0;
+      border-color: #5f8780;
     }
     .umgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @media (max-width: 480px) { .umgrid { grid-template-columns: 1fr; } }
@@ -381,7 +381,7 @@
     /* 취소 버튼 */
     .btn-unit-ghost {
       background: rgba(255,255,255,0.06); color: #234c49;
-      border: 1px solid #dcedec; border-radius: 10px;
+      border: 1px solid #779a94; border-radius: 10px;
       padding: 9px 18px; font-size: 0.88rem; cursor: pointer; font-family: inherit;
     }
     .btn-unit-ghost:hover { background: rgba(255,255,255,0.10); }
@@ -406,12 +406,12 @@
     }
     .umfield label { display: block; font-size: 0.76rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; }
     .umfield input, .umfield select, .umfield textarea {
-      width: 100%; background: #f8fcfc; border: 1px solid #dcedec;
+      width: 100%; background: #f8fcfc; border: 1px solid #779a94;
       border-radius: 10px; padding: 9px 12px; font-size: 0.88rem;
       color: #234c49; font-family: inherit; outline: none; transition: border-color 0.15s;
     }
     .umfield input:focus, .umfield select:focus, .umfield textarea:focus {
-      border-color: rgba(37,103,95,0.35);
+      border-color: rgba(37,103,95,0.5);
     }
     .umfield textarea { resize: vertical; min-height: 66px; }
     .umfield select option { background: #ffffff; }
@@ -419,9 +419,9 @@
     .umfield.umcheck label { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 0; font-size: 0.9rem; color: #234c49; cursor: pointer; }
     .umfield.umcheck input[type=checkbox] { width: 18px; height: 18px; padding: 0; accent-color: #C9A84C; }
     .unit-flag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; vertical-align: middle; }
-    .unit-flag.rec { background: rgba(37,103,95,0.18); color: #25675f; border: 1px solid rgba(37,103,95,0.35); }
+    .unit-flag.rec { background: rgba(37,103,95,0.18); color: #25675f; border: 1px solid rgba(37,103,95,0.5); }
     .unit-flag.profit { background: rgba(80,200,140,0.14); color: #177a55; border: 1px solid rgba(80,200,140,0.4); }
-    .unit-memo-entry { padding:10px 0; border-top:1px solid #dcedec; line-height:1.6; overflow-wrap:anywhere; }
+    .unit-memo-entry { padding:10px 0; border-top:1px solid #779a94; line-height:1.6; overflow-wrap:anywhere; }
     .unit-memo-entry time { display:block; font-size:.74rem; color:var(--muted); margin-bottom:4px; }
     .unit-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
 
@@ -507,7 +507,7 @@
     /* 소형 버튼 */
     .btn-unit-edit {
       background: rgba(37,103,95,0.1); color: #25675f;
-      border: 1px solid rgba(37,103,95,0.25); border-radius: 8px;
+      border: 1px solid rgba(37,103,95,0.5); border-radius: 8px;
       padding: 5px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.12s;
     }
     .btn-unit-edit:hover { background: rgba(37,103,95,0.2); }
@@ -590,11 +590,11 @@
 .owner-customer-link, .owner-customer-link:visited {
   display:inline-flex; align-items:center; justify-content:center;
   margin:6px 8px 0 0; padding:8px 14px; border-radius:8px;
-  color:#25675f; background:#ffffff; border:1px solid #cbe1e0;
+  color:#25675f; background:#ffffff; border:1px solid #5f8780;
   font-size:13px; font-weight:700; text-decoration:none;
 }
-.owner-customer-link:hover { color:#234c49; background:#ffffff; border-color:#cbe1e0; }
-.owner-customer-link:focus-visible { outline:2px solid #cbe1e0; outline-offset:3px; }
+.owner-customer-link:hover { color:#234c49; background:#ffffff; border-color:#5f8780; }
+.owner-customer-link:focus-visible { outline:2px solid #5f8780; outline-offset:3px; }
 </style>
 
 <style>
@@ -603,7 +603,7 @@
 .unit-select-cell{width:34px!important;text-align:center!important}
 .unit-select-row,#unitSelectAll{width:16px;height:16px;accent-color:#d4af37;cursor:pointer}
 @page{size:A4 landscape;margin:11mm}
-@media print{body:has(#unitPrintSheet)>*:not(#unitPrintSheet){display:none!important}body:has(#unitPrintSheet){background:white!important;margin:0!important;padding:0!important}#unitPrintSheet{display:block!important;color:#111;font-family:Arial,sans-serif;font-size:9pt}#unitPrintSheet h2{font-size:14pt;margin:0 0 12px}#unitPrintSheet table{width:100%;table-layout:fixed;border-collapse:collapse}#unitPrintSheet td{white-space:pre-line}#unitPrintSheet th,#unitPrintSheet td{border:1px solid #dcedec;padding:6px 5px;word-break:keep-all;overflow-wrap:anywhere;vertical-align:top}#unitPrintSheet th{background:#ffffff!important;color:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#unitPrintSheet tr{break-inside:avoid;page-break-inside:avoid}#unitPrintSheet thead{display:table-header-group}}
+@media print{body:has(#unitPrintSheet)>*:not(#unitPrintSheet){display:none!important}body:has(#unitPrintSheet){background:white!important;margin:0!important;padding:0!important}#unitPrintSheet{display:block!important;color:#111;font-family:Arial,sans-serif;font-size:9pt}#unitPrintSheet h2{font-size:14pt;margin:0 0 12px}#unitPrintSheet table{width:100%;table-layout:fixed;border-collapse:collapse}#unitPrintSheet td{white-space:pre-line}#unitPrintSheet th,#unitPrintSheet td{border:1px solid #779a94;padding:6px 5px;word-break:keep-all;overflow-wrap:anywhere;vertical-align:top}#unitPrintSheet th{background:#ffffff!important;color:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#unitPrintSheet tr{break-inside:avoid;page-break-inside:avoid}#unitPrintSheet thead{display:table-header-group}}
 @media print{
  html,body{width:auto!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important}
  #unitPrintSheet{position:static!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;font-size:9pt!important}
@@ -634,7 +634,7 @@
 <style>.units-tbl .profit-recommended-row td{background:rgba(37,103,95,0.11)}.units-tbl .profit-recommended-row td:first-child{box-shadow:inset 3px 0 rgba(37,103,95,0.08)}.units-tbl .profit-recommended-row:hover td{background:rgba(37,103,95,0.17)}</style>
 <style>#unitModal #unitAdditionalNotes #u_추가메모{min-height:140px;height:140px;resize:vertical}.sbadge.미확인{background:rgba(148,163,184,.15);color:#234c49;border:1px solid rgba(148,163,184,.35)}</style>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#ffffff;color:#234c49;cursor:pointer}.presale-switch button.active{background:#25675f;border-color:#cbe1e0;color:#ffffff}.presale-hidden{display:none!important}</style>
+<style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#ffffff;color:#234c49;cursor:pointer}.presale-switch button.active{background:#25675f;border-color:#5f8780;color:#ffffff}.presale-hidden{display:none!important}</style>
 <style>.unit-phase-label{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.76rem;font-weight:700}.unit-phase-label.ongoing{color:#25675f;background:rgba(37,103,95,0.12)}.unit-phase-label.completed{color:#aebbd0;background:rgba(147,170,205,.13)}</style>
 <style>
 /* 호실 현황 표: 매물 열 폭 고정 + 버튼 줄바꿈 (보증금·월세가 가려지지 않게) */
@@ -656,17 +656,17 @@
     .units-tbl:not(.residential-unit-table) td:nth-child(10) { font-weight:700; color:#13201f !important; }
 </style>
 <style id="unitBundleStyle">
-.unit-flag.bundle{background:rgba(37,103,95,0.18);color:#25675f;border:1px solid rgba(37,103,95,0.35)}
+.unit-flag.bundle{background:rgba(37,103,95,0.18);color:#25675f;border:1px solid rgba(37,103,95,0.5)}
 .unit-flag.sale{background:rgba(229,115,115,.2);color:#b42318;border:1px solid rgba(229,115,115,.45)}
-.unit-bundle-box{margin-top:16px;padding:14px 16px;border:1px solid rgba(37,103,95,0.35);border-radius:14px;background:rgba(37,103,95,0.05)}
+.unit-bundle-box{margin-top:16px;padding:14px 16px;border:1px solid rgba(37,103,95,0.5);border-radius:14px;background:rgba(37,103,95,0.05)}
 .unit-bundle-box[hidden]{display:none}
 .unit-bundle-box .ub-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .unit-bundle-box .ub-head strong{font-size:.95rem}
 .unit-bundle-box .ub-head .ub-cnt{color:#25675f;font-weight:700}
 .unit-bundle-box .ub-head .ub-hint{font-size:.76rem;opacity:.65}
 .unit-bundle-box table{width:100%;border-collapse:collapse;table-layout:auto}
-.unit-bundle-box th{text-align:left;padding:7px 8px;font-size:.76rem;font-weight:700;color:#25675f;border-bottom:1px solid #dcedec}
-.unit-bundle-box td{padding:9px 8px;font-size:.84rem;border-bottom:1px solid #dcedec;vertical-align:middle}
+.unit-bundle-box th{text-align:left;padding:7px 8px;font-size:.76rem;font-weight:700;color:#25675f;border-bottom:1px solid #779a94}
+.unit-bundle-box td{padding:9px 8px;font-size:.84rem;border-bottom:1px solid #779a94;vertical-align:middle}
 .unit-bundle-box td.ub-price{color:#25675f;font-weight:700}
 .unit-bundle-box td.ub-act{text-align:right;width:1%;white-space:nowrap}
 .unit-bundle-box .ub-strike{font-size:.7rem;font-weight:400;opacity:.6;text-decoration:line-through}
@@ -1008,13 +1008,13 @@
 <div class="toast" id="toast"></div>
 
 <script src="assets/js/storage.js?v=20261019-commercial-unit-sync"></script><script src="assets/js/ktop-shared-view.js?v=20261107-ksv3"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
-<script src="assets/js/building-register-view.js?v=20261108-white-base1"></script>
+<script src="assets/js/building-register-view.js?v=20261108-white-border1"></script>
 <script>
 /* ═══════════════════════════════════════════
    Cloudinary 설정
@@ -2327,7 +2327,7 @@ async function deleteBFile(id) {
             '#unitSavedDialog .usd-mini{appearance:none;border:1px solid #e7b9b3;background:#fff;color:#8a2c22;border-radius:999px;padding:5px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}' +
             '#unitSavedDialog .usd-mini.danger{border:0;background:#d9534f;color:#234c49' +
             '#unitSavedDialog .usd-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}' +
-            '#unitSavedDialog .usd-btn{appearance:none;border:1px solid #dcedec;background:#fff;color:#2a4a46;border-radius:999px;padding:9px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}' +
+            '#unitSavedDialog .usd-btn{appearance:none;border:1px solid #779a94;background:#fff;color:#2a4a46;border-radius:999px;padding:9px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}' +
             '#unitSavedDialog .usd-btn:hover{background:#f1f8f7;transform:translateY(-1px)}' +
             '#unitSavedDialog .usd-btn.sub{border-color:#9fd8d0;color:#0b7a6b;background:#effaf8}' +
             '#unitSavedDialog .usd-btn.main{border:0;color:#234c49;background:linear-gradient(135deg,#19c3b0,#0b7a6b);box-shadow:0 6px 16px rgba(35,76,73,0.08)}' +
@@ -2435,7 +2435,7 @@ async function deleteBFile(id) {
           const d = document.createElement('div');
           d.id = 'unitOnlyDone';
           d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#ffffff;color:#234c49;font-size:1.05rem;visibility:visible;';
-          d.innerHTML = '<div>호실 정보 창을 닫았습니다. 이 탭을 닫아 주세요.</div><button type="button" style="padding:8px 18px;border-radius:8px;border:1px solid #dcedec;background:transparent;color:#25675f;cursor:pointer;" onclick="window.close()">탭 닫기</button>';
+          d.innerHTML = '<div>호실 정보 창을 닫았습니다. 이 탭을 닫아 주세요.</div><button type="button" style="padding:8px 18px;border-radius:8px;border:1px solid #779a94;background:transparent;color:#25675f;cursor:pointer;" onclick="window.close()">탭 닫기</button>';
           document.body.appendChild(d);
         }, 400);
       };
@@ -3466,7 +3466,7 @@ async function deleteBFile(id) {
 
 })();
 </script>
-<script src="assets/js/price-room-import.js?v=20261108-white-base1"></script>
+<script src="assets/js/price-room-import.js?v=20261108-white-border1"></script>
 <script src="assets/js/building-records.js?v=20261107-zoom3"></script>
 <script src="assets/js/building-sales-contact.js?v=20261107-contact3"></script>
 <script src="assets/js/unit-guide-print.js?v=20261107-guide8"></script>

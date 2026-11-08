@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="assets/css/style.css?v=20261108-white-base1" />
+<link rel="stylesheet" href="assets/css/style.css?v=20261108-white-border1" />
 <script src="assets/js/storage.js?v=20261031-confirm"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
@@ -52,12 +52,12 @@
 .apartment-details-column .owner-contact-row{grid-template-columns:90px minmax(0,1fr) 64px minmax(46px,.4fr)}
 .apartment-details-column .owner-contact-row .ipt-value{white-space:nowrap}
 .apartment-memo-section .ipt-value{max-height:120px;overflow-y:auto}
-.apartment-info-table{border:1px solid #dcedec;border-radius:10px;overflow:hidden}
+.apartment-info-table{border:1px solid #779a94;border-radius:10px;overflow:hidden}
 .apartment-info-row{display:grid;grid-template-columns:repeat(var(--pairs),minmax(96px,128px) minmax(0,1fr))}
 .apartment-info-row.apartment-unit-row{grid-template-columns:64px minmax(50px,.7fr) 68px minmax(155px,1.4fr) 60px minmax(70px,.8fr) 56px minmax(50px,.6fr)}
-.apartment-info-row>div{min-width:0;padding:8px 10px;border-bottom:1px solid #dcedec;line-height:1.5;box-sizing:border-box}
+.apartment-info-row>div{min-width:0;padding:8px 10px;border-bottom:1px solid #779a94;line-height:1.5;box-sizing:border-box}
 .apartment-info-row:last-child>div{border-bottom:0}
-.apartment-info-row .ipt-label{display:flex;align-items:center;color:var(--gold);background:#ffffff;font-size:.82rem;font-weight:700;border-right:1px solid #dcedec}
+.apartment-info-row .ipt-label{display:flex;align-items:center;color:var(--gold);background:#ffffff;font-size:.82rem;font-weight:700;border-right:1px solid #779a94}
 .apartment-info-row .ipt-value{display:flex;align-items:center;background:#ffffff;font-size:.88rem;overflow-wrap:anywhere;white-space:pre-wrap}
 .apartment-info-row[style="--pairs:1"] .ipt-value{display:block}
 .apartment-detail-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 24px}
@@ -68,8 +68,8 @@
 .apartment-unit-part small{font-size:1rem;font-weight:600;color:var(--text-muted)}
 .apartment-unit-action{gap:8px;flex-wrap:wrap}
 .apartment-info-row .ipt-value.apartment-unit-action{padding-right:6px}
-.apartment-autofill-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;min-height:28px;padding:4px 8px;border:1px solid rgba(37,103,95,0.28);border-radius:6px;background:rgba(37,103,95,0.09);color:var(--gold);font-family:inherit;font-size:.74rem;font-weight:600;line-height:1.2;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
-.apartment-autofill-btn:hover{background:rgba(37,103,95,0.17);border-color:rgba(37,103,95,0.35)}
+.apartment-autofill-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;min-height:28px;padding:4px 8px;border:1px solid rgba(37,103,95,0.5);border-radius:6px;background:rgba(37,103,95,0.09);color:var(--gold);font-family:inherit;font-size:.74rem;font-weight:600;line-height:1.2;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.apartment-autofill-btn:hover{background:rgba(37,103,95,0.17);border-color:rgba(37,103,95,0.5)}
 .apartment-autofill-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .apartment-autofill-btn:disabled{opacity:.6;cursor:wait}
 .apartment-autofill-btn svg{width:13px;height:13px;flex-shrink:0}
@@ -81,11 +81,11 @@
 .owner-customer-link, .owner-customer-link:visited {
   display:inline-flex; align-items:center; justify-content:center;
   margin:6px 8px 0 0; padding:8px 14px; border-radius:8px;
-  color:#25675f; background:#ffffff; border:1px solid #cbe1e0;
+  color:#25675f; background:#ffffff; border:1px solid #5f8780;
   font-size:13px; font-weight:700; text-decoration:none;
 }
-.owner-customer-link:hover { color:#234c49; background:#ffffff; border-color:#cbe1e0; }
-.owner-customer-link:focus-visible { outline:2px solid #cbe1e0; outline-offset:3px; }
+.owner-customer-link:hover { color:#234c49; background:#ffffff; border-color:#5f8780; }
+.owner-customer-link:focus-visible { outline:2px solid #5f8780; outline-offset:3px; }
 
 .tenant-info-section > summary { cursor:pointer; margin-bottom:0; }
 .tenant-info-section[open] > summary { margin-bottom:12px; }
@@ -141,7 +141,7 @@
 
 <script src="assets/js/building-records.js?v=20261107-share3"></script>
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261108-white-base1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261108-white-border1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -151,8 +151,8 @@
 @media(max-width:650px){.apartment-listing-form .owner-phone-row {grid-template-columns:1fr;}}
 #owner_memo,#edit_owner_memo {min-height:110px;resize:vertical;}
 html[data-office-theme="ktop"] #apartmentListingForm .um-section,
-html[data-office-theme="ktop"] #edit_apartmentListingForm .um-section {background:#fff;border-color:#dcedec;}
-html[data-office-theme="ktop"] .apartment-listing-form .um-section-title {background:#e7effb;color:#234c49;border-bottom:1px solid #dcedec;}
+html[data-office-theme="ktop"] #edit_apartmentListingForm .um-section {background:#fff;border-color:#779a94;}
+html[data-office-theme="ktop"] .apartment-listing-form .um-section-title {background:#e7effb;color:#234c49;border-bottom:1px solid #779a94;}
 html[data-office-theme="ktop"] .apartment-listing-form .sale .um-section-title {background:#dce9fa;color:#234c49;}
 html[data-office-theme="ktop"] .apartment-listing-form label {color:#234c49;font-weight:600;}
 html[data-office-theme="ktop"] .apartment-listing-form input,
@@ -220,7 +220,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   <div style="font-size:1.1rem;font-weight:700;color:#234c49;margin-bottom:8px;">연결 오류가 발생했습니다</div>
   <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
   <button onclick="location.reload()" style="background:#25675f;color:#ffffff;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
-  <button onclick="location.href='index.html'" style="margin-top:10px;background:none;border:1px solid #dcedec;border-radius:8px;padding:10px 24px;font-size:0.88rem;color:#aaa;cursor:pointer;">← 목록으로</button>
+  <button onclick="location.href='index.html'" style="margin-top:10px;background:none;border:1px solid #779a94;border-radius:8px;padding:10px 24px;font-size:0.88rem;color:#aaa;cursor:pointer;">← 목록으로</button>
 </div>
 
 <script>
@@ -557,7 +557,7 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
   </div>
 </div>
 
-<script src="assets/js/register-picker.js?v=20261108-white-base1"></script>
+<script src="assets/js/register-picker.js?v=20261108-white-border1"></script>
 <script src="assets/js/kakao-config.js"></script>
 <script src="assets/js/road-address.js"></script>
 
@@ -1820,7 +1820,7 @@ function closeHomepageTab(tab) {
     const list = listingMemoList(item).filter(m => memoShownText(m).trim()).reverse();
     const btnStyle = "flex:none;padding:2px 10px;font-size:12px";
     const rows = list.map(m =>
-      '<div class="memo-row" data-key="' + escapeHtml(memoKey(m)) + '" style="padding:8px 0;border-top:1px dashed #dcedec">'
+      '<div class="memo-row" data-key="' + escapeHtml(memoKey(m)) + '" style="padding:8px 0;border-top:1px dashed #779a94">'
       + '<div style="display:flex;gap:10px;align-items:flex-start">'
       + '<span style="flex:none;color:var(--text-muted);font-size:12px;min-width:88px">' + escapeHtml(memoDateLabel(m)) + '</span>'
       + '<span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px">' + escapeHtml(memoShownText(m)) + '</span>'
@@ -1831,15 +1831,15 @@ function closeHomepageTab(tab) {
     return '<section class="detail-section" id="memoSection"><div class="detail-section-title">추가메모 <span style="font-size:12px;font-weight:400;color:var(--text-muted)">' + list.length + '건 · 날짜순</span></div>'
       + (rows || '<div style="font-size:13px;color:var(--text-muted);padding:2px 0 8px">아직 추가메모가 없어요.</div>')
       + '<div style="display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px">'
-      + '<input type="date" id="addMemoDate" title="메모 날짜 (달력에서 고르거나 직접 입력)" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:140px;flex:none;padding:8px 6px;border-radius:8px;border:1px solid #dcedec;background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
-      + '<textarea id="addMemoText" rows="4" placeholder="새 메모 — 나중에 알게 된 내용을 적고 저장을 누르세요 (왼쪽 날짜로 저장돼요)" style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid #dcedec;background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
+      + '<input type="date" id="addMemoDate" title="메모 날짜 (달력에서 고르거나 직접 입력)" value="' + new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }) + '" style="width:140px;flex:none;padding:8px 6px;border-radius:8px;border:1px solid #779a94;background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
+      + '<textarea id="addMemoText" rows="4" placeholder="새 메모 — 나중에 알게 된 내용을 적고 저장을 누르세요 (왼쪽 날짜로 저장돼요)" style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid #779a94;background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical"></textarea>'
       + '<button type="button" class="btn btn-primary" id="addMemoBtn" style="flex:none">메모 저장</button></div></section>';
   }
   // 수정 화면의 추가메모 목록 (내용·날짜 수정, 삭제, 새 줄 추가)
   function buildEditMemoRow(m) {
     const row = document.createElement("div");
     row.className = "edit-memo-row";
-    row.style.cssText = "display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px dashed #dcedec";
+    row.style.cssText = "display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px dashed #779a94";
     if (m) { row.dataset.key = memoKey(m); row.dataset.origText = memoShownText(m); row.dataset.origDate = memoDateKst(m); }
     const date = document.createElement("input");
     date.type = "date"; date.className = "edit-memo-date";
@@ -2037,7 +2037,7 @@ function closeHomepageTab(tab) {
           </div>`).join("")
         : `<div class="detail-read-value" style="color:var(--text-muted);font-size:0.82rem;">등록된 링크가 없습니다</div>`}
       </div>
-      <div id="addLinkForm" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(37,103,95,0.15);">
+      <div id="addLinkForm" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(37,103,95,0.5);">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <input id="newLinkName" type="text" placeholder="이름 (예: 토지대장)" style="width:130px;flex-shrink:0;" />
           <input id="newLinkUrl" type="text" placeholder="https://drive.google.com/..." style="flex:1;min-width:160px;" />
@@ -2244,8 +2244,8 @@ function closeHomepageTab(tab) {
             const m = listingMemoList(_currentItem).find(x => memoKey(x) === key);
             if (!m) return;
             row.innerHTML = '<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
-              + '<input type="date" class="memo-edit-date" value="' + escapeHtml(memoDateKst(m)) + '" style="width:auto;flex:none;padding:4px 6px;border-radius:6px;border:1px solid #dcedec;background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
-              + '<textarea class="memo-edit-text" rows="3" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid #dcedec;background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical">' + escapeHtml(memoShownText(m)) + '</textarea>'
+              + '<input type="date" class="memo-edit-date" value="' + escapeHtml(memoDateKst(m)) + '" style="width:auto;flex:none;padding:4px 6px;border-radius:6px;border:1px solid #779a94;background:rgba(255,255,255,0.05);color:inherit;font:inherit;font-size:13px">'
+              + '<textarea class="memo-edit-text" rows="3" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid #779a94;background:rgba(255,255,255,0.05);color:inherit;font:inherit;resize:vertical">' + escapeHtml(memoShownText(m)) + '</textarea>'
               + '<button type="button" class="btn btn-primary memo-save" style="flex:none;padding:4px 12px;font-size:13px">저장</button>'
               + '<button type="button" class="btn btn-ghost memo-cancel" style="flex:none;padding:4px 12px;font-size:13px">취소</button></div>';
           } else if (t.classList.contains("memo-cancel")) {
@@ -2285,7 +2285,7 @@ function closeHomepageTab(tab) {
           if (t.classList.contains("internal-memo-edit")) {
             const current = box.querySelector(".detail-read-value").textContent;
             box.innerHTML = '<div class="detail-read-label">비공개 내부메모</div>'
-              + '<textarea class="internal-memo-text" rows="8" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid #dcedec;background:transparent;color:inherit;font:inherit;resize:vertical">' + escapeHtml(current) + '</textarea>'
+              + '<textarea class="internal-memo-text" rows="8" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid #779a94;background:transparent;color:inherit;font:inherit;resize:vertical">' + escapeHtml(current) + '</textarea>'
               + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">'
               + '<button type="button" class="btn btn-ghost internal-memo-cancel" style="padding:4px 12px;font-size:13px">취소</button>'
               + '<button type="button" class="btn btn-primary internal-memo-save" style="padding:4px 12px;font-size:13px">저장</button></div>';

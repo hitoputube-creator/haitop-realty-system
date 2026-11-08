@@ -10,7 +10,7 @@
 .logo{
   width:38px; height:38px; border-radius:12px;
   background:radial-gradient(circle at 30% 20%, rgba(37,103,95,0.35), rgba(37,103,95,0.05));
-  border:1px solid rgba(37,103,95,0.35);
+  border:1px solid rgba(37,103,95,0.5);
 }
 .brand-text h1{ margin:0; font-size:1.1rem; letter-spacing:-0.2px; }
 .brand-text p{ margin:2px 0 0; font-size:0.86rem; color:var(--muted); }
@@ -30,7 +30,7 @@
 }
 @media (max-width:520px){ .meta{ grid-template-columns:1fr; } }
 .meta .box{
-  border:1px solid #dcedec; border-radius:14px;
+  border:1px solid #779a94; border-radius:14px;
   padding:10px 12px; background:#f8fcfc;
 }
 .meta .label{ font-size:0.78rem; color:var(--muted); margin-bottom:6px; }
@@ -43,7 +43,7 @@
 .section-title .sub{ color:var(--muted); font-size:0.86rem; }
 
 .image-box{
-  border:1px dashed #dcedec; border-radius:14px;
+  border:1px dashed #779a94; border-radius:14px;
   background:#f8fcfc; padding:10px;
 }
 .image-box img{ width:100%; border-radius:12px; display:block; }
@@ -51,7 +51,7 @@
 .info-list{ display:flex; flex-direction:column; gap:8px; }
 .info-row{
   display:flex; justify-content:space-between; gap:12px;
-  padding:8px 10px; border:1px solid #dcedec;
+  padding:8px 10px; border:1px solid #779a94;
   border-radius:14px; background:#f8fcfc;
 }
 .info-row .k{ color:var(--muted); font-size:0.86rem; }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>하이탑부동산 | 층별 현황보기</title>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-base1" />
+  <link rel="stylesheet" href="assets/css/app.css?v=20261108-white-border1" />
   <style>
     body { margin:0; background:#ffffff; color:#234c49; }
     .status-page { max-width:1650px; margin:auto; padding:14px 22px; }
@@ -13,17 +13,17 @@
     .status-header h1 { margin:0; font-size:1.25rem; }
     .status-header p { margin:2px 0 0; color:#234c49; font-size:.83rem; }
     .status-header-links { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    .status-button { border:1px solid rgba(37,103,95,0.35); border-radius:8px; padding:9px 13px;
+    .status-button { border:1px solid rgba(37,103,95,0.5); border-radius:8px; padding:9px 13px;
       background:#ffffff; color:#234c49; font:inherit; font-size:.85rem; cursor:pointer; text-decoration:none; }
-    .status-button:hover, .status-button:focus-visible { border-color:#cbe1e0; background:#ffffff; }
+    .status-button:hover, .status-button:focus-visible { border-color:#5f8780; background:#ffffff; }
     .status-button.primary { background:#25675f;color:#ffffff; font-weight:700; }
     .status-button:disabled { opacity:.55; cursor:wait; }
     .status-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px; }
-    .status-toolbar select { width:130px; max-width:100%; padding:8px; border-radius:7px; background:#ffffff; color:#234c49; border:1px solid #dcedec; }
+    .status-toolbar select { width:130px; max-width:100%; padding:8px; border-radius:7px; background:#ffffff; color:#234c49; border:1px solid #779a94; }
     .status-toolbar #buildingChoice { width:min(230px,45vw); }
     .status-toolbar .spacer { flex:1; }
     .status-shell { display:grid; grid-template-columns:minmax(0,1fr) 275px; gap:16px; align-items:start; }
-    .status-plan, .status-side { border:1px solid #dcedec; border-radius:12px; background:#ffffff; overflow:hidden; }
+    .status-plan, .status-side { border:1px solid #779a94; border-radius:12px; background:#ffffff; overflow:hidden; }
     .status-scroll { overflow:auto; max-height:calc(100vh - 225px); min-height:340px; }
     .status-stage { width:100%; min-width:0; position:relative; line-height:0; cursor:default; }
     .status-stage.editing { cursor:crosshair; }
@@ -35,26 +35,26 @@
       font:inherit; font-size:11px; line-height:1.2; cursor:pointer; pointer-events:auto; z-index:1; }
     .unit-pin.vacant { color:#b42318; }
     .unit-pin.sale { color:#25675f; }
-    .unit-pin.selected { outline:2px solid #dcedec; z-index:2; }
+    .unit-pin.selected { outline:2px solid #779a94; z-index:2; }
     .unit-pin span { color:#234c49; display:block; max-width:70px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
     .status-caption { padding:12px 14px; color:#234c49; font-size:.83rem; line-height:1.5; }
     .status-side { padding:15px; }
     .status-side h2 { margin:0 0 10px; font-size:1rem; color:#25675f; }
     .status-help { color:#234c49; font-size:.82rem; line-height:1.5; }
     .status-rooms { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; max-height:235px; overflow:auto; margin:12px 0; }
-    .status-room { padding:7px 4px; border-radius:6px; border:1px solid #dcedec;
+    .status-room { padding:7px 4px; border-radius:6px; border:1px solid #779a94;
       background:#ffffff; color:#234c49; text-align:center; cursor:pointer; font:inherit; font-size:.78rem; }
-    .status-room.selected { border-color:#cbe1e0; background:#5d4919; ;color:#ffffff}
+    .status-room.selected { border-color:#5f8780; background:#5d4919; ;color:#ffffff}
     .status-room small { display:block; color:#234c49; font-size:.69rem; overflow-wrap:anywhere; }
     .status-room small + small { color:#25675f; font-size:.64rem; }
-    .status-detail { border-top:1px solid #dcedec; padding-top:12px; font-size:.86rem; line-height:1.65; }
+    .status-detail { border-top:1px solid #779a94; padding-top:12px; font-size:.86rem; line-height:1.65; }
     .status-detail h3 { margin:0 0 6px; }
     .status-detail .line { overflow-wrap:anywhere; }
     .status-detail .registry { margin-top:10px; }
     .status-detail-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
     .status-edit-form { display:grid; gap:8px; margin-top:10px; }
     .status-edit-form label { display:grid; gap:3px; color:#234c49; font-size:.78rem; }
-    .status-edit-form input, .status-edit-form select { width:100%; min-width:0; box-sizing:border-box; border:1px solid #dcedec; border-radius:7px; padding:8px;
+    .status-edit-form input, .status-edit-form select { width:100%; min-width:0; box-sizing:border-box; border:1px solid #779a94; border-radius:7px; padding:8px;
       color:#234c49; background:#ffffff; font:inherit; }
     .status-area-field { color:#234c49; font-size:.78rem; }
     .status-area-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-top:3px; }
@@ -110,11 +110,11 @@
   </main>
   <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
   <script src="assets/js/storage.js?v=20261017-notice-removed"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
-  <script src="assets/js/building-register-view.js?v=20261108-white-base1"></script>
+  <script src="assets/js/building-register-view.js?v=20261108-white-border1"></script>
   <script src="assets/js/floor-status.js?v=20261027-listing-sync"></script>
 </body>
 </html>

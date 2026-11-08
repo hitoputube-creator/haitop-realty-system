@@ -42,28 +42,28 @@
   table.est-table{
     width:100%;
     border-collapse:collapse;
-    border:1px solid #dcedec;
+    border:1px solid #779a94;
   }
   .est-table th{
     background:#f6f6f6;
     font-size:11px;
     text-align:left;
     padding:8px 8px;
-    border-bottom:1px solid #dcedec;
+    border-bottom:1px solid #779a94;
     color:#111;
     width:42%;
   }
   .est-table td{
     font-size:11px;
     padding:8px 8px;
-    border-bottom:1px solid #dcedec;
+    border-bottom:1px solid #779a94;
     color:#111;
     text-align:right;
     white-space:nowrap;
   }
 
   .yield-box{
-    border:1px solid #dcedec;
+    border:1px solid #779a94;
     border-top:none;
     padding:10px 10px 6px;
   }
@@ -72,7 +72,7 @@
     justify-content:space-between;
     gap:10px;
     padding:6px 0;
-    border-bottom:1px solid #dcedec;
+    border-bottom:1px solid #779a94;
     font-size:11px;
   }
   .yield-row:last-child{ border-bottom:none; }
@@ -98,13 +98,13 @@
     justify-content:center;
     gap:10px;
     padding-top:10px;
-    border-top:1px solid #dcedec;
+    border-top:1px solid #779a94;
   }
   .est-logo{
     width:26px;
     height:26px;
     border-radius:8px;
-    border:1px solid #dcedec;
+    border:1px solid #779a94;
     background:#fff;
   }
   .est-footer-text{

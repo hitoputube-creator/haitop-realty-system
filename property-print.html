@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>부동산 매물 제안서 — 하이탑부동산</title>
 <script src="assets/js/storage.js?v=20261008-print-public"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
@@ -15,7 +15,7 @@
   --navy:   #ffffff;  --navy2:  #ffffff;
   --gold:   #25675f;  --gold2:  #25675f;  --gold-lt: #25675f;
   --text:   #234c49;  --text-s: #234c49;  --text-m:  #718096;
-  --border: #dcedec;  --bg:     #f7f9fc;  --white:   #ffffff;
+  --border: #779a94;  --bg:     #f7f9fc;  --white:   #ffffff;
   --accent: #234c49;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +28,7 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
   align-items:center; justify-content:center; gap:14px; padding:24px;
   background:var(--navy); color:#234c49; }
 .spinner { width:36px; height:36px;
-  border:3px solid rgba(37,103,95,0.2); border-top-color:var(--gold2);
+  border:3px solid rgba(37,103,95,0.5); border-top-color:var(--gold2);
   border-radius:50%; animation:spin .8s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
@@ -39,7 +39,7 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
   justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .ctrl-brand { display:flex; align-items:center; gap:10px; }
 .ctrl-logo { width:34px; height:34px;
-  background:rgba(37,103,95,0.15); border:1px solid rgba(37,103,95,0.35);
+  background:rgba(37,103,95,0.15); border:1px solid rgba(37,103,95,0.5);
   border-radius:8px; display:grid; place-items:center;
   color:var(--gold2); font-weight:900; font-size:12px; }
 .ctrl-title { color:#25675f; font-size:13px; font-weight:700; }
@@ -50,9 +50,9 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
   padding:7px 16px; border-radius:999px;
   font-size:12.5px; font-weight:700; cursor:pointer;
   border:none; transition:.15s; font-family:inherit; }
-.ctrl-btn.back { background:transparent; border:1px solid rgba(37,103,95,0.35); color:#234c49; }
+.ctrl-btn.back { background:transparent; border:1px solid rgba(37,103,95,0.5); color:#234c49; }
 .ctrl-btn.back:hover { border-color:var(--gold2); color:var(--gold2); }
-.ctrl-btn.edit { background:rgba(37,103,95,0.15); border:1px solid rgba(37,103,95,0.35); color:var(--gold2); }
+.ctrl-btn.edit { background:rgba(37,103,95,0.15); border:1px solid rgba(37,103,95,0.5); color:var(--gold2); }
 .ctrl-btn.edit:hover { background:rgba(37,103,95,0.28); }
 .ctrl-btn.print { background:linear-gradient(135deg,var(--gold),var(--gold2));color:#ffffff; border:none; }
 .ctrl-btn.print:hover { filter:brightness(1.08); }
@@ -68,7 +68,7 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
   justify-content:space-between; gap:16px; flex-wrap:wrap; }
 .ph-brand { display:flex; align-items:center; gap:12px; }
 .ph-logo  { width:44px; height:44px;
-  background:rgba(37,103,95,0.15); border:1.5px solid rgba(37,103,95,0.35);
+  background:rgba(37,103,95,0.15); border:1.5px solid rgba(37,103,95,0.5);
   border-radius:10px; display:grid; place-items:center;
   color:var(--gold2); font-weight:900; font-size:14px; }
 .ph-name { color:#25675f; font-size:17px; font-weight:900; letter-spacing:-.5px; }
@@ -91,7 +91,7 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
 .summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
 .sum-card { background:linear-gradient(135deg,#ffffff,#ffffff);
   border-radius:10px; padding:16px 14px 14px; text-align:center;
-  border:1px solid rgba(37,103,95,0.35); box-shadow:0 2px 12px rgba(0,0,0,.12); }
+  border:1px solid rgba(37,103,95,0.5); box-shadow:0 2px 12px rgba(0,0,0,.12); }
 .sum-label { font-size:10.5px; font-weight:700; color:#2b5fa8; letter-spacing:.05em; margin-bottom:6px; }
 .sum-value { font-size:19px; font-weight:900; color:var(--gold2); letter-spacing:-.3px; line-height:1.2; }
 .sum-value.sm { font-size:15px; }
@@ -127,7 +127,7 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
 .resource-meta { color:var(--text-m); font-size:11.5px; margin-top:2px; }
 .resource-link { display:inline-flex; align-items:center; justify-content:center;
   min-height:32px; padding:6px 14px; border-radius:999px;
-  background:#ffffff; border:1px solid #dcedec;
+  background:#ffffff; border:1px solid #779a94;
   color:var(--accent); text-decoration:none; font-size:12px; font-weight:800; }
 .resource-link:hover { background:#ffffff; }
 .photo-upload-strip { display:flex; gap:8px; margin-bottom:10px; }
@@ -140,9 +140,9 @@ body { font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-
 .photo-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 .photo-grid-1 { display:grid; grid-template-columns:1fr; }
 .photo-slot { position:relative; background:#f0f4fa;
-  border:1.5px dashed #dcedec; border-radius:10px; overflow:hidden;
+  border:1.5px dashed #779a94; border-radius:10px; overflow:hidden;
   aspect-ratio:4/3; }
-.photo-slot.has-img { border-style:solid; border-color:#dcedec; }
+.photo-slot.has-img { border-style:solid; border-color:#779a94; }
 .photo-slot img { width:100%; height:100%; object-fit:cover; display:block; }
 .photo-empty { display:flex; flex-direction:column;
   align-items:center; justify-content:center; height:100%;
@@ -158,7 +158,7 @@ input[type=file].hidden-file { display:none; }
 #contact-area { background:var(--navy);
   border-radius:10px; padding:16px 22px 15px; }
 .contact-head { display:grid; grid-template-columns:1fr auto; align-items:end;
-  gap:16px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #dcedec; }
+  gap:16px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #779a94; }
 .contact-company { color:var(--gold2); font-size:15.5px; font-weight:900;
   letter-spacing:-.2px; }
 .contact-phone { color:#234c49; font-size:15px; font-weight:900; white-space:nowrap; text-align:right; }
@@ -273,14 +273,14 @@ input[type=file].hidden-file { display:none; }
 #pick-box h3 { margin:0 0 4px; font-size:16px; color:#234c49; }
 #pick-box p { margin:0 0 12px; font-size:12.5px; color:#5b6f8c; }
 .pick-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
-.pick-item { position:relative; aspect-ratio:4/3; border:2px solid #dcedec; border-radius:10px; overflow:hidden; cursor:pointer; background:#f3f7fc; padding:0; }
+.pick-item { position:relative; aspect-ratio:4/3; border:2px solid #779a94; border-radius:10px; overflow:hidden; cursor:pointer; background:#f3f7fc; padding:0; }
 .pick-item img { width:100%; height:100%; object-fit:cover; display:block; }
-.pick-item.sel { border-color:#cbe1e0; box-shadow:0 0 0 2px rgba(37,103,95,0.08); }
+.pick-item.sel { border-color:#5f8780; box-shadow:0 0 0 2px rgba(37,103,95,0.08); }
 .pick-badge { position:absolute; top:6px; left:6px; width:24px; height:24px; border-radius:50%; background:#25675f;color:#ffffff; font-weight:900; font-size:13px; display:none; align-items:center; justify-content:center; }
 .pick-item.sel .pick-badge { display:flex; }
 .pick-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
-.pick-actions button { padding:8px 18px; border-radius:999px; border:1px solid #dcedec; background:#fff; color:#234c49; font-weight:700; font-size:13px; cursor:pointer; font-family:inherit; }
-.pick-actions button.go { background:#25675f; border-color:#cbe1e0;color:#ffffff; }
+.pick-actions button { padding:8px 18px; border-radius:999px; border:1px solid #779a94; background:#fff; color:#234c49; font-weight:700; font-size:13px; cursor:pointer; font-family:inherit; }
+.pick-actions button.go { background:#25675f; border-color:#5f8780;color:#ffffff; }
 @media print { #pick-overlay { display:none !important; } }
 
 </style>
@@ -575,7 +575,7 @@ input[type=file].hidden-file { display:none; }
           </button>
           <input type="file" accept="image/*" class="hidden-file" id="photo-file-input" onchange="handlePhotoUpload(this)"/>
         </div>
-        <div id="photo-storage-warn" style="display:none;font-size:11.5px;color:#b42318;background:#fffbeb;border:1px solid #cbe1e0;border-radius:6px;padding:6px 12px;margin-bottom:8px;"></div>
+        <div id="photo-storage-warn" style="display:none;font-size:11.5px;color:#b42318;background:#fffbeb;border:1px solid #5f8780;border-radius:6px;padding:6px 12px;margin-bottom:8px;"></div>
         <div id="photo-grid-wrap"></div>
       </div>
 

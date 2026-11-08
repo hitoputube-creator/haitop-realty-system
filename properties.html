@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <title>HITOP 부동산 매물관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="assets/css/style.css?v=20261108-white-base1" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20261108-white-border1" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/storage.js?v=20261031-confirm"></script>
-<script src="assets/js/office-brand.js?v=20261108-white-base1"></script>
+<script src="assets/js/office-brand.js?v=20261108-white-border1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
@@ -16,12 +16,12 @@
     .property-main-return { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
     .property-main-return a { text-decoration:none; }
     @media (max-width:480px) { .property-main-return a { width:100%; text-align:center; } }
-    /* 목록보기 테이블: 세부 스타일은 assets/css/style.css?v=20261108-white-base1 관리 */
+    /* 목록보기 테이블: 세부 스타일은 assets/css/style.css?v=20261108-white-border1 관리 */
     /* 선택매물보기 테이블 */
     #selectedViewTableWrap { overflow-x: auto; }
     #selectedViewTable { width:100%; table-layout:fixed; border-collapse:collapse; font-size:0.83rem; }
-    #selectedViewTable thead th { padding:9px 10px; text-align:left; font-weight:600; color:var(--text-muted); border-bottom:2px solid rgba(37,103,95,0.25); }
-    #selectedViewTable tbody td { padding:8px 10px; border-bottom:1px solid #dcedec; vertical-align:top; }
+    #selectedViewTable thead th { padding:9px 10px; text-align:left; font-weight:600; color:var(--text-muted); border-bottom:2px solid rgba(37,103,95,0.5); }
+    #selectedViewTable tbody td { padding:8px 10px; border-bottom:1px solid #779a94; vertical-align:top; }
     #selectedViewTable tbody tr:hover td { background:rgba(37,103,95,0.05); }
     #selectedViewTable tbody tr.done-row td { color:#666; }
     #selectedViewTable .selected-print-unit { display:block; margin-top:2px; font-weight:700; }
@@ -64,12 +64,12 @@
       #selectedViewTable th:nth-child(9), #selectedViewTable td:nth-child(9) { width: 40% !important; }
       #selectedViewTable thead th {
         background: #ffffff !important; color: #234c49 !important;
-        padding: 7px 5px !important; border: 1px solid #dcedec !important;
+        padding: 7px 5px !important; border: 1px solid #779a94 !important;
         font-weight: 700 !important;
         -webkit-print-color-adjust: exact; print-color-adjust: exact;
       }
       #selectedViewTable tbody td {
-        padding: 7px 5px !important; border: 1px solid #dcedec !important;
+        padding: 7px 5px !important; border: 1px solid #779a94 !important;
         color: #111 !important; vertical-align: top !important;
       }
       #selectedViewTable tbody td * { color: #111 !important; background: transparent !important; }
@@ -90,10 +90,10 @@
     /* 카드 더보기/접기 공통 */
     .card-expand-wrap { position:relative; max-height:100px; overflow:hidden; transition:max-height 0.3s ease; }
     .card-expand-fade { position:absolute; bottom:0; left:0; right:0; height:36px; background:var(--bg, #ffffff); pointer-events:none; }
-    .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(37,103,95,0.15); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
+    .card-expand-btn { display:none; width:100%; background:none; border:none; border-top:1px solid rgba(37,103,95,0.5); color:var(--gold); font-size:0.78rem; cursor:pointer; padding:6px 0 2px; margin-bottom:6px; font-family:inherit; letter-spacing:0.03em; }
     /* ══════════════════════════════════════════
        2단계: 검색·정렬·필터 영역 정리
-       (상단 내비게이션 CSS는 assets/css/style.css?v=20261108-white-base1 공통화됨)
+       (상단 내비게이션 CSS는 assets/css/style.css?v=20261108-white-border1 공통화됨)
     ══════════════════════════════════════════ */
 
     /* ── 검색·정렬·필터 통합 카드 ── */
@@ -117,7 +117,7 @@
     .month-current-btn { padding:0 12px; }
     .month-filter-summary { margin-left:auto; color:var(--gold-soft); font-size:.78rem; }
     .listing-note-view { display:flex; flex-direction:column; gap:18px; }
-    .note-view-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid rgba(37,103,95,0.22); border-radius:12px; background:rgba(37,103,95,0.06); }
+    .note-view-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid rgba(37,103,95,0.5); border-radius:12px; background:rgba(37,103,95,0.06); }
     .note-view-head strong { display:block; color:var(--gold-soft); font-size:1.05rem; }
     .note-view-head span { color:var(--text-muted); font-size:.8rem; }
     .note-density-toggle { display:flex; flex-shrink:0; border:1px solid var(--border-slate); border-radius:8px; overflow:hidden; }
@@ -126,19 +126,19 @@
     .note-density-toggle button.active { background:rgba(37,103,95,0.2); color:var(--gold); }
     html[data-office-theme="ktop"] .note-density-toggle button.active { background:#1769d1 !important;color:#ffffff !important; }
     .note-rows { display:flex; flex-direction:column; border:1px solid var(--border-slate); border-radius:10px; overflow:hidden; background:var(--bg-card); }
-    .note-row { display:grid; grid-template-columns:34px minmax(0,1.6fr) minmax(0,1fr) minmax(110px,.8fr) minmax(130px,.9fr); gap:10px; align-items:center; padding:9px 12px; border-bottom:1px solid #dcedec; cursor:pointer; font-size:.82rem; }
+    .note-row { display:grid; grid-template-columns:34px minmax(0,1.6fr) minmax(0,1fr) minmax(110px,.8fr) minmax(130px,.9fr); gap:10px; align-items:center; padding:9px 12px; border-bottom:1px solid #779a94; cursor:pointer; font-size:.82rem; }
     .note-row:last-child { border-bottom:0; }
     .note-row:hover { background:rgba(37,103,95,0.06); }
     .note-row-no { color:var(--gold); font-weight:700; font-size:.78rem; }
     .note-row-title { color:var(--text-main); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .note-row-meta, .note-row-owner { color:var(--text-muted); font-size:.76rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .note-row-price { color:var(--text-main); font-weight:600; white-space:nowrap; }
-    .note-day { border-left:3px solid rgba(37,103,95,0.35); padding-left:14px; }
+    .note-day { border-left:3px solid rgba(37,103,95,0.5); padding-left:14px; }
     .note-day-title { display:flex; align-items:center; gap:8px; margin:0 0 9px; color:var(--gold-soft); font-size:.96rem; }
     .note-day-title span { color:var(--text-muted); font-size:.76rem; font-weight:400; }
     .note-items { display:flex; flex-direction:column; gap:8px; }
     .note-item { display:grid; grid-template-columns:58px minmax(0,1.4fr) minmax(130px,.8fr) minmax(150px,1fr); gap:10px; align-items:start; padding:12px 14px; border:1px solid var(--border-slate); border-radius:10px; background:var(--bg-card); cursor:pointer; }
-    .note-item:hover { border-color:rgba(37,103,95,0.35); background:rgba(37,103,95,0.045); }
+    .note-item:hover { border-color:rgba(37,103,95,0.5); background:rgba(37,103,95,0.045); }
     .note-number { color:var(--gold); font-weight:700; font-size:.82rem; }
     .note-title { color:var(--text-main); font-weight:700; line-height:1.45; }
     .note-address, .note-meta, .note-owner, .note-memo { margin-top:3px; color:var(--text-muted); font-size:.78rem; line-height:1.45; word-break:keep-all; overflow-wrap:anywhere; }
@@ -239,7 +239,7 @@
  .properties-page .filter-panel-row .deal-filter-wrap .filter-row { flex-wrap:wrap; }
 }
 </style>
-<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261108-white-base1">
+<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261108-white-border1">
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261009-ktop-v4">
 <script>
 (function(){
@@ -314,7 +314,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
  html[data-office-theme="ktop"] .properties-page .listing-cell-type > span { max-width:100%; width:auto; padding:3px 7px; border-radius:5px; font-size:11px; }
  html[data-office-theme="ktop"] .properties-page .listing-row-card .listing-actions {
    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start;
-   gap:7px; padding-top:10px; margin-top:2px; border-top:1px solid #dcedec;
+   gap:7px; padding-top:10px; margin-top:2px; border-top:1px solid #779a94;
  }
  html[data-office-theme="ktop"] .properties-page .listing-row-card .lc-actions-main { display:contents; }
  html[data-office-theme="ktop"] .properties-page .listing-row-card .lc-actions-main .btn,
@@ -322,13 +322,13 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
    box-sizing:border-box; width:100%; min-height:42px; padding:10px 4px; border-radius:8px; font-size:13px; line-height:1.4; text-align:center;
  }
  html[data-office-theme="ktop"] .properties-page .ktop-mobile-more { display:block; position:relative; min-width:0; }
- html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary { display:block; border:1px solid #dcedec; background:#fff; color:#234c49; cursor:pointer; list-style:none; }
+ html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary { display:block; border:1px solid #779a94; background:#fff; color:#234c49; cursor:pointer; list-style:none; }
  html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary::-webkit-details-marker { display:none; }
  html[data-office-theme="ktop"] .properties-page .ktop-mobile-more > summary:focus-visible { outline:2px solid #1767d2; outline-offset:2px; }
  html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body { display:none; }
  html[data-office-theme="ktop"] .properties-page .ktop-mobile-more[open] .ktop-mobile-more-body {
    display:grid; gap:8px; position:absolute; top:calc(100% + 6px); right:0; width:180px;
-   padding:10px; border:1px solid #dcedec; border-radius:10px; background:#fff; box-shadow:0 6px 20px rgba(35,76,73,0.08); z-index:20;
+   padding:10px; border:1px solid #779a94; border-radius:10px; background:#fff; box-shadow:0 6px 20px rgba(35,76,73,0.08); z-index:20;
  }
  html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .btn { width:100%; min-height:42px; font-size:13px; padding:8px; }
  html[data-office-theme="ktop"] .properties-page .ktop-mobile-more-body .lc-actions-side { display:grid; gap:8px; }
@@ -352,10 +352,10 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 <script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
 <style>
 #staleFilterBtn{width:auto !important;min-width:max-content;}
-#staleFilterBtn.on{border-color:#cbe1e0;color:#25675f;background:rgba(37,103,95,0.14);}
+#staleFilterBtn.on{border-color:#5f8780;color:#25675f;background:rgba(37,103,95,0.14);}
 #staleFilterBtn b{margin-left:4px;}
 .confirm-fresh{color:#17703a;font-weight:700;}.confirm-stale{color:#b42318;font-weight:700;}.confirm-old{color:#b42318;font-weight:800;}.confirm-none{color:#234c49;font-weight:600;}
-.confirm-btn{border:1px solid #cbe1e0;color:#25675f;background:transparent;border-radius:999px;padding:1px 8px;font-size:11px;cursor:pointer;margin-left:4px;white-space:nowrap;}
+.confirm-btn{border:1px solid #5f8780;color:#25675f;background:transparent;border-radius:999px;padding:1px 8px;font-size:11px;cursor:pointer;margin-left:4px;white-space:nowrap;}
 .confirm-btn:hover{background:rgba(37,103,95,0.18);}
 .lc-confirm{display:block;margin-top:4px;font-size:11px;line-height:1.5;white-space:normal;}
 .lc-confirm .confirm-btn{display:block;margin:2px 0 0 0;}
@@ -486,7 +486,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
           <div class="filter-row" id="dealFilterRow"></div>
         </div>
       </div>
-      <div class="filter-row" id="subFilterRow" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(37,103,95,0.12);"></div>
+      <div class="filter-row" id="subFilterRow" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(37,103,95,0.5);"></div>
     </section>
 
     <!-- 목록 -->
@@ -515,7 +515,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
           <div style="font-size:10px;color:#666;text-align:right;" id="printDate"></div>
         </div>
         <!-- 통합검색: 현재매물 섹션 헤더 -->
-        <div id="unifiedPropertyLabel" style="display:none;font-weight:600;font-size:0.88rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(37,103,95,0.2);">현재매물 <span id="unifiedPropertyCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
+        <div id="unifiedPropertyLabel" style="display:none;font-weight:600;font-size:0.88rem;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(37,103,95,0.5);">현재매물 <span id="unifiedPropertyCount" style="font-size:0.78rem;color:var(--text-muted);font-weight:normal;"></span></div>
         <div id="listingContainer" class="listing-grid"></div>
         <div id="emptyMessage" style="display:none;font-size:0.82rem;color:var(--text-muted);margin-top:8px;text-align:center;padding:20px 0;">
           등록된 매물이 없습니다.
@@ -628,7 +628,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 }
 .cm-wrap {
   background: radial-gradient(circle at top left, #ffffff 0, #ffffff 45%, #ffffff 100%);
-  border: 1px solid rgba(37,103,95,0.35);
+  border: 1px solid rgba(37,103,95,0.5);
   border-radius: 18px;
   width: 100%; max-width: 700px;
   padding: 24px;
@@ -639,7 +639,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 20px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(37,103,95,0.25);
+  border-bottom: 1px solid rgba(37,103,95,0.5);
 }
 .cm-header h2 { font-size: 1.1rem; color: var(--gold); margin: 0; }
 .cm-close {
@@ -668,7 +668,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
 .cm-field textarea {
   width: 100%;
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(37,103,95,0.25);
+  border: 1px solid rgba(37,103,95,0.5);
   border-radius: 8px;
   color: var(--text-main);
   padding: 8px 10px;
@@ -677,28 +677,28 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   color-scheme: light;
 }
 .cm-field input:focus,
-.cm-field textarea:focus { outline: none; border-color: rgba(37,103,95,0.35); }
+.cm-field textarea:focus { outline: none; border-color: rgba(37,103,95,0.5); }
 .cm-toggle-group { display: flex; gap: 6px; flex-wrap: wrap; }
 .cm-toggle {
   padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; cursor: pointer;
-  border: 1px solid rgba(37,103,95,0.35); background: transparent; color: var(--text-muted);
+  border: 1px solid rgba(37,103,95,0.5); background: transparent; color: var(--text-muted);
   transition: 0.15s;
 }
 .cm-toggle.active {
   background: linear-gradient(135deg, #25675f, #25675f);color:#ffffff; font-weight: bold; border-color: transparent;
 }
-.cm-divider { border: none; border-top: 1px solid #dcedec; margin: 14px 0; }
+.cm-divider { border: none; border-top: 1px solid #779a94; margin: 14px 0; }
 .cm-calc-box {
   font-size: 0.83rem; color: var(--gold-soft);
   background: rgba(37,103,95,0.07);
-  border: 1px solid rgba(37,103,95,0.15);
+  border: 1px solid rgba(37,103,95,0.5);
   border-radius: 8px; padding: 8px 12px;
   margin-top: 4px;
 }
 .cm-output {
   width: 100%;
   background: #f8fcfc;
-  border: 1px solid rgba(37,103,95,0.3);
+  border: 1px solid rgba(37,103,95,0.5);
   border-radius: 10px;
   color: var(--text-main);
   font-size: 0.84rem;
@@ -918,8 +918,8 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   </div>
 </div>
 
-<script src="assets/js/listings-shared.js?v=20261108-white-base1"></script>
-<script src="assets/js/properties.js?v=20261108-white-base1"></script>
+<script src="assets/js/listings-shared.js?v=20261108-white-border1"></script>
+<script src="assets/js/properties.js?v=20261108-white-border1"></script>
 <script>
 /* Reuse the original card controls and handlers; enhance KTOP only. */
 (function () {
@@ -1000,7 +1000,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   });
 })();
 </script>
-<script src="assets/js/property-type-columns.js?v=20261108-white-base1"></script>
+<script src="assets/js/property-type-columns.js?v=20261108-white-border1"></script>
 <script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
 <script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
 <script src="assets/js/promo-board.js?v=20261107-board12"></script>

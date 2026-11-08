@@ -21,7 +21,7 @@
   height:38px;
   border-radius:12px;
   background:radial-gradient(circle at 30% 20%, rgba(37,103,95,0.35), rgba(37,103,95,0.05));
-  border:1px solid rgba(37,103,95,0.35);
+  border:1px solid rgba(37,103,95,0.5);
 }
 .brand-text h1{
   margin:0;
@@ -78,7 +78,7 @@
 .section-title .sub{ color:var(--muted); font-size:0.86rem; }
 
 .readonly-box{
-  border:1px dashed #dcedec;
+  border:1px dashed #779a94;
   border-radius:14px;
   background:#f8fcfc;
   padding:10px 12px;
@@ -151,7 +151,7 @@ hr.soft{
   gap:6px;
   padding:4px 10px;
   border-radius:999px;
-  border:1px solid rgba(37,103,95,0.25);
+  border:1px solid rgba(37,103,95,0.5);
   background:rgba(37,103,95,0.1);
   font-size:0.78rem;
   color:#234c49;

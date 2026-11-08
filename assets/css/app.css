@@ -1,6 +1,6 @@
 /* assets/css/app.css - White Workspace Base Theme (기본 화이트 디자인) */
 
-@import url("tokens.css?v=20261108-white-base1");
+@import url("tokens.css?v=20261108-white-border1");
 
 *, *::before, *::after { box-sizing:border-box; }
 
@@ -46,7 +46,7 @@ html, body {
   gap:12px;
   padding:14px 18px;
   background:var(--bg, #ffffff);
-  border:1px solid rgba(37,103,95,0.25);
+  border:1px solid rgba(37,103,95,0.5);
   border-radius:16px;
   box-shadow:0 8px 24px rgba(35,76,73,0.08), inset 0 1px 0 rgba(37,103,95,0.08);
 }
@@ -54,7 +54,7 @@ html, body {
 .logo{
   width:40px; height:40px; border-radius:12px;
   background:radial-gradient(circle at 30% 20%, rgba(37,103,95,0.5), rgba(37,103,95,0.1));
-  border:1px solid rgba(37,103,95,0.35);
+  border:1px solid rgba(37,103,95,0.5);
   box-shadow:0 0 12px rgba(37,103,95,0.08);
 }
 .brand-text h1{
@@ -81,7 +81,7 @@ label{
 }
 input, select, textarea{
   background:#ffffff;
-  border:1px solid #dcedec;
+  border:1px solid #779a94;
   border-radius:10px;
   color:var(--text);
   font-family:inherit; font-size:0.92rem;
@@ -90,7 +90,7 @@ input, select, textarea{
   transition:border-color 0.18s, box-shadow 0.18s;
 }
 input:focus, select:focus, textarea:focus{
-  border-color:rgba(37,103,95,0.35);
+  border-color:rgba(37,103,95,0.5);
   box-shadow:0 0 0 3px rgba(37,103,95,0.08);
 }
 input::placeholder, textarea::placeholder{ color:#234c49; }
@@ -115,7 +115,7 @@ input[readonly]{ background:rgba(255,255,255,0.04); color:var(--muted); cursor:d
 }
 .btn.primary{
   background:linear-gradient(135deg, #25675f 0%, #25675f 50%, #25675f 100%);
-  border-color:#cbe1e0;color:#ffffff; font-weight:800;
+  border-color:#5f8780;color:#ffffff; font-weight:800;
   box-shadow:0 4px 14px rgba(37,103,95,0.08);
 }
 .btn.primary:hover{

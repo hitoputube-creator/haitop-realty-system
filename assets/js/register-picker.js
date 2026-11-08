@@ -293,7 +293,7 @@
     dateField.after(road.field, jibun.field);
     const convBtn = document.createElement('button'); convBtn.type = 'button'; convBtn.textContent = '⇄ 변환';
     convBtn.title = '새주소 ⇄ 구주소 변환 (한쪽만 적고 누르세요)';
-    convBtn.style.cssText = 'flex:0 0 auto;padding:0 10px;border-radius:8px;border:1px solid rgba(37,103,95,0.35);background:rgba(37,103,95,0.14);color:#25675f;font-size:.78rem;font-weight:700;white-space:nowrap;cursor:pointer;';
+    convBtn.style.cssText = 'flex:0 0 auto;padding:0 10px;border-radius:8px;border:1px solid rgba(37,103,95,0.5);background:rgba(37,103,95,0.14);color:#25675f;font-size:.78rem;font-weight:700;white-space:nowrap;cursor:pointer;';
     const convRow = document.createElement('div'); convRow.style.cssText = 'display:flex;gap:6px;align-items:stretch;';
     roadInput.before(convRow); roadInput.style.flex = '1'; roadInput.style.minWidth = '0'; convRow.append(roadInput, convBtn);
     const convStatus = document.createElement('div'); convStatus.style.cssText = 'font-size:.74rem;margin-top:4px;';

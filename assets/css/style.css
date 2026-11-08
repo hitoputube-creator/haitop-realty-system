@@ -1,4 +1,4 @@
-@import url("tokens.css?v=20261108-white-base1");
+@import url("tokens.css?v=20261108-white-border1");
 
 * { box-sizing: border-box; }
 
@@ -42,7 +42,7 @@ body {
 .logo-text { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
 .logo-main { font-size: 1.1rem; color: var(--gold); font-weight: 600; }
 .logo-sub  { font-size: 0.78rem; color: var(--text-muted); }
-.header-line { border-bottom: 1px solid rgba(37,103,95,0.35); margin: 8px 0 16px; }
+.header-line { border-bottom: 1px solid rgba(37,103,95,0.5); margin: 8px 0 16px; }
 .page-title { font-size: 1.4rem; font-weight: 600; color: var(--gold); margin-bottom: 16px; }
 
 /* ══════════════════════════════════════════
@@ -167,7 +167,7 @@ body {
 .btn-primary:hover { filter: brightness(1.1); }
 .btn-ghost {
   background: transparent; color: var(--gold-soft);
-  border: 1px solid rgba(37,103,95,0.35);
+  border: 1px solid rgba(37,103,95,0.5);
 }
 .btn-ghost:hover { background: rgba(37,103,95,0.15); }
 .btn-danger {
@@ -199,7 +199,7 @@ body[data-nav-active="properties"] #deleteSelectedBtn.btn-select-delete:disabled
   display: inline-flex; align-items: center;
   border-radius: 999px; padding: 2px 8px;
   font-size: 0.7rem;
-  border: 1px solid rgba(37,103,95,0.35);
+  border: 1px solid rgba(37,103,95,0.5);
   color: var(--gold-soft);
 }
 .badge-red   { border-color: rgba(224,82,82,0.5);   color: #b42318; }
@@ -226,8 +226,8 @@ textarea { resize: vertical; min-height: 120px; }
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field label { font-size: 0.78rem; color: var(--text-muted); }
 .image-preview-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-.image-preview-chip { border: 1px solid rgba(37,103,95,0.28); border-radius: 999px; padding: 4px 9px; color: var(--gold-soft); font-size: 0.75rem; background: rgba(37,103,95,0.08); }
-.image-preview-thumb { position: relative; display: inline-flex; width: 72px; height: 56px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(37,103,95,0.28); }
+.image-preview-chip { border: 1px solid rgba(37,103,95,0.5); border-radius: 999px; padding: 4px 9px; color: var(--gold-soft); font-size: 0.75rem; background: rgba(37,103,95,0.08); }
+.image-preview-thumb { position: relative; display: inline-flex; width: 72px; height: 56px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(37,103,95,0.5); }
 .image-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .image-preview-thumb button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border: none; border-radius: 999px; background: rgba(0,0,0,0.68);color:#ffffff; cursor: pointer; line-height: 20px; padding: 0; }
 .image-preview-thumb-selectable {
@@ -325,7 +325,7 @@ textarea { resize: vertical; min-height: 120px; }
   box-shadow: none;
 }
 .listing-card-modern:hover {
-  border-color: rgba(37,103,95,0.35);
+  border-color: rgba(37,103,95,0.5);
   transform: none;
   background: var(--card2);
   box-shadow: 0 6px 14px rgba(35,76,73,0.08);
@@ -385,7 +385,7 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .status-pill.status-done {
   color: #aeb7c5;
-  border-color: #dcedec;
+  border-color: #779a94;
   background: rgba(174,183,197,0.08);
 }
 
@@ -486,7 +486,7 @@ textarea { resize: vertical; min-height: 120px; }
   line-height: 1.4;
   white-space: nowrap;
 }
-.lc-deal-badge.deal-sale    { background: rgba(37,103,95,0.22); color: #25675f; border: 1px solid rgba(37,103,95,0.35); }
+.lc-deal-badge.deal-sale    { background: rgba(37,103,95,0.22); color: #25675f; border: 1px solid rgba(37,103,95,0.5); }
 .lc-deal-badge.deal-monthly { background: rgba(82,130,224,0.2);  color: #234c49; border: 1px solid rgba(82,130,224,0.4); }
 .lc-deal-badge.deal-jeonse  { background: rgba(76,175,125,0.2);  color: #177a55; border: 1px solid rgba(76,175,125,0.4); }
 
@@ -620,7 +620,7 @@ textarea { resize: vertical; min-height: 120px; }
   padding: 10px 9px;
   background: var(--panel2);
   color: var(--gold-soft);
-  border-bottom: 1px solid rgba(37,103,95,0.2);
+  border-bottom: 1px solid rgba(37,103,95,0.5);
   text-align: left;
   font-weight: 700;
   white-space: nowrap;
@@ -659,19 +659,19 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* 상세 */
 .detail-title   { font-size: 1.35rem; font-weight: 600; color: var(--gold); margin-bottom: 10px; }
-.photo-main     { width: 100%; border-radius: 14px; max-height: 340px; object-fit: cover; border: 1px solid rgba(37,103,95,0.3); }
+.photo-main     { width: 100%; border-radius: 14px; max-height: 340px; object-fit: cover; border: 1px solid rgba(37,103,95,0.5); }
 .thumb-row      { display: flex; gap: 8px; margin-top: 8px; overflow-x: auto; }
-.thumb          { width: 80px; height: 62px; border-radius: 8px; object-fit: cover; border: 1px solid #dcedec; cursor: pointer; }
+.thumb          { width: 80px; height: 62px; border-radius: 8px; object-fit: cover; border: 1px solid #779a94; cursor: pointer; }
 .info-card      { margin-top: 18px; padding: 18px; border-radius: 16px; border: 1px solid var(--gold); background: var(--bg-card); }
 .info-grid      { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
 .info-label     { font-size: 0.78rem; color: var(--gold-soft); }
 .info-value     { font-size: 0.92rem; color: var(--text-main); font-weight: 500; }
-.desc-card      { margin-top: 16px; background: var(--bg-soft); border-radius: 12px; padding: 14px 18px; border: 1px solid #dcedec; }
+.desc-card      { margin-top: 16px; background: var(--bg-soft); border-radius: 12px; padding: 14px 18px; border: 1px solid #779a94; }
 .desc-title     { font-size: 0.95rem; color: var(--gold); margin-bottom: 8px; }
 .deal-status    { display: inline-block; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--gold); color: var(--gold); background: rgba(37,103,95,0.15); font-size: 0.82rem; margin-bottom: 6px; }
 .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .detail-badges  { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-.detail-section { margin-top: 14px; padding: 15px 18px; border-radius: 12px; background: var(--bg-soft); border: 1px solid #dcedec; }
+.detail-section { margin-top: 14px; padding: 15px 18px; border-radius: 12px; background: var(--bg-soft); border: 1px solid #779a94; }
 .detail-section.private-section { border-color: rgba(255,100,100,0.2); background: rgba(255,60,60,0.04); }
 .detail-section-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; color: var(--gold); font-size: 0.95rem; font-weight: 700; }
 .detail-read-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; }
@@ -682,10 +682,10 @@ textarea { resize: vertical; min-height: 120px; }
 .detail-read-value.price { color: var(--gold); font-weight: 700; }
 .detail-read-value.pre-line { white-space: pre-wrap; }
 .detail-chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
-.detail-chip { display: inline-flex; align-items: center; border: 1px solid rgba(37,103,95,0.28); border-radius: 999px; padding: 3px 9px; color: var(--gold-soft); background: rgba(37,103,95,0.08); font-size: 0.76rem; line-height: 1.4; }
+.detail-chip { display: inline-flex; align-items: center; border: 1px solid rgba(37,103,95,0.5); border-radius: 999px; padding: 3px 9px; color: var(--gold-soft); background: rgba(37,103,95,0.08); font-size: 0.76rem; line-height: 1.4; }
 .detail-resource-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.04); }
 .detail-image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
-.detail-image-link { display: block; border-radius: 8px; overflow: hidden; border: 1px solid rgba(37,103,95,0.28); background: #f8fcfc; }
+.detail-image-link { display: block; border-radius: 8px; overflow: hidden; border: 1px solid rgba(37,103,95,0.5); background: #f8fcfc; }
 .detail-image-link img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
 
 /* 매물 상세정보 — 기본정보·주소·가격·면적·건물정보·소유주 연락처를 합친 압축 표.
@@ -767,7 +767,7 @@ textarea { resize: vertical; min-height: 120px; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(37,103,95,0.35);
+  border: 1px solid rgba(37,103,95,0.5);
   border-radius: 8px;
   background: rgba(37,103,95,0.08);
   color: var(--text-main);
@@ -799,7 +799,7 @@ textarea { resize: vertical; min-height: 120px; }
 /* 빠른등록 강조 */
 .quick-card {
   background: linear-gradient(135deg, rgba(37,103,95,0.12), #ffffff);
-  border: 1px solid rgba(37,103,95,0.35);
+  border: 1px solid rgba(37,103,95,0.5);
   border-radius: 18px; padding: 18px; margin-bottom: 16px;
   box-shadow: 0 0 24px rgba(37,103,95,0.08);
 }
@@ -814,7 +814,7 @@ textarea { resize: vertical; min-height: 120px; }
 .cust-form-grid .field { margin-bottom: 0; }
 
 /* 고객 목록 - PC 압축 표 */
-.cust-table-wrap { display: flex; flex-direction: column; border: 1px solid #dcedec; border-radius: 10px; overflow: hidden; }
+.cust-table-wrap { display: flex; flex-direction: column; border: 1px solid #779a94; border-radius: 10px; overflow: hidden; }
 #tabCustomer .card-title { font-size: 1.08rem; }
 #customerSearchInput { font-size: 1rem; }
 #customerAddToggleBtn { font-size: 0.98rem; }
@@ -833,7 +833,7 @@ textarea { resize: vertical; min-height: 120px; }
   font-size: 0.95rem;
   font-weight: 700;
 }
-.cust-row { border-top: 1px solid #dcedec; font-size: 1rem; }
+.cust-row { border-top: 1px solid #779a94; font-size: 1rem; }
 .cust-row:hover { background: rgba(255,255,255,0.03); }
 .cust-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); }
 .cust-cell-name { font-weight: 700; color: var(--gold-soft); }
@@ -844,7 +844,7 @@ textarea { resize: vertical; min-height: 120px; }
   height: 30px;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid rgba(37,103,95,0.35);
+  border: 1px solid rgba(37,103,95,0.5);
   background: var(--bg-main);
   white-space: nowrap;
 }
@@ -855,7 +855,7 @@ textarea { resize: vertical; min-height: 120px; }
   margin: 0;
   padding: 0;
   border: none;
-  border-right: 1px solid rgba(37,103,95,0.35);
+  border-right: 1px solid rgba(37,103,95,0.5);
   border-radius: 0;
   font-size: 0.82rem;
   font-weight: 700;
@@ -910,7 +910,7 @@ textarea { resize: vertical; min-height: 120px; }
 .loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; }
 .spinner {
   display: inline-block; width: 22px; height: 22px;
-  border: 2px solid rgba(37,103,95,0.2); border-top-color: var(--gold);
+  border: 2px solid rgba(37,103,95,0.5); border-top-color: var(--gold);
   border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px;
   vertical-align: middle;
 }
@@ -932,7 +932,7 @@ textarea { resize: vertical; min-height: 120px; }
   display: flex; align-items: center; justify-content: center; padding: 16px;
 }
 .modal-box {
-  background: var(--card); border: 1px solid rgba(37,103,95,0.35);
+  background: var(--card); border: 1px solid rgba(37,103,95,0.5);
   border-radius: 18px; padding: 24px; width: 100%; max-width: 360px;
 }
 .modal-title { font-size: 1rem; color: var(--gold); margin-bottom: 12px; font-weight: 600; }
@@ -942,7 +942,7 @@ textarea { resize: vertical; min-height: 120px; }
 .contact-btn {
   display: inline-flex; align-items: center; gap: 6px;
   border-radius: 999px; padding: 6px 14px; font-size: 0.82rem;
-  text-decoration: none; border: 1px solid rgba(37,103,95,0.35); color: var(--gold-soft);
+  text-decoration: none; border: 1px solid rgba(37,103,95,0.5); color: var(--gold-soft);
   background: transparent; cursor: pointer; transition: 0.15s;
 }
 .contact-btn:hover { background: rgba(37,103,95,0.15); }
@@ -951,7 +951,7 @@ textarea { resize: vertical; min-height: 120px; }
 .tab-nav {
   display: flex; gap: 4px;
   margin-bottom: 16px;
-  border-bottom: 1px solid rgba(37,103,95,0.25);
+  border-bottom: 1px solid rgba(37,103,95,0.5);
   padding-bottom: 0;
 }
 .tab-btn {
@@ -979,7 +979,7 @@ textarea { resize: vertical; min-height: 120px; }
   gap: 12px; margin-top: 16px;
 }
 .page-btn {
-  border-radius: 999px; border: 1px solid rgba(37,103,95,0.35);
+  border-radius: 999px; border: 1px solid rgba(37,103,95,0.5);
   padding: 5px 14px; font-size: 0.82rem; cursor: pointer;
   background: transparent; color: var(--gold-soft);
   font-family: inherit; transition: 0.15s;
@@ -1019,7 +1019,7 @@ textarea { resize: vertical; min-height: 120px; }
 .sticker-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .sticker-chip {
   display: flex; align-items: center; gap: 5px;
-  border: 1px solid rgba(37,103,95,0.3); border-radius: 999px;
+  border: 1px solid rgba(37,103,95,0.5); border-radius: 999px;
   padding: 4px 10px; font-size: 0.78rem; color: var(--text-muted);
   cursor: pointer; transition: 0.15s; background: #ffffff;
   user-select: none;
@@ -1028,7 +1028,7 @@ textarea { resize: vertical; min-height: 120px; }
 .sticker-chip input { width: auto !important; padding: 0; }
 
 /* 모달 내 섹션 제목 */
-.modal-section-title { font-size: 0.78rem; color: var(--gold-soft); font-weight: 600; margin: 14px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(37,103,95,0.2); }
+.modal-section-title { font-size: 0.78rem; color: var(--gold-soft); font-weight: 600; margin: 14px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(37,103,95,0.5); }
 
 @media (max-width: 1100px) {
   .detail-read-grid {
@@ -1185,7 +1185,7 @@ textarea { resize: vertical; min-height: 120px; }
   min-height: 34px;
   padding: 7px 10px;
   border: 1px solid rgba(126,151,184,0.22);
-  border-bottom-color: rgba(37,103,95,0.32);
+  border-bottom-color: rgba(37,103,95,0.5);
   border-radius: 8px;
   background: #ffffff;
   color: #234c49;
@@ -1206,7 +1206,7 @@ textarea { resize: vertical; min-height: 120px; }
   transform: none;
   box-shadow: none;
   background: var(--card2);
-  border-color: rgba(37,103,95,0.35);
+  border-color: rgba(37,103,95,0.5);
 }
 .listing-card.listing-row-card.status-needs {
   border-color: rgba(82,130,224,0.45);
@@ -1534,14 +1534,14 @@ textarea { resize: vertical; min-height: 120px; }
   justify-content: space-between;
   gap: 12px;
   padding: 18px 22px 14px;
-  border-bottom: 1px solid rgba(37,103,95,0.2);
+  border-bottom: 1px solid rgba(37,103,95,0.5);
   flex-shrink: 0;
 }
 #editModal .edit-modal-header .modal-title { margin-bottom: 0; }
 #editModal .edit-modal-close {
   width: 30px; height: 30px; flex-shrink: 0;
   border-radius: 999px;
-  border: 1px solid rgba(37,103,95,0.35);
+  border: 1px solid rgba(37,103,95,0.5);
   background: transparent;
   color: var(--gold-soft);
   font-size: 0.95rem;
@@ -1562,7 +1562,7 @@ textarea { resize: vertical; min-height: 120px; }
   flex-shrink: 0;
   margin-top: 0;
   padding: 14px 22px;
-  border-top: 1px solid rgba(37,103,95,0.2);
+  border-top: 1px solid rgba(37,103,95,0.5);
   background: var(--card);
 }
 
@@ -1610,7 +1610,7 @@ textarea { resize: vertical; min-height: 120px; }
 #customerDetailModal, #customerEditModal { align-items: flex-start; overflow-y: auto; padding: 24px 12px; box-sizing: border-box; }
 #customerDetailModal .modal-box, #customerEditModal .modal-box { width: 100%; max-width: 820px !important; max-height: none; margin: auto; box-sizing: border-box; }
 #customerDetailModal .cust-history-list, #customerEditModal .cust-history-list { max-height: none; overflow: visible; gap: 14px; }
-.cust-consultation { padding: 16px; border: 1px solid rgba(37,103,95,0.22); border-radius: 10px; background: rgba(255,255,255,.035); min-width: 0; }
+.cust-consultation { padding: 16px; border: 1px solid rgba(37,103,95,0.5); border-radius: 10px; background: rgba(255,255,255,.035); min-width: 0; }
 .cust-consultation-meta, .cust-history-help { font-size: .8rem; color: var(--text-muted); line-height: 1.6; }
 .cust-consultation-title { display: block; color: var(--gold-soft); margin: 8px 0; overflow-wrap: anywhere; }
 .cust-consultation-content { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; font-size: .9rem; }
@@ -1620,7 +1620,7 @@ textarea { resize: vertical; min-height: 120px; }
 .cust-consultation-actions a.btn,
 .cust-consultation-actions a.btn:visited {
   display: inline-flex; align-items: center; color: #234c49;
-  background: rgba(37,103,95,0.12); border: 1px solid rgba(37,103,95,0.35);
+  background: rgba(37,103,95,0.12); border: 1px solid rgba(37,103,95,0.5);
   text-decoration: none; font-weight: 600;
 }
 .cust-consultation-actions a.btn:hover,
@@ -1628,7 +1628,7 @@ textarea { resize: vertical; min-height: 120px; }
   color: #234c49; background: rgba(37,103,95,0.27); border-color: var(--gold);
 }
 .cust-attachment { white-space: normal; overflow-wrap: anywhere; text-align: left; max-width: 100%; }
-.cust-consultation-editor { margin-top: 16px; border-top: 1px solid rgba(37,103,95,0.22); padding-top: 14px; }
+.cust-consultation-editor { margin-top: 16px; border-top: 1px solid rgba(37,103,95,0.5); padding-top: 14px; }
 .cust-consultation-editor label { display: block; margin: 8px 0; color: var(--gold-soft); }
 .cust-consultation-editor input, .cust-consultation-editor textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; }
 .cust-consultation-editor textarea { min-height: 180px; resize: vertical; line-height: 1.7; }
@@ -1672,9 +1672,9 @@ textarea { resize: vertical; min-height: 120px; }
 .properties-page .listing-filter-btn { border:0;background:none;color:var(--text-muted,#94a3b8);font-size:10px;line-height:1;padding:3px 2px;margin-left:1px;cursor:pointer;border-radius:4px; }
 .properties-page .listing-filter-btn:hover,.properties-page .listing-filter-btn:focus-visible { color:var(--gold);background:rgba(37,103,95,0.14); }
 .properties-page .listing-filter-btn.active { color:var(--gold);background:rgba(37,103,95,0.2); }
-.properties-page .listing-filter-reset { border:1px solid rgba(37,103,95,0.35);background:rgba(37,103,95,0.12);color:var(--gold);font:inherit;font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;cursor:pointer;white-space:nowrap; }
+.properties-page .listing-filter-reset { border:1px solid rgba(37,103,95,0.5);background:rgba(37,103,95,0.12);color:var(--gold);font:inherit;font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;cursor:pointer;white-space:nowrap; }
 .properties-page .listing-filter-reset:hover { background:rgba(37,103,95,0.24); }
-.col-filter-pop { position:absolute;z-index:1000;width:260px;box-sizing:border-box;padding:10px;border-radius:10px;background:#ffffff;border:1px solid rgba(37,103,95,0.35);box-shadow:0 12px 32px rgba(35,76,73,0.08);color:#234c49;font-size:12px; }
+.col-filter-pop { position:absolute;z-index:1000;width:260px;box-sizing:border-box;padding:10px;border-radius:10px;background:#ffffff;border:1px solid rgba(37,103,95,0.5);box-shadow:0 12px 32px rgba(35,76,73,0.08);color:#234c49;font-size:12px; }
 .col-filter-pop .cfp-title { font-weight:700;color:var(--gold);margin-bottom:8px; }
 .col-filter-pop input[type=search],.col-filter-pop input[type=number] { width:100%;box-sizing:border-box;padding:6px 8px;border-radius:6px;border:1px solid rgba(126,151,184,0.35);background:#ffffff;color:#234c49;font-size:12px; }
 .col-filter-pop .cfp-quick { display:flex;gap:6px;margin:8px 0 4px; }
@@ -1699,7 +1699,7 @@ textarea { resize: vertical; min-height: 120px; }
 .properties-page .listing-column-header .listing-cell-apartment { flex-direction:row;align-items:center;gap:0; }
 
 /* 마을단지 → 단지 자료 링크 */
-.listing-village-link { color:inherit;text-decoration:none;border-bottom:1px dotted rgba(37,103,95,0.35); }
+.listing-village-link { color:inherit;text-decoration:none;border-bottom:1px dotted rgba(37,103,95,0.5); }
 .listing-village-link:hover,.listing-village-link:focus-visible { color:var(--gold);border-bottom-style:solid; }
 
 /* ── 매물 / 명단 구분 ── */
@@ -1719,8 +1719,8 @@ textarea { resize: vertical; min-height: 120px; }
 .kind-tab-row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:2px 0 12px; }
 .kind-tab {
   padding: 7px 16px; border-radius: 999px; cursor: pointer;
-  border: 1px solid rgba(37,103,95,0.35); background: transparent;
+  border: 1px solid rgba(37,103,95,0.5); background: transparent;
   color: var(--text-muted, #aab); font-size: 0.88rem; font-weight: 700;
 }
 .kind-tab .kind-count { margin-left: 5px; font-size: 0.78rem; opacity: 0.8; font-weight: 600; }
-.kind-tab.active { background: var(--gold, #25675f);color:#ffffff; border-color: var(--gold, #cbe1e0); }
+.kind-tab.active { background: var(--gold, #25675f);color:#ffffff; border-color: var(--gold, #5f8780); }

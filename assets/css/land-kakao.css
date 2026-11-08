@@ -1,7 +1,7 @@
 .land-kakao-page{max-width:1440px}
 .land-kakao-page h1{font-size:1.55rem;color:var(--gold-soft,#25675f);margin:0 0 10px}
 .kakao-intro p,.kakao-status,.kakao-legend,.kakao-notice p{color:var(--text-muted,#9fb0c7);font-size:.85rem;line-height:1.65}
-.kakao-notice{border:1px solid var(--gold-soft,#cbe1e0);border-radius:10px;padding:14px 18px;margin:12px 0;background:rgba(37,103,95,0.06)}
+.kakao-notice{border:1px solid var(--gold-soft,#5f8780);border-radius:10px;padding:14px 18px;margin:12px 0;background:rgba(37,103,95,0.06)}
 .kakao-notice h2{margin:0 0 8px;font-size:1.05rem;color:var(--gold-soft,#25675f)}
 .kakao-notice ol{margin:0 0 8px;padding-left:20px;color:var(--text-main,#234c49);font-size:.88rem;line-height:1.8}
 .kakao-notice code{background:rgba(255,255,255,.08);padding:1px 6px;border-radius:4px}
@@ -11,17 +11,17 @@
 #kakaoPinFilters[hidden]{display:none}
 .kakao-control-group label{display:grid;gap:3px;font-size:.78rem;color:var(--text-muted,#9fb0c7)}
 .kakao-control-group select,.kakao-control-group input{min-height:34px;font-size:.85rem}
-.kakao-control-group .btn[aria-pressed="true"]{border-color:var(--gold-soft,#cbe1e0);color:var(--gold-soft,#25675f)}
-.kakao-map{width:100%;height:calc(100vh - 340px);min-height:520px;border-radius:10px;overflow:hidden;border:1px solid #dcedec}
+.kakao-control-group .btn[aria-pressed="true"]{border-color:var(--gold-soft,#5f8780);color:var(--gold-soft,#25675f)}
+.kakao-map{width:100%;height:calc(100vh - 340px);min-height:520px;border-radius:10px;overflow:hidden;border:1px solid #779a94}
 .kakao-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:8px 0 0}
 .kakao-legend span{display:inline-flex;align-items:center;gap:6px}
-.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid #dcedec}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid #779a94}
 .dot-building{background:#2563eb;color:#ffffff}.dot-vacant{background:#8b95a5;color:#ffffff}.dot-unknown{background:#f59e0b}
 .dot-shop{background:#6b7280;border-radius:2px;color:#ffffff}
 .check-mark{font-style:normal;color:#177a55;font-weight:700}
 
 /* 지도 위 필지 표시 */
-.kk-pin{position:relative;width:14px;height:14px;border:2px solid #dcedec;border-radius:50%;box-shadow:0 0 0 1px rgba(35,76,73,0.08);cursor:pointer;transform:translate(-50%,-50%);box-sizing:border-box}
+.kk-pin{position:relative;width:14px;height:14px;border:2px solid #779a94;border-radius:50%;box-shadow:0 0 0 1px rgba(35,76,73,0.08);cursor:pointer;transform:translate(-50%,-50%);box-sizing:border-box}
 .kk-pin.shop{border-radius:3px}
 .kk-pin.building{background:#2563eb;color:#ffffff}.kk-pin.vacant{background:#8b95a5;color:#ffffff}.kk-pin.unknown{background:#f59e0b}
 .kk-pin.registered::after{content:"✓";position:absolute;left:9px;top:-9px;font-size:11px;font-weight:700;color:#177a55;text-shadow:0 0 2px #000,0 0 2px #000}
@@ -36,7 +36,7 @@
 @media(max-width:640px){.kakao-map{height:calc(100vh - 300px);min-height:420px}}
 
 /* 화면 안 로드뷰 */
-.kakao-roadview{margin:14px 0 4px;border:1px solid #dcedec;border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.03)}
+.kakao-roadview{margin:14px 0 4px;border:1px solid #779a94;border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.03)}
 .kakao-roadview-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;margin-bottom:8px;color:var(--text-main,#234c49);font-size:.95rem}
 .kakao-roadview-actions{display:flex;flex-wrap:wrap;gap:8px}
 .kakao-roadview-actions .btn{display:inline-flex;align-items:center;min-height:34px;padding:5px 12px;font-size:.82rem;text-decoration:none;cursor:pointer}
