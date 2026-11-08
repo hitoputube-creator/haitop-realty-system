@@ -75,3 +75,11 @@
 
 .listings-kakao-page .kakao-controls>.kakao-control-group:nth-child(2){flex:1 1 auto}
 .listings-kakao-page .kakao-controls>.kakao-control-group:nth-child(5){order:5;margin-left:auto}
+
+/* 스크롤해도 상단 이동 버튼이 항상 보이도록 헤더를 작게 고정 */
+.listings-kakao-page .header{position:sticky;top:6px;z-index:1000;padding:8px 16px!important;min-height:0!important;margin-top:6px}
+.listings-kakao-page .header .logo-sub{display:none}
+.listings-kakao-page .header .logo-icon{width:32px!important;height:32px!important;flex:0 0 32px}
+.listings-kakao-page .header .logo-main{font-size:1.05rem!important}
+.listings-kakao-page .header-line{display:none}
+@media(max-width:720px){.listings-kakao-page .header{position:static}}
