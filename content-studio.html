@@ -78,13 +78,14 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9fc2ee;outline-offset
   <section class="card" id="stepOpts" hidden>
     <h2>2. 옵션</h2>
     <div class="opts">
+      <label>홍보용 매물 이름 (제목에 들어갑니다)<input type="text" id="oTitle" placeholder="매물 이름"></label>
       <label>말투<select id="oTone"><option value="info">정보형 (차분하고 정확하게)</option><option value="friendly">친근형 (대화하듯 부드럽게)</option></select></label>
       <label>추가 강조 포인트 (선택)<input type="text" id="oPoint" placeholder="예) 역세권, 주차 편리, 즉시 입주"></label>
       <div><label class="chk"><input type="checkbox" id="oPrice" checked> 정확한 가격 표시</label><label class="chk"><input type="checkbox" id="oAddr"> 상세 주소(번지·도로명) 표시</label></div>
     </div>
     <div id="photoBox" hidden><div class="note" style="margin-top:12px">이미지 배경 사진 선택 (사진이 없으면 색 배경으로 만들어집니다)</div><div class="photos" id="photos"></div>
       <div style="margin-top:8px"><label class="btn" style="cursor:pointer">내 사진 올리기<input type="file" id="ownPhoto" accept="image/*" hidden></label></div></div>
-    <p class="note">소유주 이름·연락처, 비공개 주소는 사용하지 않습니다. 옵션을 바꾸면 글과 이미지가 새로 만들어지며, 직접 고친 내용은 사라집니다.</p>
+    <p class="note">소유주 이름·연락처, 비공개 주소는 사용하지 않습니다. 매물 제목에 내부 메모(예: 매도임, 소유주 이름)가 섞여 있으면 위 "홍보용 매물 이름"을 고쳐 주세요. 옵션을 바꾸면 글과 이미지가 새로 만들어지며, 직접 고친 내용은 사라집니다.</p>
   </section>
 
   <section class="card" id="stepOut" hidden>
@@ -403,7 +404,7 @@ async function makePackage() {
 
 /* ───────── 화면 ───────── */
 var CHANNELS = [['blog', '블로그'], ['youtube', '유튜브'], ['threads', '스레드'], ['insta', '인스타그램']];
-function opts() { return { tone: $('oTone').value, point: $('oPoint').value.trim(), price: $('oPrice').checked, addr: $('oAddr').checked }; }
+function opts() { return { title: $('oTitle').value.trim(), tone: $('oTone').value, point: $('oPoint').value.trim(), price: $('oPrice').checked, addr: $('oAddr').checked }; }
 function fieldHtml(ch, key, label, kind, limit) {
   var id = 'f-' + ch + '-' + key;
   return '<div class="field"><div class="field-head"><b>' + label + '</b><span class="acts">' + (limit ? '<span class="count" id="' + id + '-n"></span>' : '') + '<button type="button" class="btn" data-copy="' + id + '">복사</button>' + (ch === 'blog' && key === 'body' ? '<button type="button" class="btn" data-rich="' + id + '">서식 복사</button>' : '') + '</span></div>' + (kind === 'text' ? '<input type="text" id="' + id + '">' : '<textarea id="' + id + '" rows="' + (key === 'body' ? 16 : 3) + '"></textarea>') + '</div>';
@@ -428,10 +429,11 @@ function bothText(ch) { readFields(); var o = S.out[ch]; if (ch === 'youtube') r
 
 async function regenerate() {
   if (!S.f) return;
+  S.f.title = opts().title || S.f.origTitle || S.f.title;
   S.out = buildTexts(S.f, opts()); fillFields(); await renderImages();
 }
 async function pickItem(it) {
-  S.sel = it; S.f = buildFacts(it); S.bg = null;
+  S.sel = it; S.f = buildFacts(it); S.f.origTitle = S.f.title; $('oTitle').value = S.f.title; S.bg = null;
   document.querySelectorAll('.pick-row').forEach(function (r) { r.classList.toggle('on', r.dataset.id === String(it.id)); });
   $('stepOpts').hidden = false; $('stepOut').hidden = false; $('stepAll').hidden = false;
   var ph = $('photos'); ph.innerHTML = ''; $('photoBox').hidden = false;
@@ -456,7 +458,7 @@ document.addEventListener('click', function (e) {
   if (t.dataset.both) { copyText(bothText(t.dataset.both), t); }
 });
 document.addEventListener('input', function (e) { if (e.target.id && e.target.id.indexOf('f-') === 0) counters(); });
-['oTone', 'oPoint', 'oPrice', 'oAddr'].forEach(function (id) { $(id).addEventListener('change', regenerate); });
+['oTitle', 'oTone', 'oPoint', 'oPrice', 'oAddr'].forEach(function (id) { $(id).addEventListener('change', regenerate); });
 $('q').addEventListener('input', renderList);
 $('ownPhoto').addEventListener('change', function () { var file = this.files && this.files[0]; if (!file) return; var url = URL.createObjectURL(file); loadImage(url).then(function (im) { S.bg = im; document.querySelectorAll('#photos img').forEach(function (x) { x.classList.remove('on'); }); renderImages(); }); this.value = ''; });
 $('btnAllCopy').addEventListener('click', function () { readFields(); copyText(allText(), this); });
