@@ -2,13 +2,7 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  padding:14px 16px;
-  border:1px solid var(--border);
-  background:var(--bg, #ffffff);
-  border-radius:16px;
-  box-shadow:0 12px 28px rgba(35,76,73,0.08);
-}
+  gap:12px;padding:20px 24px;border:0;background:var(--header-fill,linear-gradient(115deg,#19605d,#218d8d 70%,#24bab5));border-radius:16px;box-shadow:var(--header-shadow,0 7px 24px rgba(31,75,139,.13));color:#ffffff;margin-top:20px;}
 .brand{
   display:flex;
   gap:12px;
@@ -17,19 +11,15 @@
 .logo{
   width:38px;
   height:38px;
-  border-radius:12px;
-  background:radial-gradient(circle at 30% 20%, rgba(37,103,95,0.35), rgba(37,103,95,0.05));
-  border:1px solid rgba(37,103,95,0.5);
-}
+  border-radius:12px;background:rgba(255,255,255,.13);
+  border:1px solid rgba(37,103,95,0.5);border-color:rgba(255,255,255,.35);color:#ffffff;box-shadow:none;}
 .brand-text h1{
   margin:0;
   font-size:1.1rem;
-  letter-spacing:-0.2px;
-}
+  letter-spacing:-0.2px;color:#ffffff;text-shadow:none;}
 .brand-text p{
   margin:2px 0 0;
-  font-size:0.86rem;
-  color:var(--muted);
+  font-size:0.86rem;color:#dbf8f8;
 }
 .actions{
   display:flex;

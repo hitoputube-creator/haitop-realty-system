@@ -16,4 +16,7 @@
   --box-fill:linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%);
   --box-depth:0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95);
   --field-depth:inset 0 1px 2px rgba(35,76,73,.04),0 1px 3px rgba(35,76,73,.035);
+  /* 상단 제목 박스는 원래의 청록 색상바로 유지합니다. */
+  --header-fill:linear-gradient(115deg,#19605d,#218d8d 70%,#24bab5);
+  --header-shadow:0 7px 24px rgba(31,75,139,.13);
 }
