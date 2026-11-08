@@ -1,7 +1,7 @@
 /* assets/css/detail.css */
 
 .topbar{
-  display:flex; align-items:center; justify-content:space-between; gap:12px;padding:20px 24px;border:0;background:var(--header-fill,linear-gradient(115deg,#19605d,#218d8d 70%,#24bab5));border-radius:16px;box-shadow:var(--header-shadow,0 7px 24px rgba(31,75,139,.13));color:#ffffff;margin-top:20px;}
+  display:flex; align-items:center; justify-content:space-between; gap:12px;padding:20px 24px;border:0;background:var(--header-fill,linear-gradient(112deg,#075c68 0%,#078b94 34%,#13b3ac 68%,#4adbc3 100%));border-radius:16px;box-shadow:var(--header-shadow,0 8px 24px rgba(9,112,113,.16),inset 0 1px 0 rgba(255,255,255,.2));color:#ffffff;margin-top:20px;}
 .brand{ display:flex; gap:12px; align-items:center; }
 .logo{
   width:38px; height:38px; border-radius:12px;background:rgba(255,255,255,.13);

@@ -1,6 +1,6 @@
 /* assets/css/app.css - White Workspace Base Theme (기본 화이트 디자인) */
 
-@import url("tokens.css?v=20261108-header-restore1");
+@import url("tokens.css?v=20261108-teal-gradient2");
 
 *, *::before, *::after { box-sizing:border-box; }
 
@@ -40,7 +40,7 @@ html, body {
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;padding:20px 24px;background:var(--header-fill,linear-gradient(115deg,#19605d,#218d8d 70%,#24bab5));border:0;border-radius:16px;box-shadow:var(--header-shadow,0 7px 24px rgba(31,75,139,.13));color:#ffffff;margin-top:20px;}
+  gap:12px;padding:20px 24px;background:var(--header-fill,linear-gradient(112deg,#075c68 0%,#078b94 34%,#13b3ac 68%,#4adbc3 100%));border:0;border-radius:16px;box-shadow:var(--header-shadow,0 8px 24px rgba(9,112,113,.16),inset 0 1px 0 rgba(255,255,255,.2));color:#ffffff;margin-top:20px;}
 @media(max-width:760px){.topbar{padding:18px 16px;margin-top:12px;flex-wrap:wrap;gap:14px}.topbar .actions{justify-content:flex-start}}
 .brand{ display:flex; gap:12px; align-items:center; }
 .logo{
@@ -59,10 +59,10 @@ html, body {
 .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
 
 /* 상단 컴포넌트 안의 동작 버튼은 밝은 글자로 표시합니다. */
-.topbar .actions .btn{background:rgba(255,255,255,.1);color:#eeffff;border-color:rgba(255,255,255,.25);box-shadow:none}
-.topbar .actions .btn:hover{background:rgba(255,255,255,.2);color:#ffffff;border-color:rgba(255,255,255,.4)}
-.topbar .actions .btn.primary{background:#ffffff;color:#19605d;border-color:#ffffff}
-.topbar .actions .btn.danger{color:#ffe4df;border-color:rgba(255,228,223,.55)}
+.topbar .actions .btn{background:rgba(255,255,255,.86);color:#075b60;border-color:rgba(255,255,255,.72);box-shadow:0 2px 5px rgba(5,78,79,.06)}
+.topbar .actions .btn:hover{background:#ffffff;color:#075b60;border-color:#ffffff}
+.topbar .actions .btn.primary{background:#ffffff;color:#075b60;border-color:#ffffff}
+.topbar .actions .btn.danger{color:#a52b24;border-color:rgba(255,255,255,.72)}
 
 /* ── FORM ── */
 .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
