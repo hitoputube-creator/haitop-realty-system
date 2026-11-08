@@ -53,6 +53,7 @@
       ".pb td{padding:8px;border-top:1px solid #e3eeee;vertical-align:top}",
       ".pb tbody tr{cursor:pointer}.pb tbody tr:hover{background:#f4fbfa}",
       ".pb td small{display:block;color:#7a8b89;margin-top:2px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+      ".pb td:first-child{word-break:keep-all;min-width:110px}.pb td:nth-child(3){white-space:nowrap;min-width:120px}.pb-regdate{display:block;margin-top:4px;font-size:11px;color:#617286;white-space:nowrap}",
       ".pb-tag{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;background:#e3f4ef;color:#1a6b55;white-space:nowrap}",
       ".pb-fee{background:#fff1c2;color:#8a5a00;font-weight:700}.pb-soon{background:#ffe0e0;color:#b00020;font-weight:700}",
       ".pb-best{color:#d14a00;font-weight:700}.pb-orig{color:#8a9a98;text-decoration:line-through;font-size:12px}",
@@ -168,7 +169,7 @@
     }).join("");
     return '<tr data-link="' + esc(link) + '"><td><b>' + esc(dname(b)) + "</b></td>"
       + "<td>" + esc(subOf(r) || "건물 전체") + (firstLine ? "<small>" + esc(firstLine) + "</small>" : "") + "</td>"
-      + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span>" + ' <span class="pb-tag" style="font-weight:700;border-color:transparent;' + (r._origin === "ktop" ? "background:#fff1e0;color:#b45309" : "background:#e8f3ff;color:#1d5fa8") + '" title="' + (r._shared ? "공유 기록 (읽기만)" : "이 사무소에서 등록") + '">' + (r._origin === "ktop" ? "케이탑" : "하이탑") + " 등록" + pbReg(r) + "</span></td>"
+      + '<td><span class="pb-tag">' + esc(r.kind || "") + "</span>" + ' <span class="pb-tag" style="font-weight:700;border-color:transparent;' + (r._origin === "ktop" ? "background:#fff1e0;color:#b45309" : "background:#e8f3ff;color:#1d5fa8") + '" title="' + (r._shared ? "공유 기록 (읽기만)" : "이 사무소에서 등록") + '">' + (r._origin === "ktop" ? "케이탑" : "하이탑") + "</span>" + (pbReg(r) ? '<div class="pb-regdate">' + pbReg(r).trim() + "</div>" : "") + "</td>"
       + "<td>" + (r.fee ? '<span class="pb-tag pb-fee">' + esc(r.fee) + "</span>" : "-") + "</td>"
       + "<td>" + price + "</td>"
       + "<td>" + (dr.length ? dr.join(" / ") : "-") + "</td><td>" + (dv.yld ? esc(dv.yld) : "-") + "</td>"
