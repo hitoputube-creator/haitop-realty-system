@@ -189,7 +189,7 @@
       const widths={type:'.78fr',village:'.78fr',apartment:'1.16fr',dong:'.64fr',room:'.64fr',supply:'.82fr',price:'1.14fr',owner:'.72fr',phone:'1.18fr'};
       return '24px '+cols.map(([key])=>`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
     }
-    return '24px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
+    return '24px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'&&OfficeConfig.id!=='ktop'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
   }
   makeListingColumnHeader=function() {
     const h=document.createElement('div');h.className='listing-column-header typed-property-row';
