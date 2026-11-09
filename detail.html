@@ -1973,6 +1973,7 @@ function closeHomepageTab(tab) {
     if (OfficeConfig.id !== "ktop") html += `<button class="btn btn-ghost" id="viewHomeBtn">홈페이지 보기</button>`;
     html += '<div class="detail-print-tools">';
     html += '<select id="detailProgressStatus" class="btn" aria-label="매물 거래상태">'+['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(listingProgressStatus(item)===status?' selected':'')+'>'+status+'</option>').join('')+'</select>';
+    html += `<button type="button" class="btn btn-ghost" id="studioBtn" title="이 매물로 컨텐츠 만들기 (컨텐츠 제작실)" style="background:#e8f1ff !important;border-color:#1767d2 !important;color:#1956a3 !important;font-weight:700 !important;white-space:nowrap;" onclick="window.open('https://hitoputube-creator.github.io/hitop-content-studio/?office=${OfficeConfig.id==='ktop'?'ktop':'hitop'}&id=${encodeURIComponent(item.id)}','_blank','noopener')">🎬 컨텐츠 만들기</button>`;
     html += `<button class="btn btn-ghost" id="printBriefBtn">🖨 설명서 출력</button></div>`;
     html += `</div>`;
 
