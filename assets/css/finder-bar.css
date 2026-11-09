@@ -28,7 +28,7 @@ html .pf-btn.big{font-size:13px;padding:7px 14px;white-space:nowrap;flex:0 0 aut
 .pf-searchbar{margin:6px 0 12px}
 .pf-quick-naver{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line2,#779a94);border-radius:10px;padding:5px 6px 5px 13px;border-color:#b1c7ba;box-shadow:0 1px 4px rgba(25,61,50,.03);}
 .pf-quick-naver .pf-mag{color:#618684;flex:none}
-html .pf-quick-naver input{flex:1;min-width:0;border:0!important;background:#fff!important;font-size:14px;padding:8px 4px;outline:none;box-shadow:none!important;line-height:1.5;color:#1e3248;border-color:#cbd5e1!important;}
+html .pf-quick-naver input{flex:1;min-width:0;border:0!important;background:transparent!important;font-size:14px;padding:8px 4px;outline:none;box-shadow:none!important;line-height:1.5;}
 html .pf-quick-naver .pf-btn{border-radius:8px;padding:7px 16px;min-height:34px;}
 .pf-filterbar{margin:0 0 6px;padding:12px 0 0;border-top:1px solid #e0ebe3;border-bottom:0}
 .pf-pills{display:flex;gap:8px;align-items:center}
