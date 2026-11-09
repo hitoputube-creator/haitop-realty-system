@@ -90,3 +90,12 @@ document.addEventListener("DOMContentLoaded", renderMainNav);
   st.textContent = ".ico-home::before,.ico-list::before{content:\"\";display:inline-block;width:1.05em;height:1.05em;margin-right:.4em;vertical-align:-.13em;background:currentColor;-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat}.ico-home{--ico:url(\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2011.5%2012%204l9%207.5%22%2F%3E%3Cpath%20d%3D%22M5.5%2010v9.5h13V10%22%2F%3E%3Cpath%20d%3D%22M10%2019.5v-5h4v5%22%2F%3E%3C%2Fsvg%3E\")}.ico-list{--ico:url(\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.6%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M4%206.5h16M4%2012h16M4%2017.5h16%22%2F%3E%3C%2Fsvg%3E\")}";
   (document.head || document.documentElement).appendChild(st);
 })();
+
+// 상단 메뉴 버튼을 조금 작게 (위치·구성은 그대로)
+(function () {
+  if (document.getElementById("nav-compact-style")) return;
+  const st = document.createElement("style");
+  st.id = "nav-compact-style";
+  st.textContent = "#mainNav .nav-link,#mainNav .nav-logout-btn{height:30px !important;min-height:30px !important;padding:0 11px !important;font-size:12.4px !important}#mainNav .ico-home::before,#mainNav .ico-list::before{width:1em;height:1em;margin-right:.35em}";
+  (document.head || document.documentElement).appendChild(st);
+})();
