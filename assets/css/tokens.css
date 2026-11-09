@@ -20,3 +20,6 @@
   --header-fill:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba);
   --header-shadow:0 7px 24px rgba(31,75,139,.13);
 }
+
+/* 하이탑 상단 제목 바: 청록 */
+html[data-office-theme='hitop']{--header-fill:linear-gradient(115deg,#19605d,#218d8d 70%,#24bab5);--header-shadow:0 7px 24px rgba(25,96,93,.16)}
