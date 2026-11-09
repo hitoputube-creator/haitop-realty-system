@@ -457,6 +457,12 @@ async function naverAdSaveToServer(item, on) {
 }
 function naverAdButtonHtml(listingNo, item) { return naverAdWrapHtml(listingNo, item); }
 
+// 컨텐츠 제작실 열기: 이 매물이 골라진 상태로 열린다
+function contentStudioUrl(id) {
+  const isKtop = document.documentElement.dataset.officeTheme === "ktop";
+  return "https://hitoputube-creator.github.io/hitop-content-studio/?office=" + (isKtop ? "ktop" : "hitop") + "&id=" + encodeURIComponent(id);
+}
+
 // ===== 매물 카드 렌더러 (매물관리 · 거래완료관리 통합검색에서 공용) =====
 function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
   const card = document.createElement("div");
@@ -528,6 +534,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
         <button class="btn btn-primary" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>
         <button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>
         ${deleteButton}
+        <button type="button" class="btn btn-ghost lc-studio-btn" title="이 매물로 컨텐츠 만들기" style="background:#e8f1ff !important;border-color:#1767d2 !important;color:#1956a3 !important;font-weight:700 !important;white-space:nowrap;" onclick="event.stopPropagation();window.open(contentStudioUrl('${idArg}'),'_blank','noopener')">컨텐츠</button>
       </div>
       <div class="lc-actions-side">
         <div class="lc-status-row" style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap;grid-column:1 / -1;">
