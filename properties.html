@@ -238,6 +238,16 @@
  .properties-page .filter-panel-row .deal-filter-wrap { width:100%; margin:0; padding-left:0; border-left:0; flex-wrap:wrap; }
  .properties-page .filter-panel-row .deal-filter-wrap .filter-row { flex-wrap:wrap; }
 }
+
+/* 하이탑 매물목록: 확인날짜를 진행중 옆으로, 카드 세로폭 축소 */
+html[data-office-theme="hitop"] .properties-page .listing-row-card.typed-property-row{min-height:0;padding:5px 10px}
+html[data-office-theme="hitop"] .properties-page .typed-property-row .listing-cell-type{flex-direction:row;flex-wrap:wrap;align-items:center;align-content:center;column-gap:8px;row-gap:2px}
+html[data-office-theme="hitop"] .properties-page .typed-property-row .listing-cell-type .lc-type-deal{flex:0 0 100%}
+html[data-office-theme="hitop"] .properties-page .typed-property-row .listing-cell-type .lc-status{flex:0 0 auto;max-width:none;width:auto}
+html[data-office-theme="hitop"] .properties-page .typed-property-row .listing-cell-type .lc-confirm{display:inline-block;flex:0 0 auto;margin:0;line-height:1.2;white-space:nowrap}
+html[data-office-theme="hitop"] .properties-page .typed-property-row .listing-cell-type{justify-content:flex-start}
+html[data-office-theme="hitop"] .properties-page .listing-row-card .listing-actions{gap:3px 4px}
+html[data-office-theme="hitop"] .properties-page .listing-row-card .lc-actions-main .btn{min-height:24px!important;height:24px!important;padding:0 4px!important;line-height:22px!important;font-size:12px!important}
 </style>
 <link rel="stylesheet" href="assets/css/global-property-search.css?v=20261108-ktop-match1">
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
