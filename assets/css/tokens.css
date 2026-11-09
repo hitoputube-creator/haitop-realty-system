@@ -1,25 +1,22 @@
 /* 하이탑 기본 디자인: 화이트 배경. 모든 화면에서 직접 사용하는 기본값.
-   gold 이름은 기존 기능 호환용이며 실제 색상은 케이탑 기준 블루입니다. 별도 테마 덮어쓰기 없음. */
+   gold 이름은 기존 기능 호환용이며 실제 색상은 청록입니다. 별도 테마 덮어쓰기 없음. */
 :root {
   color-scheme: light;
-  --bg:#ffffff; --bg2:#ffffff; --panel:#fff; --panel2:#f8fafc;
-  --card:#fff; --card2:#edf3f9; --line:#e0e7ef; --line2:#cbd5e1;
-  --txt:#23364c; --sub:#617286; --muted:#66788c;
-  --gold:#254767; --gold2:#eef3f8; --blue:#345f86; --blue2:#eaf1f8;
-  --danger:#b42318; --bg-main:#ffffff; --bg-card:#fff; --bg-soft:#ffffff;
-  --surface:#fff; --surface2:#f8fafc; --text:#23364c; --text-main:#23364c;
-  --text-muted:#617286; --gold-soft:#254767; --gold-light:#254767;
-  --gold-dim:#eef3f8; --border:#dce4ed; --border-soft:#e2e8f0;
-  --border-slate:#cbd5e1; --red:#b42318; --green:#157347; --radius:14px;
+  --bg:#ffffff; --bg2:#ffffff; --panel:#ffffff; --panel2:#f8fcfc;
+  --card:#ffffff; --card2:#edf9f8; --line:#779a94; --line2:#5f8780;
+  --txt:#234c49; --sub:#618684; --muted:#668c89;
+  --gold:#25675f; --gold2:#eef8f7; --blue:#34867c; --blue2:#eaf8f7;
+  --danger:#b42318; --bg-main:#ffffff; --bg-card:#ffffff; --bg-soft:#f8fcfc;
+  --surface:#ffffff; --surface2:#f8fcfc; --text:#234c49; --text-main:#234c49;
+  --text-muted:#618684; --gold-soft:#25675f; --gold-light:#34867c;
+  --gold-dim:#eef8f7; --border:#779a94; --border-soft:#9bb9b4;
+  --border-slate:#5f8780; --red:#b42318; --green:#177a55; --radius:14px;
   /* 기본 박스의 은은한 입체 테두리. 별도 스킨 없이 원본에서 사용. */
   --box-edge:linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%);
   --box-fill:linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%);
   --box-depth:0 3px 10px rgba(35,76,73,.065),inset 0 1px 0 rgba(255,255,255,.95);
   --field-depth:inset 0 1px 2px rgba(35,76,73,.04),0 1px 3px rgba(35,76,73,.035);
-  /* 상단 제목 박스도 케이탑 기준 그라데이션을 직접 사용합니다. */
-  --header-fill:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba);
-  --header-shadow:0 7px 24px rgba(31,75,139,.13);
+  /* 상단 제목 박스는 원래의 청록 색상바로 유지합니다. */
+  --header-fill:linear-gradient(112deg,#075c68 0%,#078b94 34%,#13b3ac 68%,#4adbc3 100%);
+  --header-shadow:0 8px 24px rgba(9,112,113,.16),inset 0 1px 0 rgba(255,255,255,.2);
 }
-
-/* 하이탑 상단 제목 바: 청록 */
-html[data-office-theme='hitop']{--header-fill:linear-gradient(115deg,#19605d,#218d8d 70%,#24bab5);--header-shadow:0 7px 24px rgba(25,96,93,.16)}
