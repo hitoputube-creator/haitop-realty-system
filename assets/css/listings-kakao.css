@@ -83,3 +83,15 @@
 .listings-kakao-page .header .logo-main{font-size:1.05rem!important}
 .listings-kakao-page .header-line{display:none}
 @media(max-width:720px){.listings-kakao-page .header{position:static}}
+
+/* 하이탑 매물지도 버튼 색: 원래 청록 (케이탑은 위 블루 그대로) */
+html[data-office-theme='hitop'] .listings-kakao-page .kakao-intro .lk-sublinks{color:#618684!important}
+html[data-office-theme='hitop'] .listings-kakao-page .kakao-intro .lk-sublinks a{color:#0b7476!important}
+html[data-office-theme='hitop'] .listings-kakao-page .kakao-control-group label{color:#618684!important}
+html[data-office-theme='hitop'] .listings-kakao-page .kakao-control-group select,html[data-office-theme='hitop'] .listings-kakao-page .kakao-control-group input{border:1px solid #b9d0cb!important}
+html[data-office-theme='hitop'] .listings-kakao-page .kakao-controls .btn{color:#234c49!important;border:1px solid #b9d0cb!important}
+html[data-office-theme='hitop'] .listings-kakao-page .kakao-controls>.kakao-control-group:nth-child(1) .btn[aria-pressed="true"]{background:#0b7476!important;border-color:#0b7476!important}
+html[data-office-theme='hitop'] .listings-kakao-page .lk-cats .btn{color:#25675f!important;border-color:#cfe4e1!important}
+html[data-office-theme='hitop'] .listings-kakao-page .lk-cats .btn[aria-pressed="true"]{background:#eaf8f7!important;color:#0b7476!important;border-color:#9bd0cc!important}
+html[data-office-theme='hitop'] .listings-kakao-page .kakao-controls .btn.kakao-naverview{color:#618684!important}
+html[data-office-theme='hitop'] .listings-kakao-page #lkRetry{color:#618684!important}
