@@ -2,16 +2,16 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>HITOP 부동산 매물관리</title>
+  <title>HITOP 부동산 매물관리 목록</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261108-ktop-match1" />
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/storage.js?v=20261031-confirm"></script>
-<script src="assets/js/office-brand.js?v=20261109-ico1"></script>
+<script src="assets/js/office-brand.js?v=20261109-ico2"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
-  <script src="assets/js/nav.js?v=20261109-ico1"></script>
+  <script src="assets/js/nav.js?v=20261109-ico2"></script>
   <style>
     .property-main-return { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
     .property-main-return a { text-decoration:none; }
@@ -372,7 +372,7 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   <header class="header">
     <div class="logo-icon"></div>
     <div class="logo-text">
-      <div class="gps-heading-row"><div class="logo-main ico-list">HITOP 부동산 매물관리</div><div id="globalPropertySearchToolbar" class="gps-toolbar no-print"></div></div>
+      <div class="gps-heading-row"><div class="logo-main">HITOP 부동산 매물관리 목록</div><div id="globalPropertySearchToolbar" class="gps-toolbar no-print"></div></div>
       <div class="logo-sub">파주/운정을 가장 잘 아는 상가·토지·오피스텔 전문</div>
     </div>
     <nav class="main-nav" id="mainNav"></nav>
@@ -501,7 +501,8 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
         </div>
         <div class="listing-tools-actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <button class="btn btn-ghost" id="printBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">📋 선택매물보기</button>
-          <button class="btn btn-ghost btn-select-delete" id="deleteSelectedBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">선택삭제 (0건)</button>
+          <button class="btn btn-ghost" id="contentSendBtn" onclick="sendSelectedToContent()" disabled title="매물 하나를 체크하면 컨텐츠 제작실로 보낼 수 있어요" style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">🎬 컨텐츠 보내기</button>
+      <button class="btn btn-ghost btn-select-delete" id="deleteSelectedBtn" disabled style="opacity:0.4;cursor:not-allowed;font-size:0.82rem;">선택삭제 (0건)</button>
           <button class="btn btn-ghost" onclick="downloadExcel()" title="화면 필터와 관계없이 전체 매물(거래완료 포함)을 엑셀과 JSON 백업 파일로 받습니다" style="font-size:0.82rem;">📥 엑셀 다운로드</button>
         </div>
       </div>
@@ -918,8 +919,8 @@ html[data-office-theme="ktop"] body.properties-page .listing-row-card select.lc-
   </div>
 </div>
 
-<script src="assets/js/listings-shared.js?v=20261109-studio1"></script>
-<script src="assets/js/properties.js?v=20261108-teal-gradient2"></script>
+<script src="assets/js/listings-shared.js?v=20261109-ico2"></script>
+<script src="assets/js/properties.js?v=20261109-ico2"></script>
 <script>
 /* Reuse the original card controls and handlers; enhance KTOP only. */
 (function () {
