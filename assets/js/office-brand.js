@@ -48,3 +48,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }).observe(document.body, { childList: true, subtree: true });
 });
+
+// 매물관리 홈(집 모양)과 매물관리 리스트(가로 세 줄)를 아이콘으로 구분한다. 클래스 ico-home / ico-list
+(function () {
+  if (document.getElementById("mgmt-ico-style")) return;
+  const st = document.createElement("style");
+  st.id = "mgmt-ico-style";
+  st.textContent = ".ico-home::before,.ico-list::before{content:\"\";display:inline-block;width:1.05em;height:1.05em;margin-right:.4em;vertical-align:-.13em;background:currentColor;-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat}.ico-home{--ico:url(\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2011.5%2012%204l9%207.5%22%2F%3E%3Cpath%20d%3D%22M5.5%2010v9.5h13V10%22%2F%3E%3Cpath%20d%3D%22M10%2019.5v-5h4v5%22%2F%3E%3C%2Fsvg%3E\")}.ico-list{--ico:url(\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.6%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M4%206.5h16M4%2012h16M4%2017.5h16%22%2F%3E%3C%2Fsvg%3E\")}";
+  (document.head || document.documentElement).appendChild(st);
+})();
