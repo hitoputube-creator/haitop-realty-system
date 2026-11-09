@@ -1,14 +1,3 @@
-// 하이탑: 파랑 포인트색을 청록으로 바꾸는 스타일을 불러온다 (케이탑은 제외)
-if (typeof OfficeConfig !== 'undefined' && OfficeConfig.id !== 'ktop') {
-  (function () {
-    const cs = document.currentScript;
-    const href = cs && cs.src ? cs.src.replace(/\/js\/[^/?]*(\?.*)?$/, '/css/hitop-teal.css?v=20261109-teal1') : 'assets/css/hitop-teal.css?v=20261109-teal1';
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    document.head.appendChild(link);
-  })();
-}
 // 하이탑 기본 디자인은 공통 CSS 원본에서 화이트로 관리합니다. 별도 테마 주입 없음.
 // 화면·인쇄물의 상호만 변경한다. 고객/매물 데이터의 이름은 변경하지 않는다.
 const officeCompanyName = OfficeConfig.id === 'ktop' ? 'KTOP부동산' : '하이탑부동산';
