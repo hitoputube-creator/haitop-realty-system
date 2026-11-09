@@ -89,6 +89,14 @@ function updatePrintBtn() {
     btn.style.cursor = n === 0 ? "not-allowed" : "pointer";
   }
 
+  const contentBtn = document.getElementById("contentSendBtn");
+  if (contentBtn) {
+    const ok = n === 1;
+    contentBtn.disabled = !ok;
+    contentBtn.style.opacity = ok ? "1" : "0.4";
+    contentBtn.style.cursor = ok ? "pointer" : "not-allowed";
+    contentBtn.title = n === 0 ? "매물 하나를 체크하면 컨텐츠 제작실로 보낼 수 있어요" : n === 1 ? "체크한 매물로 컨텐츠 만들기 (새 창)" : "한 번에 매물 하나만 보낼 수 있어요";
+  }
   const deleteBtn = document.getElementById("deleteSelectedBtn");
   if (deleteBtn) {
     deleteBtn.textContent = deletingSelected ? "삭제 중..." : `선택삭제 (${n}건)`;
@@ -99,6 +107,12 @@ function updatePrintBtn() {
   updateVisibleSelectAllState();
 }
 
+// 체크한 매물 하나를 컨텐츠 제작실로 보낸다
+function sendSelectedToContent() {
+  if (selectedIds.size !== 1) return;
+  const id = Array.from(selectedIds)[0];
+  window.open(contentStudioUrl(id), "_blank", "noopener");
+}
 function toggleSelect(id, checked) {
   if (checked) selectedIds.add(id); else selectedIds.delete(id);
   updatePrintBtn();
