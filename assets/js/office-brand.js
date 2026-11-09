@@ -11,7 +11,7 @@ function officeUpdateDocumentTitle() {
   const detail = officeBrandText(document.title).replaceAll(officeCompanyName, '')
     .replace(/^[\s|·—-]+|[\s|·—-]+$/g, '');
   const plain = ['매물관리', '매물관리 메인', '매물 목록', '매물관리 로그인'].includes(detail);
-  const next = officeManagementTitle + (detail && !plain ? ' | ' + detail : '');
+  const next = detail === '매물관리 목록' ? officeManagementTitle + ' 목록' : officeManagementTitle + (detail && !plain ? ' | ' + detail : '');
   if (document.title !== next) document.title = next;
 }
 function officeUpdateBranding(root) {
@@ -23,7 +23,7 @@ function officeUpdateBranding(root) {
     let next = officeBrandText(original);
     if (node.matches('.logo-main, .brand-name, #officeBrand')) {
       const detail = next.replace(officeCompanyName, '').trim();
-      next = officeManagementTitle + (detail && detail !== '매물관리' ? ' · ' + detail : '');
+      next = officeManagementTitle + (detail === '매물관리 목록' ? ' 목록' : detail && detail !== '매물관리' ? ' · ' + detail : '');
       if (original.startsWith(officeManagementTitle)) next = original;
     }
     if (node.matches('[data-office-company-footer]')) next = officeCompanyName;
