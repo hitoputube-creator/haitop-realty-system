@@ -15,12 +15,12 @@
 .gps[hidden]{display:none}.gps-status:empty,.gps-summary:empty{display:none}
 .gps-heading-row{display:flex;justify-content:space-between;align-items:center;gap:18px}.gps-heading-row .heading{flex:1;min-width:0}
 .gps-toolbar{flex:0 0 auto}.gps-toolbar .gps-form{align-items:center;gap:6px}
-.gps-toolbar .gps-form input{width:210px;flex:none;padding:7px 10px;font-size:13px;height:34px;box-sizing:border-box;border-radius:8px;border-color:#cbd5e1;box-shadow:0 1px 2px rgba(25,61,50,.025);background:#fff;color:#1e3248;}
-.gps-toolbar button{font:inherit;font-size:13px;cursor:pointer;border:1px solid var(--line,#779a94);border-radius:8px;padding:6px 12px;white-space:nowrap;background:#fff;color:#294867;height:34px;box-sizing:border-box;font-weight:600;border-color:#cbd5e1;}
+.gps-toolbar .gps-form input{width:210px;flex:none;padding:7px 10px;font-size:13px;height:34px;box-sizing:border-box;border-radius:8px;border-color:#b4cabe;box-shadow:0 1px 2px rgba(25,61,50,.025);}
+.gps-toolbar button{font:inherit;font-size:13px;cursor:pointer;border:1px solid var(--line,#779a94);border-radius:8px;padding:6px 12px;white-space:nowrap;background:linear-gradient(112deg,#0b7476,#0e806f);color:#ffffff;height:34px;box-sizing:border-box;font-weight:600;border-color:transparent;}
 .gps-toolbar .gps-clear{display:none}.gps-toolbar button:disabled{opacity:.6;cursor:wait}
 .gps-toolbar :is(input,button):focus-visible{outline:3px solid var(--gold,#5f8780);outline-offset:3px}
 .header .logo-text:has(#globalPropertySearchToolbar){flex:1;min-width:0}
-@media(max-width:650px){.gps-heading-row{flex-wrap:wrap;gap:8px;align-items:center;}.gps-heading-row .heading{flex-basis:100%}.gps-toolbar{margin-left:auto}.gps-toolbar .gps-form{flex-wrap:nowrap}.gps-toolbar .gps-form input{width:190px;flex-basis:auto;font-size:13px;height:34px;padding:7px 10px;border-radius:8px;border-color:#cbd5e1;box-shadow:0 1px 2px rgba(25,61,50,.025);background:#fff;color:#1e3248;}.gps-heading-row .logo-main{flex-basis:100%}}
+@media(max-width:650px){.gps-heading-row{flex-wrap:wrap;gap:8px;align-items:center;}.gps-heading-row .heading{flex-basis:100%}.gps-toolbar{margin-left:auto}.gps-toolbar .gps-form{flex-wrap:nowrap}.gps-toolbar .gps-form input{width:190px;flex-basis:auto;font-size:13px;height:34px;padding:7px 10px;border-radius:8px;border-color:#b4cabe;box-shadow:0 1px 2px rgba(25,61,50,.025);}.gps-heading-row .logo-main{flex-basis:100%}}
 @media print{.gps-toolbar{display:none}}
 
 /* 제목·검색은 첫 줄, 내비게이션은 다음 줄에 배치한다. */
