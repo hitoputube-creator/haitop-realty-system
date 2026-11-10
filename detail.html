@@ -210,6 +210,8 @@ html[data-office-theme="ktop"] .page > .card > .card-title {background:#e7effb;c
     <div class="loading"><span class="spinner"></span>불러오는 중...</div>
   </div>
 
+  <div id="listingDocsArea"></div>
+
 </div>
 
 <div id="toast"></div>
@@ -2549,6 +2551,24 @@ function closeHomepageTab(tab) {
   init();
 </script>
 <script src="assets/js/listing-promo-add.js?v=20261105-add1"></script>
+<style id="ldStyles">
+.ld-section .ld-note{font-size:.8rem;color:var(--text-muted);margin:2px 0 10px;line-height:1.5}
+.ld-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.ld-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border,#d9dee5);border-radius:10px;background:var(--card-bg,#fff)}
+.ld-type{flex:0 0 auto;padding:2px 9px;border-radius:999px;font-size:.74rem;font-weight:800;background:#e8eef7;color:#234c49}
+.ld-type-건축물대장{background:#e3f1ec;color:#177a55}
+.ld-type-등기부등본{background:#e8eef9;color:#2b4fa3}
+.ld-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:.88rem}
+.ld-meta{flex:0 0 auto;font-size:.76rem;color:var(--text-muted)}
+.ld-actions{flex:0 0 auto;display:flex;gap:6px}
+.ld-actions .btn{padding:4px 12px;font-size:.8rem}
+.ld-empty{padding:10px 2px;font-size:.84rem;color:var(--text-muted)}
+.ld-upload{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ld-select{height:36px;padding:0 8px;border-radius:8px;border:1px solid var(--border,#cfd6df);background:var(--card-bg,#fff)}
+.ld-upload input[type=file]{font-size:.82rem;max-width:100%}
+@media (max-width:640px){.ld-row{flex-wrap:wrap}.ld-meta{order:5}}
+</style>
+<script src="assets/js/listing-documents.js?v=20261110-docs1"></script>
 </body>
 </html>
 
