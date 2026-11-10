@@ -40,25 +40,37 @@
     return res.data || [];
   }
 
+  var PANELS = [
+    { type: "건축물대장", icon: "🏢", hint: "건축물대장 PDF·사진" },
+    { type: "등기부등본", icon: "📑", hint: "등기부등본 PDF·사진" }
+  ];
+
+  function rowHtml(d) {
+    return '<div class="ld-row" data-id="' + esc(d.id) + '">' +
+      '<span class="ld-name" title="' + esc(d.original_name) + '">' + esc(d.original_name || "파일") + '</span>' +
+      '<span class="ld-meta">' + esc(fmtSize(d.size_bytes)) + (d.created_at ? " · " + esc(fmtDate(d.created_at)) : "") + '</span>' +
+      '<span class="ld-actions"><button type="button" class="btn btn-ghost ld-open">열기</button>' +
+      '<button type="button" class="btn btn-ghost ld-del">삭제</button></span></div>';
+  }
+
   function render(docs, busy) {
-    var rows = docs.length ? docs.map(function (d) {
-      return '<div class="ld-row" data-id="' + esc(d.id) + '">' +
-        '<span class="ld-type ld-type-' + esc(d.doc_type) + '">' + esc(d.doc_type) + '</span>' +
-        '<span class="ld-name" title="' + esc(d.original_name) + '">' + esc(d.original_name || "파일") + '</span>' +
-        '<span class="ld-meta">' + esc(fmtSize(d.size_bytes)) + (d.created_at ? " · " + esc(fmtDate(d.created_at)) : "") + '</span>' +
-        '<span class="ld-actions"><button type="button" class="btn btn-ghost ld-open">열기</button>' +
-        '<button type="button" class="btn btn-ghost ld-del">삭제</button></span></div>';
-    }).join("") : '<div class="ld-empty">등록된 서류가 없습니다.</div>';
+    var panels = PANELS.map(function (p) {
+      var mine = docs.filter(function (d) { return d.doc_type === p.type; });
+      var rows = mine.length ? mine.map(rowHtml).join("") : '<div class="ld-empty">등록된 파일이 없습니다.</div>';
+      return '<div class="ld-panel" data-type="' + esc(p.type) + '">' +
+        '<div class="ld-panel-title">' + p.icon + ' ' + esc(p.type) + ' <span class="ld-count">' + mine.length + '</span></div>' +
+        '<div class="ld-list">' + rows + '</div>' +
+        '<div class="ld-upload"><input type="file" class="ld-file" accept=".pdf,image/*" multiple />' +
+        '<button type="button" class="btn btn-primary ld-up"' + (busy ? " disabled" : "") + '>' + (busy ? "올리는 중…" : esc(p.type) + " 올리기") + '</button></div>' +
+        '</div>';
+    }).join("");
+    var others = docs.filter(function (d) { return d.doc_type !== "건축물대장" && d.doc_type !== "등기부등본"; });
+    var otherHtml = others.length ? '<div class="ld-panel ld-panel-wide"><div class="ld-panel-title">📎 기타 <span class="ld-count">' + others.length + '</span></div><div class="ld-list">' + others.map(rowHtml).join("") + '</div></div>' : "";
     root.innerHTML =
       '<section class="detail-section ld-section">' +
       '<div class="detail-section-title">📄 건축물대장 · 등기부 서류</div>' +
       '<div class="ld-note">홈페이지에는 공개되지 않고, 로그인한 직원만 열람할 수 있습니다. (PDF·사진, 파일당 30MB 이하)</div>' +
-      '<div class="ld-list">' + rows + '</div>' +
-      '<div class="ld-upload">' +
-      '<select class="ld-select" id="ldType">' + TYPES.map(function (t) { return "<option>" + t + "</option>"; }).join("") + '</select>' +
-      '<input type="file" id="ldFile" accept=".pdf,image/*" multiple />' +
-      '<button type="button" class="btn btn-primary" id="ldUpload"' + (busy ? " disabled" : "") + '>' + (busy ? "올리는 중…" : "서류 올리기") + '</button>' +
-      '</div></section>';
+      '<div class="ld-panels">' + panels + otherHtml + '</div></section>';
     bind(docs);
   }
 
@@ -97,13 +109,14 @@
         refresh(false);
       });
     });
-    var up = root.querySelector("#ldUpload");
-    if (up) up.addEventListener("click", upload);
+    root.querySelectorAll(".ld-up").forEach(function (btn) {
+      btn.addEventListener("click", function () { upload(btn.closest(".ld-panel")); });
+    });
   }
 
-  async function upload() {
-    var input = root.querySelector("#ldFile");
-    var type = root.querySelector("#ldType").value;
+  async function upload(panel) {
+    var input = panel.querySelector(".ld-file");
+    var type = panel.dataset.type;
     var files = Array.from(input.files || []);
     if (!files.length) { toast("올릴 파일을 먼저 선택하세요."); return; }
     for (var i = 0; i < files.length; i++) {
@@ -111,8 +124,8 @@
       if (!(ALLOWED.test(f.type || "") || ALLOWED_EXT.test(f.name || ""))) { toast("PDF 또는 사진 파일만 올릴 수 있습니다: " + f.name); return; }
       if (f.size > MAX_BYTES) { toast("파일이 너무 큽니다(30MB 이하): " + f.name); return; }
     }
-    root.querySelector("#ldUpload").disabled = true;
-    root.querySelector("#ldUpload").textContent = "올리는 중…";
+    panel.querySelector(".ld-up").disabled = true;
+    panel.querySelector(".ld-up").textContent = "올리는 중…";
     var c = client(), ok = 0, who = "";
     try { var u = await c.auth.getUser(); who = (u.data && u.data.user && u.data.user.email) || ""; } catch (_) {}
     var safeId = String(listingId).replace(/[^a-zA-Z0-9_-]/g, "-");
