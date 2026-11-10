@@ -735,6 +735,25 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
           });
         }
 
+        // 호실 조회 결과가 있으면 공급면적도 함께 채운다(상가·사무실·오피스텔).
+        if (variant === 'exclusive' && result.supply_area_m2 != null && Number(result.supply_area_m2) > 0) {
+          const supplyEl = document.getElementById('supplyAreaM2');
+          if (supplyEl) {
+            supplyEl.value = result.supply_area_m2;
+            supplyEl.dispatchEvent(new Event('input'));
+            filled.push('공급면적');
+          }
+        }
+
+        // 주차대수는 건축물대장의 건물 전체 기준 값이라 비어 있을 때만 채운다.
+        if (result.parking_count != null && Number(result.parking_count) > 0) {
+          const parkEl = document.getElementById('parkingCount');
+          if (parkEl && !String(parkEl.value || '').trim()) {
+            parkEl.value = result.parking_count + '대';
+            filled.push('주차대수(건물 전체 기준)');
+          }
+        }
+
         if (result.floor_info) {
           const el = document.getElementById('floorInfo');
           if (el) { el.value = result.floor_info; filled.push('층수'); }
