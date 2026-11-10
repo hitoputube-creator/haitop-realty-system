@@ -1700,3 +1700,6 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* 색상 균형(2026-11-10): 제목=청록, 라벨=슬레이트 블루, 본문=차콜로 구분 */
 html:not([data-office-theme='ktop']) .ipt-label{background:#eef3f8;color:#3b5f7a}
+
+/* 상세 화면 섹션 제목(매물 상세정보, 추가메모, 이미지·자료, 등록상태 등)은 파란색 */
+html:not([data-office-theme='ktop']) .detail-section-title{color:#1f5fa8}
