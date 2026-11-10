@@ -80,8 +80,8 @@
   }
 })();
 </script>
-<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261110-collapse2"></script>
+<script src="assets/js/commercial-price-core.js?v=20261110-kind1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261110-kind1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -1159,6 +1159,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       presalePrice:   gv('presalePrice'),
       ...(cat1 === '상가사무실' ? window.registerCommercialPhase.originalValues : {}),
       presaleStatus: cat1 === '상가사무실' ? window.registerCommercialPhase.status : undefined,
+      shopKind: cat1 === '상가사무실' ? window.registerCommercialPhase.shopKind : undefined,
       occupancy: cat1 === '상가사무실' ? window.registerCommercialPhase.occupancy : undefined,
       deposit:        gv('deposit'),
       monthlyRent:    gv('monthlyRent'),
@@ -1629,7 +1630,7 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
   })();
 
 </script>
-<script>window.registerCommercialPhase=CommercialPresaleUI.setup({host:document.getElementById("salePrice").closest(".field").parentElement,item:{presaleStatus:"분양중"}});</script>
+<script>window.registerCommercialPhase=CommercialPresaleUI.setup({host:document.getElementById("salePrice").closest(".field").parentElement,item:{presaleStatus:"분양중",shopKind:"기존상가"}});</script>
 </body>
 </html>
 

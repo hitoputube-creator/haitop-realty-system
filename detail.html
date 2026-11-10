@@ -140,8 +140,8 @@
 </script>
 
 <script src="assets/js/building-records.js?v=20261107-share3"></script>
-<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261110-collapse2"></script>
+<script src="assets/js/commercial-price-core.js?v=20261110-kind1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261110-kind1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -1725,16 +1725,22 @@ function closeHomepageTab(tab) {
     const additionalContactText = _additionalList.map(c => c.name ? c.name + " " + c.phone : c.phone).join(", ");
     const _isAllowedPrice = ([label]) => !(label === "분양가" && !priceAllow.presale);
     priceCore = priceCore.filter(_isAllowedPrice); priceCond = priceCond.filter(_isAllowedPrice);
+    // 기존상가/분양상가 구분(직접 고른 값이 우선, 없으면 분양 자료 유무로 추정)
+    const shopKind = profileKey === "commercial" && window.CommercialPriceCore ? window.CommercialPriceCore.shopKind(item) : "";
     const rows = [
       iptRow([["1차구분", (c => ({ "공장창고": "공장·창고", "상가사무실": "상가·사무실", "건물빌딩": "건물·빌딩" })[c] || c)(resolveDisplayCategory1(cat1Raw || item.category1, category.category2 || item.category2))], ["2차구분", category.category2 || item.category2], ["거래유형", dealType === "회사임대" ? "(회사)월세(임대)" : dealType === "월세" ? "월세(임대)" : dealType === "매매·월세" ? "매매·월세(임대)" : dealType]]),
       ...(profileKey === "commercial"
         ? [iptRow([["지도검색주소", mapAddress]])]
         : [...(item.is_public === true ? [iptRow([["제목", item.title]]), iptRow([["공개주소", publicAddress]])] : []), iptRow([["지도검색주소", mapAddress]])]),
-      ...(profileKey === "commercial" ? [
+      ...(profileKey === "commercial" ? (shopKind === "기존상가" ? [
+        iptRow([["상가구분", shopKind], ["현재 매매가", formatWonOrText(item.salePrice)], ["현재 보증금", depositText]]),
+        iptRow([["현재 월세", rentText]])
+      ] : [
+        iptRow([["상가구분", shopKind]]),
         iptRow([["기존 분양가", formatWonOrText(item.presalePrice)], ["현재 매매가", formatWonOrText(item.salePrice)]]),
         iptRow([["기존 보증금", formatWonOrText(item.originalDeposit ?? (item.import_unit_snapshot?.보증금 != null ? Number(item.import_unit_snapshot.보증금)*10000 : null))], ["현재 보증금", depositText]]),
         iptRow([["기존 월세", formatWonOrText(item.originalMonthlyRent ?? (item.import_unit_snapshot?.월차임 != null ? Number(item.import_unit_snapshot.월차임)*10000 : null))], ["현재 월세", rentText]])
-      ] : [iptRow(priceCore)]),
+      ]) : [iptRow(priceCore)]),
       ...profileRows,
       packRows([...(profileKey === "commercial" ? [] : priceCond), ...profileCondPairs], 3),
       iptRow([["소유주", ownerName], ["소유주 연락처", contact]]),
@@ -1754,7 +1760,7 @@ function closeHomepageTab(tab) {
     // 핵심표에 없는 나머지 필드들. 실제 값이 있는 것만 packRows가 걸러서 보여준다.
     const extraPairs = [
       ["최초 분양가", profileKey === "commercial" || !priceAllow.presale ? "" : formatWonOrText(item.presalePrice)],
-      ...(commercialPrice ? [["분양상태",commercialPrice.status]] : []),
+      ...(commercialPrice && shopKind !== "기존상가" ? [["분양상태",commercialPrice.status]] : []),
       ["관리비", item.type === "apartment" || profileKey === "commercial" || !priceAllow.fee ? "" : formatWonOrText(item.managementFee)],
       ["권리금", item.type === "apartment" || profileKey === "commercial" || !priceAllow.fee ? "" : formatWonOrText(item.premium)],
       ["상가 보증금", profileKey === "commercial" ? "" : formatManWon(item.shop_deposit)],
@@ -2479,6 +2485,7 @@ function closeHomepageTab(tab) {
           presalePrice:       gv("edit_presalePrice"),
           ...(category1 === "상가사무실" ? window.editCommercialPhase.originalValues : {}),
           presaleStatus: category1 === "상가사무실" ? window.editCommercialPhase.status : item.presaleStatus,
+        shopKind: category1 === "상가사무실" ? window.editCommercialPhase.shopKind : item.shopKind,
           occupancy: category1 === "상가사무실" ? window.editCommercialPhase.occupancy : item.occupancy,
           deposit:            gv("edit_deposit"),
           monthlyRent:        gv("edit_monthlyRent"),
