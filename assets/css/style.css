@@ -1703,3 +1703,6 @@ html:not([data-office-theme='ktop']) .ipt-label{background:#eef3f8;color:#3b5f7a
 
 /* 상세 화면 섹션 제목(매물 상세정보, 추가메모, 이미지·자료, 등록상태 등)은 파란색 */
 html:not([data-office-theme='ktop']) .detail-section-title{color:#1f5fa8}
+
+/* 수정·등록 창의 항목 제목(기본정보, 면적정보, 가격정보 등)도 파란색 */
+html:not([data-office-theme='ktop']) .modal-section-title{color:#1f5fa8;border-bottom-color:rgba(31,95,168,.35)}
