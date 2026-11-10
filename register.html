@@ -1463,6 +1463,30 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
       if (ownerEl && nameParam && !ownerEl.value.trim()) ownerEl.value = nameParam;
       const phoneEl = document.getElementById("owner_phone1");
       if (phoneEl && phoneParam && !phoneEl.value.trim()) phoneEl.value = formatKoreanPhoneInput(phoneParam);
+      // 업무일지의 추가 연락처(남편 등)를 추가 연락처 입력칸으로 옮긴다
+      try {
+        const rawExtra = _qp.get("additionalContacts") || "";
+        if (rawExtra && typeof addContactRow === "function") {
+          const parsedExtra = JSON.parse(rawExtra);
+          const seenExtra = new Set();
+          const mainDigits = phoneDigitsOnly(phoneEl ? phoneEl.value : "");
+          if (mainDigits) seenExtra.add(mainDigits);
+          document.querySelectorAll("#additionalContactsWrap .contact-phone-input").forEach(input => {
+            const d = phoneDigitsOnly(input.value);
+            if (d) seenExtra.add(d);
+          });
+          (Array.isArray(parsedExtra) ? parsedExtra : []).slice(0, 10).forEach(c => {
+            if (!c || typeof c !== "object") return;
+            const rawPhone = String(c.phone || "");
+            const digits = phoneDigitsOnly(rawPhone);
+            if (digits.length < 8 || digits.length > 11 || seenExtra.has(digits)) return;
+            seenExtra.add(digits);
+            addContactRow(String(c.name || "").slice(0, 30), formatKoreanPhoneInput(rawPhone));
+          });
+        }
+      } catch (e) {
+        console.warn("[업무일지 추가 연락처 가져오기 실패]", e.message || e);
+      }
 
       const rawPhotos = _qp.get("photos") || "";
       if (rawPhotos) {
