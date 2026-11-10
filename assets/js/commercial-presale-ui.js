@@ -11,9 +11,9 @@
   const get=id=>document.getElementById(prefix+id);
   const category=get('category1')||document.getElementById('category1Select');
   if(!host||!category)return null;
-  let phase=core.status(item);
+  let phase=core.status(item);let kind=core.shopKind(item);
   const switcher=document.createElement('div');switcher.className='presale-switch';
-  switcher.innerHTML='<span>분양상태</span><button type="button" data-phase="분양중">분양중</button><button type="button" data-phase="분양완료">분양완료</button><label>임대현황 <select class="commercial-occupancy"><option>공실</option><option>임차중</option></select></label>';
+  switcher.innerHTML='<span>상가구분</span><button type="button" data-kind="기존상가">기존상가</button><button type="button" data-kind="분양상가">분양상가</button><span class="presale-only">분양상태</span><button type="button" class="presale-only" data-phase="분양중">분양중</button><button type="button" class="presale-only" data-phase="분양완료">분양완료</button><label>임대현황 <select class="commercial-occupancy"><option>공실</option><option>임차중</option></select></label>';
   host.before(switcher);
   const occupancy=switcher.querySelector('.commercial-occupancy');
   const headings=['기존 분양조건','현재 조건'].map((title,index)=>{const el=document.createElement('div');el.className='commercial-compare-heading'+(index?' current':'');el.textContent=title;el.style.gridRow='1';el.style.gridColumn=String(index+1);host.appendChild(el);return el;});
@@ -21,7 +21,7 @@
    let originalOpen=null;
    const originalIds=['presalePrice','originalDeposit','originalMonthlyRent'];
    const hasOriginalData=()=>originalIds.some(id=>{const el=get(id);return el&&String(el.value||'').replace(/[^\d]/g,'')!==''});
-   const isOriginalOpen=()=>originalOpen===null?hasOriginalData():originalOpen;
+   const isOriginalOpen=()=>originalOpen===null?true:originalOpen;
    const toggleHeading=headings[0];
    toggleHeading.setAttribute('role','button');toggleHeading.tabIndex=0;toggleHeading.classList.add('original-toggle');
    const toggleOriginal=()=>{originalOpen=!isOriginalOpen();render();};
@@ -43,8 +43,11 @@
    const enabled=category.value==='상가사무실';
    switcher.hidden=!enabled;host.classList.toggle('commercial-price-compare',enabled);
    areaBlocks.forEach((block,index)=>{if(enabled&&priceStart)priceStart.before(block);else areaAnchors[index].after(block);});
-   const open=isOriginalOpen();
-    headings.forEach(el=>el.hidden=!enabled);
+   const presaleKind=enabled&&kind==='분양상가';
+    const open=presaleKind&&isOriginalOpen();
+    switcher.querySelectorAll('.presale-only').forEach(el=>el.hidden=!presaleKind);
+    switcher.querySelectorAll('[data-kind]').forEach(b=>{b.classList.toggle('active',b.dataset.kind===kind);b.setAttribute('aria-pressed',String(b.dataset.kind===kind));});
+    headings.forEach(el=>el.hidden=!presaleKind);
     host.classList.toggle('original-collapsed',enabled&&!open);
     toggleHeading.textContent=(open?'▾ ':'▸ ')+'기존 분양조건'+(open?'':(hasOriginalData()?' (입력된 자료 있음 · 눌러서 펼치기)':' (선택 입력 · 눌러서 펼치기)'));
     toggleHeading.setAttribute('aria-expanded',String(open));
@@ -64,7 +67,8 @@
   fillOriginal(item);
   ['originalDeposit','originalMonthlyRent'].forEach(formatOriginal);
   switcher.querySelectorAll('[data-phase]').forEach(b=>b.onclick=()=>{phase=b.dataset.phase;render();});
+   switcher.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{kind=b.dataset.kind;originalOpen=null;render();});
   category.addEventListener('change',render);render();
-  return {get status(){return phase;},get occupancy(){return occupancy.value;},get originalValues(){const clean=id=>get(id).value.replace(/[^\d]/g,'');return {originalDeposit:clean('originalDeposit')||null,originalMonthlyRent:clean('originalMonthlyRent')||null};},set(data){phase=core.status(data);originalOpen=null;fillOriginal(data);['originalDeposit','originalMonthlyRent'].forEach(formatOriginal);render();},render};
+  return {get status(){return phase;},get shopKind(){return kind;},get occupancy(){return occupancy.value;},get originalValues(){const clean=id=>get(id).value.replace(/[^\d]/g,'');return {originalDeposit:clean('originalDeposit')||null,originalMonthlyRent:clean('originalMonthlyRent')||null};},set(data){phase=core.status(data);kind=core.shopKind(data);originalOpen=null;fillOriginal(data);['originalDeposit','originalMonthlyRent'].forEach(formatOriginal);render();},render};
  }};
 })(window);
