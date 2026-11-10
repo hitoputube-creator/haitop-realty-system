@@ -26,6 +26,13 @@
     return d.getFullYear() + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + String(d.getDate()).padStart(2, "0");
   }
 
+  if (!document.getElementById("ldLinkStyle")) {
+    var st = document.createElement("style");
+    st.id = "ldLinkStyle";
+    st.textContent = ".ld-link{color:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:4px;cursor:pointer}.ld-link:hover{color:#177a55;text-decoration-style:solid}.ld-ext{font-size:.8em;opacity:.7}.ld-site{margin-left:auto;font-size:.74rem;font-weight:600;color:var(--text-muted)}";
+    document.head.appendChild(st);
+  }
+
   var listingId = new URLSearchParams(location.search).get("id");
   var root = document.getElementById("listingDocsArea");
   if (!root || !listingId) return;
@@ -41,8 +48,8 @@
   }
 
   var PANELS = [
-    { type: "건축물대장", icon: "🏢", hint: "건축물대장 PDF·사진" },
-    { type: "등기부등본", icon: "📑", hint: "등기부등본 PDF·사진" }
+    { type: "건축물대장", icon: "🏢", hint: "건축물대장 PDF·사진", url: "https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=15000000098", site: "정부24" },
+    { type: "등기부등본", icon: "📑", hint: "등기부등본 PDF·사진", url: "https://www.iros.go.kr/", site: "대법원 인터넷등기소" }
   ];
 
   function rowHtml(d) {
@@ -58,7 +65,7 @@
       var mine = docs.filter(function (d) { return d.doc_type === p.type; });
       var rows = mine.length ? mine.map(rowHtml).join("") : '<div class="ld-empty">등록된 파일이 없습니다.</div>';
       return '<div class="ld-panel" data-type="' + esc(p.type) + '">' +
-        '<div class="ld-panel-title">' + p.icon + ' ' + esc(p.type) + ' <span class="ld-count">' + mine.length + '</span></div>' +
+        '<div class="ld-panel-title"><a class="ld-link" href="' + esc(p.url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(p.site) + '에서 ' + esc(p.type) + ' 발급·열람 (새 창)">' + p.icon + ' ' + esc(p.type) + ' <span class="ld-ext" aria-hidden="true">↗</span></a> <span class="ld-count">' + mine.length + '</span><span class="ld-site">' + esc(p.site) + '</span></div>' +
         '<div class="ld-list">' + rows + '</div>' +
         '<div class="ld-upload"><input type="file" class="ld-file" accept=".pdf,image/*" multiple />' +
         '<button type="button" class="btn btn-primary ld-up"' + (busy ? " disabled" : "") + '>' + (busy ? "올리는 중…" : esc(p.type) + " 올리기") + '</button></div>' +
