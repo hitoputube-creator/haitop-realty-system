@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { key: "index",      label: "통합관리", href: "index.html" },
   { key: "home",       label: "매물관리", cls: "ico-home", href: "property-main.html?category=all&ui=20261006-brand2" },
   { key: "properties", label: "매물관리", cls: "ico-list", href: "properties.html" },
+  { key: "contracts",  label: "계약관리", href: "contracts.html" },
   { key: "worklog",    label: "업무센터", href: "https://hitoputube-creator.github.io/hitop-ai-workcenter/index.html", external: true },
   { key: "diary",      label: "업무일지", href: "https://haitop-realestate-diary.vercel.app/", external: true },
   { key: "homepage",   label: "홈페이지", href: "https://hitoputube-creator.github.io/hitop-property-platform/listings.html", external: true }
