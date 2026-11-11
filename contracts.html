@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>하이탑부동산 | 계약관리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20261108-ktop-match1" />
+  <script src="assets/js/storage.js?v=20261017-notice-removed"></script><script src="assets/js/ktop-shared-view.js?v=20261107-ksv3"></script>
+  <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+  <script src="assets/js/nav.js?v=20261006-ktop-diary1"></script>
+  <link rel="stylesheet" href="assets/css/resource-categories.css?v=20261108-teal-gradient2">
+  <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
+  <script>
+  (function(){
+    var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+    document.documentElement.dataset.officeTheme=office;
+    if(office!=='ktop'){ var link=document.querySelector('link[href*="white-navy-workspace.css"]'); if(link)link.disabled=false; }
+  })();
+  </script>
+  <style>
+    .ct-wrap { margin: 16px 0 40px; }
+    .ct-top { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
+    .ct-title { font-size:1.25rem; font-weight:800; color:#13201f; }
+    .ct-sub { font-size:.82rem; color:#6b7b79; }
+    .ct-sp { flex:1; }
+    .ct-bar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:12px; }
+    .ct-chip { border:1px solid #c9d6d4; background:#fff; color:#4b5c5a; border-radius:8px; padding:5px 12px; font:inherit; font-size:12.5px; cursor:pointer; }
+    .ct-chip.on { background:var(--ct-accent); border-color:var(--ct-accent); color:#fff; font-weight:700; }
+    .ct-search { font:inherit; font-size:13px; border:1px solid #c9d6d4; border-radius:8px; padding:6px 10px; min-width:200px; background:#fff; color:#1d2b2a; }
+    .ct-btn { border:1px solid #c9d6d4; background:#fff; color:#1d2b2a; border-radius:8px; padding:6px 12px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+    .ct-btn:hover { background:#f2f7f6; }
+    .ct-primary { background:var(--ct-accent); border-color:var(--ct-accent); color:#fff; }
+    .ct-primary:hover { background:var(--ct-accent); filter:brightness(1.08); }
+    .ct-danger { color:#b42318; }
+    .ct-head, .ct-row { display:grid; grid-template-columns:minmax(170px,1.6fr) minmax(90px,.8fr) minmax(150px,1.1fr) minmax(110px,.9fr) minmax(110px,.9fr) 150px; gap:6px 14px; align-items:center; }
+    .ct-head { font-size:11.5px; color:#6b7b79; padding:6px 10px; border-bottom:1px solid #dbe5e3; }
+    .ct-row { padding:12px 10px; border-bottom:1px solid #e6eeec; font-size:13.5px; background:#fff; }
+    .ct-row:hover { background:#f7fbfa; }
+    .ct-loc { font-weight:700; color:#13201f; text-decoration:none; }
+    a.ct-loc:hover { text-decoration:underline; }
+    .ct-small { color:#6b7b79; font-size:12px; }
+    .ct-num { font-variant-numeric:tabular-nums; }
+    .ct-soon { color:#b7791f; font-weight:700; }
+    .ct-over { color:#b42318; font-weight:700; }
+    .ct-tag { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:11px; border:1px solid #c9d6d4; color:#4b5c5a; }
+    .ct-tag.done { color:#2f7a55; border-color:#9ed4b6; }
+    .ct-act { display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap; }
+    .ct-act .ct-btn { padding:3px 9px; font-size:12px; font-weight:500; }
+    .ct-phone { color:inherit; text-decoration:none; }
+    .ct-phone:hover { text-decoration:underline; }
+    .ct-empty { padding:40px 8px; color:#6b7b79; text-align:center; }
+    .ct-err { margin:10px 0; padding:10px 12px; border:1px solid #f0b9ae; background:#fff2f0; color:#b42318; border-radius:8px; font-size:13px; }
+    .ct-note { margin-top:12px; color:#6b7b79; font-size:12px; }
+    .ct-ov { position:fixed; inset:0; background:rgba(15,23,22,.45); display:none; align-items:flex-start; justify-content:center; padding:40px 12px; overflow:auto; z-index:50; }
+    .ct-ov.show { display:flex; }
+    .ct-modal { background:#fff; border-radius:14px; width:min(680px,100%); padding:18px 18px 14px; box-shadow:0 12px 40px rgba(0,0,0,.25); }
+    .ct-mh { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; font-weight:800; font-size:1.05rem; color:#13201f; }
+    .ct-form { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px 12px; }
+    .ct-form label { display:block; font-size:11.5px; color:#6b7b79; margin-bottom:3px; }
+    .ct-form input, .ct-form select, .ct-form textarea { width:100%; font:inherit; font-size:13.5px; border:1px solid #c9d6d4; border-radius:8px; padding:7px 9px; background:#fff; color:#1d2b2a; }
+    .ct-form .c2 { grid-column:span 2; } .ct-form .c4 { grid-column:1/-1; }
+    .ct-mf { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+    @media (max-width:820px) {
+      .ct-head { display:none; }
+      .ct-row { grid-template-columns:1fr 1fr; gap:4px 12px; }
+      .ct-row > :first-child { grid-column:1/-1; }
+      .ct-act { grid-column:1/-1; justify-content:flex-start; }
+      .ct-form { grid-template-columns:1fr 1fr; } .ct-form .c4 { grid-column:1/-1; }
+    }
+  </style>
+</head>
+<body class="resources-page" data-nav-active="contracts">
+<div class="page">
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="logo-main">하이탑부동산 계약관리</div>
+      <div class="logo-sub">위치 · 금액 · 기간 · 임대인 · 임차인</div>
+    </div>
+    <nav class="main-nav" id="mainNav"></nav>
+  </header>
+  <div class="header-line"></div>
+
+  <div class="ct-wrap" id="ctWrap">
+    <div class="ct-top">
+      <div class="ct-title">계약관리</div>
+      <div class="ct-sub" id="ctCount">불러오는 중...</div>
+      <span class="ct-sp"></span>
+      <button type="button" class="ct-btn ct-primary" id="ctAdd">+ 계약 추가</button>
+    </div>
+    <div class="ct-bar" id="ctBar">
+      <button type="button" class="ct-chip on" data-k="all">전체</button>
+      <button type="button" class="ct-chip" data-k="ing">진행중</button>
+      <button type="button" class="ct-chip" data-k="soon">만기 임박</button>
+      <button type="button" class="ct-chip" data-k="done">종료</button>
+      <span class="ct-sp"></span>
+      <input class="ct-search" id="ctSearch" type="search" placeholder="위치 · 이름 · 번호 검색" />
+    </div>
+    <div id="ctErr"></div>
+    <div class="ct-head"><div>위치</div><div>금액</div><div>기간</div><div id="ctH4">임대인 (매도인)</div><div id="ctH5">임차인 (매수인)</div><div></div></div>
+    <div id="ctList"></div>
+    <div class="ct-note">전화번호를 누르면 바로 전화가 걸립니다. 기간이 끝나기 30일 전부터 노란색, 지나면 빨간색으로 표시합니다. 위치를 매물에서 고르면 위치를 누를 때 그 매물 상세로 이동합니다.</div>
+  </div>
+</div>
+
+<div class="ct-ov" id="ctOv">
+  <div class="ct-modal" role="dialog" aria-modal="true" aria-label="계약 입력">
+    <div class="ct-mh"><span id="ctMt">계약 추가</span><button type="button" class="ct-btn" id="ctClose">닫기</button></div>
+    <div class="ct-form">
+      <div class="c4"><label for="fLoc">위치 (매물을 고르거나 직접 입력)</label><input id="fLoc" list="ctListings" autocomplete="off" placeholder="예: 파주디에이블 제8층 820호" /><datalist id="ctListings"></datalist></div>
+      <div class="c2"><label for="fDoc">종류</label><select id="fDoc"><option>오피스텔</option><option>상가</option><option>아파트</option><option>사무실</option><option>토지</option><option>기타</option></select></div>
+      <div class="c2"><label for="fDeal">거래</label><select id="fDeal"><option>월세</option><option>전세</option><option>매매</option><option>기타</option></select></div>
+      <div class="c2"><label for="fAmt">금액 (예: 1,000 / 75)</label><input id="fAmt" /></div>
+      <div><label for="fS" id="fSL">시작일</label><input id="fS" type="date" /></div>
+      <div><label for="fE" id="fEL">만기일</label><input id="fE" type="date" /></div>
+      <div><label for="fA1" id="fA1L">임대인 이름</label><input id="fA1" /></div>
+      <div><label for="fP1" id="fP1L">임대인 연락처</label><input id="fP1" type="tel" inputmode="tel" /></div>
+      <div><label for="fA2" id="fA2L">임차인 이름</label><input id="fA2" /></div>
+      <div><label for="fP2" id="fP2L">임차인 연락처</label><input id="fP2" type="tel" inputmode="tel" /></div>
+      <div class="c4"><label for="fMemo">메모</label><textarea id="fMemo" rows="2"></textarea></div>
+    </div>
+    <div class="ct-mf"><button type="button" class="ct-btn" id="ctCancel">취소</button><button type="button" class="ct-btn ct-primary" id="ctSave">저장</button></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var ktop = OfficeConfig.id === 'ktop';
+  document.documentElement.style.setProperty('--ct-accent', ktop ? '#254767' : '#0f766e');
+  if (ktop) document.querySelector('.logo-main').textContent = 'KTOP부동산 계약관리';
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { rows: [], filter: 'all', q: '', editId: null, listings: [] };
+  var DAY = 86400000;
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function todayKey() { return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }); }
+  function daysTo(dateKey) { if (!dateKey) return null; var a = new Date(todayKey() + 'T00:00:00'), b = new Date(dateKey + 'T00:00:00'); return Math.round((b - a) / DAY); }
+  function dot(d) { return d ? String(d).replace(/-/g, '.') : ''; }
+  function isSale(r) { return r.deal_type === '매매'; }
+  function phoneHtml(p) { if (!p) return ''; var d = String(p).replace(/[^0-9+]/g, ''); return '<a class="ct-phone" href="tel:' + esc(d) + '">' + esc(p) + '</a>'; }
+  function period(r) {
+    if (!r.start_date && !r.end_date) return '<span class="ct-small">기간 미입력</span>';
+    if (isSale(r)) return dot(r.start_date) + ' 계약' + (r.end_date ? '<br><span class="ct-small">' + dot(r.end_date) + ' 잔금</span>' : '');
+    return dot(r.start_date) + ' ~ ' + dot(r.end_date);
+  }
+  function endState(r) {
+    if (r.status === 'done' || isSale(r) || !r.end_date) return '';
+    var d = daysTo(r.end_date); if (d == null) return '';
+    if (d < 0) return 'over'; if (d <= 30) return 'soon'; return '';
+  }
+  function matches(r) {
+    var q = state.q.trim().toLowerCase();
+    if (q) {
+      var hay = [r.location, r.amount, r.doc_type, r.deal_type, r.lessor_name, r.lessor_phone, r.lessee_name, r.lessee_phone, r.memo].join(' ').toLowerCase();
+      var digits = q.replace(/[^0-9]/g, '');
+      if (hay.indexOf(q) < 0 && !(digits.length >= 3 && [r.lessor_phone, r.lessee_phone].join(' ').replace(/[^0-9 ]/g, '').indexOf(digits) >= 0)) return false;
+    }
+    if (state.filter === 'ing') return r.status === 'ing';
+    if (state.filter === 'done') return r.status === 'done';
+    if (state.filter === 'soon') return r.status === 'ing' && !!endState(r);
+    return true;
+  }
+  function render() {
+    var all = state.rows;
+    var cnt = { all: all.length, ing: all.filter(function (r) { return r.status === 'ing'; }).length, done: all.filter(function (r) { return r.status === 'done'; }).length, soon: all.filter(function (r) { return r.status === 'ing' && endState(r); }).length };
+    $('ctCount').textContent = '전체 ' + cnt.all + '건 · 진행중 ' + cnt.ing + '건' + (cnt.soon ? ' · 만기 임박 ' + cnt.soon + '건' : '');
+    document.querySelectorAll('#ctBar .ct-chip').forEach(function (b) {
+      var base = { all: '전체', ing: '진행중', soon: '만기 임박', done: '종료' }[b.dataset.k];
+      b.textContent = base + ' ' + cnt[b.dataset.k];
+      b.classList.toggle('on', b.dataset.k === state.filter);
+    });
+    var list = all.filter(matches);
+    if (!list.length) { $('ctList').innerHTML = '<div class="ct-empty">' + (all.length ? '조건에 맞는 계약이 없어요.' : '아직 계약이 없어요. 오른쪽 위 + 계약 추가로 시작해 보세요.') + '</div>'; return; }
+    $('ctList').innerHTML = list.map(function (r) {
+      var es = endState(r);
+      var loc = r.listing_id ? '<a class="ct-loc" href="' + esc(OfficeConfig.urlFor('detail.html?id=' + encodeURIComponent(r.listing_id))) + '">' + esc(r.location) + '</a>' : '<span class="ct-loc">' + esc(r.location) + '</span>';
+      var tag = r.status === 'done' ? '<span class="ct-tag done">종료</span>' : (es === 'over' ? '<span class="ct-tag ct-over">만기 지남</span>' : '');
+      var sale = isSale(r);
+      return '<div class="ct-row" data-id="' + esc(r.id) + '">' +
+        '<div>' + loc + tag + '<div class="ct-small">' + esc([r.doc_type, r.deal_type].filter(Boolean).join(' · ')) + (r.memo ? ' · ' + esc(r.memo) : '') + '</div></div>' +
+        '<div class="ct-num">' + esc(r.amount) + '</div>' +
+        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '">' + period(r) + '</div>' +
+        '<div>' + esc(r.lessor_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessor_phone) + '</div></div>' +
+        '<div>' + esc(r.lessee_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessee_phone) + '</div></div>' +
+        '<div class="ct-act"><button type="button" class="ct-btn" data-act="edit">수정</button><button type="button" class="ct-btn" data-act="' + (r.status === 'done' ? 'resume' : 'end') + '">' + (r.status === 'done' ? '되살리기' : '종료') + '</button><button type="button" class="ct-btn ct-danger" data-act="del">삭제</button></div>' +
+        '</div>';
+    }).join('');
+    var sale0 = list.some(function (r) { return isSale(r); }), rent0 = list.some(function (r) { return !isSale(r); });
+    $('ctH4').textContent = sale0 && !rent0 ? '매도인' : rent0 && !sale0 ? '임대인' : '임대인 (매도인)';
+    $('ctH5').textContent = sale0 && !rent0 ? '매수인' : rent0 && !sale0 ? '임차인' : '임차인 (매수인)';
+  }
+  function showErr(msg) { $('ctErr').innerHTML = msg ? '<div class="ct-err">' + esc(msg) + '</div>' : ''; }
+
+  async function load() {
+    showErr('');
+    try {
+      var res = await hitopAuthClient.from('contracts').select('*').order('created_at', { ascending: false });
+      if (res.error) throw res.error;
+      state.rows = res.data || [];
+      state.rows.sort(function (a, b) {
+        var ea = a.status === 'done' ? 1 : 0, eb = b.status === 'done' ? 1 : 0; if (ea !== eb) return ea - eb;
+        var da = a.end_date || '9999-12-31', db = b.end_date || '9999-12-31'; return da < db ? -1 : da > db ? 1 : 0;
+      });
+      render();
+    } catch (e) { $('ctCount').textContent = ''; showErr('계약 목록을 불러오지 못했습니다: ' + (e.message || e)); }
+  }
+
+  function applyDealLabels() {
+    var sale = $('fDeal').value === '매매';
+    $('fSL').textContent = sale ? '계약일' : '시작일'; $('fEL').textContent = sale ? '잔금일' : '만기일';
+    $('fA1L').textContent = sale ? '매도인 이름' : '임대인 이름'; $('fP1L').textContent = sale ? '매도인 연락처' : '임대인 연락처';
+    $('fA2L').textContent = sale ? '매수인 이름' : '임차인 이름'; $('fP2L').textContent = sale ? '매수인 연락처' : '임차인 연락처';
+  }
+  var current = { listing_id: null };
+  function openForm(r) {
+    state.editId = r ? r.id : null; current.listing_id = r ? r.listing_id : null;
+    $('ctMt').textContent = r ? '계약 수정' : '계약 추가';
+    $('fLoc').value = r ? r.location : ''; $('fDoc').value = r ? (r.doc_type || '기타') : '오피스텔'; $('fDeal').value = r ? (r.deal_type || '기타') : '월세';
+    $('fAmt').value = r ? r.amount : ''; $('fS').value = r ? (r.start_date || '') : ''; $('fE').value = r ? (r.end_date || '') : '';
+    $('fA1').value = r ? r.lessor_name : ''; $('fP1').value = r ? r.lessor_phone : ''; $('fA2').value = r ? r.lessee_name : ''; $('fP2').value = r ? r.lessee_phone : '';
+    $('fMemo').value = r ? r.memo : ''; applyDealLabels(); $('ctOv').classList.add('show'); $('fLoc').focus();
+    ensureListings();
+  }
+  function closeForm() { $('ctOv').classList.remove('show'); }
+  async function ensureListings() {
+    if (state.listings.length || state.listingsLoading) return; state.listingsLoading = true;
+    try {
+      var rows = await getListings();
+      state.listings = rows.filter(function (x) { return x && x.title; }).map(function (x) { return { id: x.id, label: String(x.title).trim(), addr: x.address || '' }; });
+      $('ctListings').innerHTML = state.listings.slice(0, 1500).map(function (x) { return '<option value="' + esc(x.label) + '">' + esc(x.addr) + '</option>'; }).join('');
+    } catch (e) { /* 매물 목록이 없어도 직접 입력으로 저장할 수 있다 */ }
+    state.listingsLoading = false;
+  }
+  $('fLoc').addEventListener('input', function () {
+    var v = this.value.trim(); var hit = state.listings.find(function (x) { return x.label === v; });
+    current.listing_id = hit ? String(hit.id) : null;
+  });
+  $('fDeal').addEventListener('change', applyDealLabels);
+  async function save() {
+    var loc = $('fLoc').value.trim(); if (!loc) { alert('위치를 입력해 주세요.'); $('fLoc').focus(); return; }
+    var s = $('fS').value || null, e = $('fE').value || null;
+    if (s && e && e < s) { alert('끝나는 날이 시작하는 날보다 빠릅니다. 날짜를 확인해 주세요.'); return; }
+    var payload = { location: loc, listing_id: current.listing_id, doc_type: $('fDoc').value, deal_type: $('fDeal').value, amount: $('fAmt').value.trim(), start_date: s, end_date: e,
+      lessor_name: $('fA1').value.trim(), lessor_phone: $('fP1').value.trim(), lessee_name: $('fA2').value.trim(), lessee_phone: $('fP2').value.trim(), memo: $('fMemo').value.trim(), updated_at: new Date().toISOString() };
+    $('ctSave').disabled = true;
+    try {
+      var res = state.editId ? await hitopAuthClient.from('contracts').update(payload).eq('id', state.editId) : await hitopAuthClient.from('contracts').insert(payload);
+      if (res.error) throw res.error;
+      closeForm(); await load();
+    } catch (err) { alert('저장하지 못했습니다: ' + (err.message || err)); }
+    $('ctSave').disabled = false;
+  }
+  async function act(id, what) {
+    var r = state.rows.find(function (x) { return String(x.id) === String(id); }); if (!r) return;
+    try {
+      if (what === 'edit') { openForm(r); return; }
+      if (what === 'del') { if (!confirm('이 계약을 삭제할까요?\n' + r.location)) return; var d = await hitopAuthClient.from('contracts').delete().eq('id', id); if (d.error) throw d.error; }
+      else { var u = await hitopAuthClient.from('contracts').update({ status: what === 'end' ? 'done' : 'ing', updated_at: new Date().toISOString() }).eq('id', id); if (u.error) throw u.error; }
+      await load();
+    } catch (err) { alert('실패: ' + (err.message || err)); }
+  }
+
+  $('ctAdd').addEventListener('click', function () { openForm(null); });
+  $('ctClose').addEventListener('click', closeForm); $('ctCancel').addEventListener('click', closeForm); $('ctSave').addEventListener('click', save);
+  $('ctOv').addEventListener('click', function (e) { if (e.target === this) closeForm(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeForm(); });
+  $('ctBar').addEventListener('click', function (e) { var b = e.target.closest('.ct-chip'); if (!b) return; state.filter = b.dataset.k; render(); });
+  $('ctSearch').addEventListener('input', function () { state.q = this.value; render(); });
+  $('ctList').addEventListener('click', function (e) { var b = e.target.closest('[data-act]'); if (!b) return; act(b.closest('.ct-row').dataset.id, b.dataset.act); });
+
+  (async function () { var ok = await window.hitopAuthReady; if (ok) load(); })();
+})();
+</script>
+</body>
+</html>
