@@ -2,8 +2,8 @@
 .ac-editor { grid-column: 1 / -1; flex: 1 1 100%; width: 100%; display: flex; flex-direction: column; gap: 6px; }
 .ac-row { display: flex; gap: 6px; align-items: center; }
 .ac-row { flex-wrap: wrap; }
-.ac-row .ac-name { flex: 1 1 110px; width: auto; min-width: 0; }
-.ac-row .ac-phone { flex: 1 1 130px; width: auto; min-width: 0; }
+.ac-row .ac-name { flex: 1 1 80px; width: auto; min-width: 0; }
+.ac-row .ac-phone { flex: 1 1 100px; width: auto; min-width: 0; }
 .ac-remove { flex: 0 0 34px; height: 34px; border: 1px solid rgba(224, 82, 82, 0.4); border-radius: 8px; background: transparent; color: #b42318; cursor: pointer; }
 .ac-add { align-self: flex-start; padding: 5px 12px; border: 1px dashed currentColor; border-radius: 8px; background: transparent; color: inherit; font-weight: 700; font-size: 12px; cursor: pointer; opacity: 0.85; }
 .ac-add:disabled, .ac-remove:disabled { opacity: 0.4; cursor: default; }
@@ -40,3 +40,57 @@
 .wd-memo-listrow.is-open .wd-list-row-toggle{color:#254767;background:#dce8f5;border-color:#8fb0d3}
 .wd-memo-row-group > .wd-card--compact{margin-top:6px}
 @media (max-width:600px){.wd-memo-listrow{flex-wrap:wrap;gap:4px 8px}.wd-list-row-title{flex-basis:100%}.wd-list-row-customer{flex:1 1 auto}}
+
+/* ===== 하이탑 업무일지와 같은 형식: 날짜 박스 위, 큰 달력, 간편 일정 등록, 오른쪽 탭(오늘 일정·다가오는 일정·메모 기록) ===== */
+.wd-memo-column { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.wd-left-top { grid-template-columns: 1fr !important; grid-template-rows: auto auto !important; gap: 14px !important; }
+.wd-left-top .wd-calendar { padding: 0; }
+.wd-left-top .wd-cal-days { gap: 5px !important; grid-auto-rows: minmax(62px, auto) !important; grid-template-rows: none !important; }
+.wd-left-top .wd-cal-day { min-height: 62px !important; height: auto !important; font-size: 1.05rem; }
+.wd-left-top .wd-cal-day-num { font-size: 1.2rem; }
+.wd-left-top .wd-cal-weekday { font-size: 0.95rem; }
+.wd-left-top .wd-cal-month { font-size: 1.6rem; }
+.wd-date-card { grid-template-columns: 1fr 150px !important; grid-template-rows: auto 1fr !important; align-items: center; column-gap: 18px; padding: 12px 20px !important; min-height: 0 !important; height: auto !important; }
+.wd-left-top > .wd-date-card { min-height: 0 !important; }
+.wd-date-card .wd-date-weekday { grid-column: 1; grid-row: 1; align-self: end; text-align: center; font-size: 1.3rem; }
+.wd-date-card .wd-date-number { grid-column: 1; grid-row: 2; align-self: start; text-align: center; font-size: 130px !important; line-height: 1 !important; margin: 0 !important; }
+.wd-date-card .wd-date-stats { grid-column: 2; grid-row: 1 / span 2; grid-template-columns: 1fr !important; grid-template-rows: repeat(4, 1fr) !important; gap: 8px !important; height: auto !important; width: 100% !important; }
+.wd-date-card .wd-date-stat { height: auto !important; min-height: 44px; padding: 8px 16px !important; }
+.wd-date-card .wd-date-stat strong { font-size: 1.6rem !important; }
+.wd-left-top .wd-date-card { order: -1; }
+.wd-filter-tabs { display: grid !important; grid-template-columns: auto auto auto !important; grid-template-rows: auto auto !important; gap: 4px 6px !important; align-items: stretch; justify-content: end; }
+.wd-filter-tabs .wd-filter-author-group, .wd-filter-tabs .wd-filter-diary-group { display: contents !important; }
+.wd-filter-tabs .wd-filter-tab, .wd-filter-tabs .wd-btn-personal-diary { margin: 0 !important; padding: 3px 10px !important; min-height: 0 !important; height: auto !important; font-size: 12px !important; line-height: 1.3 !important; border: 1px solid #cdd9e8 !important; border-radius: 7px !important; white-space: nowrap; }
+.wd-filter-tabs .wd-filter-tab:nth-child(1) { grid-column: 1; grid-row: 1 / span 2; }
+.wd-filter-tabs .wd-filter-tab:nth-child(2) { grid-column: 2; grid-row: 1; }
+.wd-filter-tabs .wd-filter-tab:nth-child(3) { grid-column: 2; grid-row: 2; }
+.wd-filter-tabs .wd-btn-personal-diary:nth-child(1) { grid-column: 3; grid-row: 1; }
+.wd-filter-tabs .wd-btn-personal-diary:nth-child(2) { grid-column: 3; grid-row: 2; }
+@media (min-width: 1100px) {
+  .wd-app:has(.wd-main:not(.wd-main--week):not(.wd-main--month)) .wd-toolbar { position: relative; }
+  .wd-app:has(.wd-main:not(.wd-main--week):not(.wd-main--month)) .wd-filter-tabs { position: absolute; right: 28px; top: calc(100% + 12px); z-index: 5; }
+}
+/* 오른쪽 탭 */
+.dws-workspace { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.dws-tabs { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 0 12px; border-bottom: 1px solid #dce5ef; }
+.dws-tab { padding: 9px 13px; border: 1px solid #cdd9e8; border-radius: 8px; background: #fff; color: #23364c; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.dws-tab:hover { background: #edf3f9; }
+.dws-tab.dws-selected { color: #fff; border-color: #254767; background: #254767; }
+.dws-tab:focus-visible { outline: 2px solid #254767; outline-offset: 3px; }
+.dws-panel { min-width: 0; }
+.dws-panel[hidden] { display: none !important; }
+.dws-panel > .wd-diary { width: 100%; min-width: 0; }
+.dws-panel > .ssm-section, .dws-panel > .usw-section { margin: 0; }
+@media (max-width: 600px) { .dws-tabs { gap: 6px; } .dws-tab { padding: 8px 10px; font-size: 12px; } }
+/* 간편 일정 등록 */
+.qs-box { margin-top: 12px; padding: 12px; border: 1px solid #d9dee8; border-radius: 12px; background: #fff; display: grid; gap: 10px; }
+.qs-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 700; color: #23364c; }
+.qs-head span { font-size: 12px; font-weight: 400; color: #7a8497; }
+.qs-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.qs-date, .qs-text, .qs-writer { font: inherit; font-size: 13px; padding: 7px 9px; border: 1px solid #d9dee8; border-radius: 8px; background: #fff; color: #23364c; }
+.qs-text { flex: 1 1 160px; min-width: 0; }
+.qs-seg { display: flex; gap: 6px; }
+.qs-type { font: inherit; font-size: 13px; font-weight: 700; padding: 7px 12px; border: 1px solid; border-radius: 8px; background: #fff; cursor: pointer; }
+.qs-save { font: inherit; font-size: 13px; font-weight: 700; padding: 7px 18px; border: 0; border-radius: 8px; background: #254767; color: #fff; cursor: pointer; }
+.qs-save:disabled { opacity: 0.45; cursor: default; }
+.qs-msg { font-size: 12px; font-weight: 600; color: #254767; }
