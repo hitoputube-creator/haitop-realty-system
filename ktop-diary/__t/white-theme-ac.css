@@ -1,0 +1,226 @@
+/* ===== 추가 연락처 (하이탑 업무일지 11/10 수정과 동일 기능) ===== */
+.ac-editor { grid-column: 1 / -1; flex: 1 1 100%; width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.ac-row { display: flex; gap: 6px; align-items: center; }
+.ac-row { flex-wrap: wrap; }
+.ac-row .ac-name { flex: 1 1 80px; width: auto; min-width: 0; }
+.ac-row .ac-phone { flex: 1 1 100px; width: auto; min-width: 0; }
+.ac-remove { flex: 0 0 34px; height: 34px; border: 1px solid rgba(224, 82, 82, 0.4); border-radius: 8px; background: transparent; color: #b42318; cursor: pointer; }
+.ac-add { align-self: flex-start; padding: 5px 12px; border: 1px dashed currentColor; border-radius: 8px; background: transparent; color: inherit; font-weight: 700; font-size: 12px; cursor: pointer; opacity: 0.85; }
+.ac-add:disabled, .ac-remove:disabled { opacity: 0.4; cursor: default; }
+.ac-view { display: inline-flex; flex-wrap: wrap; gap: 6px 12px; }
+.ac-view-item { color: inherit; font-weight: 700; text-decoration: none; }
+.ac-view-item:hover { text-decoration: underline; }
+.ac-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ac-save { padding: 5px 14px; border: 1px solid #254767; border-radius: 8px; background: #254767; color: #fff; font-weight: 800; font-size: 12px; cursor: pointer; }
+.ac-save:disabled { opacity: 0.55; cursor: default; }
+.ac-msg { font-size: 12px; font-weight: 700; color: #1b6a4f; }
+@media (max-width: 640px) { .ac-row { flex-wrap: wrap; } .ac-row .ac-name, .ac-row .ac-phone { flex: 1 1 140px; width: auto; } }
+
+/* ===== 약속 일정 배지 (달력 · 선택 날짜 요약) ===== */
+.wd-calendar .wd-cal-schedule-info { flex-wrap: wrap; gap: 2px 3px; flex-shrink: 0; }
+.wd-calendar .wd-cal-schedule-count { display: inline-flex; align-items: center; justify-content: center; max-width: 100%; padding: 2px 3px; border: 1px solid transparent; border-radius: 5px; font-size: 9px; font-weight: 800; line-height: 1.2; font-variant-numeric: tabular-nums; white-space: normal; overflow-wrap: anywhere; }
+.wd-calendar .wd-cal-schedule-count--appointment { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
+.wd-calendar .wd-cal-schedule-count--contract { color: #713f12; background: #fef3c7; border-color: #d8b84a; }
+.wd-calendar .wd-cal-schedule-count--balance { color: #991b1b; background: #fee2e2; border-color: #fca5a5; }
+.wd-calendar .wd-cal-legend-box.appointment { background: #dbeafe; border-color: #2563eb; }
+.wd-left-top .wd-calendar .wd-cal-days { grid-auto-rows: minmax(48px, auto); }
+.wd-left-top .wd-calendar .wd-cal-day { height: auto; }
+.wd-calendar--compact .wd-cal-schedule-count { padding: 1px 2px; font-size: 8px; }
+.wd-date-stat--appointment { background: #eef5ff; border-color: #bcd3f5; }
+.wd-date-stat--appointment :is(span, strong) { color: #1e4fa3 !important; }
+
+/* ===== 메모 기록: 제목·이름·연락처 한 줄 목록 -> 간략보기(카드) -> 전체보기 (하이탑과 동일) ===== */
+.wd-memo-row-group{margin:0 0 8px}
+.wd-memo-listrow{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 16px;border:1px solid #dce5ef;border-radius:12px;background:#fff;cursor:pointer;transition:background .12s,border-color .12s}
+.wd-memo-listrow:hover,.wd-memo-listrow.is-open{background:#edf3f9;border-color:#254767}
+.wd-memo-listrow:focus-visible{outline:2px solid #254767;outline-offset:1px}
+.wd-list-row-title{flex:1 1 auto;min-width:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#23364c}
+.wd-list-row-customer{flex:0 0 auto;font-size:13px;color:#4b6a85;white-space:nowrap}
+.wd-list-row-toggle{flex:0 0 auto;font-size:12px;font-weight:700;color:#245c91;background:#e6eef8;border:1.5px solid #b5cae3;border-radius:999px;padding:3px 11px;white-space:nowrap}
+.wd-memo-listrow.is-open .wd-list-row-toggle{color:#254767;background:#dce8f5;border-color:#8fb0d3}
+.wd-memo-row-group > .wd-card--compact{margin-top:6px}
+@media (max-width:600px){.wd-memo-listrow{flex-wrap:wrap;gap:4px 8px}.wd-list-row-title{flex-basis:100%}.wd-list-row-customer{flex:1 1 auto}}
+
+/* ===== 하이탑 업무일지와 같은 형식: 날짜 박스 위, 큰 달력, 간편 일정 등록, 오른쪽 탭(오늘 일정·다가오는 일정·메모 기록) ===== */
+.wd-memo-column { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.wd-filter-tabs { display: grid !important; grid-template-columns: auto auto auto !important; grid-template-rows: auto auto !important; gap: 4px 6px !important; align-items: stretch; justify-content: end; }
+.wd-filter-tabs .wd-filter-author-group, .wd-filter-tabs .wd-filter-diary-group { display: contents !important; }
+.wd-filter-tabs .wd-filter-tab, .wd-filter-tabs .wd-btn-personal-diary { margin: 0 !important; padding: 3px 10px !important; min-height: 0 !important; height: auto !important; font-size: 12px !important; line-height: 1.3 !important; border: 1px solid #cdd9e8 !important; border-radius: 7px !important; white-space: nowrap; }
+.wd-filter-tabs .wd-filter-tab:nth-child(1) { grid-column: 1; grid-row: 1 / span 2; }
+.wd-filter-tabs .wd-filter-tab:nth-child(2) { grid-column: 2; grid-row: 1; }
+.wd-filter-tabs .wd-filter-tab:nth-child(3) { grid-column: 2; grid-row: 2; }
+.wd-filter-tabs .wd-btn-personal-diary:nth-child(1) { grid-column: 3; grid-row: 1; }
+.wd-filter-tabs .wd-btn-personal-diary:nth-child(2) { grid-column: 3; grid-row: 2; }
+@media (min-width: 1100px) {
+  .wd-app:has(.wd-main:not(.wd-main--week):not(.wd-main--month)) .wd-toolbar { position: relative; }
+  .wd-app:has(.wd-main:not(.wd-main--week):not(.wd-main--month)) .wd-filter-tabs { position: absolute; right: 28px; top: calc(100% + 12px); z-index: 5; }
+}
+/* 오른쪽 탭 */
+.dws-workspace { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.dws-tabs { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 0 12px; border-bottom: 1px solid #dce5ef; }
+.dws-tab { padding: 9px 13px; border: 1px solid #cdd9e8; border-radius: 8px; background: #fff; color: #23364c; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.dws-tab:hover { background: #edf3f9; }
+.dws-tab.dws-selected { color: #fff; border-color: #254767; background: #254767; }
+.dws-tab:focus-visible { outline: 2px solid #254767; outline-offset: 3px; }
+.dws-panel { min-width: 0; }
+.dws-panel[hidden] { display: none !important; }
+.dws-panel > .wd-diary { width: 100%; min-width: 0; }
+.dws-panel > .ssm-section, .dws-panel > .usw-section { margin: 0; }
+@media (max-width: 600px) { .dws-tabs { gap: 6px; } .dws-tab { padding: 8px 10px; font-size: 12px; } }
+/* 간편 일정 등록 */
+.qs-box { margin-top: 12px; padding: 12px; border: 1px solid #d9dee8; border-radius: 12px; background: #fff; display: grid; gap: 10px; }
+.qs-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 700; color: #23364c; }
+.qs-head span { font-size: 12px; font-weight: 400; color: #7a8497; }
+.qs-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.qs-date, .qs-text, .qs-writer { font: inherit; font-size: 13px; padding: 7px 9px; border: 1px solid #d9dee8; border-radius: 8px; background: #fff; color: #23364c; }
+.qs-text { flex: 1 1 160px; min-width: 0; }
+.qs-seg { display: flex; gap: 6px; }
+.qs-type { font: inherit; font-size: 13px; font-weight: 700; padding: 7px 12px; border: 1px solid; border-radius: 8px; background: #fff; cursor: pointer; }
+.qs-save { font: inherit; font-size: 13px; font-weight: 700; padding: 7px 18px; border: 0; border-radius: 8px; background: #254767; color: #fff; cursor: pointer; }
+.qs-save:disabled { opacity: 0.45; cursor: default; }
+.qs-msg { font-size: 12px; font-weight: 600; color: #254767; }
+
+.ot-panel {
+  --ot-bg: var(--color-surface, #ffffff);
+  --ot-deep: var(--color-bg-deeper, #e9ebf0);
+  --ot-text: var(--color-on-surface, #1f2430);
+  --ot-muted: var(--color-on-surface-muted, #6b7280);
+  --ot-gold: var(--color-primary, #166b6b);
+  --ot-border: var(--color-border-strong, #d8dce3);
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--ot-border);
+  border-radius: 12px;
+  background: var(--ot-bg);
+  color: var(--ot-text);
+  font-size: 14px;
+  line-height: 1.5;
+  color-scheme: light;
+}
+.ot-panel * { box-sizing: border-box; }
+.ot-header, .ot-toolbar, .ot-tabs, .ot-card-row, .ot-meta, .ot-card-actions,
+.ot-form-heading, .ot-form-actions, .ot-detail-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ot-header { justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.ot-heading { margin: 0; font-size: 18px; font-weight: 750; color: var(--ot-gold); }
+.ot-subtitle { margin: 3px 0 0; color: var(--ot-muted); font-size: 13px; }
+.ot-toolbar { flex-wrap: wrap; }
+.ot-button, .ot-tab {
+  min-height: 34px;
+  padding: 5px 11px;
+  border: 1px solid var(--ot-border);
+  border-radius: 7px;
+  background: var(--ot-deep);
+  color: var(--ot-text);
+  font: inherit;
+  line-height: 1.5;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ot-button:hover:not(:disabled), .ot-tab:hover:not(:disabled) { border-color: var(--ot-gold); background: var(--color-surface-hover); }
+.ot-primary { background: var(--ot-gold); border-color: var(--ot-gold); color: var(--color-bg, #fff); font-weight: 750; }
+.ot-primary:hover:not(:disabled) { background: var(--color-primary-container); color: var(--color-bg, #fff); }
+.ot-primary-soft { border-color: rgba(184, 134, 11, 0.5); color: var(--color-important); }
+.ot-tabs { margin: 12px 0; flex-wrap: wrap; }
+.ot-tab { border-color: transparent; color: var(--ot-muted); background: transparent; }
+.ot-selected { color: var(--color-important); background: rgba(184, 134, 11, 0.1); border-color: rgba(184, 134, 11, 0.5); font-weight: 700; }
+.ot-filter { margin-left: auto; color: var(--ot-muted); font-size: 12px; }
+.ot-panel button:focus-visible, .ot-panel input:focus-visible, .ot-panel select:focus-visible,
+.ot-panel textarea:focus-visible, .ot-list:focus-visible {
+  outline: 2px solid var(--ot-gold);
+  outline-offset: 3px;
+}
+.ot-panel button:disabled, .ot-panel input:disabled, .ot-panel select:disabled, .ot-panel textarea:disabled {
+  opacity: .58;
+  cursor: not-allowed;
+}
+.ot-error { padding: 10px 12px; margin: 8px 0; border: 1px solid rgba(220, 38, 38, 0.35); border-radius: 7px; color: var(--color-danger); background: rgba(220, 38, 38, 0.08); overflow-wrap: anywhere; }
+.ot-error .ot-button { margin-left: 6px; }
+.ot-live { color: var(--ot-muted); font-size: 13px; overflow-wrap: anywhere; }
+.ot-live:not(:empty) { margin: 8px 0; }
+.ot-empty { padding: 10px 0 2px; margin: 0; color: var(--ot-muted); }
+.ot-list { max-height: 370px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.ot-list:empty { display: none; }
+.ot-card { padding: 9px 10px; margin: 0 0 7px; border: 1px solid var(--ot-border); border-radius: 8px; background: var(--ot-deep); }
+.ot-card:last-child { margin-bottom: 0; }
+.ot-card-row { flex-wrap: wrap; }
+.ot-title-button { display: flex; align-items: baseline; gap: 7px; flex: 1 1 240px; min-width: 0; min-height: 34px; padding: 4px 0; border: 0; background: transparent; color: var(--ot-text); font: inherit; font-weight: 650; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.ot-title-button:hover:not(:disabled) { color: var(--color-important); }
+.ot-chevron { flex-shrink: 0; color: var(--ot-gold); }
+.ot-meta { flex-wrap: wrap; color: var(--ot-muted); font-size: 12px; }
+.ot-card-actions { margin-left: auto; }
+.ot-card-actions .ot-button { font-size: 12px; min-height: 32px; }
+.ot-badge { padding: 2px 7px; border: 1px solid transparent; border-radius: 5px; font-weight: 650; white-space: nowrap; }
+.ot-active { background: rgba(37, 99, 235, 0.08); border-color: rgba(37, 99, 235, 0.4); color: #1d4ed8; }
+.ot-waiting { background: rgba(184, 134, 11, 0.08); border-color: rgba(184, 134, 11, 0.4); color: var(--color-important); }
+.ot-done { background: rgba(21, 128, 61, 0.08); border-color: rgba(21, 128, 61, 0.4); color: var(--color-done); }
+.ot-overdue { color: var(--color-danger); font-weight: 650; }
+.ot-details { margin-top: 7px; padding: 10px 3px 1px 19px; border-top: 1px solid var(--ot-border); }
+.ot-description { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 9px; }
+.ot-checklist { list-style: none; padding: 0; margin: 0; }
+.ot-check-label { display: flex; align-items: baseline; gap: 9px; min-height: 32px; padding: 4px 0; cursor: pointer; overflow-wrap: anywhere; }
+.ot-check-label input { width: 17px; height: 17px; margin: 0; flex: 0 0 17px; accent-color: var(--ot-gold); transform: translateY(3px); }
+.ot-checked span { color: var(--ot-muted); text-decoration: line-through; }
+.ot-detail-footer { justify-content: space-between; flex-wrap: wrap; margin-top: 9px; font-size: 12px; }
+.ot-muted, .ot-hint, .ot-source-note { color: var(--ot-muted); font-size: 12px; }
+.ot-hint { margin: 8px 0; }
+.ot-invalid { border-color: rgba(220, 38, 38, 0.5); }
+.ot-invalid p { color: var(--color-danger); margin: 4px 0; }
+.ot-form { background: var(--ot-deep); border: 1px solid rgba(184, 134, 11, 0.5); border-radius: 9px; margin: 10px 0; padding: 12px; }
+.ot-form-heading { justify-content: space-between; margin-bottom: 10px; }
+.ot-form-heading h3 { margin: 0; font-size: 15px; color: var(--color-important); }
+.ot-fields { min-width: 0; border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ot-field { display: block; min-width: 0; font-size: 13px; color: var(--ot-text); }
+.ot-wide { grid-column: 1 / -1; }
+.ot-required { color: var(--color-important); font-size: 12px; }
+.ot-field input, .ot-field textarea, .ot-field select { display: block; width: 100%; margin-top: 4px; padding: 7px 9px; border: 1px solid var(--ot-border); border-radius: 6px; background: var(--color-surface); color: var(--ot-text); font: inherit; min-height: 36px; }
+.ot-field textarea { resize: vertical; min-height: 64px; }
+.ot-source-note { margin: 0; }
+.ot-form-actions { justify-content: flex-end; margin-top: 12px; }
+@media (max-width: 680px) {
+  .ot-panel { padding: 12px; }
+  .ot-title-button { flex-basis: 100%; }
+  .ot-card-actions { margin-left: auto; }
+  .ot-fields { grid-template-columns: 1fr; }
+  .ot-meta { flex: 1 1 100%; }
+  .ot-card-actions { width: 100%; justify-content: flex-end; }
+  .ot-filter { margin-left: 0; flex-basis: 100%; }
+  .ot-details { padding-left: 2px; }
+  .ot-list { max-height: 340px; }
+}
+
+.ot-button.ot-on { background: rgba(184, 134, 11, 0.12); border-color: rgba(184, 134, 11, 0.5); color: var(--color-important); }
+
+/* 설명 문구는 제목 옆에 작게 */
+.ot-header > div:first-child { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.ot-subtitle { margin: 0; font-size: 11px; color: var(--ot-muted); }
+.ot-detail-buttons { display: flex; gap: 6px; margin-left: auto; }
+.ot-details .ot-detail-footer { align-items: center; }
+
+/* 진행 업무 분류 선택·마지막 연락 표시 */
+.ot-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ot-group { min-height: 34px; padding: 0 14px; }
+.ot-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0 12px; padding: 12px 14px; border: 1px solid rgba(243,216,135,.55); border-radius: 10px; background: rgba(243,216,135,.08); }
+.ot-picker .ot-groups { margin: 0; flex-basis: 100%; }
+.ot-ago { align-self: center; font-size: 12px; color: var(--ot-muted); white-space: nowrap; }
+.ot-ago-warn { color: var(--color-danger); font-weight: 600; }
+
+/* 추가 메모 */
+.ot-notes { list-style: none; margin: 0 0 9px; padding: 0; }
+.ot-notes li { display: flex; gap: 9px; padding: 6px 0; border-top: 1px dashed var(--ot-border); }
+.ot-note-date { flex: 0 0 auto; color: var(--ot-gold); font-size: 12px; padding-top: 2px; }
+.ot-note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ot-note-add { display: flex; gap: 8px; align-items: flex-end; margin: 4px 0 9px; }
+.ot-note-add textarea { flex: 1; min-height: 44px; padding: 7px 9px; border: 1px solid var(--ot-border); border-radius: 6px; background: var(--color-surface); color: var(--ot-text); font: inherit; resize: vertical; }
+
+/* 케이탑 팔레트 */
+.ot-panel { --ot-gold: #254767; --ot-deep: #f4f7fb; --ot-border: #cdd9e8; --ot-text: #23364c; --ot-muted: #6b7f95; }
+.ot-primary { background: #254767; border-color: #254767; color: #fff; }
+.ot-primary:hover:not(:disabled) { background: #2f5a85; color: #fff; }
+.wd-ongoing-wrap { width: 100%; min-width: 0; scroll-margin-top: 100px; }
+.wd-daily-panels { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
