@@ -198,6 +198,7 @@
     var f = { kind: 'doc_type', deal: 'deal_type', loc: 'location', start: 'start_date', end: 'end_date', lessor: 'lessor_name', lessee: 'lessee_name' }[k];
     va = a[f] || ''; vb = b[f] || '';
     if (k === 'loc') { if (va === '(위치 미기재)') va = ''; if (vb === '(위치 미기재)') vb = ''; }
+    if (k === 'loc') { if (va === '(위치 미기재)') va = ''; if (vb === '(위치 미기재)') vb = ''; }
     if (!va || !vb) return !va && !vb ? 0 : !va ? 1 : -1;
     var r = (k === 'start' || k === 'end') ? (va < vb ? -1 : va > vb ? 1 : 0) : String(va).localeCompare(String(vb), 'ko');
     if (r === 0 && (k !== 'start')) { var s1 = a.start_date || '', s2 = b.start_date || ''; return s1 < s2 ? 1 : s1 > s2 ? -1 : 0; }
