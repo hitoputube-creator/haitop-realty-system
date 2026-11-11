@@ -148,10 +148,10 @@
   }
   function endCell(r) {
     if (!r.end_date) return '<span class="ct-small">미입력</span>';
-    return dot(r.end_date) + (isSale(r) ? '<div class="ct-small">잔금일</div>' : '');
+    return dot(r.end_date);
   }
   function endState(r) {
-    if (r.status === 'done' || isSale(r) || !r.end_date) return '';
+    if (r.status === 'done' || !r.end_date) return '';
     var d = daysTo(r.end_date); if (d == null) return '';
     if (d < 0) return 'over'; if (d <= 30) return 'soon'; return '';
   }
@@ -186,8 +186,8 @@
       return '<div class="ct-row" data-id="' + esc(r.id) + '">' +
         '<div>' + loc + tag + '<div class="ct-small">' + esc([r.doc_type, r.deal_type].filter(Boolean).join(' · ')) + (r.memo ? ' · ' + esc(r.memo) : '') + '</div></div>' +
         '<div class="ct-num">' + esc(r.amount) + '</div>' +
-        '<div class="ct-num" data-l="' + (sale ? '계약일' : '시작') + '">' + startCell(r) + '</div>' +
-        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="' + (sale ? '잔금일' : '만료') + '">' + endCell(r) + '</div>' +
+        '<div class="ct-num" data-l="시작">' + startCell(r) + '</div>' +
+        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="만료">' + endCell(r) + '</div>' +
         '<div>' + esc(r.lessor_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessor_phone) + '</div></div>' +
         '<div>' + esc(r.lessee_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessee_phone) + '</div></div>' +
         '<div class="ct-act"><button type="button" class="ct-btn" data-act="edit">수정</button><button type="button" class="ct-btn" data-act="' + (r.status === 'done' ? 'resume' : 'end') + '">' + (r.status === 'done' ? '되살리기' : '종료') + '</button><button type="button" class="ct-btn ct-danger" data-act="del">삭제</button></div>' +
@@ -215,7 +215,7 @@
 
   function applyDealLabels() {
     var sale = $('fDeal').value === '매매';
-    $('fSL').textContent = sale ? '계약일' : '계약시작일'; $('fEL').textContent = sale ? '잔금일' : '계약만료일';
+    $('fSL').textContent = '계약시작일'; $('fEL').textContent = '계약만료일';
     $('fA1L').textContent = sale ? '매도인 이름' : '임대인 이름'; $('fP1L').textContent = sale ? '매도인 연락처' : '임대인 연락처';
     $('fA2L').textContent = sale ? '매수인 이름' : '임차인 이름'; $('fP2L').textContent = sale ? '매수인 연락처' : '임차인 연락처';
   }
