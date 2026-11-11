@@ -35,7 +35,7 @@
     .ct-primary { background:var(--ct-accent); border-color:var(--ct-accent); color:#fff; }
     .ct-primary:hover { background:var(--ct-accent); filter:brightness(1.08); }
     .ct-danger { color:#b42318; }
-    .ct-head, .ct-row { display:grid; grid-template-columns:minmax(170px,1.6fr) minmax(90px,.8fr) minmax(150px,1.1fr) minmax(110px,.9fr) minmax(110px,.9fr) 150px; gap:6px 14px; align-items:center; }
+    .ct-head, .ct-row { display:grid; grid-template-columns:minmax(170px,1.6fr) minmax(90px,.8fr) minmax(95px,.7fr) minmax(95px,.7fr) minmax(110px,.9fr) minmax(110px,.9fr) 150px; gap:6px 14px; align-items:center; }
     .ct-head { font-size:11.5px; color:#6b7b79; padding:6px 10px; border-bottom:1px solid #dbe5e3; }
     .ct-row { padding:12px 10px; border-bottom:1px solid #e6eeec; font-size:13.5px; background:#fff; }
     .ct-row:hover { background:#f7fbfa; }
@@ -67,6 +67,7 @@
       .ct-head { display:none; }
       .ct-row { grid-template-columns:1fr 1fr; gap:4px 12px; }
       .ct-row > :first-child { grid-column:1/-1; }
+      .ct-row > [data-l]::before { content:attr(data-l) ' '; color:#6b7b79; font-size:11.5px; }
       .ct-act { grid-column:1/-1; justify-content:flex-start; }
       .ct-form { grid-template-columns:1fr 1fr; } .ct-form .c4 { grid-column:1/-1; }
     }
@@ -100,9 +101,9 @@
       <input class="ct-search" id="ctSearch" type="search" placeholder="위치 · 이름 · 번호 검색" />
     </div>
     <div id="ctErr"></div>
-    <div class="ct-head"><div>위치</div><div>금액</div><div>기간</div><div id="ctH4">임대인 (매도인)</div><div id="ctH5">임차인 (매수인)</div><div></div></div>
+    <div class="ct-head"><div>위치</div><div>금액</div><div>계약시작일</div><div>계약만료일</div><div id="ctH4">임대인 (매도인)</div><div id="ctH5">임차인 (매수인)</div><div></div></div>
     <div id="ctList"></div>
-    <div class="ct-note">전화번호를 누르면 바로 전화가 걸립니다. 기간이 끝나기 30일 전부터 노란색, 지나면 빨간색으로 표시합니다. 위치를 매물에서 고르면 위치를 누를 때 그 매물 상세로 이동합니다.</div>
+    <div class="ct-note">전화번호를 누르면 바로 전화가 걸립니다. 계약만료일 30일 전부터 노란색, 지나면 빨간색으로 표시합니다. 위치를 매물에서 고르면 위치를 누를 때 그 매물 상세로 이동합니다.</div>
   </div>
 </div>
 
@@ -114,8 +115,8 @@
       <div class="c2"><label for="fDoc">종류</label><select id="fDoc"><option>오피스텔</option><option>상가</option><option>아파트</option><option>사무실</option><option>토지</option><option>기타</option></select></div>
       <div class="c2"><label for="fDeal">거래</label><select id="fDeal"><option>월세</option><option>전세</option><option>매매</option><option>기타</option></select></div>
       <div class="c2"><label for="fAmt">금액 (예: 1,000 / 75)</label><input id="fAmt" /></div>
-      <div><label for="fS" id="fSL">시작일</label><input id="fS" type="date" /></div>
-      <div><label for="fE" id="fEL">만기일</label><input id="fE" type="date" /></div>
+      <div><label for="fS" id="fSL">계약시작일</label><input id="fS" type="date" /></div>
+      <div><label for="fE" id="fEL">계약만료일</label><input id="fE" type="date" /></div>
       <div><label for="fA1" id="fA1L">임대인 이름</label><input id="fA1" /></div>
       <div><label for="fP1" id="fP1L">임대인 연락처</label><input id="fP1" type="tel" inputmode="tel" /></div>
       <div><label for="fA2" id="fA2L">임차인 이름</label><input id="fA2" /></div>
@@ -141,10 +142,13 @@
   function dot(d) { return d ? String(d).replace(/-/g, '.') : ''; }
   function isSale(r) { return r.deal_type === '매매'; }
   function phoneHtml(p) { if (!p) return ''; var d = String(p).replace(/[^0-9+]/g, ''); return '<a class="ct-phone" href="tel:' + esc(d) + '">' + esc(p) + '</a>'; }
-  function period(r) {
-    if (!r.start_date && !r.end_date) return '<span class="ct-small">기간 미입력</span>';
-    if (isSale(r)) return dot(r.start_date) + ' 계약' + (r.end_date ? '<br><span class="ct-small">' + dot(r.end_date) + ' 잔금</span>' : '');
-    return dot(r.start_date) + ' ~ ' + dot(r.end_date);
+  function startCell(r) {
+    if (!r.start_date) return '<span class="ct-small">미입력</span>';
+    return dot(r.start_date);
+  }
+  function endCell(r) {
+    if (!r.end_date) return '<span class="ct-small">미입력</span>';
+    return dot(r.end_date) + (isSale(r) ? '<div class="ct-small">잔금일</div>' : '');
   }
   function endState(r) {
     if (r.status === 'done' || isSale(r) || !r.end_date) return '';
@@ -182,7 +186,8 @@
       return '<div class="ct-row" data-id="' + esc(r.id) + '">' +
         '<div>' + loc + tag + '<div class="ct-small">' + esc([r.doc_type, r.deal_type].filter(Boolean).join(' · ')) + (r.memo ? ' · ' + esc(r.memo) : '') + '</div></div>' +
         '<div class="ct-num">' + esc(r.amount) + '</div>' +
-        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '">' + period(r) + '</div>' +
+        '<div class="ct-num" data-l="' + (sale ? '계약일' : '시작') + '">' + startCell(r) + '</div>' +
+        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="' + (sale ? '잔금일' : '만료') + '">' + endCell(r) + '</div>' +
         '<div>' + esc(r.lessor_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessor_phone) + '</div></div>' +
         '<div>' + esc(r.lessee_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessee_phone) + '</div></div>' +
         '<div class="ct-act"><button type="button" class="ct-btn" data-act="edit">수정</button><button type="button" class="ct-btn" data-act="' + (r.status === 'done' ? 'resume' : 'end') + '">' + (r.status === 'done' ? '되살리기' : '종료') + '</button><button type="button" class="ct-btn ct-danger" data-act="del">삭제</button></div>' +
@@ -210,7 +215,7 @@
 
   function applyDealLabels() {
     var sale = $('fDeal').value === '매매';
-    $('fSL').textContent = sale ? '계약일' : '시작일'; $('fEL').textContent = sale ? '잔금일' : '만기일';
+    $('fSL').textContent = sale ? '계약일' : '계약시작일'; $('fEL').textContent = sale ? '잔금일' : '계약만료일';
     $('fA1L').textContent = sale ? '매도인 이름' : '임대인 이름'; $('fP1L').textContent = sale ? '매도인 연락처' : '임대인 연락처';
     $('fA2L').textContent = sale ? '매수인 이름' : '임차인 이름'; $('fP2L').textContent = sale ? '매수인 연락처' : '임차인 연락처';
   }
@@ -242,7 +247,7 @@
   async function save() {
     var loc = $('fLoc').value.trim(); if (!loc) { alert('위치를 입력해 주세요.'); $('fLoc').focus(); return; }
     var s = $('fS').value || null, e = $('fE').value || null;
-    if (s && e && e < s) { alert('끝나는 날이 시작하는 날보다 빠릅니다. 날짜를 확인해 주세요.'); return; }
+    if (s && e && e < s) { alert('계약만료일이 계약시작일보다 빠릅니다. 날짜를 확인해 주세요.'); return; }
     var payload = { location: loc, listing_id: current.listing_id, doc_type: $('fDoc').value, deal_type: $('fDeal').value, amount: $('fAmt').value.trim(), start_date: s, end_date: e,
       lessor_name: $('fA1').value.trim(), lessor_phone: $('fP1').value.trim(), lessee_name: $('fA2').value.trim(), lessee_phone: $('fP2').value.trim(), memo: $('fMemo').value.trim(), updated_at: new Date().toISOString() };
     $('ctSave').disabled = true;
