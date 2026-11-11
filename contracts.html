@@ -35,7 +35,7 @@
     .ct-primary { background:var(--ct-accent); border-color:var(--ct-accent); color:#fff; }
     .ct-primary:hover { background:var(--ct-accent); filter:brightness(1.08); }
     .ct-danger { color:#b42318; }
-    .ct-head, .ct-row { display:grid; grid-template-columns:82px 74px minmax(150px,1.5fr) minmax(78px,.7fr) 88px 88px minmax(92px,.8fr) minmax(92px,.8fr) 140px; gap:6px 10px; align-items:center; }
+    .ct-head, .ct-row { display:grid; grid-template-columns:82px 74px minmax(150px,1.5fr) minmax(72px,.6fr) 56px 56px 56px minmax(90px,.8fr) minmax(90px,.8fr) 130px; gap:6px 10px; align-items:center; }
     .ct-head { font-size:11.5px; color:#6b7b79; padding:6px 10px; border-bottom:1px solid #dbe5e3; }
     .ct-row { padding:12px 10px; border-bottom:1px solid #e6eeec; font-size:13.5px; background:#fff; }
     .ct-row:hover { background:#f7fbfa; }
@@ -58,6 +58,9 @@
     .ct-sort { border:0; background:none; font:inherit; font-size:11.5px; color:#6b7b79; cursor:pointer; padding:2px 0; white-space:nowrap; }
     .ct-sort i { font-style:normal; color:#b4c0be; margin-left:3px; font-size:11px; }
     .ct-sort.on { color:var(--ct-accent); font-weight:700; } .ct-sort.on i { color:var(--ct-accent); }
+    .ct-dt { line-height:1.3; font-variant-numeric:tabular-nums; }
+    .ct-dt .ct-yr { font-size:11px; color:#6b7b79; }
+    .ct-sort { line-height:1.2; text-align:left; }
     .ct-tag { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:11px; border:1px solid #c9d6d4; color:#4b5c5a; }
     .ct-tag.done { color:#2f7a55; border-color:#9ed4b6; }
     .ct-act { display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap; }
@@ -119,9 +122,9 @@
       <input class="ct-search" id="ctSearch" type="search" placeholder="위치 · 이름 · 번호 검색" />
     </div>
     <div id="ctErr"></div>
-    <div class="ct-head"><div class="ct-hc"><select id="ctKind" class="ct-hsel" aria-label="종류 필터"><option value="all">종류 ▾</option><option>오피스텔</option><option>상가</option><option>아파트</option><option>사무실</option><option>토지</option><option>기타</option></select><button type="button" class="ct-sort" data-s="kind" aria-label="종류 정렬"><i>↕</i></button></div><div class="ct-hc"><select id="ctDeal" class="ct-hsel" aria-label="구분 필터"><option value="all">구분 ▾</option><option>월세</option><option>전세</option><option>매매</option><option>기타</option></select><button type="button" class="ct-sort" data-s="deal" aria-label="구분 정렬"><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="loc"><span>위치</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="amt"><span>금액</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="start"><span>계약시작일</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="end"><span>계약만료일</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="lessor"><span id="ctH4">임대인 (매도인)</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="lessee"><span id="ctH5">임차인 (매수인)</span><i>↕</i></button></div><div></div></div>
+    <div class="ct-head"><div class="ct-hc"><select id="ctKind" class="ct-hsel" aria-label="종류 필터"><option value="all">종류 ▾</option><option>오피스텔</option><option>상가</option><option>아파트</option><option>사무실</option><option>토지</option><option>기타</option></select><button type="button" class="ct-sort" data-s="kind" aria-label="종류 정렬"><i>↕</i></button></div><div class="ct-hc"><select id="ctDeal" class="ct-hsel" aria-label="구분 필터"><option value="all">구분 ▾</option><option>월세</option><option>전세</option><option>매매</option><option>기타</option></select><button type="button" class="ct-sort" data-s="deal" aria-label="구분 정렬"><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="loc"><span>위치</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="amt"><span>금액</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="cdate"><span>계약일</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="start"><span>임대차<br>시작</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="end"><span>임대차<br>만료</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="lessor"><span id="ctH4">임대인 (매도인)</span><i>↕</i></button></div><div><button type="button" class="ct-sort" data-s="lessee"><span id="ctH5">임차인 (매수인)</span><i>↕</i></button></div><div></div></div>
     <div id="ctList"></div>
-    <div class="ct-note">전화번호를 누르면 바로 전화가 걸립니다. 계약만료일 30일 전부터 노란색, 지나면 빨간색으로 표시합니다. 위치를 매물에서 고르면 위치를 누를 때 그 매물 상세로 이동합니다.</div>
+    <div class="ct-note">전화번호를 누르면 바로 전화가 걸립니다. 임대차 만료 30일 전부터 노란색, 지나면 빨간색으로 표시합니다. 위치를 매물에서 고르면 위치를 누를 때 그 매물 상세로 이동합니다.</div>
   </div>
 </div>
 
@@ -133,8 +136,9 @@
       <div class="c2"><label for="fDoc">종류</label><select id="fDoc"><option>오피스텔</option><option>상가</option><option>아파트</option><option>사무실</option><option>토지</option><option>기타</option></select></div>
       <div class="c2"><label for="fDeal">거래</label><select id="fDeal"><option>월세</option><option>전세</option><option>매매</option><option>기타</option></select></div>
       <div class="c2"><label for="fAmt">금액 (예: 1,000 / 75)</label><input id="fAmt" /></div>
-      <div><label for="fS" id="fSL">계약시작일</label><input id="fS" type="date" /></div>
-      <div><label for="fE" id="fEL">계약만료일</label><input id="fE" type="date" /></div>
+      <div class="c2"><label for="fC">계약일</label><input id="fC" type="date" /></div>
+      <div class="c2"><label for="fS" id="fSL">임대차 시작</label><input id="fS" type="date" /></div>
+      <div class="c2" id="fEW"><label for="fE" id="fEL">임대차 만료</label><input id="fE" type="date" /></div>
       <div><label for="fA1" id="fA1L">임대인 이름</label><input id="fA1" /></div>
       <div><label for="fP1" id="fP1L">임대인 연락처</label><input id="fP1" type="tel" inputmode="tel" /></div>
       <div><label for="fA2" id="fA2L">임차인 이름</label><input id="fA2" /></div>
@@ -151,7 +155,7 @@
   document.documentElement.style.setProperty('--ct-accent', ktop ? '#254767' : '#0f766e');
   if (ktop) document.querySelector('.logo-main').textContent = 'KTOP부동산 계약관리';
   var $ = function (id) { return document.getElementById(id); };
-  var state = { rows: [], filter: 'all', deal: 'all', kind: 'all', q: '', sort: { k: 'start', dir: 'desc' }, editId: null, listings: [] };
+  var state = { rows: [], filter: 'all', deal: 'all', kind: 'all', q: '', sort: { k: 'cdate', dir: 'desc' }, editId: null, listings: [] };
   var DAY = 86400000;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -160,13 +164,18 @@
   function dot(d) { return d ? String(d).replace(/-/g, '.') : ''; }
   function isSale(r) { return r.deal_type === '매매'; }
   function phoneHtml(p) { if (!p) return ''; var d = String(p).replace(/[^0-9+]/g, ''); return '<a class="ct-phone" href="tel:' + esc(d) + '">' + esc(p) + '</a>'; }
+  function dtHtml(d) {
+    if (!d) return '<span class="ct-small">-</span>';
+    var p = String(d).split('-'); return '<div class="ct-dt"><span class="ct-yr">' + esc(p[0]) + '</span><br>' + esc(p[1] + '.' + p[2]) + '</div>';
+  }
+  function contractCell(r) { return dtHtml(r.contract_date); }
   function startCell(r) {
-    if (!r.start_date) return '<span class="ct-small">미입력</span>';
-    return dot(r.start_date);
+    if (!r.start_date) return '<span class="ct-small">-</span>';
+    return dtHtml(r.start_date) + (isSale(r) ? '<div class="ct-small">잔금일</div>' : '');
   }
   function endCell(r) {
-    if (!r.end_date) return '<span class="ct-small">미입력</span>';
-    return dot(r.end_date);
+    if (isSale(r)) return '<span class="ct-small">-</span>';
+    return dtHtml(r.end_date);
   }
   function endState(r) {
     if (r.status === 'done' || !r.end_date) return '';
@@ -195,13 +204,13 @@
       if (!va || !vb) return !va && !vb ? 0 : !va ? 1 : -1;
       var rs = va[0] !== vb[0] ? va[0] - vb[0] : va[1] - vb[1]; return rs * d;
     }
-    var f = { kind: 'doc_type', deal: 'deal_type', loc: 'location', start: 'start_date', end: 'end_date', lessor: 'lessor_name', lessee: 'lessee_name' }[k];
+    var f = { kind: 'doc_type', deal: 'deal_type', loc: 'location', cdate: 'contract_date', start: 'start_date', end: 'end_date', lessor: 'lessor_name', lessee: 'lessee_name' }[k];
     va = a[f] || ''; vb = b[f] || '';
     if (k === 'loc') { if (va === '(위치 미기재)') va = ''; if (vb === '(위치 미기재)') vb = ''; }
     if (k === 'loc') { if (va === '(위치 미기재)') va = ''; if (vb === '(위치 미기재)') vb = ''; }
     if (!va || !vb) return !va && !vb ? 0 : !va ? 1 : -1;
-    var r = (k === 'start' || k === 'end') ? (va < vb ? -1 : va > vb ? 1 : 0) : String(va).localeCompare(String(vb), 'ko');
-    if (r === 0 && (k !== 'start')) { var s1 = a.start_date || '', s2 = b.start_date || ''; return s1 < s2 ? 1 : s1 > s2 ? -1 : 0; }
+    var r = (k === 'start' || k === 'end' || k === 'cdate') ? (va < vb ? -1 : va > vb ? 1 : 0) : String(va).localeCompare(String(vb), 'ko');
+    if (r === 0 && (k !== 'cdate')) { var s1 = a.contract_date || '', s2 = b.contract_date || ''; return s1 < s2 ? 1 : s1 > s2 ? -1 : 0; }
     return r * d;
   }
   function render() {
@@ -236,8 +245,9 @@
         '<div><span class="ct-deal ' + ({ '월세': 'd-wol', '전세': 'd-jeon', '매매': 'd-mae' }[r.deal_type] || 'd-etc') + '" style="margin-right:0">' + esc(r.deal_type || '기타') + '</span></div>' +
         '<div class="c-loc">' + loc + tag + (r.memo ? '<div class="ct-small">' + esc(r.memo) + '</div>' : '') + '</div>' +
         '<div class="ct-num">' + esc(r.amount) + '</div>' +
-        '<div class="ct-num" data-l="시작">' + startCell(r) + '</div>' +
-        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="만료">' + endCell(r) + '</div>' +
+        '<div class="ct-num" data-l="계약일">' + contractCell(r) + '</div>' +
+        '<div class="ct-num" data-l="임대차 시작">' + startCell(r) + '</div>' +
+        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="임대차 만료">' + endCell(r) + '</div>' +
         '<div>' + esc(r.lessor_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessor_phone) + '</div></div>' +
         '<div>' + esc(r.lessee_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessee_phone) + '</div></div>' +
         '<div class="ct-act"><button type="button" class="ct-btn" data-act="edit">수정</button>' + (r.status === 'done' ? '' : '<button type="button" class="ct-btn" data-act="end">종료</button>') + '<button type="button" class="ct-btn ct-danger" data-act="del">삭제</button></div>' +
@@ -265,7 +275,7 @@
 
   function applyDealLabels() {
     var sale = $('fDeal').value === '매매';
-    $('fSL').textContent = '계약시작일'; $('fEL').textContent = '계약만료일';
+    $('fSL').textContent = sale ? '잔금일' : '임대차 시작'; $('fEW').style.display = sale ? 'none' : '';
     $('fA1L').textContent = sale ? '매도인 이름' : '임대인 이름'; $('fP1L').textContent = sale ? '매도인 연락처' : '임대인 연락처';
     $('fA2L').textContent = sale ? '매수인 이름' : '임차인 이름'; $('fP2L').textContent = sale ? '매수인 연락처' : '임차인 연락처';
   }
@@ -274,7 +284,7 @@
     state.editId = r ? r.id : null; current.listing_id = r ? r.listing_id : null;
     $('ctMt').textContent = r ? '계약 수정' : '계약 추가';
     $('fLoc').value = r ? r.location : ''; $('fDoc').value = r ? (r.doc_type || '기타') : '오피스텔'; $('fDeal').value = r ? (r.deal_type || '기타') : '월세';
-    $('fAmt').value = r ? r.amount : ''; $('fS').value = r ? (r.start_date || '') : ''; $('fE').value = r ? (r.end_date || '') : '';
+    $('fAmt').value = r ? r.amount : ''; $('fC').value = r ? (r.contract_date || '') : ''; $('fS').value = r ? (r.start_date || '') : ''; $('fE').value = r ? (r.end_date || '') : '';
     $('fA1').value = r ? r.lessor_name : ''; $('fP1').value = r ? r.lessor_phone : ''; $('fA2').value = r ? r.lessee_name : ''; $('fP2').value = r ? r.lessee_phone : '';
     $('fMemo').value = r ? r.memo : ''; $('ctRestore').style.display = (r && r.status === 'done') ? '' : 'none'; applyDealLabels(); $('ctOv').classList.add('show'); $('fLoc').focus();
     ensureListings();
@@ -296,9 +306,9 @@
   $('fDeal').addEventListener('change', applyDealLabels);
   async function save() {
     var loc = $('fLoc').value.trim(); if (!loc) { alert('위치를 입력해 주세요.'); $('fLoc').focus(); return; }
-    var s = $('fS').value || null, e = $('fE').value || null;
-    if (s && e && e < s) { alert('계약만료일이 계약시작일보다 빠릅니다. 날짜를 확인해 주세요.'); return; }
-    var payload = { location: loc, listing_id: current.listing_id, doc_type: $('fDoc').value, deal_type: $('fDeal').value, amount: $('fAmt').value.trim(), start_date: s, end_date: e,
+    var s = $('fS').value || null, e = $('fDeal').value === '매매' ? null : ($('fE').value || null), c = $('fC').value || null;
+    if (s && e && e < s) { alert('임대차 만료가 임대차 시작보다 빠릅니다. 날짜를 확인해 주세요.'); return; }
+    var payload = { location: loc, listing_id: current.listing_id, doc_type: $('fDoc').value, deal_type: $('fDeal').value, amount: $('fAmt').value.trim(), contract_date: c, start_date: s, end_date: e,
       lessor_name: $('fA1').value.trim(), lessor_phone: $('fP1').value.trim(), lessee_name: $('fA2').value.trim(), lessee_phone: $('fP2').value.trim(), memo: $('fMemo').value.trim(), updated_at: new Date().toISOString() };
     $('ctSave').disabled = true;
     try {
@@ -335,7 +345,7 @@
   document.querySelector('.ct-head').addEventListener('click', function (e) {
     var b = e.target.closest('.ct-sort'); if (!b) return; var k = b.dataset.s;
     if (state.sort.k === k) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
-    else state.sort = { k: k, dir: (k === 'start' || k === 'end' || k === 'amt') ? 'desc' : 'asc' };
+    else state.sort = { k: k, dir: (k === 'cdate' || k === 'start' || k === 'end' || k === 'amt') ? 'desc' : 'asc' };
     render();
   });
   $('ctSearch').addEventListener('input', function () { state.q = this.value; render(); });
