@@ -141,7 +141,7 @@
       <div><label for="fP2" id="fP2L">임차인 연락처</label><input id="fP2" type="tel" inputmode="tel" /></div>
       <div class="c4"><label for="fMemo">메모</label><textarea id="fMemo" rows="2"></textarea></div>
     </div>
-    <div class="ct-mf"><button type="button" class="ct-btn" id="ctCancel">취소</button><button type="button" class="ct-btn ct-primary" id="ctSave">저장</button></div>
+    <div class="ct-mf"><button type="button" class="ct-btn" id="ctRestore" style="margin-right:auto;display:none" title="종료된 계약을 진행중으로 되돌립니다">복구 (진행중으로)</button><button type="button" class="ct-btn" id="ctCancel">취소</button><button type="button" class="ct-btn ct-primary" id="ctSave">저장</button></div>
   </div>
 </div>
 
@@ -240,7 +240,7 @@
         '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="만료">' + endCell(r) + '</div>' +
         '<div>' + esc(r.lessor_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessor_phone) + '</div></div>' +
         '<div>' + esc(r.lessee_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessee_phone) + '</div></div>' +
-        '<div class="ct-act"><button type="button" class="ct-btn" data-act="edit">수정</button><button type="button" class="ct-btn" data-act="' + (r.status === 'done' ? 'resume' : 'end') + '">' + (r.status === 'done' ? '되살리기' : '종료') + '</button><button type="button" class="ct-btn ct-danger" data-act="del">삭제</button></div>' +
+        '<div class="ct-act"><button type="button" class="ct-btn" data-act="edit">수정</button>' + (r.status === 'done' ? '' : '<button type="button" class="ct-btn" data-act="end">종료</button>') + '<button type="button" class="ct-btn ct-danger" data-act="del">삭제</button></div>' +
         '</div>';
     }).join('');
     var sale0 = list.some(function (r) { return isSale(r); }), rent0 = list.some(function (r) { return !isSale(r); });
@@ -276,7 +276,7 @@
     $('fLoc').value = r ? r.location : ''; $('fDoc').value = r ? (r.doc_type || '기타') : '오피스텔'; $('fDeal').value = r ? (r.deal_type || '기타') : '월세';
     $('fAmt').value = r ? r.amount : ''; $('fS').value = r ? (r.start_date || '') : ''; $('fE').value = r ? (r.end_date || '') : '';
     $('fA1').value = r ? r.lessor_name : ''; $('fP1').value = r ? r.lessor_phone : ''; $('fA2').value = r ? r.lessee_name : ''; $('fP2').value = r ? r.lessee_phone : '';
-    $('fMemo').value = r ? r.memo : ''; applyDealLabels(); $('ctOv').classList.add('show'); $('fLoc').focus();
+    $('fMemo').value = r ? r.memo : ''; $('ctRestore').style.display = (r && r.status === 'done') ? '' : 'none'; applyDealLabels(); $('ctOv').classList.add('show'); $('fLoc').focus();
     ensureListings();
   }
   function closeForm() { $('ctOv').classList.remove('show'); }
@@ -318,6 +318,13 @@
     } catch (err) { alert('실패: ' + (err.message || err)); }
   }
 
+  $('ctRestore').addEventListener('click', async function () {
+    if (!state.editId) return;
+    try {
+      var u = await hitopAuthClient.from('contracts').update({ status: 'ing', updated_at: new Date().toISOString() }).eq('id', state.editId);
+      if (u.error) throw u.error; closeForm(); await load();
+    } catch (err) { alert('복구하지 못했습니다: ' + (err.message || err)); }
+  });
   $('ctAdd').addEventListener('click', function () { openForm(null); });
   $('ctClose').addEventListener('click', closeForm); $('ctCancel').addEventListener('click', closeForm); $('ctSave').addEventListener('click', save);
   $('ctOv').addEventListener('click', function (e) { if (e.target === this) closeForm(); });
