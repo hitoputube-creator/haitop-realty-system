@@ -35,7 +35,7 @@
     .ct-primary { background:var(--ct-accent); border-color:var(--ct-accent); color:#fff; }
     .ct-primary:hover { background:var(--ct-accent); filter:brightness(1.08); }
     .ct-danger { color:#b42318; }
-    .ct-head, .ct-row { display:grid; grid-template-columns:minmax(170px,1.6fr) minmax(90px,.8fr) minmax(95px,.7fr) minmax(95px,.7fr) minmax(110px,.9fr) minmax(110px,.9fr) 150px; gap:6px 14px; align-items:center; }
+    .ct-head, .ct-row { display:grid; grid-template-columns:68px 58px minmax(150px,1.5fr) minmax(78px,.7fr) 88px 88px minmax(92px,.8fr) minmax(92px,.8fr) 140px; gap:6px 10px; align-items:center; }
     .ct-head { font-size:11.5px; color:#6b7b79; padding:6px 10px; border-bottom:1px solid #dbe5e3; }
     .ct-row { padding:12px 10px; border-bottom:1px solid #e6eeec; font-size:13.5px; background:#fff; }
     .ct-row:hover { background:#f7fbfa; }
@@ -72,7 +72,7 @@
     @media (max-width:820px) {
       .ct-head { display:none; }
       .ct-row { grid-template-columns:1fr 1fr; gap:4px 12px; }
-      .ct-row > :first-child { grid-column:1/-1; }
+      .ct-row > .c-loc { grid-column:1/-1; order:-1; }
       .ct-row > [data-l]::before { content:attr(data-l) ' '; color:#6b7b79; font-size:11.5px; }
       .ct-act { grid-column:1/-1; justify-content:flex-start; }
       .ct-form { grid-template-columns:1fr 1fr; } .ct-form .c4 { grid-column:1/-1; }
@@ -112,7 +112,7 @@
       <input class="ct-search" id="ctSearch" type="search" placeholder="위치 · 이름 · 번호 검색" />
     </div>
     <div id="ctErr"></div>
-    <div class="ct-head"><div>위치</div><div>금액</div><div>계약시작일</div><div>계약만료일</div><div id="ctH4">임대인 (매도인)</div><div id="ctH5">임차인 (매수인)</div><div></div></div>
+    <div class="ct-head"><div>종류</div><div>구분</div><div>위치</div><div>금액</div><div>계약시작일</div><div>계약만료일</div><div id="ctH4">임대인 (매도인)</div><div id="ctH5">임차인 (매수인)</div><div></div></div>
     <div id="ctList"></div>
     <div class="ct-note">전화번호를 누르면 바로 전화가 걸립니다. 계약만료일 30일 전부터 노란색, 지나면 빨간색으로 표시합니다. 위치를 매물에서 고르면 위치를 누를 때 그 매물 상세로 이동합니다.</div>
   </div>
@@ -201,7 +201,9 @@
       var tag = r.status === 'done' ? '<span class="ct-tag done">종료</span>' : (es === 'over' ? '<span class="ct-tag ct-over">만기 지남</span>' : '');
       var sale = isSale(r);
       return '<div class="ct-row" data-id="' + esc(r.id) + '">' +
-        '<div>' + loc + tag + '<div class="ct-small"><span class="ct-deal ' + ({ '월세': 'd-wol', '전세': 'd-jeon', '매매': 'd-mae' }[r.deal_type] || 'd-etc') + '">' + esc(r.deal_type || '기타') + '</span>' + esc(r.doc_type || '') + (r.memo ? ' · ' + esc(r.memo) : '') + '</div></div>' +
+        '<div class="ct-small ct-kind" style="font-size:13px;color:#1d2b2a">' + esc(r.doc_type || '-') + '</div>' +
+        '<div><span class="ct-deal ' + ({ '월세': 'd-wol', '전세': 'd-jeon', '매매': 'd-mae' }[r.deal_type] || 'd-etc') + '" style="margin-right:0">' + esc(r.deal_type || '기타') + '</span></div>' +
+        '<div class="c-loc">' + loc + tag + (r.memo ? '<div class="ct-small">' + esc(r.memo) + '</div>' : '') + '</div>' +
         '<div class="ct-num">' + esc(r.amount) + '</div>' +
         '<div class="ct-num" data-l="시작">' + startCell(r) + '</div>' +
         '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="만료">' + endCell(r) + '</div>' +
