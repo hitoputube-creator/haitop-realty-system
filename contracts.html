@@ -64,6 +64,10 @@
     .ct-per { display:flex; gap:6px; }
     .ct-per button { flex:1; border:1px solid #c9d6d4; background:#fff; color:#1d2b2a; border-radius:8px; padding:7px 4px; font:inherit; font-size:13px; cursor:pointer; }
     .ct-per button.on { background:var(--ct-accent); border-color:var(--ct-accent); color:#fff; font-weight:700; }
+    .ct-row [data-f] { cursor:pointer; border-radius:6px; min-height:22px; }
+    .ct-row [data-f]:hover { background:#eef6f5; box-shadow:0 0 0 3px #eef6f5; }
+    .ct-row [data-f].editing { background:transparent; box-shadow:none; cursor:default; }
+    .ct-in { width:100%; font:inherit; font-size:12.5px; border:1px solid var(--ct-accent); border-radius:6px; padding:4px 5px; background:#fff; color:#1d2b2a; margin-bottom:3px; }
     .ct-tag { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:11px; border:1px solid #c9d6d4; color:#4b5c5a; }
     .ct-tag.done { color:#2f7a55; border-color:#9ed4b6; }
     .ct-act { display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap; }
@@ -245,15 +249,15 @@
       var tag = r.status === 'done' ? '<span class="ct-tag done">종료</span>' : (es === 'over' ? '<span class="ct-tag ct-over">만기 지남</span>' : '');
       var sale = isSale(r);
       return '<div class="ct-row" data-id="' + esc(r.id) + '">' +
-        '<div class="ct-small ct-kind" style="font-size:13px;color:#1d2b2a">' + esc(r.doc_type || '-') + '</div>' +
-        '<div><span class="ct-deal ' + ({ '월세': 'd-wol', '전세': 'd-jeon', '매매': 'd-mae' }[r.deal_type] || 'd-etc') + '" style="margin-right:0">' + esc(r.deal_type || '기타') + '</span></div>' +
-        '<div class="c-loc">' + loc + tag + (r.memo ? '<div class="ct-small">' + esc(r.memo) + '</div>' : '') + '</div>' +
-        '<div class="ct-num">' + esc(r.amount) + '</div>' +
-        '<div class="ct-num" data-l="계약일">' + contractCell(r) + '</div>' +
-        '<div class="ct-num" data-l="임대차 시작">' + startCell(r) + '</div>' +
-        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="임대차 만료">' + endCell(r) + '</div>' +
-        '<div>' + esc(r.lessor_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessor_phone) + '</div></div>' +
-        '<div>' + esc(r.lessee_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessee_phone) + '</div></div>' +
+        '<div class="ct-small ct-kind" data-f="kind" style="font-size:13px;color:#1d2b2a">' + esc(r.doc_type || '-') + '</div>' +
+        '<div data-f="deal"><span class="ct-deal ' + ({ '월세': 'd-wol', '전세': 'd-jeon', '매매': 'd-mae' }[r.deal_type] || 'd-etc') + '" style="margin-right:0">' + esc(r.deal_type || '기타') + '</span></div>' +
+        '<div class="c-loc" data-f="loc">' + loc + tag + (r.memo ? '<div class="ct-small">' + esc(r.memo) + '</div>' : '') + '</div>' +
+        '<div class="ct-num" data-f="amt">' + esc(r.amount) + '</div>' +
+        '<div class="ct-num" data-f="cdate" data-l="계약일">' + contractCell(r) + '</div>' +
+        '<div class="ct-num" data-f="start" data-l="임대차 시작">' + startCell(r) + '</div>' +
+        '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '"' + (sale ? '' : ' data-f="end"') + ' data-l="임대차 만료">' + endCell(r) + '</div>' +
+        '<div data-f="lessor">' + esc(r.lessor_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessor_phone) + '</div></div>' +
+        '<div data-f="lessee">' + esc(r.lessee_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessee_phone) + '</div></div>' +
         '<div class="ct-act"><button type="button" class="ct-btn" data-act="edit">수정</button>' + (r.status === 'done' ? '' : '<button type="button" class="ct-btn" data-act="end">종료</button>') + '<button type="button" class="ct-btn ct-danger" data-act="del">삭제</button></div>' +
         '</div>';
     }).join('');
@@ -384,6 +388,54 @@
     render();
   });
   $('ctSearch').addEventListener('input', function () { state.q = this.value; render(); });
+  /* 목록에서 바로 수정 */
+  var EDIT = {
+    kind: { t: 'sel', f: 'doc_type', o: ['오피스텔', '상가', '아파트', '사무실', '토지', '기타'] },
+    deal: { t: 'sel', f: 'deal_type', o: ['월세', '전세', '매매', '기타'] },
+    amt: { t: 'text', f: 'amount' },
+    cdate: { t: 'date', f: 'contract_date' }, start: { t: 'date', f: 'start_date' }, end: { t: 'date', f: 'end_date' },
+    loc: { t: 'two', f: ['location', 'memo'], ph: ['위치', '메모'] },
+    lessor: { t: 'two', f: ['lessor_name', 'lessor_phone'], ph: ['이름', '연락처'] },
+    lessee: { t: 'two', f: ['lessee_name', 'lessee_phone'], ph: ['이름', '연락처'] }
+  };
+  async function saveField(id, patch) {
+    patch.updated_at = new Date().toISOString();
+    try {
+      var u = await hitopAuthClient.from('contracts').update(patch).eq('id', id);
+      if (u.error) throw u.error;
+      var r = state.rows.find(function (x) { return String(x.id) === String(id); }); if (r) Object.assign(r, patch);
+    } catch (err) { alert('저장하지 못했습니다: ' + (err.message || err)); }
+    render();
+  }
+  function startEdit(cell) {
+    if (cell.classList.contains('editing')) return;
+    var row = cell.closest('.ct-row'), id = row.dataset.id, r = state.rows.find(function (x) { return String(x.id) === String(id); });
+    var def = EDIT[cell.dataset.f]; if (!r || !def) return;
+    cell.classList.add('editing'); var html = '';
+    if (def.t === 'sel') html = '<select class="ct-in">' + def.o.map(function (o) { return '<option' + (o === r[def.f] ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>';
+    else if (def.t === 'text') html = '<input class="ct-in" value="' + esc(r[def.f] || '') + '" />';
+    else if (def.t === 'date') html = '<input class="ct-in" type="date" value="' + esc(r[def.f] || '') + '" />';
+    else html = def.f.map(function (f, i) { return '<input class="ct-in" data-i="' + i + '" placeholder="' + def.ph[i] + '" value="' + esc(r[f] || '') + '" />'; }).join('');
+    cell.innerHTML = html;
+    var first = cell.querySelector('.ct-in'); first.focus(); if (first.select && def.t !== 'date') first.select();
+    function commit() {
+      var ins = cell.querySelectorAll('.ct-in'), patch = {}, changed = false;
+      if (def.t === 'two') def.f.forEach(function (f, i) { var v = ins[i].value.trim(); if (v !== (r[f] || '')) { patch[f] = v; changed = true; } });
+      else { var v = ins[0].value.trim(); if (def.t === 'date') v = v || null; if (v !== (r[def.f] || (def.t === 'date' ? null : ''))) { patch[def.f] = v; changed = true; } }
+      if (def.f === 'location' || (def.t === 'two' && def.f[0] === 'location')) { if (patch.location === '') { alert('위치는 비울 수 없어요.'); return render(); } if (patch.location != null) patch.listing_id = null; }
+      if (!changed) return render();
+      saveField(id, patch);
+    }
+    cell._done = false;
+    function once(fn) { return function (e) { if (cell._done) return; if (fn(e) !== false) cell._done = true; }; }
+    cell.addEventListener('keydown', once(function (e) { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { commit(); } else if (e.key === 'Escape') { render(); } else return false; }));
+    cell.addEventListener('focusout', once(function (e) { if (e.relatedTarget && cell.contains(e.relatedTarget)) return false; setTimeout(function () { if (!cell.contains(document.activeElement)) commit(); }, 0); }));
+    if (def.t === 'sel') cell.addEventListener('change', once(function () { commit(); }));
+  }
+  $('ctList').addEventListener('click', function (e) {
+    if (e.target.closest('a,button,input,select,textarea')) return;
+    var cell = e.target.closest('[data-f]'); if (cell) startEdit(cell);
+  });
   $('ctList').addEventListener('click', function (e) { var b = e.target.closest('[data-act]'); if (!b) return; act(b.closest('.ct-row').dataset.id, b.dataset.act); });
 
   (async function () { var ok = await window.hitopAuthReady; if (ok) load(); })();
