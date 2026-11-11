@@ -1,0 +1,29 @@
+/* ===== 추가 연락처 (하이탑 업무일지 11/10 수정과 동일 기능) ===== */
+.ac-editor { grid-column: 1 / -1; flex: 1 1 100%; width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.ac-row { display: flex; gap: 6px; align-items: center; }
+.ac-row .ac-name { flex: 0 0 150px; width: 150px; min-width: 0; }
+.ac-row .ac-phone { flex: 0 0 170px; width: 170px; min-width: 0; }
+.ac-remove { flex: 0 0 34px; height: 34px; border: 1px solid rgba(224, 82, 82, 0.4); border-radius: 8px; background: transparent; color: #b42318; cursor: pointer; }
+.ac-add { align-self: flex-start; padding: 5px 12px; border: 1px dashed currentColor; border-radius: 8px; background: transparent; color: inherit; font-weight: 700; font-size: 12px; cursor: pointer; opacity: 0.85; }
+.ac-add:disabled, .ac-remove:disabled { opacity: 0.4; cursor: default; }
+.ac-view { display: inline-flex; flex-wrap: wrap; gap: 6px 12px; }
+.ac-view-item { color: inherit; font-weight: 700; text-decoration: none; }
+.ac-view-item:hover { text-decoration: underline; }
+.ac-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ac-save { padding: 5px 14px; border: 1px solid #254767; border-radius: 8px; background: #254767; color: #fff; font-weight: 800; font-size: 12px; cursor: pointer; }
+.ac-save:disabled { opacity: 0.55; cursor: default; }
+.ac-msg { font-size: 12px; font-weight: 700; color: #1b6a4f; }
+@media (max-width: 640px) { .ac-row { flex-wrap: wrap; } .ac-row .ac-name, .ac-row .ac-phone { flex: 1 1 140px; width: auto; } }
+
+/* ===== 약속 일정 배지 (달력 · 선택 날짜 요약) ===== */
+.wd-calendar .wd-cal-schedule-info { flex-wrap: wrap; gap: 2px 3px; flex-shrink: 0; }
+.wd-calendar .wd-cal-schedule-count { display: inline-flex; align-items: center; justify-content: center; max-width: 100%; padding: 2px 3px; border: 1px solid transparent; border-radius: 5px; font-size: 9px; font-weight: 800; line-height: 1.2; font-variant-numeric: tabular-nums; white-space: normal; overflow-wrap: anywhere; }
+.wd-calendar .wd-cal-schedule-count--appointment { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
+.wd-calendar .wd-cal-schedule-count--contract { color: #713f12; background: #fef3c7; border-color: #d8b84a; }
+.wd-calendar .wd-cal-schedule-count--balance { color: #991b1b; background: #fee2e2; border-color: #fca5a5; }
+.wd-calendar .wd-cal-legend-box.appointment { background: #dbeafe; border-color: #2563eb; }
+.wd-left-top .wd-calendar .wd-cal-days { grid-auto-rows: minmax(48px, auto); }
+.wd-left-top .wd-calendar .wd-cal-day { height: auto; }
+.wd-calendar--compact .wd-cal-schedule-count { padding: 1px 2px; font-size: 8px; }
+.wd-date-stat--appointment { background: #eef5ff; border-color: #bcd3f5; }
+.wd-date-stat--appointment :is(span, strong) { color: #1e4fa3 !important; }
