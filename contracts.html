@@ -120,6 +120,7 @@
       <button type="button" class="ct-chip" data-k="ing">진행중</button>
       <button type="button" class="ct-chip" data-k="soon">만기 임박</button>
       <button type="button" class="ct-chip" data-k="done">종료</button>
+      <button type="button" class="ct-chip" data-k="trash">휴지통</button>
       <span class="ct-sep" style="width:1px;height:20px;background:#dbe5e3;margin:0 4px"></span>
       <button type="button" class="ct-chip on" data-d="all">모든 거래</button>
       <button type="button" class="ct-chip dwol" data-d="월세">월세</button>
@@ -222,8 +223,8 @@
     return r * d;
   }
   function render() {
-    var all = state.rows;
-    var cnt = { all: all.length, ing: all.filter(function (r) { return r.status === 'ing'; }).length, done: all.filter(function (r) { return r.status === 'done'; }).length, soon: all.filter(function (r) { return r.status === 'ing' && endState(r); }).length };
+    var all = state.rows.filter(function (r) { return !r.deleted_at; }), trash = state.rows.filter(function (r) { return !!r.deleted_at; });
+    var cnt = { trash: trash.length, all: all.length, ing: all.filter(function (r) { return r.status === 'ing'; }).length, done: all.filter(function (r) { return r.status === 'done'; }).length, soon: all.filter(function (r) { return r.status === 'ing' && endState(r); }).length };
     $('ctCount').textContent = '전체 ' + cnt.all + '건 · 진행중 ' + cnt.ing + '건' + (cnt.soon ? ' · 만기 임박 ' + cnt.soon + '건' : '');
     document.querySelectorAll('#ctBar .ct-chip[data-d]').forEach(function (b) {
       var n = b.dataset.d === 'all' ? all.length : all.filter(function (r) { return r.deal_type === b.dataset.d; }).length;
@@ -233,16 +234,17 @@
     $('ctDeal').value = state.deal; $('ctDeal').classList.toggle('on', state.deal !== 'all');
     $('ctKind').value = state.kind; $('ctKind').classList.toggle('on', state.kind !== 'all');
     document.querySelectorAll('#ctBar .ct-chip[data-k]').forEach(function (b) {
-      var base = { all: '전체', ing: '진행중', soon: '만기 임박', done: '종료' }[b.dataset.k];
+      var base = { all: '전체', ing: '진행중', soon: '만기 임박', done: '종료', trash: '휴지통' }[b.dataset.k];
       b.textContent = base + ' ' + cnt[b.dataset.k];
       b.classList.toggle('on', b.dataset.k === state.filter);
     });
-    var list = all.filter(matches).sort(cmpRows);
+    var inTrash = state.filter === 'trash';
+    var list = (inTrash ? trash : all).filter(matches).sort(cmpRows);
     document.querySelectorAll('.ct-sort[data-s]').forEach(function (b) {
       var on = b.dataset.s === state.sort.k; b.classList.toggle('on', on);
       b.querySelector('i').textContent = on ? (state.sort.dir === 'asc' ? '▲' : '▼') : '↕';
     });
-    if (!list.length) { $('ctList').innerHTML = '<div class="ct-empty">' + (all.length ? '조건에 맞는 계약이 없어요.' : '아직 계약이 없어요. 오른쪽 위 + 계약 추가로 시작해 보세요.') + '</div>'; return; }
+    if (!list.length) { $('ctList').innerHTML = '<div class="ct-empty">' + (inTrash && !trash.length ? '휴지통이 비어 있어요. 삭제한 계약은 여기에 보관돼요.' : all.length || trash.length ? '조건에 맞는 계약이 없어요.' : '아직 계약이 없어요. 오른쪽 위 + 계약 추가로 시작해 보세요.') + '</div>'; return; }
     $('ctList').innerHTML = list.map(function (r) {
       var es = endState(r);
       var loc = r.listing_id ? '<a class="ct-loc" href="' + esc(OfficeConfig.urlFor('detail.html?id=' + encodeURIComponent(r.listing_id))) + '">' + esc(r.location) + '</a>' : '<span class="ct-loc">' + esc(r.location) + '</span>';
@@ -258,7 +260,7 @@
         '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '"' + (sale ? '' : ' data-f="end"') + ' data-l="임대차 만료">' + endCell(r) + '</div>' +
         '<div data-f="lessor">' + esc(r.lessor_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessor_phone) + '</div></div>' +
         '<div data-f="lessee">' + esc(r.lessee_name) + '<div class="ct-small ct-num">' + phoneHtml(r.lessee_phone) + '</div></div>' +
-        '<div class="ct-act"><button type="button" class="ct-btn" data-act="edit">수정</button>' + (r.status === 'done' ? '' : '<button type="button" class="ct-btn" data-act="end">종료</button>') + '<button type="button" class="ct-btn ct-danger" data-act="del">삭제</button></div>' +
+        '<div class="ct-act">' + (r.deleted_at ? '<button type="button" class="ct-btn" data-act="restore">복원</button><button type="button" class="ct-btn ct-danger" data-act="purge">완전삭제</button>' : '<button type="button" class="ct-btn" data-act="edit">수정</button>' + (r.status === 'done' ? '' : '<button type="button" class="ct-btn" data-act="end">종료</button>') + '<button type="button" class="ct-btn ct-danger" data-act="del">삭제</button>') + '</div>' +
         '</div>';
     }).join('');
     var sale0 = list.some(function (r) { return isSale(r); }), rent0 = list.some(function (r) { return !isSale(r); });
@@ -361,7 +363,9 @@
     var r = state.rows.find(function (x) { return String(x.id) === String(id); }); if (!r) return;
     try {
       if (what === 'edit') { openForm(r); return; }
-      if (what === 'del') { if (!confirm('이 계약을 삭제할까요?\n' + r.location)) return; var d = await hitopAuthClient.from('contracts').delete().eq('id', id); if (d.error) throw d.error; }
+      if (what === 'del') { if (!confirm('이 계약을 휴지통으로 보낼까요?\n(휴지통에서 다시 복원할 수 있어요)\n' + r.location)) return; var d = await hitopAuthClient.from('contracts').update({ deleted_at: new Date().toISOString() }).eq('id', id); if (d.error) throw d.error; }
+      else if (what === 'restore') { var rs = await hitopAuthClient.from('contracts').update({ deleted_at: null, updated_at: new Date().toISOString() }).eq('id', id); if (rs.error) throw rs.error; }
+      else if (what === 'purge') { if (!confirm('완전히 삭제할까요? 이 작업은 되돌릴 수 없어요.\n' + r.location)) return; var pg = await hitopAuthClient.from('contracts').delete().eq('id', id); if (pg.error) throw pg.error; }
       else { var u = await hitopAuthClient.from('contracts').update({ status: what === 'end' ? 'done' : 'ing', updated_at: new Date().toISOString() }).eq('id', id); if (u.error) throw u.error; }
       await load();
     } catch (err) { alert('실패: ' + (err.message || err)); }
@@ -410,7 +414,7 @@
   function startEdit(cell) {
     if (cell.classList.contains('editing')) return;
     var row = cell.closest('.ct-row'), id = row.dataset.id, r = state.rows.find(function (x) { return String(x.id) === String(id); });
-    var def = EDIT[cell.dataset.f]; if (!r || !def) return;
+    var def = EDIT[cell.dataset.f]; if (!r || !def || r.deleted_at) return;
     cell.classList.add('editing'); var html = '';
     if (def.t === 'sel') html = '<select class="ct-in">' + def.o.map(function (o) { return '<option' + (o === r[def.f] ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>';
     else if (def.t === 'text') html = '<input class="ct-in" value="' + esc(r[def.f] || '') + '" />';
