@@ -27,3 +27,15 @@
 .wd-calendar--compact .wd-cal-schedule-count { padding: 1px 2px; font-size: 8px; }
 .wd-date-stat--appointment { background: #eef5ff; border-color: #bcd3f5; }
 .wd-date-stat--appointment :is(span, strong) { color: #1e4fa3 !important; }
+
+/* ===== 메모 기록: 제목·이름·연락처 한 줄 목록 -> 간략보기(카드) -> 전체보기 (하이탑과 동일) ===== */
+.wd-memo-row-group{margin:0 0 8px}
+.wd-memo-listrow{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 16px;border:1px solid #dce5ef;border-radius:12px;background:#fff;cursor:pointer;transition:background .12s,border-color .12s}
+.wd-memo-listrow:hover,.wd-memo-listrow.is-open{background:#edf3f9;border-color:#254767}
+.wd-memo-listrow:focus-visible{outline:2px solid #254767;outline-offset:1px}
+.wd-list-row-title{flex:1 1 auto;min-width:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#23364c}
+.wd-list-row-customer{flex:0 0 auto;font-size:13px;color:#4b6a85;white-space:nowrap}
+.wd-list-row-toggle{flex:0 0 auto;font-size:12px;font-weight:700;color:#245c91;background:#e6eef8;border:1.5px solid #b5cae3;border-radius:999px;padding:3px 11px;white-space:nowrap}
+.wd-memo-listrow.is-open .wd-list-row-toggle{color:#254767;background:#dce8f5;border-color:#8fb0d3}
+.wd-memo-row-group > .wd-card--compact{margin-top:6px}
+@media (max-width:600px){.wd-memo-listrow{flex-wrap:wrap;gap:4px 8px}.wd-list-row-title{flex-basis:100%}.wd-list-row-customer{flex:1 1 auto}}
