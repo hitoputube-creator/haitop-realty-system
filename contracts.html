@@ -45,6 +45,12 @@
     .ct-num { font-variant-numeric:tabular-nums; }
     .ct-soon { color:#b7791f; font-weight:700; }
     .ct-over { color:#b42318; font-weight:700; }
+    .ct-deal { display:inline-block; padding:1px 8px; margin-right:6px; border-radius:6px; font-size:11.5px; font-weight:700; border:1px solid transparent; }
+    .ct-deal.d-wol { background:#e3f4f1; color:#0f766e; border-color:#a7dbd3; }
+    .ct-deal.d-jeon { background:#fff4dc; color:#9a6200; border-color:#f1d28a; }
+    .ct-deal.d-mae { background:#e8ecfb; color:#2f3fa8; border-color:#b9c3f0; }
+    .ct-deal.d-etc { background:#f1f3f3; color:#5b6968; border-color:#d5dcdb; }
+    .ct-chip.dwol.on { background:#0f766e; border-color:#0f766e; } .ct-chip.djeon.on { background:#b77700; border-color:#b77700; } .ct-chip.dmae.on { background:#3a4cc0; border-color:#3a4cc0; }
     .ct-tag { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:11px; border:1px solid #c9d6d4; color:#4b5c5a; }
     .ct-tag.done { color:#2f7a55; border-color:#9ed4b6; }
     .ct-act { display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap; }
@@ -97,6 +103,11 @@
       <button type="button" class="ct-chip" data-k="ing">진행중</button>
       <button type="button" class="ct-chip" data-k="soon">만기 임박</button>
       <button type="button" class="ct-chip" data-k="done">종료</button>
+      <span class="ct-sep" style="width:1px;height:20px;background:#dbe5e3;margin:0 4px"></span>
+      <button type="button" class="ct-chip on" data-d="all">모든 거래</button>
+      <button type="button" class="ct-chip dwol" data-d="월세">월세</button>
+      <button type="button" class="ct-chip djeon" data-d="전세">전세</button>
+      <button type="button" class="ct-chip dmae" data-d="매매">매매</button>
       <span class="ct-sp"></span>
       <input class="ct-search" id="ctSearch" type="search" placeholder="위치 · 이름 · 번호 검색" />
     </div>
@@ -133,7 +144,7 @@
   document.documentElement.style.setProperty('--ct-accent', ktop ? '#254767' : '#0f766e');
   if (ktop) document.querySelector('.logo-main').textContent = 'KTOP부동산 계약관리';
   var $ = function (id) { return document.getElementById(id); };
-  var state = { rows: [], filter: 'all', q: '', editId: null, listings: [] };
+  var state = { rows: [], filter: 'all', deal: 'all', q: '', editId: null, listings: [] };
   var DAY = 86400000;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -162,6 +173,7 @@
       var digits = q.replace(/[^0-9]/g, '');
       if (hay.indexOf(q) < 0 && !(digits.length >= 3 && [r.lessor_phone, r.lessee_phone].join(' ').replace(/[^0-9 ]/g, '').indexOf(digits) >= 0)) return false;
     }
+    if (state.deal !== 'all' && r.deal_type !== state.deal) return false;
     if (state.filter === 'ing') return r.status === 'ing';
     if (state.filter === 'done') return r.status === 'done';
     if (state.filter === 'soon') return r.status === 'ing' && !!endState(r);
@@ -171,7 +183,12 @@
     var all = state.rows;
     var cnt = { all: all.length, ing: all.filter(function (r) { return r.status === 'ing'; }).length, done: all.filter(function (r) { return r.status === 'done'; }).length, soon: all.filter(function (r) { return r.status === 'ing' && endState(r); }).length };
     $('ctCount').textContent = '전체 ' + cnt.all + '건 · 진행중 ' + cnt.ing + '건' + (cnt.soon ? ' · 만기 임박 ' + cnt.soon + '건' : '');
-    document.querySelectorAll('#ctBar .ct-chip').forEach(function (b) {
+    document.querySelectorAll('#ctBar .ct-chip[data-d]').forEach(function (b) {
+      var n = b.dataset.d === 'all' ? all.length : all.filter(function (r) { return r.deal_type === b.dataset.d; }).length;
+      b.textContent = (b.dataset.d === 'all' ? '모든 거래' : b.dataset.d) + ' ' + n;
+      b.classList.toggle('on', b.dataset.d === state.deal);
+    });
+    document.querySelectorAll('#ctBar .ct-chip[data-k]').forEach(function (b) {
       var base = { all: '전체', ing: '진행중', soon: '만기 임박', done: '종료' }[b.dataset.k];
       b.textContent = base + ' ' + cnt[b.dataset.k];
       b.classList.toggle('on', b.dataset.k === state.filter);
@@ -184,7 +201,7 @@
       var tag = r.status === 'done' ? '<span class="ct-tag done">종료</span>' : (es === 'over' ? '<span class="ct-tag ct-over">만기 지남</span>' : '');
       var sale = isSale(r);
       return '<div class="ct-row" data-id="' + esc(r.id) + '">' +
-        '<div>' + loc + tag + '<div class="ct-small">' + esc([r.doc_type, r.deal_type].filter(Boolean).join(' · ')) + (r.memo ? ' · ' + esc(r.memo) : '') + '</div></div>' +
+        '<div>' + loc + tag + '<div class="ct-small"><span class="ct-deal ' + ({ '월세': 'd-wol', '전세': 'd-jeon', '매매': 'd-mae' }[r.deal_type] || 'd-etc') + '">' + esc(r.deal_type || '기타') + '</span>' + esc(r.doc_type || '') + (r.memo ? ' · ' + esc(r.memo) : '') + '</div></div>' +
         '<div class="ct-num">' + esc(r.amount) + '</div>' +
         '<div class="ct-num" data-l="시작">' + startCell(r) + '</div>' +
         '<div class="ct-num ' + (es === 'soon' ? 'ct-soon' : es === 'over' ? 'ct-over' : '') + '" data-l="만료">' + endCell(r) + '</div>' +
@@ -272,7 +289,7 @@
   $('ctClose').addEventListener('click', closeForm); $('ctCancel').addEventListener('click', closeForm); $('ctSave').addEventListener('click', save);
   $('ctOv').addEventListener('click', function (e) { if (e.target === this) closeForm(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeForm(); });
-  $('ctBar').addEventListener('click', function (e) { var b = e.target.closest('.ct-chip'); if (!b) return; state.filter = b.dataset.k; render(); });
+  $('ctBar').addEventListener('click', function (e) { var b = e.target.closest('.ct-chip'); if (!b) return; if (b.dataset.d) state.deal = b.dataset.d; else state.filter = b.dataset.k; render(); });
   $('ctSearch').addEventListener('input', function () { state.q = this.value; render(); });
   $('ctList').addEventListener('click', function (e) { var b = e.target.closest('[data-act]'); if (!b) return; act(b.closest('.ct-row').dataset.id, b.dataset.act); });
 
