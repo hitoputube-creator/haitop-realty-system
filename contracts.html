@@ -137,7 +137,8 @@
       <div class="c2"><label for="fDeal">거래</label><select id="fDeal"><option>월세</option><option>전세</option><option>매매</option><option>기타</option></select></div>
       <div class="c2"><label for="fAmt">금액 (예: 1,000 / 75)</label><input id="fAmt" /></div>
       <div class="c2"><label for="fC">계약일</label><input id="fC" type="date" /></div>
-      <div class="c2"><label for="fS" id="fSL">임대차 시작</label><input id="fS" type="date" /></div>
+      <div><label for="fS" id="fSL">임대차 시작</label><input id="fS" type="date" /></div>
+      <div id="fPW"><label for="fPer">기간</label><select id="fPer"><option value="">직접 입력</option><option value="6">6개월</option><option value="12">1년</option><option value="24">2년</option><option value="36">3년</option></select></div>
       <div class="c2" id="fEW"><label for="fE" id="fEL">임대차 만료</label><input id="fE" type="date" /></div>
       <div><label for="fA1" id="fA1L">임대인 이름</label><input id="fA1" /></div>
       <div><label for="fP1" id="fP1L">임대인 연락처</label><input id="fP1" type="tel" inputmode="tel" /></div>
@@ -275,9 +276,24 @@
 
   function applyDealLabels() {
     var sale = $('fDeal').value === '매매';
-    $('fSL').textContent = sale ? '잔금일' : '임대차 시작'; $('fEW').style.display = sale ? 'none' : '';
+    $('fSL').textContent = sale ? '잔금일' : '임대차 시작'; $('fEW').style.display = sale ? 'none' : ''; $('fPW').style.display = sale ? 'none' : '';
     $('fA1L').textContent = sale ? '매도인 이름' : '임대인 이름'; $('fP1L').textContent = sale ? '매도인 연락처' : '임대인 연락처';
     $('fA2L').textContent = sale ? '매수인 이름' : '임차인 이름'; $('fP2L').textContent = sale ? '매수인 연락처' : '임차인 연락처';
+  }
+  function addMonths(s, n) {
+    var p = s.split('-').map(Number), y = p[0], m = p[1] - 1, d = p[2];
+    var t = new Date(Date.UTC(y, m + n, 1)), last = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate();
+    var e = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), Math.min(d, last) - 1));
+    return e.toISOString().slice(0, 10);
+  }
+  function syncPeriodFromDates() {
+    var s = $('fS').value, e = $('fE').value, val = '';
+    if (s && e) ['6', '12', '24', '36'].forEach(function (n) { if (addMonths(s, +n) === e) val = n; });
+    $('fPer').value = val;
+  }
+  function applyPeriod() {
+    var n = $('fPer').value, s = $('fS').value;
+    if (n && s) $('fE').value = addMonths(s, +n);
   }
   var current = { listing_id: null };
   function openForm(r) {
@@ -286,7 +302,8 @@
     $('fLoc').value = r ? r.location : ''; $('fDoc').value = r ? (r.doc_type || '기타') : '오피스텔'; $('fDeal').value = r ? (r.deal_type || '기타') : '월세';
     $('fAmt').value = r ? r.amount : ''; $('fC').value = r ? (r.contract_date || '') : ''; $('fS').value = r ? (r.start_date || '') : ''; $('fE').value = r ? (r.end_date || '') : '';
     $('fA1').value = r ? r.lessor_name : ''; $('fP1').value = r ? r.lessor_phone : ''; $('fA2').value = r ? r.lessee_name : ''; $('fP2').value = r ? r.lessee_phone : '';
-    $('fMemo').value = r ? r.memo : ''; $('ctRestore').style.display = (r && r.status === 'done') ? '' : 'none'; applyDealLabels(); $('ctOv').classList.add('show'); $('fLoc').focus();
+    $('fMemo').value = r ? r.memo : ''; $('ctRestore').style.display = (r && r.status === 'done') ? '' : 'none'; applyDealLabels();
+    if (r) syncPeriodFromDates(); else { $('fPer').value = '12'; } $('ctOv').classList.add('show'); $('fLoc').focus();
     ensureListings();
   }
   function closeForm() { $('ctOv').classList.remove('show'); }
@@ -304,6 +321,10 @@
     current.listing_id = hit ? String(hit.id) : null;
   });
   $('fDeal').addEventListener('change', applyDealLabels);
+  $('fPer').addEventListener('change', applyPeriod);
+  $('fS').addEventListener('change', applyPeriod);
+  $('fE').addEventListener('change', syncPeriodFromDates);
+  $('fDoc').addEventListener('change', function () { if (!state.editId && !$('fE').value) { $('fPer').value = this.value === '오피스텔' ? '12' : ''; applyPeriod(); } });
   async function save() {
     var loc = $('fLoc').value.trim(); if (!loc) { alert('위치를 입력해 주세요.'); $('fLoc').focus(); return; }
     var s = $('fS').value || null, e = $('fDeal').value === '매매' ? null : ($('fE').value || null), c = $('fC').value || null;
