@@ -35,7 +35,7 @@
     .ct-primary { background:var(--ct-accent); border-color:var(--ct-accent); color:#fff; }
     .ct-primary:hover { background:var(--ct-accent); filter:brightness(1.08); }
     .ct-danger { color:#b42318; }
-    .ct-head, .ct-row { display:grid; grid-template-columns:68px 58px minmax(150px,1.5fr) minmax(78px,.7fr) 88px 88px minmax(92px,.8fr) minmax(92px,.8fr) 140px; gap:6px 10px; align-items:center; }
+    .ct-head, .ct-row { display:grid; grid-template-columns:82px 74px minmax(150px,1.5fr) minmax(78px,.7fr) 88px 88px minmax(92px,.8fr) minmax(92px,.8fr) 140px; gap:6px 10px; align-items:center; }
     .ct-head { font-size:11.5px; color:#6b7b79; padding:6px 10px; border-bottom:1px solid #dbe5e3; }
     .ct-row { padding:12px 10px; border-bottom:1px solid #e6eeec; font-size:13.5px; background:#fff; }
     .ct-row:hover { background:#f7fbfa; }
@@ -51,6 +51,8 @@
     .ct-deal.d-mae { background:#e8ecfb; color:#2f3fa8; border-color:#b9c3f0; }
     .ct-deal.d-etc { background:#f1f3f3; color:#5b6968; border-color:#d5dcdb; }
     .ct-chip.dwol.on { background:#0f766e; border-color:#0f766e; } .ct-chip.djeon.on { background:#b77700; border-color:#b77700; } .ct-chip.dmae.on { background:#3a4cc0; border-color:#3a4cc0; }
+    .ct-hsel { width:100%; font:inherit; font-size:11.5px; color:#4b5c5a; border:1px solid #c9d6d4; border-radius:6px; padding:2px 2px; background:#fff; cursor:pointer; }
+    .ct-hsel.on { border-color:var(--ct-accent); color:var(--ct-accent); font-weight:700; }
     .ct-tag { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:11px; border:1px solid #c9d6d4; color:#4b5c5a; }
     .ct-tag.done { color:#2f7a55; border-color:#9ed4b6; }
     .ct-act { display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap; }
@@ -112,7 +114,7 @@
       <input class="ct-search" id="ctSearch" type="search" placeholder="위치 · 이름 · 번호 검색" />
     </div>
     <div id="ctErr"></div>
-    <div class="ct-head"><div>종류</div><div>구분</div><div>위치</div><div>금액</div><div>계약시작일</div><div>계약만료일</div><div id="ctH4">임대인 (매도인)</div><div id="ctH5">임차인 (매수인)</div><div></div></div>
+    <div class="ct-head"><div><select id="ctKind" class="ct-hsel" aria-label="종류 필터"><option value="all">종류 ▾</option><option>오피스텔</option><option>상가</option><option>아파트</option><option>사무실</option><option>토지</option><option>기타</option></select></div><div><select id="ctDeal" class="ct-hsel" aria-label="구분 필터"><option value="all">구분 ▾</option><option>월세</option><option>전세</option><option>매매</option><option>기타</option></select></div><div>위치</div><div>금액</div><div>계약시작일</div><div>계약만료일</div><div id="ctH4">임대인 (매도인)</div><div id="ctH5">임차인 (매수인)</div><div></div></div>
     <div id="ctList"></div>
     <div class="ct-note">전화번호를 누르면 바로 전화가 걸립니다. 계약만료일 30일 전부터 노란색, 지나면 빨간색으로 표시합니다. 위치를 매물에서 고르면 위치를 누를 때 그 매물 상세로 이동합니다.</div>
   </div>
@@ -144,7 +146,7 @@
   document.documentElement.style.setProperty('--ct-accent', ktop ? '#254767' : '#0f766e');
   if (ktop) document.querySelector('.logo-main').textContent = 'KTOP부동산 계약관리';
   var $ = function (id) { return document.getElementById(id); };
-  var state = { rows: [], filter: 'all', deal: 'all', q: '', editId: null, listings: [] };
+  var state = { rows: [], filter: 'all', deal: 'all', kind: 'all', q: '', editId: null, listings: [] };
   var DAY = 86400000;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -174,6 +176,7 @@
       if (hay.indexOf(q) < 0 && !(digits.length >= 3 && [r.lessor_phone, r.lessee_phone].join(' ').replace(/[^0-9 ]/g, '').indexOf(digits) >= 0)) return false;
     }
     if (state.deal !== 'all' && r.deal_type !== state.deal) return false;
+    if (state.kind !== 'all' && r.doc_type !== state.kind) return false;
     if (state.filter === 'ing') return r.status === 'ing';
     if (state.filter === 'done') return r.status === 'done';
     if (state.filter === 'soon') return r.status === 'ing' && !!endState(r);
@@ -188,6 +191,8 @@
       b.textContent = (b.dataset.d === 'all' ? '모든 거래' : b.dataset.d) + ' ' + n;
       b.classList.toggle('on', b.dataset.d === state.deal);
     });
+    $('ctDeal').value = state.deal; $('ctDeal').classList.toggle('on', state.deal !== 'all');
+    $('ctKind').value = state.kind; $('ctKind').classList.toggle('on', state.kind !== 'all');
     document.querySelectorAll('#ctBar .ct-chip[data-k]').forEach(function (b) {
       var base = { all: '전체', ing: '진행중', soon: '만기 임박', done: '종료' }[b.dataset.k];
       b.textContent = base + ' ' + cnt[b.dataset.k];
@@ -292,6 +297,8 @@
   $('ctOv').addEventListener('click', function (e) { if (e.target === this) closeForm(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeForm(); });
   $('ctBar').addEventListener('click', function (e) { var b = e.target.closest('.ct-chip'); if (!b) return; if (b.dataset.d) state.deal = b.dataset.d; else state.filter = b.dataset.k; render(); });
+  $('ctDeal').addEventListener('change', function () { state.deal = this.value; render(); });
+  $('ctKind').addEventListener('change', function () { state.kind = this.value; render(); });
   $('ctSearch').addEventListener('input', function () { state.q = this.value; render(); });
   $('ctList').addEventListener('click', function (e) { var b = e.target.closest('[data-act]'); if (!b) return; act(b.closest('.ct-row').dataset.id, b.dataset.act); });
 
