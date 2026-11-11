@@ -1,8 +1,9 @@
 /* ===== 추가 연락처 (하이탑 업무일지 11/10 수정과 동일 기능) ===== */
 .ac-editor { grid-column: 1 / -1; flex: 1 1 100%; width: 100%; display: flex; flex-direction: column; gap: 6px; }
 .ac-row { display: flex; gap: 6px; align-items: center; }
-.ac-row .ac-name { flex: 0 0 150px; width: 150px; min-width: 0; }
-.ac-row .ac-phone { flex: 0 0 170px; width: 170px; min-width: 0; }
+.ac-row { flex-wrap: wrap; }
+.ac-row .ac-name { flex: 1 1 110px; width: auto; min-width: 0; }
+.ac-row .ac-phone { flex: 1 1 130px; width: auto; min-width: 0; }
 .ac-remove { flex: 0 0 34px; height: 34px; border: 1px solid rgba(224, 82, 82, 0.4); border-radius: 8px; background: transparent; color: #b42318; cursor: pointer; }
 .ac-add { align-self: flex-start; padding: 5px 12px; border: 1px dashed currentColor; border-radius: 8px; background: transparent; color: inherit; font-weight: 700; font-size: 12px; cursor: pointer; opacity: 0.85; }
 .ac-add:disabled, .ac-remove:disabled { opacity: 0.4; cursor: default; }
