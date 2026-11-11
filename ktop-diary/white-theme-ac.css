@@ -224,3 +224,18 @@
 .ot-primary:hover:not(:disabled) { background: #2f5a85; color: #fff; }
 .wd-ongoing-wrap { width: 100%; min-width: 0; scroll-margin-top: 100px; }
 .wd-daily-panels { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* ===== 2026-11-11 달력 폭 키우고 새 메모 작성 칸 폭 줄임 + 새 메모 작성창 버튼 작게 (하이탑·케이탑 공통) ===== */
+@media (min-width: 1200px) {
+  .wd-main:not(.wd-main--week):not(.wd-main--month) { grid-template-columns: minmax(560px, 48fr) minmax(520px, 52fr); }
+  .wd-main:not(.wd-main--week):not(.wd-main--month) .wd-left-top { grid-template-columns: minmax(300px, 1.55fr) minmax(190px, 0.7fr); }
+}
+.wd-composer .wd-action-btn { min-height: 26px !important; padding: 3px 9px !important; font-size: 12px !important; }
+.wd-composer .wd-sticker-btn { min-height: 26px !important; padding: 3px 10px !important; font-size: 12px !important; }
+.wd-composer .wd-composer-lookup-btn { min-height: 28px !important; padding: 3px 10px !important; font-size: 12px !important; }
+.wd-composer .wd-attach-row button, .wd-composer .attachment-button-group button, .wd-composer .attachment-button-group label { min-height: 26px !important; padding: 3px 9px !important; font-size: 12px !important; }
+.wd-composer .wd-composer-bar .wd-btn { min-height: 30px !important; padding: 4px 14px !important; font-size: 12.5px !important; }
+.wd-composer .wd-composer-bar select { min-height: 30px !important; padding: 3px 8px !important; font-size: 12.5px !important; }
+.wd-composer .rc-row select, .wd-composer .rc-row button { min-height: 28px !important; padding: 3px 9px !important; font-size: 12px !important; }
+.wd-composer .ac-add, .wd-composer .ac-save { padding: 3px 10px !important; font-size: 11.5px !important; }
+.wd-composer .wd-link-clear-btn { min-height: 24px !important; padding: 2px 8px !important; font-size: 11.5px !important; }
