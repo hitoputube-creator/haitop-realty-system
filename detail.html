@@ -200,6 +200,11 @@ html[data-office-theme="ktop"] .apartment-listing-form .um-section-title .apt-ti
   .apartment-listing-form>.um-section.sale:first-child .umgrid>.area-dual{grid-column:span 3}
 }
 </style>
+<style id="editRowAlign">
+/* 수정 화면 기본정보 줄 맞춤 */
+#editModal .field:has(#edit_mapAddress),#editModal .field:has(#edit_complexName),#editModal .field:has(#edit_privateDetailAddress),#editModal .field:has(#edit_quickBuildingSelect){row-gap:4px!important}
+#editModal .field:has(#edit_quickBuildingSelect)>label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
 
@@ -334,7 +339,7 @@ html[data-office-theme="ktop"] .apartment-listing-form .um-section-title .apt-ti
         <input id="edit_apartmentHo" type="text" inputmode="numeric" placeholder="예) 1303" />
       </div>
       <div class="field edit-quick-building-field" data-hide-bld>
-        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 주소·건물명 자동입력</span></label>
+        <label title="선택하면 주소·건물명이 자동으로 입력됩니다">🏢 자주쓰는 운정역 상가·오피스텔</label>
         <select id="edit_quickBuildingSelect"></select>
       </div>
       <div class="field" data-hide-bld>
