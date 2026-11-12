@@ -1007,8 +1007,16 @@ input[type=file].hidden-file { display:none; }
     const totalF   = v(extra._totalFloor, item.shop_totalFloor, item.officetel_totalFloor);
 
     /* 공통 기본 */
-    addRow2(tbody, '소재지',  v(getAddress(),'—'), '매물구분', tl);
-    addRow2(tbody, '거래방식', deal || '—',         '가격',    price || '—');
+    const addrText = v(getAddress(),'—');
+    if (addrText.length > 18) {
+      /* 주소가 길면 한 줄을 통째로 써서 칸이 찌그러지지 않게 한다 */
+      addRowFull(tbody, '소재지', addrText);
+      addRow2(tbody, '매물구분', tl, '거래방식', deal || '—');
+      addRowFull(tbody, '가격', price || '—');
+    } else {
+      addRow2(tbody, '소재지',  addrText, '매물구분', tl);
+      addRow2(tbody, '거래방식', deal || '—',         '가격',    price || '—');
+    }
     if (areaStr || supStr)
       addRow2(tbody, getType() === 'apartment' ? '분양면적 (공급)' : '계약(공급)면적', supStr || '미확인', getAreaLabel(), areaStr || '미확인');
 
