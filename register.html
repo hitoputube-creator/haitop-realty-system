@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone3" />
-  <script src="assets/js/storage.js?v=20261112-presale2"></script>
+  <script src="assets/js/storage.js?v=20261112-presale3"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
@@ -139,6 +139,19 @@ html[data-office-theme="ktop"] #registerPage #saveSection{
   /* 주거용: 관리비·권리금 숨김, 아파트·오피스텔 외에는 분양가도 숨김 */
   body.resi-reg [data-price-fee] { display: none !important; }
   body.resi-nopresale [data-price-presale] { display: none !important; }
+</style>
+<style id="aptFormCompact">
+/* 아파트 입력 폼: 세로 공간 줄이기 (기본정보 3줄 배치, 제목줄 버튼) */
+.apartment-listing-form .um-section-title{padding:7px 14px}
+.apartment-listing-form .umgrid{padding:8px 10px;gap:6px 10px}
+.apartment-listing-form label{margin-bottom:3px}
+.apartment-listing-form .um-section-title.apt-title-tools{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.apartment-listing-form .um-section-title .apt-title-btn{background:#ffffff;color:var(--gold,#25675f);border:1px solid rgba(255,255,255,.75);border-radius:8px;cursor:pointer;font-weight:700}
+html[data-office-theme="ktop"] .apartment-listing-form .um-section-title .apt-title-btn{background:#ffffff;color:#233f5d;border:1px solid #9fb3cc}
+@media(min-width:1000px){
+  .apartment-listing-form>.um-section.sale:first-child .umgrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .apartment-listing-form>.um-section.sale:first-child .umgrid>.area-dual{grid-column:span 3}
+}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
