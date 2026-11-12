@@ -46,13 +46,16 @@
         (rows || []).filter(r => String(r.category || '').trim() === '아파트 분양권').forEach(r => {
           if (complexes.some(c => c.id === r.id)) return;
           const addr = typeof apartmentResourceAddresses === 'function' ? apartmentResourceAddresses(r) : {};
-          complexes.push({ id: r.id, name: r.name, village: OTHER_VILLAGE, apt: r.name, road: addr.roadAddress || '', jibun: addr.jibunAddress || '' });
+          complexes.push({ id: r.id, name: r.name, village: OTHER_VILLAGE, apt: r.name, presale: true, road: addr.roadAddress || '', jibun: addr.jibunAddress || '' });
         });
       }
     } catch (_) {}
   }
+  // 분양권 매물이면 「아파트 분양권」 자료 단지만, 일반 아파트면 그 외 단지만 보여 준다.
+  const wantPresale = () => { const r = $('apt_권리구분'); return !!r && r.value === '분양권'; };
+  const visible = () => complexes.filter(c => !!c.presale === wantPresale());
   function villages() {
-    const set = [...new Set(complexes.map(c => c.village))];
+    const set = [...new Set(visible().map(c => c.village))];
     return set.sort((a, b) => (a === OTHER_VILLAGE) - (b === OTHER_VILLAGE) || a.localeCompare(b, 'ko', { numeric: true }));
   }
   function option(value, text) {
@@ -64,7 +67,7 @@
     villageSel.value = keep;
   }
   function fillApts(village) {
-    const list = complexes.filter(c => c.village === village)
+    const list = visible().filter(c => c.village === village)
       .sort((a, b) => a.apt.localeCompare(b.apt, 'ko', { numeric: true }));
     aptSel.replaceChildren(option('', village ? '아파트 선택' : '마을을 먼저 선택'), ...list.map(c => option(c.id, c.apt)));
     aptSel.disabled = !village;
@@ -119,11 +122,25 @@
     const c = complexes.find(x => x.id === aptSel.value);
     if (c) pickComplex(c);
   }
+  // 매물 구분(일반 아파트/분양권)을 바꾸면 선택 목록도 그에 맞게 바꾼다.
+  function onModeChange() {
+    if (!built) return;
+    const keepCustom = villageSel.value === CUSTOM;
+    const cur = complexes.find(x => x.id === aptSel.value);
+    fillVillages();
+    if (keepCustom) { villageSel.value = CUSTOM; showCustom(true); return; }
+    if (cur && !!cur.presale === wantPresale()) { villageSel.value = cur.village; fillApts(cur.village); aptSel.value = cur.id; return; }
+    if (nameInput.value.trim()) { villageSel.value = CUSTOM; fillApts(''); showCustom(true); return; }
+    villageSel.value = ''; fillApts(''); showCustom(false);
+    setAddresses('', ''); currentResourceId = ''; clearAutoFilled();
+    const vs = villages();
+    if (wantPresale() && vs.length === 1) { villageSel.value = vs[0]; onVillageChange(); }
+  }
   // 다른 코드가 입력칸 값을 직접 채운 경우(지도·건물 자료에서 넘어온 경우 등) 선택 칸에 반영한다.
   function syncFromFields() {
     if (!built) return;
     const name = nameInput.value.trim();
-    const c = name ? complexes.find(x => norm(x.name) === norm(name)) : null;
+    const c = name ? visible().find(x => norm(x.name) === norm(name)) : null;
     fillVillages();
     if (c) {
       villageSel.value = c.village; fillApts(c.village); aptSel.value = c.id; showCustom(false);
@@ -316,6 +333,7 @@
     jibunInput.addEventListener('input', () => { $('mapAddress').value = jibunInput.value; });
 
     villageSel.addEventListener('change', onVillageChange);
+    if ($('apt_권리구분')) $('apt_권리구분').addEventListener('change', onModeChange);
     aptSel.addEventListener('change', onAptChange);
     nameInput.addEventListener('input', () => { const c = $('complexName'); if (c) c.value = nameInput.value; });
     ['apt_동', 'apt_호수'].forEach(id => $(id).addEventListener('input', () => scheduleAutoFill()));
