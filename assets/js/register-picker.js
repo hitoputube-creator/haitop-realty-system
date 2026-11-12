@@ -39,6 +39,17 @@
         };
       });
     } catch (_) { complexes = []; }
+    // 자료관리의 「아파트 분양권」 폴더 단지(준공 전 분양 단지)도 기타 단지로 고를 수 있게 한다.
+    try {
+      if (typeof getDriveResources === 'function') {
+        const rows = await getDriveResources();
+        (rows || []).filter(r => String(r.category || '').trim() === '아파트 분양권').forEach(r => {
+          if (complexes.some(c => c.id === r.id)) return;
+          const addr = typeof apartmentResourceAddresses === 'function' ? apartmentResourceAddresses(r) : {};
+          complexes.push({ id: r.id, name: r.name, village: OTHER_VILLAGE, apt: r.name, road: addr.roadAddress || '', jibun: addr.jibunAddress || '' });
+        });
+      }
+    } catch (_) {}
   }
   function villages() {
     const set = [...new Set(complexes.map(c => c.village))];
