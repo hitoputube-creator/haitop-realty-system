@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone4" />
-<script src="assets/js/storage.js?v=20261112-presale13"></script>
+<script src="assets/js/storage.js?v=20261112-presale14"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
@@ -1595,8 +1595,9 @@ function closeHomepageTab(tab) {
           const mids = Array.isArray(u.중도금) ? u.중도금 : [];
           const total = u.원분양가 != null ? u.원분양가 : u.분양가;
           const rows = [
-            [["기본 분양가",man(u.분양가)],["옵션비",man(u.옵션비)]],
-            [["원분양가(옵션 포함)",man(total)],["프리미엄",man(u.프리미엄)]]
+            [["기본 분양가",man(u.분양가)],["발코니 확장비",u.발코니확장 ? man(u.발코니확장비) : "확장 안 함"]],
+            [["별도 추가 옵션비",man(u.추가옵션비 != null ? u.추가옵션비 : (u.발코니확장비 == null ? u.옵션비 : null))],["총 공급가액",man(total)]],
+            [["프리미엄",man(u.프리미엄)]]
           ];
           if (u.계약금 != null && u.계약금 !== "") rows.push([["계약금",man(u.계약금) + (u.계약금_완료 ? " · 납부 완료" : " · 미납")]]);
           const midN = u.중도금회차 || mids.length;
@@ -2639,6 +2640,7 @@ function closeHomepageTab(tab) {
 </style>
 <script src="assets/js/listing-documents.js?v=20261110-docs3"></script>
 <script src="assets/js/owner-memo.js?v=20261112-om1"></script>
+<script src="assets/js/presale-price.js?v=20261112-pp1"></script>
 </body>
 </html>
 
