@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone4" />
-<script src="assets/js/storage.js?v=20261112-presale5"></script>
+<script src="assets/js/storage.js?v=20261112-presale6"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
@@ -204,6 +204,15 @@ html[data-office-theme="ktop"] .apartment-listing-form .um-section-title .apt-ti
 /* 수정 화면 기본정보 줄 맞춤 */
 #editModal .field:has(#edit_mapAddress),#editModal .field:has(#edit_complexName),#editModal .field:has(#edit_privateDetailAddress),#editModal .field:has(#edit_quickBuildingSelect){row-gap:4px!important}
 #editModal .field:has(#edit_quickBuildingSelect)>label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+<style id="aptMergeCss">
+/* 분양권 전매 정보를 거래·가격 박스 안에 합친 모양 */
+.apartment-listing-form .presale-merged{padding:0 10px 10px}
+.apartment-listing-form .presale-merged .umgrid{padding:6px 0 0}
+.apartment-listing-form .apt-subtitle{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 2px;padding:8px 0 4px;border-top:1px solid var(--border-slate,#7f95a9);font-weight:700;font-size:.85rem;color:var(--gold,#25675f)}
+html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle{color:#233f5d;border-top-color:#9fb3cc}
+.apartment-listing-form .apt-subtitle .apt-title-btn{background:#ffffff;color:var(--gold,#25675f);border:1px solid var(--gold,#25675f);border-radius:8px;cursor:pointer;font-weight:700}
+html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-btn{color:#233f5d;border-color:#9fb3cc}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
