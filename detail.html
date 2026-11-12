@@ -5,7 +5,7 @@
   <title>매물 상세 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone4" />
-<script src="assets/js/storage.js?v=20261112-presale3"></script>
+<script src="assets/js/storage.js?v=20261112-presale4"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
@@ -572,7 +572,7 @@ html[data-office-theme="ktop"] .apartment-listing-form .um-section-title .apt-ti
   </div>
 </div>
 
-<script src="assets/js/register-picker.js?v=20261112-presale-pick"></script>
+<script src="assets/js/register-picker.js?v=20261112-presale-pick2"></script>
 <script src="assets/js/kakao-config.js"></script>
 <script src="assets/js/road-address.js"></script>
 
@@ -1576,7 +1576,7 @@ function closeHomepageTab(tab) {
           [["거래구분",u.거래구분],["매매가",man(u.현_매매가격)]],
           [["보증금·전세가",man(u.현_보증금)],["월세",man(u.현_월세)]]
         ]),
-        ...(u.권리구분 === "분양권" ? [section("분양권 정보",(() => {
+        ...((u.권리구분 === "분양권" || u.분양권_전환일) ? [section(u.권리구분 === "분양권" ? "분양권 정보" : "분양권 정보 (입주 전 기록)",(() => {
           const pay = (amt, date, done) => amt == null || amt === "" ? "" : man(amt) + (date ? " · " + date : "") + (done ? " · 납부완료" : " · 예정");
           const mids = Array.isArray(u.중도금) ? u.중도금 : [];
           const total = u.원분양가 != null ? u.원분양가 : u.분양가;
@@ -1588,6 +1588,7 @@ function closeHomepageTab(tab) {
           mids.forEach((m,i) => rows.push([["중도금 "+(i+1)+"회",pay(m.금액,m.납부일,m.완료)]]));
           if (u.잔금 != null && u.잔금 !== "") rows.push([["잔금",pay(u.잔금,u.잔금_납부일,u.잔금_완료)]]);
           rows.push([["납부 완료 합계",man(u.납부금)]]);
+          if (u.분양권_전환일) rows.unshift([["입주 전환일",u.분양권_전환일]]);
           return rows;
         })())] : []),
         ...(memoRows.length ? [section("옵션·메모",memoRows)] : [])
