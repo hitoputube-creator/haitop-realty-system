@@ -691,6 +691,7 @@
     </div>
     <div class="building-location-links" id="buildingLocationLinks" aria-label="네이버에서 위치와 매물 보기"></div>
     <div style="display:flex;justify-content:flex-end;">
+      <button class="btn" id="presaleToAptBtn" style="font-size:0.82rem;margin-right:8px;display:none;" onclick="convertPresaleResource()">🏠 입주 완료 · 아파트 폴더로 전환</button>
       <button class="btn" style="font-size:0.82rem;" onclick="goOverview()">📝 단지 기본정보</button>
     </div>
   </div>
@@ -1348,6 +1349,14 @@ lbImg().addEventListener('touchend', () => {
 /* ══════════════════════════════════════════
    초기 로드
 ══════════════════════════════════════════ */
+async function convertPresaleResource() {
+  if (!confirm('입주가 끝나 이 단지를 「아파트」 폴더로 옮길까요?\n평면도와 배치도 등 자료는 그대로 따라갑니다.')) return;
+  try {
+    await updateDriveResource(buildingId, { category: '아파트' });
+    alert('아파트 폴더로 옮겼습니다.');
+    location.reload();
+  } catch (e) { alert('전환에 실패했습니다: ' + e.message); }
+}
 async function init() {
   if (!buildingId) { alert('건물 ID가 없습니다.'); goBack(); return; }
   try {
@@ -1356,6 +1365,7 @@ async function init() {
     if (building) {
       apartmentBuildingMode = isApartmentBuilding(building);
       window.__buildingCategory = String(building.category || '');
+      { const pb = document.getElementById('presaleToAptBtn'); if (pb && window.__buildingCategory.trim() === '아파트 분양권') pb.style.display = ''; }
       window.__unitKindFilter = /오피스텔상가/.test(window.__buildingCategory.replace(/\s+/g, '')) ? '상가' : '전체';
       if (!resourceScope) {
       await getDriveCategories();
