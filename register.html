@@ -1222,6 +1222,7 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
       additional_contacts: _additionalContacts,
       owner_phone2: _additionalContacts.length ? _additionalContacts[0].phone : '',
       owner_memo:   gv('owner_memo'),
+      ownerMemos:   (window.ownerMemoGet ? window.ownerMemoGet('') : undefined),
       optionDetails: gv('optionDetails'),
       remarks:       gv('remarks'),
       additionalMemos: gv('newMemo') ? [{ id: crypto.randomUUID(), text: gv('newMemo'), created_at: (gv('newMemoDate') ? new Date(gv('newMemoDate') + 'T00:00:00+09:00') : new Date()).toISOString() }] : [],
@@ -1663,6 +1664,7 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 
 </script>
 <script>window.registerCommercialPhase=CommercialPresaleUI.setup({host:document.getElementById("salePrice").closest(".field").parentElement,item:{presaleStatus:"분양중",shopKind:"기존상가"}});</script>
+<script src="assets/js/owner-memo.js?v=20261112-om1"></script>
 </body>
 </html>
 
