@@ -569,6 +569,34 @@ function setupApartmentListingForm(prefix, category2Id) {
   PA("중도금납부").addEventListener("change",()=>host._calcPresale());
   ["분양가","옵션비","계약금","중도금총액"].forEach(k=>PA(k).addEventListener("input",()=>host._calcPresale()));
   PA("계약금_완료").addEventListener("change",()=>host._calcPresale());
+  // ── 2차구분 목록에 「아파트 분양권」 항목을 보여 준다 (저장값은 그대로 2차구분=아파트, 매물 구분=분양권) ──
+  const cat2Sel=document.getElementById(category2Id);
+  function presaleOpt(){return cat2Sel?[...cat2Sel.options].find(o=>o.dataset.presale):null;}
+  function ensurePresaleOpt(){
+    if(!cat2Sel||presaleOpt())return;
+    const apt=[...cat2Sel.options].find(o=>o.value==="아파트");
+    if(!apt)return;
+    const o=document.createElement("option");o.value="아파트";o.dataset.presale="1";o.textContent="아파트 분양권";
+    apt.after(o);
+  }
+  host._syncCat2=()=>{
+    if(!cat2Sel||cat2Sel.value!=="아파트")return;
+    ensurePresaleOpt();
+    const wantPresale=rights.value==="분양권";
+    const target=[...cat2Sel.options].find(o=>o.value==="아파트"&&!!o.dataset.presale===wantPresale);
+    if(target&&cat2Sel.selectedIndex!==target.index)cat2Sel.selectedIndex=target.index;
+  };
+  if(cat2Sel){
+    new MutationObserver(()=>ensurePresaleOpt()).observe(cat2Sel,{childList:true});
+    ensurePresaleOpt();
+    cat2Sel.addEventListener("change",()=>{
+      if(cat2Sel.value!=="아파트")return;
+      const opt=cat2Sel.options[cat2Sel.selectedIndex];
+      const want=opt&&opt.dataset.presale?"분양권":"일반 아파트";
+      if(rights.value!==want){rights.value=want;rights.dispatchEvent(new Event("change",{bubbles:true}));}
+    });
+    rights.addEventListener("change",()=>host._syncCat2());
+  }
   PA("잔금").addEventListener("input",e=>{if(e.isTrusted){PA("잔금").dataset.manual=PA("잔금").value.trim()===""?"":"1";}host._calcPresale();});
   const period=document.getElementById(prefix+"apt_계약기간");
   const contractStart=document.getElementById(prefix+"apt_계약시작");
