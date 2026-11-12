@@ -87,6 +87,9 @@
         const py = m2 => (m2 / (400 / 121)).toFixed(2);
         put('분양_m2', r.area[0]); put('분양_평', py(r.area[0])); put('평형', py(r.area[0]) + '평');
         put('전용_m2', r.area[1]); put('전용_평', py(r.area[1]));
+      } else {
+        // 면적 자료가 없는 타입이면 앞에서 자동으로 넣은 면적을 비운다.
+        ['분양_m2', '분양_평', '평형', '전용_m2', '전용_평'].forEach(id => { const el = $(id); if (el && auto[id]) { el.value = ''; delete auto[id]; el.dispatchEvent(new Event('input', { bubbles: true })); } });
       }
       put('분양가', r.price);
       put('발코니확장비', ext ? r.balcony : '', true);
