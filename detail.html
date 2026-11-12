@@ -1123,6 +1123,7 @@ function closeHomepageTab(tab) {
       _ownerMemoVal = `[기존 연락처] ${_legacyContact}`;
     }
     document.getElementById("edit_owner_memo").value = _ownerMemoVal;
+    if (window.ownerMemoLoad) window.ownerMemoLoad("edit_", item);
     document.getElementById("edit_resource_id").value   = item.resource_id || "";
     // 공개
     document.getElementById("edit_is_public").checked = item.is_public === true;
@@ -2550,6 +2551,7 @@ function closeHomepageTab(tab) {
           additional_contacts: _editAdditionalContacts,
           owner_phone2:       _editAdditionalContacts.length ? _editAdditionalContacts[0].phone : "",
           owner_memo:         gv("edit_owner_memo"),
+          ownerMemos:         (window.ownerMemoGet ? window.ownerMemoGet("edit_") : undefined),
           stickers,
         });
 
@@ -2636,6 +2638,7 @@ function closeHomepageTab(tab) {
 @media (max-width:760px){.ld-panels{grid-template-columns:1fr}.ld-row{flex-wrap:wrap}.ld-meta{order:5}}
 </style>
 <script src="assets/js/listing-documents.js?v=20261110-docs3"></script>
+<script src="assets/js/owner-memo.js?v=20261112-om1"></script>
 </body>
 </html>
 
