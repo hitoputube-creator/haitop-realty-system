@@ -576,7 +576,7 @@ function setupApartmentListingForm(prefix, category2Id) {
       if(cat2Sel.value!=="아파트")return;
       const opt=cat2Sel.options[cat2Sel.selectedIndex];
       const want=opt&&opt.dataset.presale?"분양권":"일반 아파트";
-      if(rights.value!==want){rights.value=want;host._renderPresale();}
+      if(rights.value!==want){rights.value=want;rights.dispatchEvent(new Event("change",{bubbles:true}));}
     });
     rights.addEventListener("change",()=>host._syncCat2());
   }
@@ -722,6 +722,24 @@ function setupApartmentListingForm(prefix, category2Id) {
     }
   }
   {
+    // 입주 후 분양권 → 일반 아파트 전환 버튼 (누른 뒤 저장해야 반영된다)
+    const presaleTitle = host.querySelector("[data-presale-fields] .um-section-title");
+    if (presaleTitle) {
+      presaleTitle.classList.add("apt-title-tools");
+      const conv = document.createElement("button");
+      conv.type = "button"; conv.className = "btn btn-ghost apt-title-btn";
+      conv.style.cssText = "padding:3px 10px;font-size:.74rem;white-space:nowrap";
+      conv.textContent = "입주 완료 · 일반 아파트로 전환";
+      conv.addEventListener("click", () => {
+        if (!confirm("입주가 끝나 일반 아파트로 바꿀까요?\n분양가·계약금·중도금 등 분양권 정보는 기록으로 그대로 남습니다.\n바꾼 뒤 저장 버튼을 눌러야 반영됩니다.")) return;
+        rights.value = "일반 아파트";
+        rights.dispatchEvent(new Event("change", { bubbles: true }));
+        if (host._autoStatus) host._autoStatus.textContent = "일반 아파트로 바꿨습니다. 아파트 선택에서 실제 단지를 고르고 저장하세요.";
+      });
+      presaleTitle.appendChild(conv);
+    }
+  }
+  {
     // 건축물대장 조회 버튼은 기본정보 제목줄 오른쪽으로 옮겨 세로 공간을 줄인다.
     const basicTitle = host.querySelector(".um-section.sale .um-section-title");
     if (basicTitle && autoButton) {
@@ -833,7 +851,8 @@ function collectApartmentListingFields(prefix, original = {}) {
     분양가:num("분양가"), 옵션비:num("옵션비"), 원분양가:(value("분양가")===""&&value("옵션비")==="")?null:Math.round((Number(value("분양가")||0)+Number(value("옵션비")||0))*100)/100,
     프리미엄:num("프리미엄",true), 납부금:num("납부금"), 잔금:num("잔금"),
     계약금:num("계약금"), 계약금_납부일:value("계약금_납부일") || null, 계약금_완료:document.getElementById(prefix+"apt_계약금_완료").checked,
-    중도금:document.getElementById(prefix+"apartmentListingForm")._readInstallments(), 잔금_납부일:value("잔금_납부일") || null, 잔금_완료:document.getElementById(prefix+"apt_잔금_완료").checked,
+    중도금:document.getElementById(prefix+"apartmentListingForm")._readInstallments(),
+    분양권_전환일:(value("권리구분")!=="분양권" && source.권리구분==="분양권") ? new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Seoul"}) : (value("권리구분")==="분양권" ? null : (source.분양권_전환일 || null)), 잔금_납부일:value("잔금_납부일") || null, 잔금_완료:document.getElementById(prefix+"apt_잔금_완료").checked,
     평형:value("평형") || null, 타입:value("타입") || null, 분양_m2:supply, 전용_m2:exclusive,
     분양_평:supply == null ? null : supply/(400/121), 전용_평:exclusive == null ? null : exclusive/(400/121),
     거래구분:value("거래구분") || null, 매매유형:value("거래구분")==="매매" ? value("매매유형") || "일반매매" : "일반매매", 승계보증금:source.승계보증금 ?? null, 현_매매가격:num("매매가"), 현_보증금:num("보증금"), 현_월세:num("월세"),
