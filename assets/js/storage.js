@@ -727,6 +727,25 @@ function setupApartmentListingForm(prefix, category2Id) {
     if (memo) memo.closest(".field").hidden = apt;
     const genericMemoSection = document.getElementById(prefix + "genericMemoSection");
     if (genericMemoSection) genericMemoSection.hidden = apt;
+    // 아파트: 소유주 메모/특이사항 박스를 소유자 정보 바로 아래로 옮긴다. 다른 유형이면 내부전용 카드로 되돌린다.
+    {
+      const memoEl = document.getElementById(prefix + "owner_memo");
+      const memoField = memoEl && memoEl.closest(".field");
+      const ownerGrid = document.getElementById(prefix + "apt_소유자").closest(".umgrid");
+      if (memoField && ownerGrid) {
+        if (apt) {
+          if (memoField.parentNode !== ownerGrid) {
+            if (!host._memoHome) host._memoHome = { parent: memoField.parentNode, next: memoField.nextSibling };
+            memoField.classList.add("umfield");
+            memoField.style.gridColumn = "1 / -1";
+            ownerGrid.appendChild(memoField);
+          }
+        } else if (host._memoHome && memoField.parentNode !== host._memoHome.parent) {
+          memoField.classList.remove("umfield");
+          host._memoHome.parent.insertBefore(memoField, host._memoHome.next);
+        }
+      }
+    }
 
     for (const id of ["complexName", "apartmentDong", "apartmentHo", "dealType", "title"]) {
       const el = document.getElementById(prefix + id);
