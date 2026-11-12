@@ -564,7 +564,7 @@ function setupApartmentListingForm(prefix, category2Id) {
     input.addEventListener("input",upd);
     return upd;
   }
-  const wonUpdaters=["발코니확장비","추가옵션비","프리미엄"].map(k=>attachWon(PA(k)));
+  const wonUpdaters=["분양가","발코니확장비","추가옵션비","프리미엄","계약금","중도금총액","잔금","납부금"].map(k=>attachWon(PA(k)));
   function fillPaidOptions(keep){
     const n=Number(PA("중도금회차").value)||0,sel=PA("중도금납부");
     const want=keep!=null?Number(keep)||0:Number(sel.value)||0;
@@ -584,11 +584,11 @@ function setupApartmentListingForm(prefix, category2Id) {
     const down=PA("계약금").value.trim(),mid=PA("중도금총액").value.trim();
     if(total!=null&&!PA("잔금").dataset.manual)PA("잔금").value=String(Math.max(0,r2(total-nz(down)-nz(mid))));
     const n=Number(PA("중도금회차").value)||0,paidN=Number(PA("중도금납부").value)||0;
-    wonUpdaters.forEach(f=>f());
     if(down!==""||mid!==""){
       const paid=(PA("계약금_완료").checked?nz(down):0)+(n?nz(mid)*paidN/n:0);
       PA("납부금").value=String(r2(paid));
     }
+    wonUpdaters.forEach(f=>f());
   };
   PA("중도금회차").addEventListener("change",()=>{fillPaidOptions();host._calcPresale();});
   PA("중도금납부").addEventListener("change",()=>host._calcPresale());
