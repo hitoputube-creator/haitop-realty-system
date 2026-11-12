@@ -153,6 +153,16 @@ html[data-office-theme="ktop"] .apartment-listing-form .um-section-title .apt-ti
   .apartment-listing-form>.um-section.sale:first-child .umgrid>.area-dual{grid-column:span 3}
 }
 </style>
+<style id="regRowAlign">
+/* 등록 화면 기본정보: 자주쓰는 상가·지도검색주소·단지명·호수 줄 맞춤 */
+@media(min-width:901px){
+  #registerPage .form-grid-3:has(#quickBuildingSelect)>.field>label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #registerPage .form-grid-3:has(#quickBuildingSelect) :is(#quickBuildingSelect,#mapAddress,#lookupBuildingBtn,#complexName,#privateDetailAddress){height:40px;box-sizing:border-box}
+
+  #registerPage .form-grid-3:has(#quickBuildingSelect) .field:has(#mapAddress)>div{align-items:flex-start!important}
+  #registerPage .form-grid-3:has(#quickBuildingSelect)>.field{row-gap:4px!important}
+}
+</style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
 <div class="page" id="registerPage">
@@ -236,7 +246,7 @@ html[data-office-theme="ktop"] .apartment-listing-form .um-section-title .apt-ti
     </div>
     <div class="form-grid-3" style="margin-top:10px;">
       <div class="field" data-hide-bld style="grid-column:1 / -1;">
-        <label>🏢 자주쓰는 운정역 상가·오피스텔 <span style="font-size:0.78rem;color:#888;">선택 시 주소·건물명 자동입력</span></label>
+        <label title="선택하면 주소·건물명이 자동으로 입력됩니다">🏢 자주쓰는 운정역 상가·오피스텔</label>
         <select id="quickBuildingSelect"></select>
       </div>
       <div class="field field-span2">
