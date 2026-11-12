@@ -18,7 +18,7 @@
       '.om-wrap{display:flex;flex-direction:column;gap:8px}',
       '.om-row{display:flex;gap:8px;align-items:flex-start}',
       '.om-row .om-date{flex:0 0 150px;width:150px;min-width:0}',
-      '.om-row .om-new{flex:1 1 auto;min-width:0;min-height:44px;height:48px;resize:vertical}',
+      '.om-row .om-new{flex:1 1 auto;min-width:0;min-height:88px;height:96px;resize:vertical}',
       '.om-row .om-add{flex:0 0 auto;height:38px;padding:0 14px;font-size:.82rem;white-space:nowrap}',
       '.om-list{display:flex;flex-direction:column;gap:4px}',
       '.om-item{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border:1px solid rgba(127,149,169,.45);border-radius:8px;font-size:.84rem;line-height:1.45}',
