@@ -721,6 +721,16 @@ function setupApartmentListingForm(prefix, category2Id) {
       document.getElementById(prefix + "apt_아파트명").value = document.getElementById(prefix + "complexName").value;
     }
   }
+  {
+    // 건축물대장 조회 버튼은 기본정보 제목줄 오른쪽으로 옮겨 세로 공간을 줄인다.
+    const basicTitle = host.querySelector(".um-section.sale .um-section-title");
+    if (basicTitle && autoButton) {
+      basicTitle.classList.add("apt-title-tools");
+      autoButton.classList.add("apt-title-btn");
+      autoButton.style.cssText = "padding:3px 10px;font-size:.74rem;white-space:nowrap";
+      basicTitle.appendChild(autoButton);
+    }
+  }
   document.getElementById(category2Id).addEventListener("change", render);
   fillApartmentListingForm(prefix, {}, true);
   render();
