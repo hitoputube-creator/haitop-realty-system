@@ -544,6 +544,27 @@ function setupApartmentListingForm(prefix, category2Id) {
   const PA=id=>document.getElementById(prefix+"apt_"+id);
   const nz=v=>{const n=Number(v);return v===""||v==null||!Number.isFinite(n)?0:n;};
   const r2=n=>Math.round(n*100)/100;
+  // 금액 입력칸: 숫자를 넣으면 바로 뒤에 「만원」이 붙어 보인다 (표시만 하고 값은 숫자 그대로)
+  function attachWon(input){
+    if(!input)return()=>{};
+    const wrap=document.createElement("div");wrap.style.cssText="position:relative";
+    input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
+    const sfx=document.createElement("span");sfx.className="amt-suffix";sfx.textContent="만원";
+    sfx.style.cssText="position:absolute;top:50%;transform:translateY(-50%);pointer-events:none;color:#68788a;font-weight:600;display:none;white-space:nowrap";
+    wrap.appendChild(sfx);
+    const g=document.createElement("canvas").getContext("2d");
+    const upd=()=>{
+      const v=input.value;
+      if(v===""){sfx.style.display="none";return;}
+      const cs=getComputedStyle(input);
+      g.font=cs.fontStyle+" "+cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;
+      sfx.style.left=(parseFloat(cs.paddingLeft)+parseFloat(cs.borderLeftWidth)+g.measureText(v).width+4)+"px";
+      sfx.style.fontSize=cs.fontSize;sfx.style.display="";
+    };
+    input.addEventListener("input",upd);
+    return upd;
+  }
+  const wonUpdaters=["발코니확장비","추가옵션비","프리미엄"].map(k=>attachWon(PA(k)));
   function fillPaidOptions(keep){
     const n=Number(PA("중도금회차").value)||0,sel=PA("중도금납부");
     const want=keep!=null?Number(keep)||0:Number(sel.value)||0;
@@ -563,6 +584,7 @@ function setupApartmentListingForm(prefix, category2Id) {
     const down=PA("계약금").value.trim(),mid=PA("중도금총액").value.trim();
     if(total!=null&&!PA("잔금").dataset.manual)PA("잔금").value=String(Math.max(0,r2(total-nz(down)-nz(mid))));
     const n=Number(PA("중도금회차").value)||0,paidN=Number(PA("중도금납부").value)||0;
+    wonUpdaters.forEach(f=>f());
     if(down!==""||mid!==""){
       const paid=(PA("계약금_완료").checked?nz(down):0)+(n?nz(mid)*paidN/n:0);
       PA("납부금").value=String(r2(paid));
