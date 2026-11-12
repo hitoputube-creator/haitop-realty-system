@@ -746,6 +746,21 @@ function setupApartmentListingForm(prefix, category2Id) {
         }
       }
     }
+    // 아파트는 단지를 고르면 자료실이 자동으로 연결되므로 「드라이브 자료 연결」 칸과 빈 내부전용 박스를 숨긴다.
+    {
+      const driveSel = document.getElementById(prefix + "resource_id");
+      const driveField = driveSel && driveSel.closest(".drive-link-inline");
+      if (driveField) {
+        driveField.style.display = apt ? "none" : "";
+        const card = driveField.closest("section.card");
+        const box = card || document.getElementById(prefix + "internalInfoGrid");
+        if (box) {
+          box.style.display = apt ? "none" : "";
+          const t = box.previousElementSibling;
+          if (!card && t && t.classList.contains("modal-section-title")) t.style.display = apt ? "none" : "";
+        }
+      }
+    }
 
     for (const id of ["complexName", "apartmentDong", "apartmentHo", "dealType", "title"]) {
       const el = document.getElementById(prefix + id);
