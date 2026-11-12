@@ -279,7 +279,7 @@
       return '<div class="ct-row" data-id="' + esc(r.id) + '">' +
         '<div class="ct-small ct-kind" data-f="kind" style="font-size:13px;color:#1d2b2a">' + esc(r.doc_type || '-') + '</div>' +
         '<div data-f="deal"><span class="ct-deal ' + ({ '월세': 'd-wol', '전세': 'd-jeon', '매매': 'd-mae' }[r.deal_type] || 'd-etc') + '" style="margin-right:0">' + esc(r.deal_type || '기타') + '</span></div>' +
-        '<div class="c-loc" data-f="loc">' + loc + tag + (r.memo ? '<div class="ct-small">' + esc(r.memo) + '</div>' : '') + '</div>' +
+        '<div class="c-loc" data-f="loc">' + loc + tag + (function () { var seg = String(r.memo || '').split(' · ').filter(function (x) { return !/^\s*(잔금|만료일 추정)/.test(x); }).join(' · '); return seg ? '<div class="ct-small">' + esc(seg) + '</div>' : ''; })() + '</div>' +
         '<div class="ct-num" data-f="amt">' + esc(r.amount) + '</div>' +
         '<div class="ct-num" data-f="cdate" data-l="계약일">' + contractCell(r) + '</div>' +
         '<div class="ct-num" data-f="start" data-l="임대차 시작">' + startCell(r) + '</div>' +
