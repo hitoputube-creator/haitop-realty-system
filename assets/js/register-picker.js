@@ -104,6 +104,7 @@
     if (villageSel.value === CUSTOM) {
       showCustom(true);
       nameInput.value = ''; currentResourceId = '';
+      if ($('resource_id')) $('resource_id').value = '';
       setAddresses('', '');
       clearAutoFilled();
       nameInput.focus();
@@ -115,6 +116,7 @@
     nameInput.value = '';
     setAddresses('', '');
     currentResourceId = '';
+    if ($('resource_id')) $('resource_id').value = '';
     clearAutoFilled();
     if (list.length === 1) { aptSel.value = list[0].id; pickComplex(list[0]); }
   }
