@@ -267,6 +267,13 @@ input[type=file].hidden-file { display:none; }
   #photo-area, :is(#contact-area,#contact-area-ktop), #info-table-area, #summary-area, #title-area, #desc-area { page-break-inside:avoid; }
 }
 
+/* ── 평면도(타입) 자동 삽입 ── */
+#plan-area { margin-top:18px; }
+#plan-box { border:1px solid #779a94; border-radius:10px; padding:8px; text-align:center; background:#fff; }
+#plan-box img { max-width:100%; max-height:9.4cm; object-fit:contain; display:block; margin:0 auto; }
+#plan-cap { font-size:12px; font-weight:600; color:#40525f; margin-top:6px; }
+@media print { #plan-area { page-break-inside:avoid; break-inside:avoid; } #plan-box img { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+
 /* ── 설명서에 넣을 사진 2장 고르기 ── */
 #pick-overlay { position:fixed; inset:0; background:#ffffff; z-index:300; display:flex; align-items:center; justify-content:center; padding:16px; }
 #pick-box { background:#fff; border-radius:14px; width:min(640px,100%); max-height:90vh; overflow:auto; padding:18px 18px 16px; box-shadow:0 10px 40px rgba(35,76,73,0.08); }
@@ -583,6 +590,12 @@ input[type=file].hidden-file { display:none; }
         <div id="resource-card"></div>
       </div>
 
+      <!-- ⑤-2 평면도 (아파트: 연결·일치하는 단지 자료의 타입 평면도) -->
+      <div id="plan-area" style="display:none;">
+        <div class="section-title"><span>📐</span> 평면도</div>
+        <div id="plan-box"></div>
+      </div>
+
       <!-- ⑥ 사진/도면 -->
       <div id="photo-area">
         <div class="section-title"><span>📷</span> 사진 · 도면</div>
@@ -770,7 +783,7 @@ input[type=file].hidden-file { display:none; }
   }
 
   let allDriveResources = [];
-  if (item.resource_id || item.resourceId) {
+  if (item.resource_id || item.resourceId || item.type === 'apartment' || item.category2 === '아파트') {
     try {
       allDriveResources = await getDriveResources();
     } catch(e) {
@@ -818,7 +831,8 @@ input[type=file].hidden-file { display:none; }
   function getAddress() {
     const res = getLinkedResource();
     return v(extra._address, item.roadAddress, item.mapAddress, res && res.address,
-      item.publicAddress, item.displayAddress, item.address);
+      item.publicAddress, item.displayAddress, item.address,
+      planRes && typeof apartmentResourceAddresses === 'function' ? (apartmentResourceAddresses(planRes).roadAddress || apartmentResourceAddresses(planRes).jibunAddress) : '');
   }
 
   function getDealType() {
@@ -901,16 +915,16 @@ input[type=file].hidden-file { display:none; }
     const t = getType();
     if (t && t.startsWith('land')) return v(extra._areaPy, item.areaPy, item.landAreaPy, item.land_area_py);
     if (t === 'factory' || t === 'warehouse') return v(extra._areaPy, item.totalFloorAreaPy, item.buildingAreaPy, item.factory_buildArea_py);
-    return v(extra._areaPy, item.exclusiveAreaPy, item.areaPy, item.shop_area_py, item.officetel_area_py, item.factory_buildArea_py, item.land_area_py);
+    return v(extra._areaPy, item.exclusiveAreaPy, item.areaPy, item.shop_area_py, item.officetel_area_py, item.factory_buildArea_py, item.land_area_py, planInfo && planInfo.exclusivePy);
   }
   function getAreaM2() {
     const t = getType();
     if (t && t.startsWith('land')) return v(extra._areaM2, item.areaM2, item.landAreaM2, item.land_area_m2);
     if (t === 'factory' || t === 'warehouse') return v(extra._areaM2, item.totalFloorAreaM2, item.buildingAreaM2, item.factory_buildArea_m2);
-    return v(extra._areaM2, item.exclusiveAreaM2, item.areaM2, item.shop_area_m2, item.officetel_area_m2, item.factory_buildArea_m2, item.land_area_m2);
+    return v(extra._areaM2, item.exclusiveAreaM2, item.areaM2, item.shop_area_m2, item.officetel_area_m2, item.factory_buildArea_m2, item.land_area_m2, planInfo && planInfo.exclusiveM2);
   }
-  function getSupplyPy() { return v(extra._supplyPy, item.supplyAreaPy, item.shop_supply_py, item.officetel_supply_py); }
-  function getSupplyM2() { return v(extra._supplyM2, item.supplyAreaM2, item.shop_supply_m2, item.officetel_supply_m2); }
+  function getSupplyPy() { return v(extra._supplyPy, item.supplyAreaPy, item.shop_supply_py, item.officetel_supply_py, planInfo && planInfo.supplyPy); }
+  function getSupplyM2() { return v(extra._supplyM2, item.supplyAreaM2, item.shop_supply_m2, item.officetel_supply_m2, planInfo && planInfo.supplyM2); }
   function getFloor()  { return v(extra._floor, item.floorInfo, item.shop_floor, item.officetel_floor); }
   function getAvailable() { return v(extra._available, item.moveInDate, item.availableDate, item.shop_available, item.officetel_available); }
   function getParking()   { return v(extra._parking, item.parkingCount, item.shop_parking, item.officetel_parking); }
@@ -978,7 +992,7 @@ input[type=file].hidden-file { display:none; }
     const tbody = document.getElementById('info-tbody');
     tbody.innerHTML = '';
     const t   = getType();
-    const tl  = getTypeLabel(t);
+    const tl  = getTypeLabel(t) + (presaleNow() ? ' 분양권' : '');
     const deal     = getDealType();
     const price    = getPriceDisplay();
     const areaStr  = fmtArea(getAreaPy(), getAreaM2());
@@ -1066,12 +1080,57 @@ input[type=file].hidden-file { display:none; }
   /* ══════════════════════════
      전체 렌더 (초기 + 저장 후)
   ══════════════════════════ */
+  /* ══════════════════════════
+     평면도(타입) 자동 삽입 — 연결된(또는 이름이 같은) 단지 자료에서 매물 타입과 같은 평면도를 찾는다
+  ══════════════════════════ */
+  let planInfo = null, planRes = null;
+  const normT = s => String(s || '').toUpperCase().replace(/\s+/g, '').replace(/(타입|TYPE|형|㎡)/g, '');
+  const normN = s => String(s || '').replace(/\(.*?\)/g, '').replace(/\s+/g, '');
+  function aptUnit() { return typeof apartmentSource === 'function' ? apartmentSource(item) : {}; }
+  function presaleNow() { return aptUnit().권리구분 === '분양권'; }
+  function findPlanResource() {
+    const linked = getLinkedResource();
+    if (linked) return linked;
+    const nm = normN(item.complexName || item.buildingName || aptUnit().아파트명 || '');
+    if (nm.length < 4) return null;
+    return allDriveResources.find(r => {
+      if (!/아파트/.test(String(r.category || ''))) return false;
+      const rn = normN(r.name);
+      return rn && (rn === nm || rn.includes(nm) || nm.includes(rn));
+    }) || null;
+  }
+  async function loadPlan() {
+    try {
+      if (!(getType() === 'apartment' || item.category2 === '아파트')) return;
+      planRes = findPlanResource();
+      if (!planRes) return;
+      const type = normT(item.apartmentType || aptUnit().타입 || '');
+      if (!type) return;
+      const floors = await getBuildingFloors(planRes.id);
+      const plan = (floors || []).find(f => normT(f.floor_number).split('/').includes(type));
+      if (!plan || !plan.cloudinary_url || /\.pdf(\?|$)/i.test(plan.cloudinary_url)) return;
+      const sm = Number(plan.supply_area_m2) || 0, em = Number(plan.exclusive_area_m2) || 0;
+      planInfo = { url: plan.cloudinary_url, type: String(plan.floor_number), supplyM2: sm || null, exclusiveM2: em || null,
+        supplyPy: sm ? sm / M2_PER_PY : null, exclusivePy: em ? em / M2_PER_PY : null };
+    } catch (e) { console.warn('평면도를 불러오지 못했습니다:', e.message || e); }
+  }
+  function renderPlan() {
+    const area = document.getElementById('plan-area');
+    if (!area) return;
+    if (!planInfo) { area.style.display = 'none'; return; }
+    area.style.display = '';
+    const sup = fmtArea(planInfo.supplyPy, planInfo.supplyM2), exc = fmtArea(planInfo.exclusivePy, planInfo.exclusiveM2);
+    const cap = [planInfo.type + '타입 평면도', sup ? '분양면적 ' + sup : '', exc ? '전용면적 ' + exc : ''].filter(Boolean).join(' · ');
+    document.getElementById('plan-box').innerHTML = '<img src="' + esc(planInfo.url) + '" alt="' + esc(planInfo.type) + '타입 평면도"><div id="plan-cap">' + esc(cap) + '</div>';
+  }
+
   function renderAll() {
     renderTitle();
     renderSummary();
     renderInfoTable();
     renderDescription();
     renderResource();
+    renderPlan();
     renderPhotos();
   }
 
@@ -1460,6 +1519,7 @@ input[type=file].hidden-file { display:none; }
      초기 렌더
   ══════════════════════════ */
   loadPhotos();
+  await loadPlan();
   renderAll();
 
   document.getElementById('loadingState').style.display = 'none';
