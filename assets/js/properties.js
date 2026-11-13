@@ -285,6 +285,29 @@ function formatSeanGoLine(item) {
   return `세안고 월세 ${rentMan.toLocaleString("ko-KR")}만원`;
 }
 
+// 선택매물 가격 칸에는 저장된 분양권 금액을 매매가 아래에 함께 표시한다.
+function formatSelectedPriceDetails(item) {
+  const u = (typeof apartmentSource === "function") ? apartmentSource(item) : (item.apartmentUnitData || item.import_unit_snapshot || {});
+  const present = value => value !== null && value !== undefined && value !== "" && Number.isFinite(Number(String(value).replace(/,/g, "")));
+  const money = value => {
+    const amount = Number(String(value).replace(/,/g, ""));
+    const absolute = Math.abs(amount);
+    const eok = Math.floor(absolute / 10000);
+    const man = Number((absolute - eok * 10000).toFixed(2));
+    const parts = [];
+    if (eok) parts.push(`${eok.toLocaleString("ko-KR")}억`);
+    if (man || !eok) parts.push(`${man.toLocaleString("ko-KR", { maximumFractionDigits: 2 })}만원`);
+    return (amount < 0 ? "-" : "") + parts.join(" ");
+  };
+  const option = present(u.옵션비) ? u.옵션비
+    : (present(u.발코니확장비) || present(u.추가옵션비))
+      ? Number(u.발코니확장비 || 0) + Number(u.추가옵션비 || 0)
+      : null;
+  return [["분양가", u.분양가], ["옵션비", option], ["프리미엄", u.프리미엄]]
+    .filter(([, value]) => present(value))
+    .map(([label, value]) => `${label} ${money(value)}`);
+}
+
 // 타입란: 아파트 타입(예: 55A/AS)이 있으면 그 값을, 없으면 평형을 보여준다.
 function getListingTypeText(item) {
   const u = (typeof apartmentSource === "function") ? apartmentSource(item) : {};
@@ -306,6 +329,7 @@ function renderPreview() {
   const rows = list.map((item, i) => {
     const isDone = item.status === "거래완료";
     const seanGo = formatSeanGoLine(item);
+    const priceDetails = formatSelectedPriceDetails(item);
     const memoLines = formatMemoLines(item);
     const owner = item.owner_name || item.quick_owner || "";
     const contact = item.owner_phone1 || item.owner_contact || item.quick_contact || "";
@@ -318,7 +342,7 @@ function renderPreview() {
       <td><span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:rgba(37,103,95,0.1);color:var(--gold);">${escapeHtml(normalizeListingCategory(item).subLabel || getListingCategoryLabel(item))}</span><span class="selected-print-date">${escapeHtml(formatRegistrationDate(item))}</span></td>
       <td style="font-weight:500;">${formatSelectedPrintAddress(item)}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(getListingTypeText(item))}</td>
-      <td style="font-size:0.82rem;">${escapeHtml(formatPrice(item))}${seanGo ? `<span class="selected-print-subline">${escapeHtml(seanGo)}</span>` : ""}</td>
+      <td style="font-size:0.82rem;">${escapeHtml(formatPrice(item))}${priceDetails.map(line => `<span class="selected-print-subline">${escapeHtml(line)}</span>`).join("")}${seanGo ? `<span class="selected-print-subline">${escapeHtml(seanGo)}</span>` : ""}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);">${owner}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap;">${contact}</td>
       <td style="font-size:0.78rem;color:var(--text-muted);">
@@ -335,7 +359,7 @@ function renderPreview() {
         <th style="width:64px;">유형</th>
         <th style="width:128px;">주소</th>
         <th style="width:34px;">타입</th>
-        <th style="width:128px;">가격</th>
+        <th style="width:160px;">가격</th>
         <th style="width:68px;">소유주</th>
         <th style="width:120px;">연락처</th>
         <th>메모</th>
