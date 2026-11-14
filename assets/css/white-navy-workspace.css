@@ -144,6 +144,9 @@ html[data-office-theme='ktop'] .resources-page .listing-card button[onclick^="op
 html[data-office-theme='ktop'] .resources-page .listing-card button[onclick^="deleteDriveItem"]{background:#fff0ee!important;color:#b42318!important;border-color:#efcbc5!important}
 }
 
+/* KTOP: 조건으로 매물 찾기 바(property-finder.js)의 주 버튼도 블루로 맞춘다. */
+html[data-office-theme='ktop'] .pf-btn.main{background:#1767d2!important;color:#fff!important;border-color:#1767d2!important;box-shadow:0 3px 9px rgba(23,103,210,.12)!important}
+
 /* KTOP registration and edit surfaces use the property-management navy header. */
 @media screen {
 html[data-office-theme='ktop'] body.property-form-page{background:#f3f5f9!important}
