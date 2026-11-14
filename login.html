@@ -10,15 +10,22 @@
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
 <script src="assets/js/office-brand.js?v=20261108-ktop-match1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    .login-logo{background:#0A1F5C;color:#C9A84C;border:1px solid rgba(201,168,76,0.5)}
+    .login-btn{background:#0A1F5C!important}
+    .login-title{color:#162041!important}
+    html[data-office-theme='ktop'] .login-logo{background:#1767d2;color:#fff;border-color:#1767d2}
+    html[data-office-theme='ktop'] .login-btn{background:#1767d2!important}
+  </style>
 </head>
 <body style="margin:0;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;color:var(--txt);">
   <div style="width:100%;max-width:320px;">
     <div style="text-align:center;margin-bottom:36px;">
-      <div style="width:56px;height:56px;background:linear-gradient(135deg,#25675f,#25675f);border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;border:1px solid rgba(37,103,95,0.5);;color:#ffffff">🏢</div>
-      <div id="officeBrand" style="font-size:1.4rem;font-weight:800;color:var(--gold);letter-spacing:0.5px;">HITOP 부동산</div>
+      <div class="brand-mark login-logo" style="width:56px;height:56px;border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;">HT</div>
+      <div id="officeBrand" class="login-title" style="font-size:1.4rem;font-weight:800;letter-spacing:0.5px;">HITOP 부동산</div>
       <div style="font-size:0.8rem;color:var(--muted);margin-top:4px;">관리자 로그인</div>
     </div>
-    <div id="resetSuccessBanner" style="display:none;font-size:0.82rem;color:var(--gold);text-align:center;background:var(--gold2);border:1px solid rgba(37,103,95,0.5);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
+    <div id="resetSuccessBanner" class="login-title" style="display:none;font-size:0.82rem;text-align:center;background:var(--gold2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
       비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.
     </div>
 
@@ -35,7 +42,7 @@
       <input id="loginPassword" type="password" placeholder="비밀번호" autocomplete="current-password"
         style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;border:1px solid var(--line);border-radius:10px;color:var(--txt);outline:none;margin-bottom:10px;border-color:transparent;box-shadow:var(--field-depth,inset 0 1px 2px rgba(35,76,73,.04),0 1px 3px rgba(35,76,73,.035));" />
       <div id="loginError" style="font-size:0.82rem;color:var(--danger);text-align:center;min-height:20px;margin-bottom:10px;"></div>
-      <button id="loginBtn" style="width:100%;padding:14px;background:var(--gold);color:#ffffff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">로그인</button>
+      <button id="loginBtn" class="login-btn" style="width:100%;padding:14px;color:#ffffff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">로그인</button>
       <button id="forgotPwLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:var(--sub);font-size:0.8rem;cursor:pointer;margin-top:6px;">비밀번호를 잊으셨나요?</button>
     </div>
 
@@ -43,14 +50,15 @@
       <div style="font-size:0.8rem;color:var(--sub);text-align:center;margin-bottom:14px;line-height:1.5;">
         위 이메일로 비밀번호 재설정 링크를 보내드립니다.
       </div>
-      <div id="forgotStatus" style="font-size:0.82rem;color:var(--gold);text-align:center;min-height:20px;margin-bottom:10px;"></div>
-      <button id="sendResetBtn" type="button" style="width:100%;padding:14px;background:var(--gold);color:#ffffff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">재설정 메일 보내기</button>
+      <div id="forgotStatus" style="font-size:0.82rem;color:#162041;text-align:center;min-height:20px;margin-bottom:10px;"></div>
+      <button id="sendResetBtn" type="button" class="login-btn" style="width:100%;padding:14px;color:#ffffff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">재설정 메일 보내기</button>
       <button id="backToLoginLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:var(--sub);font-size:0.8rem;cursor:pointer;margin-top:6px;">로그인으로 돌아가기</button>
     </div>
   </div>
 
   <script>
     (function () {
+      document.documentElement.dataset.officeTheme = OfficeConfig.id;
       // 재설정 링크로 사용할 고정 주소 — Supabase 프로젝트의 Auth 리다이렉트 허용 목록에도
       // 이 주소가 등록되어 있어야 실제로 reset-password.html로 이동한다.
       const RESET_REDIRECT_URL = OfficeConfig.urlFor("reset-password.html");
@@ -150,7 +158,7 @@
         sendResetBtnEl.disabled = false;
         sendResetBtnEl.textContent = "재설정 메일 보내기";
         // 존재하지 않는 이메일이어도 동일한 안내만 보여준다(이메일 존재 여부 노출 방지).
-        forgotStatusEl.style.color = error ? "#e05252" : "#25675f";
+        forgotStatusEl.style.color = error ? "#e05252" : "#162041";
         forgotStatusEl.textContent = error
           ? "메일 발송에 실패했습니다. 잠시 후 다시 시도하세요."
           : "입력하신 이메일로 재설정 링크를 보냈습니다. 메일함을 확인해주세요.";
