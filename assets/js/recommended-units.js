@@ -31,8 +31,8 @@
   // 금액은 만원 기준. 분양금액 등은 원 단위로 저장된 호실이 많아서, 만원으로 보기엔 비정상적으로 크면 원 단위로 보고 환산한다.
   function manwon(v, limit) { const n = num(v); return n === null ? null : (n >= limit ? n / 10000 : n); }
   function price(u) { return manwon(u.현_매매가격 ?? u.분양금액, 1000000); }      // 100억(만원 기준) 이상이면 원 단위
-  function deposit(u) { return manwon(u.현_보증금 ?? u.보증금, 1000000); }
-  function rent(u) { return manwon(u.현_월세 ?? u.월차임, 100000); }               // 월 10억(만원 기준) 이상이면 원 단위
+  function deposit(u) { return manwon(CommercialPriceCore.rental(u,true).deposit, 1000000); }
+  function rent(u) { return manwon(CommercialPriceCore.rental(u,true).rent, 100000); }               // 월 10억(만원 기준) 이상이면 원 단위
   function roomLabel(r) { r = String(r || ''); return r.endsWith('호') ? r : r + '호'; }
   function yieldOf(u) {                  // 저장된 수익률이 있으면 그 값, 없으면 단순수익률 자동 계산
     const raw = String(u.수익률 ?? '').trim();                      // 전화번호 같은 숫자가 아닌 값은 무시하고 계산한다

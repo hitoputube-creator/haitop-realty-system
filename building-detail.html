@@ -626,7 +626,7 @@
 
 <style>.units-tbl .profit-recommended-row td{background:rgba(37,103,95,0.11)}.units-tbl .profit-recommended-row td:first-child{box-shadow:inset 3px 0 rgba(37,103,95,0.08)}.units-tbl .profit-recommended-row:hover td{background:rgba(37,103,95,0.17)}</style>
 <style>#unitModal #unitAdditionalNotes #u_추가메모{min-height:140px;height:140px;resize:vertical}.sbadge.미확인{background:rgba(148,163,184,.15);color:#234c49;border:1px solid rgba(148,163,184,.35)}</style>
-<script src="assets/js/commercial-price-core.js?v=20261013-phase1"></script>
+<script src="assets/js/commercial-price-core.js?v=20261116-rental1"></script>
 <style>.presale-switch[hidden],.presale-switch [hidden]{display:none!important}.presale-switch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.presale-switch button{padding:8px 12px;border:1px solid #697288;border-radius:8px;background:#ffffff;color:#234c49;cursor:pointer}.presale-switch button.active{background:#25675f;border-color:#5f8780;color:#ffffff}.presale-hidden{display:none!important}</style>
 <style>.unit-phase-label{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.76rem;font-weight:700}.unit-phase-label.ongoing{color:#25675f;background:rgba(37,103,95,0.12)}.unit-phase-label.completed{color:#aebbd0;background:rgba(147,170,205,.13)}</style>
 <style>
@@ -1001,7 +1001,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/storage.js?v=20261019-commercial-unit-sync"></script><script src="assets/js/ktop-shared-view.js?v=20261107-ksv3"></script>
+<script src="assets/js/storage.js?v=20261116-rental1"></script><script src="assets/js/ktop-shared-view.js?v=20261107-ksv3"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1938,7 +1938,7 @@ async function deleteBFile(id) {
     const price=n=>toKorAmt(n) || "-";
     const cells=u=>residential
       ? [roomParts(u).dong+"동 "+roomParts(u).room+"호",residentialUnitArea(u).size+" / "+(residentialUnitArea(u).type||"-"),unitDeal(u)+(u.매매유형==="세안고매매" && String(unitDeal(u)).includes("매매") ? "\n세안고매매" : ""),price(u.현_매매가격),currentRentPrice(u.현_보증금,u.보증금)+" / "+currentRentPrice(u.현_월세,u.월차임)+(u.매매유형==="세안고매매"&&u.승계보증금!=null?"\\n승계 "+price(u.승계보증금):""),u.소유주||"-",u.연락처||"-",displayOption(u)]
-      : [u.호수||"-",u.현업종||"-",unitAreaText(u),u.소유주||"-",u.연락처||"-",CommercialPriceCore.status(u,true),commercialPriceText(u),currentRentPrice(u.현_보증금,u.보증금),currentRentPrice(u.현_월세,u.월차임),u.공실여부||"-",displayOption(u)];
+      : [u.호수||"-",u.현업종||"-",unitAreaText(u),u.소유주||"-",u.연락처||"-",CommercialPriceCore.status(u,true),commercialPriceText(u),commercialRentPrice(u,'deposit'),commercialRentPrice(u,'rent'),u.공실여부||"-",displayOption(u)];
     const printable=document.createElement("div");
     printable.id="unitPrintSheet";
     printable.innerHTML='<div class="unit-print-header"><h2>'+esc(bName)+' · 선택 '+rows.length+'건</h2><span>출력일 '+new Date().toLocaleDateString("ko-KR")+'</span></div><table><thead><tr>'+columns.map(v=>"<th>"+esc(v)+"</th>").join("")+"</tr></thead><tbody>"+rows.map(u=>"<tr>"+cells(u).map(v=>"<td>"+esc(v??"")+"</td>").join("")+"</tr>").join("")+"</tbody></table>";
@@ -2202,6 +2202,10 @@ async function deleteBFile(id) {
     const price = effectiveUnitPrice(current, original);
     if (price === null || price === undefined || price === "") return "-";
     return toKorAmt(price) || '-';
+  }
+
+  function commercialRentPrice(u, key) {
+    return currentRentPrice(CommercialPriceCore.rental(u, true)[key], null);
   }
 
   // 호수 -> 층 번호 문자열: 101->1, 201->2, 1001->10, B101->B1
@@ -2872,8 +2876,8 @@ async function deleteBFile(id) {
         <td>${u.연락처 || "-"}</td>
         <td><span class="unit-phase-label ${CommercialPriceCore.status(u,true)==='분양중' ? 'ongoing' : 'completed'}">${esc(CommercialPriceCore.status(u,true))}</span></td>
         <td style="text-align:right">${commercialPriceText(u)}${originalPriceLine(u)}</td>
-        <td style="text-align:right">${currentRentPrice(u.현_보증금, u.보증금)}</td>
-        <td style="text-align:right">${currentRentPrice(u.현_월세, u.월차임)}</td>
+        <td style="text-align:right">${commercialRentPrice(u, 'deposit')}</td>
+        <td style="text-align:right">${commercialRentPrice(u, 'rent')}</td>
         <td><span class="sbadge ${bc}">${status}</span></td>
         <td class="tbl-actions">
           <button class="btn-unit-edit" data-ri="${ri}">수정</button>
@@ -2940,16 +2944,16 @@ async function deleteBFile(id) {
     [$("u_전용_m2"), $("u_분양_m2")].forEach(el => {
       if (el) el.style.color = el.value ? "#25675f" : "";
     });
-    $("u_평당가").value   = u.평당가    || "";
-    $("u_분양금액").value = u.분양금액  || "";
-    $("u_보증금").value   = u.보증금    || "";
-    $("u_월차임").value   = u.월차임    || "";
+    $("u_평당가").value   = u.평당가    ?? "";
+    $("u_분양금액").value = u.분양금액  ?? "";
+    $("u_보증금").value   = u.보증금    ?? "";
+    $("u_월차임").value   = u.월차임    ?? "";
 
     // 현재 현황
     $("u_공실여부").value   = commercialOccupancy(u);
-    $("u_현매매가격").value = u.현_매매가격 || "";
-    $("u_현보증금").value   = u.현_보증금   || "";
-    $("u_현월세").value     = u.현_월세     || "";
+    $("u_현매매가격").value = u.현_매매가격 ?? "";
+    $("u_현보증금").value   = u.현_보증금   ?? "";
+    $("u_현월세").value     = u.현_월세     ?? "";
     $("u_소유주").value     = u.소유주      || "";
     $("u_연락처").value     = u.연락처      || "";
     $("u_수익률").value     = u.수익률      || "";
@@ -2997,8 +3001,10 @@ async function deleteBFile(id) {
     };
     const sale = money(unit.현_매매가격 || unit.매매가격);
     const presale = money(unit.분양금액);
-    const deposit = money(unit.현_보증금 ?? unit.보증금);
-    const rent = money(unit.현_월세 ?? unit.월차임);
+    const rental = CommercialPriceCore.rental(unit, true);
+    const rentalMoney = value => value === null ? '' : (value * 10000).toLocaleString('ko-KR');
+    const deposit = rentalMoney(rental.deposit);
+    const rent = rentalMoney(rental.rent);
     // 자료실 항목이 비어 있으면(예전에 저장된 호실) 매물관리에 이미 있는 값을 지우지 않는다.
     const keep = (unitKey, listingKey) => Object.hasOwn(unit, unitKey) ? (unit[unitKey] || '') : (existing?.[listingKey] || '');
     const mergeMemos = (listingMemos, unitMemos) => {
@@ -3162,9 +3168,9 @@ async function deleteBFile(id) {
       월차임:      $("u_월차임").value === "" ? null : Number($("u_월차임").value),
       전용_평:     $("u_전용_평").value ? Math.round(parseFloat($("u_전용_평").value) * 100) / 100 : null,
       분양_평:     $("u_분양_평").value ? Math.round(parseFloat($("u_분양_평").value) * 100) / 100 : null,
-      평당가:      Number($("u_평당가").value)   || null,
-      분양금액:    Number($("u_분양금액").value) || null,
-      현_매매가격: Number($("u_현매매가격").value) || null,
+      평당가:      $("u_평당가").value === "" ? null : Number($("u_평당가").value),
+      분양금액:    $("u_분양금액").value === "" ? null : Number($("u_분양금액").value),
+      현_매매가격: $("u_현매매가격").value === "" ? null : Number($("u_현매매가격").value),
       현_보증금:   $("u_현보증금").value === "" ? null : Number($("u_현보증금").value),
       현_월세:     $("u_현월세").value === "" ? null : Number($("u_현월세").value),
       수익률:      $("u_수익률").value.trim()    || null,

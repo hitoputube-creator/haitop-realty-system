@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone3" />
-  <script src="assets/js/storage.js?v=20261112-presale17"></script>
+  <script src="assets/js/storage.js?v=20261116-rental1"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
@@ -80,7 +80,7 @@
   }
 })();
 </script>
-<script src="assets/js/commercial-price-core.js?v=20261110-kind1"></script>
+<script src="assets/js/commercial-price-core.js?v=20261116-rental1"></script>
 <script src="assets/js/commercial-presale-ui.js?v=20261110-tone1"></script>
 
 <style>
@@ -1386,16 +1386,24 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
       const exclusiveM2 = unit ? (unit.전용_m2 || py2m2(unit.전용_평)) : "";
       const supplyM2    = unit ? (unit.분양_m2 || py2m2(unit.분양_평))  : "";
 
+      // 아파트 가격 경로는 유지하고 상가만 분양상태별 입력값을 사용한다.
+      const buildingCategory = String(bldgRes && bldgRes.category || "").replace(/\s+/g, "");
+      const housingType = String(memoFields["주택종류"] || "").replace(/\s+/g, "");
+      const isResidentialUnit = !!bldgRes
+        && !/오피스텔|상가/.test(buildingCategory)
+        && !/상가/.test(bldgName)
+        && (housingType ? housingType === "아파트" : buildingCategory === "아파트");
       // 5) 가격
-      const deposit = unit ? fmtPrice(CommercialPriceCore.first(unit.현_보증금,unit.보증금)) : "";
-      const rent    = unit ? fmtPrice(CommercialPriceCore.first(unit.현_월세,unit.월차임)) : "";
+      const rental = unit ? (isResidentialUnit ? {deposit:CommercialPriceCore.first(unit.현_보증금,unit.보증금),rent:CommercialPriceCore.first(unit.현_월세,unit.월차임)} : CommercialPriceCore.rental(unit,true)) : {deposit:null,rent:null};
+      const deposit = fmtPrice(rental.deposit);
+      const rent    = fmtPrice(rental.rent);
       const presale = unit ? fmtPrice(unit.분양금액)                 : "";
       const sale    = unit ? fmtPrice(unit.현_매매가격)              : "";
 
       // 6) 거래유형 자동 결정 (사용자 수정 가능)
       let autoDealtType = "월세"; // 기본값
-      const hasRent    = !!(unit && (unit.현_월세 || unit.월차임));
-      const hasDeposit = !!(unit && (unit.현_보증금 || unit.보증금));
+      const hasRent    = isResidentialUnit ? !!(unit && (unit.현_월세 || unit.월차임)) : rental.rent !== null;
+      const hasDeposit = isResidentialUnit ? !!(unit && (unit.현_보증금 || unit.보증금)) : rental.deposit !== null;
       const hasSale    = !!(unit && unit.현_매매가격);
       if (!hasRent && !hasDeposit && hasSale) autoDealtType = "매매";
       else if (hasDeposit || hasRent)         autoDealtType = "월세";
@@ -1427,12 +1435,7 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
       if (unit && unit.비고)   descParts.push(`■ 비고: ${unit.비고}`);
 
       // 8) 폼 입력
-      const buildingCategory = String(bldgRes && bldgRes.category || "").replace(/\s+/g, "");
-      const housingType = String(memoFields["주택종류"] || "").replace(/\s+/g, "");
-      const isResidentialUnit = !!bldgRes
-        && !/오피스텔|상가/.test(buildingCategory)
-        && !/상가/.test(bldgName)
-        && (housingType ? housingType === "아파트" : buildingCategory === "아파트");
+
       const unitCategory = isResidentialUnit ? "아파트" : "상가";
       cat1El.value = isResidentialUnit ? "주거용" : "상가사무실";
       renderCat2();

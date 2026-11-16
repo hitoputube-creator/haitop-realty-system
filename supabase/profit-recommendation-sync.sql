@@ -6,8 +6,13 @@ begin
  for u in select value from jsonb_array_elements(coalesce(new.units,'[]'::jsonb)) loop
   if nullif(u->>'listing_id','') is null or nullif(u->>'추천등록일','') is null then continue; end if;
   sale:=coalesce(nullif(u->>'현_매매가격',''),nullif(u->>'매매가격',''));
-  dep:=coalesce(nullif(u->>'현_보증금',''),nullif(u->>'보증금',''));
-  rent:=coalesce(nullif(u->>'현_월세',''),nullif(u->>'월차임',''));
+  if public.commercial_unit_presale_status(u)='분양중' then
+   dep:=nullif(u->>'보증금','');
+   rent:=nullif(u->>'월차임','');
+  else
+   dep:=coalesce(nullif(u->>'현_보증금',''),nullif(u->>'보증금',''));
+   rent:=coalesce(nullif(u->>'현_월세',''),nullif(u->>'월차임',''));
+  end if;
   if coalesce(sale,'') ~ '^[0-9]+([.][0-9]+)?$' then sale:=(sale::numeric*10000)::text; else sale:=''; end if;
   if coalesce(dep,'') ~ '^[0-9]+([.][0-9]+)?$' then dep:=(dep::numeric*10000)::text; else dep:=''; end if;
   if coalesce(rent,'') ~ '^[0-9]+([.][0-9]+)?$' then rent:=(rent::numeric*10000)::text; else rent:=''; end if;

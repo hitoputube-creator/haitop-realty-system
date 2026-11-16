@@ -186,7 +186,8 @@
     $('roomDetail').appendChild(line);
   }
 
-  const editableFields = ['현업종', '공실여부', '소유주', '연락처', '현_보증금', '현_월세', '전용_평', '분양_평'];
+  function rentalFields(unit) { return CommercialPriceCore.status(unit,true)==='분양중' ? {deposit:'보증금',rent:'월차임',label:'분양'} : {deposit:'현_보증금',rent:'현_월세',label:'현재'}; }
+  const editableFields = ['현업종', '공실여부', '소유주', '연락처', '분양상태', '보증금', '월차임', '현_보증금', '현_월세', '전용_평', '분양_평'];
   function editableSnapshot(unit) {
     return editableFields.map(key => unit[key] ?? null);
   }
@@ -202,7 +203,7 @@
         option.textContent = item;
         input.appendChild(option);
       });
-    } else if (name === '현_보증금' || name === '현_월세') {
+    } else if (['보증금','월차임','현_보증금','현_월세'].includes(name)) {
       input.type = 'number';
       input.min = '0';
       input.step = '1';
@@ -245,8 +246,9 @@
     editField(form, '상태', '공실여부', statusOf(unit), ['임차중', '공실', '매매가능']);
     editField(form, '소유주', '소유주', unit.소유주);
     editField(form, '연락처', '연락처', unit.연락처);
-    editField(form, '현재 보증금 (만원)', '현_보증금', unit.현_보증금);
-    editField(form, '현재 월세 (만원)', '현_월세', unit.현_월세);
+    const rentalKeys = rentalFields(unit);
+    editField(form, rentalKeys.label+' 보증금 (만원)', rentalKeys.deposit, unit[rentalKeys.deposit]);
+    editField(form, rentalKeys.label+' 월세 (만원)', rentalKeys.rent, unit[rentalKeys.rent]);
     editArea(form, '전용면적', '전용_평', unit.전용_평);
     editArea(form, '분양면적', '분양_평', unit.분양_평);
     const actions = document.createElement('div');
@@ -272,15 +274,15 @@
     const existing = await getListingById(unit.listing_id);
     if (!existing) return false;
     const money = value => {
-      const n = Number(value);
-      return n > 0 && Number.isFinite(n) ? (n * 10000).toLocaleString('ko-KR') : '';
+      const n = CommercialPriceCore.number(value);
+      return n===null ? '' : (n * 10000).toLocaleString('ko-KR');
     };
     const area = value => Number(value) ? Math.round(Number(value) * 100) / 100 : null;
     const data = {
       ...existing,
       shop_status: unit.공실여부 === '공실' || unit.공실여부 === '임차중' ? unit.공실여부 : (existing.shop_status || ''),
-      deposit: money(unit.현_보증금 ?? unit.보증금),
-      monthlyRent: money(unit.현_월세 ?? unit.월차임),
+      deposit: money(CommercialPriceCore.rental(unit,true).deposit),
+      monthlyRent: money(CommercialPriceCore.rental(unit,true).rent),
       owner_name: unit.소유주 || '',
       owner_phone1: unit.연락처 || '',
       exclusiveAreaPy: area(unit.전용_평),
@@ -315,8 +317,8 @@
         공실여부: data.공실여부,
         소유주: data.소유주.trim() || null,
         연락처: data.연락처.trim() || null,
-        현_보증금: amount('현_보증금'),
-        현_월세: amount('현_월세'),
+        [rentalFields(original).deposit]: amount(rentalFields(original).deposit),
+        [rentalFields(original).rent]: amount(rentalFields(original).rent),
         전용_평: area('전용_평'),
         분양_평: area('분양_평')
       };
@@ -339,7 +341,7 @@
       await saveBuildingUnits(record.local_id, record.name || buildingName, updated);
       const saved = await getBuildingRecord(buildingName);
       const savedUnit = saved && Array.isArray(saved.units) && saved.units.find(unit => roomId(unit) === room);
-      if (!savedUnit || editableFields.some(key => (savedUnit[key] ?? null) !== (values[key] ?? null)))
+      if (!savedUnit || Object.keys(values).some(key => (savedUnit[key] ?? null) !== (values[key] ?? null)))
         throw new Error('저장한 내용을 다시 확인하지 못했습니다. 새로고침 후 확인해 주세요.');
       units = saved.units;
       detailEditing = false;
@@ -386,8 +388,8 @@
     appendDetail('연락처', unit.연락처 || '—');
     appendDetail('전용면적', displayArea(unit.전용_평));
     appendDetail('분양면적', displayArea(unit.분양_평));
-    appendDetail('보증금', displayPrice(unit.현_보증금, unit.보증금));
-    appendDetail('월세', displayPrice(unit.현_월세, unit.월차임));
+    appendDetail('보증금', displayPrice(CommercialPriceCore.rental(unit,true).deposit, null));
+    appendDetail('월세', displayPrice(CommercialPriceCore.rental(unit,true).rent, null));
     const actions = document.createElement('div');
     actions.className = 'status-detail-actions';
     const editButton = document.createElement('button');

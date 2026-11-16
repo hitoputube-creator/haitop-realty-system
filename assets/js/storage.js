@@ -1197,7 +1197,9 @@ const SharedReference = (() => {
             const shared=units.get(unitKey(unit));
             const combined={...unit};
             if(shared)for(const field of sharedFields) {
-              if((combined[field]===null || combined[field]===undefined || combined[field]==='') && Object.hasOwn(shared,field))combined[field]=shared[field];
+              const financial=['보증금','월차임','현_보증금','현_월세'].includes(field);
+              const missing=financial ? (!Object.hasOwn(unit,field)||unit[field]===undefined) : (combined[field]===null||combined[field]===undefined||combined[field]==='');
+              if(missing && Object.hasOwn(shared,field))combined[field]=shared[field];
             }
             if(shared?.plan_positions && !combined.plan_positions)combined.plan_positions=shared.plan_positions;
             units.set(unitKey(unit),combined);
