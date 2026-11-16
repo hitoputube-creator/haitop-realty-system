@@ -1023,6 +1023,7 @@ const OV_FIELDS = [
   { label: '주차대수',  key: '주차대수' },
   { label: '사용승인일',key: '사용승인일' },
   { label: '구조',      key: '구조' },
+  { label: '규모',      key: '규모' },
   { label: '토지면적',  key: '토지면적' },
   { label: '건축면적',  key: '건축면적' },
   { label: '연면적',    key: '연면적' },
@@ -1044,7 +1045,7 @@ function isApartmentBuilding(building) {
   if (housingType) return housingType === '아파트';
   return category === '아파트';
 }
-const RESIDENTIAL_OV_FIELDS = ['지번주소','행정구역','동수','세대수','주택종류','분양구분','규모','자료기준일','자료출처'];
+const RESIDENTIAL_OV_FIELDS = ['지번주소','행정구역','동수','세대수','주택종류','분양구분','자료기준일','자료출처'];
 
 /* ── 유틸 ── */
 function showToast(msg, dur = 2500) {
