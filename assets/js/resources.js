@@ -542,7 +542,7 @@ function renderDriveTab() {
 
 // ── 등록 폼 개요 메모 템플릿 ──
 const MEMO_SEP = "---추가메모---";
-const MEMO_TEMPLATE = driveResourceScope === "land" ? "블럭: \n필지·번지: \n건물 유무: \n면적(㎡/평): \n공급금액: \n낙찰가격: \n매매금액: \n소유주: \n연락처: " : "주소: \n주차대수: \n사용승인일: \n구조: 지하  층 ~ 지상  층\n토지면적:  평\n연면적:  평\n관리사무소: ";
+const MEMO_TEMPLATE = driveResourceScope === "land" ? "블럭: \n필지·번지: \n건물 유무: \n면적(㎡/평): \n공급금액: \n낙찰가격: \n매매금액: \n소유주: \n연락처: " : "주소: \n주차대수: \n사용승인일: \n구조: \n규모: 지하  층 ~ 지상  층\n토지면적:  평\n연면적:  평\n관리사무소: ";
 
 function splitMemo(raw) {
   if (!raw) return { basic: "", extra: "" };
