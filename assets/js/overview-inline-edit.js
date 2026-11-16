@@ -19,15 +19,16 @@
     if (text === '주소(구주소)') return ['ov_lot_address'];
     var f = (typeof editableOverviewFields === 'function' ? editableOverviewFields() : []).filter(function (x) { return x[0] === text; })[0];
     if (f) return [f[1]];
-    if ((text === OWN + ' 분양담당자' || text === '케이탑 분양담당자') && $('ov_sales_agent_name')) return ['ov_sales_agent_name', 'ov_sales_agent_phone'];
+    if (window.BuildingSalesContact && window.BuildingSalesContact.editorIds) return window.BuildingSalesContact.editorIds(text);
     return null;
   }
 
-  function enter() {
-    populateForm(buildingData ? buildingData.memo || '' : '');
-    moved = [];
+  // Idempotent: asynchronous contacts may arrive after edit mode has opened.
+  function moveEditors() {
     document.querySelectorAll('#infoTable .info-table-label').forEach(function (label) {
       var ids = idsForLabel(label.textContent); if (!ids) return;
+      ids = ids.filter(function (id) { var el = $(id); return el && !moved.some(function (m) { return m.el === el; }); });
+      if (!ids.length) return;
       var cell = label.nextElementSibling; if (!cell) return;
       cell.innerHTML = ''; cell.classList.remove('empty'); cell.classList.add('inline-edit');
       ids.forEach(function (id) {
@@ -37,6 +38,13 @@
         cell.appendChild(el);
       });
     });
+  }
+  window.OverviewInlineEdit = { refresh: function () { if (inline) moveEditors(); } };
+  function enter() {
+    populateForm(buildingData ? buildingData.memo || '' : '');
+    moved = [];
+    inline = true;
+    moveEditors();
     setupAddressSync();
     $('editFormCard').style.display = 'none';
     $('editToggleBtn').textContent = '✕ 수정 취소';
@@ -55,7 +63,7 @@
   }
   function leave() {
     teardownAddressSync();
-    moved.slice().reverse().forEach(function (m) { m.el.removeEventListener('keydown', onKey); m.parent.insertBefore(m.el, m.next); });
+    moved.slice().reverse().forEach(function (m) { m.el.removeEventListener('keydown', onKey); m.parent.insertBefore(m.el, m.next && m.next.parentNode === m.parent ? m.next : null); });
     moved = [];
     var b = $('inlineSaveBtn'); if (b) b.remove();
     $('editFormCard').style.display = 'none';
@@ -96,7 +104,12 @@
     lotVal.after(l2, v2);
   }
   var origRender = window.renderReadOnlyViews;
-  window.renderReadOnlyViews = function () { origRender.apply(this, arguments); mergeAddressRow(); };
+  window.renderReadOnlyViews = function () {
+    // The original renderer replaces the entire table. Defer until leave(),
+    // not just for contacts: every moved overview input must remain connected.
+    if (inline) return;
+    origRender.apply(this, arguments); mergeAddressRow();
+  };
   // 수정 항목: 일반 건물에도 구주소 칸을 쓴다 (주거 단지는 원래 있음)
   var origFields = window.editableOverviewFields;
   window.editableOverviewFields = function () {
