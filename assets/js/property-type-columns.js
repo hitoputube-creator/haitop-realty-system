@@ -21,6 +21,41 @@
   };
   const won = v => num(v) ? num(v).toLocaleString('ko-KR')+'원' : '';
   const man = v => num(v) ? num(v).toLocaleString('ko-KR')+'만원' : (String(v ?? '').trim() || '');
+
+  // 분양권·입주예정은 이름이 아니라 유형/별도 안내로 표시한다. 원본 저장값은 변경하지 않는다.
+  const apartmentData = item => item.apartmentUnitData || item.import_unit_snapshot || {};
+  const isApartment = item => item.type === 'apartment' || !!apartmentData(item).아파트명;
+  const isApartmentPresale = item => {
+    if (!isApartment(item)) return false;
+    const u=apartmentData(item);
+    if (u.권리구분) return u.권리구분 === '분양권';
+    if (u.매매유형) return u.매매유형 === '분양권전매';
+    return /(?:^|[·\s])분양권(?:$|[·\s])/.test(String(item.title || ''));
+  };
+  const cleanApartmentName = value => String(value || '')
+    .replace(/[（(]\s*(?:입주\s*)?\d{4}\s*년\s*\d{1,2}\s*월\s*(?:입주\s*)?예정\s*[)）]/g,'')
+    .replace(/\s*·\s*분양권(?:\s*·\s*|\s*$)/g,' ')
+    .replace(/\s+/g,' ').trim();
+  function apartmentDisplayName(item,fallback) {
+    if (!isApartment(item)) return fallback;
+    const u=apartmentData(item);
+    const complex=cleanApartmentName(u.아파트명 || item.complexName || item.buildingName).replace(/아파트$/,'');
+    const dong=String(u.동 || item.apartmentDong || item.dong || '').replace(/동$/,'');
+    const room=String(u.호 || item.apartmentHo || item.ho || '').replace(/호$/,'');
+    return complex && dong && room ? complex+' '+dong+'동 '+room+'호' : cleanApartmentName(fallback);
+  }
+  function apartmentMoveInText(item) {
+    if (!isApartmentPresale(item)) return '';
+    const u=apartmentData(item);
+    const explicit=String(u.입주예정월 || item.moveInMonth || '').trim();
+    const raw=explicit || [u.아파트명,item.complexName,item.buildingName,item.title].filter(Boolean).join(' ');
+    const match=raw.match(/(\d{4})\s*(?:년|[-./])\s*(\d{1,2})(?:\s*월)?/);
+    if (!match || Number(match[2])<1 || Number(match[2])>12) return '';
+    return '입주예정 '+match[1]+'년 '+Number(match[2])+'월';
+  }
+  const originalListingName=getListingName;
+  getListingName=item=>apartmentDisplayName(item,originalListingName(item));
+
   function fields(item) {
     const u=item.apartmentUnitData || {};
     const supplyPy=first(item.areaSupplyPy,item.supplyAreaPy,item.saleAreaPy,u.분양평수,u.평형);
@@ -45,7 +80,7 @@
         const village=(complexName.match(/^(.*?마을\s*\d+단지)/)||[])[1]||'';
         const dong=u.동||item.apartmentDong||item.dong||'';
         const room=u.호||item.apartmentHo||item.ho||'';
-        return village && dong && room ? [village,dong+'동 '+room+'호'].join('\n') : first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address);
+        return village && dong && room ? [village,dong+'동 '+room+'호'].join('\n') : apartmentDisplayName(item,first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address));
       })(),
       building:first(item.buildingName,item.building_name,item.complexName,item.shop_building,item.biz_building,addressBuilding),
       unit,
@@ -72,12 +107,14 @@
     return cols;
   }
   function shortType(item) {
+    if (isApartmentPresale(item)) return '아파트 분양권';
     const parts=String(originalValue(item,'type') || '').split(/\s*\/\s*/);
     return parts[parts.length-1].replace(/\s*[·-]?\s*확인 필요/g,'').trim() || parts[0] || '-';
   }
   const originalValue=listingColumnValue;
   listingColumnValue=function(item,key) {
     if (key==='type') return shortType(item);
+    if (key==='apartment' && isApartment(item)) return cleanApartmentName(originalValue(item,key));
     const value=fields(item)[key];
     return value === undefined ? originalValue(item,key) : value;
   };
@@ -104,6 +141,13 @@
         line.appendChild(deal);node.prepend(line);
       }
     }
+    if (key==='type') {
+      const moveIn=apartmentMoveInText(item);
+      if (moveIn) {
+        const info=document.createElement('small');info.className='lc-move-in';info.textContent=moveIn;node.appendChild(info);
+      }
+    }
+    if (key==='apartment' && isApartment(item)) node.textContent=String(listingColumnValue(item,key) || '-');
     if (key==='name') {
       const raw=String(listingColumnValue(item,key) || '-');
       if (raw.includes('\n')) {
@@ -248,6 +292,7 @@
     .typed-list-table td .listing-cell::before {display:none!important;}
 
     .properties-page .lc-name-line {display:block;}
+    .properties-page .lc-move-in {display:block;margin-top:5px;font-size:11px;line-height:1.4;color:var(--text-muted);font-weight:400;}
     .properties-page .lc-type-deal {display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
     .properties-page .typed-property-row .lc-type {font-size:12px;white-space:normal;width:auto;}
     .properties-page .lc-price-line {display:block;line-height:1.5;}
