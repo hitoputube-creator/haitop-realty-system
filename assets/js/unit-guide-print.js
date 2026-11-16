@@ -327,7 +327,7 @@ function addRowButtons() {
     b.type = 'button'; b.className = 'ug-row-btn'; b.textContent = '인쇄';
     b.title = strong.textContent.trim() + '호 손님용 1장 인쇄';
     b.addEventListener('click', e => { e.stopPropagation(); run([strong.textContent.trim()], 'guide', b); });
-    cell.appendChild(b);
+    cell.insertBefore(b, cell.querySelector('.btn-unit-highlight')); 
   });
 }
 function mount() {
