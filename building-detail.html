@@ -1006,6 +1006,7 @@
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="assets/js/auth.js?v=20261006-office-login"></script>
+<script src="assets/js/unit-row-highlights.js?v=20261116-highlight1"></script>
 <script src="assets/js/resource-rooms.js?v=20260930-category-drag"></script>
 <script src="assets/js/naver-links.js?v=20261006-apartment-base-1"></script>
 <script src="assets/js/building-register-view.js?v=20261108-teal-gradient2"></script>
@@ -1800,6 +1801,13 @@ async function deleteBFile(id) {
   document.querySelectorAll('[data-unit-phase]').forEach(b=>b.addEventListener('click',()=>{unitPhase=b.dataset.unitPhase;unitOriginalOpen=false;renderUnitPhase();}));
   $('unitOriginalPrices').addEventListener('click',()=>{unitOriginalOpen=!unitOriginalOpen;renderUnitPhase();});
   let units       = [];
+  // Office-local display metadata only: never mutates units or any financial storage.
+  const unitRowHighlights = UnitRowHighlights.create({
+    document, tbody: $('unitsTbody'),
+    baseUrl: SUPABASE_URL, buildingKey: buildingId,
+    getHeaders: () => ({ ...headers }), fetchWithTimeout, showToast,
+    getUnits: () => units, getParts: unit => roomParts(unit)
+  });
   const selectedUnitRows = new Set();
   let unitListingSendBusy = false;
   function unitBulkState() {
@@ -2296,6 +2304,8 @@ async function deleteBFile(id) {
         activeListingLoaded = true;
       } catch (error) { activeListingIds = {}; commercialListings = {}; activeListingLoaded = false; }
     }
+    // Non-blocking metadata load refreshes decorated rows once the GET resolves.
+    unitRowHighlights.load();
     renderAll();
     if (location.hash === '#unitStatus') $('unitStatus').scrollIntoView({ block: 'start' });
     (function openUnitFromUrl() {
@@ -2908,6 +2918,7 @@ async function deleteBFile(id) {
     tbody.querySelectorAll(".btn-unit-del[data-ri]").forEach(btn => {
       btn.addEventListener("click", () => deleteUnit(Number(btn.dataset.ri)));
     });
+    unitRowHighlights.render();
   }
 
   function openModal(idx) {
