@@ -3476,6 +3476,65 @@ async function deleteBFile(id) {
 <style id="units-shadow-fix">.units-tbl th:last-child,.units-tbl td:last-child{box-shadow:none!important}.units-wrap.has-scroll .units-tbl td:last-child,.units-wrap.has-scroll .units-tbl th:last-child{box-shadow:-6px 0 8px -6px rgba(35,76,73,0.08)!important}</style>
 <script>(function(){var w=document.querySelector('.units-wrap');if(!w)return;var t=w.querySelector('.units-tbl')||w;function u(){w.classList.toggle('has-scroll',w.scrollWidth>w.clientWidth+1)}addEventListener('resize',u);if(window.ResizeObserver){var ro=new ResizeObserver(u);ro.observe(w);ro.observe(t)}u()})();</script>
 <script src="assets/js/unit-promo-check.js?v=20261105-up3"></script>
+<!-- 모바일 호실 현황: 고정 관리열 해제 및 카드형 정보 표시 -->
+<style id="unit-mobile-card-layout">
+@media screen and (max-width: 767px) {
+  #unitStatus .units-wrap { overflow-x: visible; width: 100%; max-width: 100%; }
+  #unitStatus .units-tbl,
+  #unitStatus .units-tbl tbody,
+  #unitStatus .units-tbl tr,
+  #unitStatus .units-tbl td { display: block; width: 100%; min-width: 0; max-width: none; box-sizing: border-box; }
+  #unitStatus .units-tbl { table-layout: auto; white-space: normal; }
+  #unitStatus .units-tbl thead { display: none; }
+  #unitStatus .units-tbl tbody { display: grid; gap: 12px; }
+  #unitStatus .units-tbl tbody tr { border: 1px solid #b9cfca; border-radius: 12px; overflow: hidden; background: #fff; padding: 8px 12px; }
+  #unitStatus .units-tbl tbody td {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    padding: 8px 0; border-bottom: 1px solid #e7efed;
+    font-size: .85rem; white-space: normal; overflow-wrap: anywhere; text-align: right;
+  }
+  #unitStatus .units-tbl tbody td::before {
+    content: attr(data-mobile-label); flex: 0 0 95px; max-width: 40%;
+    color: #607c77; font-size: .78rem; font-weight: 600; text-align: left;
+  }
+  #unitStatus .units-tbl tbody td.unit-select-cell { justify-content: flex-start; padding: 5px 0; }
+  #unitStatus .units-tbl tbody td.unit-select-cell::before { content: "선택"; }
+  #unitStatus .units-tbl tbody td:last-child {
+    position: static !important; inset: auto !important; z-index: auto !important;
+    width: 100% !important; min-width: 0 !important; max-width: none !important;
+    background: transparent !important; box-shadow: none !important;
+    display: flex !important; flex-wrap: wrap; justify-content: flex-start;
+    align-items: center; gap: 8px; padding-top: 12px; border: 0;
+    text-align: left;
+  }
+  #unitStatus .units-tbl tbody td:last-child::before { content: none; }
+  #unitStatus .units-tbl td.tbl-actions > * { margin: 0; }
+  #unitStatus .units-tbl tbody td:last-child button,
+  #unitStatus .units-tbl tbody td:last-child a { max-width: 100%; }
+  #unitStatus .units-tbl:not(.residential-unit-table) td:nth-child(3) { max-width: none; }
+}
+</style>
+<script>
+(function(){
+  var table=document.querySelector('#unitStatus .units-tbl');
+  if(!table) return;
+  var head=table.querySelector('thead'), body=table.querySelector('tbody');
+  function labelRows(){
+    var labels=Array.from(head.querySelectorAll('th')).map(function(th){
+      var span=th.querySelector('.unit-sort span');
+      return (span ? span.textContent : th.textContent).replace(/[↕▲▼]/g,'').trim();
+    });
+    body.querySelectorAll('tr').forEach(function(tr){
+      Array.from(tr.children).forEach(function(td,index){
+        if(td.tagName==='TD') td.setAttribute('data-mobile-label',labels[index] || '');
+      });
+    });
+  }
+  new MutationObserver(labelRows).observe(body,{childList:true});
+  new MutationObserver(labelRows).observe(head,{childList:true,subtree:true});
+  labelRows();
+})();
+</script>
 </body>
 </html>
 
