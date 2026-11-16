@@ -33,8 +33,8 @@
     var endpoint=String(options.baseUrl).replace(/[/]$/,'')+'/rest/v1/unit_row_highlights';
     var values=new Map(), ready=false;
     function url(key, extra) {
-      var query=new URLSearchParams({building_key:'eq.'+JSON.stringify(building),select:'building_key,unit_key,color'});
-      if (key) query.set('unit_key','eq.'+JSON.stringify(key));
+      var query=new URLSearchParams({building_key:'eq.'+building,select:'building_key,unit_key,color'});
+      if (key) query.set('unit_key','eq.'+key);
       Object.keys(extra||{}).forEach(function (k) { query.set(k,extra[k]); });
       return endpoint+'?'+query.toString();
     }
