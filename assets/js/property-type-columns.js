@@ -231,9 +231,9 @@
   function template(cols) {
     if (isKtopResidential()) {
       const widths={type:'.78fr',village:'.78fr',apartment:'1.16fr',dong:'.64fr',room:'.64fr',supply:'.82fr',price:'1.14fr',owner:'.72fr',phone:'1.18fr'};
-      return '24px '+cols.map(([key])=>`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
+      return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
     }
-    return '24px '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'&&OfficeConfig.id!=='ktop'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
+    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'&&OfficeConfig.id!=='ktop'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
   }
   makeListingColumnHeader=function() {
     const h=document.createElement('div');h.className='listing-column-header typed-property-row';
@@ -251,7 +251,7 @@
     const table=document.createElement('table');table.className='typed-list-table';
     if (isKtopResidential()) table.classList.add('residential-property-table');
     const header=makeListingColumnHeader();
-    table.innerHTML='<colgroup><col style="width:32px">'+cols.map(([key])=>'<col'+(key==='type'?' style="width:112px"':key==='price'?' style="width:138px"':key==='phone'?' style="width:172px"':'')+'>').join('')+'<col style="width:'+actionsColWidth(true)+'px"></colgroup><thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
+    table.innerHTML='<colgroup><col style="width:var(--listing-highlight-select-width,32px)">'+cols.map(([key])=>'<col'+(key==='type'?' style="width:112px"':key==='price'?' style="width:138px"':key==='phone'?' style="width:172px"':'')+'>').join('')+'<col style="width:'+actionsColWidth(true)+'px"></colgroup><thead><tr><th>선택</th>'+Array.from(header.children).slice(1,-1).map(n=>'<th>'+n.innerHTML+'</th>').join('')+'<th>관리</th></tr></thead><tbody></tbody>';
     const body=table.querySelector('tbody');
     items.forEach(item=>{
       const card=makeCard(item);
@@ -321,7 +321,7 @@
       .properties-page .typed-list-table {min-width:800px;}
 
       html body.properties-page .listing-column-header.typed-property-row {display:none;}
-      html body.properties-page .listing-card.typed-property-row {min-width:0;grid-template-columns:26px minmax(0,1fr) minmax(0,1fr);gap:10px;}
+      html body.properties-page .listing-card.typed-property-row {min-width:0;grid-template-columns:var(--listing-highlight-select-width,26px) minmax(0,1fr) minmax(0,1fr);gap:10px;}
       .properties-page .typed-property-row .listing-cell-select {grid-column:1;grid-row:1 / span 12;}
       .properties-page .typed-property-row .listing-cell-actions {grid-column:2 / -1;}
       .properties-page .typed-property-row .listing-cell:not(.listing-cell-select):not(.listing-cell-actions)::before {display:block;content:attr(data-label);font-size:11px;color:var(--text-muted);margin-bottom:3px;}
