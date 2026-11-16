@@ -42,7 +42,7 @@
     const complex=cleanApartmentName(u.아파트명 || item.complexName || item.buildingName).replace(/아파트$/,'');
     const dong=String(u.동 || item.apartmentDong || item.dong || '').replace(/동$/,'');
     const room=String(u.호 || item.apartmentHo || item.ho || '').replace(/호$/,'');
-    return complex && dong && room ? complex+' '+dong+'동 '+room+'호' : cleanApartmentName(fallback);
+    return complex && dong && room ? complex+'\n'+dong+'동 '+room+'호' : cleanApartmentName(fallback);
   }
   function apartmentMoveInText(item) {
     if (!isApartmentPresale(item)) return '';
