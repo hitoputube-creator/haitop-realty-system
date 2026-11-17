@@ -82,6 +82,7 @@
       ".lo-list{margin:0 0 6px;padding-left:18px;font-size:.84rem;line-height:1.7}.lo-list b{color:#1f2a2a}",
       ".lo-det{margin-top:8px;font-size:.76rem;color:#5b6c6c}.lo-det pre{max-height:220px;overflow:auto;background:#f6f8f8;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:.72rem}"
     ].join("");
+    st.textContent += ".lo-files{margin:8px 0}.lo-file-row{display:flex;align-items:center;gap:6px;font-size:.78rem;padding:4px 8px;background:#fff;border:1px solid #c3d2e2;border-radius:6px;margin-bottom:4px}.lo-file-row .dt{color:#16487f;font-weight:800;white-space:nowrap}.lo-file-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3d556f}.lo-file-row .sz{color:#7a8da3;font-size:.72rem;white-space:nowrap}.lo-file-row button{font-size:.72rem!important;padding:2px 9px!important}.lo-file-row .lo-x{color:#b42318!important;border-color:#e3b1ab!important;padding:2px 7px!important}.lo-others{margin-top:10px}.lo-docs-note{margin-top:8px;font-size:.74rem;color:#6a7b8e}";
     st.textContent += "#loDocsSlot{margin-top:14px;padding-top:12px;border-top:2px dashed #b9cadd}#loDocsSlot .detail-section{background:none!important;border:none!important;padding:0!important;margin:0!important}#loDocsSlot .detail-section>.detail-section-title{background:none!important;border:none!important;border-left:3px solid #1f5fa8!important;border-radius:0!important;padding:0 0 0 8px!important;margin:0 0 6px!important;font-size:13px!important}";
     st.textContent += ".lo-price tr.lo-more{display:none}.lo-price.open tr.lo-more{display:table-row}.lo-morebtn{font-size:.74rem!important;padding:3px 10px!important}";
     st.textContent += "#loMapModal{position:fixed;inset:0;z-index:100000;background:rgba(10,24,40,.6);display:flex;align-items:center;justify-content:center;padding:20px}#loMapModal .lm-box{width:min(1200px,96vw);height:min(820px,92vh);background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)}#loMapModal .lm-head{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#dce8f6;border-bottom:1px solid #b9cadd;color:#16487f;font-size:13.5px}#loMapModal .lm-tools{display:flex;gap:4px;margin-left:8px}#loMapModal .lm-tools button{padding:3px 12px;font-size:12px;font-weight:700;border:1px solid #8fa8c2;background:#fff;color:#16487f;border-radius:6px;cursor:pointer;font-family:inherit}#loMapModal .lm-tools button.on{background:#1f5fa8;color:#fff;border-color:#1f5fa8}#loMapModal .lm-hint{margin-left:auto;font-size:11.5px;color:#4a627c}#loMapModal .lm-close{border:none;background:none;font-size:18px;cursor:pointer;color:#16487f}#loMapModal .lm-map{flex:1;position:relative;background:#eef3f9}#loMapModal .lm-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#4a627c;font-size:14px}.lo-map[data-act]{cursor:zoom-in}";
@@ -347,16 +348,98 @@
     h += '<details class="lo-det"><summary>읽어 온 글자 보기 (요약이 이상할 때)</summary><pre>' + esc((s.lines || []).slice(0, 220).join("\n")) + '</pre></details>';
     return h;
   }
+
+  // ---- 서류 파일(건축물대장·등기부등본): 카드 안에서 바로 올리기 / 보기 / 삭제 ----
+  var MAX_BYTES = 30 * 1024 * 1024;
+  var ALLOWED = /^(application\/pdf|image\/(jpeg|png|webp|heic|heif))$/i;
+  var ALLOWED_EXT = /\.(pdf|jpe?g|png|webp|heic|heif)$/i;
+  function fmtDay(iso) { var dt = new Date(iso); if (isNaN(dt)) return ""; return dt.getFullYear() + "." + String(dt.getMonth() + 1).padStart(2, "0") + "." + String(dt.getDate()).padStart(2, "0"); }
+  function fmtBytes(n) { if (!n) return ""; return n < 1048576 ? Math.max(1, Math.round(n / 1024)) + "KB" : (n / 1048576).toFixed(1) + "MB"; }
+  async function loadAllDocs() {
+    try {
+      var c = client(); if (!c) return [];
+      var r = await c.from("listing_documents").select("*").eq("listing_id", listingId).order("created_at", { ascending: false });
+      return r.error ? [] : (r.data || []);
+    } catch (e) { return []; }
+  }
+  async function reloadDocs() {
+    state.allDocs = await loadAllDocs();
+    state.regDocs = state.allDocs.filter(function (d) { return d.doc_type === "등기부등본"; });
+  }
+  function docRows(list) {
+    return list.map(function (d) {
+      return '<div class="lo-file-row"><span class="dt">' + esc(fmtDay(d.created_at)) + '</span><span class="nm" title="' + esc(d.original_name) + '">' + esc(d.original_name || "파일") + '</span>' +
+        '<span class="sz">' + esc(fmtBytes(d.size_bytes)) + '</span>' +
+        '<button type="button" class="pri" data-act="doc-open" data-id="' + esc(d.id) + '">보기</button>' +
+        '<button type="button" class="lo-x" data-act="doc-del" data-id="' + esc(d.id) + '" title="삭제">✕</button></div>';
+    }).join("");
+  }
+  function filesBlock(type) {
+    var mine = (state.allDocs || []).filter(function (d) { return d.doc_type === type; });
+    return '<input type="file" class="lo-file" data-type="' + esc(type) + '" accept=".pdf,image/*" multiple hidden>' +
+      (mine.length ? '<div class="lo-files">' + docRows(mine) + '</div>' : '');
+  }
+  function othersBlock() {
+    var others = (state.allDocs || []).filter(function (d) { return d.doc_type !== "건축물대장" && d.doc_type !== "등기부등본"; });
+    return others.length ? '<div class="lo-others"><div class="lo-sub">📎 기타 서류 ' + others.length + '건</div><div class="lo-files">' + docRows(others) + '</div></div>' : "";
+  }
+  async function openDoc(id) {
+    var d = (state.allDocs || []).filter(function (x) { return String(x.id) === String(id); })[0]; if (!d) return;
+    var win = window.open("", "_blank");
+    try { var u = await signedUrl(d); if (win) win.location.href = u; else window.open(u, "_blank"); }
+    catch (e) { if (win) win.close(); toast("서류를 열지 못했어요. 다시 로그인한 뒤 시도해 주세요."); }
+  }
+  async function deleteDoc(id) {
+    var d = (state.allDocs || []).filter(function (x) { return String(x.id) === String(id); })[0]; if (!d) return;
+    if (!confirm("'" + (d.original_name || "서류") + "' 파일을 삭제할까요? 삭제하면 복구할 수 없습니다.")) return;
+    try {
+      var r1 = await client().storage.from(BUCKET).remove([d.storage_path]); if (r1.error) throw r1.error;
+      var r2 = await client().from("listing_documents").delete().eq("id", d.id); if (r2.error) throw r2.error;
+      toast("삭제했어요.");
+    } catch (e) { toast("삭제하지 못했어요: " + ((e && e.message) || e)); }
+    await afterDocsChanged();
+  }
+  async function uploadDocs(type, files) {
+    files = Array.from(files || []); if (!files.length) return;
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      if (!(ALLOWED.test(f.type || "") || ALLOWED_EXT.test(f.name || ""))) { toast("PDF 또는 사진 파일만 올릴 수 있어요: " + f.name); return; }
+      if (f.size > MAX_BYTES) { toast("파일이 너무 커요(30MB 이하): " + f.name); return; }
+    }
+    toast("올리는 중…");
+    var c = client(), ok = 0, who = "";
+    try { var u = await c.auth.getUser(); who = (u.data && u.data.user && u.data.user.email) || ""; } catch (_) {}
+    var safeId = String(listingId).replace(/[^a-zA-Z0-9_-]/g, "-");
+    for (var j = 0; j < files.length; j++) {
+      var file = files[j];
+      var ext = ((file.name || "").split(".").pop() || "pdf").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || "pdf";
+      var path = safeId + "/" + Date.now() + "-" + Math.random().toString(36).slice(2) + "." + ext;
+      var ct = file.type || (ext === "pdf" ? "application/pdf" : "application/octet-stream");
+      try {
+        var up1 = await c.storage.from(BUCKET).upload(path, file, { contentType: ct, upsert: false }); if (up1.error) throw up1.error;
+        var ins = await c.from("listing_documents").insert({ listing_id: listingId, doc_type: type, storage_path: path, original_name: file.name, mime_type: ct, size_bytes: file.size, uploaded_by: who });
+        if (ins.error) { await c.storage.from(BUCKET).remove([path]); throw ins.error; }
+        ok++;
+      } catch (e) { toast("올리지 못했어요(" + file.name + "): " + ((e && e.message) || e)); }
+    }
+    if (ok) toast(ok + "개 서류를 저장했어요.");
+    await afterDocsChanged();
+  }
+  async function afterDocsChanged() {
+    await reloadDocs(); state.regSum = null; render(); loadRegSummary();
+  }
+  function pickFile(type) { var inp = root.querySelector('.lo-file[data-type="' + type + '"]'); if (inp) inp.click(); }
+
   function cardRegistry() {
     var docs = state.regDocs || [];
     var body, wide = "";
     if (docs.length) {
       wide = " lo-wide";
-      body = '<div class="lo-note">올린 등기부 ' + docs.length + '건 · 최근 파일: ' + esc(docs[0].original_name || "파일") + '</div>' + regSummaryHtml(state.regSum) +
-        '<div class="lo-row"><button type="button" class="pri" data-act="open-reg">원문 PDF 열기</button><button type="button" data-act="goto-docs">올린 파일 보기 ↓</button><button type="button" data-act="iros">새로 발급 ↗ (주소 복사)</button></div>';
+      body = filesBlock("등기부등본") + regSummaryHtml(state.regSum) +
+        '<div class="lo-row"><button type="button" class="pri" data-act="doc-up" data-type="등기부등본">PDF 올리기</button><button type="button" data-act="iros">새로 발급 ↗ (주소 복사)</button></div>';
     } else {
       body = '<div class="lo-empty">등기부 파일이 아직 없어요. 유료(열람 700원·발급 1,000원)라서 직접 발급해서 올려 주세요.</div>' +
-        '<div class="lo-row"><button type="button" class="pri" data-act="iros">📑 등기소 열기 ↗ (주소 복사)</button><button type="button" data-act="goto-docs">PDF 올리기 ↓</button></div>';
+        filesBlock("등기부등본") + '<div class="lo-row"><button type="button" class="pri" data-act="iros">📑 등기소 열기 ↗ (주소 복사)</button><button type="button" data-act="doc-up" data-type="등기부등본">PDF 올리기</button></div>';
     }
     return '<div class="lo-card' + wide + '" data-card="registry"><h4>📑 등기부등본 <small>인터넷등기소 · 유료</small></h4>' + body + '</div>';
   }
@@ -420,7 +503,7 @@
     } else {
       body = '<div class="lo-empty">이 지번에 건축물대장이 없어요. 나대지이거나 대장 등록 전일 수 있어요.</div>';
     }
-    body += '<div class="lo-row"><button type="button" data-act="gov24">정부24 ↗ (주소 복사)</button></div>';
+    body += filesBlock("건축물대장") + '<div class="lo-row"><button type="button" data-act="gov24">정부24 ↗ (주소 복사)</button><button type="button" class="pri" data-act="doc-up" data-type="건축물대장">건축물대장 올리기</button></div>';
     return '<div class="lo-card" data-card="building"><h4>🏢 건축물대장 <small>표제부 · 전유부</small></h4>' + body + '</div>';
   }
   function cardLand(d) {
@@ -527,9 +610,7 @@
     else if (state.error) body = '<div class="lo-warn">자료를 불러오지 못했어요: ' + esc(state.error) + '</div><div class="lo-grid" style="margin-top:10px">' + cardRegistry() + '</div>';
     else body = '<div class="lo-note">등기부 파일이 있으면 같이 보여 주고, 없으면 발급 링크로 연결합니다. 나머지 서류는 자동으로 불러옵니다.</div><div class="lo-grid">' + cardRegistry() + cardBuilding(state.data) + cardLand(state.data) + cardLandUse(state.data) + cardMap(state.data) + '</div>';
     // 서류 보관(건축물대장·등기부 파일) 영역을 같은 박스 안 아래쪽으로 합친다.
-    root.innerHTML = '<section class="detail-section">' + head + body + '<div id="loDocsSlot"></div></section>';
-    var docsSlot = root.querySelector("#loDocsSlot");
-    if (docsSlot && docsRoot) docsSlot.appendChild(docsRoot);
+    root.innerHTML = '<section class="detail-section">' + head + body + othersBlock() + '<div class="lo-docs-note">서류 파일은 홈페이지에 공개되지 않고, 로그인한 직원만 열람할 수 있어요. (PDF·사진, 파일당 30MB 이하)</div></section>';
   }
 
   root.addEventListener("click", function (e) {
@@ -540,15 +621,24 @@
     else if (act === "eum") openWithAddress(EUM, addr, "토지이음");
     else if (act === "goto-docs") { docsRoot.scrollIntoView({ behavior: "smooth", block: "start" }); }
     else if (act === "open-reg") { var d0 = (state.regDocs || [])[0]; if (d0) { var win = window.open("", "_blank"); signedUrl(d0).then(function (u) { if (win) win.location.href = u; else window.open(u, "_blank"); }, function () { if (win) win.close(); toast("파일을 열지 못했어요. 다시 로그인한 뒤 시도해 주세요."); }); } }
+    else if (act === "doc-open") openDoc(t.getAttribute("data-id"));
+    else if (act === "doc-del") deleteDoc(t.getAttribute("data-id"));
+    else if (act === "doc-up") pickFile(t.getAttribute("data-type"));
     else if (act === "price-more") { var tb = t.closest(".lo-card").querySelector(".lo-price"); var op = tb.classList.toggle("open"); t.textContent = op ? "접기 ▴" : "더보기 (이전 " + t.getAttribute("data-more") + "건) ▾"; }
     else if (act === "map-zoom") openCadastral(state.data, addr);
     else if (act === "refresh") start(true);
   });
 
+  root.addEventListener("change", function (e) {
+    var inp = e.target; if (!inp || !inp.classList || !inp.classList.contains("lo-file")) return;
+    var files = inp.files; var type = inp.getAttribute("data-type");
+    uploadDocs(type, files).then(function () { try { inp.value = ""; } catch (_) {} });
+  });
+
   async function start(force) {
     state.loading = true; state.error = null; render();
     state.info = readInfo();
-    state.regDocs = await loadRegDocs();
+    await reloadDocs();
     if (state.info.address) {
       var key = "lo:" + listingId + ":" + state.info.address + ":" + state.info.hoNm;
       try {
