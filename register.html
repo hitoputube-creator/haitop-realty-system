@@ -172,6 +172,22 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle{color:#233f
 .apartment-listing-form .apt-subtitle .apt-title-btn{background:#ffffff;color:var(--gold,#25675f);border:1px solid var(--gold,#25675f);border-radius:8px;cursor:pointer;font-weight:700}
 html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-btn{color:#233f5d;border-color:#9fb3cc}
 </style>
+<style id="regLandStyle">/* 토지 등록 배치: 토지면적·평당가격 위치, 조회 버튼 */
+body .area-section.area-land{display:none!important}
+body:not(.land-reg) #landAreaField,body:not(.land-reg) #landPriceField{display:none!important}
+body.land-reg .form-grid-3:has(#mapAddress){grid-template-columns:repeat(10,minmax(0,1fr))!important}
+body.land-reg .form-grid-3:has(#mapAddress)>.field:has(#mapAddress){grid-column:span 5!important}
+body.land-reg .form-grid-3:has(#mapAddress)>#roadField{grid-column:span 3!important}
+body.land-reg .form-grid-3:has(#mapAddress)>#landAreaField{grid-column:span 2!important}
+.land-area-inline{display:flex;align-items:center;gap:4px;height:40px}
+.land-area-inline input{flex:1 1 0;width:0!important;min-width:0;height:40px!important;box-sizing:border-box}
+.land-area-inline .area-unit{font-size:12px;color:var(--text-muted)}
+#landUnitPrice{width:100%}
+body.land-reg #lookupBuildingBtn{height:36px!important;padding:0 10px!important;font-size:12px!important;line-height:1!important}
+body.land-reg :is(#mapAddress,#roadAddress){height:40px!important;box-sizing:border-box}
+body.land-reg .form-grid-3:has(#mapAddress)>.field{align-self:start}
+body.land-reg .form-grid-3:has(#mapAddress)>.field>label{height:18px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
 <div class="page" id="registerPage">
@@ -1670,6 +1686,7 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 <script src="assets/js/owner-memo.js?v=20261112-om2"></script>
 <script src="assets/js/presale-price.js?v=20261112-pp2"></script>
 <script src="assets/js/land-area-lookup.js?v=20261117-land2"></script>
+<script src="assets/js/reg-land-layout.js?v=20261117-lay1"></script>
 </body>
 </html>
 
