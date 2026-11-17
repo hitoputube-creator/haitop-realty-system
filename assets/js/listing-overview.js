@@ -82,6 +82,7 @@
       ".lo-list{margin:0 0 6px;padding-left:18px;font-size:.84rem;line-height:1.7}.lo-list b{color:#1f2a2a}",
       ".lo-det{margin-top:8px;font-size:.76rem;color:#5b6c6c}.lo-det pre{max-height:220px;overflow:auto;background:#f6f8f8;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:.72rem}"
     ].join("");
+    st.textContent += ".lo-price tr.lo-more{display:none}.lo-price.open tr.lo-more{display:table-row}.lo-morebtn{font-size:.74rem!important;padding:3px 10px!important}";
     st.textContent += "#loMapModal{position:fixed;inset:0;z-index:100000;background:rgba(10,24,40,.6);display:flex;align-items:center;justify-content:center;padding:20px}#loMapModal .lm-box{width:min(1200px,96vw);height:min(820px,92vh);background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)}#loMapModal .lm-head{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#dce8f6;border-bottom:1px solid #b9cadd;color:#16487f;font-size:13.5px}#loMapModal .lm-tools{display:flex;gap:4px;margin-left:8px}#loMapModal .lm-tools button{padding:3px 12px;font-size:12px;font-weight:700;border:1px solid #8fa8c2;background:#fff;color:#16487f;border-radius:6px;cursor:pointer;font-family:inherit}#loMapModal .lm-tools button.on{background:#1f5fa8;color:#fff;border-color:#1f5fa8}#loMapModal .lm-hint{margin-left:auto;font-size:11.5px;color:#4a627c}#loMapModal .lm-close{border:none;background:none;font-size:18px;cursor:pointer;color:#16487f}#loMapModal .lm-map{flex:1;position:relative;background:#eef3f9}#loMapModal .lm-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#4a627c;font-size:14px}.lo-map[data-act]{cursor:zoom-in}";
     document.head.appendChild(st);
   }
@@ -435,8 +436,11 @@
     }
     var prices = d.prices || [];
     if (prices.length) {
+      // 가장 최근 연도 1건만 보이고, 나머지는 "더보기"를 눌러야 보인다.
+      var sortedPrices = prices.slice().sort(function (a, b) { return Number(b.year) - Number(a.year); });
       body += '<div class="lo-sub">개별공시지가 (㎡당)</div><table class="lo-price"><tr><th>연도</th><th>원/㎡</th></tr>' +
-        prices.map(function (p) { return '<tr><td>' + esc(p.year) + '</td><td>' + fmt(p.price, 0) + '</td></tr>'; }).join("") + '</table>';
+        sortedPrices.map(function (p, i) { return '<tr' + (i ? ' class="lo-more"' : '') + '><td>' + esc(p.year) + '</td><td>' + fmt(p.price, 0) + '</td></tr>'; }).join("") + '</table>' +
+        (sortedPrices.length > 1 ? '<div class="lo-row"><button type="button" class="lo-morebtn" data-act="price-more" data-more="' + (sortedPrices.length - 1) + '">더보기 (이전 ' + (sortedPrices.length - 1) + '건) ▾</button></div>' : '');
     }
     body += '<div class="lo-note">※ 소유자 이름·주소는 공개 자료에 없어요. 소유구분만 나옵니다. 정식 서류는 정부24에서 발급하세요.</div>' +
       '<div class="lo-row"><button type="button" data-act="gov24">정부24 ↗ (주소 복사)</button></div>';
@@ -532,6 +536,7 @@
     else if (act === "eum") openWithAddress(EUM, addr, "토지이음");
     else if (act === "goto-docs") { docsRoot.scrollIntoView({ behavior: "smooth", block: "start" }); }
     else if (act === "open-reg") { var d0 = (state.regDocs || [])[0]; if (d0) { var win = window.open("", "_blank"); signedUrl(d0).then(function (u) { if (win) win.location.href = u; else window.open(u, "_blank"); }, function () { if (win) win.close(); toast("파일을 열지 못했어요. 다시 로그인한 뒤 시도해 주세요."); }); } }
+    else if (act === "price-more") { var tb = t.closest(".lo-card").querySelector(".lo-price"); var op = tb.classList.toggle("open"); t.textContent = op ? "접기 ▴" : "더보기 (이전 " + t.getAttribute("data-more") + "건) ▾"; }
     else if (act === "map-zoom") openCadastral(state.data, addr);
     else if (act === "refresh") start(true);
   });
