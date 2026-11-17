@@ -288,6 +288,23 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 #editModal #edit_description{min-height:110px!important;height:110px!important}
 #editModal textarea.om-new{min-height:92px!important;height:92px!important}
 </style>
+<style id="detailReadStyle">
+/* ── 상세 화면 가독성: 영역 배경·제목 띠·항목 칸·값 칸을 서로 다른 색으로 구분 ── */
+.detail-section{background:#eef3f9!important;border:1px solid #c9d7e6!important;border-radius:12px!important;padding:10px 14px!important;margin-bottom:10px!important}
+.detail-section>.detail-section-title,.detail-section .detail-section-title.lo-head{color:#16487f!important;background:#dce8f6!important;border-left:4px solid #1f5fa8!important;border-radius:4px!important;padding:5px 10px!important;margin:0 0 8px!important;font-size:14px!important;font-weight:800!important}
+.detail-read-item .detail-section-title{background:none!important;border:none!important;padding:0!important;color:#16487f!important;font-size:13.5px!important}
+.listing-info-table{border:1px solid #9fb6cf!important;border-radius:8px!important;overflow:hidden}
+.ipt-label{background:#d3e2f3!important;color:#17406b!important;font-weight:800!important;border-color:#a9bdd3!important}
+.ipt-value{background:#fff!important;color:#0e2236!important;font-weight:600!important;border-color:#c3d2e2!important}
+.detail-read-item{background:#fff!important;border:1px solid #c9d7e6!important;border-radius:8px!important;padding:8px 12px!important}
+.detail-read-label{color:#3d556f!important;font-weight:800!important;font-size:12.5px!important}
+.detail-read-value{color:#0e2236!important;font-weight:600!important}
+.lo-card{border-color:#b9cadd!important}
+.lo-card h4{color:#16487f!important;background:#e3edf8!important;border-left:3px solid #1f5fa8;border-radius:4px;padding:4px 8px!important}
+.lo-card dt{color:#3d556f!important;font-weight:700!important}
+.lo-card dd{color:#0e2236!important}
+.ld-panel{border-color:#b9cadd!important;background:#fff!important}
+</style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
 
@@ -1639,6 +1656,17 @@ function closeHomepageTab(tab) {
     return {roadAddress:item.roadAddress || base.roadAddress,jibunAddress:item.jibunAddress || base.jibunAddress};
   }
 
+  // 등록상태(등록구분·거래상태·홈페이지 공개 여부·등록일·최종 수정일)를 매물 상세정보 표에 함께 넣기 위한 [라벨, 값] 목록
+  function listingStatusPairs(item) {
+    return [
+      ["등록구분", item.listingKind === "명단" ? "명단" : "매물"],
+      ["거래상태", listingProgressStatus(item)],
+      ...(OfficeConfig.id === "ktop" ? [] : [["홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개"]]),
+      ["등록일", formatDateValue(item.created_at)],
+      ["최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))],
+    ];
+  }
+
   function renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact) {
     if (category.category2 === "아파트" || item.type === "apartment") {
       const u = apartmentSource(item);
@@ -1652,6 +1680,7 @@ function closeHomepageTab(tab) {
       ];
       const basic = section("기본정보", [
         [["아파트명",u.아파트명]],
+        ...listingStatusPairs(item).reduce((acc, p, i) => { if (i % 2 === 0) acc.push([p]); else acc[acc.length - 1].push(p); return acc; }, []),
         [["접수일자",u.접수일자],["매물 구분",u.권리구분 || "일반 아파트"]],
                 [["동",u.동],["호수",u.호]],
         [["분양평형",u.평형],["타입",u.타입]],
@@ -1845,6 +1874,7 @@ function closeHomepageTab(tab) {
     const shopKind = profileKey === "commercial" && window.CommercialPriceCore ? window.CommercialPriceCore.shopKind(item) : "";
     const rows = [
       iptRow([["1차구분", (c => ({ "공장창고": "공장·창고", "상가사무실": "상가·사무실", "건물빌딩": "건물·빌딩" })[c] || c)(resolveDisplayCategory1(cat1Raw || item.category1, category.category2 || item.category2))], ["2차구분", category.category2 || item.category2], ["거래유형", dealType === "회사임대" ? "(회사)월세(임대)" : dealType === "월세" ? "월세(임대)" : dealType === "매매·월세" ? "매매·월세(임대)" : dealType]]),
+      packRows(listingStatusPairs(item), 3),
       ...(profileKey === "commercial"
         ? [iptRow([["지도검색주소", mapAddress]])]
         : [...(item.is_public === true ? [iptRow([["제목", item.title]]), iptRow([["공개주소", publicAddress]])] : []), iptRow([["지도검색주소", mapAddress]])]),
@@ -2201,13 +2231,6 @@ function closeHomepageTab(tab) {
     }
     html += `<section class="detail-section"><div class="detail-section-title">이미지·자료</div><div class="detail-read-grid">${materialHtml}</div></section>`;
 
-    html += detailSection("등록상태", [
-      detailField("등록구분", item.listingKind === "명단" ? "명단" : "매물", { required: true }),
-      detailField("거래상태", listingProgressStatus(item), { required: true }),
-      ...(OfficeConfig.id === "ktop" ? [] : [detailField("홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개", { required: true })]),
-      detailField("등록일", formatDateValue(item.created_at)),
-      detailField("최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))),
-    ], { required: true, extraClass: "status-section" });
 
     return html;
   }
