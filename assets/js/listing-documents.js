@@ -36,7 +36,7 @@
   var listingId = new URLSearchParams(location.search).get("id");
   var root = document.getElementById("listingDocsArea");
   if (!root || !listingId) return;
-  if (typeof OfficeConfig !== "undefined" && OfficeConfig.id === "ktop") return;
+  // 하이탑·케이탑 공용 (케이탑도 같은 서류 보관 사용)
 
   function client() { return typeof hitopAuthClient !== "undefined" ? hitopAuthClient : null; }
 
