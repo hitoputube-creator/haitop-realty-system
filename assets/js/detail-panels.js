@@ -21,14 +21,15 @@
     st.id = "dpStyle";
     st.textContent = ".dp-hidden{display:none!important}" +
       "#detailPanelBar{display:flex;gap:8px;margin:2px 0 10px}" +
-      "#detailPanelBar .dp-btn{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #9fb6cf;border-radius:6px;background:#fff;color:#16487f;font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-sizing:border-box}" +
-      "#detailPanelBar .dp-btn:hover{background:#eef4fb}" +
-      "#detailPanelBar .dp-btn.on{background:#1f5fa8;border-color:#1f5fa8;color:#fff}" +
+      "#detailPanelBar .dp-btn{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border:1px solid #b9cadd;border-left:4px solid #1f5fa8;border-radius:6px;background:#dce8f6;color:#16487f;font:inherit;font-size:13.5px;font-weight:800;cursor:pointer;box-sizing:border-box;transition:background .12s,color .12s}" +
+      "#detailPanelBar .dp-btn:hover{background:#cddff3}" +
+      "#detailPanelBar .dp-btn.on{background:#1f5fa8;border-color:#1f5fa8;border-left-color:#0f3d73;color:#fff}" +
+      "#detailPanelBar .dp-ico{font-size:14px;line-height:1}" +
       "#detailPanelBar .dp-lab{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
-      "#detailPanelBar .dp-cnt{min-width:22px;padding:1px 7px;border-radius:4px;background:#e4ebf3;color:#7a8da3;font-size:12px;font-weight:800;text-align:center}" +
-      "#detailPanelBar .dp-cnt.has{background:#d6e6fa;color:#16487f}" +
-      "#detailPanelBar .dp-btn.on .dp-cnt{background:rgba(255,255,255,.25);color:#fff}" +
-      "#detailPanelBar .dp-caret{font-size:11px;opacity:.8}";
+      "#detailPanelBar .dp-cnt{min-width:24px;height:20px;line-height:20px;padding:0 7px;border-radius:4px;background:rgba(255,255,255,.7);color:#8aa0b8;font-size:12px;font-weight:800;text-align:center;box-sizing:border-box}" +
+      "#detailPanelBar .dp-cnt.has{background:#fff;color:#16487f;box-shadow:inset 0 0 0 1px #9fb6cf}" +
+      "#detailPanelBar .dp-btn.on .dp-cnt{background:rgba(255,255,255,.22);color:#fff;box-shadow:none}" +
+      "#detailPanelBar .dp-caret{font-size:11px;opacity:.75}";
     document.head.appendChild(st);
   }
 
@@ -62,7 +63,7 @@
       bar = document.createElement("div");
       bar.id = "detailPanelBar";
       bar.innerHTML = DEFS.map(function (d) {
-        return '<button type="button" class="dp-btn" data-k="' + d.k + '" aria-expanded="false"><span>' + d.ico + '</span><span class="dp-lab">' + d.label + '</span><span class="dp-cnt">0</span><span class="dp-caret">▾</span></button>';
+        return '<button type="button" class="dp-btn" data-k="' + d.k + '" aria-expanded="false"><span class="dp-ico">' + d.ico + '</span><span class="dp-lab">' + d.label + '</span><span class="dp-cnt">0</span><span class="dp-caret">▾</span></button>';
       }).join("");
       bar.addEventListener("click", function (e) {
         var b = e.target.closest(".dp-btn"); if (!b) return;
