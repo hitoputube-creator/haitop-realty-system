@@ -82,6 +82,7 @@
       ".lo-list{margin:0 0 6px;padding-left:18px;font-size:.84rem;line-height:1.7}.lo-list b{color:#1f2a2a}",
       ".lo-det{margin-top:8px;font-size:.76rem;color:#5b6c6c}.lo-det pre{max-height:220px;overflow:auto;background:#f6f8f8;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:.72rem}"
     ].join("");
+    st.textContent += "#loMapModal{position:fixed;inset:0;z-index:100000;background:rgba(10,24,40,.6);display:flex;align-items:center;justify-content:center;padding:20px}#loMapModal .lm-box{width:min(1200px,96vw);height:min(820px,92vh);background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)}#loMapModal .lm-head{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#dce8f6;border-bottom:1px solid #b9cadd;color:#16487f;font-size:13.5px}#loMapModal .lm-tools{display:flex;gap:4px;margin-left:8px}#loMapModal .lm-tools button{padding:3px 12px;font-size:12px;font-weight:700;border:1px solid #8fa8c2;background:#fff;color:#16487f;border-radius:6px;cursor:pointer;font-family:inherit}#loMapModal .lm-tools button.on{background:#1f5fa8;color:#fff;border-color:#1f5fa8}#loMapModal .lm-hint{margin-left:auto;font-size:11.5px;color:#4a627c}#loMapModal .lm-close{border:none;background:none;font-size:18px;cursor:pointer;color:#16487f}#loMapModal .lm-map{flex:1;position:relative;background:#eef3f9}#loMapModal .lm-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#4a627c;font-size:14px}.lo-map[data-act]{cursor:zoom-in}";
     document.head.appendChild(st);
   }
 
@@ -456,8 +457,59 @@
     body += '<div class="lo-note">※ 참고용입니다. 정식 확인서는 토지이음에서 발급하세요.</div><div class="lo-row"><button type="button" data-act="eum">토지이음 ↗ (주소 복사)</button></div>';
     return '<div class="lo-card" data-card="landuse"><h4>📋 토지이용계획 <small>지역·지구</small></h4>' + body + '</div>';
   }
+
+  // ---- 지적도 크게 보기: 카카오맵 지적편집도 위에서 확대·축소·이동 ----
+  var KAKAO_KEY = "234a59219ce322ed6a684e8ef41bf11f";
+  function ensureKakaoMaps() {
+    return new Promise(function (resolve, reject) {
+      function ready() { try { window.kakao.maps.load(function () { resolve(); }); } catch (e) { reject(e); } }
+      if (window.kakao && window.kakao.maps) { ready(); return; }
+      var key = String(window.HITOP_KAKAO_JS_KEY || KAKAO_KEY).trim();
+      var s = document.createElement("script");
+      s.src = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=" + encodeURIComponent(key) + "&libraries=services&autoload=false";
+      s.onload = ready;
+      s.onerror = function () { reject(new Error("카카오 지도를 불러오지 못했어요.")); };
+      document.head.appendChild(s);
+    });
+  }
+  function openCadastral(d, addr) {
+    if (!d || !d.point) { toast("이 지번의 좌표를 찾지 못해 크게 볼 수 없어요."); return; }
+    var old = document.getElementById("loMapModal"); if (old) old.remove();
+    var wrap = document.createElement("div");
+    wrap.id = "loMapModal";
+    wrap.innerHTML = '<div class="lm-box"><div class="lm-head"><b>📐 지적도 · ' + esc(d.address || addr || "") + '</b>' +
+      '<span class="lm-tools"><button type="button" data-m="road" class="on">지적도</button><button type="button" data-m="sky">위성+지적도</button></span>' +
+      '<span class="lm-hint">휠·+/- 버튼으로 확대·축소, 드래그로 이동</span><button type="button" class="lm-close" aria-label="닫기">✕</button></div>' +
+      '<div class="lm-map" id="loMapCanvas"><div class="lm-wait">지도를 불러오는 중…</div></div></div>';
+    document.body.appendChild(wrap);
+    function close() { wrap.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    wrap.querySelector(".lm-close").addEventListener("click", close);
+    wrap.addEventListener("click", function (e) { if (e.target === wrap) close(); });
+    ensureKakaoMaps().then(function () {
+      var kk = window.kakao.maps, el = document.getElementById("loMapCanvas");
+      if (!el) return;
+      el.innerHTML = "";
+      var center = new kk.LatLng(d.point.y, d.point.x);
+      var map = new kk.Map(el, { center: center, level: 2 });
+      map.addOverlayMapTypeId(kk.MapTypeId.USE_DISTRICT);
+      map.addControl(new kk.ZoomControl(), kk.ControlPosition.RIGHT);
+      new kk.Marker({ position: center, map: map });
+      wrap.querySelectorAll(".lm-tools button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          map.setMapTypeId(b.getAttribute("data-m") === "sky" ? kk.MapTypeId.HYBRID : kk.MapTypeId.ROADMAP);
+          wrap.querySelectorAll(".lm-tools button").forEach(function (x) { x.classList.toggle("on", x === b); });
+        });
+      });
+    }).catch(function (e) {
+      var el = document.getElementById("loMapCanvas");
+      if (el) el.innerHTML = '<div class="lm-wait">' + esc((e && e.message) || "지도를 불러오지 못했어요.") + '</div>';
+    });
+  }
+
   function cardMap(d) {
-    var body = d.mapImage ? '<div class="lo-map"><img alt="지적도" src="' + d.mapImage + '"><span class="lo-pin">📍</span></div><div class="lo-note">지도 가운데 📍이 해당 필지예요. 숫자는 지번입니다.</div>' : '<div class="lo-empty">지적도 이미지를 불러오지 못했어요.</div>';
+    var body = d.mapImage ? '<div class="lo-map"' + (d.point ? ' data-act="map-zoom" title="클릭하면 크게 보고 확대·이동할 수 있어요"' : '') + '><img alt="지적도" src="' + d.mapImage + '"><span class="lo-pin">📍</span></div><div class="lo-note">지도 가운데 📍이 해당 필지예요. 숫자는 지번입니다.</div>' + (d.point ? '<div class="lo-row"><button type="button" class="pri" data-act="map-zoom">🔍 크게 보기 · 확대/이동</button></div>' : '') : '<div class="lo-empty">지적도 이미지를 불러오지 못했어요.</div>';
     return '<div class="lo-card" data-card="map"><h4>📐 지적도 <small>브이월드</small></h4>' + body + '</div>';
   }
 
@@ -480,6 +532,7 @@
     else if (act === "eum") openWithAddress(EUM, addr, "토지이음");
     else if (act === "goto-docs") { docsRoot.scrollIntoView({ behavior: "smooth", block: "start" }); }
     else if (act === "open-reg") { var d0 = (state.regDocs || [])[0]; if (d0) { var win = window.open("", "_blank"); signedUrl(d0).then(function (u) { if (win) win.location.href = u; else window.open(u, "_blank"); }, function () { if (win) win.close(); toast("파일을 열지 못했어요. 다시 로그인한 뒤 시도해 주세요."); }); } }
+    else if (act === "map-zoom") openCadastral(state.data, addr);
     else if (act === "refresh") start(true);
   });
 
