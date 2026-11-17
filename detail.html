@@ -328,6 +328,17 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 .commercial-compare-heading{font-size:12.5px!important;font-weight:800!important;padding:5px 12px!important;min-height:0!important;height:auto!important;line-height:1.3!important;border-radius:6px!important;margin:0!important}
 .commercial-occupancy,select.commercial-occupancy{height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important}
 .commercial-tenant-biz,.presale-switch input.commercial-tenant-biz{width:150px!important;flex:0 0 150px!important;height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important;margin:0!important;box-sizing:border-box}
+
+.detail-title-extra.dt-dates{font-size:11.5px;font-weight:500;color:#5b7189}
+.detail-title-extra.dt-dates i{font-style:normal;margin:0 8px;color:#9fb0c3}
+.listing-info-table .ipt-label.hl-deal{background:#c7dbf5!important;color:#0f3d73!important}
+.listing-info-table .ipt-value.hl-deal{background:#e6f0ff!important;color:#0f4d9a!important;font-weight:800!important}
+.listing-info-table .ipt-label.hl-price{background:#f1dcae!important;color:#6b3c00!important}
+.listing-info-table .ipt-value.hl-price{background:#fff6e0!important;color:#8a4a00!important;font-weight:800!important;font-size:14.5px!important}
+.listing-info-table .ipt-label.hl-area{background:#cfe8d6!important;color:#1d5e3a!important}
+.listing-info-table .ipt-value.hl-area{background:#eaf6ee!important;color:#1d5e3a!important;font-weight:800!important}
+.listing-info-table .ipt-label.hl-use{background:#e2d6f3!important;color:#4b2a7a!important}
+.listing-info-table .ipt-value.hl-use{background:#f3edfb!important;color:#5a3a8a!important;font-weight:800!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -1628,10 +1639,20 @@ function closeHomepageTab(tab) {
   // .listing-info-table은 표 전체가 하나의 고정 6열 grid이므로(행마다 독립 grid가 아님),
   // 모든 행의 라벨·구분선이 항상 같은 위치에 온다. valueClass로 짧은 행의 마지막 값 칸만
   // 남는 열까지 넓혀 채운다(중간 라벨의 시작 위치는 절대 건드리지 않는다).
+  // 이 매물의 포인트가 되는 항목(거래유형·가격·면적·임대 상태)은 색을 살짝 달리해서 눈에 잘 띄게 한다.
+  function iptHighlight(label) {
+    const l = String(label || "");
+    if (l === "거래유형") return "deal";
+    if (/^(현재 |기존 |최초 )?(매매가|전세금|보증금|월세|분양가|월세\/매매가)$/.test(l) || /^(권리금|관리비)$/.test(l) || /^상가 (보증금|월세|권리금|관리비)$/.test(l) || /금액$/.test(l)) return "price";
+    if (/^(전용면적|공급면적|토지면적|대지면적|건축면적|연면적)$/.test(l)) return "area";
+    if (/^(임차업종|임대상태)$/.test(l)) return "use";
+    return "";
+  }
   function iptCell(label, value, valueClass) {
     const text = detailText(value);
     const cls = valueClass ? ` ${valueClass}` : "";
-    return `<div class="ipt-label">${escapeHtml(label)}</div><div class="ipt-value${cls}">${escapeHtml(text || "—")}</div>`;
+    const hl = iptHighlight(label), hc = hl ? ` hl-${hl}` : "";
+    return `<div class="ipt-label${hc}">${escapeHtml(label)}</div><div class="ipt-value${cls}${hc}">${escapeHtml(text || "—")}</div>`;
   }
 
   // pairs(1~3쌍)를 표의 고정 6열(라벨·값 x3) 기준에 맞춰 셀로 펼친다.
@@ -1697,6 +1718,16 @@ function closeHomepageTab(tab) {
       ["등록일", formatDateValue(item.created_at)],
       ["최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))],
     ];
+  }
+
+  // 표 안에는 등록구분·거래상태·공개 여부만 넣고, 등록일·최종 수정일은 제목 줄 오른쪽에 작게 보여준다.
+  function listingStatusPairsLite(item) {
+    return listingStatusPairs(item).filter(p => p[0] !== "등록일" && p[0] !== "최종 수정일");
+  }
+  function listingDatesTag(item) {
+    const created = formatDateValue(item.created_at) || "—";
+    const updated = formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local)) || "—";
+    return '<span class="detail-title-extra dt-dates">등록일 ' + escapeHtml(created) + '<i>·</i>최종 수정일 ' + escapeHtml(updated) + '</span>';
   }
 
   function renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact) {
@@ -1909,7 +1940,7 @@ function closeHomepageTab(tab) {
     const rows = [
       iptRow([["1차구분", (c => ({ "공장창고": "공장·창고", "상가사무실": "상가·사무실", "건물빌딩": "건물·빌딩" })[c] || c)(resolveDisplayCategory1(cat1Raw || item.category1, category.category2 || item.category2))], ["2차구분", category.category2 || item.category2], ["거래유형", dealType === "회사임대" ? "(회사)월세(임대)" : dealType === "월세" ? "월세(임대)" : dealType === "매매·월세" ? "매매·월세(임대)" : dealType]]),
       ...(identityKeys ? [iptRow([...identityKeys.map(k => cells[k]), ...(profileKey === "commercial" ? [["상가구분", shopKind]] : [])])] : []),
-      ...(p => [iptRow(p.slice(0, 3)), iptRow(p.slice(3))].filter(r => r))(listingStatusPairs(item)),
+      ...(p => [iptRow(p.slice(0, 3)), iptRow(p.slice(3))].filter(r => r))(listingStatusPairsLite(item)),
       ...(profileKey === "commercial"
         ? [iptRow([["지도검색주소", mapAddress]])]
         : [...(item.is_public === true ? [iptRow([["제목", item.title]]), iptRow([["공개주소", publicAddress]])] : []), iptRow([["지도검색주소", mapAddress]])]),
@@ -1969,7 +2000,7 @@ function closeHomepageTab(tab) {
       .filter(([, value]) => hasDetailValue(detailText(value)))
       .map(pair => iptRow([pair])).join("");
     return `<section class="detail-section listing-info-section">
-      <div class="detail-section-title">매물 상세정보</div>
+      <div class="detail-section-title">매물 상세정보${listingDatesTag(item)}</div>
       <div class="listing-info-table">${rows}${extraRows}</div>
     </section>`;
   }
@@ -2755,7 +2786,7 @@ function closeHomepageTab(tab) {
   init();
 </script>
 <script src="assets/js/listing-promo-add.js?v=20261105-add1"></script>
-<script src="assets/js/detail-panels.js?v=20261117-dp4"></script>
+<script src="assets/js/detail-panels.js?v=20261117-dp5"></script>
 <style id="ldStyles">
 .ld-section .ld-note{font-size:.8rem;color:var(--text-muted);margin:2px 0 12px;line-height:1.5}
 .ld-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
