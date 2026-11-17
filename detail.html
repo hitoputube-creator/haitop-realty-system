@@ -259,6 +259,19 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 #editModal [id*=ownerMemo],#editModal #edit_owner_memo{min-height:40px!important;height:40px!important}
 #editModal #edit_internalInfoGrid .muted,#editModal #edit_internalInfoGrid>.field~div,#editModal [id^="edit_ownerMemo"]{font-size:11px!important}
 #editModal .om-empty{font-size:11px!important;margin:0!important;padding:0!important}
+
+#editModal #edit_area_land{display:none!important}
+#editModal:not(.land-edit) #edit_landAreaField,#editModal:not(.land-edit) #edit_landPriceField{display:none!important}
+#editModal.land-edit .edit-grid-3:has(#edit_salePrice){grid-template-columns:repeat(4,minmax(0,1fr))!important}
+#editModal #edit_landAreaField{grid-column:span 2!important}
+#editModal .land-area-inline{display:flex;align-items:center;gap:4px;height:28px}
+#editModal .land-area-inline input{flex:1 1 0;width:0!important;min-width:0}
+#editModal .land-area-inline .area-unit{font-size:11px!important;color:var(--text-muted)}
+#editModal #edit_landUnitPrice{width:100%!important;flex:none!important}
+#editModal #editLookupBuildingBtn{height:28px!important;padding:0 8px!important;font-size:11px!important;line-height:1!important}
+#editModal #edit_mapAddress,#editModal #edit_roadAddress{height:28px!important}
+#editModal #edit_basicInfoGrid>.field>label{height:16px!important;line-height:16px!important;display:block;white-space:nowrap;overflow:hidden}
+#editModal #edit_basicInfoGrid>.field{row-gap:2px!important;gap:2px!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -2687,6 +2700,7 @@ function closeHomepageTab(tab) {
 <script src="assets/js/listing-documents.js?v=20261117-docs4"></script>
 <script src="assets/js/listing-overview.js?v=20261117-ov4"></script>
 <script src="assets/js/land-area-lookup.js?v=20261117-land2"></script>
+<script src="assets/js/edit-land-layout.js?v=20261117-lay1"></script>
 <script src="assets/js/owner-memo.js?v=20261112-om2"></script>
 <script src="assets/js/presale-price.js?v=20261112-pp2"></script>
 </body>
