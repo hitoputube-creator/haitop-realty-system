@@ -245,3 +245,8 @@ html body .wd-sticker-bar .wd-sticker-btn:nth-child(1).active{border-color:#2547
 
 /* 주간 업무일지: 창이 좁아도 일주일(7칸)을 한 줄에 */
 @media (min-width:901px){.wd-week-grid{grid-template-columns:repeat(7,minmax(0,1fr)) !important;gap:8px !important}}
+
+/* 2026-11-17 상단 버튼: 네모 버튼, 간격 줄이기 (하이탑과 동일 구조) */
+.wd-header .wd-btn-workcenter,.wd-header .wd-btn-google-calendar,.wd-header .wd-btn-private-notes,.wd-header .diary-logout-btn{border-radius:8px!important;background:#fff!important;color:#23364c!important;border:1px solid #d3deeb!important}
+.wd-header .wd-btn-workcenter:hover,.wd-header .wd-btn-google-calendar:hover,.wd-header .wd-btn-private-notes:hover,.wd-header .diary-logout-btn:hover{background:#f1f5fa!important;color:#254767!important;border-color:#254767!important}
+@media (width > 1100px){.wd-header{gap:10px!important}.wd-header .wd-btn-workcenter{padding:8px 12px!important;gap:5px!important}}
