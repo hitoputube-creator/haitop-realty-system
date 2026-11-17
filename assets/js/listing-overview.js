@@ -1,8 +1,11 @@
 // 매물 상세: "서류 한눈에 보기" (건축물대장·토지대장·토지이용계획·지적도·등기부 링크) + 지도검색주소 옆 등기부 발급 버튼
-// 데이터는 Supabase 함수 listing-overview(로그인 필요)가 브이월드·건축HUB에서 가져온다. 하이탑 전용(케이탑은 별도 DB라 제외).
+// 데이터는 Supabase 함수 listing-overview(로그인 필요)가 브이월드·건축HUB에서 가져온다. 하이탑·케이탑 공용(케이탑은 케이탑 로그인 토큰으로 하이탑 함수를 호출).
 (function () {
   "use strict";
-  if (typeof OfficeConfig !== "undefined" && OfficeConfig.id === "ktop") return;
+  var HITOP_URL = "https://xaxbkdnrzsghsabkdvzj.supabase.co";
+  var HITOP_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd"; // 공개(publishable) 키
+  var IS_KTOP = typeof OfficeConfig !== "undefined" && OfficeConfig.id === "ktop";
+  var BUCKET = "listing-documents";
   var listingId = new URLSearchParams(location.search).get("id");
   var docsRoot = document.getElementById("listingDocsArea");
   if (!listingId || !docsRoot) return;
@@ -51,7 +54,8 @@
   }
 
   // ---- 스타일 ----
-  if (!document.getElementById("loStyle")) {
+  { var oldSt = document.getElementById("loStyle"); if (oldSt) oldSt.remove(); }
+  {
     var st = document.createElement("style");
     st.id = "loStyle";
     st.textContent = [
@@ -70,7 +74,12 @@
       ".lo-ok{font-size:.84rem;color:#0f4d4d;background:#e9f6f1;border-radius:8px;padding:10px 12px}",
       ".lo-map{position:relative;border-radius:8px;overflow:hidden;border:1px solid #d9e6e5;margin-bottom:8px}.lo-map img{display:block;width:100%;height:auto}.lo-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);font-size:26px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}",
       ".lo-price{width:100%;border-collapse:collapse;font-size:.8rem}.lo-price td,.lo-price th{border-bottom:1px solid #e6efee;padding:3px 6px;text-align:right}.lo-price th{color:#5b6c6c;font-weight:600}.lo-price td:first-child,.lo-price th:first-child{text-align:left}",
-      ".lo-loading{padding:14px;color:#5b6c6c;font-size:.9rem}"
+      ".lo-loading{padding:14px;color:#5b6c6c;font-size:.9rem}",
+      ".lo-card.lo-wide{grid-column:1/-1}",
+      ".lo-danger{background:#fdecec;border-left:4px solid #d33;color:#a02020;border-radius:8px;padding:10px 12px;font-size:.86rem;font-weight:700;margin-bottom:8px}.lo-danger ul{margin:6px 0 0;padding-left:18px;font-weight:600;color:#7a1f1f}",
+      ".lo-safe{background:#e9f6f1;border-left:4px solid #1b8a63;color:#0f5a40;border-radius:8px;padding:10px 12px;font-size:.86rem;font-weight:700;margin-bottom:8px}",
+      ".lo-list{margin:0 0 6px;padding-left:18px;font-size:.84rem;line-height:1.7}.lo-list b{color:#1f2a2a}",
+      ".lo-det{margin-top:8px;font-size:.76rem;color:#5b6c6c}.lo-det pre{max-height:220px;overflow:auto;background:#f6f8f8;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:.72rem}"
     ].join("");
     document.head.appendChild(st);
   }
@@ -94,11 +103,170 @@
     return false;
   }
 
+
+  // ===== 등기부(등기사항전부증명서) PDF 텍스트 요약 =====
+  var REG = {};
+  REG.PURPOSE_KEYS = ["소유권", "가압류", "압류", "가처분", "가등기", "임의경매", "강제경매", "경매", "근저당", "저당권", "전세권", "지상권", "지역권", "임차권", "질권", "근질권", "환매", "신탁", "예고", "공유", "화해", "주택임차권", "상가임차권", "채권담보권"];
+  REG.stripSp = function (s) { return String(s || "").replace(/\s+/g, ""); };
+  REG.won = function (s) { var m = String(s || "").match(/금\s*([\d,]{3,})\s*원/); return m ? Number(m[1].replace(/,/g, "")) : null; };
+  REG.moneyAfter = function (text, label) {
+    var re = new RegExp(label + "[^\\d]{0,12}?([\\d,]{4,})\\s*원");
+    var m = String(text || "").match(re);
+    return m ? Number(m[1].replace(/,/g, "")) : null;
+  };
+  REG.dateOf = function (text) {
+    var m = String(text || "").match(/(\d{4})\s*년\s*(\d{1,2})\s*월\s*(?:(\d{1,2})(?!\d)\s*일?)?/);
+    return m ? m[1] + "-" + String(m[2]).padStart(2, "0") + (m[3] ? "-" + String(m[3]).padStart(2, "0") : "") : null;
+  };
+  REG.isEntryStart = function (line) {
+    var m = String(line).match(/^\s*(\d{1,3}(?:-\d{1,3})?)\s+(\S.*)$/);
+    if (!m) return null;
+    var rest = REG.stripSp(m[2]);
+    if (/^\d+(?:-\d+)?번/.test(rest)) return { rank: m[1], rest: m[2] };
+    for (var i = 0; i < REG.PURPOSE_KEYS.length; i++) if (rest.indexOf(REG.PURPOSE_KEYS[i]) === 0) return { rank: m[1], rest: m[2] };
+    return null;
+  };
+  REG.splitEntries = function (lines) {
+    var entries = [], cur = null;
+    lines.forEach(function (ln) {
+      var st = REG.isEntryStart(ln);
+      if (st) { cur = { rank: st.rank, lines: [st.rest] }; entries.push(cur); }
+      else if (cur) cur.lines.push(ln);
+    });
+    entries.forEach(function (e) {
+      e.text = e.lines.join(" ").replace(/(^|\s)일(?=\s|$)/g, " ").replace(/\s+/g, " ").trim();
+      e.compact = REG.stripSp(e.text);
+      var dm = e.text.search(/\d{4}\s*년/);
+      e.purpose = (dm > 0 ? e.text.slice(0, dm) : e.text.slice(0, 30)).trim();
+      e.pc = REG.stripSp(e.purpose);
+      e.date = REG.dateOf(e.text);
+    });
+    return entries;
+  };
+  REG.deletedSet = function (entries) {
+    var del = {};
+    entries.forEach(function (e) {
+      var m = e.compact.match(/^(\d+(?:-\d+)?)번[가-힣]{2,16}[\d년월일제호]{0,40}말소/);
+      if (m) del[m[1]] = true;
+    });
+    return del;
+  };
+  REG.grab = function (text, label, stop) {
+    var re = new RegExp(label + "\\s+(.+?)(?=\\s+(?:" + stop + "|제\\d+호|설정계약|\\d{4}년|거래가액)|$)");
+    var m = String(text || "").match(re);
+    return m ? m[1].trim() : null;
+  };
+  REG.parse = function (allLines) {
+    var sec = null, title = [], gap = [], eul = [], meta = {};
+    var full = allLines.join("\n");
+    var mu = full.match(/고유번호\s*([\d-]{8,})/); if (mu) meta.uniqueNo = mu[1];
+    var mt = full.match(/열람\s*일시\s*:?\s*([^\n]{6,40})/); if (mt) meta.viewedAt = mt[1].trim();
+    var mi = full.match(/발행\s*일\s*:?\s*([^\n]{6,30})/); if (!mt && mi) meta.viewedAt = mi[1].trim();
+    var head = allLines.find(function (l) { return /\[(집합건물|건물|토지)\]/.test(l); });
+    if (head) meta.target = head.replace(/\s+/g, " ").trim();
+    var closed = false;
+    allLines.forEach(function (ln) {
+      var s = REG.stripSp(ln);
+      if (/【표제부】|【전유부분의건물의표시】|【대지권의목적인토지의표시】/.test(s) || /^【?표제부/.test(s)) { sec = "title"; return; }
+      if (/【갑구】/.test(s)) { sec = "gap"; return; }
+      if (/【을구】/.test(s)) { sec = "eul"; return; }
+      if (/^순위번호/.test(s) || /이하여백/.test(s) || /^주\)?요등기사항요약/.test(s)) return;
+      if (/^(열람일시|발행번호|발행일|\d+\/\d+|-?\d+-?)$/.test(s) || /^\*?실선으로그어진부분/.test(s)) return;
+      if (sec === "gap") gap.push(ln); else if (sec === "eul") eul.push(ln); else if (sec === "title") title.push(ln);
+    });
+    var G = REG.splitEntries(gap), E = REG.splitEntries(eul);
+    var delG = REG.deletedSet(G), delE = REG.deletedSet(E);
+    var out = { meta: meta, owners: [], acquired: null, cautions: [], mortgages: [], leases: [], other: [], counts: { gap: G.length, eul: E.length }, hasSections: !!(G.length || E.length || gap.length || eul.length || title.length) };
+
+    // 소유자: 말소되지 않은 마지막 소유권 보존/이전
+    var ownerEntries = G.filter(function (e) { return /^소유권(보존|이전)/.test(e.pc) && !/청구권|가등기|말소|일부/.test(e.pc) && !delG[e.rank]; });
+    var last = ownerEntries[ownerEntries.length - 1];
+    if (last) {
+      var re = /(소유자|공유자)\s+(.+?)\s+(\d{6}-[\d*]{1,7}|\d{6}-?)(?:\s+(.+?))?(?=\s+(?:소유자|공유자|지분|거래가액|\d+번|부동산)|$)/g, m, shares = [];
+      var sh = /지분\s*(\d+\s*분의\s*\d+)/g, sm;
+      while ((sm = sh.exec(last.text)) !== null) shares.push(sm[1].replace(/\s+/g, ""));
+      var i = 0;
+      while ((m = re.exec(last.text)) !== null) { out.owners.push({ kind: m[1], name: m[2].trim(), idFront: (m[3] || "").slice(0, 6), share: shares[i] || null }); i++; }
+      if (!out.owners.length) { var m2 = last.text.match(/(소유자|공유자)\s+(\S+(?:\s\S+)?)/); if (m2) out.owners.push({ kind: m2[1], name: m2[2], idFront: "", share: null }); }
+      var cause = (last.text.replace(last.purpose, "").match(/(매매|증여|상속|판결|임의경매|강제경매|경매|신탁|협의분할|분할|교환|현물출자|합병|회사분할|공매|수용|환지)/) || [])[1] || (/소유권보존/.test(last.pc) ? "보존" : null);
+      out.acquired = { rank: last.rank, date: last.date, kind: last.pc.replace(/\d.*$/, ""), cause: cause, price: REG.won(last.text.slice(last.text.indexOf("거래가액") >= 0 ? last.text.indexOf("거래가액") : 0)) };
+      if (last.text.indexOf("거래가액") < 0) out.acquired.price = null;
+    }
+
+    // 갑구 주의 등기(말소 안 된 것)
+    var CAUTION = [["가압류", "가압류"], ["압류", "압류"], ["가처분", "가처분"], ["임의경매", "경매"], ["강제경매", "경매"], ["경매개시", "경매"], ["가등기", "가등기"], ["신탁", "신탁"], ["환매", "환매특약"], ["예고", "예고등기"]];
+    G.forEach(function (e) {
+      if (delG[e.rank] || /^\d+(?:-\d+)?번/.test(e.pc) || /^소유권(보존|이전)(?!청구)/.test(e.pc)) return;
+      var hit = CAUTION.find(function (c) { return e.pc.indexOf(c[0]) >= 0; });
+      if (!hit) return;
+      var who = REG.grab(e.text, "(?:채권자|권리자|신탁원부|수탁자)", "\\d{6}|\\d{3}-\\d{2}|서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충청|전라|경상|제주|청구금액|채무자|소유자|사건번호|\\(");
+      out.cautions.push({ rank: e.rank, type: hit[1], purpose: e.purpose, date: e.date, amount: REG.moneyAfter(e.text, "청구금액"), who: who ? who.slice(0, 30) : null });
+    });
+
+    // 을구
+    var changes = {};
+    E.forEach(function (e) {
+      var m = e.pc.match(/^(\d+(?:-\d+)?)번(근저당권|저당권|전세권|임차권)(변경|이전)/);
+      if (m) changes[m[1]] = (changes[m[1]] || []).concat([e]);
+    });
+    E.forEach(function (e) {
+      if (delE[e.rank] || /^\d+(?:-\d+)?번/.test(e.pc)) return;
+      if (/^(근저당권|저당권)설정/.test(e.pc)) {
+        var amount = REG.moneyAfter(e.text, "채권최고액");
+        var holder = REG.grab(e.text, "(?:근저당권자|저당권자)", "\\d{6}|\\d{3}-\\d{2}|서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충청|전라|경상|제주|공동담보|\\(");
+        (changes[e.rank] || []).forEach(function (c) { var a2 = REG.moneyAfter(c.text, "채권최고액"); if (a2) amount = a2; var h2 = REG.grab(c.text, "(?:근저당권자|저당권자)", "\\d{6}|\\d{3}-\\d{2}|서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충청|전라|경상|제주|공동담보|\\("); if (h2) holder = h2; });
+        out.mortgages.push({ rank: e.rank, date: e.date, amount: amount, holder: holder ? holder.slice(0, 30) : null, debtor: (REG.grab(e.text, "채무자", "\\d{6}|서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충청|전라|경상|제주|근저당권자|저당권자") || "").slice(0, 20) || null });
+      } else if (/^(전세권|임차권|주택임차권|상가임차권)/.test(e.pc)) {
+        var kind = /임차권/.test(e.pc) ? "임차권" : "전세권";
+        out.leases.push({ rank: e.rank, kind: kind, date: e.date, amount: REG.moneyAfter(e.text, kind === "전세권" ? "전세금" : "임차보증금"), who: (REG.grab(e.text, "(?:전세권자|임차권자)", "\\d{6}|\\d{3}-\\d{2}|서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충청|전라|경상|제주|존속기간|범위|\\(") || "").slice(0, 25) || null, period: ((e.text.match(/존속기간\s*(\d{4}\s*년\s*\d{1,2}\s*월\s*\d{1,2}\s*일\s*부터\s*\d{4}\s*년\s*\d{1,2}\s*월\s*\d{1,2}\s*일\s*까지)/) || [])[1] || "").replace(/\s+/g, "") || null });
+      } else if (/^(지상권|지역권|질권|근질권|채권담보권|가압류|압류|가처분|가등기)/.test(e.pc)) {
+        out.other.push({ rank: e.rank, purpose: e.purpose, date: e.date });
+      }
+    });
+    out.mortgageTotal = out.mortgages.reduce(function (s, x) { return s + (x.amount || 0); }, 0);
+    out.leaseTotal = out.leases.reduce(function (s, x) { return s + (x.amount || 0); }, 0);
+    return out;
+  };
+
+  var pdfJsPromise = null;
+  function loadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (pdfJsPromise) return pdfJsPromise;
+    pdfJsPromise = new Promise(function (res, rej) {
+      var s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+      s.onload = function () { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; res(window.pdfjsLib); } catch (e) { rej(e); } };
+      s.onerror = function () { rej(new Error("PDF 읽기 도구를 불러오지 못했어요.")); };
+      document.head.appendChild(s);
+    });
+    return pdfJsPromise;
+  }
+  async function pdfToLines(buf) {
+    var lib = await loadPdfJs();
+    var pdf = await lib.getDocument({ data: buf }).promise;
+    var lines = [], pages = Math.min(pdf.numPages, 40);
+    for (var p = 1; p <= pages; p++) {
+      var page = await pdf.getPage(p);
+      var tc = await page.getTextContent();
+      var items = tc.items.filter(function (i) { return i.str && i.str.trim(); }).map(function (i) { return { s: i.str, x: i.transform[4], y: i.transform[5] }; });
+      items.sort(function (a, b) { return b.y - a.y || a.x - b.x; });
+      var rows = [];
+      items.forEach(function (it) {
+        var row = rows.find(function (r) { return Math.abs(r.y - it.y) <= 3; });
+        if (!row) { row = { y: it.y, items: [] }; rows.push(row); }
+        row.items.push(it);
+      });
+      rows.sort(function (a, b) { return b.y - a.y; });
+      rows.forEach(function (r) { r.items.sort(function (a, b) { return a.x - b.x; }); lines.push(r.items.map(function (i) { return i.s.trim(); }).join(" ")); });
+    }
+    return lines;
+  }
+
   // ---- 본문 ----
   var root = document.createElement("div");
   root.id = "listingOverviewArea";
   docsRoot.parentNode.insertBefore(root, docsRoot);
-  var state = { info: null, data: null, error: null, loading: true, regDocs: null };
+  var state = { info: null, data: null, error: null, loading: true, regDocs: null, regSum: null };
 
   async function token() {
     var c = client(); if (!c) return null;
@@ -110,10 +278,11 @@
     if (!t) throw new Error("로그인이 필요해요.");
     var ctl = new AbortController(); var timer = setTimeout(function () { ctl.abort(); }, 60000);
     try {
-      var res = await fetch(OfficeConfig.url + "/functions/v1/listing-overview", {
-        method: "POST", signal: ctl.signal,
-        headers: { apikey: OfficeConfig.key, Authorization: "Bearer " + t, "Content-Type": "application/json" },
-        body: JSON.stringify(info)
+      var hdr = IS_KTOP
+        ? { apikey: HITOP_KEY, Authorization: "Bearer " + HITOP_KEY, "x-ktop-token": t, "Content-Type": "application/json" }
+        : { apikey: OfficeConfig.key, Authorization: "Bearer " + t, "Content-Type": "application/json" };
+      var res = await fetch((IS_KTOP ? HITOP_URL : OfficeConfig.url) + "/functions/v1/listing-overview", {
+        method: "POST", signal: ctl.signal, headers: hdr, body: JSON.stringify(info)
       });
       var d = null; try { d = await res.json(); } catch (e) {}
       if (!res.ok || !d || d.error) throw new Error((d && d.error) || ("조회 실패 (" + res.status + ")"));
@@ -123,22 +292,86 @@
   async function loadRegDocs() {
     try {
       var c = client(); if (!c) return [];
-      var r = await c.from("listing_documents").select("id,original_name,created_at").eq("listing_id", listingId).eq("doc_type", "등기부등본").order("created_at", { ascending: false });
+      var r = await c.from("listing_documents").select("id,original_name,created_at,storage_path,mime_type").eq("listing_id", listingId).eq("doc_type", "등기부등본").order("created_at", { ascending: false });
       return r.error ? [] : (r.data || []);
     } catch (e) { return []; }
   }
 
+  function won(n) { if (n == null) return "—"; var eok = Math.floor(n / 1e8), man = Math.round((n % 1e8) / 1e4); var s = ""; if (eok) s += eok.toLocaleString("ko-KR") + "억"; if (man) s += (s ? " " : "") + man.toLocaleString("ko-KR") + "만"; return (s || "0") + "원"; }
+  function sp(s) { return String(s == null ? "" : s).replace(/\s+/g, ""); }
+  function regSummaryHtml(s) {
+    if (!s) return "";
+    if (s.loading) return '<div class="lo-loading">등기부 PDF를 읽는 중…</div>';
+    if (s.error) return '<div class="lo-warn">' + esc(s.error) + '</div>';
+    var p = s.parsed, h = "";
+    var cn = p.cautions.length;
+    if (cn) {
+      h += '<div class="lo-danger">⚠ 말소 안 된 주의 등기 ' + cn + '건<ul>' + p.cautions.map(function (c) { return '<li>' + esc(c.type) + ' · ' + esc(c.date || "") + (c.amount ? ' · ' + won(c.amount) : '') + (c.who ? ' · ' + esc(c.who) : '') + '</li>'; }).join("") + '</ul></div>';
+    } else {
+      h += '<div class="lo-safe">✔ 말소 안 된 압류·가압류·가처분·경매 기록은 이 PDF에 없어요</div>';
+    }
+    h += '<div class="lo-sub">소유자 (갑구)</div>';
+    if (p.owners.length) {
+      h += '<ul class="lo-list">' + p.owners.map(function (o) { return '<li><b>' + esc(o.name) + '</b>' + (o.share ? ' · 지분 ' + esc(o.share) : '') + '</li>'; }).join("") + '</ul>';
+      if (p.acquired) h += '<div class="lo-note">취득: ' + esc(p.acquired.date || "") + ' ' + esc(sp(p.acquired.kind || "")) + (p.acquired.cause ? ' (' + esc(p.acquired.cause) + ')' : '') + (p.acquired.price ? ' · 거래가액 ' + won(p.acquired.price) : '') + '</div>';
+    } else {
+      h += '<div class="lo-empty">소유자를 읽지 못했어요. 원문을 확인해 주세요.</div>';
+    }
+    h += '<div class="lo-sub">근저당·저당 (을구)</div>';
+    if (p.mortgages.length) {
+      h += '<ul class="lo-list">' + p.mortgages.map(function (m) { return '<li><b>' + won(m.amount) + '</b> · ' + esc(m.holder || "근저당권자 미확인") + (m.debtor ? ' (채무자 ' + esc(m.debtor) + ')' : '') + (m.date ? ' · ' + esc(m.date) : '') + '</li>'; }).join("") + '</ul><div class="lo-note">채권최고액 합계 <b>' + won(p.mortgageTotal) + '</b></div>';
+    } else h += '<div class="lo-ok">말소 안 된 근저당이 없어요</div>';
+    if (p.leases.length) {
+      h += '<div class="lo-sub">전세권·임차권</div><ul class="lo-list">' + p.leases.map(function (l) { return '<li>' + esc(l.kind) + ' <b>' + won(l.amount) + '</b>' + (l.who ? ' · ' + esc(l.who) : '') + (l.period ? ' · ' + esc(String(l.period).replace(/(\d{4})년(\d{1,2})월(\d{1,2})일부터(\d{4})년(\d{1,2})월(\d{1,2})일까지/, "$1.$2.$3 ~ $4.$5.$6")) : '') + '</li>'; }).join("") + '</ul>';
+    }
+    if (p.other.length) h += '<div class="lo-note">그 밖의 권리: ' + p.other.map(function (o) { return esc(sp(o.purpose)); }).join(", ") + '</div>';
+    if (p.meta && (p.meta.viewedAt || p.meta.target)) h += '<div class="lo-note">' + (p.meta.target ? esc(p.meta.target) + '<br>' : '') + (p.meta.viewedAt ? '열람 ' + esc(p.meta.viewedAt) : '') + '</div>';
+    h += '<div class="lo-note">※ PDF 글자를 자동으로 읽은 요약이에요. 계약 등 중요한 판단은 원문 PDF로 꼭 확인하세요.</div>';
+    h += '<details class="lo-det"><summary>읽어 온 글자 보기 (요약이 이상할 때)</summary><pre>' + esc((s.lines || []).slice(0, 220).join("\n")) + '</pre></details>';
+    return h;
+  }
   function cardRegistry() {
     var docs = state.regDocs || [];
-    var body;
+    var body, wide = "";
     if (docs.length) {
-      body = '<div class="lo-ok">📑 올려 둔 등기부 파일 ' + docs.length + '건 · 최근 ' + esc(docs[0].original_name || "파일") + '<br>등기부 내용 요약은 파일 형식을 확인한 뒤 이 칸에 붙일 예정입니다.</div>' +
-        '<div class="lo-row"><button type="button" class="pri" data-act="goto-docs">올린 파일 보기 ↓</button><button type="button" data-act="iros">새로 발급 ↗ (주소 복사)</button></div>';
+      wide = " lo-wide";
+      body = '<div class="lo-note">올린 등기부 ' + docs.length + '건 · 최근 파일: ' + esc(docs[0].original_name || "파일") + '</div>' + regSummaryHtml(state.regSum) +
+        '<div class="lo-row"><button type="button" class="pri" data-act="open-reg">원문 PDF 열기</button><button type="button" data-act="goto-docs">올린 파일 보기 ↓</button><button type="button" data-act="iros">새로 발급 ↗ (주소 복사)</button></div>';
     } else {
       body = '<div class="lo-empty">등기부 파일이 아직 없어요. 유료(열람 700원·발급 1,000원)라서 직접 발급해서 올려 주세요.</div>' +
         '<div class="lo-row"><button type="button" class="pri" data-act="iros">📑 등기소 열기 ↗ (주소 복사)</button><button type="button" data-act="goto-docs">PDF 올리기 ↓</button></div>';
     }
-    return '<div class="lo-card" data-card="registry"><h4>📑 등기부등본 <small>인터넷등기소 · 유료</small></h4>' + body + '</div>';
+    return '<div class="lo-card' + wide + '" data-card="registry"><h4>📑 등기부등본 <small>인터넷등기소 · 유료</small></h4>' + body + '</div>';
+  }
+  async function signedUrl(doc) {
+    var r = await client().storage.from(BUCKET).createSignedUrl(doc.storage_path, 300);
+    if (r.error || !r.data || !r.data.signedUrl) throw (r.error || new Error("no url"));
+    return r.data.signedUrl;
+  }
+  async function loadRegSummary() {
+    var docs = state.regDocs || [];
+    var pdf = docs.find(function (d) { return /pdf/i.test(d.mime_type || "") || /\.pdf$/i.test(d.original_name || ""); });
+    if (!pdf) { state.regSum = docs.length ? { error: "올린 파일이 사진이라 자동 요약은 안 돼요. PDF로 올리면 요약해 드려요." } : null; refreshRegCard(); return; }
+    if (state.regSum && state.regSum.docId === pdf.id && state.regSum.parsed) return;
+    state.regSum = { docId: pdf.id, loading: true }; refreshRegCard();
+    try {
+      var url = await signedUrl(pdf);
+      var buf = await (await fetch(url)).arrayBuffer();
+      var lines = await pdfToLines(buf);
+      var chars = lines.join("").replace(/\s/g, "").length;
+      if (chars < 80) { state.regSum = { docId: pdf.id, error: "이미지로 된 PDF라 글자를 읽지 못했어요. 인터넷등기소에서 받은 PDF 원본을 올려 주세요." }; }
+      else {
+        var parsed = REG.parse(lines);
+        if (!parsed.hasSections || (!parsed.counts.gap && !parsed.counts.eul && !parsed.owners.length)) state.regSum = { docId: pdf.id, error: "등기부 형식을 읽지 못했어요. 원문 PDF를 직접 확인해 주세요.", lines: lines };
+        else state.regSum = { docId: pdf.id, parsed: parsed, lines: lines };
+      }
+    } catch (e) { state.regSum = { docId: pdf.id, error: "등기부 PDF를 읽지 못했어요: " + ((e && e.message) || e) }; }
+    refreshRegCard();
+  }
+  function refreshRegCard() {
+    var card = root.querySelector('[data-card="registry"]');
+    if (!card) return;
+    var tmp = document.createElement("div"); tmp.innerHTML = cardRegistry(); card.replaceWith(tmp.firstChild);
   }
   function cardBuilding(d) {
     var b = d.building || {}; var body;
@@ -232,6 +465,7 @@
     else if (act === "gov24") openWithAddress(GOV24, addr, "정부24");
     else if (act === "eum") openWithAddress(EUM, addr, "토지이음");
     else if (act === "goto-docs") { docsRoot.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    else if (act === "open-reg") { var d0 = (state.regDocs || [])[0]; if (d0) { var win = window.open("", "_blank"); signedUrl(d0).then(function (u) { if (win) win.location.href = u; else window.open(u, "_blank"); }, function () { if (win) win.close(); toast("파일을 열지 못했어요. 다시 로그인한 뒤 시도해 주세요."); }); } }
     else if (act === "refresh") start(true);
   });
 
@@ -243,7 +477,7 @@
       var key = "lo:" + listingId + ":" + state.info.address + ":" + state.info.hoNm;
       try {
         var cached = !force && sessionStorage.getItem(key);
-        if (cached) { var cd = JSON.parse(cached); if (Date.now() - cd.t < 600000) { state.data = cd.d; state.loading = false; render(); return; } }
+        if (cached) { var cd = JSON.parse(cached); if (Date.now() - cd.t < 600000) { state.data = cd.d; state.loading = false; render(); loadRegSummary(); return; } }
       } catch (e) {}
       try {
         state.data = await fetchOverview(state.info);
@@ -251,6 +485,7 @@
       } catch (e) { state.error = e && e.name === "AbortError" ? "응답이 너무 오래 걸려요. 잠시 뒤 새로고침해 주세요." : (e && e.message) || "알 수 없는 오류"; }
     }
     state.loading = false; render();
+    loadRegSummary();
   }
 
   // 등기부 파일이 새로 올라오면 등기부 칸만 갱신
@@ -260,9 +495,9 @@
     obsTimer = setTimeout(async function () {
       var next = await loadRegDocs();
       if (JSON.stringify(next.map(function (x) { return x.id; })) === JSON.stringify((state.regDocs || []).map(function (x) { return x.id; }))) return;
-      state.regDocs = next;
-      var card = root.querySelector('[data-card="registry"]');
-      if (card) { var tmp = document.createElement("div"); tmp.innerHTML = cardRegistry(); card.replaceWith(tmp.firstChild); }
+      state.regDocs = next; state.regSum = null;
+      refreshRegCard();
+      loadRegSummary();
     }, 700);
   }).observe(docsRoot, { childList: true, subtree: true });
 
