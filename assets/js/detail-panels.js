@@ -20,9 +20,9 @@
     var st = document.createElement("style");
     st.id = "dpStyle";
     st.textContent = ".dp-hidden{display:none!important}" +
-      "#detailPanelBar{display:flex;gap:8px;margin:0 0 10px}" +
+      "#detailPanelBar{display:flex;gap:8px;margin:0 0 10px;padding:8px 14px;background:#eef3f9;border:1px solid #c9d7e6;border-radius:12px}" +
       "#listingOverviewArea>.detail-section{margin-top:0!important}" +
-      "#detailPanelBar .dp-btn{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border:1px solid #b9cadd;border-left:4px solid #1f5fa8;border-radius:6px;background:#dce8f6;color:#16487f;font:inherit;font-size:13.5px;font-weight:800;cursor:pointer;box-sizing:border-box;transition:background .12s,color .12s}" +
+      "#detailPanelBar .dp-btn{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid #b9cadd;border-left:4px solid #1f5fa8;border-radius:6px;background:#dce8f6;color:#16487f;font:inherit;font-size:13px;font-weight:800;cursor:pointer;box-sizing:border-box;transition:background .12s,color .12s}" +
       "#detailPanelBar .dp-btn:hover{background:#cddff3}" +
       "#detailPanelBar .dp-btn.on{background:#1f5fa8;border-color:#1f5fa8;border-left-color:#0f3d73;color:#fff}" +
       "#detailPanelBar .dp-ico{font-size:14px;line-height:1}" +
