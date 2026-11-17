@@ -21,7 +21,7 @@
     st.id = "dpStyle";
     st.textContent = ".dp-hidden{display:none!important}" +
       "#detailPanelBar{display:flex;gap:8px;margin:2px 0 10px}" +
-      "#detailPanelBar .dp-btn{flex:1 1 0;max-width:260px;min-width:0;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #9fb6cf;border-radius:6px;background:#fff;color:#16487f;font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-sizing:border-box}" +
+      "#detailPanelBar .dp-btn{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #9fb6cf;border-radius:6px;background:#fff;color:#16487f;font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-sizing:border-box}" +
       "#detailPanelBar .dp-btn:hover{background:#eef4fb}" +
       "#detailPanelBar .dp-btn.on{background:#1f5fa8;border-color:#1f5fa8;color:#fff}" +
       "#detailPanelBar .dp-lab{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
