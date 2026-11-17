@@ -81,7 +81,7 @@
 })();
 </script>
 <script src="assets/js/commercial-price-core.js?v=20261116-rental1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261110-tone1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261117-tb1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -216,6 +216,7 @@ body.land-reg .form-grid-3:has(#mapAddress)>.field>label{height:18px;line-height
 .presale-switch select{height:28px!important;font-size:12px!important;padding:2px 8px!important}
 .commercial-compare-heading{font-size:12.5px!important;font-weight:800!important;padding:5px 12px!important;min-height:0!important;height:auto!important;line-height:1.3!important;border-radius:6px!important;margin:0!important}
 .commercial-occupancy,select.commercial-occupancy{height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important}
+.commercial-tenant-biz,.presale-switch input.commercial-tenant-biz{width:150px!important;flex:0 0 150px!important;height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important;margin:0!important;box-sizing:border-box}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -1242,6 +1243,7 @@ body.land-reg .form-grid-3:has(#mapAddress)>.field>label{height:18px;line-height
       presaleStatus: cat1 === '상가사무실' ? window.registerCommercialPhase.status : undefined,
       shopKind: cat1 === '상가사무실' ? window.registerCommercialPhase.shopKind : undefined,
       occupancy: cat1 === '상가사무실' ? window.registerCommercialPhase.occupancy : undefined,
+      tenantBusiness: cat1 === '상가사무실' ? window.registerCommercialPhase.tenantBusiness : undefined,
       deposit:        gv('deposit'),
       monthlyRent:    gv('monthlyRent'),
       managementFee:  gv('managementFee'),

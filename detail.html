@@ -141,7 +141,7 @@
 
 <script src="assets/js/building-records.js?v=20261107-share3"></script>
 <script src="assets/js/commercial-price-core.js?v=20261110-kind1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261110-tone1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261117-tb1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -327,6 +327,7 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 .presale-switch select{height:28px!important;font-size:12px!important;padding:2px 8px!important}
 .commercial-compare-heading{font-size:12.5px!important;font-weight:800!important;padding:5px 12px!important;min-height:0!important;height:auto!important;line-height:1.3!important;border-radius:6px!important;margin:0!important}
 .commercial-occupancy,select.commercial-occupancy{height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important}
+.commercial-tenant-biz,.presale-switch input.commercial-tenant-biz{width:150px!important;flex:0 0 150px!important;height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important;margin:0!important;box-sizing:border-box}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -1953,7 +1954,8 @@ function closeHomepageTab(tab) {
       ["가격 메모", (hasDetailValue(saleText) || hasDetailValue(depositText) || hasDetailValue(rentText)) ? "" : item.quick_price],
       ["일반사업자", item.officetel_biz],
       ["전입", item.officetel_resident],
-      ["임대상태", item.shop_status],
+      ["임대상태", firstDetailValue(item.shop_status, item.occupancy)],
+      ...(profileKey === "commercial" ? [["임차업종", item.tenantBusiness || "—"]] : []),
       ["예상수익률", withSuffix(item.shop_yield, "%")],
     ];
     // 연락처 문장·메모처럼 긴 글은 한 줄 전체를 써서 항목과 내용이 어긋나지 않게 한다.
@@ -2660,6 +2662,7 @@ function closeHomepageTab(tab) {
           presaleStatus: category1 === "상가사무실" ? window.editCommercialPhase.status : item.presaleStatus,
         shopKind: category1 === "상가사무실" ? window.editCommercialPhase.shopKind : item.shopKind,
           occupancy: category1 === "상가사무실" ? window.editCommercialPhase.occupancy : item.occupancy,
+        tenantBusiness: category1 === "상가사무실" ? window.editCommercialPhase.tenantBusiness : item.tenantBusiness,
           deposit:            gv("edit_deposit"),
           monthlyRent:        gv("edit_monthlyRent"),
           managementFee:      gv("edit_managementFee"),
