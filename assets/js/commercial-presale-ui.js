@@ -13,9 +13,9 @@
   if(!host||!category)return null;
   let phase=core.status(item);let kind=core.shopKind(item);
   const switcher=document.createElement('div');switcher.className='presale-switch';
-  switcher.innerHTML='<span>상가구분</span><button type="button" data-kind="기존상가">기존상가</button><button type="button" data-kind="분양상가">분양상가</button><span class="presale-only">분양상태</span><button type="button" class="presale-only" data-phase="분양중">분양중</button><button type="button" class="presale-only" data-phase="분양완료">분양완료</button><label>임대현황 <select class="commercial-occupancy"><option>공실</option><option>임차중</option></select></label>';
+  switcher.innerHTML='<span>상가구분</span><button type="button" data-kind="기존상가">기존상가</button><button type="button" data-kind="분양상가">분양상가</button><span class="presale-only">분양상태</span><button type="button" class="presale-only" data-phase="분양중">분양중</button><button type="button" class="presale-only" data-phase="분양완료">분양완료</button><label>임대현황 <select class="commercial-occupancy"><option>공실</option><option>임차중</option></select></label><label>임차업종 <input type="text" class="commercial-tenant-biz" maxlength="30" placeholder="예: 미용실"></label>';
   host.before(switcher);
-  const occupancy=switcher.querySelector('.commercial-occupancy');
+  const occupancy=switcher.querySelector('.commercial-occupancy');const tenantBiz=switcher.querySelector('.commercial-tenant-biz');
   const headings=['기존 분양조건','현재 조건'].map((title,index)=>{const el=document.createElement('div');el.className='commercial-compare-heading'+(index?' current':'');el.textContent=title;el.style.gridRow='1';el.style.gridColumn=String(index+1);host.appendChild(el);return el;});
    // 기존 분양조건은 선택 입력: 자료가 없으면 접어 두고, 눌러서 펼친 뒤 입력한다.
    let originalOpen=null;
@@ -32,7 +32,7 @@
   function fillOriginal(data){
    const snapshot=data.import_unit_snapshot||{};
    [['originalDeposit','보증금'],['originalMonthlyRent','월차임']].forEach(([id,key])=>{const value=data[id]??(snapshot[key]!=null&&snapshot[key]!==''?Number(snapshot[key])*10000:'');get(id).value=value===''?'':String(value).replace(/,/g,'');});
-   occupancy.value=data.occupancy||snapshot.공실여부||'공실';
+   occupancy.value=data.occupancy||snapshot.공실여부||'공실';tenantBiz.value=data.tenantBusiness||'';
   }
   const priceStart=prefix?switcher.previousElementSibling:host.closest('section');
   const areaBlocks=prefix
@@ -69,6 +69,6 @@
   switcher.querySelectorAll('[data-phase]').forEach(b=>b.onclick=()=>{phase=b.dataset.phase;render();});
    switcher.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{kind=b.dataset.kind;originalOpen=null;render();});
   category.addEventListener('change',render);render();
-  return {get status(){return phase;},get shopKind(){return kind;},get occupancy(){return occupancy.value;},get originalValues(){const clean=id=>get(id).value.replace(/[^\d]/g,'');return {originalDeposit:clean('originalDeposit')||null,originalMonthlyRent:clean('originalMonthlyRent')||null};},set(data){phase=core.status(data);kind=core.shopKind(data);originalOpen=null;fillOriginal(data);['originalDeposit','originalMonthlyRent'].forEach(formatOriginal);render();},render};
+  return {get status(){return phase;},get shopKind(){return kind;},get occupancy(){return occupancy.value;},get tenantBusiness(){return tenantBiz.value.trim();},get originalValues(){const clean=id=>get(id).value.replace(/[^\d]/g,'');return {originalDeposit:clean('originalDeposit')||null,originalMonthlyRent:clean('originalMonthlyRent')||null};},set(data){phase=core.status(data);kind=core.shopKind(data);originalOpen=null;fillOriginal(data);['originalDeposit','originalMonthlyRent'].forEach(formatOriginal);render();},render};
  }};
 })(window);
