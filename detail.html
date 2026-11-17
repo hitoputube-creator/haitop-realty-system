@@ -2214,7 +2214,12 @@ function closeHomepageTab(tab) {
     if (item.resource_id) {
       const res = _allDriveResources.find(r => r.id === item.resource_id);
       if (res) {
-        const memoHtml = !isApartmentDetail && res.memo ? `<div class="detail-read-value pre-line" style="margin-top:8px;color:var(--text-muted);">${escapeHtml(res.memo)}</div>` : "";
+        // 연결된 빌딩 자료 메모 중 매물 상세정보·건축물대장 카드에 이미 나오는 항목(주소·주차대수·사용승인일·구조·건축면적·연면적·규모, 빈 관리사무소)은 반복되므로 빼고, 나머지(토지면적·추가 메모 등)만 보여준다.
+        const memoHtml = !isApartmentDetail && res.memo ? (() => {
+          const dupLine = /^(주소|주차대수|사용승인일|구조|건축면적|연면적|규모)\s*[:：]/;
+          const kept = String(res.memo).split(/\r?\n/).map(l => l.trim()).filter(l => l && !dupLine.test(l) && !/^관리사무소\s*[:：]\s*$/.test(l));
+          return kept.length ? `<div class="detail-read-value pre-line" style="margin-top:8px;color:var(--text-muted);">${escapeHtml(kept.join("\n"))}</div>` : "";
+        })() : "";
         materialHtml += `<div class="detail-read-item wide">
           <div class="detail-read-label">연결된 빌딩 자료</div>
           <div class="detail-resource-row">
