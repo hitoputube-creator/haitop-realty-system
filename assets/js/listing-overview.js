@@ -84,7 +84,7 @@
     ].join("");
     st.textContent += ".lo-files{margin:8px 0}.lo-file-row{display:flex;align-items:center;gap:6px;font-size:.78rem;padding:4px 8px;background:#fff;border:1px solid #c3d2e2;border-radius:6px;margin-bottom:4px}.lo-file-row .dt{color:#16487f;font-weight:800;white-space:nowrap}.lo-file-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3d556f}.lo-file-row .sz{color:#7a8da3;font-size:.72rem;white-space:nowrap}.lo-file-row button{font-size:.72rem!important;padding:2px 9px!important}.lo-file-row .lo-x{color:#b42318!important;border-color:#e3b1ab!important;padding:2px 7px!important}.lo-others{margin-top:10px}.lo-docs-note{margin-top:8px;font-size:.74rem;color:#6a7b8e}";
     st.textContent += "#loDocsSlot{margin-top:14px;padding-top:12px;border-top:2px dashed #b9cadd}#loDocsSlot .detail-section{background:none!important;border:none!important;padding:0!important;margin:0!important}#loDocsSlot .detail-section>.detail-section-title{background:none!important;border:none!important;border-left:3px solid #1f5fa8!important;border-radius:0!important;padding:0 0 0 8px!important;margin:0 0 6px!important;font-size:13px!important}";
-    st.textContent += ".lo-price tr.lo-more{display:none}.lo-price.open tr.lo-more{display:table-row}.lo-morebtn{font-size:.74rem!important;padding:3px 10px!important}";
+    st.textContent += ".lo-price tr.lo-more{display:none}.lo-price.open tr.lo-more{display:table-row}.lo-price-head{display:flex;align-items:center;justify-content:space-between}.lo-morebtn{font-size:.68rem!important;font-weight:500!important;padding:1px 7px!important;line-height:1.5!important;color:#8696a8!important;background:#f6f9fc!important;border:1px solid #cfdae6!important;border-radius:4px!important;opacity:.85}.lo-morebtn:hover{opacity:1;color:#16487f!important;border-color:#8fa8c2!important}";
     st.textContent += "#loMapModal{position:fixed;inset:0;z-index:100000;background:rgba(10,24,40,.6);display:flex;align-items:center;justify-content:center;padding:20px}#loMapModal .lm-box{width:min(1200px,96vw);height:min(820px,92vh);background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)}#loMapModal .lm-head{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#dce8f6;border-bottom:1px solid #b9cadd;color:#16487f;font-size:13.5px}#loMapModal .lm-tools{display:flex;gap:4px;margin-left:8px}#loMapModal .lm-tools button{padding:3px 12px;font-size:12px;font-weight:700;border:1px solid #8fa8c2;background:#fff;color:#16487f;border-radius:6px;cursor:pointer;font-family:inherit}#loMapModal .lm-tools button.on{background:#1f5fa8;color:#fff;border-color:#1f5fa8}#loMapModal .lm-hint{margin-left:auto;font-size:11.5px;color:#4a627c}#loMapModal .lm-close{border:none;background:none;font-size:18px;cursor:pointer;color:#16487f}#loMapModal .lm-map{flex:1;position:relative;background:#eef3f9}#loMapModal .lm-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#4a627c;font-size:14px}.lo-map[data-act]{cursor:zoom-in}";
     document.head.appendChild(st);
   }
@@ -522,9 +522,8 @@
     if (prices.length) {
       // 가장 최근 연도 1건만 보이고, 나머지는 "더보기"를 눌러야 보인다.
       var sortedPrices = prices.slice().sort(function (a, b) { return Number(b.year) - Number(a.year); });
-      body += '<div class="lo-sub">개별공시지가 (㎡당)</div><table class="lo-price"><tr><th>연도</th><th>원/㎡</th></tr>' +
-        sortedPrices.map(function (p, i) { return '<tr' + (i ? ' class="lo-more"' : '') + '><td>' + esc(p.year) + '</td><td>' + fmt(p.price, 0) + '</td></tr>'; }).join("") + '</table>' +
-        (sortedPrices.length > 1 ? '<div class="lo-row"><button type="button" class="lo-morebtn" data-act="price-more" data-more="' + (sortedPrices.length - 1) + '">더보기 (이전 ' + (sortedPrices.length - 1) + '건) ▾</button></div>' : '');
+      body += '<div class="lo-sub lo-price-head"><span>개별공시지가 (㎡당)</span>' + (sortedPrices.length > 1 ? '<button type="button" class="lo-morebtn" data-act="price-more" data-more="' + (sortedPrices.length - 1) + '">더보기 ' + (sortedPrices.length - 1) + '건 ▾</button>' : '') + '</div><table class="lo-price"><tr><th>연도</th><th>원/㎡</th></tr>' +
+        sortedPrices.map(function (p, i) { return '<tr' + (i ? ' class="lo-more"' : '') + '><td>' + esc(p.year) + '</td><td>' + fmt(p.price, 0) + '</td></tr>'; }).join("") + '</table>';
     }
     body += '<div class="lo-note">※ 소유자 이름·주소는 공개 자료에 없어요. 소유구분만 나옵니다. 정식 서류는 정부24에서 발급하세요.</div>' +
       '<div class="lo-row"><button type="button" data-act="gov24">정부24 ↗ (주소 복사)</button></div>';
@@ -624,7 +623,7 @@
     else if (act === "doc-open") openDoc(t.getAttribute("data-id"));
     else if (act === "doc-del") deleteDoc(t.getAttribute("data-id"));
     else if (act === "doc-up") pickFile(t.getAttribute("data-type"));
-    else if (act === "price-more") { var tb = t.closest(".lo-card").querySelector(".lo-price"); var op = tb.classList.toggle("open"); t.textContent = op ? "접기 ▴" : "더보기 (이전 " + t.getAttribute("data-more") + "건) ▾"; }
+    else if (act === "price-more") { var tb = t.closest(".lo-card").querySelector(".lo-price"); var op = tb.classList.toggle("open"); t.textContent = op ? "접기 ▴" : "더보기 " + t.getAttribute("data-more") + "건 ▾"; }
     else if (act === "map-zoom") openCadastral(state.data, addr);
     else if (act === "refresh") start(true);
   });
