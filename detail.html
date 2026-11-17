@@ -296,6 +296,9 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 .listing-info-table{border:1px solid #9fb6cf!important;border-radius:8px!important;overflow:hidden}
 .ipt-label{background:#d3e2f3!important;color:#17406b!important;font-weight:800!important;border-color:#a9bdd3!important}
 .ipt-value{background:#fff!important;color:#0e2236!important;font-weight:600!important;border-color:#c3d2e2!important}
+.detail-section-title:has(.detail-title-extra){display:flex!important;align-items:center;justify-content:space-between}
+.detail-title-extra{margin-left:auto;font-size:12px;font-weight:700;color:#3d556f;display:inline-flex;align-items:center;gap:8px}
+.detail-title-extra .internal-memo-edit{padding:1px 10px!important;font-size:12px!important}
 .detail-read-item{background:#fff!important;border:1px solid #c9d7e6!important;border-radius:8px!important;padding:8px 12px!important}
 .detail-read-label{color:#3d556f!important;font-weight:800!important;font-size:12.5px!important}
 .detail-read-value{color:#0e2236!important;font-weight:600!important}
@@ -1555,7 +1558,6 @@ function closeHomepageTab(tab) {
     const raw = detailText(value);
     if (!hasDetailValue(raw)) return "";
     return '<div class="detail-read-item wide" data-internal-memo="' + (commercial ? 'c' : 'n') + '">'
-      + '<div class="detail-read-label">비공개 내부메모 <button type="button" class="btn btn-ghost internal-memo-edit" style="padding:1px 10px;font-size:12px;margin-left:8px">수정</button></div>'
       + '<div class="detail-read-value pre-line">' + escapeHtml(String(raw)) + '</div></div>';
   }
   // 내부메모(listings.description 열)만 바꿔 저장한다. 상가는 자동으로 채워진 줄을 그대로 두고 보이는 메모만 바꾼다.
@@ -1586,7 +1588,7 @@ function closeHomepageTab(tab) {
     let sectionClass = opts.private ? "detail-section private-section" : "detail-section";
     if (opts.extraClass) sectionClass += " " + opts.extraClass;
     return `<section class="${sectionClass}">
-      <div class="detail-section-title">${escapeHtml(title)}</div>
+      <div class="detail-section-title">${escapeHtml(title)}${opts.titleExtra ? '<span class="detail-title-extra">' + opts.titleExtra + '</span>' : ""}</div>
       <div class="detail-read-grid">${body || detailField("등록 정보", "-", { required: true })}</div>
     </section>`;
   }
@@ -2174,7 +2176,7 @@ function closeHomepageTab(tab) {
         internalMemoField(description, isCommercialDetail),
         detailField("빠른등록 메모", differentValue(quickMemo, description), { wide: true, pre: true }),
         ...(!isCommercialDetail ? [detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true })] : []),
-      ], { extraClass: "description-section" });
+      ], { extraClass: "description-section", titleExtra: hasDetailValue(detailText(description)) ? '비공개 내부메모 <button type="button" class="btn btn-ghost internal-memo-edit">수정</button>' : "" });
     }
 
     if (isApartmentDetail) html += detailSection("특징·태그", [detailField("특징·태그", detailChips(item.stickers), { wide: true, html: true })]);
@@ -2444,15 +2446,17 @@ function closeHomepageTab(tab) {
       window.__internalMemoClicks = true;
       document.addEventListener("click", async (ev) => {
         const t = ev.target && ev.target.closest ? ev.target.closest(".internal-memo-edit,.internal-memo-save,.internal-memo-cancel") : null;
-        const box = t && t.closest("[data-internal-memo]");
+        // 수정 버튼은 섹션 제목 줄(오른쪽)에 있으므로, 같은 섹션 안의 내부메모 칸을 찾는다.
+        const box = t && (t.closest("[data-internal-memo]") || (t.closest(".detail-section") && t.closest(".detail-section").querySelector("[data-internal-memo]")));
         if (!box) return;
         const commercial = box.dataset.internalMemo === "c";
         const redraw = () => { document.getElementById("detailArea").innerHTML = renderDetail(_currentItem); rebindButtons(); };
         try {
           if (t.classList.contains("internal-memo-edit")) {
             const current = box.querySelector(".detail-read-value").textContent;
-            box.innerHTML = '<div class="detail-read-label">비공개 내부메모</div>'
-              + '<textarea class="internal-memo-text" rows="8" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid #779a94;background:transparent;color:inherit;font:inherit;resize:vertical">' + escapeHtml(current) + '</textarea>'
+            if (box.querySelector(".internal-memo-text")) return;
+            t.style.display = "none";
+            box.innerHTML = '<textarea class="internal-memo-text" rows="8" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid #779a94;background:transparent;color:inherit;font:inherit;resize:vertical">' + escapeHtml(current) + '</textarea>'
               + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">'
               + '<button type="button" class="btn btn-ghost internal-memo-cancel" style="padding:4px 12px;font-size:13px">취소</button>'
               + '<button type="button" class="btn btn-primary internal-memo-save" style="padding:4px 12px;font-size:13px">저장</button></div>';
