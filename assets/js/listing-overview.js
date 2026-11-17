@@ -25,11 +25,27 @@
       try { var ta = document.createElement("textarea"); ta.value = text; ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); var ok = document.execCommand("copy"); document.body.removeChild(ta); ok ? res() : rej(); } catch (e) { rej(e); }
     });
   }
+  // 새 창을 열면 이 페이지가 포커스를 잃어 클립보드 복사가 막히므로, 반드시 복사를 먼저 한 뒤 창을 연다.
+  function copySync(text) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return !!ok;
+    } catch (e) { return false; }
+  }
   function openWithAddress(url, addr, site) {
-    var w = window.open(url, "_blank", "noopener");
-    copy(addr).then(function () { toast("주소를 복사했어요: " + addr + "  → " + site + " 검색칸에 붙여넣기(Ctrl+V) 하세요."); },
-      function () { toast("주소 복사가 안 됐어요. 직접 복사해 주세요: " + addr); });
-    if (!w) toast("새 창이 막혔어요. 주소창 오른쪽의 팝업 허용을 눌러 주세요.");
+    var copied = copySync(addr);
+    var pending = copied ? null : copy(addr);  // 동기 복사가 안 되면 클립보드 API도 창을 열기 전에 시도
+    var w = window.open(url, "_blank");
+    if (w) { try { w.opener = null; } catch (e) {} }
+    var okMsg = "주소를 복사했어요: " + addr + "  → " + site + " 검색칸에 붙여넣기(Ctrl+V) 하세요.";
+    var failMsg = "주소 복사가 안 됐어요. 직접 복사해 주세요: " + addr;
+    if (copied) toast(okMsg);
+    else pending.then(function () { toast(okMsg); }, function () { toast(failMsg); });
+    if (!w) setTimeout(function () { toast("새 창이 막혔어요. 주소창 오른쪽의 팝업 허용을 눌러 주세요."); }, 1200);
   }
 
   // ---- 화면에서 매물 정보 읽기 ----
