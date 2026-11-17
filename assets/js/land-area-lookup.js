@@ -2,16 +2,18 @@
 // 건물 유형은 기존 건축물대장 자동조회가 그대로 동작한다. 하이탑·케이탑 공용.
 (function () {
   "use strict";
-  var btn = document.getElementById("lookupBuildingBtn");
-  var cat1 = document.getElementById("category1Select");
-  var mapEl = document.getElementById("mapAddress");
+  // 등록 화면(register.html)은 접두사 없는 id, 매물 상세의 수정 창(detail.html)은 "edit_" 접두사 id를 쓴다.
+  var P = document.getElementById("edit_mapAddress") ? "edit_" : "";
+  var btn = document.getElementById(P ? "editLookupBuildingBtn" : "lookupBuildingBtn");
+  var cat1 = document.getElementById(P ? "edit_category1" : "category1Select");
+  var mapEl = document.getElementById(P + "mapAddress");
   if (!btn || !cat1 || !mapEl) return;
   var HITOP_URL = "https://xaxbkdnrzsghsabkdvzj.supabase.co";
   var HITOP_KEY = "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd"; // 공개(publishable) 키
   var IS_KTOP = typeof OfficeConfig !== "undefined" && OfficeConfig.id === "ktop";
-  var statusEl = document.getElementById("lookupBuildingStatus");
-  var refBox = document.getElementById("buildingLookupRefBox");
-  var refText = document.getElementById("buildingLookupRefText");
+  var statusEl = document.getElementById(P ? "editLookupBuildingStatus" : "lookupBuildingStatus");
+  var refBox = document.getElementById(P ? "editBuildingLookupRefBox" : "buildingLookupRefBox");
+  var refText = document.getElementById(P ? "editBuildingLookupRefText" : "buildingLookupRefText");
   var normalLabel = btn.textContent;
 
   function isLand() { return cat1.value === "토지"; }
@@ -63,12 +65,12 @@
       var l = d.land;
       if (!l || !l.area) throw new Error("이 지번의 토지대장 면적을 찾지 못했어요. 주소(동·리와 지번)를 확인해 주세요.");
       var filled = ["토지면적"];
-      setValue("areaM2", l.area);
-      var py = document.getElementById("areaPy");
-      if (py && (!py.value || Number(py.value) === 0)) setValue("areaPy", Math.round(l.area * 0.3025));
+      setValue(P + "areaM2", l.area);
+      var py = document.getElementById(P + "areaPy");
+      if (py && (!py.value || Number(py.value) === 0)) setValue(P + "areaPy", Math.round(l.area * 0.3025));
       var c = d.characteristics, zone = c && c.zone1 && c.zone1.indexOf("지정되지") < 0 ? c.zone1 : "";
-      var z = document.getElementById("zoning");
-      if (z && zone && !String(z.value || "").trim()) { setValue("zoning", zone); filled.push("용도지역"); }
+      var z = document.getElementById(P + "zoning");
+      if (z && zone && !String(z.value || "").trim()) { setValue(P + "zoning", zone); filled.push("용도지역"); }
       if (statusEl) statusEl.textContent = "✅ 토지대장 조회됨";
       if (refBox && refText) {
         var price = d.prices && d.prices[0];
@@ -83,7 +85,7 @@
 
   // 토지일 때만 기존 건축물대장 조회보다 먼저 가로채서 토지대장 조회를 한다.
   document.addEventListener("click", function (e) {
-    var t = e.target && e.target.closest ? e.target.closest("#lookupBuildingBtn") : null;
+    var t = e.target && e.target.closest ? e.target.closest("#" + btn.id) : null;
     if (!t || !isLand()) return;
     e.preventDefault(); e.stopImmediatePropagation();
     run();
