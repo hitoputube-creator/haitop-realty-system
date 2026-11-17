@@ -98,6 +98,7 @@
       ".lo-list{margin:0 0 6px;padding-left:18px;font-size:.84rem;line-height:1.7}.lo-list b{color:#1f2a2a}",
       ".lo-det{margin-top:8px;font-size:.76rem;color:#5b6c6c}.lo-det pre{max-height:220px;overflow:auto;background:#f6f8f8;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:.72rem}"
     ].join("");
+    st.textContent += "#loImgViewer{position:fixed;inset:0;z-index:100001;background:rgba(8,18,30,.9);display:flex;flex-direction:column}#loImgViewer .iv-bar{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#dce8f6;color:#16487f;font-size:13.5px}#loImgViewer .iv-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}#loImgViewer .iv-hint{margin-left:auto;font-size:11.5px;color:#4a627c}#loImgViewer .iv-tools{display:flex;gap:6px}#loImgViewer .iv-tools button{padding:3px 12px;font-size:12px;font-weight:700;border:1px solid #8fa8c2;background:#fff;color:#16487f;border-radius:6px;cursor:pointer;font-family:inherit}#loImgViewer .iv-stage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none}#loImgViewer .iv-img{max-width:94%;max-height:94%;user-select:none;-webkit-user-drag:none;transform-origin:center center;background:#fff}#loImgViewer .iv-nav{display:none;position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;border:none;border-radius:6px;background:rgba(255,255,255,.18);color:#fff;font-size:32px;cursor:pointer;z-index:2}#loImgViewer.multi .iv-nav{display:block}#loImgViewer .iv-nav.prev{left:12px}#loImgViewer .iv-nav.next{right:12px}#loImgViewer .iv-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#cfe0f3;font-size:14px;pointer-events:none}";
     st.textContent += ".lo-head .lo-hint{font-size:.68rem;font-weight:500;color:#6a7b8e;line-height:1.3;flex:1 1 220px;min-width:0}";
     st.textContent += ".lo-thumbs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:6px 0}.lo-thumb{display:block;border:1px solid #c3d2e2;border-radius:6px;overflow:hidden;background:#fff;aspect-ratio:4/3;cursor:zoom-in}.lo-thumb img{width:100%;height:100%;object-fit:contain;display:block}";
     st.textContent += ".lo-files{margin:8px 0}.lo-file-row{display:flex;align-items:center;gap:6px;font-size:.78rem;padding:4px 8px;background:#fff;border:1px solid #c3d2e2;border-radius:6px;margin-bottom:4px}.lo-file-row .dt{color:#16487f;font-weight:800;white-space:nowrap}.lo-file-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3d556f}.lo-file-row .sz{color:#7a8da3;font-size:.72rem;white-space:nowrap}.lo-file-row button{font-size:.72rem!important;padding:2px 9px!important}.lo-file-row .lo-x{color:#b42318!important;border-color:#e3b1ab!important;padding:2px 7px!important}.lo-others{margin-top:10px}.lo-docs-note{margin-top:8px;font-size:.74rem;color:#6a7b8e}";
@@ -388,7 +389,7 @@
     return list.map(function (d) {
       return '<div class="lo-file-row"><span class="dt">' + esc(fmtDay(d.created_at)) + '</span><span class="nm" title="' + esc(d.original_name) + '">' + esc(d.original_name || "파일") + '</span>' +
         '<span class="sz">' + esc(fmtBytes(d.size_bytes)) + '</span>' +
-        '<button type="button" class="pri" data-act="doc-open" data-id="' + esc(d.id) + '">보기</button>' +
+        '<button type="button" class="pri" data-act="' + (isImageDoc(d) ? "doc-view" : "doc-open") + '" data-id="' + esc(d.id) + '">' + (isImageDoc(d) ? "크게 보기" : "보기") + '</button>' +
         '<button type="button" class="lo-x" data-act="doc-del" data-id="' + esc(d.id) + '" title="삭제">✕</button></div>';
     }).join("");
   }
@@ -450,11 +451,67 @@
 
   // 평면도 카드: 서류 한눈에 보기의 마지막 빈칸. 사진은 작은 미리보기로, PDF는 파일 줄로 보여 준다.
   function isImageDoc(d) { return /^image\//i.test(d.mime_type || "") || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(d.original_name || ""); }
+
+  // ---- 사진 크게 보기(평면도 등): 휠·버튼으로 확대/축소, 드래그로 이동, 여러 장이면 좌우로 넘기기 ----
+  function openImageViewer(id) {
+    var all = state.allDocs || [];
+    var cur = all.filter(function (x) { return String(x.id) === String(id); })[0]; if (!cur) return;
+    var list = all.filter(function (x) { return x.doc_type === cur.doc_type && isImageDoc(x); });
+    var idx = Math.max(0, list.map(function (x) { return String(x.id); }).indexOf(String(id)));
+    var old = document.getElementById("loImgViewer"); if (old) old.remove();
+    var wrap = document.createElement("div"); wrap.id = "loImgViewer";
+    wrap.innerHTML = '<div class="iv-bar"><b class="iv-title"></b><span class="iv-hint">휠로 확대·축소, 드래그로 이동, 두 번 클릭하면 확대</span>' +
+      '<span class="iv-tools"><button type="button" data-z="out">－</button><button type="button" data-z="in">＋</button><button type="button" data-z="reset">원래대로</button><button type="button" data-z="tab">새 창</button><button type="button" data-z="close" aria-label="닫기">✕</button></span></div>' +
+      '<div class="iv-stage"><button type="button" class="iv-nav prev" aria-label="이전">‹</button><img class="iv-img" alt="" draggable="false"><button type="button" class="iv-nav next" aria-label="다음">›</button><div class="iv-wait">불러오는 중…</div></div>';
+    document.body.appendChild(wrap);
+    var stage = wrap.querySelector(".iv-stage"), img = wrap.querySelector(".iv-img"), title = wrap.querySelector(".iv-title"), wait = wrap.querySelector(".iv-wait");
+    var S = 1, TX = 0, TY = 0, urls = {}, dragging = null;
+    function apply() { img.style.transform = "translate(" + TX + "px," + TY + "px) scale(" + S + ")"; img.style.cursor = S > 1 ? "grab" : "zoom-in"; }
+    function reset() { S = 1; TX = 0; TY = 0; apply(); }
+    function zoomAt(f, px, py) {
+      var ns = Math.min(8, Math.max(1, S * f)); if (ns === S) return;
+      var r = stage.getBoundingClientRect(), cx = (px == null ? r.left + r.width / 2 : px) - (r.left + r.width / 2), cy = (py == null ? r.top + r.height / 2 : py) - (r.top + r.height / 2);
+      TX = cx - (cx - TX) * (ns / S); TY = cy - (cy - TY) * (ns / S); S = ns;
+      if (S === 1) { TX = 0; TY = 0; }
+      apply();
+    }
+    async function show(i) {
+      idx = (i + list.length) % list.length; var d = list[idx];
+      title.textContent = "📐 " + (d.original_name || "사진") + (list.length > 1 ? "  (" + (idx + 1) + " / " + list.length + ")" : "");
+      wrap.classList.toggle("multi", list.length > 1);
+      reset(); img.style.visibility = "hidden"; wait.style.display = "flex"; wait.textContent = "불러오는 중…";
+      try { if (!urls[d.id]) urls[d.id] = await signedUrl(d); img.onload = function () { img.style.visibility = "visible"; wait.style.display = "none"; }; img.src = urls[d.id]; }
+      catch (e) { wait.textContent = "사진을 불러오지 못했어요. 다시 로그인한 뒤 시도해 주세요."; }
+    }
+    function close() { wrap.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e) {
+      if (e.key === "Escape") close();
+      else if (e.key === "ArrowLeft") show(idx - 1);
+      else if (e.key === "ArrowRight") show(idx + 1);
+      else if (e.key === "+" || e.key === "=") zoomAt(1.25);
+      else if (e.key === "-") zoomAt(1 / 1.25);
+    }
+    document.addEventListener("keydown", onKey);
+    wrap.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) { if (e.target === wrap || e.target === stage) close(); return; }
+      var z = b.getAttribute("data-z");
+      if (z === "close") close(); else if (z === "in") zoomAt(1.25); else if (z === "out") zoomAt(1 / 1.25); else if (z === "reset") reset();
+      else if (z === "tab") { var u = urls[list[idx].id]; if (u) window.open(u, "_blank"); }
+      else if (b.classList.contains("prev")) show(idx - 1); else if (b.classList.contains("next")) show(idx + 1);
+    });
+    stage.addEventListener("wheel", function (e) { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.18 : 1 / 1.18, e.clientX, e.clientY); }, { passive: false });
+    img.addEventListener("dblclick", function (e) { if (S > 1) reset(); else zoomAt(2.5, e.clientX, e.clientY); });
+    img.addEventListener("pointerdown", function (e) { if (S <= 1) return; dragging = { x: e.clientX - TX, y: e.clientY - TY }; img.setPointerCapture(e.pointerId); img.style.cursor = "grabbing"; });
+    img.addEventListener("pointermove", function (e) { if (!dragging) return; TX = e.clientX - dragging.x; TY = e.clientY - dragging.y; apply(); });
+    img.addEventListener("pointerup", function () { dragging = null; apply(); });
+    show(idx);
+  }
+
   function cardFloor() {
     var mine = (state.allDocs || []).filter(function (d) { return d.doc_type === "평면도"; });
     var imgs = mine.filter(isImageDoc);
     var body = mine.length ? "" : '<div class="lo-empty">평면도가 아직 없어요. 사진이나 PDF로 올려 두면 여기서 바로 볼 수 있어요.</div>';
-    if (imgs.length) body += '<div class="lo-thumbs">' + imgs.map(function (d) { return '<a class="lo-thumb" data-act="doc-open" data-id="' + esc(d.id) + '" title="' + esc(d.original_name || "평면도") + '"><img data-doc="' + esc(d.id) + '" alt="평면도"></a>'; }).join("") + '</div>';
+    if (imgs.length) body += '<div class="lo-thumbs">' + imgs.map(function (d) { return '<a class="lo-thumb" data-act="doc-view" data-id="' + esc(d.id) + '" title="' + esc(d.original_name || "평면도") + '"><img data-doc="' + esc(d.id) + '" alt="평면도"></a>'; }).join("") + '</div>';
     body += filesBlock("평면도") + '<div class="lo-row"><button type="button" class="pri" data-act="doc-up" data-type="평면도">평면도 올리기</button></div>';
     return '<div class="lo-card" data-card="floor"><h4>📐 평면도 <small>사진 · PDF</small></h4>' + body + '</div>';
   }
@@ -658,6 +715,7 @@
     else if (act === "goto-docs") { docsRoot.scrollIntoView({ behavior: "smooth", block: "start" }); }
     else if (act === "open-reg") { var d0 = (state.regDocs || [])[0]; if (d0) { var win = window.open("", "_blank"); signedUrl(d0).then(function (u) { if (win) win.location.href = u; else window.open(u, "_blank"); }, function () { if (win) win.close(); toast("파일을 열지 못했어요. 다시 로그인한 뒤 시도해 주세요."); }); } }
     else if (act === "doc-open") openDoc(t.getAttribute("data-id"));
+    else if (act === "doc-view") openImageViewer(t.getAttribute("data-id"));
     else if (act === "doc-del") deleteDoc(t.getAttribute("data-id"));
     else if (act === "doc-up") pickFile(t.getAttribute("data-type"));
     else if (act === "price-more") { var tb = t.closest(".lo-card").querySelector(".lo-price"); var op = tb.classList.toggle("open"); t.textContent = op ? "접기 ▴" : "더보기 " + t.getAttribute("data-more") + "건 ▾"; }
