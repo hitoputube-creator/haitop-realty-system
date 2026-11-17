@@ -1044,8 +1044,9 @@ input[type=file].hidden-file { display:none; }
       addRow2(tbody, '입주가능일', avail || '협의', '주차', parking || '—');
 
     /* 방향/용도 */
-    if (dir || usage)
-      addRow2(tbody, '방향', dir || '—', '용도', usage || '—');
+    if (dir && usage) addRow2(tbody, '방향', dir, '용도', usage);
+    else if (usage) addRowFull(tbody, '용도', usage);
+    else if (dir) addRowFull(tbody, '방향', dir);
 
     /* 타입별 추가 */
     if (t === 'shop' || t === 'office') {
