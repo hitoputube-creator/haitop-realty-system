@@ -272,6 +272,21 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 #editModal #edit_mapAddress,#editModal #edit_roadAddress{height:28px!important}
 #editModal #edit_basicInfoGrid>.field>label{height:16px!important;line-height:16px!important;display:block;white-space:nowrap;overflow:hidden}
 #editModal #edit_basicInfoGrid>.field{row-gap:2px!important;gap:2px!important}
+
+/* ── 가독성: 영역(배경)·제목·항목이름·입력칸을 서로 다른 색으로 구분 ── */
+#editModal .edit-modal-body{background:#eef3f9!important}
+#editModal .modal-section-title{color:#16487f!important;background:#dce8f6!important;border:none!important;border-left:4px solid #1f5fa8!important;border-radius:4px!important;padding:4px 10px!important;margin-top:10px!important;margin-bottom:6px!important;font-weight:800!important;letter-spacing:.2px}
+#editModal .field>label,#editModal .area-label,#editModal .edit-modal-body label{color:#3d556f!important;font-weight:700!important}
+#editModal .field label span,#editModal .field small{color:#7a8da3!important;font-weight:500!important}
+#editModal input:not([type=checkbox]):not([type=radio]):not([type=file]),#editModal select,#editModal textarea{background:#fff!important;color:#102236!important;border:1px solid #8fa8c2!important;border-radius:6px!important;box-shadow:0 1px 1px rgba(16,34,54,.06)!important}
+#editModal input::placeholder,#editModal textarea::placeholder{color:#9eacbc!important}
+#editModal input:not([type=checkbox]):not([type=radio]):not([type=file]):focus,#editModal select:focus,#editModal textarea:focus{border-color:#1f5fa8!important;box-shadow:0 0 0 3px rgba(31,95,168,.2)!important;outline:none!important}
+#editModal input[readonly],#editModal #edit_roadAddress,#editModal #edit_landUnitPrice{background:#e4ebf3!important;color:#2f4258!important;border-color:#b3c3d4!important;box-shadow:none!important}
+#editModal #edit_internalInfoGrid{background:#e1ebf5!important;border:1px solid #b9cadd!important;border-radius:8px!important}
+#editModal .edit-modal-header{background:#fff!important;border-bottom:1px solid #c9d7e6!important}
+#editModal .edit-modal-footer{background:#fff!important;border-top:1px solid #c9d7e6!important}
+#editModal #edit_description{min-height:110px!important;height:110px!important}
+#editModal textarea.om-new{min-height:92px!important;height:92px!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
