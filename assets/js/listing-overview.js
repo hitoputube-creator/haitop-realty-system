@@ -525,8 +525,7 @@
       body += '<div class="lo-sub lo-price-head"><span>개별공시지가 (㎡당)</span>' + (sortedPrices.length > 1 ? '<button type="button" class="lo-morebtn" data-act="price-more" data-more="' + (sortedPrices.length - 1) + '">더보기 ' + (sortedPrices.length - 1) + '건 ▾</button>' : '') + '</div><table class="lo-price"><tr><th>연도</th><th>원/㎡</th></tr>' +
         sortedPrices.map(function (p, i) { return '<tr' + (i ? ' class="lo-more"' : '') + '><td>' + esc(p.year) + '</td><td>' + fmt(p.price, 0) + '</td></tr>'; }).join("") + '</table>';
     }
-    body += '<div class="lo-note">※ 소유자 이름·주소는 공개 자료에 없어요. 소유구분만 나옵니다. 정식 서류는 정부24에서 발급하세요.</div>' +
-      '<div class="lo-row"><button type="button" data-act="gov24">정부24 ↗ (주소 복사)</button></div>';
+    body += '<div class="lo-row"><button type="button" data-act="gov24">정부24 ↗ (주소 복사)</button></div>';
     return '<div class="lo-card" data-card="land"><h4>🗺️ 토지대장 <small>브이월드 자료</small></h4>' + body + '</div>';
   }
   function cardLandUse(d) {
