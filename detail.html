@@ -1683,7 +1683,7 @@ function closeHomepageTab(tab) {
     return [
       ["등록구분", item.listingKind === "명단" ? "명단" : "매물"],
       ["거래상태", listingProgressStatus(item)],
-      ...(OfficeConfig.id === "ktop" ? [] : [["홈페이지 공개 여부", item.is_public === true ? "공개중" : "비공개"]]),
+      ...(OfficeConfig.id === "ktop" ? [] : [["홈페이지 공개", item.is_public === true ? "공개중" : "비공개"]]),
       ["등록일", formatDateValue(item.created_at)],
       ["최종 수정일", formatDateValue(firstDetailValue(item.updated_at, item.updatedAt, item.updated_at_local))],
     ];
@@ -1838,7 +1838,7 @@ function closeHomepageTab(tab) {
       factory:     { core: [["siteArea", "buildArea", "totalFloor"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
       building:    { core: [["siteArea", "buildArea", "totalFloor"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
       house:       { core: [["siteArea", "buildArea", "totalFloor"]], cond: [] },
-      commercial:  { core: [["buildingName", "detailAddr"], ["exclusive", "supply"], ["floor", "zoning", "parking"], ["approval"]], cond: [] },
+      commercial:  { core: [["buildingName", "detailAddr"], ["exclusive", "supply", "approval"], ["floor", "zoning", "parking"]], cond: [] },
       residential: { core: [["buildingName", "detailAddr"], ["exclusive", "supply"]], cond: [] },
       // 종류를 알 수 없는("확인 필요") 매물은 예전처럼 모든 항목을 보여준다.
       default:     { core: [["exclusive", "landArea", "supply"], ["buildingName", "detailAddr", "totalFloor"], ["parking", "approval", "structure"],
@@ -1849,7 +1849,9 @@ function closeHomepageTab(tab) {
     const listedKeys = new Set([...profile.core.flat(), ...profile.cond]);
     // 종류에 안 맞는 항목이라도 값이 실제로 들어 있으면 숨기지 않고 맨 뒤에 보여준다(입력 데이터 보호).
     const strayKeys = profileKey === "default" ? Object.keys(cells).filter(k => !listedKeys.has(k) && !consumedCells.has(k)) : [];
-    const profileRows = profile.core.map(keys => iptRow(keys.map(k => cells[k])));
+    // 건물명·호수는 표 위쪽(1차구분 바로 아래)에 보여주므로 아래쪽 항목 줄에서는 뺀다.
+    const identityKeys = (profileKey === "commercial" || profileKey === "residential") ? profile.core[0] : null;
+    const profileRows = profile.core.slice(identityKeys ? 1 : 0).map(keys => iptRow(keys.map(k => cells[k])));
     const profileCondPairs = [...profile.cond, ...strayKeys].map(k => cells[k]);
 
     // 가격은 거래유형에 맞는 항목만 보여준다(매매면 매매가, 전세면 전세금, 월세·임대면 보증금+월세).
@@ -1896,18 +1898,16 @@ function closeHomepageTab(tab) {
     const shopKind = profileKey === "commercial" && window.CommercialPriceCore ? window.CommercialPriceCore.shopKind(item) : "";
     const rows = [
       iptRow([["1차구분", (c => ({ "공장창고": "공장·창고", "상가사무실": "상가·사무실", "건물빌딩": "건물·빌딩" })[c] || c)(resolveDisplayCategory1(cat1Raw || item.category1, category.category2 || item.category2))], ["2차구분", category.category2 || item.category2], ["거래유형", dealType === "회사임대" ? "(회사)월세(임대)" : dealType === "월세" ? "월세(임대)" : dealType === "매매·월세" ? "매매·월세(임대)" : dealType]]),
-      packRows(listingStatusPairs(item), 3),
+      ...(identityKeys ? [iptRow([...identityKeys.map(k => cells[k]), ...(profileKey === "commercial" ? [["상가구분", shopKind]] : [])])] : []),
+      ...(p => [iptRow(p.slice(0, 3)), iptRow(p.slice(3))].filter(r => r))(listingStatusPairs(item)),
       ...(profileKey === "commercial"
         ? [iptRow([["지도검색주소", mapAddress]])]
         : [...(item.is_public === true ? [iptRow([["제목", item.title]]), iptRow([["공개주소", publicAddress]])] : []), iptRow([["지도검색주소", mapAddress]])]),
       ...(profileKey === "commercial" ? (shopKind === "기존상가" ? [
-        iptRow([["상가구분", shopKind], ["현재 매매가", formatWonOrText(item.salePrice)], ["현재 보증금", depositText]]),
-        iptRow([["현재 월세", rentText]])
+        iptRow([["현재 매매가", formatWonOrText(item.salePrice)], ["현재 보증금", depositText], ["현재 월세", rentText]])
       ] : [
-        iptRow([["상가구분", shopKind]]),
-        iptRow([["기존 분양가", formatWonOrText(item.presalePrice)], ["현재 매매가", formatWonOrText(item.salePrice)]]),
-        iptRow([["기존 보증금", formatWonOrText(item.originalDeposit ?? (item.import_unit_snapshot?.보증금 != null ? Number(item.import_unit_snapshot.보증금)*10000 : null))], ["현재 보증금", depositText]]),
-        iptRow([["기존 월세", formatWonOrText(item.originalMonthlyRent ?? (item.import_unit_snapshot?.월차임 != null ? Number(item.import_unit_snapshot.월차임)*10000 : null))], ["현재 월세", rentText]])
+        iptRow([["기존 분양가", formatWonOrText(item.presalePrice)], ["기존 보증금", formatWonOrText(item.originalDeposit ?? (item.import_unit_snapshot?.보증금 != null ? Number(item.import_unit_snapshot.보증금)*10000 : null))], ["기존 월세", formatWonOrText(item.originalMonthlyRent ?? (item.import_unit_snapshot?.월차임 != null ? Number(item.import_unit_snapshot.월차임)*10000 : null))]]),
+        iptRow([["현재 매매가", formatWonOrText(item.salePrice)], ["현재 보증금", depositText], ["현재 월세", rentText]])
       ]) : [iptRow(priceCore)]),
       ...profileRows,
       packRows([...(profileKey === "commercial" ? [] : priceCond), ...profileCondPairs], 3),
