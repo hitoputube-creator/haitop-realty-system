@@ -307,6 +307,18 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 .lo-card dt{color:#3d556f!important;font-weight:700!important}
 .lo-card dd{color:#0e2236!important}
 .ld-panel{border-color:#b9cadd!important;background:#fff!important}
+
+/* ── 상세 상단: 버튼은 직사각형, 최종확인일은 제목 줄 오른쪽, 비공개 표시는 제목 옆에 작게 ── */
+#detailArea{display:flex;flex-wrap:wrap;align-items:center;column-gap:10px}
+#detailArea>*{flex:0 0 100%;min-width:0}
+#detailArea>.detail-title{flex:0 0 auto;order:1;margin:0!important}
+#detailArea>.detail-badges{flex:0 0 auto;order:2;margin:0!important;display:inline-flex;gap:4px}
+#detailArea>.detail-badges .badge{font-size:11px!important;padding:1px 7px!important;border-radius:4px!important}
+#detailArea>.detail-confirm-row{flex:0 0 auto;order:3;margin:0 0 0 auto!important;font-size:13px}
+#detailArea>.detail-actions{order:4;margin:10px 0 12px!important}
+#detailArea>*:not(.detail-title):not(.detail-badges):not(.detail-confirm-row):not(.detail-actions){order:5}
+.detail-actions .btn,.detail-actions .contact-btn,.detail-actions select.btn{border-radius:6px!important;font-size:13px!important;font-weight:700!important;padding:0 14px!important;height:34px!important;min-height:34px!important;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;box-shadow:none!important}
+.detail-actions select.btn{padding:0 10px!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
