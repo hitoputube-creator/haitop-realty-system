@@ -47,10 +47,10 @@
   }
   function readInfo() {
     var address = valueOf("지도검색주소");
-    var ho = valueOf("호수"), mm = ho.match(/(\d+)\s*호?/);
-    var dong = valueOf("동");
-    var dm = dong.match(/(\d+)/);
-    return { address: address === "—" || address === "-" ? "" : address, buildingName: valueOf("건물명"), hoNm: mm ? mm[1] + "호" : "", dongNm: dm ? dm[1] + "동" : "" };
+    var hoText = valueOf("호수"), dongText = valueOf("동");
+    var mh = hoText.match(/(\d+)\s*호/) || hoText.match(/(\d+)\s*$/);
+    var md = (dongText + " " + hoText).match(/(\d+)\s*동/);
+    return { address: address === "—" || address === "-" ? "" : address, buildingName: valueOf("건물명"), hoNm: mh ? mh[1] + "호" : "", dongNm: md ? md[1] + "동" : "" };
   }
 
   // ---- 스타일 ----
