@@ -694,7 +694,7 @@
     state.info = readInfo();
     await reloadDocs();
     if (state.info.address) {
-      var key = "lo:" + listingId + ":" + state.info.address + ":" + state.info.hoNm;
+      var key = "lo2:" + listingId + ":" + state.info.address + ":" + state.info.hoNm;
       try {
         var cached = !force && sessionStorage.getItem(key);
         if (cached) { var cd = JSON.parse(cached); if (Date.now() - cd.t < 600000) { state.data = cd.d; state.loading = false; render(); loadRegSummary(); return; } }
