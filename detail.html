@@ -646,6 +646,10 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
             <label>소유주 연락처</label>
             <input id="edit_owner_phone1" type="tel" placeholder="010-0000-0000" />
           </div>
+          <div class="field" style="flex:0 0 120px;min-width:0;margin:0;">
+            <label>통신사</label>
+            <select id="edit_ownerCarrier" aria-label="소유주 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>SKT 알뜰폰</option><option>KT 알뜰폰</option><option>LG U+ 알뜰폰</option><option>미확인</option></select>
+          </div>
           <div id="edit_additionalContactsWrap" style="display:contents;"></div>
           <button type="button" id="editAddOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 auto;box-sizing:border-box;height:38px;padding:0 14px;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addEditContactRow()">+ 추가 연락처</button>
           <div class="field drive-link-inline" style="flex:1 1 220px;min-width:180px;margin:0;">
@@ -1222,6 +1226,11 @@ function closeHomepageTab(tab) {
     document.getElementById("edit_progressStatus").value = listingProgressStatus(item);
     document.getElementById("edit_owner_name").value   = item.owner_name || "";
     document.getElementById("edit_owner_phone1").value = item.owner_phone1 || "";
+    (function () {
+      const carrierEl = document.getElementById("edit_ownerCarrier"), carrier = item.ownerCarrier || "";
+      if (carrier && !Array.from(carrierEl.options).some(o => o.value === carrier)) { const o = document.createElement("option"); o.value = o.textContent = carrier; carrierEl.appendChild(o); }
+      carrierEl.value = carrier;
+    })();
     // 추가 연락처: 신규 다중 목록이 있으면 그대로, 없으면 기존 연락처2를 1건으로 승계 표시
     document.getElementById("edit_additionalContactsWrap").innerHTML = "";
     _editContactRowSeq = 0;
@@ -1911,7 +1920,7 @@ function closeHomepageTab(tab) {
       ]) : [iptRow(priceCore)]),
       ...profileRows,
       packRows([...(profileKey === "commercial" ? [] : priceCond), ...profileCondPairs], 3),
-      iptRow([["소유주", ownerName], ["소유주 연락처", contact]]),
+      iptRow([["소유주", ownerName], ["소유주 연락처", contact && item.ownerCarrier ? contact + " (" + item.ownerCarrier + ")" : contact]]),
       ...(additionalContactText ? [iptRow([["추가 연락처", additionalContactText]])] : []),
     ].join("");
 
@@ -2670,6 +2679,7 @@ function closeHomepageTab(tab) {
           detailDescription:  gv("edit_detailDescription"),
           owner_name:         gv("edit_owner_name"),
           owner_phone1:       gv("edit_owner_phone1"),
+          ownerCarrier:       gv("edit_ownerCarrier"),
           additional_contacts: _editAdditionalContacts,
           owner_phone2:       _editAdditionalContacts.length ? _editAdditionalContacts[0].phone : "",
           owner_memo:         gv("edit_owner_memo"),

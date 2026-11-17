@@ -471,6 +471,10 @@ body.land-reg .form-grid-3:has(#mapAddress)>.field>label{height:18px;line-height
             <label>소유주 연락처</label>
             <input id="owner_phone1" type="tel" placeholder="010-0000-0000" />
           </div>
+          <div class="field" style="flex:0 0 120px;min-width:0;margin:0;">
+            <label>통신사</label>
+            <select id="ownerCarrier" aria-label="소유주 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>SKT 알뜰폰</option><option>KT 알뜰폰</option><option>LG U+ 알뜰폰</option><option>미확인</option></select>
+          </div>
           <div id="additionalContactsWrap" style="display:contents;"></div>
           <button type="button" id="addOwnerPhone2Btn" class="btn btn-ghost" style="flex:0 0 auto;box-sizing:border-box;height:38px;padding:0 14px;font-size:0.82rem;white-space:nowrap;text-align:center;" onclick="addContactRow()">+ 추가 연락처</button>
           <div class="field drive-link-inline" style="flex:1 1 220px;min-width:180px;margin:0;">
@@ -1264,6 +1268,7 @@ body.land-reg .form-grid-3:has(#mapAddress)>.field>label{height:18px;line-height
       detailDescription: gv('detailDescription'),
       owner_name:   gv('owner_name'),
       owner_phone1: gv('owner_phone1'),
+      ownerCarrier: gv('ownerCarrier'),
       additional_contacts: _additionalContacts,
       owner_phone2: _additionalContacts.length ? _additionalContacts[0].phone : '',
       owner_memo:   gv('owner_memo'),
