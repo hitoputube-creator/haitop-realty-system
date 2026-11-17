@@ -60,6 +60,7 @@
     st.id = "loStyle";
     st.textContent = [
       ".rl-btn{margin-left:8px;padding:3px 10px;font-size:.76rem;font-weight:700;color:#0f4d4d;background:#fff;border:1px solid #0f4d4d;border-radius:6px;cursor:pointer;vertical-align:middle;font-family:inherit}.rl-btn:hover{background:#0f4d4d;color:#fff}",
+      ".rl-copy{margin-left:4px;padding:2px 8px;font-size:.7rem;font-weight:600;color:#355;background:#fff;border:1px solid #9bb5b5;border-radius:6px;cursor:pointer;vertical-align:middle;font-family:inherit}.rl-copy:hover{background:#eef5f5}",
       ".lo-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.lo-head .lo-time{font-size:.74rem;color:#7a8a8a}.lo-refresh{margin-left:auto}",
       ".lo-note{font-size:.78rem;color:#6a7b7b;margin:4px 0 10px}",
       ".lo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}",
@@ -98,6 +99,18 @@
       b.textContent = "📑 등기부 발급 ↗";
       b.addEventListener("click", function () { openWithAddress(IROS, valueOf("지도검색주소"), "인터넷등기소"); });
       val.appendChild(document.createTextNode(" ")); val.appendChild(b);
+      var cb = document.createElement("button");
+      cb.type = "button"; cb.className = "rl-copy"; cb.title = "주소만 복사합니다 (등기소 검색칸에 붙여넣기)";
+      cb.textContent = "📋 주소복사";
+      cb.addEventListener("click", function () {
+        var a = valueOf("지도검색주소");
+        copy(a).then(function () {
+          cb.textContent = "✔ 복사됨";
+          setTimeout(function () { cb.textContent = "📋 주소복사"; }, 1500);
+          toast("주소를 복사했어요: " + a);
+        }, function () { toast("주소 복사가 안 됐어요. 직접 복사해 주세요: " + a); });
+      });
+      val.appendChild(document.createTextNode(" ")); val.appendChild(cb);
       return true;
     }
     return false;
