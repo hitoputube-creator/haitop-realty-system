@@ -2214,16 +2214,12 @@ function closeHomepageTab(tab) {
     if (item.resource_id) {
       const res = _allDriveResources.find(r => r.id === item.resource_id);
       if (res) {
-        // 연결된 빌딩 자료 메모 중 매물 상세정보·건축물대장 카드에 이미 나오는 항목(주소·주차대수·사용승인일·구조·건축면적·연면적·규모, 빈 관리사무소)은 반복되므로 빼고, 나머지(토지면적·추가 메모 등)만 보여준다.
-        const memoHtml = !isApartmentDetail && res.memo ? (() => {
-          const dupLine = /^(주소|주차대수|사용승인일|구조|건축면적|연면적|규모)\s*[:：]/;
-          const kept = String(res.memo).split(/\r?\n/).map(l => l.trim()).filter(l => l && !dupLine.test(l) && !/^관리사무소\s*[:：]\s*$/.test(l));
-          return kept.length ? `<div class="detail-read-value pre-line" style="margin-top:8px;color:var(--text-muted);">${escapeHtml(kept.join("\n"))}</div>` : "";
-        })() : "";
-        materialHtml += `<div class="detail-read-item wide">
+        // 연결된 빌딩 자료의 이름·메모(주소·면적 등)는 매물 상세정보와 건축물대장 카드에 이미 나오므로 아파트가 아니면 보여주지 않고, 빌딩자료 링크 버튼만 둔다.
+        const memoHtml = "";
+        if (isApartmentDetail || res.url) materialHtml += `<div class="detail-read-item wide">
           <div class="detail-read-label">연결된 빌딩 자료</div>
           <div class="detail-resource-row">
-            <div class="detail-read-value">${escapeHtml([res.category, res.name].filter(Boolean).join(" · ") || "빌딩 자료")}</div>
+            ${isApartmentDetail ? `<div class="detail-read-value">${escapeHtml([res.category, res.name].filter(Boolean).join(" · ") || "빌딩 자료")}</div>` : ""}
             ${isApartmentDetail ? `<a href="building-overview.html?${new URLSearchParams({id:res.id,office:OfficeConfig.id})}" class="btn btn-ghost" style="font-size:0.78rem;padding:5px 14px;text-decoration:none;">단지 자료 보기</a>` : ""}
             ${res.url ? `<a href="${escapeAttr(res.url)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.78rem;padding:5px 14px;text-decoration:none;">📁 빌딩자료 보기</a>` : ""}
           </div>
