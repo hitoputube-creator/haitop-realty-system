@@ -272,6 +272,9 @@ input[type=file].hidden-file { display:none; }
 #plan-box { border:1px solid #779a94; border-radius:10px; padding:8px; text-align:center; background:#fff; }
 #plan-box img { max-width:100%; max-height:9.4cm; object-fit:contain; display:block; margin:0 auto; }
 #plan-cap { font-size:12px; font-weight:600; color:#40525f; margin-top:6px; }
+.plan-multi { display:block; }
+.plan-multi.two { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.plan-multi img { max-width:100%; max-height:9.4cm; object-fit:contain; display:block; margin:0 auto; }
 @media print { #plan-area { page-break-inside:avoid; break-inside:avoid; } #plan-box img { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
 
 /* ── 설명서에 넣을 사진 2장 고르기 ── */
@@ -1003,7 +1006,7 @@ input[type=file].hidden-file { display:none; }
     const avail    = getAvailable();
     const parking  = getParking();
     const dir      = getDirection();
-    const usage    = v(extra._usage, item.shop_usage, item.officetel_usage);
+    const usage    = v(extra._usage, item.shop_usage, item.officetel_usage, unitInfo && unitInfo.purpose);
     const totalF   = v(extra._totalFloor, item.shop_totalFloor, item.officetel_totalFloor);
 
     /* 공통 기본 */
@@ -1020,9 +1023,16 @@ input[type=file].hidden-file { display:none; }
     if (areaStr || supStr)
       addRow2(tbody, getType() === 'apartment' ? '분양면적 (공급)' : '계약(공급)면적', supStr || '미확인', getAreaLabel(), areaStr || '미확인');
 
-    /* 층 정보 */
-    if (floor || totalF)
-      addRow2(tbody, '해당층', floor || '—', '총층', totalF || '—');
+    /* 층 정보: 상세정보에 "지상 26층/지하 1층"처럼 건물 규모가 들어 있으면 해당층이 아니라 건물규모로 표시하고,
+       건축물대장 호실 조회로 찾은 층이 있으면 해당층으로 보여준다. */
+    const scaleLike = /지상\s*\d+\s*층/.test(floor || '');
+    const unitFloor = v(unitInfo && unitInfo.floor);
+    if (scaleLike && !totalF) {
+      if (unitFloor) addRow2(tbody, '해당층', unitFloor, '건물규모', floor);
+      else addRowFull(tbody, '건물규모', floor);
+    } else if (floor || totalF || unitFloor) {
+      addRow2(tbody, '해당층', floor || unitFloor || '—', '총층', totalF || '—');
+    }
 
     /* 비용 */
     if (maint || premium)
@@ -1048,15 +1058,21 @@ input[type=file].hidden-file { display:none; }
       if (reco || curr) addRow2(tbody, '추천업종', reco || '—', '현재용도', curr || '—');
       if (toil || elev) addRow2(tbody, '화장실',   toil || '—', '엘리베이터', elev || '—');
       if (hvac)         addRow2(tbody, '냉난방',   hvac, '예상수익률', yld ? yld + '%' : '—');
+      /* 임대현황·임차업종, 건축물 정보(사용승인일·용도지역) */
+      const occ = v(item.occupancy, item.shop_status), tenant = v(item.tenantBusiness);
+      if (tenant) addRow2(tbody, '임대현황', occ || '임차중', '임차업종', tenant);
+      else if (occ) addRowFull(tbody, '임대현황', occ);
+      const appr = v(item.approvalDate), zoneS = v(item.zoning);
+      if (appr || zoneS) addRow2(tbody, '사용승인일', appr || '—', '용도지역', zoneS || '—');
     } else if (t === 'officetel' || t === 'hilsstate') {
       const complex = t === 'hilsstate' ? '힐스테이트더운정' : v(item.officetel_complex);
       const struct  = v(item.officetel_structure);
       const otype   = v(item.officetel_type);
       if (complex) addRow2(tbody, '단지명', complex, '구조/타입', [struct, otype].filter(Boolean).join(' / ') || '—');
     } else if (t.startsWith('land')) {
-      const la    = fmtArea(item.land_area_py, item.land_area_m2);
+      const la    = fmtArea(v(item.areaPy, item.land_area_py, item.landAreaPy), v(item.areaM2, item.land_area_m2, item.landAreaM2));
       const jimok = v(item.land_jimok);
-      const zone  = v(item.land_zone);
+      const zone  = v(item.zoning, item.land_zone);
       const road  = v(item.land_road);
       if (la || jimok) addRow2(tbody, '토지면적', la || '—', '지목', jimok || '—');
       if (zone || road) addRow2(tbody, '용도지역', zone || '—', '도로', road || '—');
@@ -1092,6 +1108,32 @@ input[type=file].hidden-file { display:none; }
      평면도(타입) 자동 삽입 — 연결된(또는 이름이 같은) 단지 자료에서 매물 타입과 같은 평면도를 찾는다
   ══════════════════════════ */
   let planInfo = null, planRes = null;
+  let floorPlans = [];   /* 매물 상세 "평면도" 카드에 올린 사진 */
+  let unitInfo = null;   /* 건축물대장 호실 조회 결과(해당층·건축물 용도) */
+  async function loadFloorPlans() {
+    try {
+      const c = typeof hitopAuthClient !== 'undefined' ? hitopAuthClient : null;
+      if (!c) return;
+      const r = await c.from('listing_documents').select('*').eq('listing_id', id).eq('doc_type', '평면도').order('created_at', { ascending: true });
+      const imgs = (r.data || []).filter(d => /^image\//i.test(d.mime_type || '') || /\.(jpe?g|png|webp|gif)$/i.test(d.original_name || '')).slice(0, 2);
+      for (const d of imgs) {
+        const s = await c.storage.from('listing-documents').createSignedUrl(d.storage_path, 3600);
+        if (s && s.data && s.data.signedUrl) floorPlans.push({ url: s.data.signedUrl, name: d.original_name || '평면도' });
+      }
+    } catch (e) { console.warn('평면도를 불러오지 못했습니다:', e.message || e); }
+  }
+  async function loadUnitInfo() {
+    try {
+      const t = getType();
+      if (!(t === 'shop' || t === 'office' || t === 'officetel') || typeof lookupBuildingRegister !== 'function') return;
+      const ho = String(v(item.privateDetailAddress, item.detailAddress)).match(/(\d+)\s*호/);
+      const addr = v(item.mapAddress, item.address);
+      if (!ho || !addr) return;
+      const r = await lookupBuildingRegister(addr, { hoNm: ho[1], dongNm: '' });
+      if (!r || r.unit_area_warning || r.building_match_verified === false) return;
+      unitInfo = { floor: r.unit_floor || '', purpose: r.unit_purpose || '' };
+    } catch (e) { /* 조회 실패 시 입력된 값만 사용 */ }
+  }
   const normT = s => String(s || '').toUpperCase().replace(/\s+/g, '').replace(/(타입|TYPE|형|㎡)/g, '');
   const normN = s => String(s || '').replace(/\(.*?\)/g, '').replace(/\s+/g, '');
   function aptUnit() { return typeof apartmentSource === 'function' ? apartmentSource(item) : {}; }
@@ -1125,11 +1167,18 @@ input[type=file].hidden-file { display:none; }
   function renderPlan() {
     const area = document.getElementById('plan-area');
     if (!area) return;
-    if (!planInfo) { area.style.display = 'none'; return; }
+    if (!planInfo && !floorPlans.length) { area.style.display = 'none'; return; }
     area.style.display = '';
-    const sup = fmtArea(planInfo.supplyPy, planInfo.supplyM2), exc = fmtArea(planInfo.exclusivePy, planInfo.exclusiveM2);
-    const cap = [planInfo.type + '타입 평면도', sup ? '분양면적 ' + sup : '', exc ? '전용면적 ' + exc : ''].filter(Boolean).join(' · ');
-    document.getElementById('plan-box').innerHTML = '<img src="' + esc(planInfo.url) + '" alt="' + esc(planInfo.type) + '타입 평면도"><div id="plan-cap">' + esc(cap) + '</div>';
+    let html = '';
+    if (planInfo) {
+      const sup = fmtArea(planInfo.supplyPy, planInfo.supplyM2), exc = fmtArea(planInfo.exclusivePy, planInfo.exclusiveM2);
+      const cap = [planInfo.type + '타입 평면도', sup ? '분양면적 ' + sup : '', exc ? '전용면적 ' + exc : ''].filter(Boolean).join(' · ');
+      html += '<img src="' + esc(planInfo.url) + '" alt="' + esc(planInfo.type) + '타입 평면도"><div id="plan-cap">' + esc(cap) + '</div>';
+    }
+    if (floorPlans.length) {
+      html += '<div class="plan-multi' + (floorPlans.length > 1 ? ' two' : '') + '">' + floorPlans.map(p => '<img src="' + esc(p.url) + '" alt="평면도">').join('') + '</div>';
+    }
+    document.getElementById('plan-box').innerHTML = html;
   }
 
   function renderAll() {
@@ -1527,7 +1576,7 @@ input[type=file].hidden-file { display:none; }
      초기 렌더
   ══════════════════════════ */
   loadPhotos();
-  await loadPlan();
+  await Promise.all([loadPlan(), loadFloorPlans(), loadUnitInfo()]);
   renderAll();
 
   document.getElementById('loadingState').style.display = 'none';
