@@ -98,6 +98,7 @@
       ".lo-list{margin:0 0 6px;padding-left:18px;font-size:.84rem;line-height:1.7}.lo-list b{color:#1f2a2a}",
       ".lo-det{margin-top:8px;font-size:.76rem;color:#5b6c6c}.lo-det pre{max-height:220px;overflow:auto;background:#f6f8f8;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:.72rem}"
     ].join("");
+    st.textContent += ".lo-thumbs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:6px 0}.lo-thumb{display:block;border:1px solid #c3d2e2;border-radius:6px;overflow:hidden;background:#fff;aspect-ratio:4/3;cursor:zoom-in}.lo-thumb img{width:100%;height:100%;object-fit:contain;display:block}";
     st.textContent += ".lo-files{margin:8px 0}.lo-file-row{display:flex;align-items:center;gap:6px;font-size:.78rem;padding:4px 8px;background:#fff;border:1px solid #c3d2e2;border-radius:6px;margin-bottom:4px}.lo-file-row .dt{color:#16487f;font-weight:800;white-space:nowrap}.lo-file-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3d556f}.lo-file-row .sz{color:#7a8da3;font-size:.72rem;white-space:nowrap}.lo-file-row button{font-size:.72rem!important;padding:2px 9px!important}.lo-file-row .lo-x{color:#b42318!important;border-color:#e3b1ab!important;padding:2px 7px!important}.lo-others{margin-top:10px}.lo-docs-note{margin-top:8px;font-size:.74rem;color:#6a7b8e}";
     st.textContent += "#loDocsSlot{margin-top:14px;padding-top:12px;border-top:2px dashed #b9cadd}#loDocsSlot .detail-section{background:none!important;border:none!important;padding:0!important;margin:0!important}#loDocsSlot .detail-section>.detail-section-title{background:none!important;border:none!important;border-left:3px solid #1f5fa8!important;border-radius:0!important;padding:0 0 0 8px!important;margin:0 0 6px!important;font-size:13px!important}";
     st.textContent += ".lo-price tr.lo-more{display:none}.lo-price.open tr.lo-more{display:table-row}.lo-price-head{display:flex;align-items:center;justify-content:space-between}.lo-morebtn{font-size:.68rem!important;font-weight:500!important;padding:1px 7px!important;line-height:1.5!important;color:#8696a8!important;background:#f6f9fc!important;border:1px solid #cfdae6!important;border-radius:4px!important;opacity:.85}.lo-morebtn:hover{opacity:1;color:#16487f!important;border-color:#8fa8c2!important}";
@@ -396,7 +397,7 @@
       (mine.length ? '<div class="lo-files">' + docRows(mine) + '</div>' : '');
   }
   function othersBlock() {
-    var others = (state.allDocs || []).filter(function (d) { return d.doc_type !== "건축물대장" && d.doc_type !== "등기부등본"; });
+    var others = (state.allDocs || []).filter(function (d) { return d.doc_type !== "건축물대장" && d.doc_type !== "등기부등본" && d.doc_type !== "평면도"; });
     return others.length ? '<div class="lo-others"><div class="lo-sub">📎 기타 서류 ' + others.length + '건</div><div class="lo-files">' + docRows(others) + '</div></div>' : "";
   }
   async function openDoc(id) {
@@ -446,6 +447,25 @@
   }
   function pickFile(type) { var inp = root.querySelector('.lo-file[data-type="' + type + '"]'); if (inp) inp.click(); }
 
+  // 평면도 카드: 서류 한눈에 보기의 마지막 빈칸. 사진은 작은 미리보기로, PDF는 파일 줄로 보여 준다.
+  function isImageDoc(d) { return /^image\//i.test(d.mime_type || "") || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(d.original_name || ""); }
+  function cardFloor() {
+    var mine = (state.allDocs || []).filter(function (d) { return d.doc_type === "평면도"; });
+    var imgs = mine.filter(isImageDoc);
+    var body = mine.length ? "" : '<div class="lo-empty">평면도가 아직 없어요. 사진이나 PDF로 올려 두면 여기서 바로 볼 수 있어요.</div>';
+    if (imgs.length) body += '<div class="lo-thumbs">' + imgs.map(function (d) { return '<a class="lo-thumb" data-act="doc-open" data-id="' + esc(d.id) + '" title="' + esc(d.original_name || "평면도") + '"><img data-doc="' + esc(d.id) + '" alt="평면도"></a>'; }).join("") + '</div>';
+    body += filesBlock("평면도") + '<div class="lo-row"><button type="button" class="pri" data-act="doc-up" data-type="평면도">평면도 올리기</button></div>';
+    return '<div class="lo-card" data-card="floor"><h4>📐 평면도 <small>사진 · PDF</small></h4>' + body + '</div>';
+  }
+  async function loadFloorThumbs() {
+    var imgs = root.querySelectorAll('img[data-doc]');
+    for (var i = 0; i < imgs.length; i++) {
+      var el = imgs[i];
+      var d = (state.allDocs || []).filter(function (x) { return String(x.id) === el.getAttribute("data-doc"); })[0];
+      if (!d) continue;
+      try { el.src = await signedUrl(d); } catch (e) { el.alt = "미리보기를 불러오지 못했어요"; }
+    }
+  }
   function cardRegistry() {
     var docs = state.regDocs || [];
     var body, wide = "";
@@ -622,9 +642,10 @@
     if (state.loading) body = '<div class="lo-loading">건축물대장·토지 자료를 불러오는 중…</div>';
     else if (!state.info || !state.info.address) body = '<div class="lo-empty">지도검색주소가 없어서 자료를 조회하지 못했어요. 주소를 입력하면 자동으로 보여 드려요.</div><div class="lo-grid" style="margin-top:10px">' + cardRegistry() + '</div>';
     else if (state.error) body = '<div class="lo-warn">자료를 불러오지 못했어요: ' + esc(state.error) + '</div><div class="lo-grid" style="margin-top:10px">' + cardRegistry() + '</div>';
-    else body = '<div class="lo-note">등기부 파일이 있으면 같이 보여 주고, 없으면 발급 링크로 연결합니다. 나머지 서류는 자동으로 불러옵니다.</div><div class="lo-grid">' + cardRegistry() + cardBuilding(state.data) + cardLand(state.data) + cardLandUse(state.data) + cardMap(state.data) + '</div>';
+    else body = '<div class="lo-note">등기부 파일이 있으면 같이 보여 주고, 없으면 발급 링크로 연결합니다. 나머지 서류는 자동으로 불러옵니다.</div><div class="lo-grid">' + cardRegistry() + cardBuilding(state.data) + cardLand(state.data) + cardLandUse(state.data) + cardMap(state.data) + cardFloor() + '</div>';
     // 서류 보관(건축물대장·등기부 파일) 영역을 같은 박스 안 아래쪽으로 합친다.
     root.innerHTML = '<section class="detail-section">' + head + body + othersBlock() + '<div class="lo-docs-note">서류 파일은 홈페이지에 공개되지 않고, 로그인한 직원만 열람할 수 있어요. (PDF·사진, 파일당 30MB 이하)</div></section>';
+    loadFloorThumbs();
   }
 
   root.addEventListener("click", function (e) {
