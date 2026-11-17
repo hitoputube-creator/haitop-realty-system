@@ -98,7 +98,6 @@
       b.type = "button"; b.className = "rl-btn"; b.title = "주소를 복사하고 대법원 인터넷등기소를 새 창으로 엽니다";
       b.textContent = "📑 등기부 발급 ↗";
       b.addEventListener("click", function () { openWithAddress(IROS, valueOf("지도검색주소"), "인터넷등기소"); });
-      val.appendChild(document.createTextNode(" ")); val.appendChild(b);
       var cb = document.createElement("button");
       cb.type = "button"; cb.className = "rl-copy"; cb.title = "주소만 복사합니다 (등기소 검색칸에 붙여넣기)";
       cb.textContent = "📋 주소복사";
@@ -110,7 +109,9 @@
           toast("주소를 복사했어요: " + a);
         }, function () { toast("주소 복사가 안 됐어요. 직접 복사해 주세요: " + a); });
       });
+      // 주소복사 버튼을 먼저, 등기부 발급 버튼을 그 다음에 둔다.
       val.appendChild(document.createTextNode(" ")); val.appendChild(cb);
+      val.appendChild(document.createTextNode(" ")); val.appendChild(b);
       return true;
     }
     return false;
