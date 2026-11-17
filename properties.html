@@ -281,6 +281,74 @@ html[data-office-theme="hitop"] .properties-page #registrationMonthFilter{width:
 html[data-office-theme="hitop"] .properties-page .filter-btn{height:26px!important;min-height:26px!important;padding:0 10px!important;font-size:12px!important;border-radius:6px!important}
 html[data-office-theme="hitop"] .properties-page .filter-panel-row{gap:10px!important;padding:6px 0 0!important;min-height:0!important}
 html[data-office-theme="hitop"] .properties-page .filter-divider{margin:0!important}
+
+/* Mobile property-list toolbar: compact, predictable grid rather than inherited flex sizing. */
+@media screen and (max-width: 600px) {
+  .properties-page .filter-panel-card { padding: 10px 12px !important; }
+  .properties-page #toolbarRow {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-rows: minmax(34px, auto);
+    align-items: stretch !important;
+    align-content: start !important;
+    gap: 7px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 10px 0 0 !important;
+  }
+  .properties-page #toolbarRow > * { min-width: 0 !important; max-width: none !important; margin: 0 !important; }
+  .properties-page #toolbarRow .search-field {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    display: block !important;
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 0 !important;
+    flex: none !important;
+  }
+  .properties-page #searchInput { display:block; width:100% !important; height:38px !important; min-height:0 !important; box-sizing:border-box; }
+  .properties-page #toolbarRow #searchBtn,
+  .properties-page #toolbarRow .sort-select {
+    width:100% !important; height:36px !important; min-height:36px !important;
+    padding:0 6px !important; font-size:13px !important;
+    flex:none !important; grid-column:auto !important; grid-row:auto !important;
+  }
+  .properties-page #toolbarRow #staleFilterBtn {
+    grid-column:1 / -1 !important;
+    width:100% !important; height:34px !important; min-height:34px !important;
+    flex:none !important;
+  }
+  .properties-page #toolbarRow .view-toggle-group {
+    grid-column:1 / -1 !important; display:flex !important;
+    width:100% !important; max-width:none !important; height:36px !important;
+    flex:none !important;
+  }
+  .properties-page #toolbarRow .view-toggle-group button {
+    flex:1 1 0 !important; width:auto !important; height:36px !important; min-height:36px !important;
+  }
+  .properties-page .month-filter-row {
+    display:grid !important;
+    grid-template-columns:auto 32px minmax(0,1fr) 32px !important;
+    gap:6px !important; align-items:center !important;
+    margin-top:9px !important; padding-top:9px !important;
+    min-height:0 !important;
+  }
+  .properties-page .month-filter-label { grid-column:1; white-space:nowrap; }
+  .properties-page #monthPrevBtn { grid-column:2; }
+  .properties-page #registrationMonthFilter {
+    grid-column:3; width:100% !important; min-width:0 !important; max-width:none !important;
+    height:34px !important; flex:none !important;
+  }
+  .properties-page #monthNextBtn { grid-column:4; }
+  .properties-page #currentMonthBtn { grid-column:1 / 3; width:100%; }
+  .properties-page #monthFilterSummary {
+    grid-column:3 / 5; width:auto !important; margin:0 !important;
+    min-width:0; white-space:normal;
+  }
+  .properties-page .month-step-btn,.properties-page .month-current-btn { min-height:34px !important; }
+  .properties-page .filter-divider { margin:10px 0 !important; }
+}
+
 </style>
 <link rel="stylesheet" href="assets/css/global-property-search.css?v=20261108-ktop-match1">
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
