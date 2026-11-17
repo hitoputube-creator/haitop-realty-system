@@ -82,6 +82,7 @@
       ".lo-list{margin:0 0 6px;padding-left:18px;font-size:.84rem;line-height:1.7}.lo-list b{color:#1f2a2a}",
       ".lo-det{margin-top:8px;font-size:.76rem;color:#5b6c6c}.lo-det pre{max-height:220px;overflow:auto;background:#f6f8f8;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:.72rem}"
     ].join("");
+    st.textContent += "#loDocsSlot{margin-top:14px;padding-top:12px;border-top:2px dashed #b9cadd}#loDocsSlot .detail-section{background:none!important;border:none!important;padding:0!important;margin:0!important}#loDocsSlot .detail-section>.detail-section-title{background:none!important;border:none!important;border-left:3px solid #1f5fa8!important;border-radius:0!important;padding:0 0 0 8px!important;margin:0 0 6px!important;font-size:13px!important}";
     st.textContent += ".lo-price tr.lo-more{display:none}.lo-price.open tr.lo-more{display:table-row}.lo-morebtn{font-size:.74rem!important;padding:3px 10px!important}";
     st.textContent += "#loMapModal{position:fixed;inset:0;z-index:100000;background:rgba(10,24,40,.6);display:flex;align-items:center;justify-content:center;padding:20px}#loMapModal .lm-box{width:min(1200px,96vw);height:min(820px,92vh);background:#fff;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)}#loMapModal .lm-head{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#dce8f6;border-bottom:1px solid #b9cadd;color:#16487f;font-size:13.5px}#loMapModal .lm-tools{display:flex;gap:4px;margin-left:8px}#loMapModal .lm-tools button{padding:3px 12px;font-size:12px;font-weight:700;border:1px solid #8fa8c2;background:#fff;color:#16487f;border-radius:6px;cursor:pointer;font-family:inherit}#loMapModal .lm-tools button.on{background:#1f5fa8;color:#fff;border-color:#1f5fa8}#loMapModal .lm-hint{margin-left:auto;font-size:11.5px;color:#4a627c}#loMapModal .lm-close{border:none;background:none;font-size:18px;cursor:pointer;color:#16487f}#loMapModal .lm-map{flex:1;position:relative;background:#eef3f9}#loMapModal .lm-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#4a627c;font-size:14px}.lo-map[data-act]{cursor:zoom-in}";
     document.head.appendChild(st);
@@ -525,7 +526,10 @@
     else if (!state.info || !state.info.address) body = '<div class="lo-empty">지도검색주소가 없어서 자료를 조회하지 못했어요. 주소를 입력하면 자동으로 보여 드려요.</div><div class="lo-grid" style="margin-top:10px">' + cardRegistry() + '</div>';
     else if (state.error) body = '<div class="lo-warn">자료를 불러오지 못했어요: ' + esc(state.error) + '</div><div class="lo-grid" style="margin-top:10px">' + cardRegistry() + '</div>';
     else body = '<div class="lo-note">등기부 파일이 있으면 같이 보여 주고, 없으면 발급 링크로 연결합니다. 나머지 서류는 자동으로 불러옵니다.</div><div class="lo-grid">' + cardRegistry() + cardBuilding(state.data) + cardLand(state.data) + cardLandUse(state.data) + cardMap(state.data) + '</div>';
-    root.innerHTML = '<section class="detail-section">' + head + body + '</section>';
+    // 서류 보관(건축물대장·등기부 파일) 영역을 같은 박스 안 아래쪽으로 합친다.
+    root.innerHTML = '<section class="detail-section">' + head + body + '<div id="loDocsSlot"></div></section>';
+    var docsSlot = root.querySelector("#loDocsSlot");
+    if (docsSlot && docsRoot) docsSlot.appendChild(docsRoot);
   }
 
   root.addEventListener("click", function (e) {
