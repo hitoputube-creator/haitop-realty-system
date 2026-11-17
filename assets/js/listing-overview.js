@@ -670,6 +670,25 @@
     uploadDocs(type, files).then(function () { try { inp.value = ""; } catch (_) {} });
   });
 
+  // 조회 서버(listing-overview)가 호실 전유부를 못 찾아도, 같은 건축물대장을 읽는 호실 조회(lookupBuildingRegister)로는 찾아지는 경우가 있어 한 번 더 시도한다.
+  async function enrichUnit(d) {
+    try {
+      var b = d && d.building;
+      if (!b || !b.matched || b.unit) return;
+      var hoDigits = String((state.info && state.info.hoNm) || "").replace(/\D/g, "");
+      if (!hoDigits || typeof lookupBuildingRegister !== "function") return;
+      var dongDigits = String((state.info && state.info.dongNm) || "").replace(/\D/g, "");
+      var r = await lookupBuildingRegister(state.info.address, { hoNm: hoDigits, dongNm: dongDigits });
+      if (!r || r.building_match_verified === false || r.unit_area_warning || !(Number(r.exclusive_area_m2) > 0)) return;
+      b.unit = {
+        dong: dongDigits, ho: String(r.unit_ho_name || (hoDigits + "호")).replace(/호$/, ""),
+        exclusiveArea: Number(r.exclusive_area_m2),
+        commonArea: r.common_area_m2 != null && r.common_area_m2 !== "" ? Number(r.common_area_m2) : null,
+        floor: r.unit_floor || "", purpose: r.unit_purpose || ""
+      };
+    } catch (e) { /* 실패하면 기존처럼 "전유부를 찾지 못했어요" 안내를 그대로 보여 준다 */ }
+  }
+
   async function start(force) {
     state.loading = true; state.error = null; render();
     state.info = readInfo();
@@ -682,6 +701,7 @@
       } catch (e) {}
       try {
         state.data = await fetchOverview(state.info);
+        await enrichUnit(state.data);
         try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: state.data })); } catch (e) {}
       } catch (e) { state.error = e && e.name === "AbortError" ? "응답이 너무 오래 걸려요. 잠시 뒤 새로고침해 주세요." : (e && e.message) || "알 수 없는 오류"; }
     }
