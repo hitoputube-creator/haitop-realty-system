@@ -179,14 +179,35 @@ body.land-reg .form-grid-3:has(#mapAddress){grid-template-columns:repeat(10,minm
 body.land-reg .form-grid-3:has(#mapAddress)>.field:has(#mapAddress){grid-column:span 5!important}
 body.land-reg .form-grid-3:has(#mapAddress)>#roadField{grid-column:span 3!important}
 body.land-reg .form-grid-3:has(#mapAddress)>#landAreaField{grid-column:span 2!important}
-.land-area-inline{display:flex;align-items:center;gap:4px;height:40px}
-.land-area-inline input{flex:1 1 0;width:0!important;min-width:0;height:40px!important;box-sizing:border-box}
+.land-area-inline{display:flex;align-items:center;gap:4px;height:32px}
+.land-area-inline input{flex:1 1 0;width:0!important;min-width:0;height:32px!important;box-sizing:border-box}
 .land-area-inline .area-unit{font-size:12px;color:var(--text-muted)}
 #landUnitPrice{width:100%}
-body.land-reg #lookupBuildingBtn{height:36px!important;padding:0 10px!important;font-size:12px!important;line-height:1!important}
-body.land-reg :is(#mapAddress,#roadAddress){height:40px!important;box-sizing:border-box}
+body.land-reg #lookupBuildingBtn{height:28px!important;padding:0 10px!important;font-size:11px!important;line-height:1!important}
+body.land-reg :is(#mapAddress,#roadAddress){height:32px!important;box-sizing:border-box}
 body.land-reg .form-grid-3:has(#mapAddress)>.field{align-self:start}
 body.land-reg .form-grid-3:has(#mapAddress)>.field>label{height:18px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── 수정창과 같은 가독성·간격 (영역 배경·제목 띠·항목 이름·입력칸 색 구분) ── */
+.card{background:#eef3f9!important;border:1px solid #c9d7e6!important;border-radius:12px!important;padding:10px 14px!important;margin-bottom:8px!important}
+.card>.card-title,.card .card-title{color:#16487f!important;background:#dce8f6!important;border-left:4px solid #1f5fa8!important;border-radius:4px!important;padding:4px 10px!important;margin:0 0 6px!important;font-size:12.5px!important;font-weight:800!important;line-height:1.4}
+.card .card-title span{color:#16487f!important;font-size:12.5px!important;font-weight:800!important}
+.card .field>label,.card .area-label,.card label.homepage-toggle{color:#3d556f!important;font-weight:700!important;font-size:12px!important;line-height:1.2!important}
+.card .field label span,.card .field small{color:#7a8da3!important;font-weight:500!important;font-size:11px!important}
+.card .field{row-gap:2px!important}
+.card .form-grid-3,.card .form-grid-5,.card .form-grid-2{gap:6px 10px!important}
+.card input:not([type=checkbox]):not([type=radio]):not([type=file]),.card select,.card textarea{background:#fff!important;color:#102236!important;border:1px solid #8fa8c2!important;border-radius:6px!important;box-shadow:0 1px 1px rgba(16,34,54,.06)!important;font-size:12.5px!important}
+.card input:not([type=checkbox]):not([type=radio]):not([type=file]),.card select{height:32px!important;padding:3px 9px!important}
+.card textarea{padding:5px 9px!important;min-height:44px!important}
+.card input::placeholder,.card textarea::placeholder{color:#9eacbc!important}
+.card input:not([type=checkbox]):not([type=radio]):not([type=file]):focus,.card select:focus,.card textarea:focus{border-color:#1f5fa8!important;box-shadow:0 0 0 3px rgba(31,95,168,.2)!important;outline:none!important}
+.card input[readonly]{background:#e4ebf3!important;color:#2f4258!important;border-color:#b3c3d4!important;box-shadow:none!important}
+.card #description{min-height:110px!important;height:110px!important}
+.card textarea.om-new{min-height:92px!important;height:92px!important}
+.card #newMemo{min-height:60px!important;height:60px!important}
+.card #optionDetails,.card #remarks{min-height:64px!important;height:64px!important}
+.card .btn{font-size:12px!important}
+#lookupBuildingBtn{height:28px!important;padding:0 10px!important;font-size:11px!important;line-height:1!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
