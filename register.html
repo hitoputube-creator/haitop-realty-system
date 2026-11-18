@@ -405,6 +405,21 @@ body.land-reg .form-grid-3:has(#mapAddress)>.field>label{height:18px;line-height
 .commercial-occupancy,select.commercial-occupancy{height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important}
 .commercial-tenant-biz,.presale-switch input.commercial-tenant-biz{width:150px!important;flex:0 0 150px!important;height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important;margin:0!important;box-sizing:border-box}
 html body .card .presale-switch input.commercial-tenant-biz.commercial-tenant-biz{height:28px!important;min-height:0!important;padding:2px 8px!important}
+
+html body.property-form-page.fac-reg #registerPage .form-grid-3:has(#mapAddress){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html body.property-form-page.fac-reg #registerPage .form-grid-3:has(#mapAddress)>.field.field-span2{grid-column:1/2!important}
+html body.property-form-page.fac-reg #registerPage .form-grid-3:has(#mapAddress)>#roadField{display:flex!important;grid-column:2/3!important}
+html body.property-form-page.fac-reg #registerPage .form-grid-3:has(#mapAddress)>#roadField small,html body.property-form-page.fac-reg #registerPage .form-grid-3:has(#mapAddress) #lookupBuildingStatus:empty{display:none}
+html body.property-form-page.fac-reg #registerPage #genericMemoSection,
+html body.property-form-page.fac-reg #registerPage .field:has(#description),
+html body.property-form-page.fac-reg #registerPage .drive-link-inline{display:none!important}
+html body .area-row.feature-row{display:none}
+html body.property-form-page.fac-reg #registerPage .area-row.feature-row{display:flex!important}
+
+html[data-office-theme] body.property-form-page.fac-reg #registerPage .form-grid-3:has(#owner_name) > .field:first-child > div > .field.drive-link-inline{display:none!important}
+html body #registerPage .area-row.feature-row .feature-label{padding:0 6px!important;display:flex;align-items:center}
+html body #registerPage .area-row.feature-row .feature-label input{width:100%;height:34px;font-weight:700;font-size:13px;text-align:center;border:1px dashed #94a3b8;background:#fff;border-radius:6px}
+html body #registerPage .area-row.feature-row .feature-value{flex:1 1 auto;min-width:0}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -1438,6 +1453,8 @@ html body .card .presale-switch input.commercial-tenant-biz.commercial-tenant-bi
       ...(cat2 === '아파트' ? {} : { roadAddress: (document.getElementById('roadAddress') ? document.getElementById('roadAddress').value.trim() : '') }),
       premium:        gv('premium'),
       profitRate:     gv('profitRate'),
+      extraFeatureLabel: gv('extraFeatureLabel'),
+      extraFeatureValue: gv('extraFeatureValue'),
       // 면적
       areaM2:             gn('areaM2'),
       areaPy:             gn('areaPy'),
@@ -1925,6 +1942,24 @@ html body .card .presale-switch input.commercial-tenant-biz.commercial-tenant-bi
     function sync(){document.body.classList.toggle('cat-pending',!(c1.value&&c2.value));}
     c1.addEventListener('change',sync);c2.addEventListener('change',sync);
     sync();setInterval(sync,400);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+<script>
+/* 공장·창고: 주소 한 줄, 면적 아래 「특징」 입력(층고 등), 메모 1개, 드라이브 연결 숨김 */
+(function(){
+  function init(){
+    var c1=document.getElementById('category1Select'),wrap=document.querySelector('.area-building .area-rows-inline');
+    if(!c1)return;
+    if(wrap&&!document.getElementById('extraFeatureLabel')){
+      var r=document.createElement('div');r.className='area-row feature-row';
+      r.innerHTML='<span class="area-label feature-label"><input id="extraFeatureLabel" type="text" maxlength="12" placeholder="특징 입력" aria-label="특징 항목명(예: 층고)" /></span><input id="extraFeatureValue" type="text" class="feature-value" placeholder="예) 층고 6m, 호이스트 5톤" aria-label="특징 내용" />';
+      wrap.appendChild(r);
+    }
+    function sync(){document.body.classList.toggle('fac-reg',c1.value==='공장창고');}
+    c1.addEventListener('change',sync);sync();setInterval(sync,500);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
