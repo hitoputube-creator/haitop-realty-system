@@ -1796,9 +1796,9 @@ async function deleteBFile(id) {
   function renderUnitPhase() {
     const resi=residentialUnitMode();$('unitPresaleSwitch').hidden=resi;
     document.querySelectorAll('[data-unit-phase]').forEach(b=>{b.classList.toggle('active',b.dataset.unitPhase===unitPhase);b.setAttribute('aria-pressed',String(b.dataset.unitPhase===unitPhase));});
-    $('unitOriginalPrices').hidden=unitPhase!=='분양완료';$('unitOriginalPrices').textContent=unitOriginalOpen?'최초 분양자료 접기':'최초 분양자료 보기';
-    for(const id of ['u_평당가','u_분양금액','u_보증금','u_월차임'])$(id).closest('.umfield').classList.toggle('presale-hidden',unitPhase==='분양완료'&&!unitOriginalOpen);
-    for(const id of ['u_현매매가격','u_현보증금','u_현월세'])$(id).closest('.umfield').classList.toggle('presale-hidden',unitPhase==='분양중');
+    $('unitOriginalPrices').hidden=true;$('unitOriginalPrices').textContent=unitOriginalOpen?'최초 분양자료 접기':'최초 분양자료 보기';
+    for(const id of ['u_평당가','u_분양금액','u_보증금','u_월차임'])$(id).closest('.umfield').classList.toggle('presale-hidden',false);
+    for(const id of ['u_현매매가격','u_현보증금','u_현월세'])$(id).closest('.umfield').classList.toggle('presale-hidden',false);
   }
   document.querySelectorAll('[data-unit-phase]').forEach(b=>b.addEventListener('click',()=>{unitPhase=b.dataset.unitPhase;unitOriginalOpen=false;renderUnitPhase();}));
   $('unitOriginalPrices').addEventListener('click',()=>{unitOriginalOpen=!unitOriginalOpen;renderUnitPhase();});
@@ -2932,12 +2932,14 @@ async function deleteBFile(id) {
     $("umDelete").style.display = isNew ? "none" : "";
     $("umRegistry").style.display = "";
     const u = isNew ? {} : units[idx];
-    unitPhase=isNew?"분양중":CommercialPriceCore.status(u,true);unitOriginalOpen=false;renderUnitPhase();
+    unitPhase=isNew?"분양중":CommercialPriceCore.status(u,true);unitOriginalOpen=false;renderUnitPhase();if(window.umSetView)window.umSetView(unitPhase==='분양중'?'sale':'listing');
     $('unitRegistryApplied').hidden = !u.건축물대장조회;
     $('unitRegistryApplied').textContent = u.건축물대장조회 ? '저장된 대장: 전유 '+u.건축물대장조회.exclusive_area_m2+'㎡ · 공용 합계 '+(u.건축물대장조회.common_area_m2 ?? '미확인')+'㎡ · '+(u.건축물대장조회.unit_floor || '') : '';
     $('unitModal').classList.toggle('residential-modal', residentialUnitMode());
     $('residentialUnitFields').hidden = !residentialUnitMode();
     $('commercialUnitSale').hidden = residentialUnitMode();
+    if ($('commercialUnitForm')) $('commercialUnitForm').hidden = residentialUnitMode();
+    if ($('unitViewSwitch')) $('unitViewSwitch').hidden = residentialUnitMode();
     $('commercialUnitCurrent').hidden = residentialUnitMode();
     if (residentialUnitMode()) {
       $('umTitle').textContent = isNew ? '세대 추가' : '세대 수정';
@@ -3589,6 +3591,71 @@ async function deleteBFile(id) {
     return out;
   };
   document.addEventListener('click', function (e) { if (e.target && e.target.id === 'u_추가연락처Btn') addRow('', ''); });
+})();
+</script>
+<script>
+/* 자료실 상가 호실 수정창: 매물 등록·수정창과 같은 구성(기본정보·면적정보·추가정보·가격정보·내부전용·메모)으로 정리하고,
+ * 위쪽 [분양] / [매물] 버튼으로 분양자료 칸과 매물 항목 칸을 전환한다. 칸의 id·저장 위치는 그대로다. */
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function F(id) { var e = $(id); return e && e.closest('.umfield'); }
+  var sale0 = $('commercialUnitSale'), cur0 = $('commercialUnitCurrent');
+  if (!sale0 || !cur0 || !$('u_호수')) return;
+  var st = document.createElement('style');
+  st.textContent =
+    '#commercialUnitForm .uf-sec{margin:12px 0 4px}' +
+    '#commercialUnitForm .uf-title{display:flex;align-items:center;gap:6px;margin:0 0 8px;padding:5px 10px;background:#dce8f6;border-left:4px solid #1f5fa8;border-radius:4px;color:#16487f;font-size:.84rem;font-weight:800}' +
+    '#commercialUnitForm .uf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 14px;align-items:end}' +
+    '#commercialUnitForm .uf-grid>.umfield{grid-column:auto!important;min-width:0;margin:0}' +
+    '#commercialUnitForm .uf-grid>.uf-2{grid-column:span 2!important}#commercialUnitForm .uf-grid>.uf-4{grid-column:1 / -1!important}' +
+    '#commercialUnitForm .uf-grid input:not([type=checkbox]),#commercialUnitForm .uf-grid select,#commercialUnitForm .uf-grid textarea{width:100%;box-sizing:border-box}' +
+    '#commercialUnitForm .uf-grid .area-row{display:flex;align-items:center;gap:6px}#commercialUnitForm .uf-grid .area-row input{min-width:0}' +
+    '#commercialUnitForm .uf-flags{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}' +
+    '#commercialUnitForm .uf-flags .umcheck{background:none!important;border:0!important;padding:0!important}' +
+    '#commercialUnitForm .uf-flags .umcheck label{display:inline-flex;align-items:center;gap:6px;font-weight:700;margin:0;cursor:pointer}' +
+    '#commercialUnitForm .uf-flags .uf-rate{display:inline-flex;align-items:center;gap:8px}#commercialUnitForm .uf-flags .uf-rate label{margin:0;white-space:nowrap}#commercialUnitForm .uf-flags .uf-rate input{width:90px}' +
+    '#commercialUnitForm [hidden]{display:none!important}' +
+    '#unitViewSwitch{display:flex;gap:8px;margin:0 0 10px}#unitViewSwitch button{flex:1;padding:9px 12px;border:1px solid #9db8e0;border-radius:8px;background:#fff;color:#16487f;font-size:.95rem;font-weight:800;cursor:pointer}' +
+    '#unitViewSwitch button.active{background:#1f5fa8;border-color:#1f5fa8;color:#fff}' +
+    '#commercialUnitSale,#commercialUnitCurrent{display:none!important}' +
+    '@media(max-width:640px){#commercialUnitForm .uf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}';
+  document.head.appendChild(st);
+  function sec(title) { var s = document.createElement('div'); s.className = 'uf-sec'; s.innerHTML = '<div class="uf-title">' + title + '</div><div class="uf-grid"></div>'; return s; }
+  function grid(s) { return s.querySelector('.uf-grid'); }
+  function put(s, ids, cls) { ids.forEach(function (id) { var f = F(id); if (!f) return; f.className = 'umfield' + (cls ? ' ' + cls : ''); grid(s).appendChild(f); }); }
+  var wrap = document.createElement('div'); wrap.id = 'commercialUnitForm';
+  var A = sec('📋 기본정보'), B = sec('📐 면적정보'), S = sec('💰 분양자료 (분양 당시 가격)'), C = sec('🏢 추가정보'), D = sec('💰 가격정보'), E = sec('🔒 내부전용'), M = sec('📝 메모');
+  put(A, ['u_호수']); (function () { var f = $('u_구분_field'); if (f) { f.className = 'umfield'; grid(A).appendChild(f); } })(); put(A, ['u_거래구분']);
+  ['u_전용_평', 'u_분양_평'].forEach(function (id) { var f = F(id); f.className = 'umfield area-dual uf-2'; grid(B).appendChild(f); });
+  put(S, ['u_평당가', 'u_분양금액', 'u_보증금', 'u_월차임']);
+  put(C, ['u_층정보', 'u_용도지역', 'u_주차대수', 'u_사용승인일']);
+  put(D, ['u_공실여부', 'u_현업종', 'u_현매매가격', 'u_현보증금', 'u_현월세', 'u_권리금']);
+  var flags = document.createElement('div'); flags.className = 'umfield uf-4 uf-flags';
+  ['u_추천매물', 'u_수익성매물'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield umcheck'; flags.appendChild(f); } });
+  var rate = F('u_수익률'); if (rate) { rate.className = 'umfield uf-rate'; flags.appendChild(rate); }
+  grid(D).appendChild(flags);
+  var hint = cur0.querySelector('.umhint'); if (hint) { hint.className = 'umfield uf-4 umhint'; hint.style.cssText = 'font-size:.72rem;color:var(--muted)'; grid(D).appendChild(hint); }
+  put(E, ['u_소유주', 'u_연락처', 'u_통신사']); var ac = $('u_추가연락처_field'); if (ac) { ac.className = 'umfield uf-4'; grid(E).appendChild(ac); }
+  put(E, ['u_소유주메모'], 'uf-4');
+  put(M, ['u_내부메모', 'u_옵션내역'], 'uf-4'); var nb = $('u_비고_wrap'); if (nb) { nb.className = 'umfield uf-4'; grid(M).appendChild(nb); }
+  [A, B, S, C, D, E, M].forEach(function (s) { wrap.appendChild(s); });
+  sale0.before(wrap);
+  var viewSw = document.createElement('div'); viewSw.id = 'unitViewSwitch';
+  viewSw.innerHTML = '<button type="button" data-uv="sale">분양</button><button type="button" data-uv="listing">매물</button>';
+  var phaseSw = $('unitPresaleSwitch'); if (phaseSw) phaseSw.before(viewSw); else wrap.before(viewSw);
+  var notes = $('unitAdditionalNotes'), dealField = F('u_거래구분');
+  function setView(v) {
+    var sale = v === 'sale';
+    viewSw.querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', b.dataset.uv === v); });
+    S.hidden = !sale; [C, D, E, M].forEach(function (s) { s.hidden = sale; });
+    if (dealField) dealField.hidden = sale;
+    if (notes) notes.style.display = sale ? 'none' : '';
+    // 모달을 열 때 나중에 붙는 칸(예: 특별분양 체크)이 남아 있으면 체크 줄로 옮긴다
+    [].slice.call(cur0.querySelectorAll('.umcheck')).forEach(function (c) { flags.insertBefore(c, rate || null); });
+  }
+  viewSw.addEventListener('click', function (e) { var b = e.target.closest('button[data-uv]'); if (b) setView(b.dataset.uv); });
+  window.umSetView = setView;
+  setView('listing');
 })();
 </script>
 </body>
