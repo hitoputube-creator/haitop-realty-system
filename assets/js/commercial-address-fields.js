@@ -158,3 +158,41 @@
   return render;
  };
 })(window);
+
+/* 상가·사무실 매물 등록·수정창: 자료실 호실 수정창과 같은 항목(추천매물·수익성매물·수익률) 추가.
+ * 추천매물·수익성매물은 기존 홍보스티커(추천매물·수익형)와 같은 값이라 서로 연동된다. */
+(function () {
+  'use strict';
+  function setup(prefix) {
+    var stickerName = prefix ? 'edit_stickers' : 'stickers';
+    var cat1 = document.getElementById(prefix ? 'edit_category1' : 'category1Select');
+    var sale = document.getElementById(prefix + 'salePrice');
+    if (!cat1 || !sale || document.getElementById(prefix + 'profitRate')) return;
+    var grid = sale.closest('.field') && sale.closest('.field').parentElement;
+    if (!grid) return;
+    var box = document.createElement('div');
+    box.className = 'commercial-flags';
+    box.style.cssText = 'grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin-top:6px;';
+    box.innerHTML =
+      '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:700;cursor:pointer"><input type="checkbox" class="cf-rec" style="width:16px;height:16px;margin:0"> ⭐ 추천매물</label>' +
+      '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:700;cursor:pointer"><input type="checkbox" class="cf-profit" style="width:16px;height:16px;margin:0"> 💰 수익성매물</label>' +
+      '<label style="display:inline-flex;align-items:center;gap:8px;font-weight:700">수익률 (%) <input id="' + prefix + 'profitRate" type="text" placeholder="예: 5.2" style="width:90px"></label>';
+    grid.appendChild(box);
+    var rec = box.querySelector('.cf-rec'), profit = box.querySelector('.cf-profit');
+    function chip(v) { return document.querySelector('input[name="' + stickerName + '"][value="' + v + '"]'); }
+    function toChip(el, v) { var c = chip(v); if (c && c.checked !== el.checked) { c.checked = el.checked; c.dispatchEvent(new Event('change', { bubbles: true })); } }
+    rec.addEventListener('change', function () { toChip(rec, '추천매물'); });
+    profit.addEventListener('change', function () { toChip(profit, '수익형'); });
+    function mirror() {
+      var a = chip('추천매물'), b = chip('수익형');
+      if (a && rec.checked !== a.checked) rec.checked = a.checked;
+      if (b && profit.checked !== b.checked) profit.checked = b.checked;
+      box.hidden = cat1.value !== '상가사무실';
+    }
+    cat1.addEventListener('change', mirror);
+    setInterval(mirror, 400);
+    mirror();
+  }
+  function init() { setup(''); setup('edit_'); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
