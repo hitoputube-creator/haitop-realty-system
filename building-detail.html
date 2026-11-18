@@ -3703,8 +3703,9 @@ async function deleteBFile(id) {
   var cmp = document.createElement('div'); cmp.className = 'uf-cmp';
   cmp.innerHTML = '<div class="uf-cmp-h old">기존 분양조건</div><div class="uf-cmp-h cur">할인 · 현재 조건</div>';
   put(D, ['u_분양금액', 'u_보증금', 'u_월차임', 'u_현매매가격', 'u_현보증금', 'u_현월세'], '', cmp);
-  put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) { pf.style.gridColumn = '1 / span 3'; var pl = pf.querySelector('label'); if (pl) pl.textContent = '분양금액 (평당가, 만원)'; }
-  var dcL = F('u_현매매가격') && F('u_현매매가격').querySelector('label'); if (dcL) dcL.textContent = '할인 분양가 (만원)';
+  put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) { pf.style.gridColumn = '1 / span 3'; }
+  var pl = $('u_평당가').closest('.umfield').querySelector('label'); if (pl) pl.textContent = '분양금액 (평당가, 만원)';
+  var dcL = $('u_현매매가격').closest('.umfield').querySelector('label'); if (dcL) dcL.textContent = '할인 분양가 (만원)';
   var kf = F('u_권리금'); if (kf) { kf.style.display = 'none'; grid(D).appendChild(kf); }
   grid(D).appendChild(cmp);
   var flags = document.createElement('div'); flags.className = 'umfield uf-10 uf-flags';
