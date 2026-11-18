@@ -3682,7 +3682,6 @@ async function deleteBFile(id) {
   grid(A).appendChild(nameF); grid(A).appendChild(addrF); grid(A).appendChild(hoF);
   put(A, ['u_거래구분']); var dealF = F('u_거래구분'); if (dealF) { var dl = dealF.querySelector('label'); if (dl) dl.textContent = '거래유형'; }
   var kindF = $('u_구분_field'); if (kindF) { kindF.className = 'umfield uf-2'; var kl = kindF.querySelector('label'); if (kl) kl.textContent = '구분(상가/오피스텔)'; grid(A).appendChild(kindF); }
-  var titleF = ro('제목', '', 'uf-10', 'uf_제목'); grid(A).appendChild(titleF);
   // ── 면적정보: 매물창과 같은 모양 (㎡ 먼저, 평 다음) ──
   [['u_전용_평', 'u_전용_m2', '전용면적'], ['u_분양_평', 'u_분양_m2', '분양(공급)면적']].forEach(function (p) {
     var f = F(p[0]); f.className = 'uf-area'; var lab = f.querySelector('label'); if (lab) lab.textContent = p[2];
@@ -3724,14 +3723,12 @@ async function deleteBFile(id) {
     try { name = (typeof bName !== 'undefined' && bName) || (h1 && h1.textContent.trim()) || ''; } catch (e) { name = (h1 && h1.textContent.trim()) || ''; }
     $('uf_건물명').value = name;
     try { if (typeof buildingAddress !== 'undefined') $('uf_주소').value = buildingAddress || ''; } catch (e) {}
-    var ho = ($('u_호수').value || '').trim(); $('uf_제목').value = name + (ho ? ' ' + ho + '호' : '') + ' 상가';
     var lid = null; try { var s = document.querySelector('#unitModal'); lid = s && s.dataset.listingId; } catch (e) {}
     [].slice.call(cur0.querySelectorAll('.umcheck')).forEach(function (c) { flags.insertBefore(c, rate || null); });
     var kindSel = $('u_구분'), ro2 = $('uf_2차고정');
     if (kindSel && ro2) { ro2.hidden = !(kindSel.closest('.umfield').hidden); }
     var sc = document.querySelector('#unitModal .um-scroll'); if (sc) sc.scrollTop = 0;
   };
-  $('u_호수').addEventListener('input', function () { var ho = ($('u_호수').value || '').trim(); $('uf_제목').value = ($('uf_건물명').value || '') + (ho ? ' ' + ho + '호' : '') + ' 상가'; });
   // 창 구조: 제목(위)·버튼(아래) 고정, 가운데만 스크롤
   (function () {
     var box = $('unitModal') && $('unitModal').querySelector('.unit-modal-box');
