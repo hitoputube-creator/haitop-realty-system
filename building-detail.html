@@ -2940,6 +2940,7 @@ async function deleteBFile(id) {
     $('commercialUnitSale').hidden = residentialUnitMode();
     if ($('commercialUnitForm')) $('commercialUnitForm').hidden = residentialUnitMode();
     if ($('unitViewSwitch')) $('unitViewSwitch').hidden = residentialUnitMode();
+    if ($('unitTabs')) $('unitTabs').hidden = residentialUnitMode();
     $('commercialUnitCurrent').hidden = residentialUnitMode();
     if (residentialUnitMode()) {
       $('umTitle').textContent = isNew ? '세대 추가' : '세대 수정';
@@ -3726,6 +3727,46 @@ async function deleteBFile(id) {
     var n = title.nextElementSibling;
     while (n && n !== actions) { var nx = n.nextElementSibling; scroll.appendChild(n); n = nx; }
     actions.before(scroll);
+  })();
+  // ── 위쪽 [분양] / [매물] 탭: 분양 = 이 호실의 분양자료 폼, 매물 = 연결된 매물의 실제 매물 수정창 ──
+  (function () {
+    var box = $('unitModal') && $('unitModal').querySelector('.unit-modal-box');
+    var title = box && box.querySelector('.unit-modal-title'), scrollEl = box && box.querySelector('.um-scroll'), actions = box && box.querySelector('.unit-modal-actions');
+    if (!box || !title || !scrollEl || !actions) return;
+    var tabs = document.createElement('div'); tabs.id = 'unitTabs';
+    tabs.innerHTML = '<button type="button" data-ut="sale">분양</button><button type="button" data-ut="listing">매물</button>';
+    var pane = document.createElement('div'); pane.id = 'unitListingPane';
+    pane.innerHTML = '<div class="ulp-empty" hidden>이 호실은 아직 매물로 등록되지 않았습니다.<br>호실 목록에서 체크한 뒤 [매물리스트로 보내기]를 누르면, 이 화면에서 매물 정보를 보고 고칠 수 있어요.</div><iframe title="매물 수정" style="width:100%;height:100%;border:0;display:none"></iframe>';
+    title.after(tabs); scrollEl.after(pane);
+    var st2 = document.createElement('style');
+    st2.textContent = '#unitTabs{display:flex;gap:8px;padding:8px 18px;background:#fff;border-bottom:1px solid #c9d7e6;flex-shrink:0}' +
+      '#unitTabs button{flex:1;padding:7px 12px;border:1px solid #9db8e0;border-radius:8px;background:#fff;color:#16487f;font-size:14px;font-weight:800;cursor:pointer}' +
+      '#unitTabs button.active{background:#1f5fa8;border-color:#1f5fa8;color:#fff}' +
+      '#unitListingPane{display:none;flex:1 1 auto;min-height:0;background:#eef3f9;position:relative}' +
+      '#unitListingPane .ulp-empty{padding:60px 30px;text-align:center;color:#3d556f;font-size:14px;line-height:1.7}' +
+      '#unitModal.residential-modal #unitTabs{display:none}';
+    document.head.appendChild(st2);
+    function listingId() {
+      var a = $('umListingView'); if (!a || a.hidden) return '';
+      try { return new URL(a.href, location.href).searchParams.get('id') || ''; } catch (e) { return ''; }
+    }
+    function setTab(v) {
+      var listing = v === 'listing';
+      tabs.querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', b.dataset.ut === v); });
+      scrollEl.style.display = listing ? 'none' : ''; actions.style.display = listing ? 'none' : '';
+      pane.style.display = listing ? 'block' : 'none';
+      var fr = pane.querySelector('iframe'), em = pane.querySelector('.ulp-empty');
+      if (!listing) return;
+      var id = listingId();
+      if (!id) { em.hidden = false; fr.style.display = 'none'; return; }
+      em.hidden = true; fr.style.display = 'block';
+      var want = 'detail.html?id=' + encodeURIComponent(id) + '&edit=1&embed=1' + (typeof OfficeConfig !== 'undefined' ? '&office=' + encodeURIComponent(OfficeConfig.id) : '');
+      if (fr.getAttribute('data-src') !== want) { fr.setAttribute('data-src', want); fr.src = want; }
+    }
+    tabs.addEventListener('click', function (e) { var b = e.target.closest('button[data-ut]'); if (b) setTab(b.dataset.ut); });
+    window.addEventListener('message', function (e) { if (e && e.data && e.data.um === 'listing-cancel') setTab('sale'); });
+    var base = window.umSetView;
+    window.umSetView = function () { if (base) base(); var fr = pane.querySelector('iframe'); if (fr) { fr.removeAttribute('data-src'); fr.removeAttribute('src'); } setTab('sale'); };
   })();
   window.umSetView();
 })();
