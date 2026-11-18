@@ -170,14 +170,21 @@
     if (!cat1 || !sale || document.getElementById(prefix + 'profitRate')) return;
     var grid = sale.closest('.field') && sale.closest('.field').parentElement;
     if (!grid) return;
+    // 추천매물·수익성매물은 가격정보 제목줄 오른쪽 버튼으로, 수익률은 가격 표의 빈 칸(월세 옆)에 둔다.
     var box = document.createElement('div');
     box.className = 'commercial-flags';
-    box.style.cssText = 'grid-column:1 / -1;grid-row:9;display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin-top:6px;';
+    box.style.cssText = 'display:inline-flex;gap:6px;align-items:center;margin-left:auto;';
     box.innerHTML =
-      '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:700;cursor:pointer"><input type="checkbox" class="cf-rec" style="width:16px;height:16px;margin:0"> ⭐ 추천매물</label>' +
-      '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:700;cursor:pointer"><input type="checkbox" class="cf-profit" style="width:16px;height:16px;margin:0"> 💰 수익성매물</label>' +
-      '<label style="display:inline-flex;align-items:center;gap:8px;font-weight:700">수익률 (%) <input id="' + prefix + 'profitRate" type="text" placeholder="예: 5.2" style="width:90px"></label>';
-    grid.appendChild(box);
+      '<label class="cf-btn"><input type="checkbox" class="cf-rec"><span>⭐ 추천매물</span></label>' +
+      '<label class="cf-btn"><input type="checkbox" class="cf-profit"><span>💰 수익성매물</span></label>';
+    var profitField = document.createElement('div');
+    profitField.className = 'field profit-rate-field';
+    profitField.innerHTML = '<label>수익률 (%)</label><input id="' + prefix + 'profitRate" type="text" placeholder="예: 5.2">';
+    grid.appendChild(profitField);
+    var titleHost = null, secCard = grid.closest('section.card');
+    if (secCard) titleHost = secCard.querySelector('.card-title');
+    else { var prev = grid.previousElementSibling; while (prev && !titleHost) { if (prev.classList && prev.classList.contains('modal-section-title')) titleHost = prev; prev = prev.previousElementSibling; } }
+    (titleHost || grid).appendChild(box);
     var rec = box.querySelector('.cf-rec'), profit = box.querySelector('.cf-profit');
     function chip(v) { return document.querySelector('input[name="' + stickerName + '"][value="' + v + '"]'); }
     function toChip(el, v) { var c = chip(v); if (c && c.checked !== el.checked) { c.checked = el.checked; c.dispatchEvent(new Event('change', { bubbles: true })); } }
