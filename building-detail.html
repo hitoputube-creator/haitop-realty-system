@@ -2955,7 +2955,7 @@ async function deleteBFile(id) {
     renderMemoHistory(u);
 
     // 분양 당시
-    $("u_호수").value     = u.호수      || "";
+    $("u_호수").value     = /^\d+$/.test(String(u.호수 || "").trim()) ? String(u.호수).trim() + "호" : (u.호수 || "");
     $("u_현업종").value   = u.현업종    || "";
     $("u_전용_평").value  = u.전용_평 ? parseFloat(u.전용_평).toFixed(2) : "";
     $("u_전용_m2").value  = u.전용_평 ? (parseFloat(u.전용_평) * 3.30579).toFixed(2) : "";
@@ -3183,7 +3183,7 @@ async function deleteBFile(id) {
 
   async function saveUnit(options = {}) {
     if ($("umSave").disabled) return;
-    const 호수 = $("u_호수").value.trim();
+    const 호수 = $("u_호수").value.trim().replace(/^(\d+)\s*호$/, "$1");
     if (!residentialUnitMode() && !호수) { if (typeof showToast === "function") showToast("호수를 입력하세요."); return; }
 
     let unit = {
@@ -3832,12 +3832,12 @@ async function deleteBFile(id) {
     '#commercialUnitForm .ut thead th{text-align:center;font-size:13px;font-weight:800;padding:6px}' +
     '#commercialUnitForm .ut thead th.g{background:#d5e3e1;color:#1d4d4a}#commercialUnitForm .ut thead th.b{background:#d5e2f3;color:#16487f}' +
     '#commercialUnitForm .ut td>.umfield{margin:0!important;padding:0!important;display:block;background:none!important;border:0!important;min-width:0}' +
-    '#commercialUnitForm .ut td>.umfield>label{display:none!important}' +
+    '#commercialUnitForm .ut td .umfield>label{display:none!important}' +
     '#commercialUnitForm .ut td>.uf-area{display:flex;align-items:center;gap:6px}#commercialUnitForm .ut td>.uf-area>label{display:none!important}' +
     '#commercialUnitForm .ut td>.uf-area input{flex:1 1 0;width:auto;min-width:0}' +
     '#commercialUnitForm .ut input:not([type=checkbox]):not([type=radio]):not([type=file]),#commercialUnitForm .ut select{height:32px!important;min-height:32px!important;padding-top:3px!important;padding-bottom:3px!important}' +
     '#commercialUnitForm .ut textarea{min-height:44px}' +
-    '#commercialUnitForm .ut #unitPresaleSwitch{display:flex;align-items:center;gap:6px;margin:0}#commercialUnitForm .ut #unitPresaleSwitch>span{display:none}' +
+    '#commercialUnitForm .ut #unitPresaleSwitch{display:flex;align-items:center;gap:5px;margin:0}#commercialUnitForm .ut #unitPresaleSwitch>span{display:inline;font-size:12px;font-weight:700;color:#2a4766;margin-right:2px}#commercialUnitForm .ut #unitPresaleSwitch button{padding:2px 9px!important;font-size:11.5px!important;height:26px!important;min-height:0!important;line-height:1.2!important;border-radius:6px}' +
     '#commercialUnitForm .ut .amt-hint{margin-top:1px}' +
     '#commercialUnitForm .uf-sec>.uf-title{margin-bottom:0;border-radius:4px 4px 0 0}' +
     '#commercialUnitForm .ut-note{margin:2px 0 0;font-size:11px;color:#7a8da3}';
@@ -3865,6 +3865,9 @@ async function deleteBFile(id) {
   if (!A || !B || !C || !D || !E) return;
   var nameF = $('uf_건물명') && $('uf_건물명').closest('.umfield'), addrF = $('uf_주소') && $('uf_주소').closest('.umfield');
   var ph = $('unitPresaleSwitch');
+  var dealWrap = document.createElement('div'); dealWrap.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+  var dealF0 = F('u_거래구분'); if (dealF0) { dealF0.style.cssText = 'width:150px;flex:none;margin:0;padding:0'; dealWrap.appendChild(dealF0); }
+  if (ph) dealWrap.appendChild(ph);
   var areas = [].slice.call(B.querySelectorAll('.uf-area'));
   var hintEl = D.querySelector('.umhint');
   var memoInternal = F('u_내부메모'), ac = $('u_추가연락처_field'), nb = $('u_비고_wrap');
@@ -3877,8 +3880,7 @@ async function deleteBFile(id) {
   }
   put(A, mk([
     [['건물명', nameF], ['상세주소', addrF]],
-    [[lab(F('u_호수')) || '호수', F('u_호수')], ['거래유형', F('u_거래구분')]],
-    [['분양상태', ph, 3]]
+    [[lab(F('u_호수')) || '호수', F('u_호수')], ['거래유형', dealWrap]]
   ]));
   put(B, mk([[[ '전용면적', areas[0] ], [ '분양(공급)면적', areas[1] ]]]));
   put(C, mk([
@@ -3893,6 +3895,7 @@ async function deleteBFile(id) {
     [['임대현황', F('u_공실여부')], ['임대현황', F('u_현임대현황')]],
     [['업종', F('u_현업종')], ['업종', F('u_현업종2')]]
   ], ['기존 분양조건', '할인 · 현재 조건']));
+  var hoIn = $('u_호수'); if (hoIn) hoIn.addEventListener('blur', function () { var v = hoIn.value.trim(); if (/^\d+$/.test(v)) hoIn.value = v + '호'; });
   if (hintEl) { hintEl.className = 'ut-note'; hintEl.style.cssText = ''; D.appendChild(hintEl); }
   put(E, mk([
     [['소유주명', F('u_소유주')], ['소유주 연락처', F('u_연락처')]],
