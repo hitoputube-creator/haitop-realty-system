@@ -42,7 +42,7 @@
   }));}
   const fullAddr=v=>String(v||'').trim().replace(/^경기\s/,'경기도 ');
   function cleanQuery(text){
-   let q=String(text||'').split(/[,，]/)[0].replace(/\s+\d+\s*호.*$/,'').trim();
+   let q=String(text||'').split(/[,，]/)[0].replace(/\([^)]*\)/g,' ').replace(/\s*외\s*\d+\s*필지.*$/,'').replace(/(\d)\.\d.*$/,'$1').replace(/\s+\d+\s*호.*$/,'').replace(/\s+/g,' ').trim();
    if(q&&!/[가-힣]+(시|군|구)(\s|$)/.test(q))q='파주시 '+q;
    return q;
   }
