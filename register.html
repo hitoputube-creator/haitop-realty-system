@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone3" />
   <script src="assets/js/storage.js?v=20261118-img1"></script>
-<script src="assets/js/commercial-address-fields.js?v=20261118-addr3"></script>
+<script src="assets/js/commercial-address-fields.js?v=20261118-flag1"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -225,6 +225,13 @@ html[data-office-theme] body.property-form-page .form-grid-5 > .field > select{p
 html body.land-reg #roadField{display:none!important}
 html body #editModal.land-edit #edit_roadField{display:none!important}
 html body.land-reg .form-grid-3:has(#mapAddress)>#landAreaField,html body #editModal.land-edit #edit_basicInfoGrid>#edit_landAreaField{grid-column:1/-1!important}
+
+/* 추천매물·수익성매물: 가격정보 제목줄 오른쪽 버튼, 수익률: 가격 표의 빈 칸 */
+html body .cf-btn{position:relative;display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:26px;margin:0!important;padding:0 10px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#475569;font-size:12px!important;font-weight:700!important;line-height:1;cursor:pointer;white-space:nowrap;user-select:none}
+html body .cf-btn input{position:absolute;opacity:0;width:0;height:0;margin:0;pointer-events:none}
+html body .cf-btn:hover{border-color:var(--em-accent,#1767d2);color:var(--em-accent,#1767d2)}
+html body .cf-btn:has(input:checked){background:var(--em-accent,#1767d2);border-color:var(--em-accent,#1767d2);color:#fff}
+html body .card-title > .commercial-flags,html body .modal-section-title > .commercial-flags{margin-left:auto!important}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
 <script>
