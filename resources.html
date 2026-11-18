@@ -15,7 +15,58 @@
     .resource-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
     .resource-toolbar .floor-status-entry { margin-left:0; }
     .resource-toolbar .resource-location-entry { margin-left:auto; }
-  </style>
+  
+/* 자료관리 재디자인: 작은 네모 버튼, 카테고리 칩, 자료 카드 한 줄 정리 */
+html body.resources-page{--rp-accent:#1767d2;--rp-soft:#eaf2ff;--rp-ink:#1e293b;--rp-sub:#475569;--rp-mute:#64748b;--rp-line:#e2e8f0}
+html[data-office-theme='hitop'] body.resources-page{--rp-accent:#25675f;--rp-soft:#e6f2ef}
+/* 상단 버튼줄 */
+html body.resources-page .resource-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:14px 0 10px!important}
+html body.resources-page .resource-toolbar .btn,html body.resources-page .resource-toolbar a.btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:30px!important;min-height:0!important;margin:0!important;padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--rp-sub)!important;font-family:inherit;font-size:12.5px!important;font-weight:700;line-height:1!important;white-space:nowrap;text-decoration:none!important;box-shadow:none!important}
+html body.resources-page .resource-toolbar .btn:hover{border-color:var(--rp-accent)!important;color:var(--rp-accent)!important}
+html body.resources-page .resource-toolbar .btn-primary{background:var(--rp-accent)!important;border-color:var(--rp-accent)!important;color:#fff!important}
+html body.resources-page .resource-toolbar .btn-primary:hover{color:#fff!important;filter:brightness(.92)}
+html body.resources-page .resource-toolbar a.resource-location-entry{margin-left:auto!important}
+/* 검색 */
+html body.resources-page .resource-search{margin:0 0 12px!important}
+html body.resources-page #driveGlobalSearch{height:34px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font-size:13px;color:var(--rp-ink)}
+html body.resources-page #driveGlobalSearchCount{font-size:12px!important;color:var(--rp-mute)!important}
+/* 카테고리 영역 */
+html body.resources-page #driveContent>.quick-card,html body.resources-page #driveContent .quick-card{border:1px solid var(--rp-line)!important;border-radius:12px;padding:16px 18px!important;background:#fff!important;box-shadow:0 2px 10px rgba(15,23,42,.04)!important}
+html body.resources-page .drive-category-order-hint{font-size:11.5px!important;color:var(--rp-mute)!important;margin-bottom:8px!important}
+html body.resources-page .drive-category-group+.drive-category-group{margin-top:14px}
+html body.resources-page .drive-category-group-title{display:flex;align-items:center;gap:7px;margin:0 0 8px!important;font-size:13.5px!important;font-weight:800!important;color:var(--rp-ink)!important}
+html body.resources-page .drive-category-group-title::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--rp-accent)}
+html body.resources-page .drive-category-group-title span{font-weight:600!important;opacity:1!important;color:var(--rp-mute)}
+html body.resources-page .drive-category-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))!important;gap:6px!important}
+html body.resources-page .drive-category-row{display:flex!important;align-items:stretch;gap:4px!important}
+html body.resources-page .drive-category-grip{flex:0 0 24px!important;height:32px;border:1px solid transparent!important;background:transparent!important;color:#94a3b8!important;font-size:15px!important;border-radius:6px!important}
+html body.resources-page .drive-category-grip:hover{color:var(--rp-accent)!important;background:var(--rp-soft)!important}
+html body.resources-page .drive-category-row [data-cidx]{box-sizing:border-box;height:32px;padding:0 12px!important;display:flex!important;align-items:center;gap:4px;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--rp-sub)!important;font-size:12.5px!important;font-weight:700!important;line-height:1}
+html body.resources-page .drive-category-row [data-cidx]:hover{border-color:var(--rp-accent)!important;color:var(--rp-accent)!important}
+html body.resources-page .drive-category-row [data-cidx][aria-pressed="true"]{background:var(--rp-accent)!important;border-color:var(--rp-accent)!important;color:#fff!important}
+html body.resources-page .drive-category-row [data-cidx] span{opacity:.75!important;font-weight:600;margin-left:4px}
+html body.resources-page .drive-category-row [data-cat-edit-idx]{box-sizing:border-box;width:32px;height:32px;padding:0!important;display:flex;align-items:center;justify-content:center;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;font-size:12px!important}
+html body.resources-page .drive-category-row [data-cat-edit-idx]:hover{border-color:var(--rp-accent)!important;background:var(--rp-soft)!important}
+/* 자료 목록 */
+html body.resources-page .drive-section{border-top:1px solid var(--rp-line)!important;margin-top:16px!important;padding-top:12px!important}
+html body.resources-page .drive-section-bar{margin-bottom:10px!important}
+html body.resources-page .drive-section-count{font-size:12.5px!important;font-weight:700;color:var(--rp-sub)!important}
+html body.resources-page .drive-section-bar .btn{height:30px!important;padding:0 14px!important;border-radius:6px!important;font-size:12.5px!important;font-weight:700;margin-left:auto;background:var(--rp-accent)!important;border:1px solid var(--rp-accent)!important;color:#fff!important}
+html body.resources-page #driveResourceResults{display:flex!important;flex-direction:column;gap:8px!important}
+html body.resources-page #driveResourceResults .listing-card{display:flex!important;align-items:center;justify-content:space-between;gap:14px;padding:10px 14px!important;border:1px solid var(--rp-line)!important;border-left:3px solid var(--rp-accent)!important;border-radius:10px!important;background:#fff!important;box-shadow:none!important}
+html body.resources-page #driveResourceResults .listing-card:hover{background:#fafcff!important}
+html body.resources-page #driveResourceResults .listing-card>div:first-child{margin:0!important;flex:1;min-width:0}
+html body.resources-page #driveResourceResults .listing-card>div:first-child>span:first-child{font-size:14px!important;font-weight:800!important;color:var(--rp-ink)!important}
+html body.resources-page #driveResourceResults .listing-card>div:first-child>span:nth-child(2){display:inline-block;margin-left:8px;padding:1px 7px;border-radius:4px;background:#f1f5f9;font-size:11px!important;font-weight:600;color:var(--rp-mute)!important;vertical-align:1px}
+html body.resources-page #driveResourceResults .listing-card>div:first-child>div{margin-top:3px!important;font-size:12px!important;color:var(--rp-mute)!important}
+html body.resources-page #driveResourceResults .listing-card>div:last-child{display:flex!important;flex:0 0 auto;flex-wrap:nowrap!important;gap:5px!important;justify-content:flex-end}
+html body.resources-page #driveResourceResults .listing-card .btn{box-sizing:border-box;height:28px;min-height:0;padding:0 11px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--rp-sub)!important;font-size:12px!important;font-weight:700;line-height:1;white-space:nowrap;box-shadow:none!important}
+html body.resources-page #driveResourceResults .listing-card .btn:hover{border-color:var(--rp-accent)!important;color:var(--rp-accent)!important}
+html body.resources-page #driveResourceResults .listing-card .btn-primary{background:var(--rp-accent)!important;border-color:var(--rp-accent)!important;color:#fff!important}
+html body.resources-page #driveResourceResults .listing-card .btn-primary:hover{color:#fff!important;filter:brightness(.92)}
+html body.resources-page #driveResourceResults .listing-card .btn[onclick*="deleteDriveItem"]{background:#fff0ee!important;border-color:#efcbc5!important;color:#b42318!important}
+@media(max-width:720px){html body.resources-page #driveResourceResults .listing-card{flex-direction:column;align-items:stretch}html body.resources-page #driveResourceResults .listing-card>div:last-child{flex-wrap:wrap!important}}
+</style>
   <script src="assets/js/storage.js?v=20261017-notice-removed"></script><script src="assets/js/ktop-shared-view.js?v=20261107-ksv2"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
