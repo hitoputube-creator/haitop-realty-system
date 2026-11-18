@@ -209,6 +209,17 @@ html[data-office-theme] body.property-form-page .apartment-listing-form .umgrid 
 
 html[data-office-theme] body.property-form-page .apartment-listing-form .umgrid > .umfield:not(:has(> label)){padding:6px 12px!important}
 html[data-office-theme] body.property-form-page .apartment-listing-form .umgrid > .umfield:not(:has(> label)) > .amt-hint{flex:1 1 100%!important;margin:0!important;font-weight:600!important;line-height:1.5}
+
+/* 기본정보: 1차구분 · 2차구분 · 거래유형 · 등록구분 · 거래상태를 한 줄로, 안내 글자 삭제 */
+html[data-office-theme] body.property-form-page .form-grid-5{grid-template-columns:1.35fr 1fr 1.05fr 1fr 1fr!important;grid-auto-flow:column!important}
+html[data-office-theme] body.property-form-page .form-grid-5 > .field:nth-child(5){grid-column:auto!important}
+html[data-office-theme] body.property-form-page .form-grid-5 > .field:nth-child(5) > select{flex:1 1 0!important}
+html[data-office-theme] body.property-form-page .form-grid-5 > .field > label{flex:0 0 86px!important;padding:8px 6px 8px 10px!important;white-space:nowrap!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;gap:3px;font-size:12px!important}
+html[data-office-theme] body.property-form-page .form-grid-5 > .field > label span{display:inline!important;margin:0!important;font-size:inherit!important}
+html[data-office-theme] body.property-form-page .form-grid-5 > .field > select{margin:5px 6px!important}
+html[data-office-theme] body.property-form-page .form-grid-5 > .field > span:not(.price-preview),html[data-office-theme] body.property-form-page .form-grid-5 > .field > small{display:none!important}
+
+html[data-office-theme] body.property-form-page .form-grid-5 > .field > select{padding:0 4px 0 8px!important;font-size:12.5px!important}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
 <script>

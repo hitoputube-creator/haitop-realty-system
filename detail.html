@@ -526,6 +526,19 @@ html[data-office-theme] body.property-form-page #editModal .apartment-listing-fo
 
 html[data-office-theme] body.property-form-page #editModal .apartment-listing-form .umgrid > .umfield:not(:has(> label)){padding:6px 12px!important}
 html[data-office-theme] body.property-form-page #editModal .apartment-listing-form .umgrid > .umfield:not(:has(> label)) > .amt-hint{flex:1 1 100%!important;margin:0!important;font-weight:600!important;line-height:1.5}
+
+/* 기본정보 첫 줄: 1차구분 · 2차구분 · 거래유형 · 등록구분 · 거래상태 */
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid{grid-template-columns:repeat(10,minmax(0,1fr))!important}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field{grid-column:span 5!important}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:nth-child(-n+5){grid-column:span 2!important}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:nth-child(5){grid-column:span 2!important}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > #edit_titleField,html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .commercial-address-field,html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:has(#edit_mapAddress){grid-column:1/-1!important}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:nth-child(-n+5) > label{flex:0 0 86px!important;padding:8px 6px 8px 10px!important;font-size:12px!important;flex-wrap:nowrap!important;white-space:nowrap!important;flex-direction:row!important;align-items:center!important}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:nth-child(-n+5) > label span{display:inline!important;margin:0!important;font-size:inherit!important}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:nth-child(-n+5) > select{margin:5px 6px!important;flex:1 1 0!important}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field > span:not(.price-preview):not(.caf-conv-status){display:none!important}
+
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:nth-child(-n+5) > select{padding:0 4px 0 8px!important;font-size:12.5px!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
