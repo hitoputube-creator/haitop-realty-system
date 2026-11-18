@@ -282,6 +282,16 @@
       if(target){const badge=document.createElement('small');badge.className='profit-recommended-badge';badge.textContent='수익성 추천';target.appendChild(badge);}
     }
     card.style.setProperty('--typed-columns',template(cols));
+    // 모바일에서는 연락처 번호를 누르면 바로 전화 연결 (PC에서는 기존처럼 상세 화면으로 이동)
+    card.querySelectorAll('.listing-cell-phone > span').forEach(span=>{
+      span.addEventListener('click',event=>{
+        if (!window.matchMedia('(max-width:800px)').matches) return;
+        const digits=span.textContent.replace(/[^0-9+]/g,'');
+        if (digits.length<8) return;
+        event.stopPropagation();
+        location.href='tel:'+digits;
+      });
+    });
     return card;
   };
   function actionsColWidth(table) {
@@ -461,6 +471,59 @@
       html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-phone {overflow:visible;}
       html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-phone > span {font-size:12px;white-space:nowrap;overflow:visible;text-overflow:clip;overflow-wrap:normal;}
       html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-actions .btn {padding-left:2px;padding-right:2px;}
+    }
+
+    /* ── 모바일 매물 카드 (800px 이하, 케이탑 제외): 세로 카드형 ──
+       유형·상태 → 매물명 → 가격(한 줄) → 소유주·연락처 → 상세/수정/삭제 → 상태·네이버광고 */
+    @media(max-width:800px){
+      html:not([data-office-theme="ktop"]) body.properties-page .listing-card.typed-property-row.listing-row-card {
+        position:relative;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-areas:none!important;
+        column-gap:10px;row-gap:8px;padding:12px 12px 12px 44px!important;min-width:0!important;min-height:0!important;
+        align-items:start;border-radius:12px;overflow:visible;
+      }
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell {
+        grid-area:auto!important;grid-column:1 / -1!important;grid-row:auto!important;min-width:0;font-size:14px;line-height:1.4;
+      }
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell:not(.listing-cell-owner):not(.listing-cell-phone):not(.listing-cell-select):not(.listing-cell-actions)::before {display:none!important;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-select {
+        position:absolute;top:12px;left:12px;grid-column:auto!important;width:24px;padding:0;
+      }
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-select input {width:22px;height:22px;margin:0;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-type {
+        display:flex!important;flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:4px 8px;
+      }
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-type .lc-type-deal {flex:0 1 auto!important;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row :is(.listing-cell-name,.listing-cell-building,.listing-cell-apartment,.listing-cell-address) {
+        font-size:17px;font-weight:800;line-height:1.35;white-space:pre-line;overflow-wrap:anywhere;
+      }
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-dong,
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-room {display:inline-block;width:auto;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-price.has-price {padding:8px 12px;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-price .lc-price-text {
+        font-size:20px!important;font-weight:800;line-height:1.35;white-space:normal;word-break:keep-all;overflow-wrap:normal;
+      }
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-price .lc-price-text.lc-price-multi {font-size:16px!important;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-price .lc-price-line {white-space:nowrap;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-owner {grid-column:1!important;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-phone {grid-column:2!important;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-owner,
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-phone {font-size:15px;font-weight:600;white-space:normal;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-phone > span {display:block;white-space:nowrap;overflow:visible;text-overflow:clip;color:#1767d2;text-decoration:underline;text-underline-offset:3px;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-phone > span.lc-phone-secondary {margin-top:2px;}
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-cell-actions {
+        display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;align-items:center;
+        padding-top:10px;margin-top:2px;border-top:1px solid rgba(37,103,95,0.28);width:100%;box-sizing:border-box;
+      }
+      html body.properties-page.properties-page .typed-property-row.listing-row-card .listing-actions .lc-actions-main,
+      html body.properties-page.properties-page .typed-property-row.listing-row-card .listing-actions .lc-actions-side {display:contents!important;}
+      html body.properties-page.properties-page .typed-property-row.listing-row-card .listing-actions .lc-actions-main .btn {
+        width:100%!important;min-width:0!important;height:40px!important;min-height:40px!important;padding:0 4px!important;
+        font-size:14px!important;line-height:38px!important;border-radius:8px!important;white-space:nowrap;text-align:center;box-sizing:border-box;
+      }
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-actions .lc-status-row {
+        grid-column:1 / -1;display:flex!important;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:8px!important;
+      }
+      html:not([data-office-theme="ktop"]) body.properties-page .typed-property-row .listing-actions .lc-status-row .lc-naver-wrap {margin-left:auto;}
     }
   `;
   document.head.appendChild(style);
