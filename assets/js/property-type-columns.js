@@ -228,8 +228,14 @@
     if (key==='price') {
       const price=node.querySelector('.lc-price-text');
       if(price) {
-        if (isKtopResidential() && price.textContent.trim() !== '-') node.classList.add('has-price');
-        const lines=price.textContent.split(/\s*\/\s*(?=월세)|\n/);
+        const rawPrice=price.textContent.trim();
+        if (rawPrice && rawPrice !== '-') node.classList.add('has-price');
+        let lines=rawPrice.split(/\s*\/\s*(?=월세)|\n/);
+        // 전세: 윗줄에 "보증금", 아랫줄에 금액
+        if (lines.length===1 && getTransactionType(item)==='전세' && rawPrice !== '-' && !/월세|매매/.test(rawPrice)) {
+          const amount=rawPrice.replace(/^(?:보증금|전세)\s*/,'').trim();
+          if (amount) lines=['보증금',amount];
+        }
         price.replaceChildren(...lines.map(text=>{
           const line=document.createElement('span');line.className='lc-price-line';line.textContent=text;return line;
         }));
@@ -416,8 +422,8 @@
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .lc-supply-type {color:#234c49;white-space:nowrap;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-dong,
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-room {font-size:14px;font-weight:750;}
-    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-price.has-price {padding:5px 6px;border-left:3px solid #1767d2;border-radius:5px;background:#eaf2ff;overflow:visible;}
-    html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-price.has-price .lc-price-text {font-size:14px;font-weight:800;color:#234c49;line-height:1.4;}
+    html body.properties-page .typed-property-row .listing-cell-price.has-price {padding:5px 6px;border-left:3px solid #1767d2;border-radius:5px;background:#eaf2ff;overflow:visible;}
+    html body.properties-page .typed-property-row .listing-cell-price.has-price .lc-price-text {font-size:14px;font-weight:800;color:#234c49;line-height:1.4;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-sort-btn[aria-label='분양평형/타입 정렬'] {line-height:1.2;white-space:normal;}
     @media(min-width:801px) {
       html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-phone {overflow:visible;}
