@@ -248,6 +248,9 @@ html body.cat-pending :is(#apartmentListingForm,#nonApartmentFields,#genericMemo
 html body.cat-pending .form-grid-5 ~ *:not(.cat-hint){display:none!important}
 html body .cat-hint{display:none;margin:10px 0 0;padding:12px 14px;border:1px dashed #cbd5e1;border-radius:8px;background:#f8fafc;color:#475569;font-size:13px;font-weight:600;text-align:center}
 html body.cat-pending .cat-hint{display:block!important}
+
+html[data-office-theme] body.property-form-page.cat-pending .form-grid-5 ~ *:not(.cat-hint):not(.cat-x1):not(.cat-x2){display:none!important}
+html[data-office-theme] body.property-form-page.cat-pending :is(#apartmentListingForm,#nonApartmentFields,#genericMemoSection,#homepageCard,#saveSection,section.card:has(#owner_name),section.card:has(#imageUploadSlots)):not(.cat-x1){display:none!important}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
 <script>
