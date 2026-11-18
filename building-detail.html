@@ -3594,8 +3594,9 @@ async function deleteBFile(id) {
 })();
 </script>
 <script>
-/* 자료실 상가 호실 수정창: 매물 수정창과 같은 폼(기본정보·면적정보·추가정보·가격정보[기존 분양조건 | 현재 조건]·내부전용·메모).
- * 칸의 id·저장 위치는 그대로이고 화면 배치만 바꾼다. */
+/* 자료실 상가 호실 수정창: 매물 수정창과 같은 폼·크기·구조.
+ * 칸의 id·저장 위치는 그대로이고 화면 배치만 바꾼다. 호실 자료에 저장 위치가 없는 칸(1·2차구분, 등록구분, 거래상태, 제목, 상가구분)은
+ * 매물 수정창과 같은 모양으로 보이되 읽기 전용(연결 매물 값 표시)이다. */
 (function () {
   function $(id) { return document.getElementById(id); }
   function F(id) { var e = $(id); return e && e.closest('.umfield'); }
@@ -3603,80 +3604,120 @@ async function deleteBFile(id) {
   if (!sale0 || !cur0 || !$('u_호수')) return;
   var st = document.createElement('style');
   st.textContent =
-    '#commercialUnitForm .uf-sec{margin:12px 0 4px}' +
-    '#commercialUnitForm .uf-title{display:flex;align-items:center;gap:6px;margin:0 0 8px;padding:5px 10px;background:#dce8f6;border-left:4px solid #1f5fa8;border-radius:4px;color:#16487f;font-size:.84rem;font-weight:800}' +
-    '#commercialUnitForm .uf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 14px;align-items:end}' +
-    '#commercialUnitForm .uf-grid>.umfield{grid-column:auto!important;min-width:0;margin:0}' +
-    '#commercialUnitForm .uf-grid>.uf-2{grid-column:span 2!important}#commercialUnitForm .uf-grid>.uf-4{grid-column:1 / -1!important}' +
-    '#commercialUnitForm .uf-grid input:not([type=checkbox]),#commercialUnitForm .uf-grid select,#commercialUnitForm .uf-grid textarea{width:100%;box-sizing:border-box}' +
-    '#commercialUnitForm .uf-grid input[readonly]{background:#eef2f7;color:#475569}' +
-    '#commercialUnitForm .uf-grid .area-row{display:flex;align-items:center;gap:6px}#commercialUnitForm .uf-grid .area-row input{min-width:0}' +
-    '#commercialUnitForm .uf-row{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}' +
+    '#commercialUnitForm .uf-sec{margin:10px 0 4px}' +
+    '#commercialUnitForm .uf-title,#unitModal #unitAdditionalNotes .um-section-title{display:flex;align-items:center;gap:6px;margin:0 0 6px;padding:4px 10px;background:#dce8f6!important;border:0!important;border-left:4px solid #1f5fa8!important;border-radius:4px;color:#16487f!important;font-size:12.5px;font-weight:800}' +
+    '#commercialUnitForm .uf-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px 12px;align-items:end}' +
+    '#commercialUnitForm .uf-grid>.umfield{grid-column:span 2;min-width:0;margin:0}' +
+    '#commercialUnitForm .uf-grid>.uf-3{grid-column:span 3}#commercialUnitForm .uf-grid>.uf-4{grid-column:span 4}#commercialUnitForm .uf-grid>.uf-5{grid-column:span 5}#commercialUnitForm .uf-grid>.uf-6{grid-column:span 6}#commercialUnitForm .uf-grid>.uf-10{grid-column:1 / -1}' +
+    '#commercialUnitForm .umfield>label{display:block;margin:0 0 1px;font-size:12px;font-weight:700;color:#3d556f}' +
+    '#commercialUnitForm input:not([type=checkbox]),#commercialUnitForm select{height:28px;padding:2px 8px;font-size:12.5px;width:100%;box-sizing:border-box;background:#fff;color:#102236;border:1px solid #8fa8c2;border-radius:6px}' +
+    '#commercialUnitForm textarea{width:100%;box-sizing:border-box;min-height:44px;font-size:12.5px;padding:4px 8px;background:#fff;border:1px solid #8fa8c2;border-radius:6px}' +
+    '#commercialUnitForm .uf-ro,#commercialUnitForm input[readonly],#commercialUnitForm select[disabled]{background:#e4ebf3!important;color:#2f4258!important;border-color:#b3c3d4!important}' +
+    '#commercialUnitForm .uf-grid>.uf-wide{grid-column:span 1}#commercialUnitForm .uf-grid.g3>.uf-3{grid-column:span 1}' +
+    '#commercialUnitForm .uf-area{grid-column:span 5;display:flex;align-items:center;gap:6px;margin:0}' +
+    '#commercialUnitForm .uf-area>label{margin:0;white-space:nowrap;min-width:56px}' +
+    '#commercialUnitForm .uf-area input{width:92px;flex:0 0 auto}' +
+    '#commercialUnitForm .uf-area .au{font-size:11px;color:#7a8da3}' +
+    '#commercialUnitForm .uf-row{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}' +
     '#commercialUnitForm .uf-row>.umfield{display:flex;align-items:center;gap:6px;margin:0}#commercialUnitForm .uf-row>.umfield label{margin:0;white-space:nowrap}' +
-    '#commercialUnitForm .uf-row #unitPresaleSwitch{margin:0;display:flex;align-items:center;gap:6px}' +
-    '#commercialUnitForm .uf-cmp{grid-column:1 / -1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 14px;align-items:end}' +
-    '#commercialUnitForm .uf-cmp>.umfield{grid-column:auto!important;min-width:0;margin:0}' +
-    '#commercialUnitForm .uf-cmp input{width:100%;box-sizing:border-box}' +
-    '#commercialUnitForm .uf-cmp-h{grid-column:span 3;padding:7px 10px;border-radius:6px;font-size:.82rem;font-weight:800}' +
+    '#commercialUnitForm .uf-row #unitPresaleSwitch,#commercialUnitForm .uf-kind{margin:0;display:flex;align-items:center;gap:6px}' +
+    '#commercialUnitForm .uf-row #unitPresaleSwitch span,#commercialUnitForm .uf-kind span{font-size:12px;font-weight:700;color:#3d556f}' +
+    '#commercialUnitForm .uf-row #unitPresaleSwitch button,#commercialUnitForm .uf-kind button{padding:3px 12px;border:1px solid #8fa8c2;border-radius:6px;background:#fff;color:#102236;font-size:12px;font-weight:700}' +
+    '#commercialUnitForm .uf-row #unitPresaleSwitch button.active,#commercialUnitForm .uf-kind button.active{background:#25675f;border-color:#25675f;color:#fff}' +
+    '#commercialUnitForm .uf-kind button{pointer-events:none}' +
+    '#commercialUnitForm .uf-cmp{grid-column:1 / -1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px 12px;align-items:end}' +
+    '#commercialUnitForm .uf-cmp>.umfield{grid-column:auto;min-width:0;margin:0}' +
+    '#commercialUnitForm .uf-cmp-h{grid-column:span 3;padding:6px 10px;border-radius:6px;font-size:12.5px;font-weight:800}' +
     '#commercialUnitForm .uf-cmp-h.old{background:#cfdcdc;color:#1d4d4a}#commercialUnitForm .uf-cmp-h.cur{background:#cfe0f3;color:#16487f}' +
-    '#commercialUnitForm .uf-flags{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}' +
+    '#commercialUnitForm .amt-hint{display:block;min-height:0;margin-top:1px;font-size:11px;color:#2f6b4f;font-weight:600}' +
+    '#commercialUnitForm .uf-flags{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}' +
     '#commercialUnitForm .uf-flags .umcheck{background:none!important;border:0!important;padding:0!important}' +
-    '#commercialUnitForm .uf-flags .umcheck label{display:inline-flex;align-items:center;gap:6px;font-weight:700;margin:0;cursor:pointer}' +
+    '#commercialUnitForm .uf-flags .umcheck label{display:inline-flex;align-items:center;gap:6px;font-weight:700;margin:0;cursor:pointer;font-size:12.5px;color:#102236}' +
     '#commercialUnitForm .uf-flags .uf-rate{display:inline-flex;align-items:center;gap:8px}#commercialUnitForm .uf-flags .uf-rate label{margin:0;white-space:nowrap}#commercialUnitForm .uf-flags .uf-rate input{width:90px}' +
     '#commercialUnitForm [hidden]{display:none!important}' +
+    '#unitModal #unitAdditionalNotes{background:transparent;border:0;padding:0;margin:10px 0 4px}#unitModal #unitAdditionalNotes .umgrid{background:transparent;padding:0}' +
     '#commercialUnitSale,#commercialUnitCurrent{display:none!important}' +
     '#unitModal:not(.residential-modal){align-items:center;padding:16px}' +
     '#unitModal:not(.residential-modal) .unit-modal-box{width:95%;max-width:900px;max-height:90vh;padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:18px}' +
     '@media(min-width:1200px){#unitModal:not(.residential-modal) .unit-modal-box{max-width:1300px}}' +
-    '#unitModal:not(.residential-modal) .unit-modal-title{margin:0;padding:12px 22px;border-bottom:1px solid #c9d7e6;background:#fff;flex-shrink:0;font-size:15px;color:#1f5f58}' +
+    '#unitModal:not(.residential-modal) .unit-modal-title{margin:0;padding:8px 18px 6px;border-bottom:1px solid #c9d7e6;background:#fff;flex-shrink:0;font-size:15px;color:#1f5f58}' +
     '#unitModal:not(.residential-modal) .unit-modal-title::before{content:"✏️ "}' +
-    '#unitModal:not(.residential-modal) .um-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px 20px 10px;background:#eef3f9}' +
-    '#unitModal:not(.residential-modal) .unit-modal-actions{position:static;margin:0;padding:8px 18px;border-top:1px solid #c9d7e6;background:#fff;flex-shrink:0;box-shadow:none}' +
-    '#unitModal:not(.residential-modal) .unit-modal-close{top:9px;right:16px;width:30px;height:30px;border-radius:999px;border:1px solid rgba(37,103,95,.5);display:flex;align-items:center;justify-content:center;font-size:1.1rem;line-height:1;z-index:5}' +
-    '@media(max-width:640px){#commercialUnitForm .uf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#commercialUnitForm .uf-cmp{grid-template-columns:repeat(3,minmax(0,1fr))}#commercialUnitForm .uf-cmp-h{grid-column:1 / -1}}';
+    '#unitModal:not(.residential-modal) .um-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px 16px 10px;background:#eef3f9}' +
+    '#unitModal:not(.residential-modal) .unit-modal-actions{position:static;margin:0;padding:6px 18px;border-top:1px solid #c9d7e6;background:#fff;flex-shrink:0;box-shadow:none}' +
+    '#unitModal:not(.residential-modal) .unit-modal-close{top:6px;right:16px;width:30px;height:30px;border-radius:999px;border:1px solid rgba(37,103,95,.5);display:flex;align-items:center;justify-content:center;font-size:1.1rem;line-height:1;z-index:5}' +
+    '@media(max-width:700px){#commercialUnitForm .uf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#commercialUnitForm .uf-grid>.umfield,#commercialUnitForm .uf-grid>.uf-area{grid-column:span 1}#commercialUnitForm .uf-grid>.uf-10,#commercialUnitForm .uf-grid>.uf-6,#commercialUnitForm .uf-grid>.uf-5,#commercialUnitForm .uf-grid>.uf-4,#commercialUnitForm .uf-grid>.uf-3{grid-column:1 / -1}#commercialUnitForm .uf-cmp{grid-template-columns:repeat(3,minmax(0,1fr))}#commercialUnitForm .uf-cmp-h{grid-column:1 / -1}}';
   document.head.appendChild(st);
   function sec(title) { var s = document.createElement('div'); s.className = 'uf-sec'; s.innerHTML = '<div class="uf-title">' + title + '</div><div class="uf-grid"></div>'; return s; }
   function grid(s) { return s.querySelector('.uf-grid'); }
   function put(s, ids, cls, into) { ids.forEach(function (id) { var f = F(id); if (!f) return; f.className = 'umfield' + (cls ? ' ' + cls : ''); (into || grid(s)).appendChild(f); }); }
   function relabel(id, text) { var f = F(id), l = f && f.querySelector('label'); if (l) l.textContent = text; }
+  function ro(label, value, cls, id) { var f = document.createElement('div'); f.className = 'umfield' + (cls ? ' ' + cls : ''); f.innerHTML = '<label>' + label + '</label><input class="uf-ro" readonly ' + (id ? 'id="' + id + '" ' : '') + 'value="' + (value || '') + '">'; return f; }
+  function roSel(label, value, cls) { var f = document.createElement('div'); f.className = 'umfield' + (cls ? ' ' + cls : ''); f.innerHTML = '<label>' + label + '</label><select disabled class="uf-ro"><option>' + value + '</option></select>'; return f; }
   relabel('u_분양금액', '기존 분양가 (만원)'); relabel('u_보증금', '기존 보증금 (만원)'); relabel('u_월차임', '기존 월세 (만원)');
   var wrap = document.createElement('div'); wrap.id = 'commercialUnitForm';
-  var A = sec('📋 기본정보'), B = sec('📐 면적정보'), C = sec('🏢 추가정보 <span style="font-weight:600;font-size:.76rem">(공장·상가·건물)</span>'), D = sec('💰 가격정보'), E = sec('🔒 내부전용'), M = sec('📝 메모');
-  // 기본정보: 건물명·상세주소는 건물 정보에서 가져와 보여 준다(읽기 전용)
-  var nameF = document.createElement('div'); nameF.className = 'umfield'; nameF.innerHTML = '<label>건물명</label><input id="uf_건물명" readonly>';
-  var addrF = document.createElement('div'); addrF.className = 'umfield uf-2'; addrF.innerHTML = '<label>상세주소 (건물 주소)</label><input id="uf_주소" readonly>';
-  grid(A).appendChild(nameF); grid(A).appendChild(addrF); put(A, ['u_호수']);
-  (function () { var f = $('u_구분_field'); if (f) { f.className = 'umfield'; grid(A).appendChild(f); } })(); put(A, ['u_거래구분']);
-  ['u_전용_평', 'u_분양_평'].forEach(function (id) { var f = F(id); f.className = 'umfield area-dual uf-2'; grid(B).appendChild(f); });
-  put(C, ['u_층정보', 'u_용도지역', 'u_주차대수', 'u_사용승인일']);
-  // 가격정보: [분양상태] [임대현황] [업종] 한 줄, 그 아래 기존 분양조건 | 현재 조건
-  var row = document.createElement('div'); row.className = 'uf-row';
-  var phaseSw = $('unitPresaleSwitch'); if (phaseSw) row.appendChild(phaseSw);
-  ['u_공실여부', 'u_현업종'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield'; row.appendChild(f); } });
-  grid(D).appendChild(row);
+  var A = sec('📋 기본정보'), B = sec('📐 면적정보'), C = sec('🏢 추가정보 <span style="font-weight:600;font-size:11px">(공장·상가·건물)</span>'), D = sec('💰 가격정보'), E = sec('🔒 내부전용');
+  // ── 기본정보 ──
+  grid(A).appendChild(roSel('1차구분', '상가·사무실'));
+  var kindF = $('u_구분_field');
+  if (kindF) { kindF.className = 'umfield'; var kl = kindF.querySelector('label'); if (kl) kl.textContent = '2차구분'; grid(A).appendChild(kindF); var kindRo = roSel('2차구분', '상가'); kindRo.id = 'uf_2차고정'; grid(A).appendChild(kindRo); }
+  else grid(A).appendChild(roSel('2차구분', '상가'));
+  put(A, ['u_거래구분']); var dealF = F('u_거래구분'); if (dealF) { var dl = dealF.querySelector('label'); if (dl) dl.innerHTML = '거래유형 <span style="color:#7a8da3">*</span>'; }
+  grid(A).appendChild(roSel('등록구분', '매물')); var stF = roSel('거래상태', '진행중'); stF.id = 'uf_거래상태'; grid(A).appendChild(stF);
+  var nameF = ro('건물명', '', 'uf-3', 'uf_건물명');
+  var addrF = document.createElement('div'); addrF.className = 'umfield uf-5'; addrF.innerHTML = '<label>상세주소 (구주소 · 새주소)</label><input class="uf-ro" readonly id="uf_주소">';
+  var hoF = F('u_호수'); hoF.className = 'umfield uf-2';
+  grid(A).appendChild(nameF); grid(A).appendChild(addrF); grid(A).appendChild(hoF);
+  var titleF = ro('제목', '', 'uf-10', 'uf_제목'); grid(A).appendChild(titleF);
+  // ── 면적정보: 매물창과 같은 모양 (㎡ 먼저, 평 다음) ──
+  [['u_전용_평', 'u_전용_m2', '전용면적'], ['u_분양_평', 'u_분양_m2', '분양(공급)면적']].forEach(function (p) {
+    var f = F(p[0]); f.className = 'uf-area'; var lab = f.querySelector('label'); if (lab) lab.textContent = p[2];
+    var row = f.querySelector('.area-row'); var py = $(p[0]), m2 = $(p[1]);
+    if (row) { row.className = ''; row.style.cssText = 'display:contents'; row.textContent = ''; var u1 = document.createElement('span'); u1.className = 'au'; u1.textContent = '㎡'; var u2 = document.createElement('span'); u2.className = 'au'; u2.textContent = '평'; row.append(m2, u1, py, u2); m2.placeholder = '0.00'; py.placeholder = '0'; }
+    grid(B).appendChild(f);
+  });
+  put(C, ['u_층정보', 'u_용도지역', 'u_주차대수', 'u_사용승인일'], 'uf-wide');
+  // ── 가격정보 ──
+  var row1 = document.createElement('div'); row1.className = 'uf-row';
+  var kind = document.createElement('div'); kind.className = 'uf-kind'; kind.innerHTML = '<span>상가구분</span><button type="button" data-k="기존상가">기존상가</button><button type="button" data-k="분양상가" class="active">분양상가</button>'; row1.appendChild(kind);
+  var phaseSw = $('unitPresaleSwitch'); if (phaseSw) row1.appendChild(phaseSw);
+  ['u_공실여부', 'u_현업종'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield'; row1.appendChild(f); } });
+  var occL = F('u_공실여부') && F('u_공실여부').querySelector('label'); if (occL) occL.textContent = '임대현황';
+  var bizL = F('u_현업종') && F('u_현업종').querySelector('label'); if (bizL) bizL.textContent = '업종';
+  grid(D).appendChild(row1);
   var cmp = document.createElement('div'); cmp.className = 'uf-cmp';
   cmp.innerHTML = '<div class="uf-cmp-h old">기존 분양조건</div><div class="uf-cmp-h cur">현재 조건</div>';
   put(D, ['u_분양금액', 'u_보증금', 'u_월차임', 'u_현매매가격', 'u_현보증금', 'u_현월세'], '', cmp);
   put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) pf.style.gridColumn = '1 / span 3'; put(D, ['u_권리금'], '', cmp); var kf = F('u_권리금'); if (kf) kf.style.gridColumn = '4 / span 3';
   grid(D).appendChild(cmp);
-  var flags = document.createElement('div'); flags.className = 'umfield uf-4 uf-flags';
+  var flags = document.createElement('div'); flags.className = 'umfield uf-10 uf-flags';
   ['u_추천매물', 'u_수익성매물'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield umcheck'; flags.appendChild(f); } });
   var rate = F('u_수익률'); if (rate) { rate.className = 'umfield uf-rate'; flags.appendChild(rate); }
   grid(D).appendChild(flags);
-  var hint = cur0.querySelector('.umhint'); if (hint) { hint.className = 'umfield uf-4 umhint'; hint.style.cssText = 'font-size:.72rem;color:var(--muted)'; grid(D).appendChild(hint); }
-  put(E, ['u_소유주', 'u_연락처', 'u_통신사']); var ac = $('u_추가연락처_field'); if (ac) { ac.className = 'umfield uf-4'; grid(E).appendChild(ac); }
-  put(E, ['u_소유주메모'], 'uf-4');
-  put(M, ['u_내부메모', 'u_옵션내역'], 'uf-4'); var nb = $('u_비고_wrap'); if (nb) { nb.className = 'umfield uf-4'; grid(M).appendChild(nb); }
-  [A, B, C, D, E, M].forEach(function (s) { wrap.appendChild(s); });
+  var hint = cur0.querySelector('.umhint'); if (hint) { hint.className = 'umfield uf-10 umhint'; hint.style.cssText = 'font-size:11px;color:#7a8da3'; grid(D).appendChild(hint); }
+  put(D, ['u_내부메모'], 'uf-10');
+  // ── 내부전용 ──
+  put(E, ['u_소유주', 'u_연락처', 'u_통신사'], 'uf-3'); var ac = $('u_추가연락처_field'); if (ac) { ac.className = 'umfield uf-10'; grid(E).appendChild(ac); }
+  put(E, ['u_소유주메모', 'u_옵션내역'], 'uf-10'); var nb = $('u_비고_wrap'); if (nb) { nb.className = 'umfield uf-10'; grid(E).appendChild(nb); }
+  grid(C).style.gridTemplateColumns = 'repeat(4,minmax(0,1fr))'; grid(E).classList.add('g3'); grid(E).style.gridTemplateColumns = 'repeat(3,minmax(0,1fr))';
+  [A, B, C, D].forEach(function (s) { wrap.appendChild(s); });
+  var notes = $('unitAdditionalNotes'); if (notes) wrap.appendChild(notes);
+  wrap.appendChild(E);
   sale0.before(wrap);
-  // 열 때마다: 건물명·주소 채우기, 나중에 붙는 체크 칸(특별분양)을 체크 줄로 이동
+  // 열 때마다: 건물명·주소·제목·거래상태 채우기, 나중에 붙는 체크 칸(특별분양)을 체크 줄로 이동
   window.umSetView = function () {
-    try { var h1 = document.querySelector('h1'); $('uf_건물명').value = (typeof bName !== 'undefined' && bName) || (h1 && h1.textContent.trim()) || ''; } catch (e) {}
+    var h1 = document.querySelector('h1'), name = '';
+    try { name = (typeof bName !== 'undefined' && bName) || (h1 && h1.textContent.trim()) || ''; } catch (e) { name = (h1 && h1.textContent.trim()) || ''; }
+    $('uf_건물명').value = name;
     try { if (typeof buildingAddress !== 'undefined') $('uf_주소').value = buildingAddress || ''; } catch (e) {}
+    var ho = ($('u_호수').value || '').trim(); $('uf_제목').value = name + (ho ? ' ' + ho + '호' : '') + ' 상가';
+    var lid = null; try { var s = document.querySelector('#unitModal'); lid = s && s.dataset.listingId; } catch (e) {}
     [].slice.call(cur0.querySelectorAll('.umcheck')).forEach(function (c) { flags.insertBefore(c, rate || null); });
+    var kindSel = $('u_구분'), ro2 = $('uf_2차고정');
+    if (kindSel && ro2) { ro2.hidden = !(kindSel.closest('.umfield').hidden); }
     var sc = document.querySelector('#unitModal .um-scroll'); if (sc) sc.scrollTop = 0;
   };
-  // 창 모양: 제목(위)·버튼(아래)은 고정하고 가운데만 스크롤 - 매물 수정창과 같은 크기·구조
+  $('u_호수').addEventListener('input', function () { var ho = ($('u_호수').value || '').trim(); $('uf_제목').value = ($('uf_건물명').value || '') + (ho ? ' ' + ho + '호' : '') + ' 상가'; });
+  // 창 구조: 제목(위)·버튼(아래) 고정, 가운데만 스크롤
   (function () {
     var box = $('unitModal') && $('unitModal').querySelector('.unit-modal-box');
     var title = box && box.querySelector('.unit-modal-title'), actions = box && box.querySelector('.unit-modal-actions');
