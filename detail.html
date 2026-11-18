@@ -91,6 +91,7 @@
 .tenant-info-section[open] > summary { margin-bottom:12px; }
 .tenant-info-section > summary::after { content:'펼치기 ▾'; float:right; font-size:12px; }
 .tenant-info-section[open] > summary::after { content:'접기 ▴'; }
+html body .apartment-info-table .ipt-value.hl-unit,html body .listing-info-table .ipt-value.hl-unit{font-size:16px!important;font-weight:800!important;color:#1d4ed8!important}
 .apt-title-flex { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .apt-title-flex .apartment-autofill-btn { margin-left:auto; }
 .tenant-toggle { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; cursor:pointer; }
@@ -1657,6 +1658,7 @@ function closeHomepageTab(tab) {
     if (/^(현재 |기존 |최초 )?(매매가|전세금|보증금|월세|분양가|월세\/매매가)$/.test(l) || /^(권리금|관리비)$/.test(l) || /^상가 (보증금|월세|권리금|관리비)$/.test(l) || /금액$/.test(l)) return "price";
     if (/^(전용면적|공급면적|토지면적|대지면적|건축면적|연면적)$/.test(l)) return "area";
     if (/^(임차업종|임대상태)$/.test(l)) return "use";
+    if (/^(동|호수|호실|호)$/.test(l)) return "unit";
     return "";
   }
   function iptCell(label, value, valueClass) {
