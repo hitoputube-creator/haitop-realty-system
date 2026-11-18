@@ -428,6 +428,9 @@ html body.property-form-page.fac-reg #registerPage .price-one-row > .field > inp
 html[data-office-theme] body.property-form-page #editModal.fac-edit #edit_basicInfoGrid ~ * .price-preview,html body #editModal.fac-edit .price-preview{position:absolute!important;right:20px;top:50%;transform:translateY(-50%);width:auto!important;flex:none!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;pointer-events:none;white-space:nowrap}
 html body #editModal.fac-edit .field:has(> .price-preview){position:relative}
 html body #editModal.fac-edit .field:has(> .price-preview) > input{padding-right:96px}
+
+/* 지도검색주소·새주소 라벨 아래 설명 삭제 */
+html body .field:has(>div>#mapAddress)>label>span,html body .field:has(>#roadAddress)>label>span,html body .field:has(>div>#edit_mapAddress)>label>span,html body .field:has(>#edit_roadAddress)>label>span{display:none!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
