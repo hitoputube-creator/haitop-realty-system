@@ -3625,6 +3625,14 @@ async function deleteBFile(id) {
     '#commercialUnitForm .uf-flags .uf-rate{display:inline-flex;align-items:center;gap:8px}#commercialUnitForm .uf-flags .uf-rate label{margin:0;white-space:nowrap}#commercialUnitForm .uf-flags .uf-rate input{width:90px}' +
     '#commercialUnitForm [hidden]{display:none!important}' +
     '#commercialUnitSale,#commercialUnitCurrent{display:none!important}' +
+    '#unitModal:not(.residential-modal){align-items:center;padding:16px}' +
+    '#unitModal:not(.residential-modal) .unit-modal-box{width:95%;max-width:900px;max-height:90vh;padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:18px}' +
+    '@media(min-width:1200px){#unitModal:not(.residential-modal) .unit-modal-box{max-width:1300px}}' +
+    '#unitModal:not(.residential-modal) .unit-modal-title{margin:0;padding:12px 22px;border-bottom:1px solid #c9d7e6;background:#fff;flex-shrink:0;font-size:15px;color:#1f5f58}' +
+    '#unitModal:not(.residential-modal) .unit-modal-title::before{content:"✏️ "}' +
+    '#unitModal:not(.residential-modal) .um-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px 20px 10px;background:#eef3f9}' +
+    '#unitModal:not(.residential-modal) .unit-modal-actions{position:static;margin:0;padding:8px 18px;border-top:1px solid #c9d7e6;background:#fff;flex-shrink:0;box-shadow:none}' +
+    '#unitModal:not(.residential-modal) .unit-modal-close{top:9px;right:16px;width:30px;height:30px;border-radius:999px;border:1px solid rgba(37,103,95,.5);display:flex;align-items:center;justify-content:center;font-size:1.1rem;line-height:1;z-index:5}' +
     '@media(max-width:640px){#commercialUnitForm .uf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#commercialUnitForm .uf-cmp{grid-template-columns:repeat(3,minmax(0,1fr))}#commercialUnitForm .uf-cmp-h{grid-column:1 / -1}}';
   document.head.appendChild(st);
   function sec(title) { var s = document.createElement('div'); s.className = 'uf-sec'; s.innerHTML = '<div class="uf-title">' + title + '</div><div class="uf-grid"></div>'; return s; }
@@ -3666,7 +3674,18 @@ async function deleteBFile(id) {
     try { var h1 = document.querySelector('h1'); $('uf_건물명').value = (typeof bName !== 'undefined' && bName) || (h1 && h1.textContent.trim()) || ''; } catch (e) {}
     try { if (typeof buildingAddress !== 'undefined') $('uf_주소').value = buildingAddress || ''; } catch (e) {}
     [].slice.call(cur0.querySelectorAll('.umcheck')).forEach(function (c) { flags.insertBefore(c, rate || null); });
+    var sc = document.querySelector('#unitModal .um-scroll'); if (sc) sc.scrollTop = 0;
   };
+  // 창 모양: 제목(위)·버튼(아래)은 고정하고 가운데만 스크롤 - 매물 수정창과 같은 크기·구조
+  (function () {
+    var box = $('unitModal') && $('unitModal').querySelector('.unit-modal-box');
+    var title = box && box.querySelector('.unit-modal-title'), actions = box && box.querySelector('.unit-modal-actions');
+    if (!box || !title || !actions || box.querySelector('.um-scroll')) return;
+    var scroll = document.createElement('div'); scroll.className = 'um-scroll';
+    var n = title.nextElementSibling;
+    while (n && n !== actions) { var nx = n.nextElementSibling; scroll.appendChild(n); n = nx; }
+    actions.before(scroll);
+  })();
   window.umSetView();
 })();
 </script>
