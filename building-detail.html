@@ -3001,6 +3001,10 @@ async function deleteBFile(id) {
     $("u_내부메모").value   = fromListing("내부메모", "description");
     $("u_옵션내역").value   = u.옵션내역 || u.옵션 || linked?.optionDetails || "";
     $("u_비고").value       = fromListing("비고", "remarks");
+    if (!residentialUnitMode()) { // 소유주 메모·옵션내역·비고를 메모 한 칸으로 합쳐 보여줌
+      var _mm = [$("u_비고").value.trim(), $("u_옵션내역").value.trim() ? '옵션: ' + $("u_옵션내역").value.trim() : '', $("u_소유주메모").value.trim() ? '소유주 메모: ' + $("u_소유주메모").value.trim() : ''].filter(Boolean);
+      $("u_비고").value = _mm.join('\n');
+    }
 
     refreshHints(u);
     unitModalDirty = false;
@@ -3211,9 +3215,9 @@ async function deleteBFile(id) {
       용도지역:    $("u_용도지역").value.trim()  || null,
       주차대수:    $("u_주차대수").value.trim()  || null,
       사용승인일:  $("u_사용승인일").value.trim() || null,
-      소유주메모:  $("u_소유주메모").value.trim() || null,
+      소유주메모:  residentialUnitMode() ? ($("u_소유주메모").value.trim() || null) : null,
       내부메모:    $("u_내부메모").value.trim()  || null,
-      옵션내역:    $("u_옵션내역").value.trim()  || null,
+      옵션내역:    residentialUnitMode() ? ($("u_옵션내역").value.trim() || null) : null,
       비고:        $("u_비고").value.trim()      || null,
       updated_at:  new Date().toISOString()
     };
@@ -3637,7 +3641,7 @@ async function deleteBFile(id) {
     '#commercialUnitForm .umfield>label{display:block;margin:0 0 1px;font-size:12px;font-weight:700;color:#3d556f}' +
     '#commercialUnitForm input:not([type=checkbox]),#commercialUnitForm select{height:28px;padding:2px 8px;font-size:12.5px;width:100%;box-sizing:border-box;background:#fff;color:#102236;border:1px solid #8fa8c2;border-radius:6px}' +
     '#commercialUnitForm textarea{width:100%;box-sizing:border-box;min-height:44px;font-size:12.5px;padding:4px 8px;background:#fff;border:1px solid #8fa8c2;border-radius:6px}' +
-    '#commercialUnitForm select{height:auto!important;min-height:34px;padding:6px 26px 6px 9px!important;line-height:1.35!important;text-overflow:clip}' +
+    '#commercialUnitForm select,#commercialUnitForm input:not([type=checkbox]):not([type=radio]):not([type=file]){height:34px!important;min-height:34px;box-sizing:border-box;padding-top:6px!important;padding-bottom:6px!important;line-height:1.3!important}#commercialUnitForm select{padding-right:26px!important;text-overflow:clip}' +
     '#commercialUnitForm .uf-ro,#commercialUnitForm input[readonly],#commercialUnitForm select[disabled]{background:#e4ebf3!important;color:#2f4258!important;border-color:#b3c3d4!important}' +
     '#commercialUnitForm .uf-grid>.uf-wide{grid-column:span 1}#commercialUnitForm .uf-grid.g3>.uf-3{grid-column:span 1}' +
     '#commercialUnitForm .uf-area{grid-column:span 5;display:flex;align-items:center;gap:6px;margin:0}' +
@@ -3724,8 +3728,18 @@ async function deleteBFile(id) {
   var hint = cur0.querySelector('.umhint'); if (hint) { hint.className = 'umfield uf-10 umhint'; hint.style.cssText = 'font-size:11px;color:#7a8da3'; grid(D).appendChild(hint); }
   put(D, ['u_내부메모'], 'uf-10');
   // ── 내부전용 ──
-  put(E, ['u_소유주', 'u_연락처', 'u_통신사'], 'uf-3'); var ac = $('u_추가연락처_field'); if (ac) { ac.className = 'umfield uf-10'; grid(E).appendChild(ac); }
-  put(E, ['u_소유주메모', 'u_옵션내역'], 'uf-10'); var nb = $('u_비고_wrap'); if (nb) { nb.className = 'umfield uf-10'; grid(E).appendChild(nb); }
+  put(E, ['u_소유주', 'u_연락처', 'u_통신사'], 'uf-3');
+  var ac = $('u_추가연락처_field');
+  if (ac) {
+    ac.className = 'umfield uf-10'; ac.style.cssText = 'display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 12px;align-items:start';
+    var acBtn = $('u_추가연락처Btn'), acWrap = $('u_추가연락처Wrap');
+    if (acBtn) { acBtn.style.cssText = 'grid-column:1;grid-row:1;justify-self:start;align-self:start;margin:0;padding:3px 10px;height:26px;min-height:0;font-size:12px;border-radius:8px;width:auto'; ac.insertBefore(acBtn, ac.firstChild); }
+    if (acWrap) acWrap.style.cssText = 'grid-column:2 / span 2;grid-row:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center';
+    grid(E).appendChild(ac);
+  }
+  // 소유주 메모 · 옵션내역 · 비고 → 메모 하나로 합침
+  ['u_소유주메모', 'u_옵션내역'].forEach(function (id) { var f = F(id); if (f) f.style.display = 'none'; });
+  var nb = $('u_비고_wrap'); if (nb) { nb.className = 'umfield uf-10'; var nbl = nb.querySelector('label'); if (nbl) nbl.textContent = '메모 (소유주 메모 · 옵션 · 특이사항)'; var nbt = $('u_비고'); if (nbt) { nbt.rows = 5; nbt.placeholder = '소유주 통화 가능 시간, 옵션, 특이사항 등 자유 입력'; } grid(E).appendChild(nb); }
   grid(C).style.gridTemplateColumns = 'repeat(4,minmax(0,1fr))'; grid(E).classList.add('g3'); grid(E).style.gridTemplateColumns = 'repeat(3,minmax(0,1fr))';
   [A, B, C, D].forEach(function (s) { wrap.appendChild(s); });
   var notes = $('unitAdditionalNotes'); if (notes) wrap.appendChild(notes);
