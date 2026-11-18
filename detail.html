@@ -342,6 +342,12 @@ html[data-office-theme="ktop"] .apartment-listing-form .apt-subtitle .apt-title-
 .commercial-occupancy,select.commercial-occupancy{height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important}
 .commercial-tenant-biz,.presale-switch input.commercial-tenant-biz{width:150px!important;flex:0 0 150px!important;height:28px!important;min-height:0!important;font-size:12px!important;padding:2px 8px!important;margin:0!important;box-sizing:border-box}
 
+.listing-info-table .tenant-rows{display:contents}
+.listing-info-table .ipt-value.ipt-note{white-space:pre-line}
+.listing-info-table .owner-name-tools{display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:0!important}
+.listing-info-table .tenant-toggle{margin-right:10px}
+.listing-info-table .tenant-status-text{font-weight:700}
+.detail-title-extra.dt-dates .apartment-autofill-btn{margin-right:6px}
 .detail-title-extra.dt-dates{font-size:11.5px;font-weight:500;color:#5b7189}
 .detail-title-extra.dt-dates i{font-style:normal;margin:0 8px;color:#9fb0c3}
 html body .listing-info-table .ipt-label.hl-deal.hl-deal{background:#c7dbf5!important;color:#0f3d73!important}
@@ -1747,76 +1753,63 @@ function closeHomepageTab(tab) {
 
   function renderListingInfoTable(item, category, complexName, publicAddress, mapAddress, contact) {
     if (category.category2 === "아파트" || item.type === "apartment") {
+      // 아파트도 상가·사무실과 같은 "매물 상세정보" 한 장짜리 표(.listing-info-table)로 보여준다.
+      // 데이터는 기존 apartmentSource(item) 값을 그대로 읽는다(저장 구조 변경 없음).
       const u = apartmentSource(item);
-      const addresses=apartmentDetailAddresses(item);
-      const man = n => n == null || n === "" ? "" : Number(n).toLocaleString("ko-KR") + "만원";
-      const row = pairs => '<div class="apartment-info-row' + (pairs.length===2 && pairs[0][0]==='연락처' && pairs[1][0]==='통신사' ? ' owner-contact-row' : '') + '" style="--pairs:' + pairs.length + '">' + pairs.map(([label,value]) => iptCell(label,value)).join('') + '</div>';
+      const addresses = apartmentDetailAddresses(item);
+      const won = n => n == null || n === "" || !Number.isFinite(Number(n)) ? "" : formatWonOrText(Math.round(Number(n) * 10000));
+      const unitText = (v, suffix) => { const t = detailText(v); return t && !t.endsWith(suffix) ? t + suffix : t; };
       const hasTenantNow = u.세입자현황 === "임차중" || u.세입자현황 === "세입자 거주";
+      const tenantStatus = hasTenantNow ? "있음" : !u.세입자현황 || u.세입자현황 === "미확인" ? "미확인" : "없음";
       const aptRegBtn = '<button type="button" class="apartment-autofill-btn" id="autoFillApartmentBtn" title="건축물대장과 단지자료로 면적·타입·주소 자동입력" aria-label="건축물대장으로 자동입력"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 7a7 7 0 0 1 11.5-1L20 9M4 15l2.5 3A7 7 0 0 0 18 17"/></svg>건축물대장 조회</button>';
-      const ownerNameRow = '<div class="apartment-info-row" style="--pairs:1"><div class="ipt-label">이름</div><div class="ipt-value owner-name-cell"><span class="owner-name-text">' + escapeHtml(detailText(u.소유주) || "—") + '</span><span class="owner-name-tools"><button type="button" class="apartment-autofill-btn" id="registryOwnerSearchBtn" title="인터넷등기소에서 소유자 표시 확인">대법원 인터넷등기소 확인</button><button type="button" class="apartment-autofill-btn" id="buildingOwnerSearchBtn" title="정부24 건축물대장 원문에서 소유주 확인">건축물대장 확인</button></span></div></div>';
-      const tenantToggleHtml = '<label class="tenant-toggle"><input type="checkbox" id="tenantToggle"' + (hasTenantNow ? ' checked' : '') + '> 세입자</label>';
-      const section = (title, rows, opts) => { opts = opts || {}; return '<section class="detail-section apartment-info-section' + (title==='옵션·메모' ? ' apartment-memo-section' : title==='기본정보' ? ' apartment-basic-section' : '') + (title==='가격정보' || /^분양권 정보/.test(title) ? ' apartment-wide-label' : '') + '"><div class="detail-section-title' + (opts.titleExtra ? ' apt-title-flex' : '') + '">' + escapeHtml(title) + (opts.titleExtra || '') + '</div><div class="apartment-info-table">' + (opts.rowsHtml || rows.map(row).join('')) + '</div></section>'; };
-      const memoRows = [
-        ...(u.옵션내역 ? [[["옵션내역",u.옵션내역]]] : []),
-        ...apartmentNotes(item).map(note => [note])
-      ];
-      const basic = section("기본정보", [
-        [["아파트명",u.아파트명]],
-        ...listingStatusPairs(item).reduce((acc, p, i) => { if (i % 2 === 0) acc.push([p]); else acc[acc.length - 1].push(p); return acc; }, []),
-        [["접수일자",u.접수일자],["매물 구분",u.권리구분 || "일반 아파트"]],
-                [["동",u.동],["호수",u.호]],
-        [["분양평형",u.평형],["타입",u.타입]],
-        [["분양면적(공급면적)",formatApartmentArea(u.분양_m2,u.분양_평)],["전용면적",formatApartmentArea(u.전용_m2,u.전용_평)]],
-        [["새주소(도로명주소)",addresses.roadAddress]],
-        [["구주소(지번주소)",addresses.jibunAddress]]
-      ], { titleExtra: aptRegBtn });
+      const dealRaw = firstDetailValue(u.거래구분, item.dealType);
+      const dealLabel = dealRaw === "월세" ? "월세(임대)" : dealRaw === "매매·월세" ? "매매·월세(임대)" : dealRaw;
+      const aptMapAddress = firstDetailValue(addresses.jibunAddress, item.mapAddress, addresses.roadAddress, mapAddress);
       const hasPresale = !!(u.권리구분 === "분양권" || u.분양권_전환일);
-      const leftParts = [
-        section("가격정보", [
-          [["거래구분",u.거래구분],["매매가",man(u.현_매매가격)]],
-          [["보증금·전세가",man(u.현_보증금)],["월세",man(u.현_월세)]]
-        ]),
-        ...((u.권리구분 === "분양권" || u.분양권_전환일) ? [section(u.권리구분 === "분양권" ? "분양권 정보" : "분양권 정보 (입주 전 기록)",(() => {
-          const pay = (amt, date, done) => amt == null || amt === "" ? "" : man(amt) + (date ? " · " + date : "") + (done ? " · 납부완료" : " · 예정");
-          const mids = Array.isArray(u.중도금) ? u.중도금 : [];
-          const total = u.원분양가 != null ? u.원분양가 : u.분양가;
-          const rows = [
-            [["기본 분양가",man(u.분양가)],["발코니 확장비",u.발코니확장 ? man(u.발코니확장비) : "확장 안 함"]],
-            [["별도 추가 옵션비",man(u.추가옵션비 != null ? u.추가옵션비 : (u.발코니확장비 == null ? u.옵션비 : null))],["총 공급가액",man(total)]],
-            [["프리미엄",man(u.프리미엄)],["프리미엄 포함 총액",(u.프리미엄 != null && u.프리미엄 !== "") ? man(Math.round(((Number(total) || 0) + Number(u.프리미엄)) * 100) / 100) : ""]]
-          ];
-          if (u.계약금 != null && u.계약금 !== "") rows.push([["계약금",man(u.계약금) + (u.계약금_완료 ? " · 납부 완료" : " · 미납")]]);
-          const midN = u.중도금회차 || mids.length;
-          const midTotal = u.중도금총액 != null ? u.중도금총액 : (mids.length ? mids.reduce((s,m) => s + (Number(m && m.금액) || 0), 0) : null);
-          const midPaid = u.중도금납부회차 != null ? u.중도금납부회차 : mids.filter(m => m && m.완료).length;
-          if (midTotal != null && midN) rows.push([["중도금",man(midTotal) + " · " + midN + "회 중 " + midPaid + "회차까지 납부" + (midPaid >= midN ? " (전부)" : "")]]);
-          if (u.잔금 != null && u.잔금 !== "") rows.push([["잔금",man(u.잔금)]]);
-          rows.push([["납부 완료 합계",man(u.납부금)]]);
-          if (u.분양권_전환일) rows.unshift([["입주 전환일",u.분양권_전환일]]);
-          return rows;
-        })())] : []),
-        ...(memoRows.length ? [section("옵션·메모",memoRows)] : [])
-      ];
-      const rightParts = [
-        section("소유자 정보", null, { titleExtra: tenantToggleHtml, rowsHtml: ownerNameRow + row([["연락처",u.연락처],["통신사",u.소유자통신사]]) }),
-        (() => {
-          const hasTenant = u.세입자현황 === "임차중" || u.세입자현황 === "세입자 거주";
-          const status = hasTenant ? "있음" : !u.세입자현황 || u.세입자현황 === "미확인" ? "미확인" : "없음";
-          return '<details class="detail-section apartment-info-section tenant-info-section" id="tenantSection"' + (hasTenant ? ' open' : ' style="display:none"') +
-            '><summary class="detail-section-title">세입자 정보 · ' + status + '</summary>' +
-            '<div class="apartment-info-table">' + [
-              [["이름",u.세입자이름]], [["연락처",u.세입자연락처]],
-              [["계약 시작일",u.계약시작],["계약 종료일",u.계약종료]],
-              [["비고",u.세입자비고]]
-            ].map(row).join('') + '</div></details>';
-        })()
-      ];
-      const memoHtml = leftParts.slice(hasPresale ? 2 : 1).join("");
-      const left = (hasPresale ? leftParts[1] : leftParts[0]);
-      const right = (hasPresale ? leftParts[0] : "") + rightParts.join("");
-      return '<div class="apartment-details-layout">'+basic+
-        '<div class="apartment-details-column">'+left+'</div>'+
-        '<div class="apartment-details-column">'+right+'</div>'+memoHtml+'</div>';
+      const noteRow = (label, text) => iptCell(label, text, "ipt-value-span5 ipt-note");
+      const customRow = (label, innerHtml, hl) => '<div class="ipt-label' + (hl ? ' hl-' + hl : '') + '">' + escapeHtml(label) + '</div><div class="ipt-value ipt-value-span5' + (hl ? ' hl-' + hl : '') + '">' + innerHtml + '</div>';
+      const presaleRows = [];
+      if (hasPresale) {
+        const pay = (amt, date, done) => amt == null || amt === "" ? "" : won(amt) + (date ? " · " + date : "") + (done ? " · 납부완료" : " · 예정");
+        const mids = Array.isArray(u.중도금) ? u.중도금 : [];
+        const total = u.원분양가 != null ? u.원분양가 : u.분양가;
+        presaleRows.push(iptRow([["기본 분양가", won(u.분양가)], ["발코니 확장비", u.발코니확장 ? won(u.발코니확장비) : "확장 안 함"], ["총 공급가액", won(total)]]));
+        presaleRows.push(iptRow([["추가 옵션비", won(u.추가옵션비 != null ? u.추가옵션비 : (u.발코니확장비 == null ? u.옵션비 : null))], ["프리미엄", won(u.프리미엄)], ["프리미엄 포함 총액", (u.프리미엄 != null && u.프리미엄 !== "") ? won((Number(total) || 0) + Number(u.프리미엄)) : ""]]));
+        if (u.계약금 != null && u.계약금 !== "") presaleRows.push(iptRow([["계약금", won(u.계약금) + (u.계약금_완료 ? " · 납부 완료" : " · 미납")]]));
+        const midN = u.중도금회차 || mids.length;
+        const midTotal = u.중도금총액 != null ? u.중도금총액 : (mids.length ? mids.reduce((s, m) => s + (Number(m && m.금액) || 0), 0) : null);
+        const midPaid = u.중도금납부회차 != null ? u.중도금납부회차 : mids.filter(m => m && m.완료).length;
+        if (midTotal != null && midN) presaleRows.push(iptRow([["중도금", won(midTotal) + " · " + midN + "회 중 " + midPaid + "회차까지 납부" + (midPaid >= midN ? " (전부)" : "")]]));
+        if (u.잔금 != null && u.잔금 !== "") presaleRows.push(iptRow([["잔금", won(u.잔금)]]));
+        presaleRows.push(iptRow([["납부 완료 합계", won(u.납부금)]].concat(u.분양권_전환일 ? [["입주 전환일", u.분양권_전환일]] : [])));
+      }
+      const noteRows = [
+        ...(u.옵션내역 ? [["옵션내역", u.옵션내역]] : []),
+        ...apartmentNotes(item)
+      ].map(([label, text]) => noteRow(label, text)).join("");
+      const rows = [
+        iptRow([["1차구분", "주거용"], ["2차구분", "아파트"], ["거래유형", dealLabel]]),
+        iptRow([["아파트명", firstDetailValue(u.아파트명, complexName)], ["동", unitText(u.동, "동")], ["호수", unitText(u.호, "호")]]),
+        iptRow([["분양평형", u.평형], ["타입", u.타입], ["매물 구분", u.권리구분 || "일반 아파트"]]),
+        ...(p => [iptRow(p.slice(0, 3)), iptRow(p.slice(3))].filter(r => r))([...listingStatusPairsLite(item), ["접수일자", u.접수일자]]),
+        iptRow([["지도검색주소", aptMapAddress]]),
+        ...(addresses.roadAddress && addresses.roadAddress !== aptMapAddress ? [iptRow([["새주소(도로명)", addresses.roadAddress]])] : []),
+        iptRow([["매매가", won(u.현_매매가격)], [dealRaw === "전세" ? "전세금" : "보증금", won(u.현_보증금)], ["월세", won(u.현_월세)]]),
+        iptRow([["전용면적", formatApartmentArea(u.전용_m2, u.전용_평)], ["공급면적", formatApartmentArea(u.분양_m2, u.분양_평)]]),
+        ...presaleRows,
+        iptRow([["소유주", u.소유주], ["소유주 연락처", u.연락처], ["통신사", u.소유자통신사]]),
+        customRow("소유자 확인", '<span class="owner-name-tools"><button type="button" class="apartment-autofill-btn" id="registryOwnerSearchBtn" title="인터넷등기소에서 소유자 표시 확인">대법원 인터넷등기소 확인</button><button type="button" class="apartment-autofill-btn" id="buildingOwnerSearchBtn" title="정부24 건축물대장 원문에서 소유주 확인">건축물대장 확인</button></span>'),
+        customRow("임대상태", '<label class="tenant-toggle"><input type="checkbox" id="tenantToggle"' + (hasTenantNow ? ' checked' : '') + '> 세입자</label><span class="tenant-status-text">' + escapeHtml(tenantStatus) + '</span>', "use"),
+        '<div class="tenant-rows" id="tenantSection"' + (hasTenantNow ? '' : ' style="display:none"') + '>' +
+          iptRow([["세입자 이름", u.세입자이름], ["세입자 연락처", u.세입자연락처]]) +
+          iptRow([["계약 시작일", u.계약시작], ["계약 종료일", u.계약종료]]) +
+          iptRow([["세입자 비고", u.세입자비고]]) +
+        '</div>',
+        noteRows
+      ].join("");
+      return '<section class="detail-section listing-info-section">' +
+        '<div class="detail-section-title">매물 상세정보' + listingDatesTag(item).replace('<span class="detail-title-extra dt-dates">', '<span class="detail-title-extra dt-dates">' + aptRegBtn) + '</div>' +
+        '<div class="listing-info-table">' + rows + '</div></section>';
     }
     // 옛 매물은 거래유형·금액이 가격 메모("매매_18억")에만 있을 수 있어, 가격 칸이 비어 있으면 메모에서 읽어 가격 칸에 보여준다.
     const legacyPrice = (!item.salePrice && !item.deposit && !item.monthlyRent) ? parseLegacyPriceMemo(item.quick_price) : null;
@@ -2436,7 +2429,7 @@ function closeHomepageTab(tab) {
     const registryOwnerButton=document.getElementById("registryOwnerSearchBtn");
     if(registryOwnerButton)registryOwnerButton.addEventListener("click",()=>openApartmentRegistrySearch(item,message=>showToast(message,10000)));
     const tenantToggle=document.getElementById("tenantToggle");
-    if(tenantToggle)tenantToggle.addEventListener("change",()=>{const sec=document.getElementById("tenantSection");if(!sec)return;sec.style.display=tenantToggle.checked?"":"none";sec.open=tenantToggle.checked;});
+    if(tenantToggle)tenantToggle.addEventListener("change",()=>{const sec=document.getElementById("tenantSection");if(!sec)return;sec.style.display=tenantToggle.checked?"":"none";const st=document.querySelector(".tenant-status-text");if(st)st.textContent=tenantToggle.checked?"있음":"없음";});
     const apartmentAutoButton=document.getElementById("autoFillApartmentBtn");
     if(apartmentAutoButton)apartmentAutoButton.addEventListener("click",async()=>{
       apartmentAutoButton.disabled=true;apartmentAutoButton.textContent="조회 중…";
