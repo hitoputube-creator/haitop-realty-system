@@ -3703,7 +3703,7 @@ async function deleteBFile(id) {
   cmp.innerHTML = '<div class="uf-cmp-h old">기존 분양조건</div><div class="uf-cmp-h cur">할인 · 현재 조건</div>';
   put(D, ['u_분양금액', 'u_보증금', 'u_월차임', 'u_현매매가격', 'u_현보증금', 'u_현월세'], '', cmp);
   put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) pf.style.gridColumn = '1';
-  ['u_공실여부', 'u_현업종'].forEach(function (id, i) { var f = F(id); if (f) { f.style.gridColumn = String(i + 2); cmp.appendChild(f); } }); // 임대현황·업종: 평당가 옆(기존 보증금·월세 아래)
+  [].slice.call(row1.children).forEach(function (f, i) { if (f) { f.style.gridColumn = String(i + 2); cmp.appendChild(f); } }); // 임대현황·업종: 평당가 옆(기존 보증금·월세 아래)
   var kf = F('u_권리금'); if (kf) kf.style.display = 'none';
   grid(D).appendChild(cmp);
   var flags = document.createElement('div'); flags.className = 'umfield uf-10 uf-flags';
