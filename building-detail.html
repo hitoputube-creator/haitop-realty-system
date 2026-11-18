@@ -3744,6 +3744,7 @@ async function deleteBFile(id) {
       '#unitTabs button.active{background:#1f5fa8;border-color:#1f5fa8;color:#fff}' +
       '#unitListingPane{display:none;flex:1 1 auto;min-height:0;background:#eef3f9;position:relative}' +
       '#unitListingPane .ulp-empty{padding:60px 30px;text-align:center;color:#3d556f;font-size:14px;line-height:1.7}' +
+      '#unitModal:not(.residential-modal) .unit-modal-box.ulp-on{height:90vh}' +
       '#unitModal.residential-modal #unitTabs{display:none}';
     document.head.appendChild(st2);
     function listingId() {
@@ -3754,7 +3755,7 @@ async function deleteBFile(id) {
       var listing = v === 'listing';
       tabs.querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', b.dataset.ut === v); });
       scrollEl.style.display = listing ? 'none' : ''; actions.style.display = listing ? 'none' : '';
-      pane.style.display = listing ? 'block' : 'none';
+      pane.style.display = listing ? 'block' : 'none'; box.classList.toggle('ulp-on', listing);
       var fr = pane.querySelector('iframe'), em = pane.querySelector('.ulp-empty');
       if (!listing) return;
       var id = listingId();
