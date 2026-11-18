@@ -3692,8 +3692,8 @@ async function deleteBFile(id) {
   put(C, ['u_층정보', 'u_용도지역', 'u_주차대수', 'u_사용승인일'], 'uf-wide');
   // ── 가격정보 ──
   var row1 = document.createElement('div'); row1.className = 'uf-row';
-  var kind = document.createElement('div'); kind.className = 'uf-kind'; kind.innerHTML = '<span>상가구분</span><button type="button" data-k="기존상가">기존상가</button><button type="button" data-k="분양상가" class="active">분양상가</button>'; row1.appendChild(kind);
-  var phaseSw = $('unitPresaleSwitch'); if (phaseSw) row1.appendChild(phaseSw);
+  // 상가구분(기존상가/분양상가)은 분양 화면에는 필요 없어 뺀다
+  var phaseSw = $('unitPresaleSwitch'); if (phaseSw) { var rowPhase = document.createElement('div'); rowPhase.className = 'uf-row'; rowPhase.appendChild(phaseSw); grid(A).appendChild(rowPhase); }
   ['u_공실여부', 'u_현업종'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield'; row1.appendChild(f); } });
   var occL = F('u_공실여부') && F('u_공실여부').querySelector('label'); if (occL) occL.textContent = '임대현황';
   var bizL = F('u_현업종') && F('u_현업종').querySelector('label'); if (bizL) bizL.textContent = '업종';
