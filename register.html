@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone3" />
   <script src="assets/js/storage.js?v=20261118-img1"></script>
-<script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
+<script src="assets/js/commercial-address-fields.js?v=20261118-road1"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1248,6 +1248,7 @@ html body .card .presale-switch input.commercial-tenant-biz.commercial-tenant-bi
       deposit:        gv('deposit'),
       monthlyRent:    gv('monthlyRent'),
       managementFee:  gv('managementFee'),
+      ...(cat2 === '아파트' ? {} : { roadAddress: (document.getElementById('roadAddress') ? document.getElementById('roadAddress').value.trim() : '') }),
       premium:        gv('premium'),
       // 면적
       areaM2:             gn('areaM2'),
