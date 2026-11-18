@@ -592,6 +592,67 @@
 }
 .owner-customer-link:hover { color:#234c49; background:#ffffff; border-color:#5f8780; }
 .owner-customer-link:focus-visible { outline:2px solid #5f8780; outline-offset:3px; }
+
+/* 건물 자료 상세 재디자인: 정보 카드, 작은 네모 버튼, 호실 현황 정리 */
+html body.resources-page{--bd-accent:#1767d2;--bd-soft:#eaf2ff;--bd-ink:#1e293b;--bd-sub:#475569;--bd-mute:#64748b;--bd-line:#e2e8f0}
+html[data-office-theme='hitop'] body.resources-page{--bd-accent:#25675f;--bd-soft:#e6f2ef}
+html body.resources-page .card{border:1px solid var(--bd-line)!important;border-radius:12px!important;box-shadow:0 2px 10px rgba(15,23,42,.04)!important;padding:18px 20px!important;background:#fff!important}
+html body.resources-page .sec-title{display:flex;align-items:center;gap:8px;margin:0 0 14px!important;font-size:15px!important;font-weight:800!important;color:var(--bd-ink)!important}
+html body.resources-page .sec-title::before{content:"";order:-1;width:4px;height:17px;border-radius:2px;background:var(--bd-accent)}
+html body.resources-page .sec-title::after{background:var(--bd-line)!important}
+/* 건물 기본정보 */
+html body.resources-page .info-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:8px!important;margin-bottom:12px!important}
+html body.resources-page .info-cell{background:#fff!important;border:1px solid var(--bd-line)!important;border-radius:8px!important;box-shadow:none!important;padding:9px 12px!important}
+html body.resources-page .info-cell-label{font-size:11.5px!important;font-weight:700!important;letter-spacing:0!important;text-transform:none!important;color:var(--bd-mute)!important;margin-bottom:3px!important}
+html body.resources-page .info-cell-value{font-size:13.5px!important;font-weight:700!important;color:var(--bd-ink)!important}
+html body.resources-page .info-cell-value.empty{color:#94a3b8!important;font-weight:500!important}
+html body.resources-page .info-cell:first-child{background:var(--bd-soft)!important;border-color:transparent!important}
+html body.resources-page .info-cell:first-child .info-cell-value{color:var(--bd-accent)!important}
+@media(max-width:1000px){html body.resources-page .info-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+/* 작은 네모 버튼(공통) */
+html body.resources-page .building-location-links .btn,html body.resources-page .card .btn,html body.resources-page .floor-edit-btn,html body.resources-page .floor-status-link,html body.resources-page #unitStatus .unit-head-main button,html body.resources-page #unitStatus #unitBulkActions button,html body.resources-page #unitStatus #unitBulkActions a{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:30px!important;min-height:0!important;padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--bd-sub)!important;font-family:inherit;font-size:12.5px!important;font-weight:700!important;line-height:1!important;white-space:nowrap;text-decoration:none!important;box-shadow:none!important;opacity:1}
+html body.resources-page .building-location-links .btn:hover,html body.resources-page .card .btn:hover,html body.resources-page .floor-edit-btn:hover,html body.resources-page .floor-status-link:hover,html body.resources-page #unitStatus button:hover{border-color:var(--bd-accent)!important;color:var(--bd-accent)!important;background:#fff!important}
+html body.resources-page .btn.primary,html body.resources-page .btn-primary,html body.resources-page #unitStatus #btnAddUnit,html body.resources-page #unitStatus #unitListingSend:not(:disabled){background:var(--bd-accent)!important;border-color:var(--bd-accent)!important;color:#fff!important}
+html body.resources-page .btn.primary:hover,html body.resources-page .btn-primary:hover,html body.resources-page #unitStatus #btnAddUnit:hover,html body.resources-page #unitStatus #unitListingSend:not(:disabled):hover{color:#fff!important;filter:brightness(.92)}
+html body.resources-page #unitStatus #unitBulkActions button:disabled{background:#f8fafc!important;color:#94a3b8!important;border-color:#e2e8f0!important;cursor:default}
+html body.resources-page #unitStatus #unitSelectDelete:not(:disabled){background:#fff0ee!important;border-color:#efcbc5!important;color:#b42318!important}
+html body.resources-page .building-location-links{gap:6px!important;margin:6px 0 12px!important}
+/* 업로드 폼 */
+html body.resources-page .upload-row input[type=text]{height:34px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font-size:13px}
+html body.resources-page .upload-row input[type=file]{height:34px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;background:#fff;padding:3px 8px;font-size:12.5px!important}
+html body.resources-page .floor-sort-hint{font-size:12px!important;color:var(--bd-mute)!important}
+/* 평면도 카드 */
+html body.resources-page .floor-grid,html body.resources-page .file-grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr))!important;gap:10px!important}
+html body.resources-page .floor-card{background:#fff!important;border:1px solid var(--bd-line)!important;border-radius:10px!important;box-shadow:none!important}
+html body.resources-page .floor-card:hover{border-color:var(--bd-accent)!important}
+html body.resources-page .floor-card-foot{padding:8px 10px!important;gap:5px!important;border-top:1px solid var(--bd-line)!important}
+html body.resources-page .floor-badge{font-size:13px!important;font-weight:800!important;color:var(--bd-ink)!important}
+html body.resources-page .floor-edit-btn,html body.resources-page .floor-status-link{height:24px!important;padding:0 9px!important;font-size:11.5px!important}
+html body.resources-page .floor-card .btn-icon{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #efcbc5!important;border-radius:6px!important;background:#fff0ee!important;font-size:12px!important;padding:0!important}
+html body.resources-page .empty-state{padding:22px 16px;border:1px dashed #cbd5e1;border-radius:10px;background:#fafbfd;color:var(--bd-mute);font-size:13px}
+/* 호실 현황 */
+html body.resources-page .unit-sec-head h3{font-size:15px!important;font-weight:800!important;color:var(--bd-ink)!important}
+html body.resources-page #unitStatus .unit-head-main button,html body.resources-page #unitStatus #unitBulkActions button,html body.resources-page #unitStatus #unitBulkActions a{height:30px!important;padding:0 12px!important;font-size:12.5px!important;border-radius:6px!important}
+html body.resources-page #unitStatus #btnAddUnit{height:32px!important;padding:0 16px!important}
+html body.resources-page #unitBulkActions{gap:6px!important;padding:8px 0 4px}
+html body.resources-page .summary-grid{gap:8px!important;margin-bottom:12px!important}
+html body.resources-page .sum-card{border-radius:10px!important;padding:12px 10px!important;background:#fff!important;border:1px solid var(--bd-line)!important;border-top:3px solid #cbd5e1!important;box-shadow:none!important}
+html body.resources-page .sum-card.occupied{border-top-color:#177a55!important}html body.resources-page .sum-card.vacant{border-top-color:#b42318!important}html body.resources-page .sum-card.forsale{border-top-color:var(--bd-accent)!important}html body.resources-page .sum-card.revenue{border-top-color:#2c64b6!important}html body.resources-page .sum-card.own{border-top-color:#7c5cc4!important}
+html body.resources-page .sum-num{font-size:24px!important}
+html body.resources-page .sum-label{font-size:12px!important;font-weight:700;color:var(--bd-mute)!important}
+html body.resources-page #unitCounts{font-size:12.5px!important;color:var(--bd-sub)!important}
+html body.resources-page .ftab{box-sizing:border-box;height:28px;padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--bd-sub)!important;font-size:12.5px!important;font-weight:700;line-height:1}
+html body.resources-page .ftab:hover{border-color:var(--bd-accent)!important;color:var(--bd-accent)!important}
+html body.resources-page .ftab.active{background:var(--bd-accent)!important;border-color:var(--bd-accent)!important;color:#fff!important}
+html body.resources-page .units-tbl{font-size:13px}
+html body.resources-page .units-tbl th{background:#eef2f7!important;color:var(--bd-sub)!important;font-size:12.5px!important;font-weight:800!important;border-bottom:1px solid var(--bd-line)!important;padding:9px 12px}
+html body.resources-page .units-tbl td{border-bottom:1px solid #eef2f7!important;color:var(--bd-ink)!important}
+html body.resources-page .units-tbl tr:hover td{background:var(--bd-soft)!important}
+html body.resources-page .sbadge{border-radius:4px!important;padding:2px 9px!important;font-size:12px!important}
+html body.resources-page .btn-unit-edit,html body.resources-page .btn-unit-del,html body.resources-page .btn-listing-reg,html body.resources-page .btn-listing-view,html body.resources-page .btn-listing-home{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:26px;padding:0 10px!important;border-radius:6px!important;font-size:12px!important;font-weight:700}
+html body.resources-page .btn-unit-edit{background:#fff!important;border:1px solid #cbd5e1!important;color:var(--bd-sub)!important}
+html body.resources-page .btn-unit-edit:hover{border-color:var(--bd-accent)!important;color:var(--bd-accent)!important}
+html body.resources-page .btn-unit-del{background:#fff0ee!important;border:1px solid #efcbc5!important;color:#b42318!important}
 </style>
 
 <style>
