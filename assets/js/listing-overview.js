@@ -454,7 +454,7 @@
 
   // ---- 사진 크게 보기(평면도 등): 휠·버튼으로 확대/축소, 드래그로 이동, 여러 장이면 좌우로 넘기기 ----
   function openImageViewer(id) {
-    var all = state.allDocs || [];
+    var all = (state.allDocs || []).concat(state.typePlanDoc ? [state.typePlanDoc] : []);
     var cur = all.filter(function (x) { return String(x.id) === String(id); })[0]; if (!cur) return;
     var list = all.filter(function (x) { return x.doc_type === cur.doc_type && isImageDoc(x); });
     var idx = Math.max(0, list.map(function (x) { return String(x.id); }).indexOf(String(id)));
@@ -510,10 +510,42 @@
   function cardFloor() {
     var mine = (state.allDocs || []).filter(function (d) { return d.doc_type === "평면도"; });
     var imgs = mine.filter(isImageDoc);
-    var body = mine.length ? "" : '<div class="lo-empty">평면도가 아직 없어요. 사진이나 PDF로 올려 두면 여기서 바로 볼 수 있어요.</div>';
-    if (imgs.length) body += '<div class="lo-thumbs">' + imgs.map(function (d) { return '<a class="lo-thumb" data-act="doc-view" data-id="' + esc(d.id) + '" title="' + esc(d.original_name || "평면도") + '"><img data-doc="' + esc(d.id) + '" alt="평면도"></a>'; }).join("") + '</div>';
+    var tp = state.typePlan;
+    var body = (mine.length || tp) ? "" : '<div class="lo-empty">평면도가 아직 없어요. 사진이나 PDF로 올려 두면 여기서 바로 볼 수 있어요.</div>';
+    // 단지 자료에서 이 매물의 타입과 같은 평면도를 자동으로 보여 준다(제안서와 같은 도면).
+    if (tp) body += '<div class="lo-sub">📐 ' + esc(tp.type) + '타입 평면도 <small>단지 자료에서 자동 연결</small></div><div class="lo-thumbs one"><a class="lo-thumb" data-act="doc-view" data-id="typeplan" title="' + esc(tp.type) + '타입 평면도 크게 보기"><img src="' + esc(tp.url) + '" alt="' + esc(tp.type) + '타입 평면도"></a></div>' + (tp.cap ? '<div class="lo-cap">' + esc(tp.cap) + '</div>' : '');
+    if (imgs.length) body += (tp ? '<div class="lo-sub">🏠 이 호실 평면도</div>' : '') + '<div class="lo-thumbs">' + imgs.map(function (d) { return '<a class="lo-thumb" data-act="doc-view" data-id="' + esc(d.id) + '" title="' + esc(d.original_name || "평면도") + '"><img data-doc="' + esc(d.id) + '" alt="평면도"></a>'; }).join("") + '</div>';
     body += filesBlock("평면도") + '<div class="lo-row"><button type="button" class="pri" data-act="doc-up" data-type="평면도">평면도 올리기</button></div>';
     return '<div class="lo-card" data-card="floor"><h4>📐 평면도 <small>사진 · PDF</small></h4>' + body + '</div>';
+  }
+  // ---- 단지 자료의 타입 평면도 자동 찾기 (제안서의 평면도와 같은 규칙) ----
+  (function () { var st2 = document.createElement("style"); st2.textContent = ".lo-thumbs.one{grid-template-columns:1fr}.lo-cap{font-size:.74rem;color:#475569;margin:2px 0 6px;font-weight:600}.lo-sub small{font-weight:500;color:#64748b;margin-left:4px}"; document.head.appendChild(st2); })();
+  async function loadTypePlan() {
+    try {
+      if (typeof getListingById !== "function" || typeof getDriveResources !== "function" || typeof getBuildingFloors !== "function") return;
+      var item = await getListingById(listingId); if (!item) return;
+      var u = typeof apartmentSource === "function" ? apartmentSource(item) : {};
+      if (!(item.type === "apartment" || item.category2 === "아파트" || u.아파트명)) return;
+      var normT = function (s) { return String(s || "").toUpperCase().replace(/\s+/g, "").replace(/(타입|TYPE|형|㎡)/g, ""); };
+      var normN = function (s) { return String(s || "").replace(/\(.*?\)/g, "").replace(/\s+/g, ""); };
+      var all = await getDriveResources(); if (!Array.isArray(all)) return;
+      var rid = item.resource_id || item.resourceId, res = rid ? all.filter(function (r) { return r.id === rid; })[0] : null;
+      if (!res) {
+        var nm = normN(item.complexName || item.buildingName || u.아파트명 || "");
+        if (nm.length < 4) return;
+        res = all.filter(function (r) { if (!/아파트/.test(String(r.category || ""))) return false; var rn = normN(r.name); return rn && (rn === nm || rn.indexOf(nm) > -1 || nm.indexOf(rn) > -1); })[0];
+      }
+      if (!res) return;
+      var type = normT(item.apartmentType || u.타입 || ""); if (!type) return;
+      var floors = await getBuildingFloors(res.id);
+      var plan = (floors || []).filter(function (f) { return normT(f.floor_number).split("/").indexOf(type) > -1; })[0];
+      if (!plan || !plan.cloudinary_url || /\.pdf(\?|$)/i.test(plan.cloudinary_url)) return;
+      var M2PY = 3.305785, sm = Number(plan.supply_area_m2) || 0, em = Number(plan.exclusive_area_m2) || 0;
+      var area = function (m2) { return (m2 / M2PY).toFixed(1) + "평 / " + m2.toFixed(2) + "㎡"; };
+      var cap = [sm ? "분양면적 " + area(sm) : "", em ? "전용면적 " + area(em) : ""].filter(Boolean).join(" · ");
+      state.typePlan = { url: plan.cloudinary_url, type: String(plan.floor_number), cap: cap };
+      state.typePlanDoc = { id: "typeplan", doc_type: "평면도", original_name: String(plan.floor_number) + "타입 평면도(단지 자료)", mime_type: "image/png", _url: plan.cloudinary_url };
+    } catch (e) { /* 단지 자료가 없거나 조회 실패하면 올린 평면도만 보여 준다 */ }
   }
   async function loadFloorThumbs() {
     var imgs = root.querySelectorAll('img[data-doc]');
@@ -538,6 +570,7 @@
     return '<div class="lo-card' + wide + '" data-card="registry"><h4>📑 등기부등본 <small>인터넷등기소 · 유료</small></h4>' + body + '</div>';
   }
   async function signedUrl(doc) {
+    if (doc && doc._url) return doc._url;
     var r = await client().storage.from(BUCKET).createSignedUrl(doc.storage_path, 300);
     if (r.error || !r.data || !r.data.signedUrl) throw (r.error || new Error("no url"));
     return r.data.signedUrl;
@@ -752,6 +785,7 @@
     state.loading = true; state.error = null; render();
     state.info = readInfo();
     await reloadDocs();
+    loadTypePlan().then(function () { if (state.typePlan && !state.loading) render(); });
     if (state.info.address) {
       var key = "lo2:" + listingId + ":" + state.info.address + ":" + state.info.hoNm;
       try {
