@@ -663,6 +663,55 @@ html body.resources-page .btn-unit-edit,html body.resources-page .btn-unit-del,h
 html body.resources-page .btn-unit-edit{background:#fff!important;border:1px solid #cbd5e1!important;color:var(--bd-sub)!important}
 html body.resources-page .btn-unit-edit:hover{border-color:var(--bd-accent)!important;color:var(--bd-accent)!important}
 html body.resources-page .btn-unit-del{background:#fff0ee!important;border:1px solid #efcbc5!important;color:#b42318!important}
+
+/* 호실 수정창 재디자인(건물 자료 상세) */
+html body.resources-page #unitModal{background:rgba(15,23,42,.55)!important}
+html body.resources-page #unitModal .unit-modal-box{position:relative;padding:0!important;border-radius:12px!important;border:1px solid var(--bd-line)!important;background:#fff!important;box-shadow:0 20px 50px rgba(15,23,42,.25)!important;overflow:hidden}
+html body.resources-page #unitModal .unit-modal-title{margin:0!important;padding:14px 64px 12px 20px!important;font-size:16px!important;font-weight:800!important;color:var(--bd-ink)!important;border-bottom:1px solid var(--bd-line);background:#f6f8fb}
+html body.resources-page #unitModal .unit-modal-close{top:10px!important;right:14px!important;width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--bd-sub)!important;font-size:14px!important;line-height:1}
+html body.resources-page #unitModal .unit-modal-close:hover{border-color:var(--bd-accent)!important;color:var(--bd-accent)!important}
+html body.resources-page #unitModal #unitTabs{display:flex;gap:6px;padding:10px 20px 8px}
+html body.resources-page #unitModal #unitTabs button{flex:0 0 120px!important;width:auto!important;height:32px;padding:0 14px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--bd-sub)!important;font-size:13px!important;font-weight:800!important;line-height:1;box-shadow:none!important}
+html body.resources-page #unitModal #unitTabs button.active{background:var(--bd-accent)!important;border-color:var(--bd-accent)!important;color:#fff!important}
+html body.resources-page #unitModal .um-scroll{padding:0 20px 8px!important}
+html body.resources-page #unitModal .uf-sec{margin-bottom:12px!important}
+html body.resources-page #unitModal .uf-sec>.uf-title,html body.resources-page #unitModal .um-section-title{display:flex;align-items:center;gap:7px;padding:7px 12px!important;border:0!important;border-radius:6px 6px 0 0!important;background:#f1f5f9!important;color:var(--bd-ink)!important;font-size:13.5px!important;font-weight:800!important}
+html body.resources-page #unitModal .uf-sec>.uf-title::before,html body.resources-page #unitModal .um-section-title::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--bd-accent)}
+html body.resources-page #unitModal .uf-title small,html body.resources-page #unitModal .uf-title span{font-weight:600;color:var(--bd-mute)}
+html body.resources-page #unitModal .ut{border:1px solid var(--bd-line)!important;border-radius:0 0 6px 6px}
+html body.resources-page #unitModal .ut th{background:#eef2f7!important;color:#334155!important;font-size:12.5px!important;font-weight:800!important;border-color:var(--bd-line)!important}
+html body.resources-page #unitModal .ut td{border-color:var(--bd-line)!important;background:#fff!important}
+html body.resources-page #unitModal .ut thead th{font-size:13px!important}
+html body.resources-page #unitModal .ut thead th.g{background:#eef2f7!important;color:var(--bd-ink)!important}
+html body.resources-page #unitModal .ut thead th.b{background:var(--bd-soft)!important;color:var(--bd-accent)!important}
+html body.resources-page #unitModal .ut input:not([type=checkbox]):not([type=radio]),html body.resources-page #unitModal .ut select,html body.resources-page #unitModal .ut textarea{border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--bd-ink)!important;font-size:13px!important}
+html body.resources-page #unitModal .ut input:focus,html body.resources-page #unitModal .ut select:focus,html body.resources-page #unitModal .ut textarea:focus{border-color:var(--bd-accent)!important;outline:0!important;box-shadow:0 0 0 2px rgba(23,103,210,.12)}
+html body.resources-page #unitModal .ut input.uf-ro,html body.resources-page #unitModal .ut input[readonly]{background:#f1f5f9!important;color:var(--bd-sub)!important}
+html body.resources-page #unitModal .ut .amt-hint{font-size:11.5px!important;font-weight:700;color:var(--bd-accent)!important}
+html body.resources-page #unitModal .ut-note{font-size:11.5px!important;color:var(--bd-mute)!important}
+html body.resources-page #unitModal #unitPresaleSwitch button{border-radius:6px!important;height:26px!important}
+/* 추가메모 */
+html body.resources-page #unitModal #unitAdditionalNotes{margin-top:4px}
+html body.resources-page #unitModal #unitAdditionalNotes .um-section-title{margin:0}
+html body.resources-page #unitModal #unitAdditionalNotes .umgrid{padding:10px 12px!important;border:1px solid var(--bd-line);border-top:0;border-radius:0 0 6px 6px}
+html body.resources-page #unitModal #unitAdditionalNotes .umfield label{font-size:12px!important;font-weight:700!important;color:var(--bd-sub)!important}
+html body.resources-page #unitModal #unitAdditionalNotes textarea,html body.resources-page #unitModal #unitAdditionalNotes input[type=date]{border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;font-size:13px!important}
+html body.resources-page #unitModal #umAddMemo{height:30px!important;padding:0 14px!important;border:1px solid var(--bd-accent)!important;border-radius:6px!important;background:#fff!important;color:var(--bd-accent)!important;font-size:12.5px!important;font-weight:800!important;box-shadow:none!important}
+html body.resources-page #unitModal #umAddMemo:hover{background:var(--bd-soft)!important}
+html body.resources-page #unitModal #unitMemoHistory p{font-size:12.5px!important;color:var(--bd-mute)!important}
+/* 하단 버튼 */
+html body.resources-page #unitModal .unit-modal-actions{display:flex!important;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px!important;margin:0!important;padding:12px 20px!important;border-top:1px solid var(--bd-line);background:#fff!important;box-shadow:none!important}
+html body.resources-page #unitModal .unit-modal-actions .btn-unit-ghost,html body.resources-page #unitModal .unit-modal-actions .btn-unit-add,html body.resources-page #unitModal .unit-modal-actions .btn-unit-del,html body.resources-page #unitModal .unit-modal-actions button,html body.resources-page #unitModal .unit-modal-actions a{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:32px!important;min-height:0!important;padding:0 14px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--bd-sub)!important;font-family:inherit;font-size:12.5px!important;font-weight:700!important;line-height:1!important;text-decoration:none!important;white-space:nowrap;box-shadow:none!important;opacity:1}
+html body.resources-page #unitModal .unit-modal-actions .btn-unit-ghost:hover,html body.resources-page #unitModal .unit-modal-actions a:hover{border-color:var(--bd-accent)!important;color:var(--bd-accent)!important}
+html body.resources-page #unitModal .unit-modal-actions #umSendListing{border-color:var(--bd-accent)!important;color:var(--bd-accent)!important}
+html body.resources-page #unitModal .unit-modal-actions #umSendListing:hover{background:var(--bd-soft)!important}
+html body.resources-page #unitModal .unit-modal-actions #umSave{background:var(--bd-accent)!important;border-color:var(--bd-accent)!important;color:#fff!important;min-width:72px}
+html body.resources-page #unitModal .unit-modal-actions #umSave:hover{filter:brightness(.92)}
+html body.resources-page #unitModal .unit-modal-actions #umDelete{order:-1;margin-right:auto;background:#fff0ee!important;border-color:#efcbc5!important;color:#b42318!important}
+html body.resources-page #unitModal #unitRegistryApplied{padding:0 20px 10px;font-size:12px;color:var(--bd-mute)}
+
+html body.resources-page #unitModal .ut input.uf-ro:not([type=checkbox]):not([type=radio]),html body.resources-page #unitModal .ut input[readonly]:not([type=checkbox]):not([type=radio]){background:#f1f5f9!important;color:var(--bd-sub)!important}
+html body.resources-page #unitModal #unitAdditionalNotes .um-section-title,html body.resources-page #unitModal .um-section.current .um-section-title,html body.resources-page #unitModal .um-section.sale .um-section-title{background:#f1f5f9!important;color:var(--bd-ink)!important}
 </style>
 
 <style>
