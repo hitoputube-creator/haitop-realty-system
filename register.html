@@ -220,6 +220,11 @@ html[data-office-theme] body.property-form-page .form-grid-5 > .field > select{m
 html[data-office-theme] body.property-form-page .form-grid-5 > .field > span:not(.price-preview),html[data-office-theme] body.property-form-page .form-grid-5 > .field > small{display:none!important}
 
 html[data-office-theme] body.property-form-page .form-grid-5 > .field > select{padding:0 4px 0 8px!important;font-size:12.5px!important}
+
+/* 토지는 건물이 없어 새주소(도로명, 건물주소)를 숨긴다 */
+html body.land-reg #roadField{display:none!important}
+html body #editModal.land-edit #edit_roadField{display:none!important}
+html body.land-reg .form-grid-3:has(#mapAddress)>#landAreaField,html body #editModal.land-edit #edit_basicInfoGrid>#edit_landAreaField{grid-column:1/-1!important}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
 <script>
