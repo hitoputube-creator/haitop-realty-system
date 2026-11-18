@@ -3976,9 +3976,20 @@ async function deleteBFile(id) {
   ], ['기존 분양조건', '할인 · 현재 조건']));
   var hoIn = $('u_호수'); if (hoIn) hoIn.addEventListener('blur', function () { var v = hoIn.value.trim(); if (/^\d+$/.test(v)) hoIn.value = v + '호'; });
   if (hintEl) { hintEl.className = 'ut-note'; hintEl.style.cssText = ''; D.appendChild(hintEl); }
+  // 소유주 연락처 칸: 번호 · 통신사 · + 추가 연락처 버튼을 한 줄에 둔다(추가한 연락처 입력줄은 아래로 이어진다).
+  var ownerBox = document.createElement('div'); ownerBox.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:6px';
+  var phoneF = F('u_연락처'), carrierF = F('u_통신사');
+  if (phoneF) { phoneF.style.cssText = 'flex:1 1 150px;min-width:0;margin:0;padding:0'; ownerBox.appendChild(phoneF); }
+  if (carrierF) { carrierF.style.cssText = 'flex:0 0 108px;min-width:0;margin:0;padding:0'; ownerBox.appendChild(carrierF); }
+  if (ac) {
+    ac.style.cssText = 'display:contents';
+    var acw = $('u_추가연락처Wrap'); if (acw) acw.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 100%';
+    var acb = $('u_추가연락처Btn'); if (acb) acb.style.cssText = 'margin:0;padding:0 12px;height:30px;min-height:0;font-size:12px;border-radius:6px;width:auto;flex:0 0 auto;white-space:nowrap';
+    ownerBox.appendChild(ac);
+  }
+  var acStyle = document.createElement('style'); acStyle.textContent = '#u_추가연락처Wrap:empty{display:none!important}'; document.head.appendChild(acStyle);
   put(E, mk([
-    [['소유주명', F('u_소유주')], ['소유주 연락처', F('u_연락처')]],
-    [['통신사', F('u_통신사')], ['추가 연락처', ac]],
+    [['소유주명', F('u_소유주')], ['소유주 연락처', ownerBox]],
     [['메모', nb, 3]],
     [['내부 메모 (비공개)', memoInternal, 3]]
   ]));
