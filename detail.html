@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone4" />
 <script src="assets/js/storage.js?v=20261118-img1"></script>
-<script src="assets/js/commercial-address-fields.js?v=20261118-road2"></script>
+<script src="assets/js/commercial-address-fields.js?v=20261118-flag1"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -154,7 +154,7 @@
 
 <script src="assets/js/building-records.js?v=20261107-share3"></script>
 <script src="assets/js/commercial-price-core.js?v=20261110-kind1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261118-lab1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261118-flag1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -1201,6 +1201,7 @@ function closeHomepageTab(tab) {
       document.getElementById("edit_mapAddress").value = apartmentDetailAddresses(item).jibunAddress || "";
     }
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
+    if (document.getElementById("edit_profitRate")) document.getElementById("edit_profitRate").value = item.profitRate || "";
     if (item.roadAddress && !(category.category2 === "아파트" || item.type === "apartment")) { document.getElementById("edit_roadAddress").value = item.roadAddress; }
     else if (typeof fillRoadAddress === "function") fillRoadAddress(document.getElementById("edit_mapAddress").value);
     fillApartmentUnitFields("edit_", item);
@@ -2720,6 +2721,7 @@ function closeHomepageTab(tab) {
           monthlyRent:        gv("edit_monthlyRent"),
           managementFee:      gv("edit_managementFee"),
           premium:            gv("edit_premium"),
+          profitRate:         gv("edit_profitRate"),
           // 면적
           areaM2:             gn("edit_areaM2"),           areaPy:             gn("edit_areaPy"),
           exclusiveAreaM2:    gn("edit_exclusiveAreaM2"),  exclusiveAreaPy:    gn("edit_exclusiveAreaPy"),
