@@ -2971,7 +2971,7 @@ async function deleteBFile(id) {
     $("u_연락처").value     = u.연락처      || "";
     if ($("u_통신사")) $("u_통신사").value = u.통신사 || "";
     if (window.umSetContacts) window.umSetContacts(u.추가연락처);
-    $("u_수익률").value     = u.수익률      || "";
+    $("u_수익률").value     = u.수익률      || ((u.listing_id && commercialListings[String(u.listing_id)] && commercialListings[String(u.listing_id)].profitRate) || "");
     $("u_추천매물").checked   = isFlagOn(u.추천매물);
     $('umListingView').hidden = !u.listing_id;
     $('umListingView').href = u.listing_id ? 'detail.html?id=' + encodeURIComponent(u.listing_id) : '#';
@@ -3050,7 +3050,7 @@ async function deleteBFile(id) {
       is_public:existing?.is_public === true,
       shop_status:(unit.공실여부 === '공실' ? '공실' : unit.공실여부 === '임차중' ? '임차중' : (existing?.shop_status || '')), dealType:unit.거래구분 || existing?.dealType || (CommercialPriceCore.status(unit,true)==='분양중' || sale ? '매매' : '월세'),
       salePrice:sale, presalePrice:presale, presaleStatus:CommercialPriceCore.status(unit,true), deposit, monthlyRent:rent,
-      managementFee:keep('관리비','managementFee'), premium:keep('권리금','premium'),
+      managementFee:keep('관리비','managementFee'), premium:keep('권리금','premium'), profitRate:keep('수익률','profitRate'),
       floorInfo:keep('층정보','floorInfo'), zoning:keep('용도지역','zoning'),
       parkingCount:keep('주차대수','parkingCount'), approvalDate:keep('사용승인일','approvalDate'),
       owner_memo:keep('소유주메모','owner_memo'), description:keep('내부메모','description'),
