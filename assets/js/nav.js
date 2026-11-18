@@ -63,7 +63,6 @@ function renderMainNav() {
       <button type="button" class="${toolsActiveCls}" id="toolsDropdownBtn">업무도구 <span class="nav-caret">▾</span></button>
       <div class="nav-dropdown-menu" id="toolsDropdownMenu">${toolsHtml}</div>
     </div>
-    <a class="nav-link" href="${OfficeConfig.urlFor('login.html')}">부동산 선택</a>
     <button type="button" class="nav-logout-btn" onclick="hitopLogout()">로그아웃</button>
   `;
 
