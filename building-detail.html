@@ -712,6 +712,12 @@ html body.resources-page #unitModal #unitRegistryApplied{padding:0 20px 10px;fon
 
 html body.resources-page #unitModal .ut input.uf-ro:not([type=checkbox]):not([type=radio]),html body.resources-page #unitModal .ut input[readonly]:not([type=checkbox]):not([type=radio]){background:#f1f5f9!important;color:var(--bd-sub)!important}
 html body.resources-page #unitModal #unitAdditionalNotes .um-section-title,html body.resources-page #unitModal .um-section.current .um-section-title,html body.resources-page #unitModal .um-section.sale .um-section-title{background:#f1f5f9!important;color:var(--bd-ink)!important}
+
+/* 분양상태(분양중/분양완료) 선택 표시: 표 레이아웃으로 바뀐 뒤 선택 색이 빠져 있던 것을 복구 */
+html body.resources-page #unitModal #unitPresaleSwitch button[data-unit-phase]{background:#fff!important;border:1px solid #cbd5e1!important;color:#475569!important;font-weight:700!important;height:28px!important;padding:0 12px!important;font-size:12px!important;cursor:pointer}
+html body.resources-page #unitModal #unitPresaleSwitch button[data-unit-phase]:hover{border-color:var(--bd-accent)!important;color:var(--bd-accent)!important}
+html body.resources-page #unitModal #unitPresaleSwitch button[data-unit-phase].active,html body.resources-page #unitModal #unitPresaleSwitch button[data-unit-phase][aria-pressed="true"]{background:var(--bd-accent)!important;border-color:var(--bd-accent)!important;color:#fff!important}
+html body.resources-page #unitModal #unitPresaleSwitch #unitOriginalPrices{background:#fff!important;border:1px solid #cbd5e1!important;color:#475569!important;height:28px!important;padding:0 12px!important;font-size:12px!important;border-radius:6px!important}
 </style>
 
 <style>
