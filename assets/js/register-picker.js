@@ -356,7 +356,7 @@
     if (extras.length) {
       const details = document.createElement('details');
       details.className = 'um-section current apt-more';
-      details.innerHTML = '<summary>추가 정보 — 세입자·옵션·메모 (필요할 때만 펼치기)</summary>';
+      details.innerHTML = '<summary>세입자·계약 정보 (필요할 때만 펼치기)</summary>';
       extras[0].before(details);
       extras.forEach(el => details.appendChild(el));
     }
