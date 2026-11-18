@@ -612,6 +612,14 @@ html[data-office-theme] body.property-form-page #registerPage .umfield:has(> #ap
 html[data-office-theme] body.property-form-page #registerPage .umfield:has(> #apt_추가메모),
 html[data-office-theme] body.property-form-page #editModal .umfield:has(> .umfield:only-child > #edit_apt_옵션),
 html[data-office-theme] body.property-form-page #registerPage .umfield:has(> .umfield:only-child > #apt_옵션){display:none!important}
+
+/* 아파트 폼 정리: 빈 옵션·비고/추가메모 카드 숨김, 자동입력 안내 문구 삭제, 가격 입력칸 칸폭 채움 */
+html body.property-form-page :is(#registerPage,#editModal) .um-section:has(> .umgrid > .umfield > :is(#apt_비고,#apt_추가메모,#edit_apt_비고,#edit_apt_추가메모)){display:none!important}
+html body.property-form-page :is(#registerPage,#editModal) .apt-auto-note{display:none!important}
+html body.property-form-page :is(#registerPage,#editModal) .umgrid.price-grid-5 > .umfield{position:relative!important}
+html body.property-form-page :is(#registerPage,#editModal) .umgrid.price-grid-5 > .umfield > input{flex:1 1 0!important;min-width:0!important;width:auto!important;max-width:none!important;padding-right:96px!important}
+html body.property-form-page :is(#registerPage,#editModal) .umgrid.price-grid-5 > .umfield > .amt-hint{position:absolute!important;right:20px;top:50%;transform:translateY(-50%);width:auto!important;flex:none!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;pointer-events:none;white-space:nowrap}
+html body.property-form-page :is(#registerPage,#editModal) .umgrid.price-grid-5 > .umfield > .amt-hint:empty{display:none!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
