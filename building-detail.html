@@ -3645,7 +3645,8 @@ async function deleteBFile(id) {
     '#commercialUnitForm .uf-row #unitPresaleSwitch button,#commercialUnitForm .uf-kind button{padding:3px 12px;border:1px solid #8fa8c2;border-radius:6px;background:#fff;color:#102236;font-size:12px;font-weight:700}' +
     '#commercialUnitForm .uf-row #unitPresaleSwitch button.active,#commercialUnitForm .uf-kind button.active{background:#25675f;border-color:#25675f;color:#fff}' +
     '#commercialUnitForm .uf-kind button{pointer-events:none}' +
-    '#commercialUnitForm .uf-cmp{grid-column:1 / -1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px 12px;align-items:end}' +
+    '#commercialUnitForm .uf-cmp{grid-column:1 / -1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px 12px;align-items:start}' +
+    '#commercialUnitForm .uf-cmp .amt-hint{display:block!important;min-height:16px;margin-top:2px}' +
     '#commercialUnitForm .uf-cmp>.umfield{grid-column:auto;min-width:0;margin:0}' +
     '#commercialUnitForm .uf-cmp-h{grid-column:span 3;padding:6px 10px;border-radius:6px;font-size:12.5px;font-weight:800}' +
     '#commercialUnitForm .uf-cmp-h.old{background:#cfdcdc;color:#1d4d4a}#commercialUnitForm .uf-cmp-h.cur{background:#cfe0f3;color:#16487f}' +
@@ -3700,14 +3701,16 @@ async function deleteBFile(id) {
   var bizL = F('u_현업종') && F('u_현업종').querySelector('label'); if (bizL) bizL.textContent = '업종';
   grid(D).appendChild(row1);
   var cmp = document.createElement('div'); cmp.className = 'uf-cmp';
-  cmp.innerHTML = '<div class="uf-cmp-h old">기존 분양조건</div><div class="uf-cmp-h cur">현재 조건</div>';
+  cmp.innerHTML = '<div class="uf-cmp-h old">기존 분양조건</div><div class="uf-cmp-h cur">할인 · 현재 조건</div>';
   put(D, ['u_분양금액', 'u_보증금', 'u_월차임', 'u_현매매가격', 'u_현보증금', 'u_현월세'], '', cmp);
-  put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) pf.style.gridColumn = '1 / span 3'; put(D, ['u_권리금'], '', cmp); var kf = F('u_권리금'); if (kf) kf.style.gridColumn = '4 / span 3';
+  put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) { pf.style.gridColumn = '1 / span 3'; var pl = pf.querySelector('label'); if (pl) pl.textContent = '분양금액 (평당가, 만원)'; }
+  var dcL = F('u_현매매가격') && F('u_현매매가격').querySelector('label'); if (dcL) dcL.textContent = '할인 분양가 (만원)';
+  var kf = F('u_권리금'); if (kf) { kf.style.display = 'none'; grid(D).appendChild(kf); }
   grid(D).appendChild(cmp);
   var flags = document.createElement('div'); flags.className = 'umfield uf-10 uf-flags';
   ['u_추천매물', 'u_수익성매물'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield umcheck'; flags.appendChild(f); } });
   var rate = F('u_수익률'); if (rate) { rate.className = 'umfield uf-rate'; flags.appendChild(rate); }
-  grid(D).appendChild(flags);
+  flags.style.display = 'none'; grid(D).appendChild(flags); // 추천·수익성·특별분양은 매물 탭에서 다룸
   var hint = cur0.querySelector('.umhint'); if (hint) { hint.className = 'umfield uf-10 umhint'; hint.style.cssText = 'font-size:11px;color:#7a8da3'; grid(D).appendChild(hint); }
   put(D, ['u_내부메모'], 'uf-10');
   // ── 내부전용 ──
