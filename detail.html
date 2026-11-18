@@ -567,6 +567,14 @@ html body #editModal:not(.fac-edit) .area-row.feature-row{display:none!important
 html body #editModal .area-row.feature-row .feature-label{padding:0 6px!important;display:flex;align-items:center}
 html body #editModal .area-row.feature-row .feature-label input{width:100%;height:30px;font-weight:700;font-size:12px;text-align:center;border:1px dashed #94a3b8;background:#fff;border-radius:6px}
 html body #editModal .area-row.feature-row .feature-value{flex:1 1 auto;min-width:0}
+
+/* 공장·창고 가격정보: 입력칸을 추가정보처럼 칸 끝까지 채우고, 금액 미리보기는 칸 안쪽 오른쪽에 겹쳐 표시 */
+html body.property-form-page.fac-reg #registerPage .price-one-row > .field{position:relative}
+html body.property-form-page.fac-reg #registerPage .price-one-row > .field > .price-preview{position:absolute!important;right:20px;top:50%;transform:translateY(-50%);width:auto!important;flex:none!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;pointer-events:none;white-space:nowrap}
+html body.property-form-page.fac-reg #registerPage .price-one-row > .field > input{padding-right:96px}
+html[data-office-theme] body.property-form-page #editModal.fac-edit #edit_basicInfoGrid ~ * .price-preview,html body #editModal.fac-edit .price-preview{position:absolute!important;right:20px;top:50%;transform:translateY(-50%);width:auto!important;flex:none!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;pointer-events:none;white-space:nowrap}
+html body #editModal.fac-edit .field:has(> .price-preview){position:relative}
+html body #editModal.fac-edit .field:has(> .price-preview) > input{padding-right:96px}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
