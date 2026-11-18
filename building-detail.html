@@ -3930,7 +3930,7 @@ async function deleteBFile(id) {
       var id = listingId();
       if (!id) { em.hidden = false; fr.style.display = 'none'; return; }
       em.hidden = true; fr.style.display = 'block';
-      var want = 'detail.html?id=' + encodeURIComponent(id) + '&edit=1&embed=1' + (typeof OfficeConfig !== 'undefined' ? '&office=' + encodeURIComponent(OfficeConfig.id) : '') + '&v=20261118-em4';
+      var want = 'detail.html?id=' + encodeURIComponent(id) + '&edit=1&embed=1' + (typeof OfficeConfig !== 'undefined' ? '&office=' + encodeURIComponent(OfficeConfig.id) : '') + '&v=20261118-em5';
       if (fr.getAttribute('data-src') !== want) { fr.setAttribute('data-src', want); fr.src = want; }
     }
     window.umShowTab = setTab;
