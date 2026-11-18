@@ -5,7 +5,7 @@
   <title>매물 등록 - 하이탑부동산</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone3" />
-  <script src="assets/js/storage.js?v=20261118-img1"></script>
+  <script src="assets/js/storage.js?v=20261118-apt2"></script>
 <script src="assets/js/commercial-address-fields.js?v=20261118-flag1"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
   <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
@@ -464,6 +464,20 @@ html body.property-form-page :is(#registerPage,#editModal) .umgrid.price-grid-5 
 html body.property-form-page :is(#registerPage,#editModal) .umgrid.price-grid-5 > .umfield > input{flex:1 1 0!important;min-width:0!important;width:auto!important;max-width:none!important;padding-right:96px!important}
 html body.property-form-page :is(#registerPage,#editModal) .umgrid.price-grid-5 > .umfield > .amt-hint{position:absolute!important;right:20px;top:50%;transform:translateY(-50%);width:auto!important;flex:none!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;pointer-events:none;white-space:nowrap}
 html body.property-form-page :is(#registerPage,#editModal) .umgrid.price-grid-5 > .umfield > .amt-hint:empty{display:none!important}
+
+/* 아파트 폼: 동·호수 나란히, 주소·면적 순서 정리, 새주소 입력칸 넓힘 */
+html body .apartment-listing-form .umgrid > .umfield:has(> :is(#apt_동,#edit_apt_동)){order:1}
+html body .apartment-listing-form .umgrid > .umfield:has(> :is(#apt_호수,#edit_apt_호수)),html body .apartment-listing-form .umgrid > .umfield:has(:is(#apt_호수,#edit_apt_호수)){order:2}
+html body .apartment-listing-form .umgrid > .umfield:has(> :is(#aptAddrRoad,#edit_aptAddrRoad)),html body .apartment-listing-form .umgrid > .umfield:has(:is(#aptAddrRoad,#edit_aptAddrRoad)){order:3}
+html body .apartment-listing-form .umgrid > .umfield:has(> :is(#aptAddrJibun,#edit_aptAddrJibun)){order:4}
+html body .apartment-listing-form .umgrid > .umfield:has(> :is(#apt_평형,#edit_apt_평형)){order:5}
+html body .apartment-listing-form .umgrid > .umfield:has(> :is(#apt_타입,#edit_apt_타입)){order:6}
+html body .apartment-listing-form .umgrid > .umfield:has(:is(#apt_분양_평,#edit_apt_분양_평)){order:7}
+html body .apartment-listing-form .umgrid > .umfield:has(:is(#apt_전용_평,#edit_apt_전용_평)){order:8}
+html body .apartment-listing-form .umgrid > .umfield:has(> :is(#apt_접수일자,#edit_apt_접수일자)){order:9}
+html body .apartment-listing-form .umgrid > :not(.umfield){order:20}
+html body .apartment-listing-form .umgrid > .umfield > div:has(> :is(#aptAddrRoad,#edit_aptAddrRoad)){flex:1 1 0!important;min-width:0!important}
+html body .apartment-listing-form .umgrid > .umfield:has(> div > :is(#aptAddrRoad,#edit_aptAddrRoad)) > div:not(:has(> :is(#aptAddrRoad,#edit_aptAddrRoad))){flex:0 1 auto!important;max-width:45%;padding-right:8px}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
