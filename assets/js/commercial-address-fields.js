@@ -19,6 +19,79 @@
   const list=document.createElement('datalist');list.id=mapId+'BuildingOptions';addressField.appendChild(list);
   const defaults={mapPlaceholder:map.placeholder,list:map.getAttribute('list'),mapLabel:addressField.querySelector('label').innerHTML,nameLabel:nameField.querySelector('label').innerHTML,roomLabel:roomField.querySelector('label').innerHTML,roomPlaceholder:room.placeholder};
   let enabled=false;
+  // ── 구주소(지번) ⇄ 새주소(도로명): 자료실 건물 개요와 같은 방식(한쪽만 적으면 다른 쪽이 채워진다) ──
+  const road=byId(prefix+'roadAddress'),roadField=road?road.closest('.field'):null;
+  let convBtn=null,convStatus=null,autoRoad=false,autoMap=false,lastEdited='jibun';
+  function loadKakaoServices(){
+   if(root.kakao&&root.kakao.maps&&root.kakao.maps.services)return Promise.resolve();
+   return new Promise((resolve,reject)=>{
+    const key=String(root.HITOP_KAKAO_JS_KEY||'').trim();
+    if(!key){reject(new Error('카카오맵 키가 설정되지 않았습니다.'));return;}
+    const start=()=>root.kakao.maps.load(resolve);
+    if(root.kakao&&root.kakao.maps){start();return;}
+    const s=document.createElement('script');s.src='https://dapi.kakao.com/v2/maps/sdk.js?appkey='+encodeURIComponent(key)+'&libraries=services&autoload=false';
+    s.onload=start;s.onerror=()=>reject(new Error('카카오맵을 불러오지 못했습니다.'));document.head.appendChild(s);
+   });
+  }
+  function geocodeAddr(q){return loadKakaoServices().then(()=>new Promise((resolve,reject)=>{
+   new root.kakao.maps.services.Geocoder().addressSearch(q,(result,status)=>{
+    if(status===root.kakao.maps.services.Status.OK)resolve(result||[]);
+    else if(status===root.kakao.maps.services.Status.ZERO_RESULT)resolve([]);
+    else reject(new Error('주소 검색 중 오류가 났어요. 잠시 후 다시 눌러 주세요.'));
+   });
+  }));}
+  const fullAddr=v=>String(v||'').trim().replace(/^경기\s/,'경기도 ');
+  function cleanQuery(text){
+   let q=String(text||'').split(/[,，]/)[0].replace(/\s+\d+\s*호.*$/,'').trim();
+   if(q&&!/[가-힣]+(시|군|구)(\s|$)/.test(q))q='파주시 '+q;
+   return q;
+  }
+  async function convert(from){
+   if(!road||!convStatus)return;
+   const query=from==='road'?String(road.value||'').trim():cleanQuery(map.value);
+   if(!query){convStatus.textContent='구주소나 새주소 중 한쪽을 먼저 입력해 주세요.';return;}
+   convBtn.disabled=true;convStatus.textContent='';
+   try{
+    const list=await geocodeAddr(query);
+    if(!list.length){convStatus.textContent=(from==='road'?'새주소':'구주소')+'로 검색되는 주소가 없어요. 시·동까지 정확히 적어 주세요.';return;}
+    let hit=list[0];
+    if(list.length>1&&!/[가-힣]+(시|군|구)(\s|$)/.test(query))hit=list.find(r=>/파주/.test(r.address_name))||list[0];
+    const target=from==='road'?(hit.address&&hit.address.address_name):(hit.road_address&&hit.road_address.address_name);
+    if(!target){convStatus.textContent=from==='road'?'이 새주소에 해당하는 구주소를 찾지 못했어요.':'이 번지에는 아직 새주소(도로명)가 없어요.';return;}
+    if(from==='road'){map.value=fullAddr(target);autoMap=true;}else{road.value=fullAddr(target);autoRoad=true;}
+    convStatus.textContent=list.length>1?'검색 결과 '+list.length+'건 중 첫 번째 주소예요. 맞는지 확인해 주세요.':'';
+   }catch(e){convStatus.textContent=e.message||'주소 변환에 실패했어요.';}
+   finally{convBtn.disabled=false;}
+  }
+  function mountRoad(on){
+   if(!road)return;
+   if(on){
+    if(!convBtn){
+     convBtn=document.createElement('button');convBtn.type='button';convBtn.textContent='⇄';
+     convBtn.title='구주소 ⇄ 새주소 변환 (한쪽만 적고 누르세요)';convBtn.className='btn btn-ghost';
+     convBtn.style.cssText='flex:0 0 auto;padding:0 10px;font-size:.95rem;font-weight:700;white-space:nowrap;';
+     convStatus=document.createElement('span');convStatus.className='caf-conv-status';
+     convStatus.style.cssText='grid-column:1 / -1;grid-row:4;font-size:.74rem;color:#b45309;';
+     convBtn.addEventListener('click',()=>{
+      const hasMap=!!String(map.value||'').trim(),hasRoad=!!String(road.value||'').trim();
+      convert(hasMap&&hasRoad?(lastEdited==='road'?'road':'jibun'):(hasRoad?'road':'jibun'));
+     });
+     map.addEventListener('input',()=>{lastEdited='jibun';autoMap=false;});
+     road.addEventListener('input',()=>{lastEdited='road';autoRoad=false;});
+     map.addEventListener('change',()=>{if(enabled&&String(map.value||'').trim()&&(!String(road.value||'').trim()||autoRoad))convert('jibun');});
+     road.addEventListener('change',()=>{if(enabled&&String(road.value||'').trim()&&(!String(map.value||'').trim()||autoMap))convert('road');});
+    }
+    road.readOnly=false;road.placeholder='새주소 (도로명) 예) 경기도 파주시 ○○로 123';
+    road.style.cssText='flex:1;min-width:0;';
+    map.style.minWidth='0';
+    map.after(convBtn,road);
+    if(!convStatus.parentNode)addressField.appendChild(convStatus);
+   }else if(convBtn){
+    convBtn.remove();convStatus.remove();
+    road.readOnly=true;road.style.cssText='';
+    if(roadField)roadField.appendChild(road);
+   }
+  }
   let sources=typeof UNJEONG_QUICK_BUILDINGS!=='undefined'?UNJEONG_QUICK_BUILDINGS.map(b=>({...b,addr:'파주시 '+b.addr})):[];
   const normalize=value=>String(value||'').replace(/경기도|파주시|\s/g,'').toLowerCase();
   const isOfficetel=()=>byId(cat2Id)?.value==='오피스텔';
@@ -47,7 +120,8 @@
    if(enabled){
     parts.appendChild(nameField);parts.appendChild(roomField);
     nameField.style.display='';roomField.style.display='';
-    addressField.querySelector('label').textContent='상세주소';
+    addressField.querySelector('label').textContent='상세주소 (구주소 · 새주소)';
+    mountRoad(true);
     nameField.querySelector('label').textContent='건물명';
     roomField.querySelector('label').textContent='호수';
     map.placeholder='주소 또는 건물명을 입력하거나 목록에서 선택';
@@ -55,6 +129,7 @@
     map.setAttribute('list',list.id);options();name.setAttribute('list',nameList.id);nameOptions();
    }else{
     nameAnchor.after(nameField);roomAnchor.after(roomField);
+    mountRoad(false);
     addressField.querySelector('label').innerHTML=defaults.mapLabel;
     nameField.querySelector('label').innerHTML=defaults.nameLabel;
     roomField.querySelector('label').innerHTML=defaults.roomLabel;
