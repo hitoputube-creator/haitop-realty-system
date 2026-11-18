@@ -241,6 +241,7 @@
           const amount=rawPrice.replace(/^(?:보증금|전세)\s*/,'').trim();
           if (amount) lines=['보증금',amount];
         }
+        if (lines.length>1) price.classList.add('lc-price-multi');
         price.replaceChildren(...lines.map(text=>{
           const line=document.createElement('span');line.className='lc-price-line';line.textContent=text;return line;
         }));
@@ -288,10 +289,10 @@
   }
   function template(cols) {
     if (isKtopResidential()) {
-      const widths={apartment:'1.6fr',dong:'.75fr',supply:'.65fr',price:'1.25fr',owner:'.65fr',phone:'1fr'};
-      return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>key==='type'?'minmax(140px,.8fr)':`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
+      const widths={apartment:'1.6fr',dong:'.75fr',supply:'.65fr',price:'minmax(150px,1.25fr)',owner:'.65fr',phone:'1fr'};
+      return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>key==='type'?'minmax(140px,.8fr)':`${/^minmax/.test(widths[key] || '') ? widths[key] : 'minmax(0,'+(widths[key] || '.8fr')+')'}`).join(' ')+' 166px';
     }
-    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
+    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'?'minmax(140px,.8fr)':key==='price'?'minmax(150px,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
   }
   window.sortDongRoom=function() {
     const first=listingColumnSort.find(s=>s.key==='dong');
@@ -451,7 +452,10 @@
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-dong,
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-room {font-size:14px;font-weight:750;}
     html body.properties-page .typed-property-row .listing-cell-price.has-price {padding:5px 6px;border-left:3px solid #1767d2;border-radius:5px;background:#eaf2ff;overflow:visible;}
-    html body.properties-page .typed-property-row .listing-cell-price.has-price .lc-price-text {font-size:14px;font-weight:800;color:#234c49;line-height:1.4;}
+    html body.properties-page .typed-property-row .listing-cell-price.has-price .lc-price-text {font-size:13px;font-weight:800;color:#234c49;line-height:1.4;}
+    /* 보증금 / 월세 두 줄 가격: 글자를 줄이고 줄바꿈 없이 윗줄 보증금, 아랫줄 월세 */
+    html body.properties-page .typed-property-row .listing-cell-price.has-price .lc-price-text.lc-price-multi {font-size:12.5px;font-weight:700;line-height:1.45;}
+    html body.properties-page .typed-property-row .listing-cell-price .lc-price-text.lc-price-multi .lc-price-line {white-space:nowrap;}
     html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-sort-btn[aria-label='분양평형/타입 정렬'] {line-height:1.2;white-space:normal;}
     @media(min-width:801px) {
       html[data-office-theme='ktop'] body.properties-page .residential-property-row .listing-cell-phone {overflow:visible;}
