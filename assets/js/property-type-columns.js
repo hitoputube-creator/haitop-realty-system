@@ -150,10 +150,16 @@
     if (key==='apartment' && isApartment(item)) node.textContent=String(listingColumnValue(item,key) || '-');
     if (key==='name') {
       const raw=String(listingColumnValue(item,key) || '-');
-      if (raw.includes('\n')) {
+      const parts=[];
+      raw.split('\n').forEach(text=>{
+        const m=text.trim().match(/^(.*?)\s*((?:\d+\s*동\s*)?B?\d+\s*호)\s*$/);
+        if (m) { if (m[1]) parts.push([m[1],false]); parts.push([m[2],true]); }
+        else parts.push([text,false]);
+      });
+      if (parts.some(p=>p[1]) || raw.includes('\n')) {
         const no=node.querySelector('.lc-no');
-        node.replaceChildren(...raw.split('\n').map(text=>{
-          const line=document.createElement('span');line.className='lc-name-line';line.textContent=text;return line;
+        node.replaceChildren(...parts.map(([text,isUnit])=>{
+          const line=document.createElement('span');line.className=isUnit?'lc-name-line lc-unit-line':'lc-name-line';line.textContent=text;return line;
         }));
         if (no) node.appendChild(no);
       }
@@ -216,6 +222,9 @@
     if (actions) actions.style.gridArea='auto';
     card.replaceChildren(select,...nodes,actions);
     card.classList.add('typed-property-row');
+    const moveInInfo=card.querySelector('.listing-cell-type .lc-move-in');
+    const moveInHost=card.querySelector('.listing-cell-apartment,.listing-cell-name,.listing-cell-building,.listing-cell-address');
+    if (moveInInfo && moveInHost) { moveInInfo.classList.add('lc-move-in-top'); moveInHost.prepend(moveInInfo); }
     if (isKtopResidential()) card.classList.add('residential-property-row');
     if (item.profitRecommendation || window.CommercialPriceCore?.recommendation(item)) {
       card.classList.add('profit-recommended-row');
@@ -230,10 +239,10 @@
   }
   function template(cols) {
     if (isKtopResidential()) {
-      const widths={type:'.78fr',village:'.78fr',apartment:'1.16fr',dong:'.64fr',room:'.64fr',supply:'.82fr',price:'1.14fr',owner:'.72fr',phone:'1.18fr'};
-      return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
+      const widths={village:'.45fr',apartment:'1.5fr',dong:'.45fr',room:'.45fr',supply:'.7fr',price:'1.35fr',owner:'.7fr',phone:'1.05fr'};
+      return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>key==='type'?'minmax(140px,.8fr)':`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
     }
-    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'&&OfficeConfig.id!=='ktop'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
+    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
   }
   makeListingColumnHeader=function() {
     const h=document.createElement('div');h.className='listing-column-header typed-property-row';
@@ -293,6 +302,41 @@
 
     .properties-page .lc-name-line {display:block;}
     .properties-page .lc-move-in {display:block;margin-top:5px;font-size:11px;line-height:1.4;color:var(--text-muted);font-weight:400;}
+    .properties-page .lc-move-in.lc-move-in-top {margin:0 0 4px;font-size:12px;font-weight:700;color:#b45309;white-space:nowrap;}
+    .properties-page .lc-unit-line {display:block;margin-top:3px;font-size:15px;font-weight:800;line-height:1.35;color:#1d4ed8;}
+    html body.properties-page .typed-property-row .listing-cell-dong,html body.properties-page .typed-property-row .listing-cell-room {font-size:16px!important;font-weight:800!important;color:#1d4ed8!important;}
+    @media(min-width:801px){
+      html[data-office-theme="ktop"] .properties-page .listing-row-card.typed-property-row{min-height:0;padding:5px 10px}
+      html[data-office-theme="ktop"] .properties-page .typed-property-row .listing-cell-type{flex-direction:row;flex-wrap:wrap;align-items:center;align-content:center;column-gap:8px;row-gap:2px}
+      html[data-office-theme="ktop"] .properties-page .typed-property-row .listing-cell-type .lc-type-deal{flex:0 0 100%}
+      html[data-office-theme="ktop"] .properties-page .typed-property-row .listing-cell-type .lc-status{flex:0 0 auto;max-width:none;width:auto}
+      html[data-office-theme="ktop"] .properties-page .typed-property-row .listing-cell-type .lc-confirm{display:inline-block;flex:0 0 auto;margin:0;line-height:1.2;white-space:nowrap}
+      html[data-office-theme="ktop"] .properties-page .typed-property-row .listing-cell-type{justify-content:flex-start}
+      html[data-office-theme="ktop"] .properties-page .listing-row-card .listing-actions{gap:3px 4px}
+      html[data-office-theme="ktop"] .properties-page .listing-row-card .lc-actions-main .btn{min-height:24px!important;height:24px!important;padding:0 4px!important;line-height:22px!important;font-size:12px!important}
+      html[data-office-theme="ktop"] .properties-page .filter-panel-card{padding:12px 16px!important}
+      html[data-office-theme="ktop"] .properties-page .listing-top-row{align-items:center;gap:8px}
+      html[data-office-theme="ktop"] .properties-page .kind-tab{height:30px!important;min-height:30px!important;padding:0 12px!important;font-size:12.5px!important;border-radius:6px!important}
+      html[data-office-theme="ktop"] .properties-page #kindTabRow{gap:4px}
+      html[data-office-theme="ktop"] .properties-page .property-main-return{margin:0!important;gap:6px!important}
+      html[data-office-theme="ktop"] .properties-page .property-main-return .btn{height:28px!important;min-height:28px!important;padding:0 10px!important;font-size:12px!important;border-radius:6px!important;width:auto!important}
+      html[data-office-theme="ktop"] .properties-page #detailRegisterBtn{height:30px!important;min-height:30px!important;padding:0 14px!important;font-size:12.5px!important;border-radius:6px!important}
+      html[data-office-theme="ktop"] .properties-page .toolbar-row{display:flex!important;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:8px 0 0!important}
+      html[data-office-theme="ktop"] .properties-page .toolbar-row .search-field{flex:1 1 280px;max-width:520px;min-width:200px}
+      html[data-office-theme="ktop"] .properties-page #searchInput,html[data-office-theme="ktop"] .properties-page .toolbar-row .sort-select{height:30px!important;min-height:30px!important;font-size:12.5px!important;border-radius:6px!important;padding:0 10px!important}
+      html[data-office-theme="ktop"] .properties-page .toolbar-row .sort-select{width:auto!important;min-width:96px;flex:0 0 auto}
+      html[data-office-theme="ktop"] .properties-page #searchBtn,html[data-office-theme="ktop"] .properties-page #staleFilterBtn{height:30px!important;min-height:30px!important;padding:0 12px!important;font-size:12.5px!important;border-radius:6px!important;white-space:nowrap;flex:0 0 auto;width:auto!important}
+      html[data-office-theme="ktop"] .properties-page .view-toggle-group{width:auto!important;max-width:none!important;flex:0 0 auto;display:inline-flex!important;height:28px;margin:0!important}
+      html[data-office-theme="ktop"] .properties-page .view-toggle-group button{width:60px!important;flex:0 0 60px!important;height:28px!important;min-height:28px!important;padding:0!important;font-size:12px!important}
+      html[data-office-theme="ktop"] .properties-page .month-filter-row{padding:6px 0!important;gap:6px!important;min-height:0!important}
+      html[data-office-theme="ktop"] .properties-page .month-step-btn,html[data-office-theme="ktop"] .properties-page .month-current-btn,html[data-office-theme="ktop"] .properties-page #registrationMonthFilter{height:28px!important;min-height:28px!important;font-size:12px!important;border-radius:6px!important}
+      html[data-office-theme="ktop"] .properties-page .month-step-btn{width:30px!important;min-width:30px!important}
+      html[data-office-theme="ktop"] .properties-page .month-current-btn{padding:0 10px!important}
+      html[data-office-theme="ktop"] .properties-page #registrationMonthFilter{width:170px!important}
+      html[data-office-theme="ktop"] .properties-page .filter-btn{height:26px!important;min-height:26px!important;padding:0 10px!important;font-size:12px!important;border-radius:6px!important}
+      html[data-office-theme="ktop"] .properties-page .filter-panel-row{gap:10px!important;padding:6px 0 0!important;min-height:0!important}
+      html[data-office-theme="ktop"] .properties-page .filter-divider{margin:0!important}
+    }
     .properties-page .lc-type-deal {display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
     .properties-page .typed-property-row .lc-type {font-size:12px;white-space:normal;width:auto;}
     .properties-page .lc-price-line {display:block;line-height:1.5;}
