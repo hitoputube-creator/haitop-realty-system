@@ -35,7 +35,7 @@
   }
 
   function imgSection() {
-    var secs = area.querySelectorAll(":scope > .detail-section");
+    var secs = area.querySelectorAll(".detail-section");
     for (var i = 0; i < secs.length; i++) {
       var t = secs[i].querySelector(".detail-section-title");
       if (t && /^\s*이미지\s*·\s*자료/.test(t.textContent)) return secs[i];
@@ -74,6 +74,11 @@
     // 배치: 상세정보 표 → 설명·메모 → 버튼 줄 → 추가메모 → 특별조건·홍보 → 이미지·자료
     var seq = [desc, bar, memo, box, wrap, img].filter(Boolean);
     var prev = info || area.firstElementChild;
+    var aptCol = area.querySelector(".apartment-details-layout > .apartment-details-column");
+    if (aptCol) {
+      var aptSecs = Array.prototype.filter.call(aptCol.children, function (n) { return n.classList.contains("apartment-info-section"); });
+      if (aptSecs.length) { prev = aptSecs[aptSecs.length - 1]; seq = [bar, memo, box, wrap, img].filter(Boolean); }
+    }
     seq.forEach(function (node) { if (prev.nextElementSibling !== node) prev.after(node); prev = node; });
     var c = counts(memo, box, img);
     var groups = { memo: [memo], promo: [box, wrap].filter(Boolean), img: [img] };
