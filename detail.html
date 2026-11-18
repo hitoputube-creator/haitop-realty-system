@@ -154,7 +154,7 @@
 
 <script src="assets/js/building-records.js?v=20261107-share3"></script>
 <script src="assets/js/commercial-price-core.js?v=20261110-kind1"></script>
-<script src="assets/js/commercial-presale-ui.js?v=20261117-tb1"></script>
+<script src="assets/js/commercial-presale-ui.js?v=20261118-lab1"></script>
 
 <style>
 /* Matching registration and edit form sections */
@@ -542,7 +542,7 @@ html body .listing-info-table .ipt-value.hl-use.hl-use{background:#f3edfb!import
         <input id="edit_exclusiveAreaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
       </div>
-      <div class="area-row" style="margin-bottom:10px;"><span class="area-label">공급면적</span>
+      <div class="area-row" style="margin-bottom:10px;"><span class="area-label">분양(공급)면적</span>
         <input id="edit_supplyAreaM2" type="number" min="0" step="0.01" placeholder="0.00" />
         <span class="area-unit">㎡</span>
         <input id="edit_supplyAreaPy" type="number" min="0" step="1" placeholder="0" />
@@ -1658,7 +1658,7 @@ function closeHomepageTab(tab) {
     if (l === "거래유형") return "deal";
     if (/^(현재 |기존 |최초 )?(매매가|전세금|보증금|월세|분양가|월세\/매매가)$/.test(l) || /^(권리금|관리비)$/.test(l) || /^상가 (보증금|월세|권리금|관리비)$/.test(l) || /금액$/.test(l)) return "price";
     if (/^(전용면적|공급면적|토지면적|대지면적|건축면적|연면적)$/.test(l)) return "area";
-    if (/^(임차업종|임대상태)$/.test(l)) return "use";
+    if (/^(업종|임차업종|임대상태)$/.test(l)) return "use";
     return "";
   }
   function iptCell(label, value, valueClass) {
@@ -2004,7 +2004,7 @@ function closeHomepageTab(tab) {
       ["일반사업자", item.officetel_biz],
       ["전입", item.officetel_resident],
       ["임대상태", firstDetailValue(item.shop_status, item.occupancy)],
-      ...(profileKey === "commercial" ? [["임차업종", item.tenantBusiness || "—"]] : []),
+      ...(profileKey === "commercial" ? [["업종", item.tenantBusiness || "—"]] : []),
       ["예상수익률", withSuffix(item.shop_yield, "%")],
     ];
     // 연락처 문장·메모처럼 긴 글은 한 줄 전체를 써서 항목과 내용이 어긋나지 않게 한다.
