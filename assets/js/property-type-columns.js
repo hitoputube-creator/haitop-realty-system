@@ -276,7 +276,7 @@
       const widths={village:'.35fr',apartment:'1.6fr',dong:'.75fr',supply:'.65fr',price:'1.25fr',owner:'.65fr',phone:'1fr'};
       return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>key==='type'?'minmax(140px,.8fr)':`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
     }
-    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
+    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>key==='address'?'minmax(0,1.1fr)':['name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'?'minmax(118px,.65fr)':key==='price'?'minmax(0,1.8fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.7fr)').join(' ')+' '+actionsColWidth(false)+'px';
   }
   window.sortDongRoom=function() {
     const first=listingColumnSort.find(s=>s.key==='dong');
