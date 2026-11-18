@@ -3674,7 +3674,7 @@ async function deleteBFile(id) {
   function relabel(id, text) { var f = F(id), l = f && f.querySelector('label'); if (l) l.textContent = text; }
   function ro(label, value, cls, id) { var f = document.createElement('div'); f.className = 'umfield' + (cls ? ' ' + cls : ''); f.innerHTML = '<label>' + label + '</label><input class="uf-ro" readonly ' + (id ? 'id="' + id + '" ' : '') + 'value="' + (value || '') + '">'; return f; }
   function roSel(label, value, cls) { var f = document.createElement('div'); f.className = 'umfield' + (cls ? ' ' + cls : ''); f.innerHTML = '<label>' + label + '</label><select disabled class="uf-ro"><option>' + value + '</option></select>'; return f; }
-  relabel('u_분양금액', '기존 분양가 (만원)'); relabel('u_보증금', '기존 보증금 (만원)'); relabel('u_월차임', '기존 월세 (만원)');
+  relabel('u_평당가', '분양금액 (평당가, 만원)'); relabel('u_현매매가격', '할인 분양가 (만원)'); relabel('u_분양금액', '기존 분양가 (만원)'); relabel('u_보증금', '기존 보증금 (만원)'); relabel('u_월차임', '기존 월세 (만원)');
   var wrap = document.createElement('div'); wrap.id = 'commercialUnitForm';
   var A = sec('📋 기본정보'), B = sec('📐 면적정보'), C = sec('🏢 추가정보 <span style="font-weight:600;font-size:11px">(공장·상가·건물)</span>'), D = sec('💰 가격정보'), E = sec('🔒 내부전용');
   // ── 기본정보 ── (1·2차구분·등록구분·거래상태는 [매물] 탭에서 다루므로 여기서는 뺀다)
@@ -3704,9 +3704,7 @@ async function deleteBFile(id) {
   cmp.innerHTML = '<div class="uf-cmp-h old">기존 분양조건</div><div class="uf-cmp-h cur">할인 · 현재 조건</div>';
   put(D, ['u_분양금액', 'u_보증금', 'u_월차임', 'u_현매매가격', 'u_현보증금', 'u_현월세'], '', cmp);
   put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) { pf.style.gridColumn = '1 / span 3'; }
-  var pl = $('u_평당가').closest('.umfield').querySelector('label'); if (pl) pl.textContent = '분양금액 (평당가, 만원)';
-  var dcL = $('u_현매매가격').closest('.umfield').querySelector('label'); if (dcL) dcL.textContent = '할인 분양가 (만원)';
-  var kf = F('u_권리금'); if (kf) { kf.style.display = 'none'; grid(D).appendChild(kf); }
+  var kf = F('u_권리금'); if (kf) kf.style.display = 'none';
   grid(D).appendChild(cmp);
   var flags = document.createElement('div'); flags.className = 'umfield uf-10 uf-flags';
   ['u_추천매물', 'u_수익성매물'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield umcheck'; flags.appendChild(f); } });
