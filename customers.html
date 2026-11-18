@@ -53,56 +53,6 @@
     @media(max-width:640px){.customer-navigation{width:100%;margin:12px 0 0}.customer-navigation .return-main{flex:1;justify-content:center}}
     @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:1.15fr 1.2fr 1.35fr .9fr minmax(210px,1.35fr)}}
   .customer-contact-row{display:grid;grid-template-columns:1fr 1fr 1.3fr auto;gap:6px;margin-bottom:8px}.customer-contact-row input{min-width:0;width:100%;box-sizing:border-box}.customer-note-form textarea{min-height:150px;width:100%;box-sizing:border-box;resize:vertical}.customer-note-form{margin:12px 0 18px}.customer-note-form label{display:block;margin:8px 0}.customer-note-form input[type=date]{color-scheme:light}.customer-note-error{color:var(--red)}@media(max-width:640px){.customer-contact-row{grid-template-columns:1fr 1fr}.customer-contact-row input[type=tel]{grid-column:1/2}}
-
-/* 고객 상세 모달 재디자인(가독성): 헤더/본문 구분, 3열 정보 카드, 섹션 제목 막대, 작은 네모 버튼 */
-html body #customerDetailModal{--cm-accent:#1767d2;--cm-accent-soft:#eaf2ff;--cm-text:#1e293b;--cm-sub:#475569;--cm-muted:#64748b;--cm-line:#e2e8f0;--cm-bg:#f6f8fb;align-items:flex-start;padding:28px 12px}
-html[data-office-theme='hitop'] #customerDetailModal{--cm-accent:#25675f;--cm-accent-soft:#e6f2ef}
-html body #customerDetailModal .modal-box{max-width:640px!important;padding:0!important;border-radius:14px;overflow:hidden;color:var(--cm-text);font-size:13px;line-height:1.5}
-html body #customerDetailModal .modal-title{margin:0!important;padding:16px 22px!important;font-size:16px!important;font-weight:800!important;line-height:1.4;color:var(--cm-text)!important;background:var(--cm-bg);border-bottom:1px solid var(--cm-line);overflow-wrap:anywhere}
-html body #customerDetailModal #custDetailBody{padding:16px 22px 4px}
-html body #customerDetailModal .cust-detail-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;margin:0 0 12px!important}
-html body #customerDetailModal .cust-detail-grid>div{padding:9px 11px;border:1px solid var(--cm-line);border-radius:8px;background:#fff}
-html body #customerDetailModal .cust-detail-grid span{display:block;margin:0 0 3px;font-size:11.5px;font-weight:600;color:var(--cm-muted)!important}
-html body #customerDetailModal .cust-detail-grid strong{display:block;font-size:13.5px;font-weight:700;color:var(--cm-text)!important;overflow-wrap:anywhere}
-html body #customerDetailModal .cust-detail-grid>div:first-child{background:var(--cm-accent-soft);border-color:transparent}
-html body #customerDetailModal .cust-detail-grid>div:first-child strong{font-size:15px;color:var(--cm-accent)!important}
-html body #customerDetailModal .cust-detail-memo{margin:0 0 12px;padding:9px 11px;border-radius:8px;background:var(--cm-bg);font-size:12.5px;color:var(--cm-sub)}
-html body #customerDetailModal details{margin:6px 0;font-size:12.5px}
-html body #customerDetailModal details>summary{font-size:12.5px;font-weight:600;color:var(--cm-sub);cursor:pointer;padding:4px 0}
-html body #customerDetailModal .customer-import-summary{margin-top:6px;padding:9px 11px;border-radius:8px;background:var(--cm-bg);font-size:12px;line-height:1.6;color:var(--cm-sub)}
-html body #customerDetailModal .cust-detail-section-title{display:flex;align-items:center;gap:7px;margin:18px 0 9px!important;font-size:13.5px!important;font-weight:800!important;color:var(--cm-text)!important}
-html body #customerDetailModal .cust-detail-section-title::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--cm-accent)}
-html body #customerDetailModal .customer-note-form{margin:14px 0 0!important;padding:12px 14px 12px;border:1px solid var(--cm-line);border-radius:10px;background:#fbfcfe}
-html body #customerDetailModal .customer-note-form .cust-detail-section-title{margin:0 0 8px!important}
-html body #customerDetailModal .customer-note-form label{display:block;margin:8px 0 0!important;font-size:12px;font-weight:700;color:var(--cm-sub)}
-html body #customerDetailModal .customer-note-form input[type=date],html body #customerDetailModal .customer-note-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font-size:13px;font-weight:400;color:var(--cm-text)}
-html body #customerDetailModal .customer-note-form input[type=date]{width:176px;max-width:100%;height:34px}
-html body #customerDetailModal .customer-note-form textarea{height:84px;min-height:84px;line-height:1.55;resize:vertical}
-html body #customerDetailModal .customer-note-error{margin:4px 0 0;font-size:12px}
-html body #customerDetailModal .customer-note-error:empty{display:none}
-html body #customerDetailModal #custRelatedProperties{display:flex;flex-direction:column;gap:8px}
-html body #customerDetailModal #custRelatedProperties .cust-consultation{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name btn" "sub btn";align-items:center;column-gap:12px;row-gap:2px;padding:10px 12px}
-html body #customerDetailModal #custRelatedProperties .cust-consultation>strong{grid-area:name;font-size:13.5px;font-weight:800;color:var(--cm-text)}
-html body #customerDetailModal #custRelatedProperties .cust-consultation>div{grid-area:sub;font-size:12px;color:var(--cm-muted)}
-html body #customerDetailModal #custRelatedProperties .cust-consultation>a.btn{grid-area:btn;margin:0}
-html body #customerDetailModal .cust-history-list{gap:10px;font-size:12.5px;color:var(--cm-muted)}
-html body #customerDetailModal .cust-consultation{padding:12px 14px;border:1px solid var(--cm-line)!important;border-radius:10px;background:#fff!important;box-shadow:none!important}
-html body #customerDetailModal .cust-consultation-meta{font-size:11.5px;font-weight:600;color:var(--cm-muted)}
-html body #customerDetailModal .cust-consultation-title{margin:4px 0 6px;font-size:14px;font-weight:800;color:var(--cm-text)!important}
-html body #customerDetailModal .cust-consultation-content{font-size:13px;line-height:1.65;color:var(--cm-sub)}
-html body #customerDetailModal .cust-consultation-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--cm-line)}
-html body #customerDetailModal .cust-consultation-editor{margin-top:12px;padding-top:12px;border-top:1px solid var(--cm-line)}
-html body #customerDetailModal .cust-consultation-editor label{margin:8px 0;font-size:12px;font-weight:700;color:var(--cm-sub)}
-html body #customerDetailModal .cust-consultation-editor input,html body #customerDetailModal .cust-consultation-editor textarea{font-size:13px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px}
-html body #customerDetailModal .cust-consultation-editor textarea{min-height:140px}
-html body #customerDetailModal .modal-btns{margin:0!important;padding:12px 22px 16px;justify-content:flex-end;border-top:1px solid var(--cm-line);background:#fff}
-/* 버튼: 작은 네모 */
-html body #customerDetailModal .customer-note-form .btn,html body #customerDetailModal .cust-consultation-actions .btn,html body #customerDetailModal .cust-consultation-actions a.btn,html body #customerDetailModal #custRelatedProperties a.btn,html body #customerDetailModal .modal-btns .btn,html body #customerDetailModal .cust-consultation>a.btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:auto;height:28px!important;min-height:0!important;margin:0;padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:#334155!important;font-family:inherit;font-size:12px!important;font-weight:700;line-height:1!important;white-space:nowrap;text-decoration:none!important;box-shadow:none!important}
-html body #customerDetailModal .customer-note-form .btn:hover,html body #customerDetailModal .cust-consultation-actions .btn:hover,html body #customerDetailModal #custRelatedProperties a.btn:hover,html body #customerDetailModal .modal-btns .btn:hover{background:var(--cm-bg)!important;border-color:var(--cm-accent)!important}
-html body #customerDetailModal .customer-note-form .btn{display:flex;margin:10px 0 0 auto}
-html body #customerDetailModal .customer-note-form .btn-primary,html body #customerDetailModal .cust-consultation-editor .btn-primary{background:var(--cm-accent)!important;border-color:var(--cm-accent)!important;color:#fff!important}
-html body #customerDetailModal .customer-note-form .btn-primary:hover,html body #customerDetailModal .cust-consultation-editor .btn-primary:hover{background:var(--cm-accent)!important;filter:brightness(.92)}
-@media(max-width:560px){html body #customerDetailModal .cust-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 <script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
@@ -153,10 +103,6 @@ html body #customerDetailModal .customer-note-form .btn-primary:hover,html body 
 @media(max-width:640px){.cust-row .cust-select{width:14px;height:14px;min-width:14px;min-height:14px}}
 </style><style id="ktop-customer-accents">
 html[data-office-theme='ktop'] body.customer-management-page{background:#f3f6fb!important}
-html[data-office-theme='ktop'] .customer-management-page .header{background:transparent!important;box-shadow:none!important}
-html[data-office-theme='ktop'] .customer-management-page .header-line{background:#d8e3f1}
-html[data-office-theme='ktop'] .customer-management-page .logo-icon{background:#e7effc;border-color:#779a94}
-html[data-office-theme='ktop'] .customer-management-page .customer-navigation .return-main{background:#ffffff!important;color:#234c49!important;border-color:#779a94!important}
 html[data-office-theme='ktop'] .customer-management-page .card{border:1px solid #779a94!important;box-shadow:0 5px 20px rgba(31,61,104,.06)!important}
 html[data-office-theme='ktop'] .customer-management-page .card-title>span{border-left:3px solid #3478d5;padding-left:10px;font-weight:700;color:#234c49}
 html[data-office-theme='ktop'] .customer-management-page .btn-primary{background:#ffffff!important;border-color:#779a94!important;color:#234c49!important}
@@ -187,6 +133,62 @@ html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .cus
 html[data-office-theme='ktop'] .customer-management-page .cust-cell-actions .btn:hover{filter:brightness(.94)}
 html[data-office-theme='ktop'] .customer-management-page .page-btn{background:#f2f6fc!important;color:#234c49!important;border-color:#779a94!important}
 html[data-office-theme='ktop'] .customer-management-page .page-btn:disabled{opacity:.4}
+</style>
+<style id="customer-page-redesign">
+/* 고객관리 화면 재디자인: 상단바 복원, 작은 네모 버튼, 목록 정렬 */
+html body.customer-management-page{--cp-accent:#1767d2;--cp-soft:#eaf2ff;--cp-text:#1e293b;--cp-sub:#475569;--cp-muted:#64748b;--cp-line:#e2e8f0;--cp-bg:#f6f8fb}
+html[data-office-theme='hitop'] body.customer-management-page{--cp-accent:#25675f;--cp-soft:#e6f2ef}
+html body.customer-management-page .customer-page-heading{margin:14px 0 12px}
+html body.customer-management-page .customer-page-heading p{font-size:13px;color:var(--cp-muted);margin:0}
+html body.customer-management-page .card{border:1px solid var(--cp-line)!important;border-radius:14px;padding:18px 20px!important;box-shadow:0 2px 10px rgba(15,23,42,.04)!important}
+html body.customer-management-page .card-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px!important;padding:0!important;border:0!important}
+html body.customer-management-page .card-title>span{display:inline-flex;align-items:center;gap:8px;border-left:0!important;padding-left:0!important;font-size:16px!important;font-weight:800!important;color:var(--cp-text)!important}
+html body.customer-management-page .card-title>span::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--cp-accent)}
+html body.customer-management-page #customerCountBadge{font-size:13px!important;font-weight:600;color:var(--cp-muted)!important}
+html body.customer-management-page #customerSearchInput{height:34px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff}
+/* 작은 네모 버튼(공통) */
+html body.customer-management-page #customerAddToggleBtn,html body.customer-management-page #customerCategoryAdd,html body.customer-management-page .cust-bulk-bar .btn,html body.customer-management-page .page-btn,html body.customer-management-page .pagination button{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:30px!important;min-height:0!important;padding:0 12px!important;border-radius:6px!important;font-family:inherit;font-size:12.5px!important;font-weight:700;line-height:1;white-space:nowrap;box-shadow:none!important}
+html body.customer-management-page #customerAddToggleBtn{background:var(--cp-accent)!important;border:1px solid var(--cp-accent)!important;color:#fff!important}
+html body.customer-management-page #customerAddToggleBtn:hover{filter:brightness(.92)}
+html body.customer-management-page #customerCategoryAdd{background:#fff!important;border:1px dashed #94a3b8!important;color:var(--cp-sub)!important;margin-left:auto}
+html body.customer-management-page #customerCategoryAdd:hover{border-color:var(--cp-accent)!important;color:var(--cp-accent)!important}
+/* 보기 전환 탭 */
+html body.customer-management-page .cust-view-tabs{display:flex;gap:6px;margin:0 0 10px!important}
+html body.customer-management-page .cust-view-tabs button{box-sizing:border-box;height:32px;padding:0 14px;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--cp-sub)!important;font-size:13px;font-weight:700;line-height:1}
+html body.customer-management-page .cust-view-tabs button.active{background:var(--cp-soft)!important;border-color:var(--cp-accent)!important;color:var(--cp-accent)!important}
+/* 분류 칩 */
+html body.customer-management-page .customer-type-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 14px!important}
+html body.customer-management-page .customer-type-tabs button{box-sizing:border-box;height:28px;padding:0 11px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--cp-sub)!important;font-size:12.5px!important;font-weight:600;line-height:1;box-shadow:none!important}
+html body.customer-management-page .customer-type-tabs button:hover{border-color:var(--cp-accent)!important;color:var(--cp-accent)!important}
+html body.customer-management-page .customer-type-tabs button.active{background:var(--cp-accent)!important;border-color:var(--cp-accent)!important;color:#fff!important;font-weight:800}
+/* 목록 */
+html body.customer-management-page .cust-table-head{padding:9px 14px!important;border:1px solid var(--cp-line)!important;border-radius:8px!important;background:#eef2f7!important;color:var(--cp-sub)!important;font-size:12.5px!important;font-weight:800;gap:12px}
+html body.customer-management-page .cust-sort-button{font-size:12.5px!important;font-weight:800;color:var(--cp-sub)!important}
+html body.customer-management-page .cust-row{padding:10px 14px!important;gap:12px;font-size:13.5px!important;border-top:0!important;border-bottom:1px solid #eef2f7!important;color:var(--cp-text)}
+html body.customer-management-page .cust-row:nth-child(even){background:#fafbfd!important}
+html body.customer-management-page .cust-row:hover{background:var(--cp-soft)!important}
+html body.customer-management-page .cust-cell-name{font-size:14px!important;font-weight:800!important;color:var(--cp-text)!important}
+html body.customer-management-page .cust-cell{color:var(--cp-sub);font-variant-numeric:tabular-nums}
+html body.customer-management-page .cust-cell-name .customer-kind-change{display:inline-flex;margin-top:4px;height:20px;padding:0 7px!important;font-size:11.5px;font-weight:700;border-radius:4px!important}
+/* 관리 버튼: 3열 x 2행 작은 네모 */
+html body.customer-management-page .cust-cell-actions{display:grid!important;grid-template-columns:repeat(3,50px);gap:4px;width:auto!important;height:auto!important;border:0!important;border-radius:0;overflow:visible!important;background:transparent!important}
+html body.customer-management-page .cust-cell-actions .btn{box-sizing:border-box;flex:none!important;width:50px!important;height:24px!important;padding:0!important;border:1px solid #cbd5e1!important;border-radius:5px!important;font-size:11.5px!important;font-weight:700;line-height:1}
+html body.customer-management-page .cust-cell-actions .btn:last-child{border:1px solid #cbd5e1!important}
+html body.customer-management-page .cust-cell-actions .cust-act-register{border-color:#2c64b6!important}
+/* 페이지네이션 */
+html body.customer-management-page .pagination{gap:6px;margin-top:16px}
+html body.customer-management-page .page-btn{background:#fff!important;border:1px solid #cbd5e1!important;color:var(--cp-sub)!important}
+html body.customer-management-page .page-btn:hover:not(:disabled){border-color:var(--cp-accent)!important;color:var(--cp-accent)!important}
+html body.customer-management-page .pagination button.active{background:var(--cp-accent)!important;border-color:var(--cp-accent)!important;color:#fff!important}
+@media(max-width:640px){html body.customer-management-page .card{padding:14px!important}html body.customer-management-page #customerCategoryAdd{margin-left:0}}
+
+@media(min-width:901px){html body.customer-management-page .cust-table-head,html body.customer-management-page .cust-row{grid-template-columns:minmax(0,1.7fr) minmax(0,1.05fr) minmax(0,1.5fr) 104px 168px!important}}
+html body.customer-management-page .cust-cell-actions{display:flex!important;flex-direction:column;gap:4px;width:auto!important}
+html body.customer-management-page .cust-cell-actions>*{display:flex;gap:4px;flex-wrap:nowrap}
+html body.customer-management-page .customer-navigation a,html body.customer-management-page .customer-navigation button{min-height:0!important;height:34px;padding:0 14px!important;border-radius:6px!important;font-size:13px!important;font-weight:700}
+
+html body.customer-management-page .customer-category-toolbar{display:flex;align-items:center;gap:8px;margin:0 0 14px}
+html body.customer-management-page .customer-category-toolbar .customer-type-tabs{margin:0!important;flex:1}
 </style>
 
 <!-- The integrated customer tab reuses this canonical customer screen. -->
