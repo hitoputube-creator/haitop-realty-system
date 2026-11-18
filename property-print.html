@@ -364,9 +364,9 @@ html[data-pt-office='ktop']{--pt-a:#1767d2;--pt-a2:#193860;--pt-soft:#eaf2ff;--p
 #property-page .sum-label{font-size:11px;font-weight:800;color:var(--pt-a);letter-spacing:.02em;margin-bottom:4px}
 #property-page .sum-value{font-size:19px;font-weight:900;color:var(--pt-ink);letter-spacing:-.4px}
 #property-page .sum-value.sm{font-size:15px}
-#property-page .sum-card:has(#sum-price){order:-1;flex:0 0 100%;padding:16px 20px 15px;text-align:center;background:var(--pt-hero)!important;border:0;border-radius:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#property-page .sum-card:has(#sum-price) .sum-label{color:rgba(255,255,255,.85);font-size:12px;letter-spacing:.12em}
-#property-page .sum-card:has(#sum-price) .sum-value{color:#fff;font-size:34px;font-weight:900;letter-spacing:-.8px;line-height:1.25}
+#property-page .sum-card:has(#sum-price){order:-1;flex:0 0 100%;padding:14px 20px 13px;text-align:center;background:#fff!important;border:1px solid var(--pt-line);border-top:3px solid var(--pt-a);border-radius:10px}
+#property-page .sum-card:has(#sum-price) .sum-label{color:var(--pt-mute);font-size:12px;letter-spacing:.12em}
+#property-page .sum-card:has(#sum-price) .sum-value{color:var(--pt-a);font-size:34px;font-weight:900;letter-spacing:-.8px;line-height:1.25}
 #property-page .sum-card:has(#sum-price) .sum-value.sm{font-size:24px}
 /* 섹션 제목 */
 #property-page .section-title{gap:8px;margin-bottom:10px;padding-bottom:7px;font-size:14px;font-weight:900;color:var(--pt-a2);border-bottom:2px solid var(--pt-a)}
@@ -386,8 +386,9 @@ html[data-pt-office='ktop']{--pt-a:#1767d2;--pt-a2:#193860;--pt-soft:#eaf2ff;--p
 #property-page #plan-cap{color:var(--pt-sub);font-weight:700}
 /* 하단 회사 정보 */
 #property-page :is(#contact-area,#contact-area-ktop){border:1.5px solid var(--pt-a)!important;box-shadow:none!important}
-#property-page :is(#contact-area,#contact-area-ktop) .contact-head{background:var(--pt-hero)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#property-page :is(#contact-area,#contact-area-ktop) .contact-phone{color:#fcd34d!important;font-size:15px}
+#property-page :is(#contact-area,#contact-area-ktop) .contact-head{background:#fff!important;border-bottom:2px solid var(--pt-a)!important}
+#property-page :is(#contact-area,#contact-area-ktop) .contact-company{color:var(--pt-a2)!important;font-size:16px}
+#property-page :is(#contact-area,#contact-area-ktop) .contact-phone{color:var(--pt-point)!important;font-size:15px}
 #property-page :is(#contact-area,#contact-area-ktop) .contact-label{color:var(--pt-a)}
 #property-page :is(#contact-area,#contact-area-ktop) .contact-value{color:var(--pt-ink);font-weight:600}
 #property-page :is(#contact-area,#contact-area-ktop) .contact-line:nth-child(4n+3),#property-page :is(#contact-area,#contact-area-ktop) .contact-line:nth-child(4n+4){background:var(--pt-soft)!important}
