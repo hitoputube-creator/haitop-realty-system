@@ -413,7 +413,7 @@ html[data-office-theme] body.property-form-page #editModal .edit-modal-close:hov
 /* ===== 분양 탭과 같은 표 형식(라벨 칸 + 입력 칸) ===== */
 html[data-office-theme] body.property-form-page #editModal{--em-th:#eef2f7}
 /* 공통: 표 컨테이너 */
-html[data-office-theme] body.property-form-page #editModal :is(#edit_basicInfoGrid,.edit-grid-4,.commercial-price-compare:not(.original-collapsed),.edit-area-flex){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:1px!important;background:var(--em-line);border:1px solid var(--em-line);border-radius:0 0 6px 6px;overflow:hidden;margin:0 0 10px!important}
+html[data-office-theme] body.property-form-page #editModal :is(#edit_basicInfoGrid,.edit-grid-4,.commercial-price-compare:not(.original-collapsed),.edit-area-flex){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0!important;background:#fff;border-top:1px solid var(--em-line);border-left:1px solid var(--em-line);border-radius:0 0 6px 6px;overflow:hidden;margin:0 0 10px!important}
 html[data-office-theme] body.property-form-page #editModal :is(#edit_basicInfoGrid,.edit-grid-4,.commercial-price-compare) > .field{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;row-gap:0!important;margin:0!important;padding:0!important;background:#fff;min-width:0}
 html[data-office-theme] body.property-form-page #editModal :is(#edit_basicInfoGrid,.edit-grid-4,.commercial-price-compare) > .field[style*="display: none"],html[data-office-theme] body.property-form-page #editModal .field.presale-hidden,html[data-office-theme] body.property-form-page #editModal .field[hidden],html[data-office-theme] body.property-form-page #editModal .commercial-original[hidden]{display:none!important}
 html[data-office-theme] body.property-form-page #editModal :is(#edit_basicInfoGrid,.edit-grid-4,.commercial-price-compare) > .field > label,html[data-office-theme] body.property-form-page #editModal .commercial-address-field > label,html[data-office-theme] body.property-form-page #editModal .commercial-address-field .commercial-address-parts > .field > label,html[data-office-theme] body.property-form-page #editModal .area-row > .area-label{flex:0 0 128px;box-sizing:border-box;align-self:stretch;display:flex!important;align-items:center;height:auto!important;line-height:1.3!important;margin:0!important;padding:8px 12px!important;background:var(--em-th);border-right:1px solid var(--em-line);color:#334155!important;font-size:12.5px!important;font-weight:800!important;white-space:normal!important}
@@ -425,7 +425,7 @@ html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid >
 html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:nth-child(5){grid-column:1/-1!important}
 html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > #edit_titleField,html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .commercial-address-field,html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .field:has(#edit_mapAddress){grid-column:1/-1!important}
 /* 주소 칸: 건물명|호수 한 줄, 상세주소 한 줄 */
-html[data-office-theme] body.property-form-page #editModal .commercial-address-field{display:grid!important;grid-template-columns:128px minmax(0,1fr) 128px minmax(0,1fr)!important;gap:1px!important;background:var(--em-line)!important;padding:0!important}
+html[data-office-theme] body.property-form-page #editModal .commercial-address-field{display:grid!important;grid-template-columns:128px minmax(0,1fr) 128px minmax(0,1fr)!important;gap:0!important;background:#fff!important;padding:0!important}
 html[data-office-theme] body.property-form-page #editModal .commercial-address-field > *{background:#fff}
 html[data-office-theme] body.property-form-page #editModal .commercial-address-field .commercial-address-parts{display:contents!important}
 html[data-office-theme] body.property-form-page #editModal .commercial-address-field .commercial-address-parts > .field{display:flex!important;flex-direction:row;align-items:center;margin:0!important;padding:0!important;background:#fff;grid-row:1!important;min-width:0}
@@ -462,9 +462,13 @@ html[data-office-theme] body.property-form-page #editModal .commercial-price-com
 html[data-office-theme] body.property-form-page #editModal .commercial-price-compare > .field > .price-preview{flex:0 0 118px!important;margin:0 8px 0 0!important;padding:0!important;line-height:1.3;text-align:left}
 html[data-office-theme] body.property-form-page #editModal .commercial-price-compare > .field > .price-preview:empty{display:block!important;visibility:hidden}
 
+html[data-office-theme] body.property-form-page #editModal :is(#edit_basicInfoGrid,.edit-grid-4,.commercial-price-compare:not(.original-collapsed),.edit-area-flex) > :is(.field,.commercial-compare-heading,.commercial-flags,.area-row){box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page #editModal .commercial-address-field > *:not(.commercial-address-parts),html[data-office-theme] body.property-form-page #editModal .commercial-address-field .commercial-address-parts > .field{box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page #editModal #edit_basicInfoGrid > .commercial-address-field{box-shadow:none}
+
 /* 내부전용: 소유주명 | 소유주 연락처 | 통신사 | + 추가 연락처 / 드라이브 / 메모 */
 html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid{display:block!important;border:1px solid var(--em-line)!important;border-radius:0 0 6px 6px!important;padding:0!important;background:#fff!important;overflow:hidden;margin:0 0 10px!important}
-html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid > .field:first-child > div{display:flex!important;flex-wrap:wrap!important;gap:1px!important;align-items:stretch!important;background:var(--em-line)}
+html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid > .field:first-child > div{display:flex!important;flex-wrap:wrap!important;gap:0!important;align-items:stretch!important;background:#fff}
 html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid > .field:first-child > div > .field{display:flex!important;flex-direction:row!important;align-items:center;flex:1 1 280px!important;min-width:0;margin:0!important;padding:0!important;background:#fff}
 html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid > .field:first-child > div > .field > label{flex:0 0 128px;box-sizing:border-box;align-self:stretch;display:flex!important;align-items:center;margin:0!important;padding:8px 12px!important;background:var(--em-th);border-right:1px solid var(--em-line);color:#334155!important;font-size:12.5px!important;font-weight:800!important}
 html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid > .field:first-child > div > .field > :is(input,select){flex:1 1 0;min-width:0;margin:5px 8px!important;width:auto!important}
@@ -476,6 +480,8 @@ html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGri
 html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid > .field:not(:first-child){display:block!important;margin:0!important;padding:8px 12px 10px!important;border-top:1px solid var(--em-line);grid-column:auto!important}
 html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid > .field:not(:first-child) > label{display:block;margin-bottom:6px!important}
 html[data-office-theme] body.property-form-page #editModal #edit_memoBlock>label,html[data-office-theme] body.property-form-page #editModal .field>label.field-title{font-weight:800!important}
+
+html[data-office-theme] body.property-form-page #editModal #edit_internalInfoGrid > .field:first-child > div > .field{box-shadow:inset -1px -1px 0 var(--em-line)}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
