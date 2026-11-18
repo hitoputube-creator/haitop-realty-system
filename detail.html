@@ -2834,6 +2834,23 @@ function closeHomepageTab(tab) {
 <script src="assets/js/edit-land-layout.js?v=20261117-lay1"></script>
 <script src="assets/js/owner-memo.js?v=20261112-om2"></script>
 <script src="assets/js/presale-price.js?v=20261112-pp2"></script>
+<script>
+/* 자료실 호실 수정창의 [매물] 탭에서 이 화면을 안에 끼워 넣어 쓸 때(?embed=1): 매물 수정창만 꽉 차게 보여 준다 */
+(function () {
+  if (new URLSearchParams(location.search).get('embed') !== '1') return;
+  document.documentElement.classList.add('embed-mode');
+  var st = document.createElement('style');
+  st.textContent = 'html.embed-mode body{background:#eef3f9!important}html.embed-mode .page,html.embed-mode .main-nav,html.embed-mode .header{display:none!important}' +
+    'html.embed-mode #editModal{position:static!important;inset:auto!important;display:flex!important;padding:0!important;background:transparent!important;height:100vh!important;align-items:stretch!important}' +
+    'html.embed-mode #editModal .modal-box{width:100%!important;max-width:100%!important;height:100vh!important;max-height:100vh!important;border-radius:0!important;border:0!important;box-shadow:none!important}' +
+    'html.embed-mode #editModal .edit-modal-close{display:none!important}';
+  document.head.appendChild(st);
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('#editModal .edit-modal-footer .btn-ghost');
+    if (b && window.parent !== window) window.parent.postMessage({ um: 'listing-cancel' }, '*');
+  });
+})();
+</script>
 </body>
 </html>
 
