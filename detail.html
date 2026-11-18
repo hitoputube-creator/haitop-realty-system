@@ -91,7 +91,6 @@
 .tenant-info-section[open] > summary { margin-bottom:12px; }
 .tenant-info-section > summary::after { content:'펼치기 ▾'; float:right; font-size:12px; }
 .tenant-info-section[open] > summary::after { content:'접기 ▴'; }
-html body .apartment-info-table .ipt-value.hl-unit,html body .listing-info-table .ipt-value.hl-unit{font-size:16px!important;font-weight:800!important;color:#1d4ed8!important}
 .apt-title-flex { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .apt-title-flex .apartment-autofill-btn { margin-left:auto; }
 .tenant-toggle { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; cursor:pointer; }
@@ -1658,7 +1657,6 @@ function closeHomepageTab(tab) {
     if (/^(현재 |기존 |최초 )?(매매가|전세금|보증금|월세|분양가|월세\/매매가)$/.test(l) || /^(권리금|관리비)$/.test(l) || /^상가 (보증금|월세|권리금|관리비)$/.test(l) || /금액$/.test(l)) return "price";
     if (/^(전용면적|공급면적|토지면적|대지면적|건축면적|연면적)$/.test(l)) return "area";
     if (/^(임차업종|임대상태)$/.test(l)) return "use";
-    if (/^(동|호수|호실|호)$/.test(l)) return "unit";
     return "";
   }
   function iptCell(label, value, valueClass) {
@@ -1810,11 +1808,11 @@ function closeHomepageTab(tab) {
         })()
       ];
       const memoHtml = leftParts.slice(hasPresale ? 2 : 1).join("");
-      const left = (hasPresale ? leftParts[1] : leftParts[0]) + memoHtml;
+      const left = (hasPresale ? leftParts[1] : leftParts[0]);
       const right = (hasPresale ? leftParts[0] : "") + rightParts.join("");
       return '<div class="apartment-details-layout">'+basic+
         '<div class="apartment-details-column">'+left+'</div>'+
-        '<div class="apartment-details-column">'+right+'</div></div>';
+        '<div class="apartment-details-column">'+right+'</div>'+memoHtml+'</div>';
     }
     // 옛 매물은 거래유형·금액이 가격 메모("매매_18억")에만 있을 수 있어, 가격 칸이 비어 있으면 메모에서 읽어 가격 칸에 보여준다.
     const legacyPrice = (!item.salePrice && !item.deposit && !item.monthlyRent) ? parseLegacyPriceMemo(item.quick_price) : null;
@@ -2806,7 +2804,7 @@ function closeHomepageTab(tab) {
   init();
 </script>
 <script src="assets/js/listing-promo-add.js?v=20261105-add1"></script>
-<script src="assets/js/detail-panels.js?v=20261118-dp6"></script>
+<script src="assets/js/detail-panels.js?v=20261118-dp7"></script>
 <style id="ldStyles">
 .ld-section .ld-note{font-size:.8rem;color:var(--text-muted);margin:2px 0 12px;line-height:1.5}
 .ld-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
