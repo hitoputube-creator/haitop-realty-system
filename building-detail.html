@@ -952,6 +952,7 @@
 
       <div class="unit-modal-actions">
         <a class="btn-unit-ghost" id="umListingView" hidden>매물 상세보기</a>
+        <button class="btn-unit-add" id="umSendListing" type="button" title="이 호실의 분양 정보를 그대로 매물로 등록합니다">매물등록</button>
         <button class="btn-unit-ghost" id="umRegistry" type="button" style="display:none;">건축물대장정보 확인</button>
         <button class="btn-unit-ghost" id="umCancel">취소</button>
         <button class="btn-unit-del" id="umDelete" style="display:none;">삭제</button>
@@ -2977,6 +2978,7 @@ async function deleteBFile(id) {
     $("u_수익률").value     = u.수익률      || ((u.listing_id && commercialListings[String(u.listing_id)] && commercialListings[String(u.listing_id)].profitRate) || "");
     $("u_추천매물").checked   = isFlagOn(u.추천매물);
     $('umListingView').hidden = !u.listing_id;
+    if ($('umSendListing')) { $('umSendListing').textContent = u.listing_id ? '매물 보기' : '매물등록'; $('umSendListing').hidden = residentialUnitMode(); }
     $('umListingView').href = u.listing_id ? 'detail.html?id=' + encodeURIComponent(u.listing_id) : '#';
     $("u_수익성매물").checked = isFlagOn(u.수익성매물);
     // 매물관리(상가) 입력 항목과 같은 항목
@@ -3447,6 +3449,22 @@ async function deleteBFile(id) {
   });
   $("btnAddUnit").addEventListener("click", () => openModal(-1));
   $("umSave").addEventListener("click", saveUnit);
+  // 분양 화면의 [매물등록]: 지금 입력된 분양 정보를 저장한 뒤 그대로 매물로 등록하고, [매물] 탭에서 이어서 고치게 한다.
+  let umSendBusy = false;
+  $('umSendListing').addEventListener('click', async () => {
+    if (umSendBusy) return;
+    if (editIdx >= 0 && units[editIdx] && units[editIdx].listing_id) { if (window.umShowTab) window.umShowTab('listing'); return; }
+    if (!$("u_호수").value.trim()) { showToast("호수를 입력하세요."); return; }
+    umSendBusy = true; $('umSendListing').disabled = true;
+    try {
+      await saveUnit({ keepOpen: true });
+      if (editIdx < 0 || !units[editIdx]) return;
+      await sendCommercialUnitsToListing([units[editIdx]]);
+      openModal(editIdx);
+      if (window.umShowTab) window.umShowTab('listing');
+    } catch (e) { showToast('매물 등록 실패: ' + e.message); }
+    finally { umSendBusy = false; $('umSendListing').disabled = false; }
+  });
   $("umDelete").addEventListener("click", deleteUnit);
   $("umRegistry").addEventListener("click", () => {
     const targetEditIdx=editIdx;
@@ -3736,7 +3754,7 @@ async function deleteBFile(id) {
     var tabs = document.createElement('div'); tabs.id = 'unitTabs';
     tabs.innerHTML = '<button type="button" data-ut="sale">분양</button><button type="button" data-ut="listing">매물</button>';
     var pane = document.createElement('div'); pane.id = 'unitListingPane';
-    pane.innerHTML = '<div class="ulp-empty" hidden>이 호실은 아직 매물로 등록되지 않았습니다.<br>호실 목록에서 체크한 뒤 [매물리스트로 보내기]를 누르면, 이 화면에서 매물 정보를 보고 고칠 수 있어요.</div><iframe title="매물 수정" style="width:100%;height:100%;border:0;display:none"></iframe>';
+    pane.innerHTML = '<div class="ulp-empty" hidden>이 호실은 아직 매물로 등록되지 않았습니다.<br>[매물등록]을 누르면 분양 화면의 정보가 그대로 매물로 등록되고, 이 화면에서 이어서 고칠 수 있어요.<br><br><button type="button" class="btn-unit-add" id="ulpSend" style="padding:8px 22px">매물등록</button></div><iframe title="매물 수정" style="width:100%;height:100%;border:0;display:none"></iframe>';
     title.after(tabs); scrollEl.after(pane);
     var st2 = document.createElement('style');
     st2.textContent = '#unitTabs{display:flex;gap:8px;padding:8px 18px;background:#fff;border-bottom:1px solid #c9d7e6;flex-shrink:0}' +
@@ -3764,7 +3782,9 @@ async function deleteBFile(id) {
       var want = 'detail.html?id=' + encodeURIComponent(id) + '&edit=1&embed=1' + (typeof OfficeConfig !== 'undefined' ? '&office=' + encodeURIComponent(OfficeConfig.id) : '');
       if (fr.getAttribute('data-src') !== want) { fr.setAttribute('data-src', want); fr.src = want; }
     }
+    window.umShowTab = setTab;
     tabs.addEventListener('click', function (e) { var b = e.target.closest('button[data-ut]'); if (b) setTab(b.dataset.ut); });
+    pane.addEventListener('click', function (e) { if (e.target && e.target.id === 'ulpSend') { var s = $('umSendListing'); if (s) s.click(); } });
     window.addEventListener('message', function (e) { if (e && e.data && e.data.um === 'listing-cancel') setTab('sale'); });
     var base = window.umSetView;
     window.umSetView = function () { if (base) base(); var fr = pane.querySelector('iframe'); if (fr) { fr.removeAttribute('data-src'); fr.removeAttribute('src'); } setTab('sale'); };
