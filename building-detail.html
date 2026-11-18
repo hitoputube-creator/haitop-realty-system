@@ -3663,7 +3663,7 @@ async function deleteBFile(id) {
   sale0.before(wrap);
   // 열 때마다: 건물명·주소 채우기, 나중에 붙는 체크 칸(특별분양)을 체크 줄로 이동
   window.umSetView = function () {
-    try { if (typeof bName !== 'undefined') $('uf_건물명').value = bName || ''; } catch (e) {}
+    try { var h1 = document.querySelector('h1'); $('uf_건물명').value = (typeof bName !== 'undefined' && bName) || (h1 && h1.textContent.trim()) || ''; } catch (e) {}
     try { if (typeof buildingAddress !== 'undefined') $('uf_주소').value = buildingAddress || ''; } catch (e) {}
     [].slice.call(cur0.querySelectorAll('.umcheck')).forEach(function (c) { flags.insertBefore(c, rate || null); });
   };
