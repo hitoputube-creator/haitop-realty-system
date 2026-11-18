@@ -54,36 +54,55 @@
     @media(min-width:901px){.cust-table-head,.cust-row{grid-template-columns:1.15fr 1.2fr 1.35fr .9fr minmax(210px,1.35fr)}}
   .customer-contact-row{display:grid;grid-template-columns:1fr 1fr 1.3fr auto;gap:6px;margin-bottom:8px}.customer-contact-row input{min-width:0;width:100%;box-sizing:border-box}.customer-note-form textarea{min-height:150px;width:100%;box-sizing:border-box;resize:vertical}.customer-note-form{margin:12px 0 18px}.customer-note-form label{display:block;margin:8px 0}.customer-note-form input[type=date]{color-scheme:light}.customer-note-error{color:var(--red)}@media(max-width:640px){.customer-contact-row{grid-template-columns:1fr 1fr}.customer-contact-row input[type=tel]{grid-column:1/2}}
 
-/* 고객 상세 모달 정돈: 폭 축소, 글자 크기 통일, 메모 입력칸·연결 매물 카드 정리 */
-#customerDetailModal .modal-box{max-width:600px!important;padding:20px 22px;font-size:13px;color:#1e293b}
-#customerDetailModal .modal-title{font-size:15px;font-weight:800;line-height:1.4;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere}
-#customerDetailModal .cust-detail-grid{gap:10px 18px;margin-bottom:12px}
-#customerDetailModal .cust-detail-grid>div{padding:8px 10px;border-radius:8px;background:#f6f8fb}
-#customerDetailModal .cust-detail-grid span{font-size:11.5px;margin-bottom:3px;color:#64748b}
-#customerDetailModal .cust-detail-grid strong{font-size:13.5px;font-weight:700;color:#1e293b}
-#customerDetailModal details{font-size:12.5px;margin:6px 0}
-#customerDetailModal details>summary{font-size:12.5px;color:#475569;cursor:pointer}
-#customerDetailModal .customer-import-summary{font-size:12px;line-height:1.55;background:#f6f8fb;border-radius:8px;padding:8px 10px;margin-top:6px}
-#customerDetailModal .cust-detail-section-title{font-size:13px;font-weight:800;margin:16px 0 8px;color:#1e3a56}
-#customerDetailModal .customer-note-form{margin:14px 0 4px;padding:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fbfcfe}
-#customerDetailModal .customer-note-form .cust-detail-section-title{margin-top:0}
-#customerDetailModal .customer-note-form label{display:block;margin:8px 0 0;font-size:12px;font-weight:700;color:#475569}
-#customerDetailModal .customer-note-form input[type=date],#customerDetailModal .customer-note-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;font-size:13px;font-weight:400;color:#1e293b;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}
-#customerDetailModal .customer-note-form input[type=date]{height:34px;width:180px;max-width:100%}
-#customerDetailModal .customer-note-form textarea{height:84px;min-height:84px;line-height:1.55}
-#customerDetailModal .customer-note-error{margin:4px 0 0;font-size:12px;min-height:0}
-#customerDetailModal .customer-note-error:empty{display:none}
-#customerDetailModal .customer-note-form .btn{margin-top:10px;height:32px;padding:0 16px;font-size:12.5px}
-#customerDetailModal .btn{font-family:inherit}
-#customerDetailModal #custRelatedProperties{display:flex;flex-direction:column;gap:8px}
-#customerDetailModal #custRelatedProperties .cust-consultation{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name btn" "sub btn";align-items:center;column-gap:12px;row-gap:2px;padding:10px 12px}
-#customerDetailModal #custRelatedProperties .cust-consultation>strong{grid-area:name;font-size:13.5px;font-weight:800;line-height:1.4;color:#1e293b}
-#customerDetailModal #custRelatedProperties .cust-consultation>div{grid-area:sub;font-size:12px;color:#64748b}
-#customerDetailModal #custRelatedProperties .cust-consultation>a.btn{grid-area:btn;margin:0;height:30px;padding:0 14px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;white-space:nowrap}
-#customerDetailModal .cust-history-list{font-size:12.5px;color:#64748b;gap:10px}
-#customerDetailModal .cust-consultation-content{font-size:13px;line-height:1.65}
-#customerDetailModal .modal-btns{margin-top:14px}
-#customerDetailModal .modal-btns .btn{height:32px;padding:0 18px;font-size:12.5px}
+/* 고객 상세 모달 재디자인(가독성): 헤더/본문 구분, 3열 정보 카드, 섹션 제목 막대, 작은 네모 버튼 */
+html body #customerDetailModal{--cm-accent:#1767d2;--cm-accent-soft:#eaf2ff;--cm-text:#1e293b;--cm-sub:#475569;--cm-muted:#64748b;--cm-line:#e2e8f0;--cm-bg:#f6f8fb;align-items:flex-start;padding:28px 12px}
+html[data-office-theme='hitop'] #customerDetailModal{--cm-accent:#25675f;--cm-accent-soft:#e6f2ef}
+html body #customerDetailModal .modal-box{max-width:640px!important;padding:0!important;border-radius:14px;overflow:hidden;color:var(--cm-text);font-size:13px;line-height:1.5}
+html body #customerDetailModal .modal-title{margin:0!important;padding:16px 22px!important;font-size:16px!important;font-weight:800!important;line-height:1.4;color:var(--cm-text)!important;background:var(--cm-bg);border-bottom:1px solid var(--cm-line);overflow-wrap:anywhere}
+html body #customerDetailModal #custDetailBody{padding:16px 22px 4px}
+html body #customerDetailModal .cust-detail-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;margin:0 0 12px!important}
+html body #customerDetailModal .cust-detail-grid>div{padding:9px 11px;border:1px solid var(--cm-line);border-radius:8px;background:#fff}
+html body #customerDetailModal .cust-detail-grid span{display:block;margin:0 0 3px;font-size:11.5px;font-weight:600;color:var(--cm-muted)!important}
+html body #customerDetailModal .cust-detail-grid strong{display:block;font-size:13.5px;font-weight:700;color:var(--cm-text)!important;overflow-wrap:anywhere}
+html body #customerDetailModal .cust-detail-grid>div:first-child{background:var(--cm-accent-soft);border-color:transparent}
+html body #customerDetailModal .cust-detail-grid>div:first-child strong{font-size:15px;color:var(--cm-accent)!important}
+html body #customerDetailModal .cust-detail-memo{margin:0 0 12px;padding:9px 11px;border-radius:8px;background:var(--cm-bg);font-size:12.5px;color:var(--cm-sub)}
+html body #customerDetailModal details{margin:6px 0;font-size:12.5px}
+html body #customerDetailModal details>summary{font-size:12.5px;font-weight:600;color:var(--cm-sub);cursor:pointer;padding:4px 0}
+html body #customerDetailModal .customer-import-summary{margin-top:6px;padding:9px 11px;border-radius:8px;background:var(--cm-bg);font-size:12px;line-height:1.6;color:var(--cm-sub)}
+html body #customerDetailModal .cust-detail-section-title{display:flex;align-items:center;gap:7px;margin:18px 0 9px!important;font-size:13.5px!important;font-weight:800!important;color:var(--cm-text)!important}
+html body #customerDetailModal .cust-detail-section-title::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--cm-accent)}
+html body #customerDetailModal .customer-note-form{margin:14px 0 0!important;padding:12px 14px 12px;border:1px solid var(--cm-line);border-radius:10px;background:#fbfcfe}
+html body #customerDetailModal .customer-note-form .cust-detail-section-title{margin:0 0 8px!important}
+html body #customerDetailModal .customer-note-form label{display:block;margin:8px 0 0!important;font-size:12px;font-weight:700;color:var(--cm-sub)}
+html body #customerDetailModal .customer-note-form input[type=date],html body #customerDetailModal .customer-note-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font-size:13px;font-weight:400;color:var(--cm-text)}
+html body #customerDetailModal .customer-note-form input[type=date]{width:176px;max-width:100%;height:34px}
+html body #customerDetailModal .customer-note-form textarea{height:84px;min-height:84px;line-height:1.55;resize:vertical}
+html body #customerDetailModal .customer-note-error{margin:4px 0 0;font-size:12px}
+html body #customerDetailModal .customer-note-error:empty{display:none}
+html body #customerDetailModal #custRelatedProperties{display:flex;flex-direction:column;gap:8px}
+html body #customerDetailModal #custRelatedProperties .cust-consultation{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name btn" "sub btn";align-items:center;column-gap:12px;row-gap:2px;padding:10px 12px}
+html body #customerDetailModal #custRelatedProperties .cust-consultation>strong{grid-area:name;font-size:13.5px;font-weight:800;color:var(--cm-text)}
+html body #customerDetailModal #custRelatedProperties .cust-consultation>div{grid-area:sub;font-size:12px;color:var(--cm-muted)}
+html body #customerDetailModal #custRelatedProperties .cust-consultation>a.btn{grid-area:btn;margin:0}
+html body #customerDetailModal .cust-history-list{gap:10px;font-size:12.5px;color:var(--cm-muted)}
+html body #customerDetailModal .cust-consultation{padding:12px 14px;border:1px solid var(--cm-line)!important;border-radius:10px;background:#fff!important;box-shadow:none!important}
+html body #customerDetailModal .cust-consultation-meta{font-size:11.5px;font-weight:600;color:var(--cm-muted)}
+html body #customerDetailModal .cust-consultation-title{margin:4px 0 6px;font-size:14px;font-weight:800;color:var(--cm-text)!important}
+html body #customerDetailModal .cust-consultation-content{font-size:13px;line-height:1.65;color:var(--cm-sub)}
+html body #customerDetailModal .cust-consultation-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--cm-line)}
+html body #customerDetailModal .cust-consultation-editor{margin-top:12px;padding-top:12px;border-top:1px solid var(--cm-line)}
+html body #customerDetailModal .cust-consultation-editor label{margin:8px 0;font-size:12px;font-weight:700;color:var(--cm-sub)}
+html body #customerDetailModal .cust-consultation-editor input,html body #customerDetailModal .cust-consultation-editor textarea{font-size:13px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px}
+html body #customerDetailModal .cust-consultation-editor textarea{min-height:140px}
+html body #customerDetailModal .modal-btns{margin:0!important;padding:12px 22px 16px;justify-content:flex-end;border-top:1px solid var(--cm-line);background:#fff}
+/* 버튼: 작은 네모 */
+html body #customerDetailModal .customer-note-form .btn,html body #customerDetailModal .cust-consultation-actions .btn,html body #customerDetailModal .cust-consultation-actions a.btn,html body #customerDetailModal #custRelatedProperties a.btn,html body #customerDetailModal .modal-btns .btn,html body #customerDetailModal .cust-consultation>a.btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:auto;height:28px!important;min-height:0!important;margin:0;padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:#334155!important;font-family:inherit;font-size:12px!important;font-weight:700;line-height:1!important;white-space:nowrap;text-decoration:none!important;box-shadow:none!important}
+html body #customerDetailModal .customer-note-form .btn:hover,html body #customerDetailModal .cust-consultation-actions .btn:hover,html body #customerDetailModal #custRelatedProperties a.btn:hover,html body #customerDetailModal .modal-btns .btn:hover{background:var(--cm-bg)!important;border-color:var(--cm-accent)!important}
+html body #customerDetailModal .customer-note-form .btn{display:flex;margin:10px 0 0 auto}
+html body #customerDetailModal .customer-note-form .btn-primary,html body #customerDetailModal .cust-consultation-editor .btn-primary{background:var(--cm-accent)!important;border-color:var(--cm-accent)!important;color:#fff!important}
+html body #customerDetailModal .customer-note-form .btn-primary:hover,html body #customerDetailModal .cust-consultation-editor .btn-primary:hover{background:var(--cm-accent)!important;filter:brightness(.92)}
+@media(max-width:560px){html body #customerDetailModal .cust-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 <script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
