@@ -3865,6 +3865,14 @@ async function deleteBFile(id) {
   if (!A || !B || !C || !D || !E) return;
   var nameF = $('uf_건물명') && $('uf_건물명').closest('.umfield'), addrF = $('uf_주소') && $('uf_주소').closest('.umfield');
   var ph = $('unitPresaleSwitch');
+  function pairCell(a, b) {
+    var d = document.createElement('div'); d.style.cssText = 'display:flex;align-items:flex-start;gap:8px';
+    if (a) { a.style.cssText = 'flex:1 1 0;min-width:0;margin:0;padding:0'; d.appendChild(a); }
+    var s = document.createElement('span'); s.textContent = '평당가'; s.style.cssText = 'flex:none;margin-top:8px;font-size:12px;font-weight:700;color:#2a4766;white-space:nowrap'; d.appendChild(s);
+    if (b) { b.style.cssText = 'flex:0 0 120px;margin:0;padding:0'; d.appendChild(b); }
+    return d;
+  }
+  var priceOld = pairCell(F('u_분양금액'), F('u_평당가')), priceNew = pairCell(F('u_현매매가격'), F('u_현평당가'));
   var dealWrap = document.createElement('div'); dealWrap.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap';
   var dealF0 = F('u_거래구분'); if (dealF0) { dealF0.style.cssText = 'width:150px;flex:none;margin:0;padding:0'; dealWrap.appendChild(dealF0); }
   if (ph) dealWrap.appendChild(ph);
@@ -3888,10 +3896,9 @@ async function deleteBFile(id) {
     [['주차대수', F('u_주차대수')], ['사용승인일', F('u_사용승인일')]]
   ]));
   put(D, mk([
-    [[lab(F('u_분양금액')), F('u_분양금액')], [lab(F('u_현매매가격')), F('u_현매매가격')]],
+    [[lab(F('u_분양금액')), priceOld], [lab(F('u_현매매가격')), priceNew]],
     [[lab(F('u_보증금')), F('u_보증금')], [lab(F('u_현보증금')), F('u_현보증금')]],
     [[lab(F('u_월차임')), F('u_월차임')], [lab(F('u_현월세')), F('u_현월세')]],
-    [['분양 평당가 (만원)', F('u_평당가')], ['평당가 (만원)', F('u_현평당가')]],
     [['임대현황', F('u_공실여부')], ['임대현황', F('u_현임대현황')]],
     [['업종', F('u_현업종')], ['업종', F('u_현업종2')]]
   ], ['기존 분양조건', '할인 · 현재 조건']));
