@@ -1597,7 +1597,6 @@ async function linkDiaryEntryToListing(diaryId, listingId) {
 }
 
 async function uploadListingImage(file, listingId) {
-  if (OfficeConfig.id === "ktop") throw new Error("케이탑 매물 첨부파일 저장은 아직 연결 준비 중입니다.");
   if (!file) throw new Error("No file selected.");
   const isImage = file.type ? file.type.startsWith("image/") : isListingImageFile(file.name);
   const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
