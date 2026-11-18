@@ -239,6 +239,9 @@ html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.comme
 html[data-office-theme] body.property-form-page .form-grid-3.price-one-row:not(.commercial-price-compare) > .field.profit-rate-field{grid-area:auto!important}
 html[data-office-theme] body.property-form-page #editModal .commercial-price-compare.original-collapsed > .field.profit-rate-field{grid-area:auto!important}
 html[data-office-theme] body.property-form-page #editModal .commercial-price-compare:not(.original-collapsed) > .field.profit-rate-field{grid-area:5/2!important}
+
+/* 토지는 옵션·비고 카드를 숨긴다 */
+html body.land-reg section.card:has(#optionDetails){display:none!important}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
 <script>
