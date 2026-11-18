@@ -3873,6 +3873,7 @@ async function deleteBFile(id) {
     return d;
   }
   var priceOld = pairCell(F('u_분양금액'), F('u_평당가')), priceNew = pairCell(F('u_현매매가격'), F('u_현평당가'));
+  var spacer = document.createElement('div'); spacer.style.cssText = 'height:16px'; var priceNewBox = document.createElement('div'); priceNewBox.appendChild(priceNew); priceNewBox.appendChild(spacer);
   var dealWrap = document.createElement('div'); dealWrap.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap';
   var dealF0 = F('u_거래구분'); if (dealF0) { dealF0.style.cssText = 'width:150px;flex:none;margin:0;padding:0'; dealWrap.appendChild(dealF0); }
   if (ph) dealWrap.appendChild(ph);
@@ -3896,7 +3897,7 @@ async function deleteBFile(id) {
     [['주차대수', F('u_주차대수')], ['사용승인일', F('u_사용승인일')]]
   ]));
   put(D, mk([
-    [[lab(F('u_분양금액')), priceOld], [lab(F('u_현매매가격')), priceNew]],
+    [['기존 분양가 (만원)', priceOld], ['할인 분양가 (만원)', priceNewBox]],
     [[lab(F('u_보증금')), F('u_보증금')], [lab(F('u_현보증금')), F('u_현보증금')]],
     [[lab(F('u_월차임')), F('u_월차임')], [lab(F('u_현월세')), F('u_현월세')]],
     [['임대현황', F('u_공실여부')], ['임대현황', F('u_현임대현황')]],
