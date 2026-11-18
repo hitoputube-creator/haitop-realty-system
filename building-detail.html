@@ -2971,6 +2971,9 @@ async function deleteBFile(id) {
     $("u_현매매가격").value = u.현_매매가격 ?? "";
     $("u_현보증금").value   = u.현_보증금   ?? "";
     $("u_현월세").value     = u.현_월세     ?? "";
+    if ($("u_현평당가")) $("u_현평당가").value = u.현_평당가 ?? "";
+    if ($("u_현임대현황")) $("u_현임대현황").value = u.현_임대현황 || "";
+    if ($("u_현업종2")) $("u_현업종2").value = u.현_업종 || "";
     $("u_소유주").value     = u.소유주      || "";
     $("u_연락처").value     = u.연락처      || "";
     if ($("u_통신사")) $("u_통신사").value = u.통신사 || "";
@@ -3195,6 +3198,9 @@ async function deleteBFile(id) {
       현_매매가격: $("u_현매매가격").value === "" ? null : Number($("u_현매매가격").value),
       현_보증금:   $("u_현보증금").value === "" ? null : Number($("u_현보증금").value),
       현_월세:     $("u_현월세").value === "" ? null : Number($("u_현월세").value),
+      현_평당가:   ($("u_현평당가") && $("u_현평당가").value !== "") ? Number($("u_현평당가").value) : null,
+      현_임대현황: ($("u_현임대현황") && $("u_현임대현황").value) || null,
+      현_업종:     ($("u_현업종2") && $("u_현업종2").value.trim()) || null,
       수익률:      $("u_수익률").value.trim()    || null,
       추천매물:    $("u_추천매물").checked   ? true : null,
       수익성매물:  $("u_수익성매물").checked ? true : null,
@@ -3699,12 +3705,17 @@ async function deleteBFile(id) {
   ['u_공실여부', 'u_현업종'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield'; row1.appendChild(f); } });
   var occL = F('u_공실여부') && F('u_공실여부').querySelector('label'); if (occL) occL.textContent = '임대현황';
   var bizL = F('u_현업종') && F('u_현업종').querySelector('label'); if (bizL) bizL.textContent = '업종';
+  // 할인·현재 조건 쪽에도 같은 3칸(평당가·임대현황·업종)
+  var rN = document.createElement('div'); rN.className = 'umfield'; rN.style.gridColumn = '4'; rN.innerHTML = '<label>평당가 (만원)</label><input id="u_현평당가" type="number" placeholder="0" />';
+  var rO = document.createElement('div'); rO.className = 'umfield'; rO.style.gridColumn = '5'; rO.innerHTML = '<label>임대현황</label>'; var rOs0 = row1.querySelector('#u_공실여부') || $('u_공실여부'); var rOs = rOs0 ? rOs0.cloneNode(true) : document.createElement('select'); rOs.id = 'u_현임대현황'; rOs.removeAttribute('aria-label'); rO.appendChild(rOs);
+  var rB = document.createElement('div'); rB.className = 'umfield'; rB.style.gridColumn = '6'; rB.innerHTML = '<label>업종</label><input id="u_현업종2" placeholder="예: 음식점, 학원" />';
   var cmp = document.createElement('div'); cmp.className = 'uf-cmp';
   cmp.innerHTML = '<div class="uf-cmp-h old">기존 분양조건</div><div class="uf-cmp-h cur">할인 · 현재 조건</div>';
   put(D, ['u_분양금액', 'u_보증금', 'u_월차임', 'u_현매매가격', 'u_현보증금', 'u_현월세'], '', cmp);
   put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) pf.style.gridColumn = '1';
   [].slice.call(row1.children).forEach(function (f, i) { if (f) { f.style.gridColumn = String(i + 2); cmp.appendChild(f); } }); // 임대현황·업종: 평당가 옆(기존 보증금·월세 아래)
   var kf = F('u_권리금'); if (kf) kf.style.display = 'none';
+  [rN, rO, rB].forEach(function (f) { cmp.appendChild(f); });
   grid(D).appendChild(cmp);
   var flags = document.createElement('div'); flags.className = 'umfield uf-10 uf-flags';
   ['u_추천매물', 'u_수익성매물'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield umcheck'; flags.appendChild(f); } });
