@@ -82,7 +82,7 @@
      road.addEventListener('change',()=>{if(enabled&&String(road.value||'').trim()&&(!String(map.value||'').trim()||autoMap))convert('road');});
     }
     road.readOnly=false;road.placeholder='새주소 (도로명) 예) 경기도 파주시 ○○로 123';
-    road.style.cssText='flex:1;min-width:0;';
+    road.style.cssText='flex:1;min-width:0;background:#fff!important;color:inherit!important;border-color:inherit;';
     map.style.minWidth='0';
     map.after(convBtn,road);
     if(!convStatus.parentNode)addressField.appendChild(convStatus);
