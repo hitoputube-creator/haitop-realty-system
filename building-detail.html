@@ -871,7 +871,7 @@
           <div class="umfield g2"><label>호수 *</label><input id="u_호수" placeholder="예: 101, 202" /></div>
           <div class="umfield g2"><label>업종</label><input id="u_현업종" placeholder="예: 음식점, 학원" /></div>
           <div class="umfield area-dual full g4">
-            <label>전용 면적</label>
+            <label>전용면적</label>
             <div class="area-row">
               <input id="u_전용_평" type="number" step="0.01" placeholder="평" />
               <span class="area-arrow">↔</span>
@@ -880,7 +880,7 @@
             </div>
           </div>
           <div class="umfield area-dual full g4">
-            <label>분양 면적</label>
+            <label>분양(공급)면적</label>
             <div class="area-row">
               <input id="u_분양_평" type="number" step="0.01" placeholder="평" />
               <span class="area-arrow">↔</span>
@@ -900,15 +900,15 @@
         <div class="um-section-title">📊 현재 현황</div>
         <div class="umgrid">
           <div class="umfield g3">
-            <label>임대현황 (공실 여부)</label>
+            <label>임대현황</label>
             <select id="u_공실여부" aria-label="임대현황 공실 여부">
               <option value="임차중">임차중</option>
               <option value="공실">공실</option>
             </select>
           </div>
-          <div class="umfield g3"><label>(현)매매가격 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /><span class="amt-hint" id="h_현매매가격"></span></div>
-          <div class="umfield g3"><label>(현)보증금 (만원)</label><input id="u_현보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_현보증금"></span></div>
-          <div class="umfield g3"><label>(현)월세 (만원)</label><input id="u_현월세" type="number" placeholder="0" /><span class="amt-hint" id="h_현월세"></span></div>
+          <div class="umfield g3"><label>현재 매매가 (만원)</label><input id="u_현매매가격" type="number" placeholder="0" /><span class="amt-hint" id="h_현매매가격"></span></div>
+          <div class="umfield g3"><label>현재 보증금 (만원)</label><input id="u_현보증금" type="number" placeholder="0" /><span class="amt-hint" id="h_현보증금"></span></div>
+          <div class="umfield g3"><label>현재 월세 (만원)</label><input id="u_현월세" type="number" placeholder="0" /><span class="amt-hint" id="h_현월세"></span></div>
           <div class="umfield g3" id="u_구분_field" hidden>
             <label>구분 (상가 / 오피스텔)</label>
             <select id="u_구분" aria-label="구분"><option value="상가">상가</option><option value="오피스텔">오피스텔(주거)</option></select>
@@ -923,14 +923,16 @@
               <option value="매매·전세">매매·전세</option><option value="매매·월세">매매·월세(임대)</option><option value="회사분양">(회사)분양</option><option value="회사임대">(회사)월세(임대)</option>
             </select>
           </div>
-          <div class="umfield g3"><label>관리비</label><input id="u_관리비" placeholder="예: 15만" /></div>
+          <div class="umfield g3" hidden style="display:none"><label>관리비</label><input id="u_관리비" placeholder="예: 15만" /></div>
           <div class="umfield g3"><label>권리금</label><input id="u_권리금" placeholder="예: 없음 또는 2,000만" /></div>
           <div class="umfield g3"><label>층정보</label><input id="u_층정보" placeholder="예: 지상 1층" /></div>
           <div class="umfield g3"><label>용도지역</label><input id="u_용도지역" placeholder="예: 준공업지역" /></div>
           <div class="umfield g3"><label>주차대수</label><input id="u_주차대수" placeholder="예: 10대" /></div>
           <div class="umfield g3"><label>사용승인일</label><input id="u_사용승인일" placeholder="예: 2010-03-15" /></div>
           <div class="umfield g4"><label>소유주명</label><input id="u_소유주" placeholder="예) 홍길동" /></div>
-          <div class="umfield g4"><label>연락처1</label><input id="u_연락처" placeholder="010-0000-0000" /></div>
+          <div class="umfield g4"><label>소유주 연락처</label><input id="u_연락처" placeholder="010-0000-0000" /></div>
+          <div class="umfield g4"><label>통신사</label><select id="u_통신사" aria-label="소유자 통신사"><option value="">통신사</option><option>SKT</option><option>KT</option><option>LG U+</option><option>SKT 알뜰폰</option><option>KT 알뜰폰</option><option>LG U+ 알뜰폰</option><option>미확인</option></select></div>
+          <div class="umfield full" id="u_추가연락처_field"><div id="u_추가연락처Wrap" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div><button type="button" class="btn-unit-ghost" id="u_추가연락처Btn" style="margin-top:4px">+ 추가 연락처</button></div>
           <div class="umfield g4"><label>수익률 (%)</label><input id="u_수익률" placeholder="예: 5.2" /></div>
           <div class="umfield umcheck g3"><label for="u_추천매물"><input id="u_추천매물" type="checkbox" /> ⭐ 추천매물</label></div>
           <div class="umfield umcheck g3"><label for="u_수익성매물"><input id="u_수익성매물" type="checkbox" /> 💰 수익성매물</label></div>
@@ -2967,6 +2969,8 @@ async function deleteBFile(id) {
     $("u_현월세").value     = u.현_월세     ?? "";
     $("u_소유주").value     = u.소유주      || "";
     $("u_연락처").value     = u.연락처      || "";
+    if ($("u_통신사")) $("u_통신사").value = u.통신사 || "";
+    if (window.umSetContacts) window.umSetContacts(u.추가연락처);
     $("u_수익률").value     = u.수익률      || "";
     $("u_추천매물").checked   = isFlagOn(u.추천매물);
     $('umListingView').hidden = !u.listing_id;
@@ -3175,6 +3179,8 @@ async function deleteBFile(id) {
       현업종:      $("u_현업종").value.trim()    || null,
       소유주:      $("u_소유주").value.trim()    || null,
       연락처:      $("u_연락처").value.trim()    || null,
+      통신사:      ($("u_통신사") && $("u_통신사").value) || null,
+      추가연락처:  window.umGetContacts ? window.umGetContacts() : [],
       보증금:      $("u_보증금").value === "" ? null : Number($("u_보증금").value),
       월차임:      $("u_월차임").value === "" ? null : Number($("u_월차임").value),
       전용_평:     $("u_전용_평").value ? Math.round(parseFloat($("u_전용_평").value) * 100) / 100 : null,
@@ -3551,6 +3557,38 @@ async function deleteBFile(id) {
   new MutationObserver(labelRows).observe(body,{childList:true});
   new MutationObserver(labelRows).observe(head,{childList:true,subtree:true});
   labelRows();
+})();
+</script>
+<script>
+/* 자료실 호실 수정창: 추가 연락처 입력 (매물 수정창과 같은 구성: 이름(선택) + 번호) */
+(function () {
+  function wrap() { return document.getElementById('u_추가연락처Wrap'); }
+  function addRow(name, phone) {
+    var w = wrap(); if (!w) return;
+    var row = document.createElement('div'); row.className = 'u-contact-row'; row.style.cssText = 'display:flex;gap:6px;align-items:center';
+    row.innerHTML = '<input type="text" class="u-contact-name" placeholder="이름(선택)" style="width:110px" /><input type="tel" class="u-contact-phone" placeholder="010-0000-0000" style="width:160px" /><button type="button" class="btn-unit-ghost u-contact-del" title="삭제" style="padding:4px 9px">✕</button>';
+    row.querySelector('.u-contact-name').value = name || '';
+    row.querySelector('.u-contact-phone').value = phone || '';
+    row.querySelector('.u-contact-del').addEventListener('click', function () { row.remove(); });
+    w.appendChild(row);
+    if (!phone) row.querySelector('.u-contact-name').focus();
+  }
+  window.umSetContacts = function (list) {
+    var w = wrap(); if (!w) return; w.textContent = '';
+    (Array.isArray(list) ? list : []).forEach(function (c) { if (c && c.phone) addRow(c.name, c.phone); });
+  };
+  window.umGetContacts = function () {
+    var w = wrap(); if (!w) return [];
+    var seen = {}, out = [];
+    var main = String((document.getElementById('u_연락처') || {}).value || '').replace(/\D/g, ''); if (main) seen[main] = true;
+    w.querySelectorAll('.u-contact-row').forEach(function (row) {
+      var phone = row.querySelector('.u-contact-phone').value.trim(), digits = phone.replace(/\D/g, '');
+      if (!digits || seen[digits]) return; seen[digits] = true;
+      out.push({ name: row.querySelector('.u-contact-name').value.trim(), phone: phone });
+    });
+    return out;
+  };
+  document.addEventListener('click', function (e) { if (e.target && e.target.id === 'u_추가연락처Btn') addRow('', ''); });
 })();
 </script>
 </body>
