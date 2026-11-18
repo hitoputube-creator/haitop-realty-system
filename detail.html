@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="assets/css/style.css?v=20261110-tone4" />
 <script src="assets/js/storage.js?v=20261118-img1"></script>
-<script src="assets/js/commercial-address-fields.js?v=20261103-name-first"></script>
+<script src="assets/js/commercial-address-fields.js?v=20261118-road1"></script>
 <script src="assets/js/office-brand.js?v=20261109-logo1"></script>
 <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1201,7 +1201,8 @@ function closeHomepageTab(tab) {
       document.getElementById("edit_mapAddress").value = apartmentDetailAddresses(item).jibunAddress || "";
     }
     document.getElementById("edit_privateDetailAddress").value = item.privateDetailAddress || item.detailAddress || "";
-    if (typeof fillRoadAddress === "function") fillRoadAddress(document.getElementById("edit_mapAddress").value);
+    if (item.roadAddress && !(category.category2 === "아파트" || item.type === "apartment")) { document.getElementById("edit_roadAddress").value = item.roadAddress; }
+    else if (typeof fillRoadAddress === "function") fillRoadAddress(document.getElementById("edit_mapAddress").value);
     fillApartmentUnitFields("edit_", item);
     syncEditApartmentFields();
     // 레거시 type="hilsstate" 매물은 단지명 필드가 비어 있어도 "힐스테이트더운정"을 자동 표시한다(세부유형은 강제 선택하지 않음).
@@ -2684,6 +2685,7 @@ function closeHomepageTab(tab) {
           ...apartmentAddresses,
           publicAddress,
           mapAddress,
+          ...(category2 === "아파트" ? {} : { roadAddress: gv("edit_roadAddress") }),
           privateDetailAddress,
           dong: category2 === "아파트" ? apartmentUnit.dong : item.dong,
           ho: category2 === "아파트" ? apartmentUnit.ho : item.ho,
