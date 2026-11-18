@@ -152,9 +152,9 @@
       const dv=String(listingColumnValue(item,'dong') || '').replace(/동$/,'').trim();
       const rv=String(listingColumnValue(item,'room') || '').replace(/호$/,'').trim();
       const lines=[];
-      if (dv && dv!=='-') lines.push(dv+'동');
-      if (rv && rv!=='-') lines.push(rv+'호');
-      node.replaceChildren(...(lines.length ? lines : ['-']).map(text=>{const line=document.createElement('span');line.className='lc-dh-line';line.textContent=text;return line;}));
+      if (dv && dv!=='-') lines.push([dv+'동','lc-dh-dong']);
+      if (rv && rv!=='-') lines.push([rv+'호','lc-dh-ho']);
+      node.replaceChildren(...(lines.length ? lines : [['-','']]).map(([text,cls])=>{const line=document.createElement('span');line.className=('lc-dh-line '+cls).trim();line.textContent=text;return line;}));
     }
     if (key==='name') {
       const raw=String(listingColumnValue(item,key) || '-');
@@ -320,7 +320,8 @@
     .properties-page .lc-dh-line {display:block;line-height:1.35;white-space:nowrap;}
     html body.properties-page .typed-property-row .listing-cell-dong::after {content:none!important;}
     .properties-page .lc-unit-line {display:block;margin-top:3px;font-size:15px;font-weight:800;line-height:1.35;color:#1d4ed8;}
-    html body.properties-page .typed-property-row .listing-cell-dong,html body.properties-page .typed-property-row .listing-cell-room {font-size:16px!important;font-weight:800!important;color:#1d4ed8!important;}
+    html body.properties-page .typed-property-row .listing-cell-dong,html body.properties-page .typed-property-row .listing-cell-room {font-size:14.5px!important;font-weight:800!important;color:#1d4ed8!important;}
+    html body.properties-page .typed-property-row .listing-cell-dong .lc-dh-ho {color:#c2410c!important;}
     @media(min-width:801px){
       html[data-office-theme="ktop"] .properties-page .listing-row-card.typed-property-row{min-height:0;padding:5px 10px}
       html[data-office-theme="ktop"] .properties-page .typed-property-row .listing-cell-type{flex-direction:row;flex-wrap:wrap;align-items:center;align-content:center;column-gap:8px;row-gap:2px}
