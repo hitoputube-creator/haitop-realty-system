@@ -502,7 +502,16 @@ function setupApartmentListingForm(prefix, category2Id) {
   const host = document.getElementById(prefix + "apartmentListingForm");
   host.innerHTML = APARTMENT_LISTING_FORM_HTML.replace(/id="([^"]+)"/g, (_, id) => 'id="' + prefix + id + '"')
     .replace('list="aptUnitTypes"', 'list="' + prefix + 'aptUnitTypes"');
-  { const ps = host.querySelector("[data-presale-fields]"), priceSec = host.querySelector(".um-section.current"); if (ps && priceSec) priceSec.appendChild(ps); } // 분양권 정보는 거래·가격 박스 안으로 합친다
+  { const ps = host.querySelector("[data-presale-fields]"), priceSec = host.querySelector(".um-section.current"); if (ps && priceSec) priceSec.appendChild(ps); }
+  { // 아파트도 다른 유형처럼 위쪽 기본정보 줄에 「거래유형」을 두고, 거래·가격 카드의 중복 칸은 없앤다. (select 자체를 옮기므로 저장·불러오기는 그대로 동작)
+    const dealSel0 = document.getElementById(prefix + "apt_거래구분"), topDeal0 = document.getElementById(prefix + "dealType"), topField0 = topDeal0 && topDeal0.closest(".field");
+    if (dealSel0 && topField0 && !document.getElementById(prefix + "aptDealField")) {
+      const f0 = document.createElement("div"); f0.className = topField0.className; f0.id = prefix + "aptDealField"; f0.style.display = "none";
+      const l0 = topField0.querySelector("label"), nl0 = document.createElement("label"); nl0.innerHTML = l0 ? l0.innerHTML : "거래유형";
+      const u0 = dealSel0.closest(".umfield");
+      f0.append(nl0, dealSel0); topField0.after(f0); if (u0) u0.remove();
+    }
+  } // 분양권 정보는 거래·가격 박스 안으로 합친다
   const saleType=document.getElementById(prefix+"apt_매매유형");
   const saleDeal=document.getElementById(prefix+"apt_거래구분");
   function toggleSaleType(){const isSale=saleDeal.value==="매매";saleType.disabled=!isSale;}
@@ -794,6 +803,7 @@ function setupApartmentListingForm(prefix, category2Id) {
       }
     }
 
+    { const aptDealField0 = document.getElementById(prefix + "aptDealField"); if (aptDealField0) aptDealField0.style.display = apt ? "" : "none"; }
     for (const id of ["complexName", "apartmentDong", "apartmentHo", "dealType", "title"]) {
       const el = document.getElementById(prefix + id);
       if (el) el.closest(".field").style.display = apt ? "none" : (id.startsWith("apartment") ? "none" : "");
