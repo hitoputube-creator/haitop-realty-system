@@ -60,7 +60,8 @@
     Object.entries(positions).forEach(([id,[row,col]])=>{const field=get(id)?.closest('.field');if(!field)return;field.classList.remove('presale-hidden');const pos=open?[row,col]:collapsedLayout[id];if(enabled&&pos){field.style.gridRow=String(pos[0]);field.style.gridColumn=String(pos[1]);}else{field.style.gridRow='';field.style.gridColumn='';if(enabled&&!open)field.classList.add('presale-hidden');}if(id.startsWith('original'))field.hidden=!enabled||!open;});
    const labels={presalePrice:enabled?'기존 분양가':'분양가',salePrice:enabled?'현재 매매가':'매매가',deposit:enabled?'현재 보증금':'보증금',monthlyRent:enabled?'현재 월세':'월세'};
    Object.entries(labels).forEach(([id,label])=>{const field=get(id)?.closest('.field');if(field)field.querySelector('label').textContent=label;});
-   ['publicAddress','managementFee','premium'].forEach(id=>{const field=get(id)?.closest('.field');if(field)field.classList.toggle('presale-hidden',enabled);});
+   ['publicAddress','managementFee'].forEach(id=>{const field=get(id)?.closest('.field');if(field)field.classList.toggle('presale-hidden',enabled);});
+    {const premiumField=get('premium')?.closest('.field');if(premiumField)premiumField.classList.toggle('presale-hidden',presaleKind);}
   }
   const formatOriginal=id=>{const input=get(id),preview=get(id+'_preview');const digits=input.value.replace(/[^\d]/g,'');input.value=digits?Number(digits).toLocaleString('ko-KR'):'';if(preview){const n=Number(digits);preview.textContent=digits?new Intl.NumberFormat('ko-KR').format(n)+'원':'';}};
   ['originalDeposit','originalMonthlyRent'].forEach(id=>get(id).addEventListener('input',()=>formatOriginal(id)));
