@@ -342,6 +342,55 @@ input[type=file].hidden-file { display:none; }
 @media screen and (min-width:820px), print{ #property-page>*{flex-shrink:0} #property-page .page-body{flex:1 0 auto} }
 
 @media screen and (min-width:820px){ #property-page .page-footer{display:none!important} }
+
+/* ══ 제안서 재디자인: 포인트 색, 가격 강조, 읽기 쉬운 위계 ══ */
+:root{--pt-a:#25675f;--pt-a2:#1d5149;--pt-soft:#e8f3f1;--pt-line:#d9e2ec;--pt-hero:linear-gradient(115deg,#1d5149 0%,#25675f 60%,#2f8176 100%);--pt-point:#b45309;--pt-point-bg:#fff6e6;--pt-ink:#1e293b;--pt-sub:#475569;--pt-mute:#64748b}
+html[data-pt-office='ktop']{--pt-a:#1767d2;--pt-a2:#193860;--pt-soft:#eaf2ff;--pt-hero:linear-gradient(115deg,#193860 0%,#214c8d 70%,#2465ba 100%)}
+#property-page #page-header{background:var(--pt-hero)!important;padding:20px 28px 18px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#property-page .ph-logo{width:46px;height:46px;background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.45);color:#fff;font-size:15px}
+#property-page .ph-name{color:#fff;font-size:20px;letter-spacing:-.4px}
+#property-page .ph-doc{color:#fcd34d;font-size:12.5px;letter-spacing:.08em}
+#property-page .ph-date{color:rgba(255,255,255,.8);font-size:11.5px}
+#property-page .ph-date strong{color:#fff;font-size:13px}
+#property-page .gold-line{height:4px;background:linear-gradient(90deg,#f59e0b 0%,#fcd34d 45%,rgba(252,211,77,0) 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#property-page #title-area{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--pt-line)}
+#property-page .prop-main-title{font-size:24px;font-weight:900;color:var(--pt-a2);letter-spacing:-.6px;line-height:1.3}
+#property-page .prop-sub-title{font-size:13px;color:var(--pt-sub);font-weight:600;margin-top:6px}
+#property-page .prop-sub-title::before{background:var(--pt-a);width:4px}
+/* 요약: 가격을 가장 크게, 나머지는 작은 카드 */
+#property-page #summary-area{margin-bottom:18px}
+#property-page .summary-grid{display:flex!important;flex-wrap:wrap;gap:10px}
+#property-page .sum-card{flex:1 1 0;min-width:0;padding:12px 12px 11px;text-align:left;background:#fff!important;border:1px solid var(--pt-line);border-top:3px solid var(--pt-a);border-radius:10px;box-shadow:none}
+#property-page .sum-label{font-size:11px;font-weight:800;color:var(--pt-a);letter-spacing:.02em;margin-bottom:4px}
+#property-page .sum-value{font-size:19px;font-weight:900;color:var(--pt-ink);letter-spacing:-.4px}
+#property-page .sum-value.sm{font-size:15px}
+#property-page .sum-card:has(#sum-price){order:-1;flex:0 0 100%;padding:16px 20px 15px;text-align:center;background:var(--pt-hero)!important;border:0;border-radius:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#property-page .sum-card:has(#sum-price) .sum-label{color:rgba(255,255,255,.85);font-size:12px;letter-spacing:.12em}
+#property-page .sum-card:has(#sum-price) .sum-value{color:#fff;font-size:34px;font-weight:900;letter-spacing:-.8px;line-height:1.25}
+#property-page .sum-card:has(#sum-price) .sum-value.sm{font-size:24px}
+/* 섹션 제목 */
+#property-page .section-title{gap:8px;margin-bottom:10px;padding-bottom:7px;font-size:14px;font-weight:900;color:var(--pt-a2);border-bottom:2px solid var(--pt-a)}
+#property-page .section-title span{font-size:13px}
+/* 기본 정보 표 */
+#property-page .info-table{font-size:13px;border:1px solid var(--pt-line)}
+#property-page .info-table th,#property-page .info-table td{padding:8px 12px;border:1px solid var(--pt-line)}
+#property-page .info-table th{background:var(--pt-soft);color:var(--pt-a2);font-size:12.5px;font-weight:800;width:19%;text-align:left}
+#property-page .info-table td{color:var(--pt-ink);font-weight:500}
+#property-page .info-table tr:nth-child(even) td{background:#fff}
+#property-page .info-table td.k-price{background:var(--pt-point-bg)!important;color:var(--pt-point);font-size:14px;font-weight:900;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#property-page .info-table td.k-area{color:var(--pt-a);font-weight:800}
+#property-page .info-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#property-page .desc-box{background:var(--pt-soft);border-left:4px solid var(--pt-a);color:var(--pt-ink);font-size:13px;line-height:1.8}
+#property-page #plan-box{border:1px solid var(--pt-line);border-radius:10px}
+#property-page #plan-box img,#property-page .plan-multi img{max-height:8.6cm}
+#property-page #plan-cap{color:var(--pt-sub);font-weight:700}
+/* 하단 회사 정보 */
+#property-page :is(#contact-area,#contact-area-ktop){border:1.5px solid var(--pt-a)!important;box-shadow:none!important}
+#property-page :is(#contact-area,#contact-area-ktop) .contact-head{background:var(--pt-hero)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#property-page :is(#contact-area,#contact-area-ktop) .contact-phone{color:#fcd34d!important;font-size:15px}
+#property-page :is(#contact-area,#contact-area-ktop) .contact-label{color:var(--pt-a)}
+#property-page :is(#contact-area,#contact-area-ktop) .contact-value{color:var(--pt-ink);font-weight:600}
+#property-page :is(#contact-area,#contact-area-ktop) .contact-line:nth-child(4n+3),#property-page :is(#contact-area,#contact-area-ktop) .contact-line:nth-child(4n+4){background:var(--pt-soft)!important}
 </style>
 </head>
 <body>
@@ -1642,6 +1691,20 @@ input[type=file].hidden-file { display:none; }
   var body=document.querySelector('.page-body');
   if(window.MutationObserver&&body){new MutationObserver(function(m){if(busy)return;later();}).observe(body,{childList:true,subtree:true,characterData:true});}
   setTimeout(fit,600);setTimeout(fit,2000);
+})();
+</script>
+
+<script>
+/* 기본 정보 표에서 가격·면적 칸에 포인트 색 클래스를 붙인다 */
+(function(){
+  try{document.documentElement.setAttribute('data-pt-office',(typeof OfficeConfig!=='undefined'&&OfficeConfig.id)||'hitop');}catch(e){}
+  var PRICE=/^(가격|매매가|보증금|월세|전세|분양가|권리금|관리비)$/;var AREA=/면적$/;
+  function mark(){var tb=document.getElementById('info-tbody');if(!tb)return;
+    tb.querySelectorAll('th').forEach(function(th){var t=th.textContent.replace(/\s+/g,' ').trim();var td=th.nextElementSibling;if(!td||td.tagName!=='TD')return;
+      var isP=PRICE.test(t),isA=AREA.test(t)||/^(분양면적|전용면적|계약\(공급\)면적)/.test(t);
+      td.classList.toggle('k-price',isP);td.classList.toggle('k-area',!isP&&isA);});}
+  var tb=document.getElementById('info-tbody');if(tb&&window.MutationObserver){var busy=false;new MutationObserver(function(){if(busy)return;busy=true;mark();busy=false;}).observe(tb,{childList:true});}
+  window.addEventListener('load',mark);setTimeout(mark,500);setTimeout(mark,2000);
 })();
 </script>
 </body>
