@@ -66,6 +66,117 @@
       .price-one-row.commercial-price-compare>.field:has(#deposit){grid-column:5!important}
       .price-one-row.commercial-price-compare>.field:has(#monthlyRent){grid-column:6!important}
     }
+
+/* 매물 등록 화면 재디자인: 분양 탭·매물 수정창과 같은 표 형식 */
+html[data-office-theme] body.property-form-page{--em-accent:#1767d2;--em-soft:#eaf2ff;--em-ink:#1e293b;--em-sub:#475569;--em-mute:#64748b;--em-line:#e2e8f0;--em-th:#eef2f7}
+html[data-office-theme='hitop'] body.property-form-page{--em-accent:#25675f;--em-soft:#e6f2ef}
+html[data-office-theme] body.property-form-page .page-title{font-size:20px!important;font-weight:800!important;color:var(--em-ink)!important}
+html[data-office-theme] body.property-form-page #registerPageIntro{padding:9px 14px!important;border:1px solid var(--em-line)!important;border-radius:8px!important;background:#f6f8fb!important;color:var(--em-sub)!important;font-size:12.5px!important}
+html[data-office-theme] body.property-form-page .back-to-properties{height:32px!important;min-height:0!important;padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--em-sub)!important;font-size:12.5px!important;font-weight:700!important;text-decoration:none!important}
+/* 카드·섹션 제목 */
+html[data-office-theme] body.property-form-page section.card{border:1px solid var(--em-line)!important;border-radius:12px!important;box-shadow:0 2px 10px rgba(15,23,42,.04)!important;background:#fff!important;padding:14px 18px 16px!important}
+html[data-office-theme] body.property-form-page section.card > .card-title{display:flex;align-items:center;gap:7px;margin:0 0 0!important;padding:7px 12px!important;border:0!important;border-radius:6px 6px 0 0!important;background:#f1f5f9!important;color:var(--em-ink)!important;font-size:13.5px!important;font-weight:800!important}
+html[data-office-theme] body.property-form-page section.card > .card-title::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--em-accent)}
+html[data-office-theme] body.property-form-page section.card > .card-title > span{color:inherit!important;font-weight:inherit!important}
+html[data-office-theme] body.property-form-page section.card > .card-title > span+span{margin-left:auto;font-size:11.5px!important;font-weight:600!important;color:var(--em-mute)!important}
+/* 표 컨테이너 */
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0!important;margin:0!important;padding:0!important;background:#fff;border-top:1px solid var(--em-line);border-left:1px solid var(--em-line);overflow:hidden}
+html[data-office-theme] body.property-form-page .area-rows-inline{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0!important;margin:0!important;border-top:1px solid var(--em-line);border-left:1px solid var(--em-line);background:#fff}
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row) > .field{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:0!important;margin:0!important;padding:0!important;background:#fff;min-width:0;box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row) > .field[style*="display: none"],html[data-office-theme] body.property-form-page .field.presale-hidden,html[data-office-theme] body.property-form-page .field[hidden],html[data-office-theme] body.property-form-page .commercial-original[hidden],html[data-office-theme] body.property-form-page .apt-top-unit-hidden{display:none!important}
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row) > .field > label,html[data-office-theme] body.property-form-page .commercial-address-field > label,html[data-office-theme] body.property-form-page .commercial-address-field .commercial-address-parts > .field > label,html[data-office-theme] body.property-form-page .area-row > .area-label{flex:0 0 128px;box-sizing:border-box;align-self:stretch;display:flex!important;flex-direction:column;justify-content:center;align-items:flex-start;height:auto!important;line-height:1.3!important;margin:0!important;padding:8px 12px!important;background:var(--em-th);border-right:1px solid var(--em-line);color:#334155!important;font-size:12.5px!important;font-weight:800!important;text-align:left!important;white-space:normal!important}
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row) > .field > label span,html[data-office-theme] body.property-form-page .commercial-address-field > label span{display:block;margin-top:2px;font-size:11px!important;font-weight:500!important;color:var(--em-mute)!important}
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row) > .field > :is(input,select,textarea){flex:1 1 0;min-width:0;margin:5px 8px!important;width:auto!important}
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row) > .field > :is(span:not(.price-preview),small){flex:0 0 auto;margin:0 8px 0 0;font-size:11px!important;color:var(--em-mute)!important}
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row) > .field > .price-preview{flex:0 0 118px;margin:0 8px 0 0!important;padding:0!important;font-size:11.5px;line-height:1.3;font-weight:700;color:var(--em-accent)!important}
+html[data-office-theme] body.property-form-page :is(.form-grid-5,.form-grid-3:not(.price-one-row):not(:has(#owner_name)),.form-grid-2.commercial-one-row,.form-grid-3.price-one-row) > .field > .price-preview:empty{visibility:hidden;display:block}
+/* 기본정보: 5개 필드, 마지막은 전체 폭 */
+html[data-office-theme] body.property-form-page .form-grid-5 > .field:nth-child(5){grid-column:1/-1}
+html[data-office-theme] body.property-form-page .form-grid-5 > .field:nth-child(5) > select{flex:0 0 260px!important}
+/* 주소 영역 */
+html[data-office-theme] body.property-form-page .form-grid-3:not(.price-one-row):not(:has(#owner_name)) > .field{grid-column:span 1}
+html[data-office-theme] body.property-form-page .form-grid-3:not(.price-one-row):not(:has(#owner_name)) > .field.field-span2,html[data-office-theme] body.property-form-page .form-grid-3:not(.price-one-row):not(:has(#owner_name)) > .field[style*="1 / -1"]{grid-column:1/-1!important}
+html[data-office-theme] body.property-form-page .commercial-address-field{display:grid!important;grid-template-columns:128px minmax(0,1fr) 128px minmax(0,1fr)!important;gap:0!important;padding:0!important;background:#fff!important}
+html[data-office-theme] body.property-form-page .commercial-address-field > *{background:#fff}
+html[data-office-theme] body.property-form-page .commercial-address-field .commercial-address-parts{display:contents!important}
+html[data-office-theme] body.property-form-page .commercial-address-field .commercial-address-parts > .field{display:flex!important;flex-direction:row;align-items:center;margin:0!important;padding:0!important;grid-row:1!important;min-width:0;box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page .commercial-address-field .commercial-address-parts > .field:nth-child(1){grid-column:1 / span 2!important}
+html[data-office-theme] body.property-form-page .commercial-address-field .commercial-address-parts > .field:nth-child(2){grid-column:3 / span 2!important}
+html[data-office-theme] body.property-form-page .commercial-address-field .commercial-address-parts > .field > :is(input,select){flex:1 1 0;min-width:0;margin:5px 8px!important;width:auto!important}
+html[data-office-theme] body.property-form-page .commercial-address-field > label{grid-row:2!important;grid-column:1!important}
+html[data-office-theme] body.property-form-page .commercial-address-field > div:not(.commercial-address-parts){grid-row:2!important;grid-column:2 / span 3!important;padding:5px 8px;align-items:center;box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page .commercial-address-field > span{grid-column:1 / -1!important;grid-row:auto!important}
+html[data-office-theme] body.property-form-page .commercial-address-field > span:empty{display:none}
+html[data-office-theme] body.property-form-page :is(.form-grid-3:not(.price-one-row):not(:has(#owner_name))) > .field:not(.commercial-address-field) > div:not(.commercial-address-parts){flex:1 1 0;display:flex;gap:8px;align-items:center;margin:5px 8px!important;min-width:0}
+/* 면적 */
+html[data-office-theme] body.property-form-page .area-rows-inline .area-row{display:flex!important;align-items:center;gap:8px;margin:0!important;padding:0 10px 0 0!important;background:#fff;min-width:0;box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page .area-rows-inline .area-row > .area-label{flex:0 0 128px}
+html[data-office-theme] body.property-form-page .area-rows-inline .area-row > input{flex:1 1 0;min-width:70px;margin:5px 0!important;width:auto!important}
+html[data-office-theme] body.property-form-page .area-rows-inline .area-row > .area-unit{flex:0 0 auto;color:var(--em-mute);font-size:12px}
+/* 입력칸 공통 */
+html[data-office-theme] body.property-form-page .field input:not([type=checkbox]):not([type=radio]):not([type=file]),html[data-office-theme] body.property-form-page .field select{height:32px!important;min-height:0!important;box-sizing:border-box;padding:0 10px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--em-ink)!important;font-size:13px!important}
+html[data-office-theme] body.property-form-page .field textarea{box-sizing:border-box;padding:8px 10px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--em-ink)!important;font-size:13px!important;line-height:1.55}
+html[data-office-theme] body.property-form-page .field input:focus,html[data-office-theme] body.property-form-page .field select:focus,html[data-office-theme] body.property-form-page .field textarea:focus{border-color:var(--em-accent)!important;outline:0!important;box-shadow:0 0 0 2px rgba(23,103,210,.12)!important}
+html[data-office-theme] body.property-form-page .field input[readonly]{background:#f1f5f9!important;color:var(--em-sub)!important}
+/* 가격 */
+html[data-office-theme] body.property-form-page .presale-switch{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0!important;padding:8px 10px!important;border:1px solid var(--em-line);border-bottom:0;border-radius:0!important;background:#fff}
+html[data-office-theme] body.property-form-page .presale-switch > span{font-size:12.5px!important;font-weight:800!important;color:#334155!important;min-height:0!important;margin:0 2px 0 0!important}
+html[data-office-theme] body.property-form-page .presale-switch > label{margin:0 0 0 8px!important;min-height:0!important;font-size:12.5px!important;font-weight:800!important;color:#334155!important;display:inline-flex!important;align-items:center;gap:6px}
+html[data-office-theme] body.property-form-page .presale-switch button{box-sizing:border-box;height:30px!important;min-height:0!important;padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--em-sub)!important;font-size:12.5px!important;font-weight:700!important;line-height:1!important}
+html[data-office-theme] body.property-form-page .presale-switch button.active{background:var(--em-accent)!important;border-color:var(--em-accent)!important;color:#fff!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .field:has(#salePrice){grid-area:1/1!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .field:has(#deposit){grid-area:1/2!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .field:has(#monthlyRent){grid-area:2/1!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .field:has(#premium){grid-area:2/2!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .commercial-compare-heading.original-toggle{grid-area:1/1!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .commercial-compare-heading.current{grid-area:1/2!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .field:has(#presalePrice){grid-area:2/1!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .field:has(#salePrice){grid-area:2/2!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .field:has(#originalDeposit){grid-area:3/1!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .field:has(#deposit){grid-area:3/2!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .field:has(#originalMonthlyRent){grid-area:4/1!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .field:has(#monthlyRent){grid-area:4/2!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare:not(.original-collapsed) > .field:has(#premium){grid-area:5/1!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row > .commercial-compare-heading{margin:0!important;padding:8px 12px!important;border-radius:0!important;border:0!important;font-size:13px!important;font-weight:800!important;box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row > .commercial-compare-heading.original-toggle{background:var(--em-th)!important;color:var(--em-ink)!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row > .commercial-compare-heading.current{background:var(--em-soft)!important;color:var(--em-accent)!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row > .commercial-flags{grid-area:6/1/auto/-1!important;background:#fff;padding:8px 12px;margin:0!important;box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row > .commercial-flags label{font-size:12.5px!important;font-weight:700!important;color:#334155!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row:not(.commercial-price-compare) > .commercial-flags,html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed > .commercial-flags{grid-area:auto/1/auto/-1!important}
+/* 버튼 */
+html[data-office-theme] body.property-form-page .btn,html[data-office-theme] body.property-form-page button.btn-ghost{box-sizing:border-box;height:30px!important;min-height:0!important;padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:6px!important;background:#fff!important;color:var(--em-sub)!important;font-family:inherit;font-size:12.5px!important;font-weight:700!important;line-height:1!important;box-shadow:none!important}
+html[data-office-theme] body.property-form-page .btn:hover{border-color:var(--em-accent)!important;color:var(--em-accent)!important}
+html[data-office-theme] body.property-form-page .btn-primary{background:var(--em-accent)!important;border-color:var(--em-accent)!important;color:#fff!important}
+html[data-office-theme] body.property-form-page .btn-primary:hover{color:#fff!important;filter:brightness(.92)}
+html[data-office-theme] body.property-form-page #saveBtn{height:34px!important;padding:0 24px!important}
+/* 내부전용 */
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name){display:block!important;margin:0!important;border:1px solid var(--em-line);border-top:0;border-radius:0 0 6px 6px;overflow:hidden;background:#fff}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div{display:flex!important;flex-wrap:wrap!important;gap:0!important;align-items:stretch!important;background:#fff}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div > .field{display:flex!important;flex-direction:row!important;align-items:center;flex:1 1 280px!important;min-width:0;margin:0!important;padding:0!important;background:#fff;box-shadow:inset -1px -1px 0 var(--em-line)}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div > .field > label{flex:0 0 128px;box-sizing:border-box;align-self:stretch;display:flex!important;align-items:center;margin:0!important;padding:8px 12px!important;background:var(--em-th);border-right:1px solid var(--em-line);color:#334155!important;font-size:12.5px!important;font-weight:800!important}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div > .field > :is(input,select){flex:1 1 0;min-width:0;margin:5px 8px!important;width:auto!important}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div > .field:nth-child(3){flex:0 0 150px!important}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div > .field:nth-child(3) > label{display:none!important}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div > .field.drive-link-inline{flex:1 1 100%!important}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div > #addOwnerPhone2Btn{align-self:center;margin:0 8px 0 0!important}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:first-child > div > #additionalContactsWrap{display:contents!important}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:not(:first-child){display:block!important;margin:0!important;padding:8px 12px 10px!important;border-top:1px solid var(--em-line)}
+html[data-office-theme] body.property-form-page .form-grid-3:has(#owner_name) > .field:not(:first-child) > label{display:block;margin-bottom:6px!important;font-size:12.5px!important;font-weight:800!important;color:#334155!important}
+
+html[data-office-theme] body.property-form-page section.card > .card-title{justify-content:flex-start!important}
+
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .commercial-flags{grid-area:3/1/auto/-1!important}
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .commercial-compare-heading{display:none!important}
+html[data-office-theme] body.property-form-page section.card > div:not(.card-title):not(.presale-switch):not([class*="form-grid"]):not(.area-rows-inline){margin-top:10px}
+html[data-office-theme] body.property-form-page section.card > .form-grid-2:not(.commercial-one-row){margin-top:10px!important;gap:10px!important}
+html[data-office-theme] body.property-form-page #genericMemoSection section.card > div{margin-top:10px}
+
+html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .field{grid-row:auto}
+
+html[data-office-theme] body.property-form-page .land-area-inline{flex:1 1 0;min-width:0;display:flex!important;align-items:center;gap:6px;margin:5px 8px!important}
+html[data-office-theme] body.property-form-page .land-area-inline input{flex:1 1 0;min-width:60px;width:auto!important;margin:0!important}
+html[data-office-theme] body.property-form-page .land-area-inline .area-unit{flex:0 0 auto;font-size:12px;color:var(--em-mute)}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
 <script>
