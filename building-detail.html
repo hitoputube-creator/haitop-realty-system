@@ -3813,6 +3813,91 @@ async function deleteBFile(id) {
   window.umSetView();
 })();
 </script>
+<script>
+/* 분양 호실 수정창: 표(이름칸 + 입력칸) 형태로 다시 배치. 칸의 id·저장·불러오기는 그대로이고 모양만 바뀐다. */
+(function () {
+  var wrap = document.getElementById('commercialUnitForm'); if (!wrap) return;
+  function $(id) { return document.getElementById(id); }
+  function F(id) { var e = $(id); return e && e.closest('.umfield'); }
+  function lab(f) { var l = f && f.querySelector('label'); return l ? l.textContent.trim() : ''; }
+  var st = document.createElement('style');
+  st.textContent =
+    '#commercialUnitForm .ut{width:100%;border-collapse:collapse;background:#fff;table-layout:fixed;margin:0 0 4px}' +
+    '#commercialUnitForm .ut th,#commercialUnitForm .ut td{border:1px solid #cbd8e6;padding:4px 8px;vertical-align:middle;box-sizing:border-box}' +
+    '#commercialUnitForm .ut th{background:#eef3f9;color:#2a4766;font-weight:700;text-align:left;font-size:12.5px;line-height:1.25}' +
+    '#commercialUnitForm .ut thead th{text-align:center;font-size:13px;font-weight:800;padding:6px}' +
+    '#commercialUnitForm .ut thead th.g{background:#d5e3e1;color:#1d4d4a}#commercialUnitForm .ut thead th.b{background:#d5e2f3;color:#16487f}' +
+    '#commercialUnitForm .ut td>.umfield{margin:0!important;padding:0!important;display:block;background:none!important;border:0!important;min-width:0}' +
+    '#commercialUnitForm .ut td>.umfield>label{display:none!important}' +
+    '#commercialUnitForm .ut td>.uf-area{display:flex;align-items:center;gap:6px}#commercialUnitForm .ut td>.uf-area>label{display:none!important}' +
+    '#commercialUnitForm .ut td>.uf-area input{flex:1 1 0;width:auto;min-width:0}' +
+    '#commercialUnitForm .ut input:not([type=checkbox]):not([type=radio]):not([type=file]),#commercialUnitForm .ut select{height:32px!important;min-height:32px!important;padding-top:3px!important;padding-bottom:3px!important}' +
+    '#commercialUnitForm .ut textarea{min-height:44px}' +
+    '#commercialUnitForm .ut #unitPresaleSwitch{display:flex;align-items:center;gap:6px;margin:0}#commercialUnitForm .ut #unitPresaleSwitch>span{display:none}' +
+    '#commercialUnitForm .ut .amt-hint{margin-top:1px}' +
+    '#commercialUnitForm .uf-sec>.uf-title{margin-bottom:0;border-radius:4px 4px 0 0}' +
+    '#commercialUnitForm .ut-note{margin:2px 0 0;font-size:11px;color:#7a8da3}';
+  document.head.appendChild(st);
+  function mk(rows, head) {
+    var t = document.createElement('table'); t.className = 'ut';
+    t.innerHTML = '<colgroup><col style="width:128px"><col><col style="width:128px"><col></colgroup>';
+    if (head) { var h = document.createElement('thead'); h.innerHTML = '<tr><th class="g" colspan="2">' + head[0] + '</th><th class="b" colspan="2">' + head[1] + '</th></tr>'; t.appendChild(h); }
+    var tb = document.createElement('tbody');
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+      r.forEach(function (p) {
+        if (!p || !p[1]) return;
+        var th = document.createElement('th'); th.textContent = p[0]; tr.appendChild(th);
+        var td = document.createElement('td'); if (p[2]) td.colSpan = p[2]; td.appendChild(p[1]); tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); return t;
+  }
+  function put(sec, table) { var g = sec.querySelector('.uf-grid'); var title = sec.querySelector('.uf-title'); title.after(table); if (g) g.style.display = 'none'; }
+  var secs = [].slice.call(wrap.querySelectorAll('.uf-sec'));
+  function find(t) { return secs.filter(function (s) { var x = s.querySelector('.uf-title'); return x && x.textContent.indexOf(t) >= 0; })[0]; }
+  var A = find('기본정보'), B = find('면적정보'), C = find('추가정보'), D = find('가격정보'), E = find('내부전용');
+  if (!A || !B || !C || !D || !E) return;
+  var nameF = $('uf_건물명') && $('uf_건물명').closest('.umfield'), addrF = $('uf_주소') && $('uf_주소').closest('.umfield');
+  var ph = $('unitPresaleSwitch');
+  var areas = [].slice.call(B.querySelectorAll('.uf-area'));
+  var hintEl = D.querySelector('.umhint');
+  var memoInternal = F('u_내부메모'), ac = $('u_추가연락처_field'), nb = $('u_비고_wrap');
+  // 추가 연락처: 작은 버튼 + 입력 줄
+  if (ac) {
+    ac.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center';
+    var b = $('u_추가연락처Btn'), w = $('u_추가연락처Wrap');
+    if (b) { b.style.cssText = 'margin:0;padding:3px 12px;height:26px;min-height:0;font-size:12px;border-radius:8px;width:auto'; ac.insertBefore(b, ac.firstChild); }
+    if (w) w.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;align-items:center';
+  }
+  put(A, mk([
+    [['건물명', nameF], ['상세주소', addrF]],
+    [[lab(F('u_호수')) || '호수', F('u_호수')], ['거래유형', F('u_거래구분')]],
+    [['분양상태', ph, 3]]
+  ]));
+  put(B, mk([[[ '전용면적', areas[0] ], [ '분양(공급)면적', areas[1] ]]]));
+  put(C, mk([
+    [['층정보', F('u_층정보')], ['용도지역', F('u_용도지역')]],
+    [['주차대수', F('u_주차대수')], ['사용승인일', F('u_사용승인일')]]
+  ]));
+  put(D, mk([
+    [[lab(F('u_분양금액')), F('u_분양금액')], [lab(F('u_현매매가격')), F('u_현매매가격')]],
+    [[lab(F('u_보증금')), F('u_보증금')], [lab(F('u_현보증금')), F('u_현보증금')]],
+    [[lab(F('u_월차임')), F('u_월차임')], [lab(F('u_현월세')), F('u_현월세')]],
+    [[lab(F('u_평당가')), F('u_평당가')], ['평당가 (만원)', F('u_현평당가')]],
+    [['임대현황', F('u_공실여부')], ['임대현황', F('u_현임대현황')]],
+    [['업종', F('u_현업종')], ['업종', F('u_현업종2')]]
+  ], ['기존 분양조건', '할인 · 현재 조건']));
+  if (hintEl) { hintEl.className = 'ut-note'; hintEl.style.cssText = ''; D.appendChild(hintEl); }
+  put(E, mk([
+    [['소유주명', F('u_소유주')], ['소유주 연락처', F('u_연락처')]],
+    [['통신사', F('u_통신사')], ['추가 연락처', ac]],
+    [['메모', nb, 3]],
+    [['내부 메모 (비공개)', memoInternal, 3]]
+  ]));
+})();
+</script>
 </body>
 </html>
 
