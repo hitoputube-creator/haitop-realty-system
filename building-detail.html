@@ -3739,7 +3739,7 @@ async function deleteBFile(id) {
   }
   // 소유주 메모 · 옵션내역 · 비고 → 메모 하나로 합침
   ['u_소유주메모', 'u_옵션내역'].forEach(function (id) { var f = F(id); if (f) f.style.display = 'none'; });
-  var nb = $('u_비고_wrap'); if (nb) { nb.className = 'umfield uf-10'; var nbl = nb.querySelector('label'); if (nbl) nbl.textContent = '메모 (소유주 메모 · 옵션 · 특이사항)'; var nbt = $('u_비고'); if (nbt) { nbt.rows = 5; nbt.placeholder = '소유주 통화 가능 시간, 옵션, 특이사항 등 자유 입력'; } grid(E).appendChild(nb); }
+  var nb = $('u_비고_wrap'); if (nb) { nb.className = 'umfield uf-10'; var nbl = nb.querySelector('label'); if (nbl) nbl.textContent = '메모 (소유주 메모 · 옵션 · 특이사항)'; var nbt = $('u_비고'); if (nbt) { nbt.rows = 5; nbt.style.setProperty('height', '100px', 'important'); nbt.placeholder = '소유주 통화 가능 시간, 옵션, 특이사항 등 자유 입력'; } grid(E).appendChild(nb); }
   grid(C).style.gridTemplateColumns = 'repeat(4,minmax(0,1fr))'; grid(E).classList.add('g3'); grid(E).style.gridTemplateColumns = 'repeat(3,minmax(0,1fr))';
   [A, B, C, D].forEach(function (s) { wrap.appendChild(s); });
   var notes = $('unitAdditionalNotes'); if (notes) wrap.appendChild(notes);
