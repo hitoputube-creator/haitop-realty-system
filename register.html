@@ -432,6 +432,13 @@ html body #editModal.fac-edit .field:has(> .price-preview) > input{padding-right
 /* 지도검색주소·새주소 라벨 아래 설명 삭제 */
 html body .field:has(>div>#mapAddress)>label>span,html body .field:has(>#roadAddress)>label>span,html body .field:has(>div>#edit_mapAddress)>label>span,html body .field:has(>#edit_roadAddress)>label>span{display:none!important}
 </style>
+<style id="priceFillStyle">
+/* 가격정보 입력칸을 표 칸 끝까지 채우고, 금액 미리보기는 칸 안쪽 오른쪽에 겹쳐 표시 */
+html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row > .field{position:relative!important}
+html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row > .field > .price-preview{position:absolute!important;right:20px;top:50%;transform:translateY(-50%);flex:none!important;width:auto!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;pointer-events:none;white-space:nowrap;display:block!important;visibility:visible!important}
+html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row > .field > .price-preview:empty{display:none!important}
+html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row > .field:has(> .price-preview) > input{padding-right:96px!important}
+</style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
 <div class="page" id="registerPage">
