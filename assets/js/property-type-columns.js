@@ -53,8 +53,8 @@
     if (!match || Number(match[2])<1 || Number(match[2])>12) return '';
     return '입주예정 '+match[1]+'년 '+Number(match[2])+'월';
   }
-  const originalListingName=getListingName;
-  getListingName=item=>apartmentDisplayName(item,originalListingName(item));
+  const originalListingName=getListingName; // 제목 대신 건물명+호수로 표시하도록 아래에서 재정의
+  getListingName=item=>fields(item).name || originalListingName(item);
 
   function fields(item) {
     const u=item.apartmentUnitData || {};
@@ -71,7 +71,7 @@
     const unitMatch=rawUnit.match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호/i) || rawUnit.match(/^\s*(?:[A-Za-z]-?\s*)?\d{1,5}\s*$/) || String(address).match(/(?:[A-Za-z]\s*)?\d{1,5}\s*호(?=\s|$|[,，])/i);
     const unitText=(/\d{1,5}\s*호/.test(rawUnit) && /[+,，]/.test(rawUnit)) ? rawUnit.replace(/\s+/g,'') : (unitMatch ? unitMatch[0].replace(/\s+/g,'') : '');
     const unit=unitText && /호/.test(unitText) ? unitText : unitText ? unitText+'호' : '';
-    const addressBuilding=unit ? ((String(address).match(/,\s*([^,]+?)\s*\d{1,5}\s*호(?=\s|$|[,，])/i)||[])[1] || '').trim() : '';
+    const addressBuilding=unit ? ((String(address).match(/,\s*([^,\d][^,]*?)\s*\d{1,5}\s*호(?=\s|$|[,，])/i)||[])[1] || '').trim() : '';
     const addressDisplay=addressBuilding ? String(address).replace(/[,，]\s*[^,，]+$/,'').trim() : String(address).replace(/[,，]?\s*(?:[A-Za-z]\s*)?\d{1,5}\s*호(?=\s*$)/i,'').trim();
     return {
       presaleStatus:window.CommercialPriceCore?.commercial(item)?CommercialPriceCore.status(item):'',
@@ -80,7 +80,27 @@
         const village=(complexName.match(/^(.*?마을\s*\d+단지)/)||[])[1]||'';
         const dong=u.동||item.apartmentDong||item.dong||'';
         const room=u.호||item.apartmentHo||item.ho||'';
-        return village && dong && room ? [village,dong+'동 '+room+'호'].join('\n') : apartmentDisplayName(item,first(item.title,getBuildingName(item) === '-' ? '' : getBuildingName(item),item.address));
+        // 매물명은 제목이 아니라 항상 건물명 + 호수(없으면 소재지)로 표시한다.
+        let bName=String(first(item.buildingName,item.building_name,item.complexName,item.complex_name,item.shop_building,item.biz_building,addressBuilding)).trim();
+        // 건물명이 비어 있고 주소가 "105동 2404호"처럼 동·호수뿐인 옛 매물은 제목 앞쪽(건물명 · 동호수)에서 건물명만 가져온다.
+        if (!bName && /^\s*(?:\d{1,4}\s*동)?\s*(?:[A-Za-z]-?)?\d{1,5}\s*호\s*$/.test(String(address))) {
+          const seg=String(item.title || '').split('·').map(v=>v.trim());
+          if (seg.length>1 && !/^(?:상가|오피스텔|기타|토지|사무실|아파트|공장|창고|주택|빌딩|건물)$/.test(seg[0]) && !/\d\s*호$/.test(seg[0])) bName=seg[0];
+        }
+        let unitFull='';
+        for (const cand of [item.privateDetailAddress,item.detailAddress,item.detail_address,item.roomNumber,item.shop_room,item.unitNumber,item.ho,/^\s*\d{1,4}\s*동\s*\d{1,5}\s*호\s*$/.test(String(address)) ? address : '']) {
+          const t=String(cand ?? '').trim();
+          if (!t) continue;
+          const m=t.match(/(?:\d{1,4}\s*동\s*)?(?:[A-Za-z]-?\s*)?\d{1,5}\s*호/i);
+          if (m) { unitFull=m[0].replace(/\s*동\s*/,'동 ').replace(/\s+/g,' ').replace(/([A-Za-z]-?)\s+/,'$1'); break; }
+          if (/^(?:[A-Za-z]-?\s*)?\d{1,5}$/.test(t)) { unitFull=t.replace(/\s+/g,'')+'호'; break; }
+        }
+        if (!unitFull) unitFull=unit;
+        const place=String(addressDisplay || address || '').trim();
+        const fallbackName=bName
+          ? (unitFull && !bName.replace(/\s+/g,'').endsWith(unitFull.replace(/\s+/g,'')) ? bName+'\n'+unitFull : bName)
+          : (place ? (unitFull && !place.replace(/\s+/g,'').includes(unitFull.replace(/\s+/g,'')) ? place+'\n'+unitFull : place) : String(item.title || '').trim());
+        return village && dong && room ? [village,dong+'동 '+room+'호'].join('\n') : apartmentDisplayName(item,fallbackName);
       })(),
       building:first(item.buildingName,item.building_name,item.complexName,item.shop_building,item.biz_building,addressBuilding),
       unit,
