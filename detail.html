@@ -2843,7 +2843,7 @@ function closeHomepageTab(tab) {
   st.textContent = 'html.embed-mode body{background:#eef3f9!important}html.embed-mode .page,html.embed-mode .main-nav,html.embed-mode .header{display:none!important}' +
     'html.embed-mode #editModal{position:static!important;inset:auto!important;display:flex!important;padding:0!important;background:transparent!important;height:100vh!important;align-items:stretch!important}' +
     'html.embed-mode #editModal .modal-box{width:100%!important;max-width:100%!important;height:100vh!important;max-height:100vh!important;border-radius:0!important;border:0!important;box-shadow:none!important}' +
-    'html.embed-mode #editModal .edit-modal-close{display:none!important}';
+    'html.embed-mode #editModal .edit-modal-close,html.embed-mode #editModal .edit-modal-header{display:none!important}';
   document.head.appendChild(st);
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('#editModal .edit-modal-footer .btn-ghost');
