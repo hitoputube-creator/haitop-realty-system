@@ -444,6 +444,18 @@ html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price
 html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .field.profit-rate-field{grid-area:2/2!important}
 /* 내부 메모·추가메모·옵션·비고 입력창 숨김 (소유주 메모/특이사항만 사용, 저장된 값은 유지) */
 html[data-office-theme] body.property-form-page #registerPage .field:has(> #description),html body.property-form-page #registerPage #genericMemoSection{display:none!important}
+
+/* 아파트 폼: 옵션·세입자 비고·비고·추가메모 입력칸 숨김 (소유주 메모 / 특이사항만 사용, 저장된 값은 유지) */
+html[data-office-theme] body.property-form-page #editModal .umfield:has(> #edit_apt_옵션),
+html[data-office-theme] body.property-form-page #editModal .umfield:has(> #edit_apt_세입자비고),
+html[data-office-theme] body.property-form-page #editModal .umfield:has(> #edit_apt_비고),
+html[data-office-theme] body.property-form-page #editModal .umfield:has(> #edit_apt_추가메모),
+html[data-office-theme] body.property-form-page #registerPage .umfield:has(> #apt_옵션),
+html[data-office-theme] body.property-form-page #registerPage .umfield:has(> #apt_세입자비고),
+html[data-office-theme] body.property-form-page #registerPage .umfield:has(> #apt_비고),
+html[data-office-theme] body.property-form-page #registerPage .umfield:has(> #apt_추가메모),
+html[data-office-theme] body.property-form-page #editModal .umfield:has(> .umfield:only-child > #edit_apt_옵션),
+html[data-office-theme] body.property-form-page #registerPage .umfield:has(> .umfield:only-child > #apt_옵션){display:none!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
