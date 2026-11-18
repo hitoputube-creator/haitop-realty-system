@@ -242,6 +242,12 @@ html[data-office-theme] body.property-form-page #editModal .commercial-price-com
 
 /* 토지는 옵션·비고 카드를 숨긴다 */
 html body.land-reg section.card:has(#optionDetails){display:none!important}
+
+/* 1차구분·2차구분을 고르기 전에는 기본정보만 보이고, 고른 뒤에 해당 항목이 나타난다 */
+html body.cat-pending :is(#apartmentListingForm,#nonApartmentFields,#genericMemoSection,#homepageCard,#saveSection,section.card:has(#owner_name),section.card:has(#imageUploadSlots)){display:none!important}
+html body.cat-pending .form-grid-5 ~ *:not(.cat-hint){display:none!important}
+html body .cat-hint{display:none;margin:10px 0 0;padding:12px 14px;border:1px dashed #cbd5e1;border-radius:8px;background:#f8fafc;color:#475569;font-size:13px;font-weight:600;text-align:center}
+html body.cat-pending .cat-hint{display:block!important}
 </style>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
 <script>
@@ -1902,6 +1908,22 @@ html body .card .presale-switch input.commercial-tenant-biz.commercial-tenant-bi
 <script src="assets/js/presale-price.js?v=20261112-pp2"></script>
 <script src="assets/js/land-area-lookup.js?v=20261117-land2"></script>
 <script src="assets/js/reg-land-layout.js?v=20261117-lay1"></script>
+
+<script>
+/* 1차구분·2차구분 선택 전에는 입력 항목을 숨긴다 */
+(function(){
+  function init(){
+    var c1=document.getElementById('category1Select'),c2=document.getElementById('category2Select'),grid=document.querySelector('.form-grid-5');
+    if(!c1||!c2||!grid)return;
+    var hint=document.createElement('div');hint.className='cat-hint';hint.textContent='1차구분과 2차구분을 선택하면 해당 매물의 입력 항목이 나타납니다.';
+    grid.insertAdjacentElement('afterend',hint);
+    function sync(){document.body.classList.toggle('cat-pending',!(c1.value&&c2.value));}
+    c1.addEventListener('change',sync);c2.addEventListener('change',sync);
+    sync();setInterval(sync,400);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 </body>
 </html>
 
