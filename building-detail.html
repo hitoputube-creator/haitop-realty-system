@@ -3594,8 +3594,8 @@ async function deleteBFile(id) {
 })();
 </script>
 <script>
-/* 자료실 상가 호실 수정창: 매물 등록·수정창과 같은 구성(기본정보·면적정보·추가정보·가격정보·내부전용·메모)으로 정리하고,
- * 위쪽 [분양] / [매물] 버튼으로 분양자료 칸과 매물 항목 칸을 전환한다. 칸의 id·저장 위치는 그대로다. */
+/* 자료실 상가 호실 수정창: 매물 수정창과 같은 폼(기본정보·면적정보·추가정보·가격정보[기존 분양조건 | 현재 조건]·내부전용·메모).
+ * 칸의 id·저장 위치는 그대로이고 화면 배치만 바꾼다. */
 (function () {
   function $(id) { return document.getElementById(id); }
   function F(id) { var e = $(id); return e && e.closest('.umfield'); }
@@ -3609,27 +3609,48 @@ async function deleteBFile(id) {
     '#commercialUnitForm .uf-grid>.umfield{grid-column:auto!important;min-width:0;margin:0}' +
     '#commercialUnitForm .uf-grid>.uf-2{grid-column:span 2!important}#commercialUnitForm .uf-grid>.uf-4{grid-column:1 / -1!important}' +
     '#commercialUnitForm .uf-grid input:not([type=checkbox]),#commercialUnitForm .uf-grid select,#commercialUnitForm .uf-grid textarea{width:100%;box-sizing:border-box}' +
+    '#commercialUnitForm .uf-grid input[readonly]{background:#eef2f7;color:#475569}' +
     '#commercialUnitForm .uf-grid .area-row{display:flex;align-items:center;gap:6px}#commercialUnitForm .uf-grid .area-row input{min-width:0}' +
+    '#commercialUnitForm .uf-row{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}' +
+    '#commercialUnitForm .uf-row>.umfield{display:flex;align-items:center;gap:6px;margin:0}#commercialUnitForm .uf-row>.umfield label{margin:0;white-space:nowrap}' +
+    '#commercialUnitForm .uf-row #unitPresaleSwitch{margin:0;display:flex;align-items:center;gap:6px}' +
+    '#commercialUnitForm .uf-cmp{grid-column:1 / -1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 14px;align-items:end}' +
+    '#commercialUnitForm .uf-cmp>.umfield{grid-column:auto!important;min-width:0;margin:0}' +
+    '#commercialUnitForm .uf-cmp input{width:100%;box-sizing:border-box}' +
+    '#commercialUnitForm .uf-cmp-h{grid-column:span 3;padding:7px 10px;border-radius:6px;font-size:.82rem;font-weight:800}' +
+    '#commercialUnitForm .uf-cmp-h.old{background:#cfdcdc;color:#1d4d4a}#commercialUnitForm .uf-cmp-h.cur{background:#cfe0f3;color:#16487f}' +
     '#commercialUnitForm .uf-flags{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}' +
     '#commercialUnitForm .uf-flags .umcheck{background:none!important;border:0!important;padding:0!important}' +
     '#commercialUnitForm .uf-flags .umcheck label{display:inline-flex;align-items:center;gap:6px;font-weight:700;margin:0;cursor:pointer}' +
     '#commercialUnitForm .uf-flags .uf-rate{display:inline-flex;align-items:center;gap:8px}#commercialUnitForm .uf-flags .uf-rate label{margin:0;white-space:nowrap}#commercialUnitForm .uf-flags .uf-rate input{width:90px}' +
     '#commercialUnitForm [hidden]{display:none!important}' +
-    '#unitViewSwitch{display:flex;gap:8px;margin:0 0 10px}#unitViewSwitch button{flex:1;padding:9px 12px;border:1px solid #9db8e0;border-radius:8px;background:#fff;color:#16487f;font-size:.95rem;font-weight:800;cursor:pointer}' +
-    '#unitViewSwitch button.active{background:#1f5fa8;border-color:#1f5fa8;color:#fff}' +
     '#commercialUnitSale,#commercialUnitCurrent{display:none!important}' +
-    '@media(max-width:640px){#commercialUnitForm .uf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}';
+    '@media(max-width:640px){#commercialUnitForm .uf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#commercialUnitForm .uf-cmp{grid-template-columns:repeat(3,minmax(0,1fr))}#commercialUnitForm .uf-cmp-h{grid-column:1 / -1}}';
   document.head.appendChild(st);
   function sec(title) { var s = document.createElement('div'); s.className = 'uf-sec'; s.innerHTML = '<div class="uf-title">' + title + '</div><div class="uf-grid"></div>'; return s; }
   function grid(s) { return s.querySelector('.uf-grid'); }
-  function put(s, ids, cls) { ids.forEach(function (id) { var f = F(id); if (!f) return; f.className = 'umfield' + (cls ? ' ' + cls : ''); grid(s).appendChild(f); }); }
+  function put(s, ids, cls, into) { ids.forEach(function (id) { var f = F(id); if (!f) return; f.className = 'umfield' + (cls ? ' ' + cls : ''); (into || grid(s)).appendChild(f); }); }
+  function relabel(id, text) { var f = F(id), l = f && f.querySelector('label'); if (l) l.textContent = text; }
+  relabel('u_분양금액', '기존 분양가 (만원)'); relabel('u_보증금', '기존 보증금 (만원)'); relabel('u_월차임', '기존 월세 (만원)');
   var wrap = document.createElement('div'); wrap.id = 'commercialUnitForm';
-  var A = sec('📋 기본정보'), B = sec('📐 면적정보'), S = sec('💰 분양자료 (분양 당시 가격)'), C = sec('🏢 추가정보'), D = sec('💰 가격정보'), E = sec('🔒 내부전용'), M = sec('📝 메모');
-  put(A, ['u_호수']); (function () { var f = $('u_구분_field'); if (f) { f.className = 'umfield'; grid(A).appendChild(f); } })(); put(A, ['u_거래구분']);
+  var A = sec('📋 기본정보'), B = sec('📐 면적정보'), C = sec('🏢 추가정보 <span style="font-weight:600;font-size:.76rem">(공장·상가·건물)</span>'), D = sec('💰 가격정보'), E = sec('🔒 내부전용'), M = sec('📝 메모');
+  // 기본정보: 건물명·상세주소는 건물 정보에서 가져와 보여 준다(읽기 전용)
+  var nameF = document.createElement('div'); nameF.className = 'umfield'; nameF.innerHTML = '<label>건물명</label><input id="uf_건물명" readonly>';
+  var addrF = document.createElement('div'); addrF.className = 'umfield uf-2'; addrF.innerHTML = '<label>상세주소 (건물 주소)</label><input id="uf_주소" readonly>';
+  grid(A).appendChild(nameF); grid(A).appendChild(addrF); put(A, ['u_호수']);
+  (function () { var f = $('u_구분_field'); if (f) { f.className = 'umfield'; grid(A).appendChild(f); } })(); put(A, ['u_거래구분']);
   ['u_전용_평', 'u_분양_평'].forEach(function (id) { var f = F(id); f.className = 'umfield area-dual uf-2'; grid(B).appendChild(f); });
-  put(S, ['u_평당가', 'u_분양금액', 'u_보증금', 'u_월차임']);
   put(C, ['u_층정보', 'u_용도지역', 'u_주차대수', 'u_사용승인일']);
-  put(D, ['u_공실여부', 'u_현업종', 'u_현매매가격', 'u_현보증금', 'u_현월세', 'u_권리금']);
+  // 가격정보: [분양상태] [임대현황] [업종] 한 줄, 그 아래 기존 분양조건 | 현재 조건
+  var row = document.createElement('div'); row.className = 'uf-row';
+  var phaseSw = $('unitPresaleSwitch'); if (phaseSw) row.appendChild(phaseSw);
+  ['u_공실여부', 'u_현업종'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield'; row.appendChild(f); } });
+  grid(D).appendChild(row);
+  var cmp = document.createElement('div'); cmp.className = 'uf-cmp';
+  cmp.innerHTML = '<div class="uf-cmp-h old">기존 분양조건</div><div class="uf-cmp-h cur">현재 조건</div>';
+  put(D, ['u_분양금액', 'u_보증금', 'u_월차임', 'u_현매매가격', 'u_현보증금', 'u_현월세'], '', cmp);
+  put(D, ['u_평당가'], '', cmp); var pf = F('u_평당가'); if (pf) pf.style.gridColumn = '1 / span 3'; put(D, ['u_권리금'], '', cmp); var kf = F('u_권리금'); if (kf) kf.style.gridColumn = '4 / span 3';
+  grid(D).appendChild(cmp);
   var flags = document.createElement('div'); flags.className = 'umfield uf-4 uf-flags';
   ['u_추천매물', 'u_수익성매물'].forEach(function (id) { var f = F(id); if (f) { f.className = 'umfield umcheck'; flags.appendChild(f); } });
   var rate = F('u_수익률'); if (rate) { rate.className = 'umfield uf-rate'; flags.appendChild(rate); }
@@ -3638,24 +3659,15 @@ async function deleteBFile(id) {
   put(E, ['u_소유주', 'u_연락처', 'u_통신사']); var ac = $('u_추가연락처_field'); if (ac) { ac.className = 'umfield uf-4'; grid(E).appendChild(ac); }
   put(E, ['u_소유주메모'], 'uf-4');
   put(M, ['u_내부메모', 'u_옵션내역'], 'uf-4'); var nb = $('u_비고_wrap'); if (nb) { nb.className = 'umfield uf-4'; grid(M).appendChild(nb); }
-  [A, B, S, C, D, E, M].forEach(function (s) { wrap.appendChild(s); });
+  [A, B, C, D, E, M].forEach(function (s) { wrap.appendChild(s); });
   sale0.before(wrap);
-  var viewSw = document.createElement('div'); viewSw.id = 'unitViewSwitch';
-  viewSw.innerHTML = '<button type="button" data-uv="sale">분양</button><button type="button" data-uv="listing">매물</button>';
-  var phaseSw = $('unitPresaleSwitch'); if (phaseSw) phaseSw.before(viewSw); else wrap.before(viewSw);
-  var notes = $('unitAdditionalNotes'), dealField = F('u_거래구분');
-  function setView(v) {
-    var sale = v === 'sale';
-    viewSw.querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', b.dataset.uv === v); });
-    S.hidden = !sale; [C, D, E, M].forEach(function (s) { s.hidden = sale; });
-    if (dealField) dealField.hidden = sale;
-    if (notes) notes.style.display = sale ? 'none' : '';
-    // 모달을 열 때 나중에 붙는 칸(예: 특별분양 체크)이 남아 있으면 체크 줄로 옮긴다
+  // 열 때마다: 건물명·주소 채우기, 나중에 붙는 체크 칸(특별분양)을 체크 줄로 이동
+  window.umSetView = function () {
+    try { if (typeof bName !== 'undefined') $('uf_건물명').value = bName || ''; } catch (e) {}
+    try { if (typeof buildingAddress !== 'undefined') $('uf_주소').value = buildingAddress || ''; } catch (e) {}
     [].slice.call(cur0.querySelectorAll('.umcheck')).forEach(function (c) { flags.insertBefore(c, rate || null); });
-  }
-  viewSw.addEventListener('click', function (e) { var b = e.target.closest('button[data-uv]'); if (b) setView(b.dataset.uv); });
-  window.umSetView = setView;
-  setView('listing');
+  };
+  window.umSetView();
 })();
 </script>
 </body>
