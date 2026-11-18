@@ -537,7 +537,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
       </div>
       <div class="lc-actions-side">
         <div class="lc-status-row" style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap;grid-column:1 / -1;">
-        <select class="lc-status-chip" style="flex:0 0 68px !important;width:68px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 8px 0 6px !important;font-size:11px !important;" aria-label="매물 거래상태" title="명단 매물은 거래상태를 직접 선택해 확인 처리합니다" onclick="event.stopPropagation()" onchange="event.stopPropagation();handleListingProgressChange('${idArg}',this)">${isRoster && getStatusLabel(item)==='진행중' ? '<option value="" selected disabled>선택</option>' : ''}${['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(getStatusLabel(item)===status && !(isRoster && status==='진행중')?' selected':'')+'>'+status+'</option>').join('')}</select>
+        <select class="lc-status-chip" style="flex:0 0 68px !important;width:68px !important;min-width:0 !important;height:26px !important;min-height:26px !important;padding:0 8px 0 6px !important;font-size:11px !important;" aria-label="매물 거래상태" onclick="event.stopPropagation()" onchange="event.stopPropagation();handleListingProgressChange('${idArg}',this)">${['진행중','보류','거래완료'].map(status=>'<option value="'+status+'"'+(getStatusLabel(item)===status?' selected':'')+'>'+status+'</option>').join('')}</select>
         ${naverAdBtn}
         </div>
       </div>
