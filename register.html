@@ -438,6 +438,12 @@ html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price
 html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row > .field > .price-preview{position:absolute!important;right:20px;top:50%;transform:translateY(-50%);flex:none!important;width:auto!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;pointer-events:none;white-space:nowrap;display:block!important;visibility:visible!important}
 html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row > .field > .price-preview:empty{display:none!important}
 html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row > .field:has(> .price-preview) > input{padding-right:96px!important}
+
+/* 상가 기존상가: 수익률은 월세 옆, 권리금은 아래줄 */
+html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .field:has(#premium){grid-area:3/1!important}
+html[data-office-theme] body.property-form-page #registerPage .form-grid-3.price-one-row.commercial-price-compare.original-collapsed:has(#salePrice) > .field.profit-rate-field{grid-area:2/2!important}
+/* 내부 메모·추가메모·옵션·비고 입력창 숨김 (소유주 메모/특이사항만 사용, 저장된 값은 유지) */
+html[data-office-theme] body.property-form-page #registerPage .field:has(> #description),html body.property-form-page #registerPage #genericMemoSection{display:none!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">

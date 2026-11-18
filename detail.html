@@ -594,6 +594,12 @@ html[data-office-theme] body.property-form-page #editModal .edit-grid-3.commerci
 html[data-office-theme] body.property-form-page #editModal .edit-grid-3.commercial-price-compare.original-collapsed:has(#edit_salePrice) > .field:has(#edit_monthlyRent){grid-area:2/1!important}
 html[data-office-theme] body.property-form-page #editModal .edit-grid-3.commercial-price-compare.original-collapsed:has(#edit_salePrice) > .field:has(#edit_premium){grid-area:2/2!important}
 html[data-office-theme] body.property-form-page #editModal .edit-grid-3.commercial-price-compare.original-collapsed:has(#edit_salePrice) > .field.profit-rate-field{grid-area:3/1!important}
+
+/* 상가 기존상가: 수익률은 월세 옆, 권리금은 아래줄 */
+html[data-office-theme] body.property-form-page #editModal .edit-grid-3.commercial-price-compare.original-collapsed:has(#edit_salePrice) > .field:has(#edit_premium){grid-area:3/1!important}
+html[data-office-theme] body.property-form-page #editModal .edit-grid-3.commercial-price-compare.original-collapsed:has(#edit_salePrice) > .field.profit-rate-field{grid-area:2/2!important}
+/* 내부 메모·추가메모 입력창 숨김 (소유주 메모/특이사항만 사용, 저장된 값은 유지) */
+html[data-office-theme] body.property-form-page #editModal .field:has(> #edit_description),html body.property-form-page #editModal #edit_memoBlock{display:none!important}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
