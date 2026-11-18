@@ -124,7 +124,8 @@
   function columns() {
     const cols=(schemas[currentMajor] || schemas['']).filter(([key])=>key!=='deal');
     if (!cols.some(([key])=>key==='type')) cols.unshift(['type','매물유형']);
-    return cols;
+    // 주거용은 마을·단지명을 한 칸(마을 윗줄, 단지명 아랫줄)에 합쳐서 보여준다.
+    return currentMajor==='주거용' ? cols.filter(([key])=>key!=='village') : cols;
   }
   function shortType(item) {
     if (isApartmentPresale(item)) return '아파트 분양권';
@@ -155,10 +156,14 @@
       const badge=node.querySelector('.lc-type');
       if(badge) badge.textContent=shortType(item);
       const deal=original.querySelector('.listing-cell-deal .lc-deal-badge');
-      if(deal) {
+      const rosterBadge=node.querySelector('.lc-roster-badge');
+      if(deal || rosterBadge) {
+        // 유형·거래구분·명단 배지를 첫 줄에 모으고, 진행상태·확인일은 둘째 줄에 둔다.
         const line=document.createElement('div');line.className='lc-type-deal';
         if(badge) line.appendChild(badge);
-        line.appendChild(deal);node.prepend(line);
+        if(deal) line.appendChild(deal);
+        if(rosterBadge) line.appendChild(rosterBadge);
+        node.prepend(line);
       }
     }
     if (key==='type') {
@@ -241,6 +246,16 @@
         }));
       }
     }
+    if (key==='apartment' && currentMajor==='주거용') {
+      // 마을은 윗줄, 단지명은 아랫줄
+      const vsrc=original.querySelector('.listing-cell-village');
+      const vtext=vsrc ? vsrc.textContent.trim() : '';
+      if (vtext && vtext!=='-') {
+        const top=document.createElement('span');top.className='lc-village-top';
+        top.append(...Array.from(vsrc.childNodes));
+        node.prepend(top);
+      }
+    }
     node.querySelectorAll('.lc-no').forEach(no=>no.remove());
     node.dataset.label=label;
     node.style.gridArea='auto';
@@ -273,10 +288,10 @@
   }
   function template(cols) {
     if (isKtopResidential()) {
-      const widths={village:'.35fr',apartment:'1.6fr',dong:'.75fr',supply:'.65fr',price:'1.25fr',owner:'.65fr',phone:'1fr'};
+      const widths={apartment:'1.6fr',dong:'.75fr',supply:'.65fr',price:'1.25fr',owner:'.65fr',phone:'1fr'};
       return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>key==='type'?'minmax(140px,.8fr)':`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
     }
-    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>key==='address'?'minmax(0,1.1fr)':['name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'?'minmax(118px,.65fr)':key==='price'?'minmax(0,1.8fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.7fr)').join(' ')+' '+actionsColWidth(false)+'px';
+    return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
   }
   window.sortDongRoom=function() {
     const first=listingColumnSort.find(s=>s.key==='dong');
@@ -290,7 +305,7 @@
     h.style.setProperty('--typed-columns',template(columns()));
     const sort=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="'+(key==='dong' && currentMajor==='주거용' ? 'sortDongRoom()' : 'sortListingColumn(\''+key+'\')')+'" aria-label="'+label+' 정렬">'+(key==='supply' && isKtopResidential() ? '분양평형<br>타입' : label)+' '+listingSortMark(key)+'</button>';
     const filter=(key,label)=>'<button type="button" class="listing-filter-btn'+(listingColumnFilters[key]?' active':'')+'" onclick="openColumnFilter(\''+key+'\',this,event)" aria-label="'+label+' 필터">▾</button>';
-    h.innerHTML='<div>선택</div>'+columns().map(([key,label])=>'<div>'+sort(key,label)+filter(key,label)+(key==='type'?'<span class="lc-deal-filter">'+sort('deal','구분')+filter('deal','구분')+'</span>':'')+'</div>').join('')+'<div>'+(columnFilterCount()?'<button type="button" class="listing-filter-reset" onclick="clearColumnFilters()">필터 해제</button>':'관리')+'</div>';
+    h.innerHTML='<div>선택</div>'+columns().map(([key,label])=>'<div>'+(key==='apartment' && currentMajor==='주거용' ? '<span class="lc-vh-line">'+sort('village','마을')+filter('village','마을')+'</span><span class="lc-vh-line">'+sort(key,label)+filter(key,label)+'</span>' : sort(key,label)+filter(key,label))+(key==='type'?'<span class="lc-deal-filter">'+sort('deal','구분')+filter('deal','구분')+'</span>':'')+'</div>').join('')+'<div>'+(columnFilterCount()?'<button type="button" class="listing-filter-reset" onclick="clearColumnFilters()">필터 해제</button>':'관리')+'</div>';
     return h;
   };
   renderListView=function(items) {
@@ -318,7 +333,7 @@
   };
   const originalRender=renderList;
   renderList=function() {
-    const visible=new Set([...columns().map(([key])=>key),'deal','room']);
+    const visible=new Set([...columns().map(([key])=>key),'deal','room',...(currentMajor==='주거용'?['village']:[])]);
     Object.keys(listingColumnFilters).forEach(key=>{if(!visible.has(key))delete listingColumnFilters[key];});
     listingColumnSort=listingColumnSort.filter(s=>visible.has(s.key));
     closeColumnFilterPopover();
@@ -383,6 +398,11 @@
     .properties-page .lc-type-deal {display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
     .properties-page .typed-property-row .lc-type {font-size:12px;white-space:normal;width:auto;}
     .properties-page .lc-price-line {display:block;line-height:1.5;}
+    .properties-page .lc-village-top {display:block;margin-bottom:2px;font-size:12px;font-weight:700;line-height:1.3;color:#1767d2;word-break:keep-all;}
+    .properties-page .lc-village-top a,.properties-page .lc-village-top a:visited {color:inherit;}
+    .properties-page .lc-vh-line {display:flex;align-items:center;flex-wrap:nowrap;white-space:nowrap;}
+    .properties-page .typed-property-row .listing-cell-type .lc-type-deal {display:flex;flex:0 0 100%;align-items:center;gap:4px;flex-wrap:wrap;}
+    .properties-page .typed-property-row .lc-roster-badge {display:inline-block;margin:0;white-space:nowrap;}
     .properties-page .typed-property-row .lc-price-text {font-size:13px;white-space:normal;overflow:visible;}
     .properties-page .typed-property-row .listing-cell-phone > span {display:inline-block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;word-break:normal;}
     .properties-page .typed-property-row .listing-actions {min-width:0;width:100%;box-sizing:border-box;}
