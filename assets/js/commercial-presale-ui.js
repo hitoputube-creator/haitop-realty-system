@@ -13,7 +13,7 @@
   if(!host||!category)return null;
   let phase=core.status(item);let kind=core.shopKind(item);
   const switcher=document.createElement('div');switcher.className='presale-switch';
-  switcher.innerHTML='<span>상가구분</span><button type="button" data-kind="기존상가">기존상가</button><button type="button" data-kind="분양상가">분양상가</button><span class="presale-only">분양상태</span><button type="button" class="presale-only" data-phase="분양중">분양중</button><button type="button" class="presale-only" data-phase="분양완료">분양완료</button><label>임대현황 <select class="commercial-occupancy"><option>공실</option><option>임차중</option></select></label><label>임차업종 <input type="text" class="commercial-tenant-biz" maxlength="30" placeholder="예: 미용실"></label>';
+  switcher.innerHTML='<span>상가구분</span><button type="button" data-kind="기존상가">기존상가</button><button type="button" data-kind="분양상가">분양상가</button><span class="presale-only">분양상태</span><button type="button" class="presale-only" data-phase="분양중">분양중</button><button type="button" class="presale-only" data-phase="분양완료">분양완료</button><label>임대현황 <select class="commercial-occupancy"><option>공실</option><option>임차중</option></select></label><label>업종 <input type="text" class="commercial-tenant-biz" maxlength="30" placeholder="예: 미용실"></label>';
   host.before(switcher);
   const occupancy=switcher.querySelector('.commercial-occupancy');const tenantBiz=switcher.querySelector('.commercial-tenant-biz');
   const headings=['기존 분양조건','현재 조건'].map((title,index)=>{const el=document.createElement('div');el.className='commercial-compare-heading'+(index?' current':'');el.textContent=title;el.style.gridRow='1';el.style.gridColumn=String(index+1);host.appendChild(el);return el;});
