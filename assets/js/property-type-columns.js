@@ -6,7 +6,7 @@
     '': [['type','매물유형'],['name','매물명'],...common],
     '상가사무실': [['building','건물명'],['address','소재지'],['exclusive','전용면적'],...common],
     '토지': [['address','소재지'],['parcel','블럭/필지'],['landArea','토지면적'],['unitPrice','평당가'],...common],
-    '주거용': [['village','마을'],['apartment','단지명'],['dong','동'],['room','호수'],['supply','분양평형/타입'],...common],
+    '주거용': [['village','마을'],['apartment','단지명'],['dong','동·호수'],['supply','분양평형/타입'],...common],
     '공장창고': [['address','소재지'],['landArea','대지면적'],['buildingArea','건축면적'],['totalArea','연면적'],...common],
     '건물빌딩': [['building','건물명'],['address','소재지'],['landArea','대지면적'],['totalArea','연면적'],['floors','층수'],...common]
   };
@@ -148,6 +148,14 @@
       }
     }
     if (key==='apartment' && isApartment(item)) node.textContent=String(listingColumnValue(item,key) || '-');
+    if (key==='dong' && currentMajor==='주거용') {
+      const dv=String(listingColumnValue(item,'dong') || '').replace(/동$/,'').trim();
+      const rv=String(listingColumnValue(item,'room') || '').replace(/호$/,'').trim();
+      const lines=[];
+      if (dv && dv!=='-') lines.push(dv+'동');
+      if (rv && rv!=='-') lines.push(rv+'호');
+      node.replaceChildren(...(lines.length ? lines : ['-']).map(text=>{const line=document.createElement('span');line.className='lc-dh-line';line.textContent=text;return line;}));
+    }
     if (key==='name') {
       const raw=String(listingColumnValue(item,key) || '-');
       const parts=[];
@@ -239,16 +247,22 @@
   }
   function template(cols) {
     if (isKtopResidential()) {
-      const widths={village:'.45fr',apartment:'1.5fr',dong:'.45fr',room:'.45fr',supply:'.7fr',price:'1.35fr',owner:'.7fr',phone:'1.05fr'};
+      const widths={village:'.35fr',apartment:'1.6fr',dong:'.75fr',supply:'.65fr',price:'1.25fr',owner:'.65fr',phone:'1fr'};
       return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>key==='type'?'minmax(140px,.8fr)':`minmax(0,${widths[key] || '.8fr'})`).join(' ')+' 166px';
     }
     return 'var(--listing-highlight-select-width,24px) '+cols.map(([key])=>['address','name','building','apartment'].includes(key)?'minmax(0,1.5fr)':key==='type'?'minmax(140px,.8fr)':key==='price'?'minmax(0,1.1fr)':key==='phone'?'minmax(0,1fr)':'minmax(0,.8fr)').join(' ')+' '+actionsColWidth(false)+'px';
   }
+  window.sortDongRoom=function() {
+    const first=listingColumnSort.find(s=>s.key==='dong');
+    const dir=first && listingColumnSort.length===2 ? -first.direction : 1;
+    listingColumnSort=[{key:'dong',direction:dir},{key:'room',direction:dir}];
+    currentPage=1; renderList();
+  };
   makeListingColumnHeader=function() {
     const h=document.createElement('div');h.className='listing-column-header typed-property-row';
     if (isKtopResidential()) h.classList.add('residential-property-row');
     h.style.setProperty('--typed-columns',template(columns()));
-    const sort=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="sortListingColumn(\''+key+'\')" aria-label="'+label+' 정렬">'+(key==='supply' && isKtopResidential() ? '분양평형<br>타입' : label)+' '+listingSortMark(key)+'</button>';
+    const sort=(key,label)=>'<button type="button" class="listing-sort-btn" onclick="'+(key==='dong' && currentMajor==='주거용' ? 'sortDongRoom()' : 'sortListingColumn(\''+key+'\')')+'" aria-label="'+label+' 정렬">'+(key==='supply' && isKtopResidential() ? '분양평형<br>타입' : label)+' '+listingSortMark(key)+'</button>';
     const filter=(key,label)=>'<button type="button" class="listing-filter-btn'+(listingColumnFilters[key]?' active':'')+'" onclick="openColumnFilter(\''+key+'\',this,event)" aria-label="'+label+' 필터">▾</button>';
     h.innerHTML='<div>선택</div>'+columns().map(([key,label])=>'<div>'+sort(key,label)+filter(key,label)+(key==='type'?'<span class="lc-deal-filter">'+sort('deal','구분')+filter('deal','구분')+'</span>':'')+'</div>').join('')+'<div>'+(columnFilterCount()?'<button type="button" class="listing-filter-reset" onclick="clearColumnFilters()">필터 해제</button>':'관리')+'</div>';
     return h;
@@ -278,7 +292,7 @@
   };
   const originalRender=renderList;
   renderList=function() {
-    const visible=new Set([...columns().map(([key])=>key),'deal']);
+    const visible=new Set([...columns().map(([key])=>key),'deal','room']);
     Object.keys(listingColumnFilters).forEach(key=>{if(!visible.has(key))delete listingColumnFilters[key];});
     listingColumnSort=listingColumnSort.filter(s=>visible.has(s.key));
     closeColumnFilterPopover();
@@ -303,6 +317,8 @@
     .properties-page .lc-name-line {display:block;}
     .properties-page .lc-move-in {display:block;margin-top:5px;font-size:11px;line-height:1.4;color:var(--text-muted);font-weight:400;}
     .properties-page .lc-move-in.lc-move-in-top {margin:0 0 4px;font-size:12px;font-weight:700;color:#b45309;white-space:nowrap;}
+    .properties-page .lc-dh-line {display:block;line-height:1.35;white-space:nowrap;}
+    html body.properties-page .typed-property-row .listing-cell-dong::after {content:none!important;}
     .properties-page .lc-unit-line {display:block;margin-top:3px;font-size:15px;font-weight:800;line-height:1.35;color:#1d4ed8;}
     html body.properties-page .typed-property-row .listing-cell-dong,html body.properties-page .typed-property-row .listing-cell-room {font-size:16px!important;font-weight:800!important;color:#1d4ed8!important;}
     @media(min-width:801px){
