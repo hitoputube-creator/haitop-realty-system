@@ -398,6 +398,14 @@
     .properties-page .lc-type-deal {display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
     .properties-page .typed-property-row .lc-type {font-size:12px;white-space:normal;width:auto;}
     .properties-page .lc-price-line {display:block;line-height:1.5;}
+    /* 등록된 매물 제목줄: 파란 막대는 제목 바로 옆에, 제목·전체선택은 왼쪽 정렬 */
+    html[data-office-theme='ktop'] :is(.properties-page) .card-title.listing-tools-title::before {content:none!important;display:none!important;}
+    html[data-office-theme='ktop'] .properties-page .listing-tools-heading::before {content:"";display:inline-block;flex:0 0 5px;width:5px;height:19px;background:#1767d2;border-radius:4px;margin-right:-2px;}
+    .properties-page .listing-tools-heading {justify-content:flex-start;margin-right:auto;}
+    /* 카드·목록·노트 보기 전환: 글자 가운데 정렬, 선택 색은 사무실 테마 색으로 */
+    .properties-page .view-toggle-group {display:inline-flex;box-sizing:border-box;overflow:hidden;}
+    .properties-page .view-toggle-group button {display:flex;align-items:center;justify-content:center;line-height:1;box-sizing:border-box;}
+    html[data-office-theme='ktop'] .properties-page .view-toggle-group button[style*="37, 103, 95"] {background:#e3edff!important;color:#1767d2!important;font-weight:800;}
     .properties-page .lc-village-top {display:block;margin-bottom:2px;font-size:12px;font-weight:700;line-height:1.3;color:#1767d2;word-break:keep-all;}
     .properties-page .lc-village-top a,.properties-page .lc-village-top a:visited {color:inherit;}
     .properties-page .lc-vh-line {display:flex;align-items:center;flex-wrap:nowrap;white-space:nowrap;}
