@@ -172,7 +172,7 @@
     if (!grid) return;
     var box = document.createElement('div');
     box.className = 'commercial-flags';
-    box.style.cssText = 'grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin-top:6px;';
+    box.style.cssText = 'grid-column:1 / -1;grid-row:9;display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin-top:6px;';
     box.innerHTML =
       '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:700;cursor:pointer"><input type="checkbox" class="cf-rec" style="width:16px;height:16px;margin:0"> ⭐ 추천매물</label>' +
       '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:700;cursor:pointer"><input type="checkbox" class="cf-profit" style="width:16px;height:16px;margin:0"> 💰 수익성매물</label>' +
