@@ -558,6 +558,15 @@ html[data-office-theme] body.property-form-page .form-grid-3.price-one-row.comme
 html[data-office-theme] body.property-form-page .form-grid-3.price-one-row:not(.commercial-price-compare) > .field.profit-rate-field{grid-area:auto!important}
 html[data-office-theme] body.property-form-page #editModal .commercial-price-compare.original-collapsed > .field.profit-rate-field{grid-area:auto!important}
 html[data-office-theme] body.property-form-page #editModal .commercial-price-compare:not(.original-collapsed) > .field.profit-rate-field{grid-area:5/2!important}
+
+/* 공장·창고 수정창: 주소 한 줄, 특징 입력, 드라이브 연결 숨김 */
+html[data-office-theme] body.property-form-page #editModal.fac-edit #edit_basicInfoGrid > .field:has(#edit_mapAddress){grid-column:1/7!important}
+html[data-office-theme] body.property-form-page #editModal.fac-edit #edit_basicInfoGrid > #edit_roadField{grid-column:7/13!important}
+html[data-office-theme] body.property-form-page #editModal.fac-edit .drive-link-inline,html[data-office-theme] body.property-form-page #editModal.fac-edit #edit_internalInfoGrid > .field:first-child > div > .field.drive-link-inline{display:none!important}
+html body #editModal:not(.fac-edit) .area-row.feature-row{display:none!important}
+html body #editModal .area-row.feature-row .feature-label{padding:0 6px!important;display:flex;align-items:center}
+html body #editModal .area-row.feature-row .feature-label input{width:100%;height:30px;font-weight:700;font-size:12px;text-align:center;border:1px dashed #94a3b8;background:#fff;border-radius:6px}
+html body #editModal .area-row.feature-row .feature-value{flex:1 1 auto;min-width:0}
 </style>
 </head>
 <body class="property-form-page" data-nav-active="properties">
@@ -778,6 +787,7 @@ html[data-office-theme] body.property-form-page #editModal .commercial-price-com
         <input id="edit_totalFloorAreaPy" type="number" min="0" step="1" placeholder="0" />
         <span class="area-unit">평</span>
       </div>
+      <div class="area-row feature-row"><span class="area-label feature-label"><input id="edit_extraFeatureLabel" type="text" maxlength="12" placeholder="특징 입력" aria-label="특징 항목명(예: 층고)" /></span><input id="edit_extraFeatureValue" type="text" class="feature-value" placeholder="예) 층고 6m, 호이스트 5톤" aria-label="특징 내용" /></div>
       </div>
     </div>
 
@@ -1444,6 +1454,8 @@ function closeHomepageTab(tab) {
     sv("edit_landAreaM2", item.landAreaM2);           sv("edit_landAreaPy", item.landAreaPy);
     sv("edit_buildingAreaM2", item.buildingAreaM2);   sv("edit_buildingAreaPy", item.buildingAreaPy);
     sv("edit_totalFloorAreaM2", item.totalFloorAreaM2); sv("edit_totalFloorAreaPy", item.totalFloorAreaPy);
+    sv("edit_extraFeatureLabel", item.extraFeatureLabel);
+    sv("edit_extraFeatureValue", item.extraFeatureValue);
     // 추가정보
     sv("edit_floorInfo", item.floorInfo); sv("edit_zoning", item.zoning);
     sv("edit_parkingCount", item.parkingCount); sv("edit_approvalDate", item.approvalDate);
@@ -2201,6 +2213,7 @@ function closeHomepageTab(tab) {
       ["임대상태", firstDetailValue(item.shop_status, item.occupancy)],
       ...(profileKey === "commercial" ? [["업종", item.tenantBusiness || "—"]] : []),
       ["예상수익률", withSuffix(item.shop_yield, "%")],
+      ...(String(item.extraFeatureValue || "").trim() ? [[String(item.extraFeatureLabel || "").trim() || "특징", item.extraFeatureValue]] : []),
     ];
     // 연락처 문장·메모처럼 긴 글은 한 줄 전체를 써서 항목과 내용이 어긋나지 않게 한다.
     const longPairs = [
@@ -2922,6 +2935,8 @@ function closeHomepageTab(tab) {
           landAreaM2:         gn("edit_landAreaM2"),       landAreaPy:         gn("edit_landAreaPy"),
           buildingAreaM2:     gn("edit_buildingAreaM2"),   buildingAreaPy:     gn("edit_buildingAreaPy"),
           totalFloorAreaM2:   gn("edit_totalFloorAreaM2"), totalFloorAreaPy:   gn("edit_totalFloorAreaPy"),
+          extraFeatureLabel:  gv("edit_extraFeatureLabel"),
+          extraFeatureValue:  gv("edit_extraFeatureValue"),
           // 추가정보
           floorInfo:          gv("edit_floorInfo"),
           zoning:             gv("edit_zoning"),
@@ -3043,6 +3058,9 @@ function closeHomepageTab(tab) {
     if (b && window.parent !== window) window.parent.postMessage({ um: 'listing-cancel' }, '*');
   });
 })();
+</script>
+<script>
+(function(){var m=document.getElementById('editModal'),c=document.getElementById('edit_category1');if(!m||!c)return;function s(){m.classList.toggle('fac-edit',c.value==='공장창고');}c.addEventListener('change',s);setInterval(s,400);s();})();
 </script>
 </body>
 </html>
