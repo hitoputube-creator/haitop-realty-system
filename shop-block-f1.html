@@ -36,14 +36,25 @@ table.ov tbody tr.sel{background:#fff3df}
 table.ov a.bn{color:#12395f;text-decoration:none}table.ov a.bn:hover{text-decoration:underline}
 table.ov tr.no td{color:#9aa5b5;cursor:default}
 table.ov td .sm{color:#8892a2;font-size:11px}table.ov td{line-height:1.35}table.ov th,table.ov td{padding:5px 6px}
+.mapbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}.mapbar .hint{flex:1;margin:0;min-width:160px}
+.zb{border:1px solid #c9d3e0;background:#fff;border-radius:8px;padding:4px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#1a2a3d}.zb:hover{background:#f3f8ff}
+#zVal{min-width:52px}
+#mapScroll{overflow:auto;max-height:78vh;border-radius:8px}
+.card.big{position:fixed;inset:0;z-index:50;border-radius:0;overflow:hidden;display:flex;flex-direction:column;padding:14px}.card.big #mapScroll{max-height:none;flex:1}
 </style></head><body><div class="wrap">
 <div class="top"><a class="back" id="backLink" href="shop-location.html">← 상가 위치도로</a><h1>운정역 상업지 · F1 블록</h1><span class="sub" id="count">불러오는 중…</span></div>
-<div class="grid"><div class="card"><div class="hint">건물 이름을 누르면 그 건물 자료 페이지로 이동합니다. (마우스를 올리면 주황색으로 표시)</div><div id="stage"><img src="assets/images/land/blocks/f1-unjeong-station-v4.jpg" alt="F1 블록 지도"></div>
+<div class="grid"><div class="card" id="mapCard"><div class="mapbar"><div class="hint">건물 이름을 누르면 그 건물 자료 페이지로 이동합니다. (마우스를 올리면 주황색으로 표시)</div><button class="zb" id="zOut" title="축소">−</button><button class="zb" id="zVal" title="누르면 100%">100%</button><button class="zb" id="zIn" title="확대">＋</button><button class="zb" id="zBig">크게 보기</button></div><div id="mapScroll"><div id="stage"><img src="assets/images/land/blocks/f1-unjeong-station-v4.jpg" alt="F1 블록 지도"></div></div>
 <div class="legend">자료관리에 등록된 건물만 자료 페이지로 이동합니다.</div></div>
 <div class="card" id="panel"><h2 style="font-size:16px;margin:0 0 8px">건물 기본정보</h2><div class="ovwrap"><table class="ov"><thead><tr><th>건물명</th><th>주소</th><th>토지면적</th><th>건축면적</th><th>연면적</th><th>층수</th><th>주차</th><th>사용승인일</th></tr></thead><tbody id="ovRows"></tbody></table></div><div class="empty" id="empty" hidden></div></div></div></div>
 <script>
 (async function(){
   var HS=[{"k":"엠버418","x":360,"y":322,"w":80,"h":36},{"k":"유은8차","x":360,"y":382,"w":80,"h":34},{"k":"클래스원","x":360,"y":430,"w":80,"h":34},{"k":"디에이블","x":455,"y":282,"w":92,"h":40},{"k":"월드스퀘어","x":528,"y":292,"w":62,"h":50},{"k":"해품가","x":581,"y":296,"w":52,"h":40},{"k":"아름터","x":631,"y":297,"w":54,"h":40},{"k":"월드15차","x":465,"y":348,"w":100,"h":36},{"k":"유은9차","x":432,"y":402,"w":68,"h":34},{"k":"크라운타워","x":432,"y":443,"w":70,"h":34},{"k":"브릭스","x":519,"y":406,"w":56,"h":32},{"k":"현해","x":516,"y":453,"w":52,"h":34},{"k":"명품3차","x":614,"y":376,"w":66,"h":32},{"k":"한미","x":572,"y":436,"w":40,"h":34},{"k":"프라임타워","x":618,"y":449,"w":52,"h":34},{"k":"센트럴하이뷰","x":362,"y":516,"w":72,"h":48},{"k":"레이크필드위버젠","x":366,"y":586,"w":76,"h":40},{"k":"송림로데오","x":437,"y":522,"w":66,"h":44},{"k":"더운정퍼스트","x":511,"y":522,"w":60,"h":44},{"k":"월드로데오","x":437,"y":586,"w":66,"h":40},{"k":"홍원","x":510,"y":582,"w":48,"h":34},{"k":"세안파크","x":588,"y":533,"w":66,"h":36},{"k":"송림","x":570,"y":622,"w":56,"h":52},{"k":"남광하우스토리","x":376,"y":692,"w":76,"h":40},{"k":"월드12차","x":379,"y":768,"w":62,"h":34},{"k":"월드플러스","x":441,"y":705,"w":56,"h":40},{"k":"브릿지10","x":503,"y":708,"w":50,"h":40},{"k":"트윈타워 1차","x":441,"y":762,"w":50,"h":34},{"k":"트윈타워 2차","x":495,"y":762,"w":50,"h":34},{"k":"월드11차","x":388,"y":858,"w":64,"h":40},{"k":"월드10차","x":387,"y":912,"w":66,"h":34},{"k":"아주빌딩","x":488,"y":882,"w":56,"h":40},{"k":"월드9차","x":421,"y":982,"w":62,"h":34},{"k":"덕진","x":482,"y":988,"w":40,"h":34},{"k":"법조타운","x":222,"y":383,"w":64,"h":34}], W=1202, H=1309; var $=function(i){return document.getElementById(i)}; var OFF=(typeof OfficeConfig!=='undefined'&&OfficeConfig.id)||(new URLSearchParams(location.search).get('office'))||'hitop'; $('backLink').href='shop-location.html?office='+encodeURIComponent(OFF);
+  var z=1,mapCard=$('mapCard');
+  function setZ(n){z=Math.max(1,Math.min(4,Math.round(n*100)/100));$('stage').style.width=(z*100)+'%';$('zVal').textContent=Math.round(z*100)+'%';}
+  $('zIn').onclick=function(){setZ(z+0.25)};$('zOut').onclick=function(){setZ(z-0.25)};$('zVal').onclick=function(){setZ(1)};
+  $('zBig').onclick=function(){var on=mapCard.classList.toggle('big');$('zBig').textContent=on?'닫기 ✕':'크게 보기';document.body.style.overflow=on?'hidden':'';};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('big'))$('zBig').click();});
+  $('mapScroll').addEventListener('wheel',function(e){if(e.ctrlKey){e.preventDefault();setZ(z+(e.deltaY<0?0.25:-0.25));}},{passive:false});
   var buildings=[];
   var s=await hitopAuthClient.auth.getSession(); if(s.error||!s.data.session){hitopRedirectToLogin();return;} hitopApplyAuthHeader(s.data.session);
   var res=await Promise.all([getDriveResources(),fetchWithTimeout(SUPABASE_URL+'/rest/v1/buildings?select=local_id,name,units',{headers})]);
