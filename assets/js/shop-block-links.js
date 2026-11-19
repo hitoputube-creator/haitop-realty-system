@@ -8,7 +8,9 @@
   var BLOCKS = [
     { name: '운정역 F1 블록', href: 'shop-block-f1.html', x: 65.9, y: 41.5, w: 3.1, h: 9.6 },
     { name: '법조타운 블록', href: 'shop-block-beopjo.html', x: 63.3, y: 41.35, w: 2.2, h: 4.23, side: 'left' },
-    { name: '야당역 F4·F5 블록', href: 'shop-block-yadang.html', x: 64.06, y: 64.31, w: 3.6, h: 17.5, side: 'left' }
+    { name: '야당역 F4·F5 블록', href: 'shop-block-yadang.html', x: 64.06, y: 64.31, w: 3.6, h: 17.5, side: 'left' },
+    { name: '해오름마을 F7·F3 블록', href: 'shop-block-haeoreum.html', x: 35.8, y: 31.18, w: 2.98, h: 2.44 },
+    { name: '해오름마을 F7·F3 블록', href: 'shop-block-haeoreum.html', x: 32.71, y: 33.54, w: 2.93, h: 5.37, nolabel: true }
   ];
   var style = document.createElement('style');
   style.textContent = '.block-hotspot{position:absolute;z-index:3;display:block;border:2px dashed #d6247f;background:rgba(214,36,127,.12);border-radius:6px;line-height:1;text-decoration:none}' +
@@ -23,7 +25,7 @@
     a.title = b.name + ' 자료 보기';
     a.setAttribute('aria-label', b.name + ' 자료 보기');
     a.style.left = b.x + '%'; a.style.top = b.y + '%'; a.style.width = b.w + '%'; a.style.height = b.h + '%';
-    var s = document.createElement('span'); s.textContent = b.name + ' ▸'; if (b.side === 'left') { s.style.left = 'auto'; s.style.right = '100%'; s.style.marginLeft = '0'; s.style.marginRight = '8px'; } a.appendChild(s);
+    var s = document.createElement('span'); s.textContent = b.name + ' ▸'; if (b.nolabel) { s.style.display = 'none'; } if (b.side === 'left') { s.style.left = 'auto'; s.style.right = '100%'; s.style.marginLeft = '0'; s.style.marginRight = '8px'; } a.appendChild(s);
     stage.appendChild(a);
   });
 })();
