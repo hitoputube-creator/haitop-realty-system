@@ -12,6 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
+<link rel="stylesheet" href="assets/css/location-list-style.css?v=20261119-list-style1">
 <script>(function(){var office=typeof OfficeConfig!=='undefined'?OfficeConfig.id:(new URLSearchParams(location.search).get('office')||sessionStorage.getItem('realty_selected_office')||'hitop');document.documentElement.dataset.officeTheme=office;if(office!=='ktop'){var link=document.querySelector('link[href*="white-navy-workspace.css"]');if(link)link.disabled=false;}})();</script>
 <style id="land-top-tidy">
 /* 택지 위치도 상단 정리: 설명 글자 삭제, 검색칸 축소, 지도 위로, 직사각형 작은 버튼 */
@@ -49,7 +50,7 @@
 .land-location-page .map-hotspot.multi{background:#df6e20!important;color:#fff!important;border-color:#fff!important}
 </style>
 </head>
-<body>
+<body class="list-style">
 <main class="page land-location-page">
   <header class="header">
     <div class="logo-icon" aria-hidden="true"></div>
@@ -147,7 +148,7 @@
 <section id="parcelSourceSection" hidden>
 <p class="source-note" hidden>LH 공급안내 원본 · 2021년 9월 기준. 예정지번과 당시 공급예정금액이며, 현재 지번·매매가와 별도로 확인해주세요.</p>
 <label class="source-group-filter">소블럭 선택 <select id="parcelSubblockFilter"><option value="all">C1 전체</option></select></label>
-<p id="parcelSourceSummary"></p><div class="parcel-table-scroll"><table class="parcel-source-table"><thead><tr><th>필지</th><th>예정지번</th><th>면적 ㎡ / 평</th><th>공급예정금액</th><th>자료</th></tr></thead><tbody id="parcelSourceBody"></tbody></table></div></section>
+<p id="parcelSourceSummary"></p><div class="parcel-table-scroll"><table class="parcel-source-table"><thead><tr><th>필지</th><th>예정지번</th><th>면적 ㎡ / 평</th><th>공급예정금액</th><th>평당가</th><th>자료</th></tr></thead><tbody id="parcelSourceBody"></tbody></table></div></section>
 <p id="parcelCount"></p><div id="parcelList" class="block-buttons"></div><p id="parcelListEmpty" hidden>표시할 필지가 없습니다. 위치를 지정해 등록할 수 있습니다.</p>
 <dialog id="parcelEditor" aria-labelledby="parcelFormTitle" aria-describedby="parcelFormSubtitle" hidden><div class="pe-head"><div class="parcel-modal-heading"><h3 id="parcelFormTitle" tabindex="-1" autofocus></h3><div class="parcel-print-controls"><label class="parcel-print-mode">인쇄 용도<select id="parcelPrintMode"><option value="customer">고객용</option><option value="internal">내부용</option></select></label><label><input id="parcelPrintLocation" type="checkbox" checked>택지위치</label><label><input id="parcelPrintMemo" type="checkbox">메모</label><label><input id="parcelPrintPhotos" type="checkbox">사진</label><button class="btn" id="parcelPrint" type="button">선택 내용 인쇄</button></div><button class="btn parcel-modal-close" id="parcelModalClose" type="button" aria-label="필지 세부정보 닫기">×</button></div><div class="pe-subline"><p id="parcelFormSubtitle"></p><label class="parcel-building-check"><input id="parcel-building" type="checkbox" form="parcelForm"><span>건물 있음</span></label></div></div><div class="pe-body"><p id="parcelOwnershipDetail" class="source-note"></p><p id="parcelSourceDetail" hidden></p><section id="parcelLhDetail" class="lh-detail"></section><p id="parcelModalStatus" role="status" aria-live="polite"></p>
 <form id="parcelForm">
@@ -191,7 +192,7 @@
 <script src="assets/js/land-parcel-notes.js?v=20261002-source-blocks-1"></script>
 <script src="assets/js/parcel-print.js?v=20261108-teal-gradient2"></script>
 <script src="assets/js/naver-links.js?v=20261004-2"></script>
-<script src="assets/js/land-parcels.js?v=20261004-naver-1"></script>
+<script src="assets/js/land-parcels.js?v=20261119-perpyeong1"></script>
 <script src="assets/js/unjeong-map.js?v=20261003-shared-map-1"></script>
 <script src="assets/js/land-location.js?v=20261119-blockview"></script>
 <script src="assets/js/land-block-view.js?v=20261119-1"></script>
