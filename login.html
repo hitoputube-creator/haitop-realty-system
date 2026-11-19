@@ -73,6 +73,9 @@
       document.getElementById("officeNotice").textContent = OfficeConfig.id === "ktop"
         ? "케이탑 계정으로 로그인합니다. 고객과 소유주·연락처는 케이탑에서 별도로 관리합니다."
         : "하이탑 계정으로 로그인합니다.";
+      if (OfficeConfig.id === "ktop" && new URLSearchParams(location.search).get("from") === "admin-switch") {
+        document.getElementById("officeNotice").textContent = "하이탑 관리자 전환: 케이탑 계정으로 한 번 로그인하면 이후에는 '케이탑 보기' 버튼으로 바로 이동합니다.";
+      }
       document.title = "매물관리 로그인 - " + OfficeConfig.label;
       officeSelect.addEventListener("change", function () {
         const target = new URL(location.href);
@@ -123,6 +126,7 @@
               return;
             }
           }
+          if (OfficeConfig.id === "hitop") await linkKtopForAdmin(email, password);
           location.replace(getRedirectTarget());
         } catch (_) {
           errEl.textContent = "로그인에 실패했습니다. 선택한 부동산의 이메일·비밀번호와 인터넷 연결을 확인하세요.";
@@ -133,6 +137,24 @@
           officeSelect.disabled = false;
           btnEl.textContent = "로그인";
         }
+      }
+
+      // 하이탑(관리자)으로 로그인하면 같은 이메일·비밀번호로 케이탑 프로젝트에도 조용히 로그인해 둔다.
+      // 케이탑에 같은 계정이 없거나 회원이 아니면 기존 케이탑 세션을 그대로 둔다(하이탑 로그인은 계속 진행).
+      async function linkKtopForAdmin(email, password) {
+        const ktopKey = "sb-enefadyhmhfphtochlku-auth-token";
+        let previous = null;
+        try { previous = localStorage.getItem(ktopKey); } catch (_) {}
+        try {
+          const ktopClient = window.supabase.createClient("https://enefadyhmhfphtochlku.supabase.co", "sb_publishable__8Ru0l0wfQo8e5Ljq1ZQ7Q_LYtCAP-p");
+          const { data, error } = await ktopClient.auth.signInWithPassword({ email, password });
+          if (error || !data.user) return;
+          const { data: members, error: memberError } = await ktopClient.from("office_members").select("email").eq("email", data.user.email.toLowerCase());
+          if (memberError || !members || !members.length) {
+            await ktopClient.auth.signOut({ scope: "local" });
+            if (previous) localStorage.setItem(ktopKey, previous);
+          }
+        } catch (_) {}
       }
 
       function showForgotPanel() {
