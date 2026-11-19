@@ -28,14 +28,25 @@ h2{margin:0 0 6px;font-size:20px}.info{font-size:13px;color:#4a5a6e;line-height:
 table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid #e6ecf3;padding:6px 8px;text-align:left}th{background:#f4f8fc;color:#4a5a6e;font-weight:700;position:sticky;top:0}
 .vac{color:#b42318;font-weight:700}.scroll{max-height:430px;overflow:auto;border:1px solid #e6ecf3;border-radius:8px}
 .empty{color:#8892a2;font-size:14px;padding:30px 6px;text-align:center}
+.mapbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}.mapbar .hint{flex:1;margin:0;min-width:160px}
+.zb{border:1px solid #c9d3e0;background:#fff;border-radius:8px;padding:4px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#1a2a3d}.zb:hover{background:#f3f8ff}
+#zVal{min-width:52px}
+#mapScroll{overflow:auto;max-height:78vh;border-radius:8px}
+.card.big{position:fixed;inset:0;z-index:50;border-radius:0;overflow:hidden;display:flex;flex-direction:column;padding:14px}.card.big #mapScroll{max-height:none;flex:1}
 </style></head><body><div class="wrap">
 <div class="top"><a class="back" id="backLink" href="shop-location.html">← 상가 위치도로</a><h1>법조타운 블록 (업무시설)</h1><span class="sub" id="count">불러오는 중…</span></div>
-<div class="grid"><div class="card"><div class="hint">분홍 점선 안이 법조타운 블록입니다. 이 블록의 상가 건물은 법조타운 1곳입니다.</div><div id="stage"><img src="assets/images/land/blocks/beopjo-block.png" alt="F1 블록 지도"></div>
+<div class="grid"><div class="card" id="mapCard"><div class="mapbar"><div class="hint">분홍 점선 안이 법조타운 블록입니다. 이 블록의 상가 건물은 법조타운 1곳입니다.</div><button class="zb" id="zOut" title="축소">−</button><button class="zb" id="zVal" title="누르면 100%">100%</button><button class="zb" id="zIn" title="확대">＋</button><button class="zb" id="zBig">크게 보기</button></div><div id="mapScroll"><div id="stage"><img src="assets/images/land/blocks/beopjo-block.png" alt="F1 블록 지도"></div></div>
 </div>
 <div class="card" id="panel"><div class="empty" id="empty">지도에서 건물 이름을 눌러 보세요.<br>호실 현황과 공실이 여기에 나옵니다.</div><div id="detail" hidden><h2 id="dName"></h2><div class="info" id="dAddr"></div><div class="chips" id="dChips"></div><div class="tiles" id="dTiles"></div><div class="scroll"><table><thead><tr><th>호수</th><th>상태</th><th>업종</th><th>전용평</th><th>월세/보증금</th></tr></thead><tbody id="dRows"></tbody></table></div></div></div></div></div>
 <script>
 (async function(){
   var HS=[], W=461, H=900; var $=function(i){return document.getElementById(i)}; var OFF=(typeof OfficeConfig!=='undefined'&&OfficeConfig.id)||(new URLSearchParams(location.search).get('office'))||'hitop'; $('backLink').href='shop-location.html?office='+encodeURIComponent(OFF);
+  var z=1,mapCard=$('mapCard');
+  function setZ(n){z=Math.max(1,Math.min(4,Math.round(n*100)/100));$('stage').style.width=(z*100)+'%';$('zVal').textContent=Math.round(z*100)+'%';}
+  $('zIn').onclick=function(){setZ(z+0.25)};$('zOut').onclick=function(){setZ(z-0.25)};$('zVal').onclick=function(){setZ(1)};
+  $('zBig').onclick=function(){var on=mapCard.classList.toggle('big');$('zBig').textContent=on?'닫기 ✕':'크게 보기';document.body.style.overflow=on?'hidden':'';};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('big'))$('zBig').click();});
+  $('mapScroll').addEventListener('wheel',function(e){if(e.ctrlKey){e.preventDefault();setZ(z+(e.deltaY<0?0.25:-0.25));}},{passive:false});
   var buildings=[];
   var s=await hitopAuthClient.auth.getSession(); if(s.error||!s.data.session){hitopRedirectToLogin();return;} hitopApplyAuthHeader(s.data.session);
   var res=await Promise.all([getDriveResources(),fetchWithTimeout(SUPABASE_URL+'/rest/v1/buildings?select=local_id,name,units',{headers})]);
