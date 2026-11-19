@@ -504,8 +504,11 @@
   function appendSourceRow(row){
     const tr=document.createElement('tr');
     const area=row.data.area;const price=row.source?.supplyPriceWon;
-    const values=[parcelLabel(row),row.data.address||'원본 미기재',area==null?'미기재':Number(area).toLocaleString('ko-KR')+'㎡ / '+(Number(area)/3.305785).toFixed(2)+'평',price==null?'원본 금액 미기재':money(price)+'원'];
-    values.forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td);});
+    // 공급예정금액 옆에 평당가(공급예정금액 ÷ 평)를 함께 보여준다.
+    const pyeong=area==null?0:Number(area)/3.305785;
+    const perPyeong=price==null||!(pyeong>0)?'-':money(price/pyeong)+'원';
+    const values=[parcelLabel(row),row.data.address||'원본 미기재',area==null?'미기재':Number(area).toLocaleString('ko-KR')+'㎡ / '+(Number(area)/3.305785).toFixed(2)+'평',price==null?'원본 금액 미기재':money(price)+'원',perPyeong];
+    values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=value;if(i===4)td.className='parcel-price-per';tr.append(td);});
     const td=document.createElement('td'), state=contactState(row), badge=document.createElement('span');badge.className='parcel-contact-badge parcel-contact-'+state;badge.textContent=contactStates[state].symbol+' '+contactStates[state].label+(views.ownership?' · '+window.HitopParcelOwnership.label(row):'')+(views.data&&dataLabel(row)?' · '+dataLabel(row):'');
     const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent=row.id?'자료 수정':'자료 보기·등록';btn.addEventListener('click',()=>show(row));td.append(badge,btn);tr.append(td);$('parcelSourceBody').append(tr);
   }
