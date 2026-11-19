@@ -1613,8 +1613,36 @@ async function linkDiaryEntryToListing(diaryId, listingId) {
   }
 }
 
+// 업로드 전 사진 자동 축소: 긴 변 2000px, JPEG 화질 85% (500KB 이하 · GIF · SVG · PDF는 그대로, 실패하면 원본 업로드)
+const IMAGE_COMPRESS_MAX_SIDE = 2000;
+const IMAGE_COMPRESS_QUALITY = 0.85;
+const IMAGE_COMPRESS_MIN_BYTES = 500 * 1024;
+async function compressListingImageFile(file) {
+  try {
+    if (!file || !/^image\/(jpeg|png|webp)$/i.test(file.type || "") || file.size <= IMAGE_COMPRESS_MIN_BYTES) return file;
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, IMAGE_COMPRESS_MAX_SIDE / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * scale));
+    const h = Math.max(1, Math.round(bmp.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(bmp, 0, 0, w, h);
+    if (bmp.close) bmp.close();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", IMAGE_COMPRESS_QUALITY));
+    if (!blob || blob.size >= file.size) return file;
+    const baseName = (file.name || "photo").replace(/\.[^.]+$/, "");
+    return new File([blob], baseName + ".jpg", { type: "image/jpeg", lastModified: Date.now() });
+  } catch (e) {
+    console.warn("[사진 축소 실패 - 원본 업로드]", e);
+    return file;
+  }
+}
+
 async function uploadListingImage(file, listingId) {
   if (!file) throw new Error("No file selected.");
+  file = await compressListingImageFile(file);
   const isImage = file.type ? file.type.startsWith("image/") : isListingImageFile(file.name);
   const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
   if (!isImage && !isPdf) throw new Error("이미지 또는 PDF 파일만 업로드할 수 있습니다.");
