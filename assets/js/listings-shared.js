@@ -586,6 +586,57 @@ async function handleRosterToListing(id) {
   } catch (e) { showToast("❌ 전환 실패: " + e.message); }
 }
 
+// ===== 되돌리기 (안내창의 [되돌리기] 버튼 · Ctrl+Z) =====
+// 잘못 누른 매물 변경(명단으로 보내기 · 상태 변경)을 바로 이전 상태로 돌린다. 새로고침하면 기록은 사라진다.
+var listingUndoStack = [];
+var listingUndoTimer = null;
+function hideUndoToast() {
+  const el = document.getElementById("listingUndoToast");
+  if (el) el.remove();
+  if (listingUndoTimer) { clearTimeout(listingUndoTimer); listingUndoTimer = null; }
+}
+function showUndoToast(msg) {
+  hideUndoToast();
+  const el = document.createElement("div");
+  el.id = "listingUndoToast";
+  el.style.cssText = "position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:100000;display:flex;align-items:center;gap:12px;padding:10px 14px 10px 18px;background:#1f2937;color:#fff;border-radius:12px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)";
+  const span = document.createElement("span"); span.textContent = msg;
+  const btn = document.createElement("button"); btn.type = "button"; btn.textContent = "↩ 되돌리기 (Ctrl+Z)";
+  btn.style.cssText = "border:1px solid #fff;background:#fff;color:#111827;border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;cursor:pointer";
+  btn.onclick = function (ev) { ev.stopPropagation(); runListingUndo(); };
+  el.appendChild(span); el.appendChild(btn); document.body.appendChild(el);
+  listingUndoTimer = setTimeout(hideUndoToast, 10000);
+}
+function pushListingUndo(label, fn) {
+  listingUndoStack.push({ label: label, fn: fn });
+  if (listingUndoStack.length > 20) listingUndoStack.shift();
+  showUndoToast(label);
+}
+async function runListingUndo() {
+  const act = listingUndoStack.pop();
+  if (!act) { if (typeof showToast === "function") showToast("되돌릴 작업이 없어요"); return; }
+  hideUndoToast();
+  try {
+    await act.fn();
+    if (typeof invalidateCustomerLinkContext === "function") invalidateCustomerLinkContext();
+    if (typeof loadListings === "function") await loadListings();
+    if (typeof renderDoneList === "function") renderDoneList();
+    if (typeof renderList === "function") renderList();
+    if (typeof showToast === "function") showToast("↩ 되돌렸어요 (" + act.label.replace(/ ?했어요$| ?했습니다\.?$/, "") + ")");
+  } catch (e) {
+    if (typeof showToast === "function") showToast("❌ 되돌리기 실패: " + e.message);
+  }
+}
+document.addEventListener("keydown", function (e) {
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+  if (!(e.code === "KeyZ" || String(e.key).toLowerCase() === "z")) return;
+  const el = e.target;
+  if (el && (el.isContentEditable || el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !["checkbox", "radio", "button", "submit"].includes(el.type)))) return;
+  if (!listingUndoStack.length) return;
+  e.preventDefault();
+  runListingUndo();
+});
+
 // 매물 → 명단 전환: 등록구분만 "명단"으로 바꾼다 (나머지 정보는 그대로, 명단은 홈페이지 공개 불가라 공개 중이면 해제)
 async function handleListingToRoster(id) {
   const item = allListings.find(x => x.id === id);
@@ -595,15 +646,16 @@ async function handleListingToRoster(id) {
   try {
     const current = await getListingById(id);
     if (!current) throw new Error("매물을 찾을 수 없습니다.");
+    const before = JSON.parse(JSON.stringify(current));
     const patch = { listingKind: "명단" };
     if (wasPublic) patch.is_public = false;
     await updateListing(id, Object.assign({}, current, patch));
     item.listingKind = "명단";
     if (wasPublic) item.is_public = false;
     if (typeof invalidateCustomerLinkContext === "function") invalidateCustomerLinkContext();
-    showToast("✅ 명단으로 보냈어요");
     if (typeof renderList === "function") renderList();
     if (typeof renderDoneList === "function") renderDoneList();
+    pushListingUndo("명단으로 보냈어요", async function () { await updateListing(id, before); });
   } catch (e) { showToast("❌ 전환 실패: " + e.message); }
 }
 
@@ -657,10 +709,16 @@ async function handleRevertListing(id) {
 async function handleListingProgressChange(id,select) {
   const item=allListings.find(l=>l.id===id),status=select.value;
   const before=item && isRosterListing(item) && listingProgressStatus(item)==='진행중' ? '' : item?listingProgressStatus(item):'진행중';
+  const prevStatus=item?listingProgressStatus(item):'진행중';
   if(!['진행중','보류','거래완료'].includes(status))return;
   select.disabled=true;
   try {
     const convert = item && isRosterListing(item) && status==='진행중';
+    let snapshotBefore=null;
+    if(convert || status==='거래완료' || prevStatus==='거래완료'){
+      const cur=await getListingById(id);
+      if(cur)snapshotBefore=JSON.parse(JSON.stringify(cur));
+    }
     if(convert) {
       const current=await getListingById(id);
       if(!current)throw new Error('매물을 찾을 수 없습니다.');
@@ -670,6 +728,12 @@ async function handleListingProgressChange(id,select) {
     } else if(status==='거래완료')await markListingDone(id);
     else await updateListingStatus(id,status);
     showToast(convert ? '진행중 매물로 전환했습니다.' : '매물 상태를 '+status+'으로 변경했습니다.');
+    if(typeof pushListingUndo==='function' && prevStatus!==status || convert){
+      const undoFn = snapshotBefore
+        ? async function(){ await updateListing(id,snapshotBefore); }
+        : async function(){ await updateListingStatus(id,prevStatus); };
+      pushListingUndo(convert ? '매물로 전환했어요' : '상태를 '+status+'으로 바꿨어요', undoFn);
+    }
     if(typeof loadListings==='function')await loadListings();
     if(typeof renderDoneList==='function')renderDoneList();
     if(typeof renderList==='function')renderList();
