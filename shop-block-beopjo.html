@@ -47,6 +47,14 @@ table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px
   $('zBig').onclick=function(){var on=mapCard.classList.toggle('big');$('zBig').textContent=on?'닫기 ✕':'크게 보기';document.body.style.overflow=on?'hidden':'';};
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('big'))$('zBig').click();});
   $('mapScroll').addEventListener('wheel',function(e){if(e.ctrlKey){e.preventDefault();setZ(z+(e.deltaY<0?0.25:-0.25));}},{passive:false});
+  (function(){var sc=$('mapScroll'),down=false,moved=false,sx=0,sy=0,l0=0,t0=0;
+    sc.style.cursor='grab';sc.style.userSelect='none';
+    sc.addEventListener('mousedown',function(e){if(e.button!==0)return;down=true;moved=false;sx=e.clientX;sy=e.clientY;l0=sc.scrollLeft;t0=sc.scrollTop;});
+    window.addEventListener('mousemove',function(e){if(!down)return;var dx=e.clientX-sx,dy=e.clientY-sy;if(!moved&&Math.abs(dx)+Math.abs(dy)>5){moved=true;sc.style.cursor='grabbing';}if(moved){sc.scrollLeft=l0-dx;sc.scrollTop=t0-dy;e.preventDefault();}});
+    window.addEventListener('mouseup',function(){if(down){down=false;sc.style.cursor='grab';}});
+    sc.addEventListener('click',function(e){if(moved){e.stopPropagation();e.preventDefault();moved=false;}},true);
+    sc.addEventListener('dragstart',function(e){e.preventDefault();});
+  })();
   var buildings=[];
   var s=await hitopAuthClient.auth.getSession(); if(s.error||!s.data.session){hitopRedirectToLogin();return;} hitopApplyAuthHeader(s.data.session);
   var res=await Promise.all([getDriveResources(),fetchWithTimeout(SUPABASE_URL+'/rest/v1/buildings?select=local_id,name,units',{headers})]);
