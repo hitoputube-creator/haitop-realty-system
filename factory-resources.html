@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>하이탑부동산 | 공장·창고 자료관리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20261108-ktop-match1" />
+  <style>
+    .floor-status-entry, .floor-status-entry:visited {
+      display:inline-block; margin-left:8px; text-decoration:none;
+      border:1px solid rgba(37,103,95,0.5); background:#ffffff;
+      color:#234c49; font-weight:700;
+    }
+    .floor-status-entry:hover, .floor-status-entry:focus-visible { background:#ffffff; color:#234c49; }
+    .resource-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+    .resource-toolbar .floor-status-entry { margin-left:0; }
+    .resource-toolbar .resource-location-entry { margin-left:auto; }
+  </style>
+  <script src="assets/js/storage.js?v=20261017-notice-removed"></script><script src="assets/js/ktop-shared-view.js?v=20261107-ksv2"></script>
+<script src="assets/js/office-brand.js?v=20261108-ktop-match1"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+  <script src="assets/js/nav.js?v=20261111-ct1"></script>
+
+<link rel="stylesheet" href="assets/css/resource-categories.css?v=20261108-teal-gradient2">
+<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
+<link rel="stylesheet" href="assets/css/global-property-search.css?v=20261108-ktop-match1">
+<link rel="stylesheet" href="assets/css/resource-list-style.css?v=20261119-list-style2">
+<script>
+(function(){
+  var office = typeof OfficeConfig !== 'undefined' ? OfficeConfig.id : (new URLSearchParams(location.search).get('office') || sessionStorage.getItem('realty_selected_office') || 'hitop');
+  document.documentElement.dataset.officeTheme=office;
+  if(office!=='ktop'){
+    var link=document.querySelector('link[href*="white-navy-workspace.css"]');
+    if(link)link.disabled=false;
+    var building=document.getElementById('ktop-building-light');
+    if(building)building.disabled=true;
+  }
+})();
+</script>
+</head>
+<body class="resources-page list-style" data-resource-scope="factory" data-nav-active="tools">
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-icon"></div>
+    <div class="logo-text">
+      <div class="gps-heading-row"><div class="logo-main">하이탑부동산 공장·창고 자료관리</div><div id="globalPropertySearchToolbar" class="gps-toolbar no-print"></div></div>
+      <div class="logo-sub">공장 · 창고 건물·부지 자료</div>
+    </div>
+    <nav class="main-nav" id="mainNav"></nav>
+  </header>
+  <div class="header-line"></div>
+  <div id="globalPropertySearch" class="no-print"></div>
+
+  <!-- ===== 자료 등록 토글 버튼 ===== -->
+  <div class="resource-toolbar" style="margin:16px 0 10px;">
+    <div class="resource-scope-title">공장·창고 자료</div>
+    <button class="btn btn-primary" id="driveRegisterToggleBtn">📁 자료 등록</button>
+    <button class="btn btn-ghost" id="driveCategoryAddBtn">+ 카테고리 추가</button>
+
+  </div>
+
+  <!-- ===== 자료 등록 ===== -->
+  <div class="quick-card" id="driveRegisterCard" style="display:none;">
+    <div class="quick-title">📁 자료 등록</div>
+    <div class="quick-sub">카테고리와 블럭·필지명, 자료 링크를 입력하세요</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>카테고리</label>
+        <select id="drive_cat_select">
+          <option value="">-- 직접 입력 --</option>
+        </select>
+        <input id="drive_category" type="text" placeholder="카테고리 직접 입력 또는 위에서 선택" style="margin-top:6px;" />
+      </div>
+      <div class="field">
+        <label>건물명 · 부지명</label>
+        <input id="drive_name" type="text" placeholder="예) 문산읍 ○○물류창고" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>드라이브 링크</label>
+      <input id="drive_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>건물 기본 정보 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <textarea id="drive_memo_basic_reg" rows="8" style="width:100%;resize:vertical;min-height:200px;box-sizing:border-box;font-family:inherit;"></textarea>
+    </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>추가 메모 <span style="color:var(--text-muted);font-size:0.78rem;">(선택)</span></label>
+      <textarea id="drive_memo_extra_reg" rows="3" placeholder="기타 특이사항 입력" style="width:100%;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+    </div>
+    <button class="btn btn-primary" id="driveSaveBtn" style="width:100%;">💾 저장</button>
+  </div>
+
+  <!-- ===== 자료 목록 ===== -->
+  <div id="driveContent"></div>
+
+</div>
+
+<!-- ✏️ 자료보기 수정 모달 -->
+<div id="driveEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-title">✏️ 자료 수정</div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div class="field">
+        <label>카테고리</label>
+        <input id="drive_edit_category" type="text" placeholder="예) 점포택지" />
+      </div>
+      <div class="field">
+        <label>자료명 · 블럭·필지명</label>
+        <input id="drive_edit_name" type="text" placeholder="예) 운정3지구 11블럭 01번 필지" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>드라이브 링크</label>
+      <input id="drive_edit_url" type="text" placeholder="https://drive.google.com/drive/folders/..." />
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('driveEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 📂 카테고리 폴더명 수정 모달 -->
+<div id="driveCategoryEditModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-title" id="driveCategoryModalTitle">📂 카테고리 이름 수정</div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>카테고리명</label>
+      <input id="drive_cat_edit_name" type="text" placeholder="예) 공장, 물류창고" />
+    </div>
+    <div class="field" id="drive_cat_add_room_field" style="display:none;margin-bottom:14px;"><label>자료실</label><select id="drive_cat_add_room"><option value="commercial">상가</option><option value="residential">주거</option><option value="land">택지</option></select></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('driveCategoryEditModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveCategoryEditSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🔗 매물연결 모달 -->
+<div id="driveLinkModal" class="modal-overlay" style="display:none;align-items:flex-start;padding:20px 0;overflow-y:auto;">
+  <div class="modal-box" style="max-width:560px;width:95%;padding:20px;">
+    <div class="modal-title">🔗 매물 연결</div>
+    <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">이 건물 자료와 연결할 매물을 선택하세요 (복수 선택 가능)</div>
+    <div id="driveLinkListArea" style="max-height:400px;overflow-y:auto;margin-bottom:14px;">
+      <div class="loading"><span class="spinner"></span>불러오는 중...</div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="document.getElementById('driveLinkModal').style.display='none'">취소</button>
+      <button class="btn btn-primary" id="driveLinkSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- 전역 에러 오버레이 -->
+<div id="appErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#f8fcfc;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+  <div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>
+  <div style="font-size:1.1rem;font-weight:700;color:#234c49;margin-bottom:8px;">연결 오류가 발생했습니다</div>
+  <div id="appErrorMsg" style="font-size:0.85rem;color:#888;margin-bottom:24px;max-width:320px;line-height:1.6;">새로고침 해주세요.</div>
+  <button onclick="location.reload()" style="background:#25675f;color:#ffffff;border:none;border-radius:8px;padding:12px 28px;font-size:0.95rem;font-weight:700;cursor:pointer;">🔄 새로고침</button>
+</div>
+
+<script>
+  function showAppError(msg) {
+    const el = document.getElementById("appErrorOverlay");
+    if (!el) return;
+    document.getElementById("appErrorMsg").textContent = msg || "새로고침 해주세요.";
+    el.style.display = "flex";
+  }
+  window.onerror = function(msg, src, line, col, err) {
+    showAppError((err && err.message) || msg || "알 수 없는 오류가 발생했습니다.");
+  };
+  window.onunhandledrejection = function(e) {
+    const msg = (e.reason && e.reason.message) || String(e.reason) || "비동기 오류가 발생했습니다.";
+    if (msg.includes("저장 실패") || msg.includes("수정 실패") || msg.includes("삭제 실패")) return;
+    showAppError(msg);
+  };
+</script>
+
+<script>
+  (function () {
+    var toggleBtn = document.getElementById("driveRegisterToggleBtn");
+    var card = document.getElementById("driveRegisterCard");
+    if (!toggleBtn || !card) return;
+    function setOpen(open) {
+      card.style.display = open ? "" : "none";
+      toggleBtn.textContent = open ? "📁 자료 등록 접기" : "📁 자료 등록";
+    }
+    toggleBtn.addEventListener("click", function () {
+      setOpen(card.style.display === "none");
+    });
+  })();
+</script>
+
+<script src="assets/js/resource-rooms.js?v=20261119-factory1"></script>
+<script src="assets/js/resources.js?v=20261119-factory1"></script>
+<script src="assets/js/global-property-search-core.js?v=20261009-closed"></script>
+<script src="assets/js/global-property-search.js?v=20261008-status-portfolio"></script>
+</body>
+</html>
