@@ -52,12 +52,13 @@ table.ov td .sm{color:#8892a2;font-size:11px}table.ov td{line-height:1.35}table.
   var z=1,mapCard=$('mapCard');
   function setZ(n){z=Math.max(1,Math.min(4,Math.round(n*100)/100));$('stage').style.width=(z*100)+'%';$('zVal').textContent=Math.round(z*100)+'%';}
   $('zIn').onclick=function(){setZ(z+0.25)};$('zOut').onclick=function(){setZ(z-0.25)};$('zVal').onclick=function(){setZ(1)};
-  $('zBig').onclick=function(){var on=mapCard.classList.toggle('big');$('zBig').textContent=on?'닫기 ✕':'크게 보기';document.body.style.overflow=on?'hidden':'';};
+  var hintEl=document.querySelector('#mapCard .hint'),hintTxt=hintEl?hintEl.textContent:'',zBefore=1;
+  $('zBig').onclick=function(){var on=mapCard.classList.toggle('big');$('zBig').textContent=on?'닫기 ✕':'크게 보기';document.body.style.overflow=on?'hidden':'';if(on){zBefore=z;if(z<2)setZ(2);if(hintEl)hintEl.textContent='마우스로 끌어서 이동 · Ctrl+휠로 확대/축소 · Esc로 닫기';}else{setZ(zBefore);if(hintEl)hintEl.textContent=hintTxt;}};
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('big'))$('zBig').click();});
   $('mapScroll').addEventListener('wheel',function(e){if(e.ctrlKey){e.preventDefault();setZ(z+(e.deltaY<0?0.25:-0.25));}},{passive:false});
   (function(){var sc=$('mapScroll'),down=false,moved=false,sx=0,sy=0,l0=0,t0=0;
     sc.style.cursor='grab';sc.style.userSelect='none';
-    sc.addEventListener('mousedown',function(e){if(e.button!==0)return;down=true;moved=false;sx=e.clientX;sy=e.clientY;l0=sc.scrollLeft;t0=sc.scrollTop;});
+    sc.addEventListener('mousedown',function(e){if(e.button!==0)return;var rc=sc.getBoundingClientRect();if(e.clientX-rc.left>sc.clientWidth||e.clientY-rc.top>sc.clientHeight)return;down=true;moved=false;sx=e.clientX;sy=e.clientY;l0=sc.scrollLeft;t0=sc.scrollTop;});
     window.addEventListener('mousemove',function(e){if(!down)return;var dx=e.clientX-sx,dy=e.clientY-sy;if(!moved&&Math.abs(dx)+Math.abs(dy)>5){moved=true;sc.style.cursor='grabbing';}if(moved){sc.scrollLeft=l0-dx;sc.scrollTop=t0-dy;e.preventDefault();}});
     window.addEventListener('mouseup',function(){if(down){down=false;sc.style.cursor='grab';}});
     sc.addEventListener('click',function(e){if(moved){e.stopPropagation();e.preventDefault();moved=false;}},true);
