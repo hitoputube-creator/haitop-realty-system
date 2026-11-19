@@ -113,3 +113,12 @@ html:root[data-office-theme] body.list-style .land-location-page #parcelSearchFo
   html:root[data-office-theme] body.list-style .land-location-page .block-navigation>label{grid-row:3!important}
   html:root[data-office-theme] body.list-style .land-location-page .block-search-panel{grid-column:1/-1!important;grid-row:4!important;max-width:none}
 }
+
+/* 도면 위 면적 숫자: 같은 색 그림자 때문에 글자가 뭉개져 보이던 것을 흰 테두리로 바꿔 또렷하게 */
+html:root[data-office-theme] body.list-style .land-location-page .parcel-area-label:not(.parcel-ownership-label):not(.parcel-hh-label){
+  color:#1e293b!important;font-weight:700!important;letter-spacing:-.01em!important;
+  text-shadow:0 0 2px #fff,-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff!important;
+  font-variant-numeric:tabular-nums;
+}
+html:root[data-office-theme] body.list-style .land-location-page .parcel-area-label.parcel-unsold-label{color:#b42318!important}
+html:root[data-office-theme] body.list-style .land-location-page .parcel-data-cross{text-shadow:0 0 2px #fff,1px 1px 0 #fff,-1px -1px 0 #fff!important}
