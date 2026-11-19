@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex">
+<title>상가 블록 | 해오름마을 F7·F3</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="assets/js/storage.js?v=20261119-imgz"></script>
+<script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/auth.js?v=20261006-office-login"></script>
+<script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef2f7;font-family:Pretendard,system-ui,sans-serif;color:#1a2a3d}
+.wrap{max-width:1400px;margin:0 auto;padding:16px}.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.back{border:1px solid #c9d3e0;border-radius:8px;padding:7px 12px;background:#fff;color:#334;text-decoration:none;font-size:13px}
+h1{margin:0;font-size:22px;color:#12395f}.sub{font-size:12.5px;color:#6b7a8c}
+.notice{background:#fff7e0;border:1px solid #f0d98a;color:#7a5b00;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:600px minmax(0,1fr);gap:14px;align-items:start}@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid #d5deea;border-radius:14px;padding:12px}
+.hint{font-size:12px;color:#6b7a8c;margin-bottom:6px}
+#stage{position:relative;line-height:0;width:100%}#stage img{width:100%;display:block;border-radius:8px}
+.hs{position:absolute;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:.12s}
+.hs.ok{border-color:rgba(20,160,90,.0)}.hs.ok:hover{background:rgba(255,153,0,.25);border-color:#ff9900}
+.hs.no{cursor:help}.hs.no:hover{background:rgba(120,120,120,.25);border-color:#888;border-style:dashed}
+.hs.sel{background:rgba(255,153,0,.28);border-color:#ff8a00}
+.legend{font-size:12px;color:#4a5a6e;margin-top:8px;line-height:1.5}
+h2{margin:0 0 6px;font-size:20px}.info{font-size:13px;color:#4a5a6e;line-height:1.7}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chip{border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;background:#eef4fb;color:#1f4d7a}.chip.v{background:#fdecec;color:#b42318}
+.tiles{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}.tiles a{border:1px solid #c9d3e0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;color:#1a2a3d;text-decoration:none;background:#fff}.tiles a.p{background:#1a6fe0;border-color:#1a6fe0;color:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid #e6ecf3;padding:6px 8px;text-align:left}th{background:#f4f8fc;color:#4a5a6e;font-weight:700;position:sticky;top:0}
+.vac{color:#b42318;font-weight:700}.scroll{max-height:430px;overflow:auto;border:1px solid #e6ecf3;border-radius:8px}
+.empty{color:#8892a2;font-size:14px;padding:30px 6px;text-align:center}
+.ovwrap{max-height:560px;overflow:auto;border:1px solid #e6ecf3;border-radius:8px;margin-bottom:12px}
+table.ov th,table.ov td{white-space:nowrap;font-size:12.5px;padding:6px 8px}
+table.ov td.addr{white-space:normal;min-width:130px}
+table.ov tbody tr{cursor:pointer}table.ov tbody tr:hover{background:#f3f8ff}
+table.ov tbody tr.sel{background:#fff3df}
+table.ov a.bn{color:#12395f;text-decoration:none}table.ov a.bn:hover{text-decoration:underline}
+table.ov tr.no td{color:#9aa5b5;cursor:default}
+table.ov td .sm{color:#8892a2;font-size:11px}table.ov td{line-height:1.35}table.ov th,table.ov td{padding:5px 6px}
+.mapbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}.mapbar .hint{flex:1;margin:0;min-width:160px}
+.zb{border:1px solid #c9d3e0;background:#fff;border-radius:8px;padding:4px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#1a2a3d}.zb:hover{background:#f3f8ff}
+#zVal{min-width:52px}
+#mapScroll{overflow:auto;max-height:78vh;border-radius:8px}
+.card.big{position:fixed;inset:0;z-index:50;border-radius:0;overflow:hidden;display:flex;flex-direction:column;padding:14px}.card.big #mapScroll{max-height:none;flex:1}
+</style></head><body><div class="wrap">
+<div class="top"><a class="back" id="backLink" href="shop-location.html">← 상가 위치도로</a><h1>해오름마을 상가 · F7 · F3 블록</h1><span class="sub" id="count">불러오는 중…</span></div>
+<div class="grid"><div class="card" id="mapCard"><div class="mapbar"><div class="hint">건물 이름을 누르면 그 건물 자료 페이지로 이동합니다. (마우스를 올리면 주황색으로 표시)</div><button class="zb" id="zOut" title="축소">−</button><button class="zb" id="zVal" title="누르면 100%">100%</button><button class="zb" id="zIn" title="확대">＋</button><button class="zb" id="zBig">크게 보기</button></div><div id="mapScroll"><div id="stage"><img src="assets/images/land/blocks/haeoreum-map.jpg" alt="F1 블록 지도"></div></div>
+<div class="legend">자료관리에 등록된 건물만 자료 페이지로 이동합니다.</div></div>
+<div class="card" id="panel"><h2 style="font-size:16px;margin:0 0 8px">건물 기본정보</h2><div class="ovwrap"><table class="ov"><thead><tr><th>건물명</th><th>주소</th><th>토지면적</th><th>건축면적</th><th>연면적</th><th>층수</th><th>주차</th><th>사용승인일</th></tr></thead><tbody id="ovRows"></tbody></table></div><div class="hint" style="margin-top:6px">회색(미등록) 건물은 자료관리에 등록하면 자동으로 이어집니다.</div><div class="empty" id="empty" hidden></div></div></div></div>
+<script>
+(async function(){
+  var HS=[{"k":"이타워4","x":435,"y":735,"w":90,"h":40},{"k":"우미프라자","x":645,"y":715,"w":80,"h":50},{"k":"드림스퀘어","x":792,"y":700,"w":70,"h":50},{"k":"해모니타워","x":892,"y":700,"w":66,"h":56},{"k":"이타워2","x":423,"y":840,"w":80,"h":34},{"k":"이타워3","x":541,"y":835,"w":80,"h":34},{"k":"폴리","x":800,"y":808,"w":50,"h":34},{"k":"태산W타워","x":1005,"y":690,"w":72,"h":50},{"k":"월드타워18","x":1000,"y":785,"w":76,"h":74},{"k":"다율타워","x":1142,"y":695,"w":80,"h":40},{"k":"월드타워19","x":1260,"y":688,"w":56,"h":56},{"k":"네스트원","x":1073,"y":795,"w":66,"h":34},{"k":"공감빌딩","x":1156,"y":795,"w":74,"h":34},{"k":"채움","x":1257,"y":790,"w":50,"h":40},{"k":"월드타워17","x":1348,"y":787,"w":82,"h":60},{"k":"신운정프라자4","x":1445,"y":690,"w":76,"h":50},{"k":"상성메디컬프라자","x":1447,"y":765,"w":80,"h":50}], W=1932, H=1366; var $=function(i){return document.getElementById(i)}; var OFF=(typeof OfficeConfig!=='undefined'&&OfficeConfig.id)||(new URLSearchParams(location.search).get('office'))||'hitop'; $('backLink').href='shop-location.html?office='+encodeURIComponent(OFF);
+  var z=1,mapCard=$('mapCard');
+  function setZ(n){z=Math.max(1,Math.min(4,Math.round(n*100)/100));$('stage').style.width=(z*100)+'%';$('zVal').textContent=Math.round(z*100)+'%';}
+  $('zIn').onclick=function(){setZ(z+0.25)};$('zOut').onclick=function(){setZ(z-0.25)};$('zVal').onclick=function(){setZ(1)};
+  $('zBig').onclick=function(){var on=mapCard.classList.toggle('big');$('zBig').textContent=on?'닫기 ✕':'크게 보기';document.body.style.overflow=on?'hidden':'';};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('big'))$('zBig').click();});
+  $('mapScroll').addEventListener('wheel',function(e){if(e.ctrlKey){e.preventDefault();setZ(z+(e.deltaY<0?0.25:-0.25));}},{passive:false});
+  var buildings=[];
+  var s=await hitopAuthClient.auth.getSession(); if(s.error||!s.data.session){hitopRedirectToLogin();return;} hitopApplyAuthHeader(s.data.session);
+  var res=await Promise.all([getDriveResources(),fetchWithTimeout(SUPABASE_URL+'/rest/v1/buildings?select=local_id,name,units',{headers})]);
+  var recs=res[1].ok?await res[1].json():[];
+  buildings=HitopResourceRooms.visible(res[0],'commercial').filter(function(r){return /상가/.test(String(r.category||''))}).map(function(r){var rec=recs.find(function(x){return x.local_id===r.id})||recs.find(function(x){return x.name===r.name})||null;return{id:r.id,name:r.name,memo:r.memo,rec:rec}});
+  function norm(t){return String(t||'').replace(/\s+/g,'')}
+  var ALIAS={'월드11차':'SUN메디컬','송림':'송림메디컬','현해':'현해프라자','한미':'한미프라자','아름터':'아름터타워','덕진':'덕진프라자','홍원':'홍원빌딩'};
+  function find(k){var key=norm(ALIAS[k]||k);return buildings.find(function(b){return norm(b.name)===key})||buildings.find(function(b){return norm(b.name).indexOf(key)===0})||null}
+  function mf(memo,label){var ls=String(memo||'').split('\n');for(var i=0;i<ls.length;i++){var c=ls[i].indexOf(':');if(c>0&&ls[i].slice(0,c).trim()===label)return ls[i].slice(c+1).trim();}return '';}
+  function esc2(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+  var rowEls={},hsEls={};
+  var matched=0,stage=$('stage');
+  function urlOf(b){return HitopResourceRooms.detailUrl('building-detail.html',b.id,'commercial');}
+  function note(k){var e=$('empty');e.hidden=false;e.innerHTML='<b>'+esc2(k)+'</b>은(는) 자료관리에 아직 등록되어 있지 않습니다.<br>건물을 등록하면 이름을 눌러 자료 페이지로 갈 수 있습니다.';}
+  function go(b,k){if(!b){note(k);return;}location.href=urlOf(b);}
+  function hl(id,on){var h=hsEls[id];if(h)h.classList.toggle('sel',on);var r=rowEls[id];if(r)r.classList.toggle('sel',on);}
+  HS.forEach(function(h){
+    var b=find(h.k); if(b)matched++;
+    var d=document.createElement('div'); d.className='hs '+(b?'ok':'no');
+    d.style.left=((h.x-h.w/2)/W*100)+'%';d.style.top=((h.y-h.h/2)/H*100)+'%';d.style.width=(h.w/W*100)+'%';d.style.height=(h.h/H*100)+'%';
+    d.title=b?(b.name+' 자료 보기'):(h.k+' (자료관리에 아직 없음)');
+    if(b&&!hsEls[b.id])hsEls[b.id]=d;
+    d.addEventListener('click',function(){go(b,h.k);});
+    if(b){d.addEventListener('mouseenter',function(){hl(b.id,true);if(rowEls[b.id])rowEls[b.id].scrollIntoView({block:'nearest'});});d.addEventListener('mouseleave',function(){hl(b.id,false);});}
+    stage.appendChild(d);
+  });
+  $('count').textContent='지도의 건물 '+HS.length+'곳 중 자료관리 등록 '+matched+'곳';
+  HS.forEach(function(h){
+    if(h.k==='법조타운')return;
+    var b=find(h.k); var tr=document.createElement('tr'); if(!b)tr.className='no';
+    function cell(v){v=String(v==null?'':v).trim(); if(/^평$/.test(v))v=''; if(/^\d+$/.test(v))v+='대'; if(!v)return '<td>-</td>'; var q=esc2(v).replace('/','/<br>').replace(' (','<br><span class="sm">(').replace(/\)$/,')</span>'); return '<td>'+q+'</td>'}
+    var nameCell=b?'<td><a class="bn" href="'+esc2(urlOf(b))+'"><b>'+esc2(b.name)+'</b></a></td>':'<td><b>'+esc2(h.k+' (미등록)')+'</b></td>';
+    tr.innerHTML=nameCell+'<td class="addr">'+(b&&mf(b.memo,'주소')?esc2(mf(b.memo,'주소')):'-')+'</td>'+(b?cell(mf(b.memo,'토지면적'))+cell(mf(b.memo,'건축면적'))+cell(mf(b.memo,'연면적'))+cell(mf(b.memo,'규모'))+cell(mf(b.memo,'주차대수'))+cell(mf(b.memo,'사용승인일')):'<td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>');
+    tr.addEventListener('click',function(ev){ if(ev.target.closest('a'))return; go(b,h.k); });
+    if(b){rowEls[b.id]=tr; tr.addEventListener('mouseenter',function(){hl(b.id,true);}); tr.addEventListener('mouseleave',function(){hl(b.id,false);});}
+    $('ovRows').appendChild(tr);
+  });
+})();
+</script></body></html>
