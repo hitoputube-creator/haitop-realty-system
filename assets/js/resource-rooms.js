@@ -10,7 +10,7 @@
   }
   function isResidential(resource) { return resourceRoom(resource) === 'residential'; }
   function pageScope(body, search) {
-    if (['residential', 'land', 'factory'].includes(body.dataset.resourceScope)) return body.dataset.resourceScope;
+    if (['residential', 'land', 'factory', 'other'].includes(body.dataset.resourceScope)) return body.dataset.resourceScope;
     return new URLSearchParams(search).get('scope') === 'all' ? 'all' : 'commercial';
   }
   function visible(resources, scope) {
@@ -19,10 +19,10 @@
   }
   function readDetailScope(search) {
     const value = new URLSearchParams(search).get('resourceScope');
-    return ['residential', 'commercial', 'land', 'factory', 'all'].includes(value) ? value : null;
+    return ['residential', 'commercial', 'land', 'factory', 'other', 'all'].includes(value) ? value : null;
   }
   function roomUrl(scope) {
-    return scope === 'land' ? 'land-resources.html' : scope === 'factory' ? 'factory-resources.html' : scope === 'residential' ? 'residential-resources.html' : scope === 'all' ? 'resources.html?scope=all' : 'resources.html';
+    return scope === 'land' ? 'land-resources.html' : scope === 'factory' ? 'factory-resources.html' : scope === 'other' ? 'other-resources.html' : scope === 'residential' ? 'residential-resources.html' : scope === 'all' ? 'resources.html?scope=all' : 'resources.html';
   }
   function detailUrl(page, id, scope) {
     const params = new URLSearchParams({id: String(id)});
