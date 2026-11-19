@@ -70,7 +70,7 @@ table.ov td .sm{color:#8892a2;font-size:11px}table.ov td{line-height:1.35}table.
   var recs=res[1].ok?await res[1].json():[];
   buildings=HitopResourceRooms.visible(res[0],'commercial').filter(function(r){return /상가/.test(String(r.category||''))}).map(function(r){var rec=recs.find(function(x){return x.local_id===r.id})||recs.find(function(x){return x.name===r.name})||null;return{id:r.id,name:r.name,memo:r.memo,rec:rec}});
   function norm(t){return String(t||'').replace(/\s+/g,'')}
-  var ALIAS={'월드11차':'SUN메디컬','송림':'송림메디컬','현해':'현해프라자','한미':'한미프라자','아름터':'아름터타워','덕진':'덕진프라자','홍원':'홍원빌딩'};
+  var ALIAS={'채움':'채움(F3)','월드11차':'SUN메디컬','송림':'송림메디컬','현해':'현해프라자','한미':'한미프라자','아름터':'아름터타워','덕진':'덕진프라자','홍원':'홍원빌딩'};
   function find(k){var key=norm(ALIAS[k]||k);return buildings.find(function(b){return norm(b.name)===key})||buildings.find(function(b){return norm(b.name).indexOf(key)===0})||null}
   function mf(memo,label){var ls=String(memo||'').split('\n');for(var i=0;i<ls.length;i++){var c=ls[i].indexOf(':');if(c>0&&ls[i].slice(0,c).trim()===label)return ls[i].slice(c+1).trim();}return '';}
   function esc2(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
