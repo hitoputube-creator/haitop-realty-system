@@ -7,7 +7,8 @@
   // x, y, w, h: 지도 그림 크기에 대한 % (확대해도 같은 자리)
   var BLOCKS = [
     { name: '운정역 F1 블록', href: 'shop-block-f1.html', x: 65.9, y: 41.5, w: 3.1, h: 9.6 },
-    { name: '법조타운 블록', href: 'shop-block-beopjo.html', x: 63.3, y: 41.35, w: 2.2, h: 4.23, side: 'left' }
+    { name: '법조타운 블록', href: 'shop-block-beopjo.html', x: 63.3, y: 41.35, w: 2.2, h: 4.23, side: 'left' },
+    { name: '야당역 F4·F5 블록', href: 'shop-block-yadang.html', x: 64.06, y: 64.31, w: 3.6, h: 17.5, side: 'left' }
   ];
   var style = document.createElement('style');
   style.textContent = '.block-hotspot{position:absolute;z-index:3;display:block;border:2px dashed #d6247f;background:rgba(214,36,127,.12);border-radius:6px;line-height:1;text-decoration:none}' +
