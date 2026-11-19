@@ -1,0 +1,86 @@
+/* 택지 위치도에 매물관리 목록 기준 스타일 적용 (skill: realty-list-style). body.list-style 화면에만 적용 */
+html[data-office-theme='ktop'] body.list-style{
+  --ls-point:#1767d2; --ls-point-soft:#eaf2ff; --ls-title:#1c344f; --ls-sub:#617286; --ls-bg:#f3f5f9;
+  --ls-head:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba); --ls-head-shadow:0 7px 24px rgba(31,75,139,.13);
+  --ls-card-border:transparent; --ls-shadow:0 5px 20px rgba(24,44,71,.043);
+}
+html[data-office-theme='hitop'] body.list-style{
+  --ls-point:#25675f; --ls-point-soft:#eef8f7; --ls-title:#1e3a56; --ls-sub:#68788a; --ls-bg:#ffffff;
+  --ls-head:linear-gradient(112deg,#075c68 0%,#078b94 34%,#13b3ac 68%,#4adbc3 100%); --ls-head-shadow:0 8px 24px rgba(9,112,113,.16);
+  --ls-card-border:#a3b4c4; --ls-shadow:0 3px 10px rgba(39,50,63,.07);
+}
+html:root[data-office-theme] body.list-style{background:var(--ls-bg)!important}
+html:root[data-office-theme] body.list-style [hidden]{display:none!important}
+
+/* 상단 헤더: 목록 화면과 같은 그라데이션 박스 (지도가 위에 오도록 한 줄로 낮게 유지) */
+html:root[data-office-theme] body.list-style .land-location-page .header{
+  background:var(--ls-head)!important;box-shadow:var(--ls-head-shadow)!important;border:0!important;
+  border-radius:16px!important;padding:10px 18px!important;margin:6px 0 12px!important;min-height:0!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page .header .logo-main{color:#fff!important;font-size:16px!important;font-weight:600!important}
+html:root[data-office-theme] body.list-style .land-location-page .header .logo-sub{display:none!important}
+html:root[data-office-theme] body.list-style .land-location-page .header .main-nav{gap:6px!important}
+html:root[data-office-theme] body.list-style .land-location-page .header :is(.nav-link,.nav-logout-btn){
+  height:30px!important;min-height:30px!important;line-height:28px!important;padding:0 11px!important;border-radius:8px!important;
+  background:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.25)!important;color:#eef5ff!important;
+  font-size:12.4px!important;font-weight:400!important;box-shadow:none!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page .header .nav-logout-btn{font-weight:600!important}
+html:root[data-office-theme] body.list-style .land-location-page .header :is(.nav-link,.nav-logout-btn):hover{background:rgba(255,255,255,.2)!important}
+
+/* 버튼 */
+html:root[data-office-theme] body.list-style .land-location-page .btn:not(.map-hotspot){
+  height:30px!important;min-height:30px!important;line-height:28px!important;padding:0 11px!important;border-radius:6px!important;
+  font-size:12.5px!important;font-weight:600!important;background:#fff!important;background-image:none!important;
+  color:#254767!important;border:1px solid #cbd5e1!important;box-shadow:none!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page .btn[aria-pressed="true"],
+html:root[data-office-theme] body.list-style .land-location-page .btn.btn-primary{
+  background:var(--ls-point)!important;border-color:var(--ls-point)!important;color:#fff!important;font-weight:700!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page .btn:not(.map-hotspot):hover{filter:brightness(.97)}
+html:root[data-office-theme] body.list-style .land-location-page .map-filter-dropdown summary{
+  height:30px!important;min-height:30px!important;border-radius:6px!important;background:#fff!important;border:1px solid #cbd5e1!important;
+  color:#254767!important;font-size:12.5px!important;font-weight:600!important;box-shadow:none!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page .info-fold>summary{
+  display:inline-flex!important;align-items:center;height:28px;padding:0 10px!important;border-radius:6px!important;
+  background:#fff!important;border:1px solid #cbd5e1!important;color:var(--ls-sub)!important;font-size:12px!important;box-shadow:none!important;
+}
+
+/* 입력·선택 */
+html:root[data-office-theme] body.list-style .land-location-page :is(select,input[type=search],input[type=text]):not([readonly]){
+  height:30px!important;min-height:30px!important;padding:0 10px!important;border-radius:6px!important;font-size:12.5px!important;
+  background:#fff!important;border:1px solid #cbd5e1!important;color:#1e3248!important;
+  box-shadow:inset 0 1px 2px rgba(39,50,63,.04),0 1px 3px rgba(39,50,63,.04)!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page :is(select,input):focus{border-color:#365f88!important;box-shadow:0 0 0 2px rgba(54,95,136,.14)!important;outline:0}
+html:root[data-office-theme] body.list-style .land-location-page .block-heading label:not(.parcel-search-field){color:var(--ls-sub)!important;font-size:12px!important}
+
+/* 카드 */
+html:root[data-office-theme] body.list-style .land-location-page :is(.block-detail-card,.block-list-card){
+  background:#fff!important;background-image:none!important;border:1px solid var(--ls-card-border)!important;border-radius:16px!important;
+  box-shadow:var(--ls-shadow)!important;padding:14px 16px!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page .block-detail-card{border-top:4px solid var(--ls-point)!important}
+html:root[data-office-theme] body.list-style .land-location-page #detailTitle{
+  font-size:20px!important;font-weight:800!important;color:var(--ls-title)!important;outline:0!important;border:0!important;box-shadow:none!important;
+  padding-left:10px!important;border-left:4px solid var(--ls-point)!important;line-height:1.2!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page :is(.parcel-manager>h2,.block-list-heading h2){
+  display:flex;align-items:center;gap:8px;font-size:15px!important;font-weight:700!important;color:var(--ls-title)!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page :is(.parcel-manager>h2,.block-list-heading h2)::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--ls-point)}
+html:root[data-office-theme] body.list-style .land-location-page :is(.map-viewport,#detailDrawing,.parcel-table-scroll){border:1px solid #dce5ef!important;border-radius:8px!important}
+html:root[data-office-theme] body.list-style .land-location-page :is(#parcelSourceSummary,#parcelCount,#parcelStatus){color:var(--ls-sub)!important;font-size:12.5px!important}
+
+/* 필지 표 = 목록 머리줄 + 행 */
+html:root[data-office-theme] body.list-style .land-location-page .parcel-source-table{font-size:13px!important}
+html:root[data-office-theme] body.list-style .land-location-page .parcel-source-table th{
+  background:#f1f5f9!important;color:#334155!important;font-size:12px!important;font-weight:600!important;
+  border-bottom:1px solid #e2e8f0!important;padding:9px 10px!important;
+}
+html:root[data-office-theme] body.list-style .land-location-page .parcel-source-table td{border-bottom:1px solid #e5ebf2!important;padding:7px 10px!important;color:#293d52!important}
+html:root[data-office-theme] body.list-style .land-location-page .parcel-source-table tbody tr:hover td{background:#f6f9fc!important}
+html:root[data-office-theme] body.list-style .land-location-page .parcel-source-table td.parcel-price-per{font-weight:700!important;color:var(--ls-point)!important}
+html:root[data-office-theme] body.list-style .land-location-page .parcel-source-table .btn{height:24px!important;min-height:24px!important;line-height:22px!important;padding:0 8px!important;font-size:12px!important;margin-left:6px}

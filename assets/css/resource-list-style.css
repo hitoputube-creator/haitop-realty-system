@@ -89,3 +89,5 @@ html:root[data-office-theme] body.list-style.resources-page #driveContent .listi
 html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card .btn:not(.btn-primary):not(.btn-ghost){
   background:#fff!important;color:#b42318!important;border-color:#f2c7c2!important;
 }
+
+html:root[data-office-theme] body.list-style.resources-page [hidden]{display:none!important}
