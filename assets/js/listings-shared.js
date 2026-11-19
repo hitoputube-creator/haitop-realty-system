@@ -532,7 +532,7 @@ function makeCard(item, { revert = false, showActiveBadge = false } = {}) {
     <div class="listing-cell listing-cell-actions listing-actions" data-label="관리">
       <div class="lc-actions-main">
         <button class="btn btn-primary" onclick="event.stopPropagation();location.href='${detailUrl}'">상세</button>
-        <button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>
+        ${(!isRoster && !isQuick) ? `<button class="btn btn-ghost lc-to-roster-btn" style="border-color:#c9b8e8;background:#f4efff;color:#6b3fb5" title="이 매물을 명단으로 보냅니다" onclick="event.stopPropagation();handleListingToRoster('${idArg}')">→명단</button>` : `<button class="btn btn-ghost" onclick="event.stopPropagation();${editAction}">수정</button>`}
         ${deleteButton}
       </div>
       <div class="lc-actions-side">
@@ -581,6 +581,27 @@ async function handleRosterToListing(id) {
     await updateListing(id, Object.assign({}, current, { listingKind: "매물" }));
     item.listingKind = "매물";
     showToast("✅ 매물로 전환됐어요");
+    if (typeof renderList === "function") renderList();
+    if (typeof renderDoneList === "function") renderDoneList();
+  } catch (e) { showToast("❌ 전환 실패: " + e.message); }
+}
+
+// 매물 → 명단 전환: 등록구분만 "명단"으로 바꾼다 (나머지 정보는 그대로, 명단은 홈페이지 공개 불가라 공개 중이면 해제)
+async function handleListingToRoster(id) {
+  const item = allListings.find(x => x.id === id);
+  if (!item) return;
+  const wasPublic = item.is_public === true;
+  if (!confirm("이 매물을 [명단]으로 보내시겠습니까?\n매물 목록에서 빠지고 명단으로 이동합니다. (내용은 그대로 유지)" + (wasPublic ? "\n※ 홈페이지 공개 중이라 공개도 함께 해제됩니다." : ""))) return;
+  try {
+    const current = await getListingById(id);
+    if (!current) throw new Error("매물을 찾을 수 없습니다.");
+    const patch = { listingKind: "명단" };
+    if (wasPublic) patch.is_public = false;
+    await updateListing(id, Object.assign({}, current, patch));
+    item.listingKind = "명단";
+    if (wasPublic) item.is_public = false;
+    if (typeof invalidateCustomerLinkContext === "function") invalidateCustomerLinkContext();
+    showToast("✅ 명단으로 보냈어요");
     if (typeof renderList === "function") renderList();
     if (typeof renderDoneList === "function") renderDoneList();
   } catch (e) { showToast("❌ 전환 실패: " + e.message); }
