@@ -1,0 +1,91 @@
+/* 매물관리 목록(properties.html) 기준 스타일을 자료관리 화면에 적용 (skill: realty-list-style)
+   body에 .list-style 클래스가 있는 화면에만 적용. 색은 사무소별 변수로 분리. */
+html[data-office-theme='ktop'] body.list-style{
+  --ls-point:#1767d2; --ls-point-soft:#eaf2ff; --ls-point-line:#c4d8f5; --ls-point-text:#1956a3;
+  --ls-text:#23364c; --ls-sub:#617286; --ls-title:#1c344f; --ls-bg:#f3f5f9;
+  --ls-card-border:transparent; --ls-shadow:0 5px 20px rgba(24,44,71,.043);
+}
+html[data-office-theme='hitop'] body.list-style{
+  --ls-point:#25675f; --ls-point-soft:#eef8f7; --ls-point-line:#b9d8d3; --ls-point-text:#1f5f57;
+  --ls-text:#27323f; --ls-sub:#68788a; --ls-title:#1e3a56; --ls-bg:#ffffff;
+  --ls-card-border:#a3b4c4; --ls-shadow:0 3px 10px rgba(39,50,63,.07);
+}
+html:root[data-office-theme] body.list-style.resources-page{background:var(--ls-bg)!important}
+html:root[data-office-theme] body.list-style.resources-page .header-line{display:none!important}
+
+/* 공통 버튼 */
+html:root[data-office-theme] body.list-style.resources-page :is(.resource-toolbar,#driveContent,#driveRegisterCard) .btn{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:4px;
+  height:30px!important;min-height:30px!important;padding:0 12px!important;border-radius:6px!important;
+  font-size:12.5px!important;font-weight:600!important;line-height:1!important;white-space:nowrap;
+  background:#fff!important;background-image:none!important;color:#254767!important;
+  border:1px solid #cbd5e1!important;box-shadow:none!important;text-decoration:none!important;margin:0!important;
+}
+html:root[data-office-theme] body.list-style.resources-page :is(.resource-toolbar,#driveContent,#driveRegisterCard) .btn.btn-primary{
+  background:var(--ls-point)!important;border-color:var(--ls-point)!important;color:#fff!important;font-weight:700!important;
+  box-shadow:0 3px 9px color-mix(in srgb,var(--ls-point) 12%,transparent)!important;
+}
+html:root[data-office-theme] body.list-style.resources-page :is(.resource-toolbar,#driveContent) .btn:hover{filter:brightness(.97)}
+
+/* 상단 도구 줄 = 필터 패널 카드 (위 4px 포인트 띠) */
+html:root[data-office-theme] body.list-style.resources-page .resource-toolbar{
+  background:#fff!important;border:1px solid var(--ls-card-border)!important;border-top:4px solid var(--ls-point)!important;
+  border-radius:16px!important;box-shadow:var(--ls-shadow)!important;padding:12px 16px!important;
+  margin:14px 0 14px!important;gap:8px!important;justify-content:flex-end;
+}
+html:root[data-office-theme] body.list-style.resources-page .resource-toolbar .resource-scope-title{margin-right:auto;font-size:15px;font-weight:700;color:var(--ls-title);display:flex;align-items:center;gap:8px}
+html:root[data-office-theme] body.list-style.resources-page .resource-toolbar .resource-scope-title::before{content:"";width:4px;height:18px;border-radius:2px;background:var(--ls-point)}
+html:root[data-office-theme] body.list-style.resources-page .resource-toolbar .resource-location-entry{margin-left:0!important}
+html:root[data-office-theme] body.list-style.resources-page .resource-toolbar #driveRegisterToggleBtn{order:9}
+
+/* 자료 카드 (카테고리 + 목록) */
+html:root[data-office-theme] body.list-style.resources-page #driveContent>.quick-card,html:root[data-office-theme] body.list-style.resources-page #driveRegisterCard{
+  background:#fff!important;background-image:none!important;border:1px solid var(--ls-card-border)!important;
+  border-radius:16px!important;box-shadow:var(--ls-shadow)!important;padding:14px 16px!important;
+}
+html:root[data-office-theme] body.list-style.resources-page .drive-category-order-hint{font-size:12px!important;color:var(--ls-sub)!important;margin-bottom:8px!important}
+html:root[data-office-theme] body.list-style.resources-page .drive-category-group-title{color:var(--ls-title)!important;font-size:12.5px!important}
+html:root[data-office-theme] body.list-style.resources-page .drive-category-grid{gap:6px!important;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))!important}
+html:root[data-office-theme] body.list-style.resources-page .drive-category-row{gap:4px!important}
+
+/* 카테고리 = 종류 탭 모양 */
+html:root[data-office-theme] body.list-style.resources-page .drive-category-row [data-cidx]{
+  height:32px!important;padding:0 12px!important;border-radius:6px!important;display:flex!important;align-items:center;gap:4px;
+  font-size:12.5px!important;font-weight:700!important;background:#fff!important;color:#42617f!important;
+  border:1px solid #d8e3f1!important;box-shadow:none!important;
+}
+html:root[data-office-theme] body.list-style.resources-page .drive-category-row [data-cidx][aria-pressed="true"]{
+  background:var(--ls-point)!important;border-color:var(--ls-point)!important;color:#fff!important;
+}
+html:root[data-office-theme] body.list-style.resources-page .drive-category-row [data-cidx] span{font-size:11.5px!important;opacity:.75!important;font-weight:600}
+html:root[data-office-theme] body.list-style.resources-page .drive-category-grip,html:root[data-office-theme] body.list-style.resources-page .drive-category-row [data-cat-edit-idx]{
+  flex:0 0 30px!important;height:32px!important;min-height:32px!important;padding:0!important;border-radius:6px!important;
+  background:#fff!important;border:1px solid #cbd5e1!important;color:#617286!important;font-size:13px!important;box-shadow:none!important;
+}
+html:root[data-office-theme] body.list-style.resources-page .drive-category-grip{font-size:1rem!important}
+
+/* 목록 머리: 왼쪽 4px 막대 + 건수 */
+html:root[data-office-theme] body.list-style.resources-page .drive-section{border-top:1px solid #e0e7ef!important;padding-top:12px!important;margin-top:12px!important}
+html:root[data-office-theme] body.list-style.resources-page .drive-section-bar{margin-bottom:10px!important}
+html:root[data-office-theme] body.list-style.resources-page .drive-section-count{display:flex;align-items:center;gap:8px;font-size:13px!important;color:var(--ls-sub)!important}
+html:root[data-office-theme] body.list-style.resources-page .drive-section-count::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--ls-point)}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .drive-section-bar .btn{height:30px!important;padding:0 12px!important;margin-left:auto!important}
+
+/* 자료 행 = 목록 행 카드 */
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-grid{gap:10px!important}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card{
+  background:#fff!important;background-image:none!important;border:1px solid #dce5ef!important;border-left:1px solid #dce5ef!important;
+  border-radius:8px!important;box-shadow:0 3px 12px rgba(24,44,71,.043)!important;padding:10px 12px!important;
+}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card::before{display:none!important}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card>div:first-child{margin-bottom:8px!important}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card>div:first-child>span:first-child{font-size:14px!important;font-weight:700!important;color:var(--ls-title)!important}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card>div:first-child>span:nth-child(2){
+  display:inline-block;margin-left:6px;padding:2px 5px;border-radius:4px;background:#f1f5f9;border:1px solid #e2e8f0;
+  color:#334155!important;font-size:11px!important;font-weight:700;vertical-align:1px;
+}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card>div:first-child>div{font-size:12px!important;color:var(--ls-sub)!important}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card .btn{height:24px!important;min-height:24px!important;padding:0 8px!important;font-size:12px!important;font-weight:600!important}
+html:root[data-office-theme] body.list-style.resources-page #driveContent .listing-card .btn:not(.btn-primary):not(.btn-ghost){
+  background:#fff!important;color:#b42318!important;border-color:#f2c7c2!important;
+}
