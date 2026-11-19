@@ -13,6 +13,41 @@
   <script src="assets/js/auth.js?v=20261006-office-login"></script>
 <link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
 <script>(function(){var office=typeof OfficeConfig!=='undefined'?OfficeConfig.id:(new URLSearchParams(location.search).get('office')||sessionStorage.getItem('realty_selected_office')||'hitop');document.documentElement.dataset.officeTheme=office;if(office!=='ktop'){var link=document.querySelector('link[href*="white-navy-workspace.css"]');if(link)link.disabled=false;}})();</script>
+<style id="land-top-tidy">
+/* 택지 위치도 상단 정리: 설명 글자 삭제, 검색칸 축소, 지도 위로, 직사각형 작은 버튼 */
+.land-location-page .logo-sub,.land-location-page .header-line,.land-location-page .location-intro,.land-location-page .map-help,.land-location-page #allParcelSearchStatus,.land-location-page #overviewMapSource,.land-location-page #overviewMapNotice,.land-location-page .source-note:not(#mapLoading){display:none!important}
+.land-location-page .btn,.land-location-page .nav-link,.land-location-page .nav-logout-btn,.land-location-page .map-filter-dropdown summary{border-radius:6px!important;min-height:28px!important;height:28px;padding:0 10px!important;font-size:12px!important;font-weight:500!important;line-height:26px;box-shadow:none!important;border:1px solid rgba(148,163,184,.55)!important;background:#fff!important;color:#3b5f7a!important;display:inline-flex;align-items:center}
+.land-location-page .nav-link.active{background:#e8f1f6!important}
+.land-location-page .parcel-global-search{border:0!important;background:none!important;box-shadow:none!important;padding:0!important;margin:0 0 6px!important}
+.land-location-page .parcel-search-controls{display:flex;gap:6px;align-items:center;margin:0!important}
+.land-location-page .parcel-search-field{display:block;font-size:0!important;flex:0 1 320px;margin:0!important}
+.land-location-page .parcel-search-field input{width:100%;height:28px;padding:0 10px;font-size:12px;border-radius:6px;border:1px solid rgba(148,163,184,.55)}
+.land-location-page .map-controls{margin:0 0 6px!important;gap:6px!important}
+.land-location-page .map-filter-controls{gap:6px!important}
+.land-location-page .map-filter-dropdown summary .filter-caption{display:none}
+.land-location-page .zoom-controls{gap:4px!important}
+.land-location-page .zoom-controls output{font-size:12px}
+.land-location-page .map-viewport{margin-top:0!important}
+
+.land-location-page{padding-top:8px!important}
+.land-location-page .header{padding:7px 14px!important;margin:0 0 6px!important;flex-wrap:nowrap!important;align-items:center!important;gap:10px!important;border-radius:10px!important;min-height:0!important}
+.land-location-page .logo-icon{width:26px!important;height:26px!important;border-radius:7px!important;font-size:13px}
+.land-location-page .logo-text{width:auto!important;flex:1 1 auto}
+.land-location-page .logo-main{font-size:15px!important}
+.land-location-page .main-nav{width:auto!important;margin-left:auto!important;gap:6px!important}
+#allParcelSearchInput{height:28px!important;min-height:28px!important;padding:0 10px!important;font-size:12px!important}
+.land-location-page #overview{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 10px}
+.land-location-page #overview>*{flex:0 0 100%}
+.land-location-page #overview>.parcel-global-search{flex:0 0 auto}
+.land-location-page #overview>.map-controls{flex:1 1 420px;min-width:380px}
+.land-location-page .parcel-global-search:has(.parcel-search-results:not(:empty)){flex:0 0 100%!important}
+
+.land-location-page .logo-text{flex:0 0 auto!important;width:auto!important;white-space:nowrap;flex-direction:row!important}
+.land-location-page .main-nav{flex:1 1 auto!important;width:auto!important;justify-content:flex-end!important;margin-left:0!important}
+.land-location-page .parcel-search-controls{flex-wrap:nowrap!important;width:auto!important}
+.land-location-page .parcel-search-field{flex:0 0 300px!important;width:300px}
+.land-location-page .map-hotspot.multi{background:#df6e20!important;color:#fff!important;border-color:#fff!important}
+</style>
 </head>
 <body>
 <main class="page land-location-page">
@@ -158,6 +193,13 @@
 <script src="assets/js/unjeong-map.js?v=20261003-shared-map-1"></script>
 <script src="assets/js/land-location.js?v=20261005-kakao-button-1"></script>
 <script src="assets/js/parcel-global-search.js?v=20261003-road-1"></script>
+<script>
+/* 택지 위치도: 지도 위 사업개요 상자·범례·안내 문구·나침반 가리기 (이 페이지에서만) */
+(function(){var st=document.getElementById('mapStage');if(!st||document.getElementById('landExtraMask'))return;
+var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.id='landExtraMask';svg.setAttribute('viewBox','0 0 2048 1416');svg.setAttribute('aria-hidden','true');svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1';
+[[48,168,380,148],[48,1165,380,150],[1625,595,370,145],[540,1235,360,130],[40,1328,460,72],[1870,55,150,110]].forEach(function(r){var e=document.createElementNS('http://www.w3.org/2000/svg','rect');e.setAttribute('x',r[0]);e.setAttribute('y',r[1]);e.setAttribute('width',r[2]);e.setAttribute('height',r[3]);e.setAttribute('fill','#fdfeff');svg.appendChild(e);});
+st.appendChild(svg);})();
+</script>
 </body>
 </html>
 
