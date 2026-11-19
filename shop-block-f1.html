@@ -33,13 +33,14 @@ table.ov th,table.ov td{white-space:nowrap;font-size:12.5px;padding:6px 8px}
 table.ov td.addr{white-space:normal;min-width:130px}
 table.ov tbody tr{cursor:pointer}table.ov tbody tr:hover{background:#f3f8ff}
 table.ov tbody tr.sel{background:#fff3df}
+table.ov a.bn{color:#12395f;text-decoration:none}table.ov a.bn:hover{text-decoration:underline}
 table.ov tr.no td{color:#9aa5b5;cursor:default}
 table.ov td .sm{color:#8892a2;font-size:11px}table.ov td{line-height:1.35}table.ov th,table.ov td{padding:5px 6px}
 </style></head><body><div class="wrap">
 <div class="top"><a class="back" id="backLink" href="shop-location.html">← 상가 위치도로</a><h1>운정역 상업지 · F1 블록</h1><span class="sub" id="count">불러오는 중…</span></div>
-<div class="grid"><div class="card"><div class="hint">건물 이름을 눌러 보세요. (마우스를 올리면 주황색으로 표시)</div><div id="stage"><img src="assets/images/land/blocks/f1-unjeong-station-v4.jpg" alt="F1 블록 지도"></div>
-<div class="legend">자료관리에 등록된 건물만 눌러집니다. 아직 등록 안 된 건물(점선)은 안내만 나옵니다.</div></div>
-<div class="card" id="panel"><h2 style="font-size:16px;margin:0 0 8px">건물 기본정보</h2><div class="ovwrap"><table class="ov"><thead><tr><th>건물명</th><th>주소</th><th>토지면적</th><th>건축면적</th><th>연면적</th><th>층수</th><th>주차</th><th>사용승인일</th></tr></thead><tbody id="ovRows"></tbody></table></div><div class="empty" id="empty">지도에서 건물 이름을 눌러 보세요.<br>호실 현황과 공실이 여기에 나옵니다.</div><div id="detail" hidden><h2 id="dName"></h2><div class="info" id="dAddr"></div><div class="chips" id="dChips"></div><div class="tiles" id="dTiles"></div><div class="scroll"><table><thead><tr><th>호수</th><th>상태</th><th>업종</th><th>전용평</th><th>월세/보증금</th></tr></thead><tbody id="dRows"></tbody></table></div></div></div></div></div>
+<div class="grid"><div class="card"><div class="hint">건물 이름을 누르면 그 건물 자료 페이지로 이동합니다. (마우스를 올리면 주황색으로 표시)</div><div id="stage"><img src="assets/images/land/blocks/f1-unjeong-station-v4.jpg" alt="F1 블록 지도"></div>
+<div class="legend">자료관리에 등록된 건물만 자료 페이지로 이동합니다.</div></div>
+<div class="card" id="panel"><h2 style="font-size:16px;margin:0 0 8px">건물 기본정보</h2><div class="ovwrap"><table class="ov"><thead><tr><th>건물명</th><th>주소</th><th>토지면적</th><th>건축면적</th><th>연면적</th><th>층수</th><th>주차</th><th>사용승인일</th></tr></thead><tbody id="ovRows"></tbody></table></div><div class="empty" id="empty" hidden></div></div></div></div>
 <script>
 (async function(){
   var HS=[{"k":"엠버418","x":360,"y":322,"w":80,"h":36},{"k":"유은8차","x":360,"y":382,"w":80,"h":34},{"k":"클래스원","x":360,"y":430,"w":80,"h":34},{"k":"디에이블","x":455,"y":282,"w":92,"h":40},{"k":"월드스퀘어","x":528,"y":292,"w":62,"h":50},{"k":"해품가","x":581,"y":296,"w":52,"h":40},{"k":"아름터","x":631,"y":297,"w":54,"h":40},{"k":"월드15차","x":465,"y":348,"w":100,"h":36},{"k":"유은9차","x":432,"y":402,"w":68,"h":34},{"k":"크라운타워","x":432,"y":443,"w":70,"h":34},{"k":"브릭스","x":519,"y":406,"w":56,"h":32},{"k":"현해","x":516,"y":453,"w":52,"h":34},{"k":"명품3차","x":614,"y":376,"w":66,"h":32},{"k":"한미","x":572,"y":436,"w":40,"h":34},{"k":"프라임타워","x":618,"y":449,"w":52,"h":34},{"k":"센트럴하이뷰","x":362,"y":516,"w":72,"h":48},{"k":"레이크필드위버젠","x":366,"y":586,"w":76,"h":40},{"k":"송림로데오","x":437,"y":522,"w":66,"h":44},{"k":"더운정퍼스트","x":511,"y":522,"w":60,"h":44},{"k":"월드로데오","x":437,"y":586,"w":66,"h":40},{"k":"홍원","x":510,"y":582,"w":48,"h":34},{"k":"세안파크","x":588,"y":533,"w":66,"h":36},{"k":"송림","x":570,"y":622,"w":56,"h":52},{"k":"남광하우스토리","x":376,"y":692,"w":76,"h":40},{"k":"월드12차","x":379,"y":768,"w":62,"h":34},{"k":"월드플러스","x":441,"y":705,"w":56,"h":40},{"k":"브릿지10","x":503,"y":708,"w":50,"h":40},{"k":"트윈타워 1차","x":441,"y":762,"w":50,"h":34},{"k":"트윈타워 2차","x":495,"y":762,"w":50,"h":34},{"k":"월드11차","x":388,"y":858,"w":64,"h":40},{"k":"월드10차","x":387,"y":912,"w":66,"h":34},{"k":"아주빌딩","x":488,"y":882,"w":56,"h":40},{"k":"월드9차","x":421,"y":982,"w":62,"h":34},{"k":"덕진","x":482,"y":988,"w":40,"h":34},{"k":"법조타운","x":222,"y":383,"w":64,"h":34}], W=1202, H=1309; var $=function(i){return document.getElementById(i)}; var OFF=(typeof OfficeConfig!=='undefined'&&OfficeConfig.id)||(new URLSearchParams(location.search).get('office'))||'hitop'; $('backLink').href='shop-location.html?office='+encodeURIComponent(OFF);
@@ -54,39 +55,31 @@ table.ov td .sm{color:#8892a2;font-size:11px}table.ov td{line-height:1.35}table.
   function mf(memo,label){var ls=String(memo||'').split('\n');for(var i=0;i<ls.length;i++){var c=ls[i].indexOf(':');if(c>0&&ls[i].slice(0,c).trim()===label)return ls[i].slice(c+1).trim();}return '';}
   function esc2(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
   var rowEls={},hsEls={};
-  var matched=0,sel=null,stage=$('stage');
-  function markRow(id){Object.keys(rowEls).forEach(function(k){rowEls[k].classList.remove('sel')}); if(id&&rowEls[id]){rowEls[id].classList.add('sel');rowEls[id].scrollIntoView({block:'nearest'});}}
-  function pick(b,k,el){ if(sel)sel.classList.remove('sel'); if(!b){sel=null;markRow(null);show(null,k);return;} sel=el||hsEls[b.id]||null; if(sel)sel.classList.add('sel'); markRow(b.id); show(b,k); }
+  var matched=0,stage=$('stage');
+  function urlOf(b){return HitopResourceRooms.detailUrl('building-detail.html',b.id,'commercial');}
+  function note(k){var e=$('empty');e.hidden=false;e.innerHTML='<b>'+esc2(k)+'</b>은(는) 자료관리에 아직 등록되어 있지 않습니다.<br>건물을 등록하면 이름을 눌러 자료 페이지로 갈 수 있습니다.';}
+  function go(b,k){if(!b){note(k);return;}location.href=urlOf(b);}
+  function hl(id,on){var h=hsEls[id];if(h)h.classList.toggle('sel',on);var r=rowEls[id];if(r)r.classList.toggle('sel',on);}
   HS.forEach(function(h){
     var b=find(h.k); if(b)matched++;
     var d=document.createElement('div'); d.className='hs '+(b?'ok':'no');
     d.style.left=((h.x-h.w/2)/W*100)+'%';d.style.top=((h.y-h.h/2)/H*100)+'%';d.style.width=(h.w/W*100)+'%';d.style.height=(h.h/H*100)+'%';
-    d.title=b?b.name:(h.k+' (자료관리에 아직 없음)');
-    if(b&&!hsEls[b.id])hsEls[b.id]=d; d.addEventListener('click',function(){ pick(b,h.k,d); });
+    d.title=b?(b.name+' 자료 보기'):(h.k+' (자료관리에 아직 없음)');
+    if(b&&!hsEls[b.id])hsEls[b.id]=d;
+    d.addEventListener('click',function(){go(b,h.k);});
+    if(b){d.addEventListener('mouseenter',function(){hl(b.id,true);if(rowEls[b.id])rowEls[b.id].scrollIntoView({block:'nearest'});});d.addEventListener('mouseleave',function(){hl(b.id,false);});}
     stage.appendChild(d);
   });
   $('count').textContent='지도의 건물 '+HS.length+'곳 중 자료관리 등록 '+matched+'곳';
   HS.forEach(function(h){
     if(h.k==='법조타운')return;
     var b=find(h.k); var tr=document.createElement('tr'); if(!b)tr.className='no';
-    function cell(v){v=String(v==null?'':v).trim(); if(/^평$/.test(v))v=''; if(/^\d+$/.test(v))v+='대'; if(!v)return '<td>-</td>'; var h=esc2(v).replace('/','/<br>').replace(' (','<br><span class="sm">(').replace(/\)$/,')</span>'); return '<td>'+h+'</td>'}
-    tr.innerHTML='<td><b>'+esc2(b?b.name:h.k+' (미등록)')+'</b></td><td class="addr">'+(b&&mf(b.memo,'주소')?esc2(mf(b.memo,'주소')):'-')+'</td>'+(b?cell(mf(b.memo,'토지면적'))+cell(mf(b.memo,'건축면적'))+cell(mf(b.memo,'연면적'))+cell(mf(b.memo,'규모'))+cell(mf(b.memo,'주차대수'))+cell(mf(b.memo,'사용승인일')):'<td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>');
-    tr.addEventListener('click',function(){ if(b){pick(b,h.k,null);}else{pick(null,h.k,null);} });
-    if(b)rowEls[b.id]=tr; $('ovRows').appendChild(tr);
+    function cell(v){v=String(v==null?'':v).trim(); if(/^평$/.test(v))v=''; if(/^\d+$/.test(v))v+='대'; if(!v)return '<td>-</td>'; var q=esc2(v).replace('/','/<br>').replace(' (','<br><span class="sm">(').replace(/\)$/,')</span>'); return '<td>'+q+'</td>'}
+    var nameCell=b?'<td><a class="bn" href="'+esc2(urlOf(b))+'"><b>'+esc2(b.name)+'</b></a></td>':'<td><b>'+esc2(h.k+' (미등록)')+'</b></td>';
+    tr.innerHTML=nameCell+'<td class="addr">'+(b&&mf(b.memo,'주소')?esc2(mf(b.memo,'주소')):'-')+'</td>'+(b?cell(mf(b.memo,'토지면적'))+cell(mf(b.memo,'건축면적'))+cell(mf(b.memo,'연면적'))+cell(mf(b.memo,'규모'))+cell(mf(b.memo,'주차대수'))+cell(mf(b.memo,'사용승인일')):'<td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>');
+    tr.addEventListener('click',function(ev){ if(ev.target.closest('a'))return; go(b,h.k); });
+    if(b){rowEls[b.id]=tr; tr.addEventListener('mouseenter',function(){hl(b.id,true);}); tr.addEventListener('mouseleave',function(){hl(b.id,false);});}
+    $('ovRows').appendChild(tr);
   });
-  function show(b,k){
-    $('empty').hidden=!!b&&true; $('detail').hidden=!b;
-    if(!b){ $('empty').hidden=false; $('empty').innerHTML='<b>'+k+'</b>은(는) 자료관리에 아직 등록되어 있지 않습니다.<br>(건물 등록 후 연결하면 여기에 자료가 나옵니다)'; return; }
-    $('dName').textContent=b.name; $('dAddr').textContent='';
-    var units=b.rec&&Array.isArray(b.rec.units)?b.rec.units.filter(function(u){return String(u.호수||'').trim()}):[];
-    function fl(r){var m=String(r).match(/^[Bb](\d+)/); if(m)return -1; var n=String(r).match(/^(\d+)/); if(!n)return 0; var v=Number(n[1]); return v>=100?Math.floor(v/100):v}
-    units.sort(function(a,c){return fl(a.호수)-fl(c.호수)||String(a.호수).localeCompare(String(c.호수),'ko',{numeric:true})});
-    var vac=units.filter(function(u){return u.공실여부==='공실'}).length;
-    $('dChips').innerHTML='<span class="chip">호실 '+units.length+'개</span><span class="chip v">공실 '+vac+'개</span><span class="chip">임차 등 '+(units.length-vac)+'개</span>';
-    var detail=HitopResourceRooms.detailUrl('building-detail.html',b.id,'commercial');
-    $('dTiles').innerHTML='<a class="p" href="'+detail+'" target="_blank">건물 상세 열기</a><a href="shop-location.html?office='+encodeURIComponent(OFF)+'&id='+encodeURIComponent(b.id)+'" target="_blank">위치도에서 호실 검색</a><a href="shop-kakao.html?office='+encodeURIComponent(OFF)+'&id='+encodeURIComponent(b.id)+'" target="_blank">카카오맵</a>';
-    function money(v){return v==null||v===''?'':Number(v).toLocaleString()}
-    $('dRows').innerHTML=units.map(function(u){var m=(u.현_월세?money(u.현_월세)+'만':'')+(u.현_보증금?' / '+money(u.현_보증금)+'만':'');return '<tr><td>'+u.호수+'</td><td class="'+(u.공실여부==='공실'?'vac':'')+'">'+(u.공실여부||'')+'</td><td>'+(u.현업종||'')+'</td><td>'+(u.전용_평?Number(u.전용_평).toFixed(1):'')+'</td><td>'+m+'</td></tr>'}).join('')||'<tr><td colspan="5" class="empty">등록된 호실이 없습니다</td></tr>';
-  }
 })();
 </script></body></html>
