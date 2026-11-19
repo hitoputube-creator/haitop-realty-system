@@ -137,6 +137,8 @@
       <div class="building-update-status"><p id="parcelAddressSnapshot" class="source-note" role="status" aria-live="polite">소재지 지번 · LH 공고에 지번이 부여된 필지를 채우고, LH 자료가 없는 블럭은 직접 입력한 지번 5곳 이상(넓게 흩어진 필지)을 기준으로 나머지를 위치로 추정합니다.</p><button class="btn" id="parcelAddressUpdate" type="button" aria-label="소재지 지번 업데이트" title="소재지 지번 업데이트">업데이트</button></div>
       <p class="map-help">PC에서는 마우스 휠로 최대 2,000%까지 확대·축소하고 드래그해서 이동할 수 있습니다. 모바일에서는 두 손가락으로 확대·축소하고 밀어서 이동할 수 있습니다.</p>
       </details>
+      <div id="blockViewBar" class="block-view-bar" hidden><button class="btn" type="button" data-bv="drawing" aria-pressed="true">블록 도면</button><button class="btn" type="button" data-bv="kakao" aria-pressed="false">카카오맵 위치</button></div>
+      <div id="blockKakaoWrap" hidden><iframe id="blockKakaoFrame" title="카카오맵 블럭 위치" loading="lazy"></iframe></div>
       <div id="detailDrawing" hidden></div>
 <section id="parcelManager" class="parcel-manager" hidden>
 <h2>필지별 세부자료</h2><p id="parcelHelp" hidden></p>
@@ -191,7 +193,8 @@
 <script src="assets/js/naver-links.js?v=20261004-2"></script>
 <script src="assets/js/land-parcels.js?v=20261004-naver-1"></script>
 <script src="assets/js/unjeong-map.js?v=20261003-shared-map-1"></script>
-<script src="assets/js/land-location.js?v=20261005-kakao-button-1"></script>
+<script src="assets/js/land-location.js?v=20261119-blockview"></script>
+<script src="assets/js/land-block-view.js?v=20261119-1"></script>
 <script src="assets/js/parcel-global-search.js?v=20261003-road-1"></script>
 <script>
 /* 택지 위치도: 지도 위 사업개요 상자·범례·안내 문구·나침반 가리기 (이 페이지에서만) */
