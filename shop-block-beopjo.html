@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex">
+<title>상가 블록 | 법조타운</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="assets/js/storage.js?v=20261119-imgz"></script>
+<script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/js/auth.js?v=20261006-office-login"></script>
+<script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef2f7;font-family:Pretendard,system-ui,sans-serif;color:#1a2a3d}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.back{border:1px solid #c9d3e0;border-radius:8px;padding:7px 12px;background:#fff;color:#334;text-decoration:none;font-size:13px}
+h1{margin:0;font-size:22px;color:#12395f}.sub{font-size:12.5px;color:#6b7a8c}
+.notice{background:#fff7e0;border:1px solid #f0d98a;color:#7a5b00;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:480px minmax(0,1fr);gap:14px;align-items:start}@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid #d5deea;border-radius:14px;padding:12px}
+.hint{font-size:12px;color:#6b7a8c;margin-bottom:6px}
+#stage{position:relative;line-height:0;width:100%}#stage img{width:100%;display:block;border-radius:8px}
+.hs{position:absolute;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:.12s}
+.hs.ok{border-color:rgba(20,160,90,.0)}.hs.ok:hover{background:rgba(255,153,0,.25);border-color:#ff9900}
+.hs.no{cursor:help}.hs.no:hover{background:rgba(120,120,120,.25);border-color:#888;border-style:dashed}
+.hs.sel{background:rgba(255,153,0,.28);border-color:#ff8a00}
+.legend{font-size:12px;color:#4a5a6e;margin-top:8px;line-height:1.5}
+h2{margin:0 0 6px;font-size:20px}.info{font-size:13px;color:#4a5a6e;line-height:1.7}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chip{border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;background:#eef4fb;color:#1f4d7a}.chip.v{background:#fdecec;color:#b42318}
+.tiles{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}.tiles a{border:1px solid #c9d3e0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;color:#1a2a3d;text-decoration:none;background:#fff}.tiles a.p{background:#1a6fe0;border-color:#1a6fe0;color:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid #e6ecf3;padding:6px 8px;text-align:left}th{background:#f4f8fc;color:#4a5a6e;font-weight:700;position:sticky;top:0}
+.vac{color:#b42318;font-weight:700}.scroll{max-height:430px;overflow:auto;border:1px solid #e6ecf3;border-radius:8px}
+.empty{color:#8892a2;font-size:14px;padding:30px 6px;text-align:center}
+</style></head><body><div class="wrap">
+<div class="top"><a class="back" id="backLink" href="shop-location.html">← 상가 위치도로</a><h1>법조타운 블록 (업무시설)</h1><span class="sub" id="count">불러오는 중…</span></div>
+<div class="grid"><div class="card"><div class="hint">분홍 점선 안이 법조타운 블록입니다. 이 블록의 상가 건물은 법조타운 1곳입니다.</div><div id="stage"><img src="assets/images/land/blocks/beopjo-block.png" alt="F1 블록 지도"></div>
+</div>
+<div class="card" id="panel"><div class="empty" id="empty">지도에서 건물 이름을 눌러 보세요.<br>호실 현황과 공실이 여기에 나옵니다.</div><div id="detail" hidden><h2 id="dName"></h2><div class="info" id="dAddr"></div><div class="chips" id="dChips"></div><div class="tiles" id="dTiles"></div><div class="scroll"><table><thead><tr><th>호수</th><th>상태</th><th>업종</th><th>전용평</th><th>월세/보증금</th></tr></thead><tbody id="dRows"></tbody></table></div></div></div></div></div>
+<script>
+(async function(){
+  var HS=[], W=461, H=900; var $=function(i){return document.getElementById(i)}; var OFF=(typeof OfficeConfig!=='undefined'&&OfficeConfig.id)||(new URLSearchParams(location.search).get('office'))||'hitop'; $('backLink').href='shop-location.html?office='+encodeURIComponent(OFF);
+  var buildings=[];
+  var s=await hitopAuthClient.auth.getSession(); if(s.error||!s.data.session){hitopRedirectToLogin();return;} hitopApplyAuthHeader(s.data.session);
+  var res=await Promise.all([getDriveResources(),fetchWithTimeout(SUPABASE_URL+'/rest/v1/buildings?select=local_id,name,units',{headers})]);
+  var recs=res[1].ok?await res[1].json():[];
+  buildings=HitopResourceRooms.visible(res[0],'commercial').filter(function(r){return /상가/.test(String(r.category||''))}).map(function(r){var rec=recs.find(function(x){return x.local_id===r.id})||recs.find(function(x){return x.name===r.name})||null;return{id:r.id,name:r.name,rec:rec}});
+  function norm(t){return String(t||'').replace(/\s+/g,'')}
+  var ALIAS={'월드11차':'SUN메디컬','송림':'송림메디컬','현해':'현해프라자','한미':'한미프라자','아름터':'아름터타워','덕진':'덕진프라자','홍원':'홍원빌딩'};
+  function find(k){var key=norm(ALIAS[k]||k);return buildings.find(function(b){return norm(b.name)===key})||buildings.find(function(b){return norm(b.name).indexOf(key)===0})||null}
+  var matched=0,sel=null,stage=$('stage');
+  HS.forEach(function(h){
+    var b=find(h.k); if(b)matched++;
+    var d=document.createElement('div'); d.className='hs '+(b?'ok':'no');
+    d.style.left=((h.x-h.w/2)/W*100)+'%';d.style.top=((h.y-h.h/2)/H*100)+'%';d.style.width=(h.w/W*100)+'%';d.style.height=(h.h/H*100)+'%';
+    d.title=b?b.name:(h.k+' (자료관리에 아직 없음)');
+    d.addEventListener('click',function(){ if(!b){show(null,h.k);return;} if(sel)sel.classList.remove('sel'); sel=d; d.classList.add('sel'); show(b,h.k); });
+    stage.appendChild(d);
+  });
+  $('count').textContent='상가 건물 1곳 · 법조타운'; show(find('법조타운'),'법조타운');
+  function show(b,k){
+    $('empty').hidden=!!b&&true; $('detail').hidden=!b;
+    if(!b){ $('empty').hidden=false; $('empty').innerHTML='<b>'+k+'</b>은(는) 자료관리에 아직 등록되어 있지 않습니다.<br>(건물 등록 후 연결하면 여기에 자료가 나옵니다)'; return; }
+    $('dName').textContent=b.name; $('dAddr').textContent='';
+    var units=b.rec&&Array.isArray(b.rec.units)?b.rec.units.filter(function(u){return String(u.호수||'').trim()}):[];
+    function fl(r){var m=String(r).match(/^[Bb](\d+)/); if(m)return -1; var n=String(r).match(/^(\d+)/); if(!n)return 0; var v=Number(n[1]); return v>=100?Math.floor(v/100):v}
+    units.sort(function(a,c){return fl(a.호수)-fl(c.호수)||String(a.호수).localeCompare(String(c.호수),'ko',{numeric:true})});
+    var vac=units.filter(function(u){return u.공실여부==='공실'}).length;
+    $('dChips').innerHTML='<span class="chip">호실 '+units.length+'개</span><span class="chip v">공실 '+vac+'개</span><span class="chip">임차 등 '+(units.length-vac)+'개</span>';
+    var detail=HitopResourceRooms.detailUrl('building-detail.html',b.id,'commercial');
+    $('dTiles').innerHTML='<a class="p" href="'+detail+'" target="_blank">건물 상세 열기</a><a href="shop-location.html?office='+encodeURIComponent(OFF)+'&id='+encodeURIComponent(b.id)+'" target="_blank">위치도에서 호실 검색</a><a href="shop-kakao.html?office='+encodeURIComponent(OFF)+'&id='+encodeURIComponent(b.id)+'" target="_blank">카카오맵</a>';
+    function money(v){return v==null||v===''?'':Number(v).toLocaleString()}
+    $('dRows').innerHTML=units.map(function(u){var m=(u.현_월세?money(u.현_월세)+'만':'')+(u.현_보증금?' / '+money(u.현_보증금)+'만':'');return '<tr><td>'+u.호수+'</td><td class="'+(u.공실여부==='공실'?'vac':'')+'">'+(u.공실여부||'')+'</td><td>'+(u.현업종||'')+'</td><td>'+(u.전용_평?Number(u.전용_평).toFixed(1):'')+'</td><td>'+m+'</td></tr>'}).join('')||'<tr><td colspan="5" class="empty">등록된 호실이 없습니다</td></tr>';
+  }
+})();
+</script></body></html>
