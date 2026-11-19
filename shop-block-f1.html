@@ -69,7 +69,7 @@ table.ov td .sm{color:#8892a2;font-size:11px}table.ov td{line-height:1.35}table.
   HS.forEach(function(h){
     if(h.k==='법조타운')return;
     var b=find(h.k); var tr=document.createElement('tr'); if(!b)tr.className='no';
-    function cell(v){v=String(v==null?'':v).trim(); if(/^평$/.test(v))v=''; if(/^\d+$/.test(v))v+='대'; if(!v)return '<td>-</td>'; var h=esc2(v).replace(' (','<br><span class="sm">(').replace(/\)$/,')</span>').replace('/','/<br>'); return '<td>'+h+'</td>'}
+    function cell(v){v=String(v==null?'':v).trim(); if(/^평$/.test(v))v=''; if(/^\d+$/.test(v))v+='대'; if(!v)return '<td>-</td>'; var h=esc2(v).replace('/','/<br>').replace(' (','<br><span class="sm">(').replace(/\)$/,')</span>'); return '<td>'+h+'</td>'}
     tr.innerHTML='<td><b>'+esc2(b?b.name:h.k+' (미등록)')+'</b></td><td class="addr">'+(b&&mf(b.memo,'주소')?esc2(mf(b.memo,'주소')):'-')+'</td>'+(b?cell(mf(b.memo,'토지면적'))+cell(mf(b.memo,'건축면적'))+cell(mf(b.memo,'연면적'))+cell(mf(b.memo,'규모'))+cell(mf(b.memo,'주차대수'))+cell(mf(b.memo,'사용승인일')):'<td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>');
     tr.addEventListener('click',function(){ if(b){pick(b,h.k,null);}else{pick(null,h.k,null);} });
     if(b)rowEls[b.id]=tr; $('ovRows').appendChild(tr);
