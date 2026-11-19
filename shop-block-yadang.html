@@ -36,14 +36,25 @@ table.ov tbody tr.sel{background:#fff3df}
 table.ov a.bn{color:#12395f;text-decoration:none}table.ov a.bn:hover{text-decoration:underline}
 table.ov tr.no td{color:#9aa5b5;cursor:default}
 table.ov td .sm{color:#8892a2;font-size:11px}table.ov td{line-height:1.35}table.ov th,table.ov td{padding:5px 6px}
+.mapbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}.mapbar .hint{flex:1;margin:0;min-width:160px}
+.zb{border:1px solid #c9d3e0;background:#fff;border-radius:8px;padding:4px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#1a2a3d}.zb:hover{background:#f3f8ff}
+#zVal{min-width:52px}
+#mapScroll{overflow:auto;max-height:78vh;border-radius:8px}
+.card.big{position:fixed;inset:0;z-index:50;border-radius:0;overflow:hidden;display:flex;flex-direction:column;padding:14px}.card.big #mapScroll{max-height:none;flex:1}
 </style></head><body><div class="wrap">
 <div class="top"><a class="back" id="backLink" href="shop-location.html">← 상가 위치도로</a><h1>야당역 상업지 · F4 · F5 블록</h1><span class="sub" id="count">불러오는 중…</span></div>
-<div class="grid"><div class="card"><div class="hint">건물 이름을 누르면 그 건물 자료 페이지로 이동합니다. (마우스를 올리면 주황색으로 표시)</div><div id="stage"><img src="assets/images/land/blocks/yadang-map.jpg" alt="F1 블록 지도"></div>
+<div class="grid"><div class="card" id="mapCard"><div class="mapbar"><div class="hint">건물 이름을 누르면 그 건물 자료 페이지로 이동합니다. (마우스를 올리면 주황색으로 표시)</div><button class="zb" id="zOut" title="축소">−</button><button class="zb" id="zVal" title="누르면 100%">100%</button><button class="zb" id="zIn" title="확대">＋</button><button class="zb" id="zBig">크게 보기</button></div><div id="mapScroll"><div id="stage"><img src="assets/images/land/blocks/yadang-map.jpg" alt="F1 블록 지도"></div></div>
 <div class="legend">자료관리에 등록된 건물만 자료 페이지로 이동합니다.</div></div>
 <div class="card" id="panel"><h2 style="font-size:16px;margin:0 0 8px">건물 기본정보</h2><div class="ovwrap"><table class="ov"><thead><tr><th>건물명</th><th>주소</th><th>토지면적</th><th>건축면적</th><th>연면적</th><th>층수</th><th>주차</th><th>사용승인일</th></tr></thead><tbody id="ovRows"></tbody></table></div><div class="hint" style="margin-top:6px">회색(미등록) 건물은 자료관리에 등록하면 자동으로 이어집니다.</div><div class="empty" id="empty" hidden></div></div></div></div>
 <script>
 (async function(){
   var HS=[{"k":"에펠타워","x":722,"y":92,"w":64,"h":40},{"k":"월드타워7","x":700,"y":167,"w":64,"h":46},{"k":"유은타워1","x":690,"y":265,"w":64,"h":46},{"k":"연세프라자","x":680,"y":345,"w":70,"h":40},{"k":"유은타워3","x":660,"y":430,"w":66,"h":46},{"k":"삼육타워","x":665,"y":513,"w":66,"h":40},{"k":"케이힐스더테라스","x":903,"y":115,"w":100,"h":44},{"k":"파크뷰테라스","x":985,"y":138,"w":76,"h":44},{"k":"채움","x":880,"y":258,"w":56,"h":36},{"k":"호텔시에나","x":958,"y":285,"w":70,"h":40},{"k":"유은타워7","x":890,"y":440,"w":64,"h":46},{"k":"명동프라자","x":650,"y":642,"w":100,"h":60},{"k":"삼육시네마","x":628,"y":772,"w":66,"h":46},{"k":"호수프라자(농협)","x":607,"y":832,"w":66,"h":56},{"k":"삼육프라자1","x":592,"y":892,"w":66,"h":40},{"k":"중앙타워","x":570,"y":948,"w":56,"h":40},{"k":"호수프라자(주차빌딩)","x":672,"y":884,"w":70,"h":56},{"k":"하나프라자","x":672,"y":945,"w":56,"h":40},{"k":"아이플렉스","x":560,"y":1078,"w":70,"h":40},{"k":"센트럴파크리움","x":552,"y":1192,"w":72,"h":50},{"k":"이더펠리체","x":536,"y":1272,"w":70,"h":36},{"k":"유은타워2","x":655,"y":1117,"w":62,"h":46},{"k":"유니타워","x":632,"y":1197,"w":56,"h":44},{"k":"더진프라자","x":612,"y":1335,"w":56,"h":44},{"k":"롯데프라자","x":597,"y":1472,"w":56,"h":44},{"k":"힘찬헤리움","x":527,"y":1555,"w":62,"h":46},{"k":"이든시티","x":515,"y":1630,"w":56,"h":40},{"k":"월드타워8차","x":622,"y":1587,"w":56,"h":44},{"k":"유미어스1차","x":527,"y":1752,"w":62,"h":40},{"k":"유미어스2차","x":545,"y":1842,"w":62,"h":40},{"k":"유미어스4차","x":643,"y":1735,"w":62,"h":30},{"k":"유미어스3차","x":643,"y":1768,"w":62,"h":30},{"k":"디베뉴스타1차","x":646,"y":1832,"w":62,"h":44},{"k":"월드스테이","x":598,"y":1935,"w":76,"h":40}], W=1355, H=2000; var $=function(i){return document.getElementById(i)}; var OFF=(typeof OfficeConfig!=='undefined'&&OfficeConfig.id)||(new URLSearchParams(location.search).get('office'))||'hitop'; $('backLink').href='shop-location.html?office='+encodeURIComponent(OFF);
+  var z=1,mapCard=$('mapCard');
+  function setZ(n){z=Math.max(1,Math.min(4,Math.round(n*100)/100));$('stage').style.width=(z*100)+'%';$('zVal').textContent=Math.round(z*100)+'%';}
+  $('zIn').onclick=function(){setZ(z+0.25)};$('zOut').onclick=function(){setZ(z-0.25)};$('zVal').onclick=function(){setZ(1)};
+  $('zBig').onclick=function(){var on=mapCard.classList.toggle('big');$('zBig').textContent=on?'닫기 ✕':'크게 보기';document.body.style.overflow=on?'hidden':'';};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('big'))$('zBig').click();});
+  $('mapScroll').addEventListener('wheel',function(e){if(e.ctrlKey){e.preventDefault();setZ(z+(e.deltaY<0?0.25:-0.25));}},{passive:false});
   var buildings=[];
   var s=await hitopAuthClient.auth.getSession(); if(s.error||!s.data.session){hitopRedirectToLogin();return;} hitopApplyAuthHeader(s.data.session);
   var res=await Promise.all([getDriveResources(),fetchWithTimeout(SUPABASE_URL+'/rest/v1/buildings?select=local_id,name,units',{headers})]);
