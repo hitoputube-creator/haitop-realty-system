@@ -489,7 +489,36 @@
     if (back) back.href = 'land-location.html?view=' + district;
   }
 
+  // ---------- 택지 위치도에서 넘어온 경우: ?block=third-C5 → 그 블럭 위치로 이동, embed=1 → 지도만 크게 ----------
+  function enableEmbed() {
+    document.body.classList.add('embed');
+    var st = document.createElement('style');
+    st.textContent = 'body.embed .header,body.embed .header-line,body.embed .kakao-intro,body.embed #kakaoHint,body.embed #kakaoLegend,body.embed #kakaoStatus,body.embed .kakao-naverview-group,body.embed #kakaoControls .kakao-control-group:not(:first-child),body.embed #kakaoPinFilters{display:none!important}body.embed .land-kakao-page{padding:6px!important;max-width:none!important}body.embed #kakaoMap{height:calc(100vh - 56px)!important;min-height:380px}';
+    document.head.appendChild(st);
+  }
+  async function focusBlockFromUrl() {
+    var id = new URLSearchParams(location.search).get('block');
+    if (!id) return;
+    try {
+      var res = await fetch('assets/data/land-block-geo.json', { cache: 'no-store' });
+      var geo = res.ok ? await res.json() : null;
+      var g = geo && geo.blocks && geo.blocks[id];
+      if (!g) return;
+      map.relayout();
+      var pos = new kakao.maps.LatLng(g.lat, g.lng);
+      map.setCenter(pos);
+      map.setLevel(4);
+      new kakao.maps.Circle({ map: map, center: pos, radius: g.r || 150, strokeWeight: 3, strokeColor: '#d6247f', strokeOpacity: 0.95, strokeStyle: 'dashed', fillColor: '#d6247f', fillOpacity: 0.12 });
+      var tag = document.createElement('div');
+      tag.style.cssText = 'background:#12395f;color:#fff;font:700 12px sans-serif;padding:4px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+      tag.textContent = g.label + ' 블럭' + (g.est ? ' (추정 위치)' : '');
+      new kakao.maps.CustomOverlay({ map: map, position: pos, content: tag, yAnchor: 1.4, zIndex: 20 });
+      setStatus(g.label + ' 블럭 위치입니다.' + (g.est ? ' LH 위치도에 맞춰 계산한 추정 위치라 오차(약 100m)가 있을 수 있습니다.' : ''));
+    } catch (e) { /* 위치 데이터가 없으면 지구 전체 보기 그대로 */ }
+  }
+
   async function start() {
+    if (new URLSearchParams(location.search).get('embed')) enableEmbed();
     applyDistrictTexts();
     $('kakaoMap').hidden = false;
     $('kakaoControls').hidden = false;
@@ -500,6 +529,7 @@
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
     bindControls();
     await applyDistrictView();
+    await focusBlockFromUrl();
     setStatus(cfg.label + ' 전체를 보고 있습니다. [필지 핀 켜기]를 누르면 등록된 필지가 표시됩니다.');
   }
 
