@@ -466,8 +466,8 @@ function renderDriveTab() {
     </div>`;
   });
   // 부동산 유형별로 묶어서 보여 준다(택지 → 토지, 상가·근생·점포 → 상가, 아파트·오피스텔 등 → 주거).
-  const categoryTypeOf = name => /택지|토지/.test(name) ? '토지' : /상가|근생|점포/.test(name) ? '상가' : /아파트|오피스텔|힐스테이트|주거/.test(name) ? '주거' : '기타';
-  const categoryTypeGroups = [['상가', '🏪 상가'], ['주거', '🏠 주거 (아파트·오피스텔)'], ['토지', '🌱 토지·택지'], ['기타', '📁 기타']]
+  const categoryTypeOf = name => /공장|창고/.test(name) ? '공장' : /택지|토지/.test(name) ? '토지' : /상가|근생|점포/.test(name) ? '상가' : /아파트|오피스텔|힐스테이트|주거/.test(name) ? '주거' : '기타';
+  const categoryTypeGroups = [['상가', '🏪 상가'], ['주거', '🏠 주거 (아파트·오피스텔)'], ['토지', '🌱 토지·택지'], ['공장', '🏭 공장·창고'], ['기타', '📁 기타']]
     .map(([key, label]) => ({ label, indexes: categories.map((c, i) => i).filter(i => categoryTypeOf(categories[i]) === key) }))
     .filter(group => group.indexes.length);
   const catGridHtml = categoryTypeGroups.map(group => `<div class="drive-category-group">${categoryTypeGroups.length > 1 ? `<div class="drive-category-group-title">${group.label} <span>(${group.indexes.length})</span></div>` : ''}<div class="drive-category-grid">${group.indexes.map(i => catRowHtml[i]).join("")}</div></div>`).join("");
