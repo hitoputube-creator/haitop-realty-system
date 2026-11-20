@@ -1,0 +1,49 @@
+/* 상가 실제 지도(shop-kakao)에 매물관리 목록 기준 스타일 적용 (skill: realty-list-style). location-list-style.css 의 변수를 그대로 사용 */
+html:root[data-office-theme] body.list-style .shop-kakao-page{padding-top:8px!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-intro,html:root[data-office-theme] body.list-style .shop-kakao-page .header-line,html:root[data-office-theme] body.list-style .shop-kakao-page .header .logo-sub{display:none!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header{
+  display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:10px!important;
+  background:var(--ls-head)!important;box-shadow:var(--ls-head-shadow)!important;border:0!important;
+  border-radius:16px!important;padding:10px 18px!important;margin:6px 0 12px!important;min-height:0!important;
+}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header .logo-icon{width:26px!important;height:26px!important;border-radius:7px!important;font-size:13px}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header .logo-text{flex:0 0 auto!important;width:auto!important;white-space:nowrap}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header .logo-main{color:#fff!important;font-size:16px!important;font-weight:600!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header .main-nav{flex:1 1 auto!important;width:auto!important;margin-left:0!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:6px!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header :is(.nav-link,.nav-logout-btn){
+  height:30px!important;min-height:30px!important;line-height:28px!important;padding:0 11px!important;border-radius:8px!important;
+  background:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.25)!important;color:#eef5ff!important;
+  font-size:12.4px!important;font-weight:400!important;box-shadow:none!important;display:inline-flex;align-items:center;white-space:nowrap;
+}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header .nav-logout-btn{font-weight:600!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header :is(.nav-link,.nav-logout-btn):hover{background:rgba(255,255,255,.2)!important}
+
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-controls{display:flex!important;flex-wrap:wrap;gap:6px 10px!important;align-items:center!important;margin:0 0 6px!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group{gap:6px!important;align-items:center!important;flex-wrap:wrap}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group label{display:flex!important;align-items:center;gap:6px!important;font-size:12px!important;color:var(--ls-sub)!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group .btn,html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-controls .btn.kakao-naverview{
+  height:30px!important;min-height:30px!important;line-height:28px!important;padding:0 11px!important;border-radius:6px!important;
+  font-size:12.5px!important;font-weight:600!important;background:#fff!important;background-image:none!important;
+  color:#254767!important;border:1px solid #cbd5e1!important;box-shadow:none!important;display:inline-flex;align-items:center;text-decoration:none;
+}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group .btn[aria-pressed="true"]{background:var(--ls-point)!important;border-color:var(--ls-point)!important;color:#fff!important;font-weight:700!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group .btn:hover,html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-controls .btn.kakao-naverview:hover{filter:brightness(.97)}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group :is(select,input){
+  height:30px!important;min-height:30px!important;padding:0 10px!important;border-radius:6px!important;font-size:12.5px!important;
+  background:#fff!important;border:1px solid #cbd5e1!important;color:#1e3248!important;
+  box-shadow:inset 0 1px 2px rgba(39,50,63,.04),0 1px 3px rgba(39,50,63,.04)!important;
+}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group :is(select,input):focus{border-color:#365f88!important;box-shadow:0 0 0 2px rgba(54,95,136,.14)!important;outline:0}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-search input{width:260px}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-status,html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-legend{color:var(--ls-sub)!important;font-size:12.5px!important;margin:0 0 6px!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-map{border:1px solid #dce5ef!important;border-radius:8px!important;height:calc(100vh - 150px)!important}
+
+html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-list{margin:14px 0 28px}
+html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-list h2{display:flex;align-items:center;gap:8px;font-size:15px!important;font-weight:700!important;color:var(--ls-title)!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-list h2::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--ls-point)}
+html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-buttons button{background:#fff!important;border:1px solid #cbd5e1!important;border-left-width:4px!important;border-radius:8px!important;color:#254767!important;box-shadow:var(--ls-shadow)}
+html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-buttons button.vacant{border-left-color:#e5484d!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-buttons button.full{border-left-color:#2563eb!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-buttons button.none{border-left-color:#8a97ab!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-buttons button:hover{background:#f6f9fc!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group label{white-space:nowrap}html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group select{min-width:90px}
