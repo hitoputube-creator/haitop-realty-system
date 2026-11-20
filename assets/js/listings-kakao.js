@@ -186,14 +186,21 @@
     ul.textContent = '';
     box.hidden = !list.length;
     if (!list.length) return;
-    $('lkUnplacedNote').textContent = '주소가 비어 있거나 지도에서 찾지 못한 매물입니다. 매물 상세에서 공개·비공개 주소를 "동패동 2079-4"처럼 지번으로 확인해 주세요.';
+    var head = box.querySelector('h2');
+    var count = head && head.querySelector('.lk-unplaced-count');
+    if (head && !count) { count = el('span', 'lk-unplaced-count'); head.appendChild(count); }
+    if (count) count.textContent = list.length + '건';
+    $('lkUnplacedNote').textContent = '주소가 없거나 지도에서 못 찾은 매물입니다. 매물 상세에서 주소를 지번(예: 동패동 2079-4)으로 넣어 주세요.';
     list.forEach(function (p) {
       var li = el('li');
-      var a = el('a', '', Core.titleOf(p.item));
+      var title = Core.titleOf(p.item);
+      var notFound = !!p.queries.length;
+      var a = el('a', 'lk-unplaced-item');
       a.href = detailUrl(p.item);
+      a.title = title;
+      a.appendChild(el('span', 'lk-unplaced-title', title));
+      a.appendChild(el('span', 'lk-why ' + (notFound ? 'is-notfound' : 'is-noaddr'), notFound ? '위치 못 찾음' : '주소 없음'));
       li.appendChild(a);
-      li.appendChild(document.createTextNode(' '));
-      li.appendChild(el('span', 'lk-why', '· ' + Core.categoryInfo(p.key).label + (p.queries.length ? ' · 위치 못 찾음' : ' · 주소 없음')));
       ul.appendChild(li);
     });
   }
