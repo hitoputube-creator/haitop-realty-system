@@ -1,0 +1,55 @@
+/* LH 용지 분양 기록 (lh-land-sales.html). 색은 location-list-style.css 의 사무소 변수(--ls-point 등)를 사용 */
+.lh-sales-page{--lhs-c-상업:#e5484d;--lhs-c-근생:#f59e0b;--lhs-c-업무:#2563eb}
+.lh-sales-page .lhs-bar{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:0 0 8px}
+.lh-sales-page .lhs-seg{display:flex;gap:4px}
+.lh-sales-page .lhs-seg button{height:30px;padding:0 11px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#254767;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.lh-sales-page .lhs-seg button.on{background:var(--ls-point,#25675f);border-color:var(--ls-point,#25675f);color:#fff}
+.lh-sales-page .lhs-check{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ls-sub,#68788a);cursor:pointer}
+.lh-sales-page #lhsQ{height:30px;width:260px;padding:0 10px;border-radius:6px;border:1px solid #cbd5e1;font:inherit;font-size:12.5px;color:#1e3248;background:#fff}
+.lh-sales-page .lhs-sum{font-size:12.5px;color:var(--ls-sub,#68788a);margin:0 0 8px}
+.lh-sales-page .lhs-sum b{color:var(--ls-point,#25675f)}
+.lh-sales-page .lhs-mapwrap{position:relative;margin:0 0 10px}
+.lh-sales-page #lhsMap{width:100%;height:440px;border:1px solid #dce5ef;border-radius:12px;overflow:hidden;background:#f1f5f9}
+.lh-sales-page .lhs-legend{position:absolute;left:10px;bottom:10px;z-index:3;background:rgba(255,255,255,.95);border:1px solid #dce5ef;border-radius:8px;padding:5px 9px;font-size:11.5px;color:#475569;display:flex;gap:10px}
+.lh-sales-page .lhs-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.lh-sales-page .c-상업{background:var(--lhs-c-상업)}.lh-sales-page .c-근생{background:var(--lhs-c-근생)}.lh-sales-page .c-업무{background:var(--lhs-c-업무)}
+.lhs-pin{width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.45);cursor:pointer;transform:translate(-50%,-50%)}
+.lhs-pin.상업{background:#e5484d}.lhs-pin.근생{background:#f59e0b}.lhs-pin.업무{background:#2563eb}
+.lhs-pin.sel{width:20px;height:20px;outline:3px solid #1e3a56}
+.lhs-pinlabel{transform:translate(-50%,-150%);background:#fff;border:1px solid #1e3a56;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:700;color:#1e3a56;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.lh-sales-page .lhs-card{border:1px solid #dce5ef;border-radius:12px;overflow:auto;background:#fff;box-shadow:0 3px 10px rgba(39,50,63,.05)}
+.lh-sales-page .lhs-table{width:100%;border-collapse:collapse;font-size:13px}
+.lh-sales-page .lhs-table th{background:#f1f5f9;color:#334155;font-size:12px;font-weight:600;text-align:left;padding:9px 10px;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.lh-sales-page .lhs-table td{padding:8px 10px;border-bottom:1px solid #e5ebf2;white-space:nowrap;vertical-align:middle;color:#293d52}
+.lh-sales-page .lhs-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.lh-sales-page tr.lhs-row{cursor:pointer}
+.lh-sales-page tr.lhs-row:hover td{background:#f6f9fc}
+.lh-sales-page tr.lhs-row.open td{background:var(--ls-point-soft,#eef8f7)}
+.lh-sales-page .lhs-tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;background:#f1f5f9;color:#475569}
+.lh-sales-page .lhs-tag.상업{background:#fde8e8;color:#b42318}.lh-sales-page .lhs-tag.근생{background:#fff4e5;color:#b45309}.lh-sales-page .lhs-tag.업무{background:#e8effd;color:#1d4ed8}
+.lh-sales-page .lhs-bid{font-weight:700;color:var(--ls-point,#25675f)}
+.lh-sales-page .lhs-none{color:#94a3b8;font-size:12px}
+.lh-sales-page .lhs-bld a{color:var(--ls-point,#25675f);font-weight:600;text-decoration:none}
+.lh-sales-page .lhs-bld a:hover{text-decoration:underline}
+.lh-sales-page .lhs-cnt{display:inline-block;min-width:22px;text-align:center;padding:1px 6px;border-radius:10px;background:#f1f5f9;font-size:11.5px;color:#475569}
+.lh-sales-page .lhs-cnt.many{background:#fff4e5;color:#b45309}
+.lh-sales-page tr.lhs-detail td{background:#fbfdfd;white-space:normal;padding:12px 16px 14px}
+.lh-sales-page .lhs-hist{display:grid;grid-template-columns:90px minmax(0,1fr) 140px;gap:4px 12px;font-size:12.5px;max-width:980px}
+.lh-sales-page .lhs-hist .h{color:#68788a;font-size:11.5px}
+.lh-sales-page .lhs-hist a{color:#254767}
+.lh-sales-page .lhs-files{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lh-sales-page .lhs-files a,.lh-sales-page .lhs-btn{display:inline-flex;align-items:center;height:26px;padding:0 9px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#254767;font:inherit;font-size:12px;text-decoration:none;cursor:pointer}
+.lh-sales-page .lhs-btn.primary{background:var(--ls-point,#25675f);border-color:var(--ls-point,#25675f);color:#fff;font-weight:600}
+.lh-sales-page .lhs-loc{margin-top:12px}
+.lh-sales-page .lhs-loc .lbl{font-size:12px;color:#68788a;margin-bottom:6px}
+.lh-sales-page .lhs-thumbs{display:flex;flex-wrap:wrap;gap:8px}
+.lh-sales-page .lhs-thumbs img{height:170px;border:1px solid #dce5ef;border-radius:8px;cursor:zoom-in;background:#fff}
+.lh-sales-page .lhs-warn{color:#b45309;font-size:12px}
+.lh-sales-page .lhs-note{font-size:12px;color:#68788a;margin:10px 2px 28px}
+.lhs-zoom{position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:1000;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+.lhs-zoom img{max-width:96vw;max-height:94vh;border-radius:8px;background:#fff}
+.lhs-zoom .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.9);font-size:22px;cursor:pointer}
+.lhs-zoom .prev{left:16px}.lhs-zoom .next{right:16px}
+@media (max-width:760px){.lh-sales-page #lhsMap{height:320px}.lh-sales-page #lhsQ{width:100%}}
+.lh-sales-page .lhs-check{display:inline-flex!important;flex-direction:row!important;white-space:nowrap;margin:0!important}
+.lh-sales-page .lhs-check input{width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;box-shadow:none!important}
