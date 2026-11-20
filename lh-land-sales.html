@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>하이탑부동산 | LH 용지 분양 기록</title>
+  <link rel="stylesheet" href="assets/css/style.css?v=20261108-ktop-match1">
+  <link rel="stylesheet" href="assets/css/land-kakao.css?v=20261108-teal-gradient2">
+  <script src="assets/js/storage.js?v=20261119-imgz"></script>
+<script src="assets/js/office-brand.js?v=20261108-ktop-match1"></script>
+  <script src="assets/js/admin-guard.js?v=20261006-office-login"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="assets/js/auth.js?v=20261006-office-login"></script>
+<link rel="stylesheet" href="assets/css/white-navy-workspace.css?v=20261108-btn-match1">
+<link rel="stylesheet" href="assets/css/location-list-style.css?v=20261119-list-style4">
+<link rel="stylesheet" href="assets/css/shop-kakao-list-style.css?v=20261120-list-style2">
+<link rel="stylesheet" href="assets/css/lh-land-sales.css?v=20261120-1">
+<script>(function(){var office=typeof OfficeConfig!=='undefined'?OfficeConfig.id:(new URLSearchParams(location.search).get('office')||sessionStorage.getItem('realty_selected_office')||'hitop');document.documentElement.dataset.officeTheme=office;if(office!=='ktop'){var link=document.querySelector('link[href*="white-navy-workspace.css"]');if(link)link.disabled=false;}})();</script>
+</head>
+<body class="shop-kakao-page list-style lh-sales-body">
+<main class="page land-kakao-page shop-kakao-page lh-sales-page">
+  <header class="header">
+    <div class="logo-icon" aria-hidden="true"></div>
+    <div class="logo-text"><div class="logo-main">하이탑부동산 LH 용지 분양 기록</div><div class="logo-sub">파주운정</div></div>
+    <nav class="main-nav" aria-label="페이지 이동">
+      <a class="nav-link" href="land-location.html">택지 위치도</a>
+      <a class="nav-link" href="shop-location.html">상가 위치도</a>
+      <a class="nav-link" href="shop-kakao.html">상가 지도</a>
+      <a class="nav-link" href="resources.html">상가 자료관리</a>
+      <a class="nav-link" href="property-main.html?category=shop">매물관리 메인으로</a>
+      <button type="button" class="nav-logout-btn" onclick="hitopAdminLogout()">로그아웃</button>
+    </nav>
+  </header>
+  <div class="header-line"></div>
+
+  <div class="lhs-bar">
+    <div class="lhs-seg" id="segD" role="group" aria-label="지구"><button type="button" data-v="" class="on">전체</button><button type="button" data-v="운정">운정(1·2지구)</button><button type="button" data-v="운정3">운정3지구</button></div>
+    <div class="lhs-seg" id="segU" role="group" aria-label="용도"><button type="button" data-v="" class="on">전체 용도</button><button type="button" data-v="상업">상업</button><button type="button" data-v="근생">근린생활</button><button type="button" data-v="업무">업무·지원</button></div>
+    <label class="lhs-check"><input type="checkbox" id="onlyB"> 건물 연결된 것만</label>
+    <label class="lhs-check"><input type="checkbox" id="onlyBid"> 낙찰가 있는 것만</label>
+    <input type="search" id="lhsQ" maxlength="60" placeholder="지번·건물명 검색 (예: 와동동 1436, 정석프라자)">
+  </div>
+  <p class="lhs-sum" id="lhsSum">불러오는 중입니다.</p>
+  <div class="lhs-mapwrap">
+    <div id="lhsMap" aria-label="카카오 지도"></div>
+    <div class="lhs-legend"><span><i class="c-상업"></i>상업</span><span><i class="c-근생"></i>근린생활</span><span><i class="c-업무"></i>업무·지원</span><span id="lhsGeo"></span></div>
+  </div>
+  <div class="lhs-card">
+    <table class="lhs-table">
+      <thead><tr><th>지구</th><th>용도</th><th>지번</th><th class="num">면적</th><th>처음 공고</th><th class="num">마지막 예정가</th><th class="num">평당 예정가</th><th>공고</th><th class="num">낙찰가</th><th class="num">낙찰률</th><th>지금 건물</th><th>위치</th></tr></thead>
+      <tbody id="lhsBody"></tbody>
+    </table>
+  </div>
+  <p class="lhs-note">· 예정가·면적·공고·위치도: LH청약플러스 공고문(2015~2026) · 낙찰가: LH 낙찰자명단(최근 결과만 남아 있음) · 낙찰가가 없는 필지는 "미확인"으로 두고 추정하지 않음 · 지금 건물: 상가 자료관리 건물 주소의 지번이 같은 필지 · 주유소·주차장·점포겸용 단독은 제외</p>
+</main>
+<script src="assets/js/kakao-config.js"></script>
+<script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
+<script src="assets/js/lh-land-sales-data.js?v=20261120-1"></script>
+<script src="assets/js/lh-land-sales.js?v=20261120-1"></script>
+</body>
+</html>
