@@ -95,3 +95,18 @@ html[data-office-theme='hitop'] .listings-kakao-page .lk-cats .btn{color:#25675f
 html[data-office-theme='hitop'] .listings-kakao-page .lk-cats .btn[aria-pressed="true"]{background:#eaf8f7!important;color:#0b7476!important;border-color:#9bd0cc!important}
 html[data-office-theme='hitop'] .listings-kakao-page .kakao-controls .btn.kakao-naverview{color:#618684!important}
 html[data-office-theme='hitop'] .listings-kakao-page #lkRetry{color:#618684!important}
+
+/* 지도에 못 올린 매물: 한 줄 카드 + 사유 배지로 정리 */
+html[data-office-theme] .lk-unplaced{--lk-point:#25675f;margin:16px 0 0;padding:14px 16px;border:1px solid #dce5ef;border-radius:12px;background:#fff;box-shadow:0 3px 10px rgba(39,50,63,.05)}
+html[data-office-theme='ktop'] .lk-unplaced{--lk-point:#1767d2}
+html[data-office-theme] .lk-unplaced h2{display:flex;align-items:center;gap:8px;margin:0 0 4px;font-size:15px;font-weight:700;color:#1e3a56}
+html[data-office-theme] .lk-unplaced h2::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--lk-point)}
+html[data-office-theme] .lk-unplaced .lk-unplaced-count{font-size:12.5px;font-weight:500;color:#68788a}
+html[data-office-theme] .lk-unplaced p{margin:0 0 10px;font-size:12.5px;color:#68788a}
+html[data-office-theme] .lk-unplaced ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px 8px}
+html[data-office-theme] .lk-unplaced li{margin:0;font-size:13px;line-height:1.3;min-width:0}
+html[data-office-theme] .lk-unplaced a.lk-unplaced-item{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#254767;text-decoration:none}
+html[data-office-theme] .lk-unplaced a.lk-unplaced-item:hover{background:#f6f9fc;border-color:#cbd5e1}
+html[data-office-theme] .lk-unplaced .lk-unplaced-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-office-theme] .lk-unplaced .lk-why{flex:0 0 auto;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600}
+html[data-office-theme] .lk-unplaced .lk-why.is-notfound{background:#fff4e5;color:#b45309}
