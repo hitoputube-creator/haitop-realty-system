@@ -47,3 +47,10 @@ html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-button
 html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-buttons button.none{border-left-color:#8a97ab!important}
 html:root[data-office-theme] body.list-style .shop-kakao-page .shop-kakao-buttons button:hover{background:#f6f9fc!important}
 html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group label{white-space:nowrap}html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-control-group select{min-width:90px}
+
+/* 상단바 위치·높이를 매물지도(listings-kakao)와 같게 */
+html:root[data-office-theme] body.list-style .shop-kakao-page{padding-top:24px!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header{padding:8px 16px!important;margin:6px 0 10px!important;min-height:56px!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header .logo-icon{width:40px!important;height:40px!important;border-radius:10px!important;font-size:18px!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .header .logo-main{font-size:16.8px!important}
+html:root[data-office-theme] body.list-style .shop-kakao-page .kakao-map{height:calc(100vh - 175px)!important}
