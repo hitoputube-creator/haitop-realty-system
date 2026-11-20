@@ -109,13 +109,27 @@
     if (!value) return '';
     return /파주|(?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)|[가-힣]+(?:시|군)\s/.test(value) ? value : '파주시 ' + value;
   }
+  // 주소 글자 안(괄호 안, "__" 뒤 등)에 적힌 지번만 뽑아 추가 후보로 쓴다. 예: "반석프라자 302호(동패동 2080-3)" → "파주시 동패동 2080-3"
+  // 고양시 구 이름(덕양구·일산동구·일산서구)이 바로 앞에 있으면 고양시로, 없으면 파주시 → 시 없이 순서로 찾는다.
+  function jibunCandidates(raw) {
+    var text = String(raw || ''), out = [], re = /([가-힣]+(?:동|리))\s*(산\s*)?(\d+(?:-\d+)?)(?:\s*번지)?/g, m;
+    while ((m = re.exec(text))) {
+      var gu = text.slice(0, m.index).match(/(덕양구|일산동구|일산서구)\s*$/);
+      var jibun = m[1] + ' ' + (m[2] ? '산 ' : '') + m[3];
+      if (gu) out.push('고양시 ' + gu[1] + ' ' + jibun);
+      else { out.push('파주시 ' + jibun); out.push(jibun); }
+    }
+    return out;
+  }
   function addressCandidates(item) {
-    var seen = {}, list = [];
+    var seen = {}, list = [], extra = [];
     [item.mapAddress, item.roadAddress, item.jibunAddress, item.address, item.publicAddress, item.displayAddress, item.locationAddress, item.privateAddress, item.quick_location].forEach(function (raw) {
       if (!has(raw) || !ADDRESS_HINT.test(String(raw))) return;
       var q = normalizeAddress(raw);
       if (q && !seen[q]) { seen[q] = true; list.push(q); }
+      extra = extra.concat(jibunCandidates(raw));
     });
+    extra.forEach(function (q) { if (q && !seen[q]) { seen[q] = true; list.push(q); } });
     return list;
   }
   function listingCoordinates(item) {
