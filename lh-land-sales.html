@@ -17,6 +17,13 @@
 <link rel="stylesheet" href="assets/css/shop-kakao-list-style.css?v=20261120-list-style2">
 <link rel="stylesheet" href="assets/css/lh-land-sales.css?v=20261120-1">
 <script>(function(){var office=typeof OfficeConfig!=='undefined'?OfficeConfig.id:(new URLSearchParams(location.search).get('office')||sessionStorage.getItem('realty_selected_office')||'hitop');document.documentElement.dataset.officeTheme=office;if(office!=='ktop'){var link=document.querySelector('link[href*="white-navy-workspace.css"]');if(link)link.disabled=false;}})();</script>
+<style id="lhs-filter-colors">
+#segD { --tint:#edf5f2; --edge:#bdd6ce; --ink:#315e55; --active:#25675f; }
+#segU { --tint:#eff3f9; --edge:#c3d0e0; --ink:#415974; --active:#496583; }
+.lhs-bar .lhs-seg button { background:var(--tint)!important; border-color:var(--edge)!important; color:var(--ink)!important; }
+.lhs-bar .lhs-seg button:hover { border-color:var(--active)!important; }
+.lhs-bar .lhs-seg button.on { background:var(--active)!important; border-color:var(--active)!important; color:white!important; }
+</style>
 </head>
 <body class="shop-kakao-page list-style lh-sales-body">
 <main class="page land-kakao-page shop-kakao-page lh-sales-page">
