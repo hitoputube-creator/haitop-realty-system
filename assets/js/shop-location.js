@@ -249,21 +249,89 @@
   }
 
 
+  // ----- 건물 목록 (검색 · 위치 표시 여부 필터 · 작은 카드) -----
+  let listQuery = '';
+  let listFilter = 'all'; // all | placed | missing
+  function shortAddress(text) {
+    return String(text || '').replace(/^경기도\s*/, '').replace(/^파주시\s*/, '').replace(/\s*\(.*$/, '').trim();
+  }
+  function buildingStats(b) {
+    const mine = rows.filter(r => r.b.id === b.id);
+    if (!mine.length) return '호실 미등록';
+    const vacant = mine.filter(r => r.u.공실여부 === '공실').length;
+    const contacts = mine.filter(r => hasOwnerContact(r.u)).length;
+    const listed = mine.filter(r => hasListing(r.u)).length;
+    return `호실 ${mine.length} · 공실 ${vacant} · 연락처 ${contacts} · 매물 ${listed}`;
+  }
+  function showBuildingOnMap(id) {
+    selectedBuilding = id;
+    $('filterForm').building.value = id;
+    applyFilters();
+    renderPins();
+    renderBuildingLinks();
+    focusBuildingOnMap(id);
+  }
+  function ensureListToolbar(box) {
+    if ($('blistToolbar')) return;
+    const bar = document.createElement('div');
+    bar.id = 'blistToolbar';
+    bar.className = 'blist-toolbar';
+    const search = document.createElement('input');
+    search.type = 'search'; search.id = 'blistSearch'; search.className = 'blist-search';
+    search.placeholder = '건물명 · 주소 검색'; search.setAttribute('aria-label', '건물 목록 검색');
+    search.addEventListener('input', () => { listQuery = search.value.trim(); renderBuildingLinks(); });
+    const chips = document.createElement('div'); chips.className = 'blist-chips'; chips.setAttribute('role', 'group'); chips.setAttribute('aria-label', '위치 표시 여부');
+    [['all', '전체'], ['placed', '위치도 표시'], ['missing', '위치 없음']].forEach(([value, text]) => {
+      const chip = document.createElement('button'); chip.type = 'button'; chip.className = 'blist-chip'; chip.dataset.value = value; chip.textContent = text;
+      chip.addEventListener('click', () => { listFilter = value; renderBuildingLinks(); });
+      chips.appendChild(chip);
+    });
+    const count = document.createElement('span'); count.id = 'blistCount'; count.className = 'blist-count';
+    bar.append(search, chips, count);
+    box.before(bar);
+  }
   function renderBuildingLinks() {
     const box = $('mapBuildingList'); if (!box) return;
+    box.removeAttribute('style');
+    box.className = 'blist-grid';
+    ensureListToolbar(box);
+    document.querySelectorAll('.blist-chip').forEach(chip => { const on = chip.dataset.value === listFilter; chip.classList.toggle('is-on', on); chip.setAttribute('aria-pressed', on ? 'true' : 'false'); });
     box.replaceChildren();
-    buildings.forEach(b => {
-      const card = document.createElement('div'); card.className = 'shop-card';
-      const name = document.createElement('button'); name.type = 'button'; name.className = 'shop-btn'; name.textContent = b.name;
-      name.addEventListener('click', () => chooseBuilding(b.id)); card.appendChild(name);
-      const address = document.createElement('p'); address.className = 'shop-help'; address.textContent = b.address || '주소 미등록'; card.appendChild(address);
-      const links = document.createElement('div'); links.className = 'shop-tools';
-      [['건물 상세', HitopResourceRooms.detailUrl('building-detail.html', b.id, scope)], ['카카오맵', prefix + '-kakao.html?id=' + encodeURIComponent(b.id)]].forEach(([text, href]) => {
-        const a = document.createElement('a'); a.className = 'shop-btn'; a.textContent = text; a.href = href; links.appendChild(a);
+    const q = listQuery.replace(/\s+/g, '').toLowerCase();
+    const sorted = buildings.slice().sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
+    const list = sorted.filter(b => {
+      const placed = Boolean(pins[b.id] || autoPins[b.id]);
+      if (listFilter === 'placed' && !placed) return false;
+      if (listFilter === 'missing' && placed) return false;
+      if (!q) return true;
+      return (b.name + ' ' + b.address).replace(/\s+/g, '').toLowerCase().includes(q);
+    });
+    const counter = $('blistCount'); if (counter) counter.textContent = `${list.length} / ${buildings.length}개`;
+    list.forEach(b => {
+      const placed = Boolean(pins[b.id] || autoPins[b.id]);
+      const card = document.createElement('article'); card.className = 'blist-card' + (selectedBuilding === b.id ? ' is-selected' : '');
+      const head = document.createElement('div'); head.className = 'blist-head';
+      const name = document.createElement('button'); name.type = 'button'; name.className = 'blist-name'; name.textContent = b.name; name.title = placed ? '위치도에서 보기' : b.name;
+      name.addEventListener('click', () => { if (placed) showBuildingOnMap(b.id); else chooseBuilding(b.id); });
+      const badge = document.createElement('span'); badge.className = 'blist-badge ' + (placed ? 'on' : 'off');
+      badge.textContent = pins[b.id] ? '위치 지정' : placed ? '위치도 표시' : '위치 없음';
+      head.append(name, badge);
+      const address = document.createElement('p'); address.className = 'blist-address'; address.textContent = shortAddress(b.address) || '주소 미등록'; address.title = b.address || '';
+      const stats = document.createElement('p'); stats.className = 'blist-stats'; stats.textContent = buildingStats(b);
+      const links = document.createElement('div'); links.className = 'blist-actions';
+      const mapBtn = document.createElement('button'); mapBtn.type = 'button'; mapBtn.className = 'blist-btn primary'; mapBtn.textContent = '위치도';
+      mapBtn.disabled = !placed; mapBtn.title = placed ? '위치도에서 이 건물로 이동' : '주소로 위치를 찾지 못했습니다. 건물 위치 설정으로 지정할 수 있어요.';
+      mapBtn.addEventListener('click', () => showBuildingOnMap(b.id));
+      links.appendChild(mapBtn);
+      [['상세', HitopResourceRooms.detailUrl('building-detail.html', b.id, scope)], ['카카오맵', prefix + '-kakao.html?id=' + encodeURIComponent(b.id)]].forEach(([text, href]) => {
+        const a = document.createElement('a'); a.className = 'blist-btn'; a.textContent = text; a.href = href; links.appendChild(a);
       });
-      HitopNaverLinks.append(links, b.address, 'shop-btn'); card.appendChild(links); box.appendChild(card);
+      HitopNaverLinks.append(links, b.address, 'blist-btn');
+      card.append(head, address, stats, links);
+      box.appendChild(card);
     });
     if (!buildings.length) box.textContent = '등록된 건물이 없습니다.';
+    else if (!list.length) { const empty = document.createElement('p'); empty.className = 'blist-empty'; empty.textContent = '조건에 맞는 건물이 없습니다.'; box.appendChild(empty); }
   }
 
   function chooseBuilding(id) {
@@ -272,6 +340,7 @@
     $('filterForm').building.value = selectedBuilding;
     applyFilters();
     renderPins();
+    renderBuildingLinks();
     $('filterTitle').scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
@@ -634,6 +703,7 @@
       renderPins();
       resolveAutoPins().then(() => {
         renderPins();
+        renderBuildingLinks();
         const shown = buildings.filter(b => pins[b.id] || autoPins[b.id]).length;
         say(`${label} 건물 ${buildings.length}개 · 호실 ${rows.length}개 · 위치도 표시 ${shown}개 (주소로 자동 표시한 점은 대략 위치입니다)`);
         if (requestedId && !focusBuildingOnMap(requestedId)) {
