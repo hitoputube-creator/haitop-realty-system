@@ -21,6 +21,115 @@
   let selectedBuilding = '';
   let zoom = 1;
   let current = null;   // row being edited
+  let autoPins = {};    // building id -> {x, y} 주소(위경도)로 자동 계산한 위치
+
+  // ----- 주소(위경도) → 위치도 좌표 자동 변환 -----
+  // 위치도(LH 리플렛)에서 단지 이름·블럭번호가 보이는 곳 69곳의 좌표와 카카오 주소 검색 결과를 맞춰 만든 기준점.
+  // [위도, 경도, 지도 가로 %, 지도 세로 %]
+  const GEO_ADDRESS_PATTERN = /[가-힣]+(?:동|리)\s*(?:산\s*)?\d+(?:-\d+)?/;
+  const GEO_CACHE_KEY = 'hitop-kakao-geo-v1'; // 카카오맵 화면과 같은 저장소를 같이 쓴다
+  const GEO_CTRL = [[37.731632,126.75301,59.1,38.4],[37.73295,126.757576,63.2,37.6],[37.735355,126.760396,65.9,33.1],[37.734763,126.763458,67.5,31.4],[37.732902,126.753352,58.8,35.1],[37.733321,126.764807,68.6,36.2],[37.734655,126.758389,62.7,33.6],[37.715772,126.719451,23.7,67.5],[37.70899,126.719663,24.6,78.7],[37.735662,126.729888,36.4,29.8],[37.71541,126.714176,20.6,67.9],[37.736242,126.728279,33.5,29.4],[37.707812,126.722669,29.3,78.7],[37.735283,126.733918,39.9,28.2],[37.710973,126.719553,25.8,73.8],[37.741985,126.761639,66.4,19.75],[37.711282,126.717561,22.1,74.1],[37.733897,126.728549,33.6,32.5],[37.714441,126.707782,14,68.2],[37.738747,126.760076,64.4,26.5],[37.71535,126.709781,17,67.4],[37.737064,126.764225,69,28.8],[37.741605,126.729288,34.1,19.2],[37.717011,126.709879,16.4,64.2],[37.741272,126.726697,32.1,20.9],[37.712181,126.712117,18.3,71.5],[37.743524,126.756874,63.9,15],[37.73725,126.729715,35.9,27.1],[37.711487,126.713196,19.4,74.6],[37.715746,126.720991,27.4,67.1],[37.744535,126.731819,37.8,14.5],[37.742477,126.731368,37.8,17.8],[37.712107,126.723677,29.2,72.7],[37.74097,126.758129,61,19.6],[37.735839,126.725303,30.7,33.5],[37.739567,126.730373,35,23.4],[37.716966,126.706406,13.3,64.2],[37.738744,126.731737,38.1,24.5],[37.743148,126.729103,35.7,16.2],[37.712134,126.727068,32.7,74.1],[37.713289,126.725481,31.1,69.9],[37.708441,126.721874,26.5,79.3],[37.715864,126.747489,53.6,66.6],[37.725167,126.743639,49.1,47.1],[37.730633,126.739124,44,37.6],[37.724496,126.739262,44.6,48.9],[37.713408,126.74862,55.7,72.1],[37.716357,126.753429,57.4,66.6],[37.72573,126.750625,54.3,48.8],[37.728375,126.757649,61,43.3],[37.710928,126.758076,62.6,72.9],[37.732074,126.749511,55.1,39.6],[37.708772,126.749528,54.1,77.5],[37.730713,126.736036,40.1,38.6],[37.709512,126.757923,62,79.3],[37.727627,126.751044,55.1,43.8],[37.728978,126.752698,58.2,43.2],[37.728939,126.745353,49.9,43.1],[37.721205,126.750203,56.4,55.8],[37.724105,126.744152,49.5,53.5],[37.716589,126.756958,61.9,66.6],[37.726766,126.755449,58.2,47.4],[37.708814,126.753704,56.7,79.4],[37.723007,126.748577,52.3,54.1],[37.72552,126.754162,59.7,49.8],[37.710491,126.755524,60.8,72.9],[37.723977,126.735175,39.1,51.5],[37.712611,126.761454,66.7,72],[37.725602,126.767163,72.2,49.3]];
+  const GEO_LAT0 = 37.725, GEO_LNG0 = 126.735;
+  const geoFit = (function () {
+    const solve = (rows, values) => {
+      const M = [[0,0,0],[0,0,0],[0,0,0]], v = [0,0,0];
+      rows.forEach((row, i) => { for (let j = 0; j < 3; j++) { v[j] += row[j] * values[i]; for (let k = 0; k < 3; k++) M[j][k] += row[j] * row[k]; } });
+      for (let i = 0; i < 3; i++) {
+        for (let r = 0; r < 3; r++) {
+          if (r === i) continue;
+          const f = M[r][i] / M[i][i];
+          for (let k = i; k < 3; k++) M[r][k] -= f * M[i][k];
+          v[r] -= f * v[i];
+        }
+      }
+      return v.map((x, i) => x / M[i][i]);
+    };
+    const rows = GEO_CTRL.map(p => [(p[1] - GEO_LNG0) * 1000, (p[0] - GEO_LAT0) * 1000, 1]);
+    const ax = solve(rows, GEO_CTRL.map(p => p[2])), ay = solve(rows, GEO_CTRL.map(p => p[3]));
+    const affine = (lat, lng) => { const a = (lng - GEO_LNG0) * 1000, b = (lat - GEO_LAT0) * 1000; return [ax[0]*a + ax[1]*b + ax[2], ay[0]*a + ay[1]*b + ay[2]]; };
+    const resid = GEO_CTRL.map(p => { const q = affine(p[0], p[1]); return [p[2] - q[0], p[3] - q[1]]; });
+    return { affine, resid };
+  })();
+  function geoToPct(lat, lng) {
+    const base = geoFit.affine(lat, lng);
+    let wx = 0, wy = 0, ws = 0;
+    GEO_CTRL.forEach((p, i) => {
+      const q = geoFit.affine(p[0], p[1]);
+      const d2 = (q[0] - base[0]) ** 2 + (q[1] - base[1]) ** 2;
+      const w = 1 / (d2 + 4);
+      wx += w * geoFit.resid[i][0]; wy += w * geoFit.resid[i][1]; ws += w;
+    });
+    // 기준점과 멀리 떨어진 곳은 보정량이 0에 가깝도록 줄인다.
+    const near = Math.min(1, ws / 0.25);
+    return [base[0] + near * wx / ws, base[1] + near * wy / ws];
+  }
+  function geoNormalize(text) { const v = String(text || '').replace(/\s+/g, ' ').trim(); return /파주/.test(v) ? v : '파주시 ' + v; }
+  function loadScript(src) {
+    return new Promise((resolve, reject) => { const s = document.createElement('script'); s.src = src; s.onload = resolve; s.onerror = () => reject(new Error(src)); document.head.appendChild(s); });
+  }
+  async function ensureKakaoGeocoder() {
+    if (window.kakao && kakao.maps && kakao.maps.services) return new kakao.maps.services.Geocoder();
+    if (!window.HITOP_KAKAO_JS_KEY) await loadScript('assets/js/kakao-config.js');
+    if (!window.HITOP_KAKAO_JS_KEY) return null;
+    if (!(window.kakao && kakao.maps)) await loadScript('https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(window.HITOP_KAKAO_JS_KEY) + '&libraries=services&autoload=false');
+    await new Promise(resolve => kakao.maps.load(resolve));
+    return new kakao.maps.services.Geocoder();
+  }
+  async function resolveAutoPins() {
+    let cache = {};
+    try { cache = JSON.parse(OfficeStorage.local.getItem(GEO_CACHE_KEY) || '{}') || {}; } catch (e) { cache = {}; }
+    let savedGeo = {};
+    try {
+      const res = await fetchWithTimeout(SUPABASE_URL + '/rest/v1/shop_building_geo?select=building_id,lat,lng', { headers });
+      if (res.ok) (await res.json()).forEach(row => { if (Number.isFinite(Number(row.lat)) && Number.isFinite(Number(row.lng))) savedGeo[row.building_id] = [Number(row.lat), Number(row.lng)]; });
+    } catch (e) { /* 직접 옮긴 위치가 없어도 주소로 계산한다 */ }
+    const missing = Array.from(new Set(buildings.filter(b => !savedGeo[b.id] && !b.regCoords && b.query).map(b => geoNormalize(b.query)).filter(k => cache[k] === undefined)));
+    if (missing.length) {
+      try {
+        const geocoder = await ensureKakaoGeocoder();
+        if (geocoder) {
+          const one = q => new Promise(resolve => geocoder.addressSearch(q, (r, s) => resolve(s === kakao.maps.services.Status.OK && r[0] ? [Number(r[0].y), Number(r[0].x)] : s === kakao.maps.services.Status.ZERO_RESULT ? 0 : undefined)));
+          const queue = missing.slice();
+          await Promise.all(Array.from({ length: 4 }, async () => { while (queue.length) { const k = queue.shift(); const hit = await one(k); if (hit !== undefined) cache[k] = hit; } }));
+          try { OfficeStorage.local.setItem(GEO_CACHE_KEY, JSON.stringify(cache)); } catch (e) { /* 저장 공간 없음 */ }
+        }
+      } catch (e) { console.warn('[위치도] 주소 위치 찾기 실패:', e.message || e); }
+    }
+    const used = {};
+    autoPins = {};
+    buildings.forEach(b => {
+      const ll = savedGeo[b.id] || b.regCoords || (b.query && Array.isArray(cache[geoNormalize(b.query)]) ? cache[geoNormalize(b.query)] : null);
+      if (!ll) return;
+      const xy = geoToPct(ll[0], ll[1]);
+      if (!(xy[0] > 1 && xy[0] < 99 && xy[1] > 1 && xy[1] < 99)) return; // 위치도 밖(다른 동네)은 표시하지 않음
+      const key = xy[0].toFixed(1) + ',' + xy[1].toFixed(1);
+      const n = used[key] = (used[key] || 0) + 1;
+      autoPins[b.id] = { x: Math.round((xy[0] + (n - 1) * 0.35) * 100) / 100, y: Math.round(xy[1] * 100) / 100 };
+    });
+  }
+  // 주소로 자동 계산한 위치는 작은 점으로, 고른 건물만 이름표로 크게 보여 준다.
+  (function addAutoPinStyle() {
+    const style = document.createElement('style');
+    style.textContent = '.bpin.auto:not(.selected){width:14px;height:14px;padding:0;border-radius:50%;border:2px solid #fff;background:currentColor;box-shadow:0 0 0 1px rgba(0,0,0,.35);transform:translate(-50%,-50%);max-width:none}' +
+      '.bpin.auto:not(.selected) strong,.bpin.auto:not(.selected) span{display:none}' +
+      '.bpin.auto:not(.selected):hover{z-index:5;outline:2px solid #234c49}' +
+      '.bpin.selected{z-index:6;box-shadow:0 0 0 4px rgba(230,57,70,.35),0 6px 16px rgba(0,0,0,.25);animation:bpinPulse 1.4s ease-in-out 3}' +
+      '@keyframes bpinPulse{50%{box-shadow:0 0 0 10px rgba(230,57,70,.15),0 6px 16px rgba(0,0,0,.25)}}';
+    document.head.appendChild(style);
+  })();
+  // 주소로 찾은 건물(카카오맵 링크로 들어온 건물)을 지도에서 크게 보여 주고 그 자리로 이동한다.
+  function focusBuildingOnMap(id) {
+    const p = pins[id] || autoPins[id];
+    if (!p) return false;
+    setZoom(Math.max(zoom, 2.2));
+    requestAnimationFrame(() => {
+      const scroller = $('mapScroll'), stage = $('mapStage');
+      scroller.scrollLeft = p.x / 100 * stage.offsetWidth - scroller.clientWidth / 2;
+      scroller.scrollTop = p.y / 100 * stage.offsetHeight - scroller.clientHeight / 2;
+      $('mapTitle').scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+    return true;
+  }
 
   function say(text) { $('shopMessage').textContent = text; }
   function floorOfRoom(room) {
@@ -72,7 +181,14 @@
     buildings = shops.map(r => {
       const rec = records.find(x => x.local_id === r.id) || records.find(x => x.name === r.name) || null;
       const line = String(r.memo || '').split('\n').find(l => /^주소\s*:/.test(l));
-      return { id: r.id, name: r.name, address: line ? line.replace(/^주소\s*:/, '').trim() : '', record: rec,
+      const address = line ? line.replace(/^주소\s*:/, '').trim() : '';
+      const fields = {};
+      String(r.memo || '').split('---추가메모---')[0].split('\n').forEach(l => { const c = l.indexOf(':'); if (c >= 0) fields[l.slice(0, c).trim()] = l.slice(c + 1).trim(); });
+      const lot = address.match(GEO_ADDRESS_PATTERN);
+      const regLat = Number(fields['지도위도']), regLng = Number(fields['지도경도']);
+      return { id: r.id, name: r.name, address, record: rec,
+        query: lot ? lot[0] : /[가-힣]+(?:로|길)\s*\d+/.test(address) ? address : '',
+        regCoords: regLat >= 33 && regLat <= 39 && regLng >= 124 && regLng <= 132 ? [regLat, regLng] : null,
         floors: floors.filter(f => f.building_id === r.id) };
     });
     rows = [];
@@ -111,13 +227,15 @@
     const layer = $('mapPins');
     layer.replaceChildren();
     buildings.forEach(b => {
-      const p = pins[b.id];
+      const p = pins[b.id] || autoPins[b.id];
       if (!p) return;
+      const isAuto = !pins[b.id];
       const mine = rows.filter(r => r.b.id === b.id);
       const vacant = mine.filter(r => r.u.공실여부 === '공실').length;
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'bpin ' + (!mine.length ? 'none' : vacant ? 'vacant' : '') + (selectedBuilding === b.id ? ' selected' : '');
+      btn.className = 'bpin ' + (!mine.length ? 'none' : vacant ? 'vacant' : '') + (selectedBuilding === b.id ? ' selected' : '') + (isAuto ? ' auto' : '');
+      btn.title = b.name + (isAuto ? ' (주소로 자동 표시 · 대략 위치)' : '');
       btn.style.left = p.x + '%';
       btn.style.top = p.y + '%';
       const name = document.createElement('strong');
@@ -507,12 +625,22 @@
     try {
       if (!(await loadAll())) return;
       setupFilters();
-      if (requestedId && buildings.some(b => b.id === requestedId)) $('filterForm').building.value = requestedId;
+      if (requestedId && buildings.some(b => b.id === requestedId)) { $('filterForm').building.value = requestedId; selectedBuilding = requestedId; }
       renderBuildingLinks();
       setZoom(1);
       setPinHelp(); renderPinPicker();
       applyFilters();
       say(buildings.length ? `${label} 건물 ${buildings.length}개 · 호실 ${rows.length}개` : `등록된 ${label} 건물이 없습니다. ${label} 자료관리에서 건물을 먼저 등록해 주세요.`);
+      renderPins();
+      resolveAutoPins().then(() => {
+        renderPins();
+        const shown = buildings.filter(b => pins[b.id] || autoPins[b.id]).length;
+        say(`${label} 건물 ${buildings.length}개 · 호실 ${rows.length}개 · 위치도 표시 ${shown}개 (주소로 자동 표시한 점은 대략 위치입니다)`);
+        if (requestedId && !focusBuildingOnMap(requestedId)) {
+          const b = buildings.find(x => x.id === requestedId);
+          if (b) say(`"${b.name}"은 주소로 위치를 찾지 못했거나 위치도 범위 밖이라 지도에 표시하지 못했습니다. '건물 위치 설정'으로 직접 지정할 수 있어요.`);
+        }
+      });
     } catch (err) { say('불러오기 실패: ' + err.message); }
   }
   init();
