@@ -5,7 +5,7 @@
   var N = DATA.notices, P = DATA.parcels;
   var IMG_BASE = 'assets/images/land/';
   var GEO_KEY = 'lhs_geo_v1';
-  var st = { d: '', u: '', b: false, bid: false, q: '' }, open = null, curList = [];
+  var st = { d: '', u: '', sub: '', b: false, bid: false, q: '' }, open = null, curList = [];
   var bMap = {}, G = loadGeo(), map = null, overlays = [];
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -23,6 +23,7 @@
     return P.filter(function (p) {
       if (st.d && p.d !== st.d) return false;
       if (st.u && grp(p.u) !== st.u) return false;
+      if (st.u === '상업' && st.sub && p.u !== st.sub) return false;
       if (st.b && !bldOf(p).length) return false;
       if (st.bid && !p.bp) return false;
       if (q && (p.k + ' ' + p.u + ' ' + bldOf(p).map(function (b) { return b.name; }).join(' ')).indexOf(q) < 0) return false;
@@ -186,14 +187,24 @@
 
   function bind() {
     function seg(id, field) {
+      if (!$(id)) return;
       $(id).addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
+        if (field === 'u' && $('lhsCommercial')) {
+          var commercial = b.dataset.v === '상업';
+          $('lhsCommercial').hidden = !commercial;
+          $(id).querySelector('[data-v="상업"]').setAttribute('aria-expanded', String(commercial));
+          if (!commercial) {
+            st.sub = '';
+            $('segC').querySelectorAll('button').forEach(function (x) { var all = !x.dataset.v; x.classList.toggle('on', all); x.setAttribute('aria-pressed', String(all)); });
+          }
+        }
         st[field] = b.dataset.v;
-        $(id).querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+        $(id).querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); if (field === 'sub') x.setAttribute('aria-pressed', String(x === b)); });
         draw();
       });
     }
-    seg('segD', 'd'); seg('segU', 'u');
+    seg('segD', 'd'); seg('segU', 'u'); seg('segC', 'sub');
     $('onlyB').addEventListener('change', function (e) { st.b = e.target.checked; draw(); });
     $('onlyBid').addEventListener('change', function (e) { st.bid = e.target.checked; draw(); });
     $('lhsQ').addEventListener('input', function (e) { st.q = e.target.value; draw(); });
