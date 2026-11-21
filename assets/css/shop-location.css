@@ -57,3 +57,40 @@ small.sub { display:block; color:var(--muted); font-size:.74rem; }
 .dialog-actions { display:flex; flex-wrap:wrap; gap:8px; }
 [hidden] { display:none !important; }
 @media (max-width:640px) { .unit-form { grid-template-columns:1fr; } .shop-page { padding:10px; } }
+
+/* ===== 건물 목록 (2026-11-21 정리) ===== */
+.blist-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:4px 0 12px; }
+.blist-search { height:30px; width:min(280px,100%); padding:0 10px; border:1px solid #cbd5e1; border-radius:6px; font:inherit; font-size:12.5px; color:#1e293b; background:#fff; }
+.blist-search:focus { outline:none; border-color:#25675f; box-shadow:0 0 0 2px #e6f2ef; }
+.blist-chips { display:flex; gap:6px; }
+.blist-chip { height:28px; padding:0 10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; color:#475569; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+.blist-chip.is-on { background:#25675f; border-color:#25675f; color:#fff; }
+.blist-count { margin-left:auto; font-size:12px; color:#64748b; }
+.blist-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; }
+.blist-card { display:flex; flex-direction:column; gap:4px; min-width:0; padding:12px 14px; border:1px solid #e2e8f0; border-left:3px solid #e2e8f0; border-radius:10px; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+.blist-card:hover { border-color:#cbd5e1; border-left-color:#25675f; }
+.blist-card.is-selected { border-color:#25675f; border-left-color:#25675f; background:#f4faf8; }
+.blist-head { display:flex; align-items:center; gap:8px; min-width:0; }
+.blist-name { flex:1 1 auto; min-width:0; padding:0; border:0; background:none; text-align:left; font:inherit; font-size:14px; font-weight:800; color:#1e293b; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.blist-name:hover { color:#25675f; text-decoration:underline; }
+.blist-badge { flex:none; height:20px; line-height:18px; padding:0 6px; border-radius:5px; font-size:11px; font-weight:700; border:1px solid; }
+.blist-badge.on { color:#25675f; background:#e6f2ef; border-color:#b9dcd4; }
+.blist-badge.off { color:#64748b; background:#f6f8fb; border-color:#e2e8f0; }
+.blist-address { margin:0; font-size:12.5px; color:#475569; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.blist-stats { margin:0; font-size:11.5px; color:#64748b; }
+.blist-actions { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+.blist-btn { display:inline-flex; align-items:center; justify-content:center; height:26px; padding:0 8px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; color:#1e293b; font:inherit; font-size:12px; font-weight:700; text-decoration:none; cursor:pointer; white-space:nowrap; }
+.blist-btn:hover { border-color:#25675f; color:#25675f; background:#f4faf8; }
+.blist-btn.primary { background:#25675f; border-color:#25675f; color:#fff; }
+.blist-btn.primary:hover { background:#1d544d; color:#fff; }
+.blist-btn:disabled { background:#f6f8fb; border-color:#e2e8f0; color:#94a3b8; cursor:not-allowed; }
+.blist-empty { grid-column:1/-1; margin:8px 0; font-size:13px; color:#64748b; }
+@media (max-width:640px) { .blist-grid { grid-template-columns:1fr; } .blist-count { margin-left:0; } }
+html[data-office-theme='ktop'] .blist-chip.is-on, html[data-office-theme='ktop'] .blist-btn.primary { background:#1767d2; border-color:#1767d2; color:#fff; }
+html[data-office-theme='ktop'] .blist-btn.primary:hover { background:#1256b3; }
+html[data-office-theme='ktop'] .blist-card:hover, html[data-office-theme='ktop'] .blist-card.is-selected { border-left-color:#1767d2; }
+html[data-office-theme='ktop'] .blist-card.is-selected { border-color:#1767d2; background:#f3f8ff; }
+html[data-office-theme='ktop'] .blist-name:hover, html[data-office-theme='ktop'] .blist-btn:hover { color:#1767d2; }
+html[data-office-theme='ktop'] .blist-btn:hover { border-color:#1767d2; background:#f3f8ff; }
+html[data-office-theme='ktop'] .blist-badge.on { color:#1767d2; background:#eaf2ff; border-color:#c4d9f6; }
+html[data-office-theme='ktop'] .blist-search:focus { border-color:#1767d2; box-shadow:0 0 0 2px #eaf2ff; }
