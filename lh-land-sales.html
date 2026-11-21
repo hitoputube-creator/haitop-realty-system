@@ -17,16 +17,13 @@
 <link rel="stylesheet" href="assets/css/shop-kakao-list-style.css?v=20261120-list-style2">
 <link rel="stylesheet" href="assets/css/lh-land-sales.css?v=20261120-1">
 <script>(function(){var office=typeof OfficeConfig!=='undefined'?OfficeConfig.id:(new URLSearchParams(location.search).get('office')||sessionStorage.getItem('realty_selected_office')||'hitop');document.documentElement.dataset.officeTheme=office;if(office!=='ktop'){var link=document.querySelector('link[href*="white-navy-workspace.css"]');if(link)link.disabled=false;}})();</script>
-<style id="lhs-filter-colors">
-#segD { --tint:#edf5f2; --edge:#bdd6ce; --ink:#315e55; --active:#25675f; }
-#segU, #segC { --tint:#eff3f9; --edge:#c3d0e0; --ink:#415974; --active:#496583; }
-:is(.lhs-bar,.lhs-subbar) .lhs-seg button { background:var(--tint)!important; border-color:var(--edge)!important; color:var(--ink)!important; }
-:is(.lhs-bar,.lhs-subbar) .lhs-seg button:hover { border-color:var(--active)!important; }
-:is(.lhs-bar,.lhs-subbar) .lhs-seg button.on { background:var(--active)!important; border-color:var(--active)!important; color:white!important; }
-.lhs-subbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:8px 0; }
-.lhs-subbar[hidden] { display:none; }
-.lhs-sublabel { color:#475569; font-size:12px; font-weight:700; }
-#segC { flex-wrap:wrap; }
+<style id="lhs-filter-selects">
+.lhs-bar .lhs-picker { display:inline-flex; align-items:center; gap:6px; margin:0; white-space:nowrap; font-size:12px; font-weight:700; color:#475569; }
+.lhs-bar .lhs-picker select { box-sizing:border-box; appearance:auto; width:auto; min-width:106px; height:32px; padding:0 7px; border:1px solid #c3d0e0; border-radius:6px; background:#eff3f9; color:#30485e; font-weight:600; font-family:inherit; font-size:13px; cursor:pointer; }
+.lhs-bar #pickD { background:#edf5f2; border-color:#bdd6ce; color:#315e55; }
+.lhs-bar #pickSub { min-width:126px; }
+.lhs-bar select:disabled { color:#657181; background:#f6f8fa; cursor:default; }
+.lhs-bar select:focus-visible { outline:2px solid #406b96; outline-offset:2px; }
 </style>
 </head>
 <body class="shop-kakao-page list-style lh-sales-body">
@@ -46,13 +43,13 @@
   <div class="header-line"></div>
 
   <div class="lhs-bar">
-    <div class="lhs-seg" id="segD" role="group" aria-label="지구"><button type="button" data-v="" class="on">전체</button><button type="button" data-v="운정">운정(1·2지구)</button><button type="button" data-v="운정3">운정3지구</button></div>
-    <div class="lhs-seg" id="segU" role="group" aria-label="용도"><button type="button" data-v="" class="on">전체 용도</button><button type="button" data-v="상업" aria-controls="lhsCommercial" aria-expanded="false">상업</button><button type="button" data-v="근생">근린생활</button><button type="button" data-v="업무">업무·지원</button></div>
+    <label class="lhs-picker">지구<select id="pickD"><option value="">전체 지구</option><option value="운정">운정(1·2지구)</option><option value="운정3">운정3지구</option></select></label>
+    <label class="lhs-picker">구분1<select id="pickU"><option value="">전체 용도</option><option value="상업">상업</option><option value="근생">근린생활</option><option value="업무">업무·지원</option></select></label>
+    <label class="lhs-picker">구분2<select id="pickSub" disabled><option value="">구분1 먼저 선택</option></select></label>
     <label class="lhs-check"><input type="checkbox" id="onlyB"> 건물 연결된 것만</label>
     <label class="lhs-check"><input type="checkbox" id="onlyBid"> 낙찰가 있는 것만</label>
     <input type="search" id="lhsQ" maxlength="60" placeholder="지번·건물명 검색 (예: 와동동 1436, 정석프라자)">
   </div>
-  <div id="lhsCommercial" class="lhs-subbar" hidden><span class="lhs-sublabel">상업 세부</span><div class="lhs-seg" id="segC" role="group" aria-label="상업용지 세부 종류"><button type="button" data-v="" aria-pressed="true" class="on">상업 전체</button><button type="button" data-v="근린상업용지" aria-pressed="false">근린상업용지</button><button type="button" data-v="일반상업용지" aria-pressed="false">일반상업용지</button><button type="button" data-v="중심상업용지" aria-pressed="false">중심상업용지</button></div></div>
   <p class="lhs-sum" id="lhsSum">불러오는 중입니다.</p>
   <div class="lhs-mapwrap">
     <div id="lhsMap" aria-label="카카오 지도"></div>
@@ -69,6 +66,6 @@
 <script src="assets/js/kakao-config.js"></script>
 <script src="assets/js/resource-rooms.js?v=20261006-residential-maps-1"></script>
 <script src="assets/js/lh-land-sales-data.js?v=20261120-1"></script>
-<script src="assets/js/lh-land-sales.js?v=20261121-sub1"></script>
+<script src="assets/js/lh-land-sales.js?v=20261121-pick2"></script>
 </body>
 </html>
