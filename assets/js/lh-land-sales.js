@@ -23,7 +23,7 @@
     return P.filter(function (p) {
       if (st.d && p.d !== st.d) return false;
       if (st.u && grp(p.u) !== st.u) return false;
-      if (st.u === '상업' && st.sub && p.u !== st.sub) return false;
+      if (st.sub && p.u !== st.sub) return false;
       if (st.b && !bldOf(p).length) return false;
       if (st.bid && !p.bp) return false;
       if (q && (p.k + ' ' + p.u + ' ' + bldOf(p).map(function (b) { return b.name; }).join(' ')).indexOf(q) < 0) return false;
@@ -186,25 +186,18 @@
   }
 
   function bind() {
-    function seg(id, field) {
-      if (!$(id)) return;
-      $(id).addEventListener('click', function (e) {
-        var b = e.target.closest('button'); if (!b) return;
-        if (field === 'u' && $('lhsCommercial')) {
-          var commercial = b.dataset.v === '상업';
-          $('lhsCommercial').hidden = !commercial;
-          $(id).querySelector('[data-v="상업"]').setAttribute('aria-expanded', String(commercial));
-          if (!commercial) {
-            st.sub = '';
-            $('segC').querySelectorAll('button').forEach(function (x) { var all = !x.dataset.v; x.classList.toggle('on', all); x.setAttribute('aria-pressed', String(all)); });
-          }
-        }
-        st[field] = b.dataset.v;
-        $(id).querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); if (field === 'sub') x.setAttribute('aria-pressed', String(x === b)); });
-        draw();
-      });
+    function updateSub() {
+      var sel = $('pickSub');
+      sel.replaceChildren(new Option(st.u ? '세부 전체' : '구분1 먼저 선택', ''));
+      sel.disabled = !st.u;
+      if (!st.u) return;
+      var types = Array.from(new Set(P.filter(function(p) { return grp(p.u) === st.u; }).map(function(p) { return p.u; })));
+      types.sort(function(a,b) { return a.localeCompare(b, 'ko'); }).forEach(function(type) { sel.add(new Option(type, type)); });
     }
-    seg('segD', 'd'); seg('segU', 'u'); seg('segC', 'sub');
+    $('pickD').addEventListener('change', function() { st.d = this.value; draw(); });
+    $('pickU').addEventListener('change', function() { st.u = this.value; st.sub = ''; updateSub(); draw(); });
+    $('pickSub').addEventListener('change', function() { st.sub = this.value; draw(); });
+    updateSub();
     $('onlyB').addEventListener('change', function (e) { st.b = e.target.checked; draw(); });
     $('onlyBid').addEventListener('change', function (e) { st.bid = e.target.checked; draw(); });
     $('lhsQ').addEventListener('input', function (e) { st.q = e.target.value; draw(); });
