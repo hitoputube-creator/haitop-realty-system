@@ -234,7 +234,7 @@
 .wd-composer .ac-add, .wd-composer .ac-save { padding: 3px 10px !important; font-size: 11.5px !important; }
 .wd-composer .wd-link-clear-btn { min-height: 24px !important; padding: 2px 8px !important; font-size: 11.5px !important; }
 
-/* ===== 2026-11-24 일정 관계인·메모, 날짜 요약 박스 클릭 내역 창 ===== */
+/* ===== 2026-11-24 일정 관계인·메모, 날짜 요약 박스 클릭 시 달력 아래 내역 ===== */
 /* 일정 관계인·메모 */
 .sp-extra { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 2px; }
 .sp-people { display: flex; flex-direction: column; gap: 6px; }
@@ -262,7 +262,12 @@
 .wd-date-stat--click:focus-visible { outline: 2px solid #ffd27a; outline-offset: 2px; }
 
 /* 날짜별 계약·잔금·약속 내역 창 */
-.stm-dialog { max-width: 560px; }
+.stm-panel { margin-top: 12px; padding: 12px; border: 1px solid #d9dee8; border-top: 3px solid var(--stm-color, #254767); border-radius: 12px; background: #fff; color: #1f2430; }
+.stm-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.stm-panel-head h3 { margin: 0; font-size: 15px; font-weight: 800; color: #1f2430; }
+.stm-close { width: 30px; height: 30px; border: 1px solid #d9dee8; border-radius: 8px; background: #fff; color: #7a8497; cursor: pointer; font-size: 13px; }
+.stm-close:hover { background: #f3f5f8; }
+.wd-date-stat--active { outline: 2px solid #ffd27a; outline-offset: 1px; filter: brightness(1.2); }
 .stm-empty { padding: 18px 4px; font-size: 14px; color: #7a8497; }
 .stm-list { display: flex; flex-direction: column; gap: 10px; }
 .stm-item { border: 1px solid #e3e7ee; border-left: 4px solid var(--stm-color, #254767); border-radius: 10px; padding: 12px; background: #fafbfc; color: #1f2430; }
