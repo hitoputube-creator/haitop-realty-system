@@ -234,7 +234,7 @@
 .wd-composer .ac-add, .wd-composer .ac-save { padding: 3px 10px !important; font-size: 11.5px !important; }
 .wd-composer .wd-link-clear-btn { min-height: 24px !important; padding: 2px 8px !important; font-size: 11.5px !important; }
 
-/* ===== 2026-11-24 일정 관계인·메모, 달력 아래 내역, 간편 등록 관계인 ===== */
+/* ===== 2026-11-24 일정 관계인·메모, 달력 아래 내역, 간편 등록 2줄 ===== */
 /* 일정 관계인·메모 */
 .sp-extra { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 2px; }
 .sp-people { display: flex; flex-direction: column; gap: 6px; }
@@ -291,7 +291,27 @@
 .usw-section--compact .usw-list .usw-item { grid-template-columns: auto auto minmax(0, 1fr); }
 .usw-section--compact .usw-person { display: none; }
 
-/* 간편 일정 등록 관계인·메모 */
-.qs-box .sp-editor { margin: 0; }
-.qs-line--end { justify-content: flex-end; }
-.qs-line--end .qs-msg { margin-right: auto; }
+/* 간편 일정 등록: 2줄 컴팩트 */
+.qs-box.qs-box--compact { padding: 9px 10px; gap: 7px; }
+.qs-box--compact .qs-line { gap: 6px; flex-wrap: nowrap; }
+.qs-box--compact .qs-title { font-size: 13px; font-weight: 800; color: #1f2430; white-space: nowrap; margin-right: 2px; }
+.qs-box--compact .qs-date, .qs-box--compact .qs-text, .qs-box--compact .qs-writer { font-size: 12.5px; padding: 6px 8px; border-radius: 7px; }
+.qs-box--compact .qs-text { flex: 1 1 auto; }
+.qs-seg.qs-seg--joined { gap: 0; }
+.qs-seg--joined .qs-type { font-size: 12px; padding: 6px 10px; border-radius: 0; }
+.qs-seg--joined .qs-type + .qs-type { margin-left: -1px; }
+.qs-seg--joined .qs-type:first-child { border-radius: 7px 0 0 7px; }
+.qs-seg--joined .qs-type:last-child { border-radius: 0 7px 7px 0; }
+.qs-box--compact .qs-save { font-size: 12.5px; padding: 6px 14px; border-radius: 7px; white-space: nowrap; }
+.qs-people-btn { font: inherit; font-size: 12px; font-weight: 700; padding: 6px 9px; border: 1px dashed #254767; border-radius: 7px; background: #fff; color: #254767; cursor: pointer; white-space: nowrap; }
+.qs-people-btn.on { border-style: solid; background: #e8eef6; }
+.qs-people-btn:disabled { opacity: 0.5; cursor: default; }
+.qs-sub { padding: 7px; border: 1px solid #e8ecf1; border-radius: 9px; background: #f6f8fa; }
+.sp-editor.sp-editor--compact { gap: 5px; margin: 0; }
+.sp-editor--compact .sp-row { flex-wrap: nowrap; gap: 5px; }
+.sp-editor--compact .sp-input { font-size: 12.5px; padding: 6px 8px; border-radius: 7px; }
+.sp-editor--compact .sp-role-select { flex: 0 0 86px; }
+.sp-editor--compact .sp-name, .sp-editor--compact .sp-phone { flex: 1 1 0; }
+.sp-editor--compact .sp-remove { flex: 0 0 30px; height: 30px; border-radius: 7px; }
+.sp-memo-line { flex: 1 1 auto; }
+.sp-add.sp-add--inline { align-self: center; border: 0; padding: 4px 2px; white-space: nowrap; }
