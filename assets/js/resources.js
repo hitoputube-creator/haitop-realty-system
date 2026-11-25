@@ -412,6 +412,16 @@ function buildVillageGroupsHtml(items, category) {
 function renderDriveTab() {
   const container = document.getElementById("driveContent");
   const visibleResources = visibleDriveResources();
+  if (container.hasAttribute('data-land-documents')) {
+    container.replaceChildren();
+    const docs=visibleResources.slice().sort((a,b)=>String(a.category).localeCompare(String(b.category),'ko')||String(a.name).localeCompare(String(b.name),'ko'));
+    for (const item of docs) {
+      const row=document.createElement('div'), title=document.createElement('strong'), open=document.createElement('button');
+      row.className='land-doc-row';title.textContent=item.name;open.type='button';open.className='btn btn-ghost';open.textContent='자료 열기';open.onclick=()=>openDriveBuilding('land-resource.html',item.id);row.append(title,open);container.append(row);
+    }
+    if(!docs.length)container.textContent='등록된 자료가 없습니다.';
+    return;
+  }
   const categories = visibleDriveCategories().map(c => c.name);
   if (!categories.length) {
     container.innerHTML = `<div class="loading" style="color:var(--text-muted);">등록된 자료가 없습니다. 위 폼에서 추가해주세요.</div>`;
