@@ -3,14 +3,16 @@
   function fromRegister(info,address) {
     const rawItems=info?.raw?.response?.body?.items?.item;
     const items=Array.isArray(rawItems)?rawItems:rawItems?[rawItems]:[];
-    if(!items.length)throw Error('건축물대장 정보가 확인되지 않았습니다.');
-    const count=Number(info.raw.response.body.totalCount)||items.length;
+    // 조회 서버가 raw 없이 건물 한 동의 정리된 값만 돌려주는 경우도 건물 있음으로 본다.
+    const summary=['building_name','main_purpose','use_apr_day','total_area_m2','floor_info'].some(key=>String(info?.[key]??'').trim()!=='');
+    if(!items.length&&!summary)throw Error('건축물대장 정보가 확인되지 않았습니다.');
+    const count=items.length?(Number(info.raw.response.body.totalCount)||items.length):1;
     const result={building:'building',buildingCheck:{status:'found',address,checkedAt:new Date().toISOString(),source:'건축물대장',multiple:count>1}};
     // Several title registers can belong to one lot. Never fill one arbitrary building's figures.
     if(count>1)return result;
     const mapping={buildingName:'building_name',buildingPurpose:'main_purpose',buildingFloors:'floor_info',buildingFootprint:'footprint_area_m2',buildingTotalArea:'total_area_m2',buildingStructure:'structure'};
     Object.entries(mapping).forEach(([field,key])=>{
-      const value=info[key];
+      const value=typeof info[key]==='string'?info[key].trim():info[key];
       if(value!==null&&value!==undefined&&value!=='')result[field]=value;
     });
     const date=String(info.use_apr_day||'');
