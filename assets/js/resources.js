@@ -417,9 +417,9 @@ function renderDriveTab() {
     const docs=visibleResources.slice().sort((a,b)=>String(a.category).localeCompare(String(b.category),'ko')||String(a.name).localeCompare(String(b.name),'ko'));
     for (const item of docs) {
       const row=document.createElement('div'), title=document.createElement('strong'), open=document.createElement('button');
-      row.className='land-doc-row';title.textContent=item.name;open.type='button';open.className='btn btn-ghost';open.textContent='자료 열기';open.onclick=()=>openDriveBuilding('land-resource.html',item.id);row.append(title,open);container.append(row);
+      row.className='listing-card';row.style.cursor='default';const info=document.createElement('div'),desc=document.createElement('div'),actions=document.createElement('div');info.style.marginBottom='10px';title.style.cssText='font-size:.92rem;font-weight:600;color:var(--gold-soft)';title.textContent=item.name;desc.style.cssText='font-size:.75rem;color:var(--text-muted);margin-top:3px;line-height:1.4';desc.textContent=item.category+' · 공급 원본자료';actions.style.cssText='display:flex;justify-content:flex-end';open.type='button';open.className='btn btn-primary';open.style.cssText='font-size:.75rem;padding:4px 12px';open.textContent='📁 열기';open.onclick=()=>openDriveBuilding('land-resource.html',item.id);info.append(title,desc);actions.append(open);row.append(info,actions);container.append(row);
     }
-    if(!docs.length)container.textContent='등록된 자료가 없습니다.';
+    if(!docs.length)container.textContent='등록된 자료가 없습니다.';window.dispatchEvent(new Event('land-docs-ready')); 
     return;
   }
   const categories = visibleDriveCategories().map(c => c.name);
