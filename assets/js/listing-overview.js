@@ -120,7 +120,7 @@
       var b = document.createElement("button");
       b.type = "button"; b.className = "rl-btn"; b.title = "주소를 복사하고 대법원 인터넷등기소를 새 창으로 엽니다";
       b.textContent = "📑 등기부 발급 ↗";
-      b.addEventListener("click", function () { openWithAddress(IROS, valueOf("지도검색주소"), "인터넷등기소"); });
+      b.addEventListener("click", function () { openWithAddress(IROS, (state && state.info && state.info.address) || valueOf("지도검색주소"), "인터넷등기소"); });
       var cb = document.createElement("button");
       cb.type = "button"; cb.className = "rl-copy"; cb.title = "주소만 복사합니다 (등기소 검색칸에 붙여넣기)";
       cb.textContent = "📋 주소복사";
@@ -781,9 +781,25 @@
     } catch (e) { /* 실패하면 기존처럼 "전유부를 찾지 못했어요" 안내를 그대로 보여 준다 */ }
   }
 
+  // 택지 매물: "운정3지구 C4블록 18-2"처럼 블럭·필지번호만 있으면 택지 위치도에 저장된 실제 지번으로 바꿔 조회한다.
+  async function resolveLandParcelAddress(info) {
+    try {
+      var m = String(info.address || "").match(/운정\s*3\s*지구\s*C\s*(\d+)\s*블[럭록]\s*(\d+)\s*-\s*(\d+)/);
+      if (!m || typeof fetchWithTimeout !== "function") return;
+      var t = await token(); if (!t) return;
+      var q = "?block_id=eq.third-C" + m[1] + "&subblock=eq." + m[2] + "&parcel=eq." + m[3] + "&select=data";
+      var res = await fetchWithTimeout(SUPABASE_URL + "/rest/v1/land_parcels" + q, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + t }, cache: "no-store" }, 20000);
+      if (!res.ok) return;
+      var rows = await res.json();
+      var a = rows && rows[0] && rows[0].data && String(rows[0].data.address || "").trim();
+      if (a && /[가-힣]+(동|리)\s*(산\s*)?\d+/.test(a)) { info.parcelLabel = "C" + m[1] + "-" + m[2] + "-" + m[3]; info.address = "경기도 파주시 " + a; }
+    } catch (e) { /* 못 찾으면 원래 주소로 조회 */ }
+  }
+
   async function start(force) {
     state.loading = true; state.error = null; render();
     state.info = readInfo();
+    await resolveLandParcelAddress(state.info);
     await reloadDocs();
     loadTypePlan().then(function () { if (state.typePlan && !state.loading) render(); });
     if (state.info.address) {
