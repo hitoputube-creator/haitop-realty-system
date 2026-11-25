@@ -3,6 +3,8 @@
   'use strict';
   const RE=/운정\s*3\s*지구\s*C\s*(\d+)\s*블[럭록]\s*(\d+)\s*-\s*(\d+)/;
   const id=new URLSearchParams(location.search).get('id');
+  async function ready(){try{if(window.hitopAuthReady)await window.hitopAuthReady;}catch(e){}}
+  async function withRetry(fn){for(let i=0;i<5;i++){try{await ready();const r=await fn();if(r)return r;}catch(e){}await new Promise(r=>setTimeout(r,1200*(i+1)));}return null;}
   async function token(){const {data}=await hitopAuthClient.auth.getSession();if(!data.session)throw Error('login');return data.session.access_token;}
   async function run(){
     if(!id||typeof getListingById!=='function')return;
@@ -10,10 +12,11 @@
     const m=[item.address,item.mapAddress,item.title,item.publicAddress].filter(Boolean).join(' ').match(RE);if(!m)return;
     const t={block:'third-C'+m[1],name:'C'+m[1],sub:m[2],parcel:m[3]};const label=t.name+'-'+t.sub+'-'+t.parcel;
     const h={apikey:SUPABASE_KEY,Authorization:'Bearer '+await token()};const q='?block_id=eq.'+t.block;
-    const [src,row]=await Promise.all([
+    const got=await withRetry(async()=>{const a=await Promise.all([
       fetchWithTimeout(SUPABASE_URL+'/rest/v1/land_block_sources'+q+'&select=diagram_svg,source_data',{headers:h,cache:'no-store'},30000).then(r=>r.ok?r.json():[]),
       fetchWithTimeout(SUPABASE_URL+'/rest/v1/land_parcels'+q+'&subblock=eq.'+t.sub+'&parcel=eq.'+t.parcel+'&select=x,y,data',{headers:h,cache:'no-store'},30000).then(r=>r.ok?r.json():[])
-    ]);
+    ]);return a[0]&&a[0][0]&&a[0][0].diagram_svg?a:null;});
+    const [src,row]=got||[[],[]];
     const s=src[0];const base=s?((s.source_data&&s.source_data.parcels)||[]).find(p=>String(p.subblock)===t.sub&&String(p.parcel)===t.parcel)||{}:{};
     const saved=row[0]||{};const d=saved.data||{};
     const jibun=String(d.address||'').trim();
