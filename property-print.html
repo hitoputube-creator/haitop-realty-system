@@ -1099,7 +1099,7 @@ html[data-pt-office='ktop']{--pt-a:#1767d2;--pt-a2:#193860;--pt-soft:#eaf2ff;--p
       addRow2(tbody, '소재지',  addrText, '매물구분', tl);
       addRow2(tbody, '거래방식', deal || '—',         '가격',    price || '—');
     }
-    if (areaStr || supStr)
+    if ((areaStr || supStr) && !t.startsWith('land'))
       addRow2(tbody, getType() === 'apartment' ? '분양면적 (공급)' : '계약(공급)면적', supStr || '미확인', getAreaLabel(), areaStr || '미확인');
 
     /* 층 정보: 상세정보에 "지상 26층/지하 1층"처럼 건물 규모가 들어 있으면 해당층이 아니라 건물규모로 표시하고,
@@ -1154,7 +1154,8 @@ html[data-pt-office='ktop']{--pt-a:#1767d2;--pt-a2:#193860;--pt-soft:#eaf2ff;--p
       const jimok = v(item.land_jimok);
       const zone  = v(item.zoning, item.land_zone);
       const road  = v(item.land_road);
-      if (la || jimok) addRow2(tbody, '토지면적', la || '—', '지목', jimok || '—');
+      if (jimok) addRow2(tbody, '토지면적', la || areaStr || '—', '지목', jimok);
+      else addRowFull(tbody, '토지면적', la || areaStr);
       if (zone || road) addRow2(tbody, '용도지역', zone || '—', '도로', road || '—');
     } else if (t === 'factory' || t === 'warehouse') {
       const siteA  = fmtArea(v(item.landAreaPy, item.factory_siteArea_py), v(item.landAreaM2, item.factory_siteArea_m2));
@@ -1708,5 +1709,6 @@ html[data-pt-office='ktop']{--pt-a:#1767d2;--pt-a2:#193860;--pt-soft:#eaf2ff;--p
   window.addEventListener('load',mark);setTimeout(mark,500);setTimeout(mark,2000);
 })();
 </script>
+<script src="assets/js/print-land-map.js?v=20261125-1"></script>
 </body>
 </html>
