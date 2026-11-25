@@ -65,7 +65,7 @@
     const toggle=document.createElement('button');toggle.type='button';toggle.textContent='세로 제안서로 보기';
     bar.append(info,toggle);
     const frame=document.createElement('iframe');frame.title=label+' 택지 안내서 미리보기';frame.srcdoc=window.HitopParcelPrint.render(model).replace('<body>','<body style="padding:8mm;box-sizing:border-box;width:297mm">');
-    box.append(bar,frame);(page.closest('.page-wrap')||page).before(box);box.style.margin='24px auto 12px';page.style.display='none';
+    box.append(bar,frame);(page.closest('.page-wrap')||page).before(box);box.style.cssText+=';position:relative;left:50%;transform:translateX(-50%);margin:24px 0 12px';page.style.display='none';
     const holder=document.createElement('div');holder.className='plm-holder';frame.before(holder);holder.append(frame);
     const fitFrame=()=>{const full=frame.offsetWidth||1123;const w=Math.min(full,document.documentElement.clientWidth-40);const s=Math.min(1,w/full);frame.style.transform=s<1?'scale('+s+')':'';holder.style.width=Math.round(full*s)+'px';holder.style.height=Math.round(frame.offsetHeight*s)+'px';box.style.width=holder.style.width;};
     fitFrame();window.addEventListener('resize',fitFrame);
