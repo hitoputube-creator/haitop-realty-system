@@ -10,6 +10,8 @@
     const m=text.match(RE);if(!m)return null;
     return {block:'third-C'+m[1],name:'C'+m[1],sub:m[2],parcel:m[3]};
   }
+  async function ready(){try{if(window.hitopAuthReady)await window.hitopAuthReady;}catch(e){}}
+  async function withRetry(fn){for(let i=0;i<5;i++){try{await ready();const r=await fn();if(r)return r;}catch(e){}await new Promise(r=>setTimeout(r,1200*(i+1)));}return null;}
   async function token(){const {data}=await hitopAuthClient.auth.getSession();if(!data.session)throw Error('로그인이 필요합니다.');return data.session.access_token;}
   async function load(t){
     const h={apikey:SUPABASE_KEY,Authorization:'Bearer '+await token()};
@@ -51,7 +53,7 @@
     const old=document.getElementById('landParcelMapSection');
     if(!t){if(old)old.remove();return;}
     const key=t.block+'/'+t.sub+'/'+t.parcel;
-    if(key!==cacheKey){cacheKey=key;cacheEl=null;loading=load(t).then(d=>{cacheEl=build(t,d);}).catch(()=>{cacheEl=build(t,null);});}
+    if(key!==cacheKey){cacheKey=key;cacheEl=null;loading=withRetry(()=>load(t)).then(d=>{cacheEl=build(t,d);if(!d)cacheKey='';});}
     await loading;if(key!==cacheKey)return;
     if(document.getElementById('landParcelMapSection')===cacheEl)return;
     const anchor=area.querySelector('.listing-info-section');if(!anchor)return;
