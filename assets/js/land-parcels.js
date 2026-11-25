@@ -26,9 +26,24 @@
   function hasContact(row) { return /\d{7,}/.test(String(row.data.contact || '').replace(/\D/g,'')); }
   function hasOwnerData(row) { return Boolean(String(row.data.owner||'').trim()) || hasContact(row); }
   function contactState(row) { return hasOwnerData(row) ? 'contact' : !recordsLoaded ? 'unknown' : row.id ? 'registered' : 'missing'; }
+  function updateDateTags() {
+    // 업데이트 버튼 옆에 무엇을 업데이트하는지와 마지막 업데이트 날짜를 작게 표시합니다.
+    const fmt=value=>new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(value)).replace(/\s/g,'').replace(/\.$/,'');
+    const latest=list=>list.map(value=>Date.parse(value)).filter(Number.isFinite).sort((a,b)=>b-a)[0];
+    const items=[['parcelBuildingUpdate','건물 현황',latest(rows.flatMap(row=>[row.data?.buildingSnapshot?.completedAt,row.data?.buildingCheck?.checkedAt]))],
+      ['parcelOwnershipUpdate','소유 구분',latest(rows.flatMap(row=>[row.data?.ownershipSnapshot?.completedAt,row.data?.ownershipCheck?.checkedAt]))],
+      ['parcelAddressUpdate','소재지 지번',latest(rows.map(row=>row.data?.addressCheckedAt))]];
+    for(const [id,label,time] of items){
+      const button=$(id);if(!button)continue;
+      let tag=button.nextElementSibling;
+      if(!tag||!tag.classList.contains('update-date-tag')){tag=document.createElement('span');tag.className='update-date-tag';button.after(tag);}
+      tag.textContent=label+' · '+(!recordsLoaded?'불러오는 중':time?fmt(time)+' 업데이트':'기록 없음');
+    }
+  }
   function viewLegend() {
     $('parcelBuildingSnapshot').textContent=recordsLoaded ? window.HitopParcelBuilding.savedSummary(rows) : '건물 업데이트 현황 · 저장 자료를 불러오지 못했습니다.';
     $('parcelOwnershipSnapshot').textContent=recordsLoaded ? window.HitopParcelOwnership.savedSummary(rows) : '소유 구분 현황 · 저장 자료를 불러오지 못했습니다.';
+    updateDateTags();
     const parts=[];
     if(views.building) parts.push('건물 있음: 붉은색 강조 · 건물 없음/미입력: 원본 그대로');
     if(views.data) parts.push('공급금액·토지면적이 모두 없는 필지만 X · 지번 제외');
@@ -833,7 +848,7 @@
       if(run!==generation)return false;
       const saved=latest[0],base={...row.data,...saved?.data};
       if(REAL_ADDRESS.test(String(base.address||'').trim()))return false;
-      const body={block_id:blockId,subblock:row.subblock,parcel:row.parcel,x:saved?.x??row.x??0,y:saved?.y??row.y??0,data:{...base,address,...extra},updated_at:new Date().toISOString()};
+      const body={block_id:blockId,subblock:row.subblock,parcel:row.parcel,x:saved?.x??row.x??0,y:saved?.y??row.y??0,data:{...base,address,...extra,addressCheckedAt:new Date().toISOString()},updated_at:new Date().toISOString()};
       const result=await request(saved?'?id=eq.'+encodeURIComponent(saved.id):'',{method:saved?'PATCH':'POST',body:JSON.stringify(body)});
       if(!result[0])throw Error('저장 실패');
       const index=rows.findIndex(item=>key(item)===key(row));
