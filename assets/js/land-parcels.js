@@ -1055,9 +1055,12 @@
       includeMemo:$('parcelPrintMemo').checked,
       includePhotos:$('parcelPrintPhotos').checked,
       title:$('parcelFullNumber').value,address:value('address'),
+      district:$('detailDistrictSelect')?.selectedOptions[0]?.textContent||'',blockName:$('detailTitle')?.textContent||current.name,
+      subblock:$('parcelSubblock').value.trim(),parcel:$('parcelNumber').value.trim(),households:value('households'),unsold:$('parcel-unsold').checked,
+      ownership:window.HitopParcelOwnership.state(selected)!=='unknown'?window.HitopParcelOwnership.label(selected):'',
       landType:{single:'주거전용',shop:'상가점포'}[value('landType')]||'',
       area:value('area'),prices:{supplyPrice:readWon(value('supplyPrice')),auctionPrice:readWon(value('auctionPrice')),salePrice:readWon(value('salePrice'))},
-      building:{exists:$('parcel-building').checked,confirmedVacant:selected.data.building==='vacant',name:value('buildingName'),purpose:value('buildingPurpose'),floors:value('buildingFloors'),structure:value('buildingStructure'),approval:value('buildingApproval'),footprint:value('buildingFootprint'),totalArea:value('buildingTotalArea'),deposit:readWon(value('buildingDeposit')),rent:readWon(value('buildingRent'))},
+      building:{road:selected.data.buildingRoadAddress||'',exists:$('parcel-building').checked,confirmedVacant:selected.data.building==='vacant',name:value('buildingName'),purpose:value('buildingPurpose'),floors:value('buildingFloors'),structure:value('buildingStructure'),approval:value('buildingApproval'),footprint:value('buildingFootprint'),totalArea:value('buildingTotalArea'),deposit:readWon(value('buildingDeposit')),rent:readWon(value('buildingRent'))},
       owner:value('owner'),contact:value('contact'),note:value('note'),
       sourceText:!$('parcelSourceDetail').hidden?$('parcelSourceDetail').textContent:''
     };
