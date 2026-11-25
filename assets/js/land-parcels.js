@@ -714,6 +714,41 @@
   $('parcelRegisterCheck').addEventListener('click',()=>runRegisterCheck($('parcelRegisterCheck')));
   $('parcel-address').addEventListener('input',updateLiveLinks);
   ['parcelKakaoLink','parcelSatelliteLink'].forEach(id=>$(id).addEventListener('click',event=>{if($(id).getAttribute('aria-disabled')==='true'){event.preventDefault();status('실제 지번주소를 먼저 입력해주세요.');}}));
+// ---- 브이월드(국토교통부 공간정보) 조회 ----
+  // 지번 → 공식 지적도 필지 모양, 필지 안 실제 건물(도로명주소 건물)을 확인합니다. 키는 하이탑 서버(vworld-proxy)에만 있습니다.
+  const VWORLD_PROXY='https://xaxbkdnrzsghsabkdvzj.supabase.co/functions/v1/vworld-proxy';
+  const HITOP_PUBLIC_KEY='sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd';
+  async function vworld(path,params){
+    const {data,error}=await hitopAuthClient.auth.getSession();
+    if(error||!data?.session)throw Error('로그인 상태를 확인해주세요.');
+    const ktop=typeof OfficeConfig!=='undefined'&&OfficeConfig.id==='ktop';
+    const headers=ktop?{apikey:HITOP_PUBLIC_KEY,Authorization:'Bearer '+HITOP_PUBLIC_KEY,'x-ktop-token':data.session.access_token,'Content-Type':'application/json'}
+      :{apikey:SUPABASE_KEY,Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'};
+    const res=await fetchWithTimeout(VWORLD_PROXY,{method:'POST',headers,body:JSON.stringify({path,params})},30000);
+    let json=null;try{json=await res.json();}catch(_){}
+    if(!res.ok||!json?.response)throw Error('브이월드 조회에 실패했습니다.');
+    return json.response;
+  }
+  function vworldInside(pt,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const [xi,yi]=ring[i],[xj,yj]=ring[j];if(((yi>pt[1])!==(yj>pt[1]))&&(pt[0]<(xj-xi)*(pt[1]-yi)/(yj-yi)+xi))inside=!inside;}return inside;}
+  function vworldCenter(ring){const pts=ring.slice(0,-1);return [pts.reduce((s,p)=>s+p[0],0)/pts.length,pts.reduce((s,p)=>s+p[1],0)/pts.length];}
+  async function vworldLot(address){
+    const found=await vworld('/req/address',{service:'address',request:'getcoord',version:'2.0',crs:'epsg:4326',type:'parcel',format:'json',refine:'true',simple:'false',address:'경기도 파주시 '+address});
+    const pnu=String(found?.refined?.structure?.level4LC||'');
+    if(found?.status!=='OK'||!/^\d{19}$/.test(pnu))throw Error('지적도에서 지번을 찾지 못했습니다.');
+    const lot=await vworld('/req/data',{service:'data',request:'GetFeature',data:'LP_PA_CBND_BUBUN',attrFilter:'pnu:=:'+pnu,geometry:'true',attribute:'true',format:'json',crs:'EPSG:4326',size:1});
+    const ring=lot?.result?.featureCollection?.features?.[0]?.geometry?.coordinates?.[0]?.[0];
+    if(!Array.isArray(ring)||ring.length<4)throw Error('필지 모양을 찾지 못했습니다.');
+    return ring;
+  }
+  async function vworldBuildingAt(address){
+    const ring=await vworldLot(address);
+    const xs=ring.map(p=>p[0]),ys=ring.map(p=>p[1]);
+    const res=await vworld('/req/data',{service:'data',request:'GetFeature',data:'LT_C_SPBD',geomFilter:'BOX('+Math.min(...xs)+','+Math.min(...ys)+','+Math.max(...xs)+','+Math.max(...ys)+')',geometry:'true',attribute:'true',format:'json',crs:'EPSG:4326',size:30});
+    if(res?.status!=='OK'&&res?.status!=='NOT_FOUND')throw Error('건물 조회에 실패했습니다.');
+    const inside=(res?.result?.featureCollection?.features||[]).filter(f=>{const r=f?.geometry?.coordinates?.[0]?.[0];return Array.isArray(r)&&vworldInside(vworldCenter(r),ring);}).map(f=>f.properties||{});
+    const first=inside[0];
+    return {count:inside.length,road:first?String(first.rd_nm||'')+' '+String(first.buld_no||''):'',floors:first?Number(first.gro_flo_co)||null:null,name:first?String(first.buld_nm||'').trim():''};
+  }
   let buildingUpdateRun=null;
   $('parcelBuildingUpdate').addEventListener('click',async()=>{
     if(buildingUpdateRun){buildingUpdateRun.cancelled=true;return;}
@@ -723,7 +758,7 @@
     const task={generation,blockId:current.id,batchId:crypto.randomUUID(),cancelled:false};buildingUpdateRun=task;busy=true;
     const button=$('parcelBuildingUpdate');button.textContent='업데이트 중지';
     const targets=[...combinedParcels().values()];
-    let found=0,review=0,skipped=0,completed=0,saveErrors=0,anchor=null;
+    let found=0,vacant=0,review=0,skipped=0,completed=0,saveErrors=0,anchor=null;
     try{
       for(const row of targets){
         if(task.cancelled||task.generation!==generation)break;
@@ -731,8 +766,21 @@
         if(!/[가-힣]+(?:동|리)\s+(?:산\s*)?\d+/.test(address)){skipped++;completed++;continue;}
         status('건물 현황 확인 '+(completed+1)+' / '+targets.length+' · '+address);
         let changes;
-        try{changes=await lookupParcelBuilding(address);changes.buildingCheck.batchId=task.batchId;changes.buildingCheckAttempt=null;found++;}
-        catch(error){changes={buildingCheckAttempt:{status:'review',address,checkedAt:new Date().toISOString(),source:'건축물대장',batchId:task.batchId}};review++;}
+        try{
+          const checkedAt=new Date().toISOString(),result=await vworldBuildingAt(address);
+          const check={address,checkedAt,source:'브이월드 도로명주소 건물',batchId:task.batchId,multiple:result.count>1};
+          if(result.count){
+            changes={building:'building',buildingRoadAddress:result.road,buildingCheck:{...check,status:'found'},buildingCheckAttempt:null};
+            if(result.floors&&!row.data.buildingFloors)changes.buildingFloors='지상 '+result.floors+'층';
+            if(result.name&&!row.data.buildingName)changes.buildingName=result.name;
+            found++;
+          }else{
+            changes={building:'vacant',buildingCheck:{...check,status:'none'},buildingCheckAttempt:null};
+            ['buildingName','buildingPurpose','buildingFloors','buildingStructure','buildingApproval','buildingFootprint','buildingTotalArea','buildingRoadAddress'].forEach(field=>{changes[field]=undefined;});
+            vacant++;
+          }
+        }
+        catch(error){changes={buildingCheckAttempt:{status:'review',address,checkedAt:new Date().toISOString(),source:'브이월드',batchId:task.batchId}};review++;}
         if(task.cancelled||task.generation!==generation)break;
         // Fetch the latest office record before merging to retain edits from other devices.
         try{
@@ -760,14 +808,14 @@
           const latest=await request('?id=eq.'+encodeURIComponent(anchor.id));
           if(!latest[0])throw Error('업데이트 기록을 저장할 필지가 없습니다.');
           if(!task.cancelled&&task.generation===generation){
-            const data={...latest[0].data,buildingSnapshot:{batchId:task.batchId,completedAt:new Date().toISOString(),found,review,skipped,total:targets.length}};
+            const data={...latest[0].data,buildingSnapshot:{batchId:task.batchId,completedAt:new Date().toISOString(),found,vacant,review,skipped,total:targets.length,source:'브이월드'}};
             const result=await request('?id=eq.'+encodeURIComponent(anchor.id),{method:'PATCH',body:JSON.stringify({data})});
             if(!result[0])throw Error('업데이트 날짜 저장 실패');
             if(task.generation===generation){const index=rows.findIndex(item=>item.id===anchor.id);if(index>=0)rows[index]=result[0];draw();}
           }
         }catch(error){saveErrors++;}
       }
-      if(task.generation===generation)status((task.cancelled?'업데이트 중지 · 저장된 일부 결과 유지 · ':saveErrors?'일부 저장 · 업데이트 날짜 갱신 실패 · ':!anchor?'조회 가능한 지번주소가 없어 업데이트 날짜를 유지했습니다. · ':'업데이트 완료 · ')+'건물 확인 '+found+'건 · 추가 확인 '+review+'건 · 주소 미확인/변경 '+skipped+'건'+(saveErrors?' · 저장 실패 '+saveErrors+'건':''));
+      if(task.generation===generation)status((task.cancelled?'업데이트 중지 · 저장된 일부 결과 유지 · ':saveErrors?'일부 저장 · 업데이트 날짜 갱신 실패 · ':!anchor?'조회 가능한 지번주소가 없어 업데이트 날짜를 유지했습니다. · ':'업데이트 완료 · ')+'건물 있음 '+found+'건 · 건물 없음 '+vacant+'건 · 조회 실패 '+review+'건 · 주소 미확인/변경 '+skipped+'건'+(saveErrors?' · 저장 실패 '+saveErrors+'건':'')+' · 브이월드 기준');
     }finally{
       window.dispatchEvent(new CustomEvent('parcel-search-invalidate',{detail:{block_id:task.blockId}}));
       buildingUpdateRun=null;busy=false;button.textContent='업데이트';button.disabled=false;
@@ -809,26 +857,17 @@
     });
     return kakaoServices;
   }
-  function lotAddressAt(geocoder,point){
-    return new Promise(resolve=>{
-      const timer=setTimeout(()=>resolve(null),8000);
-      geocoder.coord2Address(point.lng,point.lat,(result,state)=>{
-        clearTimeout(timer);
-        const info=state===window.kakao.maps.services.Status.OK&&result[0]?.address;
-        if(!info||!info.region_3depth_name||!info.main_address_no){resolve(null);return;}
-        resolve(info.region_3depth_name+' '+info.main_address_no+(info.sub_address_no&&info.sub_address_no!=='0'?'-'+info.sub_address_no:''));
-      });
-    });
+  // 위치 → 지번, 지번 → 위치는 브이월드 공식 지적도로 확인합니다(카카오 추정은 신규 택지 지번이 어긋나는 경우가 있어 쓰지 않습니다).
+  async function lotAddressAt(geocoder,point){
+    try{
+      const res=await vworld('/req/data',{service:'data',request:'GetFeature',data:'LP_PA_CBND_BUBUN',geomFilter:'POINT('+point.lng+' '+point.lat+')',geometry:'false',attribute:'true',format:'json',crs:'EPSG:4326',size:2});
+      const addr=String(res?.result?.featureCollection?.features?.[0]?.properties?.addr||'').trim();
+      const m=addr.match(/([가-힣]+(?:동|리))\s+(산\s*)?(\d+(?:-\d+)?)$/);
+      return m?m[1]+' '+(m[2]?'산':'')+m[3].replace(/-0$/,''):null;
+    }catch(_){return null;}
   }
-  function pointOfAddress(geocoder,address){
-    return new Promise(resolve=>{
-      const timer=setTimeout(()=>resolve(null),8000);
-      geocoder.addressSearch('파주시 '+address,(result,state)=>{
-        clearTimeout(timer);
-        if(state===window.kakao.maps.services.Status.OK&&result[0]){const lng=Number(result[0].x),lat=Number(result[0].y);resolve(Number.isFinite(lng)&&Number.isFinite(lat)?{lng,lat}:null);}
-        else resolve(null);
-      });
-    });
+  async function pointOfAddress(geocoder,address){
+    try{const c=vworldCenter(await vworldLot(address));return {lng:c[0],lat:c[1]};}catch(_){return null;}
   }
   async function mapLimit(items,limit,work){
     const out=new Array(items.length);let next=0;
@@ -900,7 +939,7 @@
             const predictFor=target=>{const fit=fitAffine(controls.filter(c=>c!==target));return fit&&fit(target);};
             // 검증: LH 지번을 아는 필지를 하나씩 빼고 추정해 실제 LH 지번과 맞는지 확인
             status('지번 위치 추정 검증 중 · LH 지번 필지로 확인');
-            const checks=await mapLimit(controls,4,async c=>{const point=controls.length>=5?predictFor(c):null;if(!point)return null;return (await lotAddressAt(geocoder,point))===c.address;});
+            const checks=await mapLimit(controls,4,async c=>{const point=controls.length>=5?predictFor(c):null;if(!point)return null;return String(await lotAddressAt(geocoder,point)||'').replace(/-0$/,'')===String(c.address||'').replace(/-0$/,'');});
             const usable=checks.filter(v=>v!==null);
             verify={ok:usable.filter(Boolean).length,total:usable.length};
             if(!usable.length||verify.ok/verify.total<0.75){notice='위치 추정 검증이 맞지 않아(LH 기준 '+verify.ok+'/'+verify.total+' 일치) 추정 지번은 저장하지 않았습니다.';}
