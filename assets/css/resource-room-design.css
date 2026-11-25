@@ -57,3 +57,5 @@ html body.resources-page :is(#groups>.listing-grid,#landDocuments>.listing-grid)
 html body.resources-page #landDocuments>h2{display:flex;align-items:center;gap:7px;margin:0 0 10px!important;font-size:13.5px!important;font-weight:800!important;color:var(--rp-ink)!important}
 html body.resources-page #landDocuments>h2::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--rp-accent)}
 @media(max-width:720px){html body.resources-page :is(#groups>.listing-grid,#landDocuments>.listing-grid){grid-template-columns:1fr!important}}
+html body.resources-page #landDocuments>.listing-grid .listing-card>div:first-child>strong:first-child{font-size:14px!important;font-weight:800!important;color:var(--rp-ink)!important}
+
