@@ -504,3 +504,32 @@
 /* 업데이트 버튼 옆 날짜 표시 */
 .land-location-page .building-update-status{display:flex!important;align-items:center;gap:8px;margin:4px 0}
 .land-location-page .update-date-tag{font-size:12px;color:#68788a;white-space:nowrap}
+
+/* 필지 세부자료 창 가독성 정리: 항목 묶음 카드, 자동 계산 칸 강조, 버튼 하단 고정 */
+#parcelEditor .pe-body{background:#f4f6f8!important;padding:14px 22px 6px!important}
+#parcelEditor .pe-head{border-bottom:1px solid #e2e8ee!important}
+#parcelEditor #parcelFormTitle{font-size:24px!important;color:#1e3a56!important;letter-spacing:-.2px}
+#parcelEditor #parcelFormSubtitle{font-size:13px!important;color:#5b6b7b!important}
+#parcelEditor .parcel-print-controls{gap:8px!important}
+#parcelEditor .parcel-print-controls label{font-size:12px!important;color:#5b6b7b!important}
+#parcelEditor .pe-section{background:#fff!important;border:1px solid #dfe6ec!important;border-radius:10px!important;padding:14px 16px 14px!important;margin:0 0 12px!important;box-shadow:0 1px 2px rgba(30,58,86,.04)}
+#parcelEditor .pe-section>.pe-title,#parcelEditor .pe-section:not(.parcel-building-details)>.pe-title{display:flex!important;align-items:center;gap:8px;margin:0 0 12px!important;font-size:14px!important;font-weight:700!important;color:#1e3a56!important}
+#parcelEditor .pe-section>.pe-title::before{content:"";width:4px;height:15px;border-radius:2px;background:#25675f}
+#parcelEditor .parcel-field-label{font-size:12px!important;font-weight:600!important;color:#4b5b6b!important;margin-bottom:5px!important}
+#parcelEditor input:not([type=checkbox]),#parcelEditor select,#parcelEditor textarea{font-size:14px!important;border-color:#cfd8e1!important}
+#parcelEditor input[readonly]{background:#eef5f3!important;border:1px solid #eef5f3!important;color:#1f5f57!important;font-weight:700!important}
+#parcelEditor input[readonly]::placeholder{color:#9fb3ad!important;font-weight:500}
+#parcelEditor #parcel-supplyPrice,#parcelEditor #parcel-supplyPricePerPyeong{font-weight:700!important;color:#1e3a56!important}
+#parcelEditor #parcel-supplyPricePerPyeong{color:#1f5f57!important}
+#parcelEditor .parcel-value-pair{background:#fafbfc;border:1px solid #eef2f5;border-radius:8px;padding:8px}
+#parcelEditor .parcel-live-actions .btn{height:30px!important;min-height:30px!important;font-size:12.5px!important;padding:0 10px!important}
+#parcelEditor #parcelSourceDetail:not([hidden]){display:block!important;}#parcelEditor #parcelSourceDetail:not([hidden]),#parcelEditor #parcelLhDetail{background:#eef5f3;border:1px solid #d3e6e1;border-radius:8px;padding:8px 12px!important;color:#2b5a53!important;font-size:12.5px!important;margin:0 0 12px!important}
+#parcelEditor #parcelSourceDetail:empty,#parcelEditor #parcelLhDetail:empty,#parcelEditor #parcelOwnershipDetail:empty{display:none!important}
+#parcelEditor .pe-actions{position:sticky;bottom:0;background:#fff!important;border-top:1px solid #e2e8ee;margin:0 -22px!important;padding:10px 22px!important;z-index:2}
+#parcelEditor .parcel-building-check{background:#fff;border-color:#cfd8e1!important}
+#parcelEditor .parcel-building-check:has(input:checked){background:#fdecec!important;border-color:#dc2626!important;color:#b91c1c!important}
+#parcelEditor .parcel-notes{background:#fff;border:1px solid #dfe6ec;border-radius:10px;padding:14px 16px;margin:12px 0 16px}
+html[data-office-theme='ktop'] #parcelEditor .pe-section>.pe-title::before{background:#1767d2}
+html[data-office-theme='ktop'] #parcelEditor input[readonly]{background:#eaf2ff!important;border-color:#eaf2ff!important;color:#1956a3!important}
+html[data-office-theme='ktop'] #parcelEditor #parcel-supplyPricePerPyeong{color:#1956a3!important}
+html[data-office-theme='ktop'] #parcelEditor #parcelSourceDetail:not([hidden]),html[data-office-theme='ktop'] #parcelEditor #parcelLhDetail{background:#eaf2ff;border-color:#c4d8f5;color:#1956a3!important}
