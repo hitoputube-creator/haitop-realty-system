@@ -43,7 +43,7 @@
   function loadScript(src){return new Promise((res,rej)=>{if(window.HitopParcelPrint)return res();const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.append(sc);});}
   /* 택지 자료실 필지 인쇄와 같은 A4 가로 양식으로 보여 주고 출력한다 */
   async function landscape(item,t,label,s,base,saved,d,src,x,y){
-    await loadScript('assets/js/parcel-print.js?v=20261125-landscape-contact1');
+    await loadScript('assets/js/parcel-print.js?v=20261125-contact2');
     if(!window.HitopParcelPrint)return;
     const num=v=>v===null||v===undefined||v===''?null:Number(v);
     const src0=base.source||{};
