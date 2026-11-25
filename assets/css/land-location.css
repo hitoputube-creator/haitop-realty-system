@@ -533,3 +533,7 @@ html[data-office-theme='ktop'] #parcelEditor .pe-section>.pe-title::before{backg
 html[data-office-theme='ktop'] #parcelEditor input[readonly]{background:#eaf2ff!important;border-color:#eaf2ff!important;color:#1956a3!important}
 html[data-office-theme='ktop'] #parcelEditor #parcel-supplyPricePerPyeong{color:#1956a3!important}
 html[data-office-theme='ktop'] #parcelEditor #parcelSourceDetail:not([hidden]),html[data-office-theme='ktop'] #parcelEditor #parcelLhDetail{background:#eaf2ff;border-color:#c4d8f5;color:#1956a3!important}
+/* 필지 창 제목 배지형 포인트 */
+#parcelEditor #parcelFormTitle{display:inline-block!important;background:#25675f;color:#fff!important;padding:4px 14px!important;border-radius:8px;font-size:21px!important}
+#parcelEditor #parcelFormSubtitle{margin-top:6px!important}
+html[data-office-theme='ktop'] #parcelEditor #parcelFormTitle{background:#1767d2}
