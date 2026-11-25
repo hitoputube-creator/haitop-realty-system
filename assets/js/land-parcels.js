@@ -30,7 +30,7 @@
     $('parcelBuildingSnapshot').textContent=recordsLoaded ? window.HitopParcelBuilding.savedSummary(rows) : '건물 업데이트 현황 · 저장 자료를 불러오지 못했습니다.';
     $('parcelOwnershipSnapshot').textContent=recordsLoaded ? window.HitopParcelOwnership.savedSummary(rows) : '소유 구분 현황 · 저장 자료를 불러오지 못했습니다.';
     const parts=[];
-    if(views.building) parts.push('건물 있음: 파란색 강조 · 건물 없음/미입력: 원본 그대로');
+    if(views.building) parts.push('건물 있음: 붉은색 강조 · 건물 없음/미입력: 원본 그대로');
     if(views.data) parts.push('공급금액·토지면적이 모두 없는 필지만 X · 지번 제외');
     if(views.ownership) parts.push('소유 구분: 개인 / 법인 / 기타 · 저장된 자료 기준');
     if(views.contact) parts.push(recordsLoaded ? '소유주 자료 있음: 초록색 필지 · 자료 없음: X · 건물 있음과 겹치면 보라색' : '연락처 확인 불가 · 저장 자료를 불러오지 못했습니다');
@@ -105,7 +105,7 @@
         const doc=object.contentDocument,root=doc?.documentElement;
         if(!doc||!root)return;
         const style=doc.createElementNS(ns,'style');
-        style.textContent='svg *{opacity:0!important;pointer-events:none!important}.parcel-building-vector-highlight{opacity:1!important;fill:#2563eb99!important;stroke:#1d4ed8!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}';
+        style.textContent='svg *{opacity:0!important;pointer-events:none!important}.parcel-building-vector-highlight{opacity:1!important;fill:#dc2626e6!important;stroke:#b91c1c!important;stroke-width:1.8!important;vector-effect:non-scaling-stroke}';
         root.insertBefore(style,root.firstChild);
         const vb=root.viewBox?.baseVal;
         if(vb&&vb.width&&vb.height)buildingVectorViewBox={x:vb.x,y:vb.y,width:vb.width,height:vb.height};
