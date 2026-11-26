@@ -87,7 +87,7 @@
     var landscape = ratio > 1.1;
     /* A4, 여백 8mm, 머리글·범례 높이를 빼고 도면이 한 장에 들어가도록 크기 계산 */
     var maxW = landscape ? 281 : 194;
-    var maxH = landscape ? 104 : 186;
+    var maxH = landscape ? 114 : 196;
     var pageH = landscape ? 190 : 277;
     var widthMm = Math.min(maxW, maxH * ratio);
 
@@ -116,7 +116,6 @@
     sheet.style.setProperty('--dp-soft', co.soft);
     sheet.style.height = pageH + 'mm';
     sheet.innerHTML =
-      '<div class="dp-brand"><b>' + esc(co.name) + '</b><strong>T. ' + esc(co.phone) + '</strong></div>' +
       '<div class="dp-head"><div><p class="dp-title">' + esc(title) + ' 상세 도면</p>' +
       '<p class="dp-sub">' + esc([group, type].filter(Boolean).join(' · ')) + '</p></div>' +
       '<div class="dp-meta">출력 ' + esc(today()) + '</div></div>' +
