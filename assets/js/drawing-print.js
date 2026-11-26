@@ -87,7 +87,7 @@
     var landscape = ratio > 1.1;
     /* A4, 여백 8mm, 머리글·범례 높이를 빼고 도면이 한 장에 들어가도록 크기 계산 */
     var maxW = landscape ? 281 : 194;
-    var maxH = landscape ? 114 : 196;
+    var maxH = landscape ? 119 : 201;
     var pageH = landscape ? 190 : 277;
     var widthMm = Math.min(maxW, maxH * ratio);
 
@@ -105,7 +105,7 @@
     var legend = legendEl && !legendEl.hidden ? text(legendEl) : '';
 
     var co = company();
-    var footRows = [['대표', co.rep], ['팩스', co.fax], ['주소', co.addr, 1], ['등록번호', co.reg], ['사업자번호', co.biz], ['이메일', co.email, 1]]
+    var footRows = [['대표', co.rep], ['팩스', co.fax], ['등록번호', co.reg], ['사업자번호', co.biz], ['주소', co.addr], ['이메일', co.email]]
       .filter(function (x) { return x[1]; })
       .map(function (x) { return '<div' + (x[2] ? ' class="full"' : '') + '><span>' + x[0] + '</span><em>' + esc(x[1]) + '</em></div>'; }).join('');
 
