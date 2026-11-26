@@ -352,3 +352,8 @@
 /* 수정창 스티커 버튼 작게 */
 .wd-card-sticker-edit .wd-sticker-btn{height:22px!important;min-height:0!important;padding:0 10px!important;font-size:11px!important;line-height:1!important;border-radius:999px!important;font-weight:700!important}
 .wd-card-sticker-edit .wd-sticker-bar-label{font-size:11px!important}
+
+
+/* 수정창 제목·이름·연락처 칸 위의 작은 안내 글자 */
+.wd-edit-field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.wd-edit-cap{font-size:10.5px;line-height:1;font-weight:700;color:#7b8494;padding-left:2px}
