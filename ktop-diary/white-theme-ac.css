@@ -375,3 +375,12 @@
 .wd-edit-oneline > .wd-card-date-edit > .wd-link-bar-label,
 .wd-schedule-date-edit > .wd-link-bar-label:first-child{flex:0 0 52px;width:52px}
 .wd-edit-oneline{margin-top:10px}
+
+
+/* 수정창 일정 묶음 카드: 일정일 + 일정메모 + 메모 */
+.wd-sched-card{background:#fff;border:1px solid #d9dee5;border-left:4px solid #254767;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.wd-sched-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#254767}
+.wd-sched-badge{font-style:normal;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#2d8fd8;color:#fff}
+.wd-sched-grid{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px}
+.wd-sched-card .wd-edit-field .wd-link-input{width:100%;box-sizing:border-box;height:34px}
+.wd-sched-card .wd-edit-cap--block{margin:0 0 -7px}
