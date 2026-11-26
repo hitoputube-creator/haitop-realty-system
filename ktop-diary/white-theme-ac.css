@@ -322,3 +322,9 @@
 .wd-og-toggle{background:#fff!important;color:#7b8494!important;border:1px solid #c9ced6!important}
 .wd-og-toggle.is-on{background:#e6c364!important;color:#3a2e05!important;border-color:#d1a93a!important}
 .wd-og-go{background:transparent!important;color:#1859af!important;border:1px solid #a9c4e8!important}
+
+
+/* 중요 / 완료 버튼: 제목 옆 작은 버튼, 켜지면 색으로 구분 (중요=주황빨강, 완료=초록) */
+.wd-st-btn{margin-left:6px!important;padding:1px 7px!important;height:20px!important;min-height:0!important;font-size:11px!important;line-height:1!important;border-radius:5px!important;font-weight:700!important;cursor:pointer;vertical-align:middle;display:inline-flex;align-items:center;box-shadow:none!important;background:#fff!important;color:#7b8494!important;border:1px solid #c9ced6!important}
+.wd-st-btn.wd-st-important.is-on{background:#e5533d!important;color:#fff!important;border-color:#c93f2a!important}
+.wd-st-btn.wd-st-done.is-on{background:#2e9e6b!important;color:#fff!important;border-color:#23865a!important}
