@@ -347,3 +347,8 @@
 .wd-info-act:hover{background:#f1f3f6!important}
 .wd-info-act.is-danger{color:#c0392b!important;border-color:#e3b2ab!important}
 .wd-info-act.is-danger:hover{background:#fdf0ee!important}
+
+
+/* 수정창 스티커 버튼 작게 */
+.wd-card-sticker-edit .wd-sticker-btn{height:22px!important;min-height:0!important;padding:0 10px!important;font-size:11px!important;line-height:1!important;border-radius:999px!important;font-weight:700!important}
+.wd-card-sticker-edit .wd-sticker-bar-label{font-size:11px!important}
