@@ -384,3 +384,5 @@
 .wd-sched-grid{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px}
 .wd-sched-card .wd-edit-field .wd-link-input{width:100%;box-sizing:border-box;height:34px}
 .wd-sched-card .wd-edit-cap--block{margin:0 0 -7px}
+
+.wd-sched-card .wd-edit-field .wd-link-input{height:34px!important;min-height:34px!important;padding:0 10px!important;border-radius:8px!important}
