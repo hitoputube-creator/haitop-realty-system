@@ -328,3 +328,9 @@
 .wd-st-btn{margin-left:6px!important;padding:1px 7px!important;height:20px!important;min-height:0!important;font-size:11px!important;line-height:1!important;border-radius:5px!important;font-weight:700!important;cursor:pointer;vertical-align:middle;display:inline-flex;align-items:center;box-shadow:none!important;background:#fff!important;color:#7b8494!important;border:1px solid #c9ced6!important}
 .wd-st-btn.wd-st-important.is-on{background:#e5533d!important;color:#fff!important;border-color:#c93f2a!important}
 .wd-st-btn.wd-st-done.is-on{background:#2e9e6b!important;color:#fff!important;border-color:#23865a!important}
+
+.ac-phone-wrap { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.ac-phone-wrap > input { flex: 1 1 auto; width: auto; min-width: 0; }
+.ac-plus { flex: 0 0 34px; width: 34px; height: 34px; padding: 0; border: 1px dashed #254767; border-radius: 8px; background: transparent; color: #254767; font-size: 20px; font-weight: 800; line-height: 1; cursor: pointer; }
+.ac-plus:hover:not(:disabled) { background: rgba(37, 71, 103, 0.1); }
+.ac-plus:disabled { opacity: 0.4; cursor: default; }
