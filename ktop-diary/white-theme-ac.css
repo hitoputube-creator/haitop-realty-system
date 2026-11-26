@@ -368,3 +368,10 @@
 .wd-schedule-memo-input{flex:1 1 220px!important;min-width:140px;width:auto!important}
 .wd-edit-cap--block{display:block;margin:6px 0 3px}
 .wd-schedule-date-edit .wd-link-bar-label + .wd-link-input.wd-schedule-memo-input{margin-left:0}
+
+
+/* 수정창 줄 간격·왼쪽 정렬 통일: 관계구분/작성일/일정일 이름표 폭을 같게, 줄 간격 10px */
+.wd-card-relation-edit > .wd-link-bar-label,
+.wd-edit-oneline > .wd-card-date-edit > .wd-link-bar-label,
+.wd-schedule-date-edit > .wd-link-bar-label:first-child{flex:0 0 52px;width:52px}
+.wd-edit-oneline{margin-top:10px}
