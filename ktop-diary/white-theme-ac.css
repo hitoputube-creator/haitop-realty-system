@@ -334,3 +334,9 @@
 .ac-plus { flex: 0 0 34px; width: 34px; height: 34px; padding: 0; border: 1px dashed #254767; border-radius: 8px; background: transparent; color: #254767; font-size: 20px; font-weight: 800; line-height: 1; cursor: pointer; }
 .ac-plus:hover:not(:disabled) { background: rgba(37, 71, 103, 0.1); }
 .ac-plus:disabled { opacity: 0.4; cursor: default; }
+
+
+/* 수정창: 작성일과 스티커를 한 줄로 */
+.wd-edit-oneline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px}
+.wd-edit-oneline>.wd-link-bar,.wd-edit-oneline>.wd-sticker-bar{flex:0 0 auto;width:auto;margin:0}
+.wd-edit-oneline .wd-link-input{width:150px;flex:0 0 auto}
