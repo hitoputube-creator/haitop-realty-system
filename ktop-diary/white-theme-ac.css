@@ -386,3 +386,10 @@
 .wd-sched-card .wd-edit-cap--block{margin:0 0 -7px}
 
 .wd-sched-card .wd-edit-field .wd-link-input{height:34px!important;min-height:34px!important;padding:0 10px!important;border-radius:8px!important}
+
+
+/* 수정창 아래 버튼: 사진 추가 · 파일 추가 ........ 취소 · 저장 (한 줄) */
+.wd-compact-edit-actions--one{display:flex!important;flex-wrap:nowrap;align-items:center;gap:8px;margin-top:10px}
+.wd-compact-edit-actions--one .wd-action-btn{height:28px!important;padding:0 12px!important;font-size:12px!important;white-space:nowrap;border-radius:7px!important}
+.wd-compact-edit-actions--one .wd-edit-spacer{flex:1 1 auto}
+.wd-compact-edit-actions--one .wd-save-btn{background:#254767!important;color:#fff!important;border:1px solid #254767!important;font-weight:800!important}
