@@ -361,3 +361,10 @@
 .wd-card-customer-edit > .wd-edit-field{flex:1 1 130px}
 .wd-card-customer-edit > .wd-edit-field:first-child{flex:1.4 1 160px}
 .wd-edit-field > .wd-card-customer-input{width:100%;min-width:0;box-sizing:border-box}
+
+
+/* 일정메모 입력칸, 메모 안내 글자 */
+.wd-schedule-date-edit{flex-wrap:wrap;align-items:center}
+.wd-schedule-memo-input{flex:1 1 220px!important;min-width:140px;width:auto!important}
+.wd-edit-cap--block{display:block;margin:6px 0 3px}
+.wd-schedule-date-edit .wd-link-bar-label + .wd-link-input.wd-schedule-memo-input{margin-left:0}
