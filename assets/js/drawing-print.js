@@ -33,7 +33,7 @@
       ' #' + SHEET_ID + ' .dp-legend{font-size:9pt;color:#1e293b;margin:0 0 2.5mm;line-height:1.45}',
       ' #' + SHEET_ID + ' .dp-legend b{color:var(--dp-accent)}',
       ' #' + SHEET_ID + ' .dp-spacer{flex:1 1 auto;min-height:2mm}',
-      ' #' + SHEET_ID + ' .dp-foot{flex:0 0 auto;margin-top:3mm;border:1.5px solid var(--dp-accent);border-radius:3mm;overflow:hidden;break-inside:avoid;page-break-inside:avoid;line-height:1.3}',
+      ' #' + SHEET_ID + ' .dp-foot{box-sizing:border-box;flex:0 0 auto;margin:3mm auto 0;border:1.5px solid var(--dp-accent);border-radius:3mm;overflow:hidden;break-inside:avoid;page-break-inside:avoid;line-height:1.3}',
       ' #' + SHEET_ID + ' .dp-foot-head{display:flex;justify-content:space-between;align-items:center;gap:3mm;padding:2.4mm 4.5mm;background:var(--dp-accent);color:#fff}',
       ' #' + SHEET_ID + ' .dp-foot-head b{font-size:12pt;letter-spacing:-.02em}',
       ' #' + SHEET_ID + ' .dp-foot-head strong{font-size:13pt;font-weight:800;white-space:nowrap}',
@@ -44,8 +44,8 @@
       ' #' + SHEET_ID + ' .dp-foot-grid div.full{grid-column:1/-1;background:var(--dp-soft)}',
       ' #' + SHEET_ID + ' .dp-foot-grid span{color:var(--dp-accent);font-weight:800}',
       ' #' + SHEET_ID + ' .dp-foot-grid em{font-style:normal;font-weight:600;color:#23332f;overflow-wrap:anywhere}',
-      ' #' + SHEET_ID + ' .dp-frame{border:1px solid #94a3b8;margin:0 auto;break-inside:avoid;page-break-inside:avoid;line-height:0}',
-      ' #' + SHEET_ID + ' .parcel-stage{width:100%!important;margin:0!important}',
+      ' #' + SHEET_ID + ' .dp-frame{box-sizing:border-box;border:1px solid #94a3b8;margin:0 auto;break-inside:avoid;page-break-inside:avoid;line-height:0}',
+      ' #' + SHEET_ID + ' .parcel-stage{width:var(--dp-img-w,100%)!important;margin:0 auto!important}',
       ' #' + SHEET_ID + ' .parcel-stage img{width:100%!important;height:auto!important;display:block}',
       ' #' + SHEET_ID + ' .parcel-vector-hit:focus,#' + SHEET_ID + ' .parcel-vector-hit:hover{outline:none!important}',
       '}'
@@ -90,6 +90,8 @@
     var maxH = landscape ? 119 : 201;
     var pageH = landscape ? 190 : 277;
     var widthMm = Math.min(maxW, maxH * ratio);
+    /* 도면 테두리와 하단 연락처 박스는 같은 폭으로 맞춤 (연락처가 읽히도록 최소 160mm) */
+    var frameMm = Math.max(widthMm, Math.min(maxW, 160));
 
     var pageStyle = document.createElement('style');
     pageStyle.id = 'drawingPrintPage';
@@ -115,15 +117,16 @@
     sheet.style.setProperty('--dp-accent', co.accent);
     sheet.style.setProperty('--dp-soft', co.soft);
     sheet.style.height = pageH + 'mm';
+    sheet.style.setProperty('--dp-img-w', (widthMm / frameMm * 100).toFixed(3) + '%');
     sheet.innerHTML =
       '<div class="dp-head"><div><p class="dp-title">' + esc(title) + ' 상세 도면</p>' +
       '<p class="dp-sub">' + esc([group, type].filter(Boolean).join(' · ')) + '</p></div>' +
       '<div class="dp-meta">출력 ' + esc(today()) + '</div></div>' +
       '<p class="dp-legend"><b>표시 항목:</b> ' + esc(views.length ? views.join(', ') : '원본 도면') +
       (legend ? '<br><b>범례:</b> ' + esc(legend) : '') + '</p>' +
-      '<div class="dp-frame" style="width:' + widthMm.toFixed(1) + 'mm"></div>' +
+      '<div class="dp-frame" style="width:' + frameMm.toFixed(1) + 'mm"></div>' +
       '<div class="dp-spacer"></div>' +
-      '<footer class="dp-foot"><div class="dp-foot-head"><b>' + esc(co.name) + '</b><strong>T. ' + esc(co.phone) + '</strong></div>' +
+      '<footer class="dp-foot" style="width:' + frameMm.toFixed(1) + 'mm"><div class="dp-foot-head"><b>' + esc(co.name) + '</b><strong>T. ' + esc(co.phone) + '</strong></div>' +
       '<div class="dp-foot-grid">' + footRows + '</div></footer>';
 
     var clone = stage.cloneNode(true);
