@@ -1,7 +1,7 @@
 /* 택지 위치도 필지 자료 공유 (케이탑 화면 전용)
    하이탑 기준으로 건물 유무·건물 정보·소유 구분·지번·면적·금액 자료를 양쪽이 같이 보게 한다.
    - 읽기: 하이탑 자료가 더 최근이면 하이탑 값을 보여 준다.
-   - 쓰기: 하이탑 관리자가 케이탑 화면에서 저장한 자료만 하이탑에도 저장한다(케이탑 계정은 하이탑 자료를 고칠 수 없음).
+   - 쓰기: 케이탑에서 저장한 자료는 하이탑에도 바로 저장한다.
    소유주·연락처·메모는 공유하지 않는다. 하이탑 화면은 하이탑 DB에 직접 저장하므로 아무 일도 하지 않는다. */
 (function () {
   'use strict';
@@ -26,7 +26,7 @@
       headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'x-ktop-token': s.data.session.access_token, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (!res.ok) { var err = new Error('하이탑 공유 서버 응답 ' + res.status); err.status = res.status; throw err; }
+    if (!res.ok) throw new Error('하이탑 공유 서버 응답 ' + res.status);
     return res.json();
   }
   function shared() {
@@ -48,8 +48,6 @@
         for (var i = 0; i < items.length; i += 300) await call({ action: 'write', parcels: items.slice(i, i + 300) });
         cache = null;
       } catch (e) {
-        // 하이탑 자료는 하이탑 관리자만 고칠 수 있다. 케이탑 계정의 저장은 케이탑에만 남고 하이탑에는 반영하지 않는다.
-        if (e && e.status === 403) { console.info('하이탑 자료는 하이탑 관리자만 수정할 수 있어 하이탑 공유를 건너뜁니다.'); return; }
         console.warn('하이탑 자료 공유 실패', e);
         notify('하이탑에 자료를 공유하지 못했어요. 잠시 후 같은 작업을 다시 해 주세요.');
       }
