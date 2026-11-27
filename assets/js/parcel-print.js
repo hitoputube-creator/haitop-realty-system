@@ -23,9 +23,9 @@
     const items=[];
     const add=(label,value,strong)=>{if(value!==null&&value!==undefined&&value!=='')items.push([label,value,strong]);};
     add('필지번호',model.title,true);add('지구',model.district);add('블럭',model.blockName);
-    const roadText=b.road?(/(?:시|군)\s/.test(b.road)?b.road:'파주시 '+b.road):'';add('신주소',roadText||'미부여');
+    add('소재지 · 지번',model.address||'미입력',true);
     add('택지 유형',model.landType);add('허용가구수',model.households?model.households+'가구 이하':'');add('공급 상태',model.unsold?'미분양 (공급 전)':'');
-    add('지번',model.address||'미입력',true);add('소유 구분',model.ownership);
+    add('도로명주소',b.road?(/(?:시|군)\s/.test(b.road)?b.road:'파주시 '+b.road):'');add('소유 구분',model.ownership);
     add('토지면적',area(model.area));
     for(const [key,label] of [['supplyPrice','공급금액'],['auctionPrice','낙찰가격'],['salePrice',b.exists?'토지+건물 매매금액':'매매금액']]){
       const v=model.prices?.[key];if(!won(v))continue;
@@ -83,14 +83,7 @@
     return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+escape(model.title)+' 필지 안내</title><style>'+css+'</style></head><body><main class="sheet'+(location?'':' only')+'"><div class="info"><header><div class="headrow"><span class="eyebrow">'+(internal?'내부 관리자료':'택지 안내서')+'</span><span class="date">'+escape(today)+'</span></div><h1>'+escape(model.title)+'</h1><div class="sub">'+escape(subtitle)+'</div></header>'+kpis+'<table class="data">'+details+'</table>'+(privateContent?'<div class="extra">'+privateContent+'</div>':'')+(location&&model.map?.x!=null&&model.map?.y!=null?'<p class="legend"><i></i>도면의 붉은 표시가 해당 필지입니다.</p>':'')+'<div class="spacer"></div><footer class="contact2"><div class="c2-head"><b>'+escape(company.name)+'</b><strong>T. '+escape(company.phone)+'</strong></div><div class="c2-grid">'+[['대표',company.rep],['팩스',company.fax],['주소',company.addr,1],['등록번호',company.reg],['사업자번호',company.biz],['이메일',company.email,1]].filter(x=>x[1]).map(x=>'<div'+(x[2]?' class="full"':'')+'><span>'+x[0]+'</span><em>'+escape(x[1])+'</em></div>').join('')+'</div></footer></div>'+location+'</main></body></html>';
   }
   let frame=null;
-  // 건물 도로명주소가 없으면 지번으로 신주소를 찾아 넣습니다(최대 4초).
-  async function fillRoad(model){
-    const helper=root.HitopRoadAddress;model.building=model.building||{};
-    if(model.building.road||!helper||!model.address)return;
-    try{model.building.road=await Promise.race([helper.lookup(model.address),new Promise(r=>setTimeout(()=>r(''),4000))])||'';}catch(e){}
-  }
-  async function print(model){
-    await fillRoad(model);
+  function print(model){
     if(frame)frame.remove();
     return new Promise((resolve,reject)=>{
       const target=root.document.createElement('iframe');frame=target;
