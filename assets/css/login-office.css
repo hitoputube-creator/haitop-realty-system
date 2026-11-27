@@ -1,0 +1,53 @@
+/* ===== 매물관리 로그인창 (하이탑·케이탑 매물프로그램과 같은 디자인) =====
+   하이탑: 청록 상단 바 / 케이탑: 네이비 상단 바. html[data-office-theme='ktop'] 이면 케이탑 색으로 바뀐다.
+   규칙: Pretendard, 네모 버튼(모서리 6px), 카드 모서리 14px, 라벨·본문 색 분리. */
+:root{
+  --lg-accent:#25675f;--lg-accent-soft:#e6f2ef;--lg-accent-dark:#1d544d;
+  --lg-bar:linear-gradient(112deg,#075c68,#078b94 34%,#13b3ac 68%,#4adbc3);
+  --lg-bar-sub:#e3fbf6;
+  --lg-ink:#1e293b;--lg-sub:#475569;--lg-mute:#64748b;--lg-line:#e2e8f0;--lg-border:#cbd5e1;--lg-face:#f6f8fb;--lg-danger:#c62828;
+}
+html[data-office-theme='ktop']{
+  --lg-accent:#1767d2;--lg-accent-soft:#eaf2ff;--lg-accent-dark:#1356b0;
+  --lg-bar:linear-gradient(115deg,#193860,#214c8d 70%,#2465ba);
+  --lg-bar-sub:#dbe7f8;
+}
+body.warm-login *{box-sizing:border-box}
+body.warm-login{margin:0;min-height:100vh;background:var(--lg-face);color:var(--lg-ink);font-family:Pretendard,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;display:flex;justify-content:center;align-items:center;padding:24px;color-scheme:light}
+body.warm-login :focus-visible{outline:2px solid var(--lg-accent);outline-offset:2px}
+body.warm-login [hidden]{display:none!important}
+.wl-wrap{width:100%;max-width:400px;background:#fff;border:1px solid var(--lg-line);border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 32px rgba(15,23,42,.08)}
+/* 상단 바 */
+.wl-hero{background:var(--lg-bar);color:#fff;padding:20px 22px 22px}
+.wl-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.wl-logo{flex:0 0 40px;width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
+.wl-brand strong{display:block;font-size:16px;font-weight:800;letter-spacing:-.2px;color:#fff}
+.wl-brand small{display:block;margin-top:2px;font-size:11px;font-weight:600;letter-spacing:.8px;color:var(--lg-bar-sub)}
+.wl-hello{margin:0 0 4px;font-size:12.5px;font-weight:600;color:var(--lg-bar-sub)}
+.wl-hero h1{margin:0;font-size:19px;font-weight:800;line-height:1.4;letter-spacing:-.3px;color:#fff}
+.wl-art{display:none}
+/* 본문 */
+.wl-sheet{padding:22px}
+.wl-offices{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.wl-office{height:34px;border:1px solid var(--lg-border);border-radius:6px;background:#fff;color:var(--lg-sub);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.wl-office:hover{border-color:var(--lg-accent);color:var(--lg-accent)}
+.wl-office.on{background:var(--lg-accent-soft);border-color:var(--lg-accent);color:var(--lg-accent);cursor:default}
+.wl-sub{display:none}
+.wl-label{display:block;margin:14px 0 5px;font-size:12px;font-weight:700;color:var(--lg-mute)}
+.wl-field{display:block;width:100%;height:40px;margin:0 0 10px;padding:0 12px;border:1px solid var(--lg-border);border-radius:6px;background:#fff;color:var(--lg-ink);font-family:inherit;font-size:14px;outline:none}
+.wl-field:focus{border-color:var(--lg-accent);box-shadow:0 0 0 3px var(--lg-accent-soft)}
+.wl-field::placeholder{color:#94a3b8}
+.wl-error{min-height:18px;margin:2px 0 8px;font-size:12.5px;color:var(--lg-danger);text-align:left}
+.wl-btn{display:block;width:100%;font-family:inherit;text-align:center;cursor:pointer}
+.wl-btn:disabled{opacity:.6;cursor:wait}
+.wl-btn-primary{height:40px;border:none;border-radius:6px;background:var(--lg-accent);color:#fff;font-size:14px;font-weight:700}
+.wl-btn-primary:hover{background:var(--lg-accent-dark)}
+.wl-btn-ghost{height:36px;margin-top:8px;border:1px solid var(--lg-border);border-radius:6px;background:#fff;color:var(--lg-ink);font-size:13px;font-weight:700}
+.wl-btn-text{margin-top:8px;padding:6px;border:none;background:none;color:var(--lg-mute);font-size:12.5px;font-weight:600}
+.wl-btn-text:hover{color:var(--lg-accent);text-decoration:underline}
+.wl-note{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--lg-line);font-size:12px;line-height:1.6;color:var(--lg-mute);text-align:center}
+.wl-banner{margin-bottom:12px;padding:9px 12px;border-radius:6px;background:var(--lg-accent-soft);border:1px solid var(--lg-accent);font-size:12.5px;color:var(--lg-ink);text-align:center}
+@media (max-width:520px){
+  body.warm-login{padding:0;align-items:stretch;background:#fff}
+  .wl-wrap{max-width:none;min-height:100vh;border:none;border-radius:0;box-shadow:none}
+}
