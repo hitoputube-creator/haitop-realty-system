@@ -32,6 +32,7 @@
       비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.
     </div>
 
+    <div id="emailView">
     <label for="officeSelect" style="display:block;margin-bottom:8px;">로그인할 부동산</label>
     <select id="officeSelect" class="login-field" style="width:100%;padding:12px;border-radius:10px;background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;color:var(--txt);border:1px solid var(--line);margin-bottom:14px;border-color:transparent;box-shadow:var(--field-depth,inset 0 1px 2px rgba(35,76,73,.04),0 1px 3px rgba(35,76,73,.035));">
       <option value="hitop">하이탑부동산</option>
@@ -57,7 +58,9 @@
       <button id="sendResetBtn" type="button" class="login-btn" style="width:100%;padding:14px;color:#ffffff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">재설정 메일 보내기</button>
       <button id="backToLoginLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:var(--sub);font-size:0.8rem;cursor:pointer;margin-top:6px;">로그인으로 돌아가기</button>
     </div>
+    </div>
   </div>
+  <script src="assets/js/pin-login.js?v=20261127-pin1"></script>
 
   <script>
     (function () {
@@ -127,7 +130,9 @@
             }
           }
           if (OfficeConfig.id === "hitop") await linkKtopForAdmin(email, password);
-          location.replace(getRedirectTarget());
+          pwEl.value = "";
+          if (pinLogin) pinLogin.afterPasswordLogin();
+          else location.replace(getRedirectTarget());
         } catch (_) {
           errEl.textContent = "로그인에 실패했습니다. 선택한 부동산의 이메일·비밀번호와 인터넷 연결을 확인하세요.";
           pwEl.value = "";
@@ -198,6 +203,16 @@
       forgotLinkEl.addEventListener("click", showForgotPanel);
       backToLoginEl.addEventListener("click", showLoginPanel);
       sendResetBtnEl.addEventListener("click", sendResetEmail);
+
+      // 6자리 간편로그인은 하이탑에서만 사용한다(케이탑은 별도 프로젝트).
+      const pinLogin = OfficeConfig.id === "hitop" && window.HitopPinLogin ? window.HitopPinLogin.create({
+        client: authClient,
+        card: document.querySelector(".login-card"),
+        emailView: document.getElementById("emailView"),
+        enter: function () { location.replace(getRedirectTarget()); },
+        onEmail: function (message) { errEl.textContent = message; emailEl.focus(); }
+      }) : null;
+      if (pinLogin) pinLogin.start();
 
       // 기존 하이탑 세션이 있어도 부동산을 선택할 수 있도록 로그인 화면을 유지한다.
       if (OfficeConfig.id === "ktop") emailEl.value = "ktop2027@gmail.com";
