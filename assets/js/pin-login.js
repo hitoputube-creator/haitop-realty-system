@@ -29,14 +29,8 @@
     view.hidden = true;
     var keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "clear", "0", "back"];
     view.innerHTML =
-      '<style>#pinView[hidden]{display:none}#pinTitle{text-align:center;font-weight:700;margin:0 0 14px}' +
-      '#pinDots{display:flex;justify-content:center;gap:14px}#pinDots i{width:15px;height:15px;border-radius:50%;border:2px solid #C7CEDE}' +
-      '#pinDots i.on{background:#0A1F5C;border-color:#0A1F5C}' +
-      '#pinMessage{font-size:.85rem;color:#5E6684;text-align:center;min-height:44px;margin:12px 0 6px;line-height:1.5}' +
-      '#pinMessage.error{color:#B6392F}#pinPad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}' +
-      'html body #pinPad button{height:58px;border:1px solid #E1E5EF;border-radius:12px;background:#F6F7FB;color:#081840;font-family:inherit;font-weight:700;font-size:1.35rem;cursor:pointer;touch-action:manipulation}' +
-      'html body #pinPad button.sub{font-size:.85rem}html body #pinPad button:disabled{opacity:.5;cursor:wait}' +
-      'html body #pinAltBtn{width:100%;margin-top:10px;padding:13px;border-radius:10px;border:1px solid #C7CEDE;background:#fff;color:#0A1F5C;font-family:inherit;font-weight:700;cursor:pointer}</style>' +
+      // 모양은 로그인 페이지의 login-warm.css가 정한다.
+      '<style>#pinView[hidden]{display:none}</style>' +
       '<p id="pinTitle"></p><div id="pinDots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>' +
       '<div id="pinMessage" role="status" aria-live="polite"></div><div id="pinPad">' +
       keys.map(function (k) {

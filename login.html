@@ -6,61 +6,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" as="style" crossorigin
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="assets/css/tokens.css?v=20261108-ktop-match1" />
+  <link rel="stylesheet" href="assets/css/login-warm.css?v=20261127-warm1" />
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
+  <script data-office-theme>document.documentElement.dataset.officeTheme = OfficeConfig.id;</script>
 <script src="assets/js/office-brand.js?v=20261108-ktop-match1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <style>
-    .login-logo{background:#0A1F5C;color:#C9A84C;border:1px solid rgba(201,168,76,0.5)}
-    .login-btn{background:#0A1F5C!important}
-    .login-title{color:#162041!important}
-    html[data-office-theme='ktop'] .login-logo{background:#1767d2;color:#fff;border-color:#1767d2}
-    html[data-office-theme='ktop'] .login-btn{background:#1767d2!important}
-    html[data-office-theme='ktop'] .login-card{border-top-color:#1767d2!important;box-shadow:0 -6px 18px rgba(23,103,210,.18),0 1px 2px rgba(10,22,60,.05),0 12px 28px rgba(10,22,60,.07)!important}
-    .login-field{border-color:#C7CEDE!important;box-shadow:inset 0 0 0 1px rgba(201,168,76,.4)!important}
-    html[data-office-theme='ktop'] .login-field{box-shadow:inset 0 0 0 1px rgba(23,103,210,.35)!important}
-  </style>
 </head>
-<body style="margin:0;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Pretendard,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;color:var(--txt);">
-  <div class="login-card" style="width:100%;max-width:360px;background:#fff;border:1px solid var(--line);border-top:3px solid #C9A84C;border-radius:16px;padding:36px 32px;box-shadow:0 -6px 18px rgba(201,168,76,.22),0 1px 2px rgba(10,22,60,.05),0 12px 28px rgba(10,22,60,.07);box-sizing:border-box;">
-    <div style="text-align:center;margin-bottom:36px;">
-      <div class="brand-mark login-logo" style="width:56px;height:56px;border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;">HT</div>
-      <div id="officeBrand" class="login-title" style="font-size:1.4rem;font-weight:800;letter-spacing:0.5px;">HITOP 부동산</div>
-      <div style="font-size:0.8rem;color:var(--muted);margin-top:4px;">관리자 로그인</div>
-    </div>
-    <div id="resetSuccessBanner" class="login-title" style="display:none;font-size:0.82rem;text-align:center;background:var(--gold2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
-      비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.
-    </div>
-
-    <div id="emailView">
-    <label for="officeSelect" style="display:block;margin-bottom:8px;">로그인할 부동산</label>
-    <select id="officeSelect" class="login-field" style="width:100%;padding:12px;border-radius:10px;background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;color:var(--txt);border:1px solid var(--line);margin-bottom:14px;border-color:transparent;box-shadow:var(--field-depth,inset 0 1px 2px rgba(35,76,73,.04),0 1px 3px rgba(35,76,73,.035));">
-      <option value="hitop">하이탑부동산</option>
-      <option value="ktop">케이탑부동산</option>
-    </select>
-    <p id="officeNotice" style="font-size:0.8rem;color:var(--sub);line-height:1.5;margin-bottom:16px;"></p>
-    <input id="loginEmail" class="login-field" type="email" placeholder="이메일" autocomplete="username"
-      style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;border:1px solid var(--line);border-radius:10px;color:var(--txt);outline:none;margin-bottom:10px;border-color:transparent;box-shadow:var(--field-depth,inset 0 1px 2px rgba(35,76,73,.04),0 1px 3px rgba(35,76,73,.035));" />
-
-    <div id="loginPanel">
-      <input id="loginPassword" class="login-field" type="password" placeholder="비밀번호" autocomplete="current-password"
-        style="width:100%;box-sizing:border-box;padding:14px 16px;font-size:1rem;background:var(--box-fill,linear-gradient(180deg,#ffffff 0%,#fdfefd 58%,#f7fbf9 100%)) padding-box,var(--box-edge,linear-gradient(135deg,#acc5be 0%,#73998e 40%,#5f877b 68%,#9bb7ad 100%)) border-box;border:1px solid var(--line);border-radius:10px;color:var(--txt);outline:none;margin-bottom:10px;border-color:transparent;box-shadow:var(--field-depth,inset 0 1px 2px rgba(35,76,73,.04),0 1px 3px rgba(35,76,73,.035));" />
-      <div id="loginError" style="font-size:0.82rem;color:var(--danger);text-align:center;min-height:20px;margin-bottom:10px;"></div>
-      <button id="loginBtn" class="login-btn" style="width:100%;padding:14px;color:#ffffff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">로그인</button>
-      <button id="forgotPwLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:var(--sub);font-size:0.8rem;cursor:pointer;margin-top:6px;">비밀번호를 잊으셨나요?</button>
-    </div>
-
-    <div id="forgotPanel" style="display:none;">
-      <div style="font-size:0.8rem;color:var(--sub);text-align:center;margin-bottom:14px;line-height:1.5;">
-        위 이메일로 비밀번호 재설정 링크를 보내드립니다.
+<body class="warm-login">
+  <main class="wl-wrap">
+    <header class="wl-hero">
+      <p class="wl-hello" id="wlHello">좋은 하루예요, 소장님</p>
+      <h1>오늘도 파주·운정의<br>좋은 매물을 찾아요</h1>
+      <svg class="wl-art" viewBox="0 0 440 150" aria-hidden="true" focusable="false">
+        <circle cx="352" cy="46" r="26" fill="#F2C38B"></circle>
+        <path d="M0 110 C 80 70, 150 80, 220 100 S 360 80, 440 96 L 440 150 L 0 150 Z" fill="#E7D6BC"></path>
+        <rect class="acc" x="70" y="66" width="34" height="58" rx="6" opacity=".85"></rect>
+        <rect class="acc" x="110" y="44" width="40" height="80" rx="6" opacity=".6"></rect>
+        <rect x="156" y="78" width="30" height="46" rx="6" fill="#C9A47A" opacity=".8"></rect>
+        <rect x="250" y="74" width="44" height="50" rx="6" fill="#C9A47A" opacity=".7"></rect>
+        <path class="acc" d="M300 124 L 322 96 L 344 124 Z" opacity=".55"></path>
+        <path d="M0 128 C 100 112, 200 130, 300 118 S 400 120, 440 116 L 440 150 L 0 150 Z" fill="#DCC6A5"></path>
+      </svg>
+      <script data-greeting>
+        (function () {
+          var h = new Date().getHours();
+          document.getElementById("wlHello").textContent =
+            h >= 5 && h < 11 ? "좋은 아침이에요, 소장님" :
+            h >= 11 && h < 17 ? "좋은 오후예요, 소장님" :
+            h >= 17 && h < 22 ? "오늘도 수고 많으셨어요, 소장님" : "늦은 시간까지 수고 많으세요, 소장님";
+        })();
+      </script>
+    </header>
+    <section class="wl-sheet login-card">
+      <div class="wl-offices" role="group" aria-label="부동산 선택">
+        <button type="button" class="wl-office" data-office="hitop" aria-pressed="false">하이탑</button>
+        <button type="button" class="wl-office" data-office="ktop" aria-pressed="false">케이탑</button>
       </div>
-      <div id="forgotStatus" style="font-size:0.82rem;color:#162041;text-align:center;min-height:20px;margin-bottom:10px;"></div>
-      <button id="sendResetBtn" type="button" class="login-btn" style="width:100%;padding:14px;color:#ffffff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">재설정 메일 보내기</button>
-      <button id="backToLoginLink" type="button" style="width:100%;padding:10px;background:none;border:none;color:var(--sub);font-size:0.8rem;cursor:pointer;margin-top:6px;">로그인으로 돌아가기</button>
-    </div>
-    </div>
-  </div>
-  <script src="assets/js/pin-login.js?v=20261127-pin1"></script>
+      <select id="officeSelect" hidden aria-hidden="true" tabindex="-1">
+        <option value="hitop">하이탑부동산</option>
+        <option value="ktop">케이탑부동산</option>
+      </select>
+      <p id="officeBrand" class="wl-sub">하이탑부동산 매물관리</p>
+      <div id="resetSuccessBanner" class="wl-banner" style="display:none;">비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.</div>
+
+      <div id="emailView">
+        <input id="loginEmail" class="wl-field" type="email" placeholder="이메일" autocomplete="username" aria-label="이메일" />
+        <div id="loginPanel">
+          <input id="loginPassword" class="wl-field" type="password" placeholder="비밀번호" autocomplete="current-password" aria-label="비밀번호" />
+          <div id="loginError" class="wl-error"></div>
+          <button id="loginBtn" class="wl-btn wl-btn-primary">로그인</button>
+          <button id="forgotPwLink" type="button" class="wl-btn wl-btn-text">비밀번호를 잊으셨나요?</button>
+        </div>
+        <div id="forgotPanel" style="display:none;">
+          <p class="wl-note" style="margin:0 0 12px;">위 이메일로 비밀번호 재설정 링크를 보내드립니다.</p>
+          <div id="forgotStatus" class="wl-error" style="color:var(--wl-ink);"></div>
+          <button id="sendResetBtn" type="button" class="wl-btn wl-btn-primary">재설정 메일 보내기</button>
+          <button id="backToLoginLink" type="button" class="wl-btn wl-btn-text">로그인으로 돌아가기</button>
+        </div>
+        <p id="officeNotice" class="wl-note"></p>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/pin-login.js?v=20261127-warm1"></script>
 
   <script>
     (function () {
@@ -72,7 +79,18 @@
       const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       const officeSelect = document.getElementById("officeSelect");
       officeSelect.value = OfficeConfig.id;
-      document.getElementById("officeBrand").textContent = OfficeConfig.id === "ktop" ? officeManagementTitle : OfficeConfig.brand + " 부동산";
+      document.getElementById("officeBrand").textContent = OfficeConfig.label + " 매물관리";
+      // 하이탑·케이탑 선택 버튼: 고르면 해당 부동산 로그인으로 바꾼다.
+      document.querySelectorAll(".wl-office").forEach(function (btn) {
+        const on = btn.dataset.office === OfficeConfig.id;
+        btn.classList.toggle("on", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+        btn.addEventListener("click", function () {
+          if (on || officeSelect.disabled) return;
+          officeSelect.value = btn.dataset.office;
+          officeSelect.dispatchEvent(new Event("change"));
+        });
+      });
       document.getElementById("officeNotice").textContent = OfficeConfig.id === "ktop"
         ? "케이탑 계정으로 로그인합니다. 고객과 소유주·연락처는 케이탑에서 별도로 관리합니다."
         : "하이탑 계정으로 로그인합니다.";
