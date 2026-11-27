@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" as="style" crossorigin
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="assets/css/login-warm.css?v=20261127-warm1" />
+  <link rel="stylesheet" href="assets/css/login-warm.css?v=20261127-paperlogy" />
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
   <script data-office-theme>document.documentElement.dataset.officeTheme = OfficeConfig.id;</script>
 <script src="assets/js/office-brand.js?v=20261108-ktop-match1"></script>
@@ -16,7 +16,7 @@
   <main class="wl-wrap">
     <header class="wl-hero">
       <p class="wl-hello" id="wlHello">좋은 하루예요, 소장님</p>
-      <h1>오늘도 파주·운정의<br>좋은 매물을 찾아요</h1>
+      <h1>오늘도 파이팅하시고<br>좋은 하루 되세요</h1>
       <svg class="wl-art" viewBox="0 0 440 150" aria-hidden="true" focusable="false">
         <circle cx="352" cy="46" r="26" fill="#F2C38B"></circle>
         <path d="M0 110 C 80 70, 150 80, 220 100 S 360 80, 440 96 L 440 150 L 0 150 Z" fill="#E7D6BC"></path>
@@ -33,7 +33,7 @@
           document.getElementById("wlHello").textContent =
             h >= 5 && h < 11 ? "좋은 아침이에요, 소장님" :
             h >= 11 && h < 17 ? "좋은 오후예요, 소장님" :
-            h >= 17 && h < 22 ? "오늘도 수고 많으셨어요, 소장님" : "늦은 시간까지 수고 많으세요, 소장님";
+            h >= 17 && h < 22 ? "좋은 하루예요, 소장님" : "늦은 시간까지 수고 많으세요, 소장님";
         })();
       </script>
     </header>
@@ -67,7 +67,6 @@
       </div>
     </section>
   </main>
-  <script src="assets/js/pin-login.js?v=20261127-warm1"></script>
 
   <script>
     (function () {
@@ -149,8 +148,7 @@
           }
           if (OfficeConfig.id === "hitop") await linkKtopForAdmin(email, password);
           pwEl.value = "";
-          if (pinLogin) pinLogin.afterPasswordLogin();
-          else location.replace(getRedirectTarget());
+          location.replace(getRedirectTarget());
         } catch (_) {
           errEl.textContent = "로그인에 실패했습니다. 선택한 부동산의 이메일·비밀번호와 인터넷 연결을 확인하세요.";
           pwEl.value = "";
@@ -222,15 +220,9 @@
       backToLoginEl.addEventListener("click", showLoginPanel);
       sendResetBtnEl.addEventListener("click", sendResetEmail);
 
-      // 6자리 간편로그인은 하이탑에서만 사용한다(케이탑은 별도 프로젝트).
-      const pinLogin = OfficeConfig.id === "hitop" && window.HitopPinLogin ? window.HitopPinLogin.create({
-        client: authClient,
-        card: document.querySelector(".login-card"),
-        emailView: document.getElementById("emailView"),
-        enter: function () { location.replace(getRedirectTarget()); },
-        onEmail: function (message) { errEl.textContent = message; emailEl.focus(); }
-      }) : null;
-      if (pinLogin) pinLogin.start();
+      // 6자리 간편로그인은 업무센터와 함께 없앴다(이메일+비밀번호만 사용). 예전에 등록한 기기 표시는 지운다.
+      try { localStorage.removeItem("hitopPinDevice"); } catch (_) {}
+      document.cookie = "hitopPinUnlocked=; path=/; Max-Age=0";
 
       // 하이탑 관리자 전환: 하이탑 로그인(관리자)이 살아 있으면 케이탑 비밀번호 없이
       // 케이탑 서버 함수(admin-bridge)가 하이탑 관리자임을 직접 확인한 뒤 케이탑을 바로 연다.
@@ -238,11 +230,7 @@
       const HITOP_REF = "xaxbkdnrzsghsabkdvzj";
       function hitopAdminReady() {
         try {
-          if (!localStorage.getItem("sb-" + HITOP_REF + "-auth-token")) return false;
-          const mark = document.cookie.match(/(?:^|; )hitopPinUnlocked=(\d+)/);
-          const age = mark ? Date.now() - Number(mark[1]) : -1;
-          // 6자리 간편로그인을 등록한 기기는 하이탑 잠금이 풀린 상태에서만 전환한다.
-          return !(localStorage.getItem("hitopPinDevice") && !(age >= 0 && age < 12 * 60 * 60 * 1000));
+          return !!localStorage.getItem("sb-" + HITOP_REF + "-auth-token");
         } catch (_) { return false; }
       }
       async function openKtopAsHitopAdmin() {
