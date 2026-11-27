@@ -95,7 +95,7 @@
         ? "케이탑 계정으로 로그인합니다. 고객과 소유주·연락처는 케이탑에서 별도로 관리합니다."
         : "하이탑 계정으로 로그인합니다.";
       if (OfficeConfig.id === "ktop" && new URLSearchParams(location.search).get("from") === "admin-switch") {
-        document.getElementById("officeNotice").textContent = "하이탑 관리자 전환: 케이탑 계정으로 한 번 로그인하면 이후에는 '케이탑 보기' 버튼으로 바로 이동합니다.";
+        document.getElementById("officeNotice").textContent = "하이탑 관리자 전환: 하이탑에 로그인되어 있으면 케이탑 비밀번호 없이 바로 열립니다.";
       }
       document.title = "매물관리 로그인 - " + OfficeConfig.label;
       officeSelect.addEventListener("change", function () {
@@ -231,6 +231,53 @@
         onEmail: function (message) { errEl.textContent = message; emailEl.focus(); }
       }) : null;
       if (pinLogin) pinLogin.start();
+
+      // 하이탑 관리자 전환: 하이탑 로그인(관리자)이 살아 있으면 케이탑 비밀번호 없이
+      // 케이탑 서버 함수(admin-bridge)가 하이탑 관리자임을 직접 확인한 뒤 케이탑을 바로 연다.
+      // 하이탑 -> 케이탑 한 방향만 가능하다. 케이탑 계정으로는 하이탑에 들어가거나 하이탑 자료를 고칠 수 없다.
+      const HITOP_REF = "xaxbkdnrzsghsabkdvzj";
+      function hitopAdminReady() {
+        try {
+          if (!localStorage.getItem("sb-" + HITOP_REF + "-auth-token")) return false;
+          const mark = document.cookie.match(/(?:^|; )hitopPinUnlocked=(\d+)/);
+          const age = mark ? Date.now() - Number(mark[1]) : -1;
+          // 6자리 간편로그인을 등록한 기기는 하이탑 잠금이 풀린 상태에서만 전환한다.
+          return !(localStorage.getItem("hitopPinDevice") && !(age >= 0 && age < 12 * 60 * 60 * 1000));
+        } catch (_) { return false; }
+      }
+      async function openKtopAsHitopAdmin() {
+        try {
+          const hitopClient = window.supabase.createClient("https://" + HITOP_REF + ".supabase.co", "sb_publishable_gqNFRMHb6yYKvqFnQurPKQ_7gGhURVd", { auth: { autoRefreshToken: false, detectSessionInUrl: false } });
+          const { data: sessionData } = await hitopClient.auth.getSession();
+          const token = sessionData && sessionData.session && sessionData.session.access_token;
+          if (!token) return false;
+          const res = await fetch(SUPABASE_URL + "/functions/v1/admin-bridge", {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+            body: "{}"
+          });
+          if (!res.ok) return false;
+          const out = await res.json();
+          if (!out || !out.tokenHash) return false;
+          const { error } = await authClient.auth.verifyOtp({ token_hash: out.tokenHash, type: "email" });
+          return !error;
+        } catch (_) { return false; }
+      }
+      const switchParams = new URLSearchParams(location.search);
+      const fromAdminSwitch = switchParams.get("from") === "admin-switch";
+      if (OfficeConfig.id === "ktop" && (fromAdminSwitch || switchParams.has("redirect")) && hitopAdminReady()) {
+        const noticeEl = document.getElementById("officeNotice");
+        const prevNotice = noticeEl.textContent;
+        noticeEl.textContent = "하이탑 관리자 확인 중... 잠시만 기다려 주세요.";
+        btnEl.disabled = true;
+        openKtopAsHitopAdmin().then(function (ok) {
+          if (ok) { location.replace(getRedirectTarget()); return; }
+          btnEl.disabled = false;
+          noticeEl.textContent = fromAdminSwitch
+            ? "하이탑 관리자 확인에 실패했습니다. 하이탑에 다시 로그인한 뒤 '케이탑 보기'를 눌러 주세요."
+            : prevNotice;
+        });
+      }
 
       // 기존 하이탑 세션이 있어도 부동산을 선택할 수 있도록 로그인 화면을 유지한다.
       if (OfficeConfig.id === "ktop") emailEl.value = "ktop2027@gmail.com";
