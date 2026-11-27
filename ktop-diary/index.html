@@ -2,6 +2,16 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // 케이탑 6자리 간편로그인을 등록한 기기는, 이번 브라우저에서 확인(12시간 유효)하기 전에는 열지 않는다.
+      (function () {
+        try {
+          var mark = document.cookie.match(/(?:^|; )ktopPinUnlocked=(\d+)/);
+          var age = mark ? Date.now() - Number(mark[1]) : -1;
+          if (localStorage.getItem('ktopPinDevice') && !(age >= 0 && age < 12 * 60 * 60 * 1000)) location.replace('../login.html?office=ktop');
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/haitop-realty-system/ktop-diary/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>케이탑 업무일지</title>

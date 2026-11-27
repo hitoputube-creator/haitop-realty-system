@@ -29,15 +29,14 @@
   var sessionKey = "sb-" + (m ? m[1] : "") + "-auth-token";
   var hasSession = false;
   try { hasSession = !!localStorage.getItem(sessionKey); } catch (e) {}
-  // 6자리 간편로그인을 등록한 기기(하이탑)는, 이번 브라우저에서 확인(12시간 유효)하기 전에는 열지 않는다.
+  // 6자리 간편로그인을 등록한 기기(부동산별)는, 이번 브라우저에서 확인(12시간 유효)하기 전에는 열지 않는다.
   var pinLocked = false;
-  if (OfficeConfig.id === "hitop") {
-    try {
-      var mark = document.cookie.match(/(?:^|; )hitopPinUnlocked=(\d+)/);
-      var age = mark ? Date.now() - Number(mark[1]) : -1;
-      pinLocked = !!localStorage.getItem("hitopPinDevice") && !(age >= 0 && age < 12 * 60 * 60 * 1000);
-    } catch (e) {}
-  }
+  try {
+    var office = OfficeConfig.id === "ktop" ? "ktop" : "hitop";
+    var mark = document.cookie.match(new RegExp("(?:^|; )" + office + "PinUnlocked=(\\d+)"));
+    var age = mark ? Date.now() - Number(mark[1]) : -1;
+    pinLocked = !!localStorage.getItem(office + "PinDevice") && !(age >= 0 && age < 12 * 60 * 60 * 1000);
+  } catch (e) {}
   if (!hasSession || pinLocked) {
     var next = encodeURIComponent(location.pathname.split("/").pop() + location.search);
     location.replace(OfficeConfig.urlFor("login.html?redirect=" + next));

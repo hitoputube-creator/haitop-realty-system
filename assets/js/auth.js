@@ -8,7 +8,7 @@ function hitopRedirectToLogin() {
   location.replace(OfficeConfig.urlFor('login.html?redirect=' + next));
 }
 async function hitopAdminLogout() {
-  if (OfficeConfig.id === 'hitop' && typeof document !== 'undefined') document.cookie = 'hitopPinUnlocked=; path=/; Max-Age=0';
+  if (typeof document !== 'undefined') document.cookie = (OfficeConfig.id === 'ktop' ? 'ktop' : 'hitop') + 'PinUnlocked=; path=/; Max-Age=0';
   try { await hitopAuthClient.auth.signOut(); }
   finally { hitopApplyAuthHeader(null); hitopRedirectToLogin(); }
 }

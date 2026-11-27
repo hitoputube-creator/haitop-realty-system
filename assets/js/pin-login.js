@@ -1,9 +1,11 @@
-// ===== 하이탑 6자리 간편로그인 (login.html 전용) =====
-// 기기 등록 정보(localStorage)와 확인 표시(세션 쿠키)는 같은 주소의 업무센터(pin-gate.js)와 공유한다.
-// 서버 확인은 Supabase Edge Function "pin-login"이 한다.
+// ===== 6자리 간편로그인 (login.html 전용, 하이탑·케이탑) =====
+// 기기 등록 정보(localStorage)와 확인 표시(세션 쿠키)는 부동산별로 따로 두며,
+// 하이탑 것은 같은 주소의 업무센터(pin-gate.js)와 공유한다.
+// 서버 확인은 선택한 부동산 Supabase 프로젝트의 Edge Function "pin-login"이 한다.
 (function () {
-  var DEVICE_KEY = "hitopPinDevice";
-  var COOKIE = "hitopPinUnlocked";
+  var OFFICE = typeof OfficeConfig !== "undefined" && OfficeConfig.id === "ktop" ? "ktop" : "hitop";
+  var DEVICE_KEY = OFFICE + "PinDevice";
+  var COOKIE = OFFICE + "PinUnlocked";
   var MAX_AGE_MS = 12 * 60 * 60 * 1000;
   function writeCookie(value, extra) {
     document.cookie = COOKIE + "=" + value + "; path=/; SameSite=Lax" +
@@ -36,7 +38,8 @@
       '#pinMessage.error{color:#B6392F}#pinPad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}' +
       'html body #pinPad button{height:58px;border:1px solid #E1E5EF;border-radius:12px;background:#F6F7FB;color:#081840;font-family:inherit;font-weight:700;font-size:1.35rem;cursor:pointer;touch-action:manipulation}' +
       'html body #pinPad button.sub{font-size:.85rem}html body #pinPad button:disabled{opacity:.5;cursor:wait}' +
-      'html body #pinAltBtn{width:100%;margin-top:10px;padding:13px;border-radius:10px;border:1px solid #C7CEDE;background:#fff;color:#0A1F5C;font-family:inherit;font-weight:700;cursor:pointer}</style>' +
+      'html body #pinAltBtn{width:100%;margin-top:10px;padding:13px;border-radius:10px;border:1px solid #C7CEDE;background:#fff;color:#0A1F5C;font-family:inherit;font-weight:700;cursor:pointer}' +
+      "html[data-office-theme='ktop'] #pinDots i.on{background:#1767d2;border-color:#1767d2}html[data-office-theme='ktop'] body #pinAltBtn{color:#1767d2}</style>" +
       '<p id="pinTitle"></p><div id="pinDots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>' +
       '<div id="pinMessage" role="status" aria-live="polite"></div><div id="pinPad">' +
       keys.map(function (k) {
