@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" as="style" crossorigin
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="assets/css/login-warm.css?v=20261127-paperlogy" />
+  <link rel="stylesheet" href="assets/css/login-office.css?v=20261127-office1" />
   <script src="assets/js/storage.js?v=20261006-ktop-diary1"></script>
   <script data-office-theme>document.documentElement.dataset.officeTheme = OfficeConfig.id;</script>
 <script src="assets/js/office-brand.js?v=20261108-ktop-match1"></script>
@@ -15,20 +15,17 @@
 <body class="warm-login">
   <main class="wl-wrap">
     <header class="wl-hero">
+      <div class="wl-brand">
+        <span class="wl-logo" id="wlLogo" aria-hidden="true">H</span>
+        <div><strong id="wlBrandName">하이탑부동산 매물관리</strong><small>PROPERTY MANAGEMENT</small></div>
+      </div>
       <p class="wl-hello" id="wlHello">좋은 하루예요, 소장님</p>
       <h1>오늘도 파이팅하시고<br>좋은 하루 되세요</h1>
-      <svg class="wl-art" viewBox="0 0 440 150" aria-hidden="true" focusable="false">
-        <circle cx="352" cy="46" r="26" fill="#F2C38B"></circle>
-        <path d="M0 110 C 80 70, 150 80, 220 100 S 360 80, 440 96 L 440 150 L 0 150 Z" fill="#E7D6BC"></path>
-        <rect class="acc" x="70" y="66" width="34" height="58" rx="6" opacity=".85"></rect>
-        <rect class="acc" x="110" y="44" width="40" height="80" rx="6" opacity=".6"></rect>
-        <rect x="156" y="78" width="30" height="46" rx="6" fill="#C9A47A" opacity=".8"></rect>
-        <rect x="250" y="74" width="44" height="50" rx="6" fill="#C9A47A" opacity=".7"></rect>
-        <path class="acc" d="M300 124 L 322 96 L 344 124 Z" opacity=".55"></path>
-        <path d="M0 128 C 100 112, 200 130, 300 118 S 400 120, 440 116 L 440 150 L 0 150 Z" fill="#DCC6A5"></path>
-      </svg>
       <script data-greeting>
         (function () {
+          var ktop = typeof OfficeConfig !== "undefined" && OfficeConfig.id === "ktop";
+          document.getElementById("wlLogo").textContent = ktop ? "K" : "H";
+          document.getElementById("wlBrandName").textContent = ktop ? "KTOP부동산 매물관리" : "하이탑부동산 매물관리";
           var h = new Date().getHours();
           document.getElementById("wlHello").textContent =
             h >= 5 && h < 11 ? "좋은 아침이에요, 소장님" :
@@ -50,8 +47,10 @@
       <div id="resetSuccessBanner" class="wl-banner" style="display:none;">비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.</div>
 
       <div id="emailView">
+        <label class="wl-label" for="loginEmail">이메일</label>
         <input id="loginEmail" class="wl-field" type="email" placeholder="이메일" autocomplete="username" aria-label="이메일" />
         <div id="loginPanel">
+          <label class="wl-label" for="loginPassword">비밀번호</label>
           <input id="loginPassword" class="wl-field" type="password" placeholder="비밀번호" autocomplete="current-password" aria-label="비밀번호" />
           <div id="loginError" class="wl-error"></div>
           <button id="loginBtn" class="wl-btn wl-btn-primary">로그인</button>
