@@ -44,3 +44,30 @@ hitopAuthClient.auth.onAuthStateChange(function (event, session) {
   // 콜백 내부에서는 추가 Supabase 호출을 하지 않는다.
   hitopApplyAuthHeader(session);
 });
+
+// ===== 하이탑 한 번 로그인(SSO) =====
+// 하이탑 관리자로 로그인된 상태에서 업무일지(vercel)·홈페이지(hitoprealty.com) 링크를 누르면
+// 서버(sso-handoff)에서 1회용 입장권을 받아 붙여 연다. 비밀번호를 다시 묻지 않는다.
+// 케이탑은 업무일지·관리화면이 같은 주소에 있어 이미 한 번 로그인으로 함께 열린다.
+const HITOP_SSO_TARGET = /^https:\/\/(haitop-realestate-diary\.vercel\.app|(www\.)?hitoprealty\.com)\/|^https:\/\/hitoputube-creator\.github\.io\/hitop-property-platform\//;
+async function hitopSsoUrl(url) {
+  try {
+    const { data } = await hitopAuthClient.auth.getSession();
+    if (!data.session) return url;
+    const { data: res, error } = await hitopAuthClient.functions.invoke('sso-handoff', { body: {} });
+    if (error || !res || res.status !== 'ok' || !res.tokenHash) return url;
+    return url.split('#')[0] + '#sso=' + encodeURIComponent(res.tokenHash);
+  } catch (_) { return url; }
+}
+window.hitopSsoUrl = hitopSsoUrl;
+document.addEventListener('click', function (event) {
+  if (OfficeConfig.id !== 'hitop' || event.defaultPrevented) return;
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const link = event.target.closest && event.target.closest('a[href]');
+  if (!link || !HITOP_SSO_TARGET.test(link.href)) return;
+  event.preventDefault();
+  const newTab = link.target === '_blank';
+  const w = newTab ? window.open('about:blank', '_blank') : null;
+  if (w) { try { w.opener = null; } catch (_) {} }
+  hitopSsoUrl(link.href).then(function (u) { if (w) w.location.href = u; else location.href = u; });
+});
